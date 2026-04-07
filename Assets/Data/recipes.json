@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "recipes": [
+    {
+      "recipeId": 1,
+      "recipeName": "Proton",
+      "inputs": [
+        { "itemId": 1, "quantity": 2 },
+        { "itemId": 2, "quantity": 1 }
+      ],
+      "outputItemId": 4,
+      "outputQuantity": 1,
+      "craftTime": 1.0,
+      "requiresBuilding": false
+    },
+    {
+      "recipeId": 2,
+      "recipeName": "Neutron",
+      "inputs": [
+        { "itemId": 1, "quantity": 1 },
+        { "itemId": 2, "quantity": 2 }
+      ],
+      "outputItemId": 5,
+      "outputQuantity": 1,
+      "craftTime": 1.0,
+      "requiresBuilding": false
+    },
+    {
+      "recipeId": 3,
+      "recipeName": "Hydrogen",
+      "inputs": [
+        { "itemId": 4, "quantity": 1 },
+        { "itemId": 3, "quantity": 1 }
+      ],
+      "outputItemId": 6,
+      "outputQuantity": 1,
+      "craftTime": 2.0,
+      "requiresBuilding": false
+    },
+    {
+      "recipeId": 4,
+      "recipeName": "Helium-4",
+      "inputs": [
+        { "itemId": 4, "quantity": 2 },
+        { "itemId": 5, "quantity": 2 },
+        { "itemId": 3, "quantity": 2 }
+      ],
+      "outputItemId": 7,
+      "outputQuantity": 1,
+      "craftTime": 4.0,
+      "requiresBuilding": true
+    }
+  ]
+}

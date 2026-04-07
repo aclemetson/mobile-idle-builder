@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "items": [
+    {
+      "itemId": 1,
+      "itemName": "Up Quark",
+      "tierLevel": 0,
+      "codexDescription": "An up quark — one of the two lightest quarks. Electric charge +2/3."
+    },
+    {
+      "itemId": 2,
+      "itemName": "Down Quark",
+      "tierLevel": 0,
+      "codexDescription": "A down quark — one of the two lightest quarks. Electric charge -1/3."
+    },
+    {
+      "itemId": 3,
+      "itemName": "Electron",
+      "tierLevel": 0,
+      "codexDescription": "A fundamental lepton with charge -1. Orbits the nucleus in all atoms."
+    },
+    {
+      "itemId": 4,
+      "itemName": "Proton",
+      "tierLevel": 1,
+      "codexDescription": "A baryon composed of two up quarks and one down quark. Charge +1."
+    },
+    {
+      "itemId": 5,
+      "itemName": "Neutron",
+      "tierLevel": 1,
+      "codexDescription": "A baryon composed of one up quark and two down quarks. Electrically neutral."
+    },
+    {
+      "itemId": 6,
+      "itemName": "Hydrogen",
+      "tierLevel": 2,
+      "codexDescription": "The simplest atom — one proton orbited by one electron. Most abundant element in the universe."
+    },
+    {
+      "itemId": 7,
+      "itemName": "Helium-4",
+      "tierLevel": 2,
+      "codexDescription": "Two protons, two neutrons, two electrons. The primary product of stellar nucleosynthesis."
+    }
+  ]
+}

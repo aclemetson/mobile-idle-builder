@@ -1,0 +1,21 @@
+{
+    "name": "MobileIdleBuilder.Tests",
+    "rootNamespace": "MobileIdleBuilder.Tests",
+    "references": [
+        "MobileIdleBuilder"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

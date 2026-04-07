@@ -1,0 +1,21 @@
+{
+    "name": "MobileIdleBuilder.Editor",
+    "rootNamespace": "MobileIdleBuilder.Editor",
+    "references": [
+        "MobileIdleBuilder",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Entities.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(unzip -l .claude/outline-files.zip)",
       "Bash(unzip -p .claude/outline-files.zip 06-ci-cd.md)",
-      "Bash(unzip -p .claude/outline-files.zip README.md)"
+      "Bash(unzip -p .claude/outline-files.zip README.md)",
+      "Bash(unzip -l outline-files.zip)",
+      "Bash(unzip -o outline-files.zip -d outline-files/)"
     ]
   }
 }
