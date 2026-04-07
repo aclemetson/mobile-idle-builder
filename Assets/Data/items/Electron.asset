@@ -12,9 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
   m_Name: Electron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
-  itemId: 3
-  itemName: Electron
-  tierLevel: 0
+  id: electron
+  displayName: Electron
+  symbol: "e\u207B"
   icon: {fileID: 0}
-  codexDescription: A fundamental lepton with charge -1. Orbits the nucleus in all
-    atoms.
+  itemId: 3
+  tier: 1
+  category: 0
+  tierData: {fileID: 0}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: A fundamental particle with a negative charge. Orbits the nucleus of
+    atoms and determines chemical bonding behavior.
+  codexUnlocked: 0
+  baseSellValue: 0
+  isotopeSellMultiplier: 0

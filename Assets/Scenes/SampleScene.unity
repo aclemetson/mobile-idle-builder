@@ -180,7 +180,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:
@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,6 +383,99 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &827826008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 827826013}
+  - component: {fileID: 827826012}
+  - component: {fileID: 827826011}
+  - component: {fileID: 827826010}
+  - component: {fileID: 827826009}
+  m_Layer: 0
+  m_Name: Bootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &827826009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74fa8ba505b73ae4c8b92500ff91209a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManualCraftService
+--- !u!114 &827826010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e992acbd9735e646bad81078035f410, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeDatabase
+  recipesJsonAsset: {fileID: 4900000, guid: fabdbb24d26dea3448a77ed089ff3f01, type: 3}
+--- !u!114 &827826011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169c60b13fadf284aa6b958a6dac8c99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemDatabase
+  items:
+  - {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
+  - {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+  - {fileID: 11400000, guid: 04d07b51613939847859ccefa2a89880, type: 2}
+  - {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
+  - {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+  - {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+  - {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
+--- !u!114 &827826012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13ac5b8072fb8774b806c1f2fcf9ef71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GameBootstrap
+  gameConfig: {fileID: 0}
+--- !u!4 &827826013
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -485,6 +578,89 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1347028480
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1347028484}
+  - component: {fileID: 1347028483}
+  - component: {fileID: 1347028482}
+  - component: {fileID: 1347028481}
+  m_Layer: 0
+  m_Name: HUD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1347028481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6391de1bdd729fb41970b7050bf79105, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingPlacer
+--- !u!114 &1347028482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19e3518db6f52764483c31420d4b11a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDController
+  craftService: {fileID: 827826009}
+  placementController: {fileID: 1750057545}
+--- !u!114 &1347028483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: deb81829a2178004a9aa3bd4a85a25ef, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 0a188c375c68d604686783e69a357727, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &1347028484
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1590349487
 GameObject:
   m_ObjectHideFlags: 0
@@ -530,6 +706,104 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1750057540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1750057542}
+  - component: {fileID: 1750057541}
+  - component: {fileID: 1750057543}
+  - component: {fileID: 1750057545}
+  - component: {fileID: 1750057544}
+  m_Layer: 0
+  m_Name: Grid
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1750057541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 947cda4e65ca35d48b3bc4ea5af09780, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GridRenderer
+  width: 10
+  height: 10
+  cellSize: 1
+  tileColor: {r: 0.067, g: 0.094, b: 0.102, a: 1}
+  occupiedColor: {r: 0, g: 0.565, b: 0.612, a: 1}
+  ghostValidColor: {r: 0, g: 0.898, b: 1, a: 0.6}
+  ghostInvalidColor: {r: 1, g: 0.09, b: 0.267, a: 0.6}
+  gap: 0.05
+--- !u!4 &1750057542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1750057543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479bd31a66ad9834ebb4788f55894ff1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingVisualizer
+  gridRenderer: {fileID: 1750057541}
+--- !u!114 &1750057544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d192e543ec79294ca65bf47a15c0a05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GridOccupancy
+--- !u!114 &1750057545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bef4d7f39607694d91832f26e13ee43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingPlacementController
+  availableBuildings:
+  - building: {fileID: 0}
+    defaultRecipe: {fileID: 11400000, guid: 990c172c58c320d4b9570223e9ad447a, type: 2}
+  gridRenderer: {fileID: 1750057541}
+  buildingPlacer: {fileID: 1347028481}
+  buildingVisualizer: {fileID: 1750057543}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -538,4 +812,7 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
+  - {fileID: 827826013}
+  - {fileID: 1347028484}
+  - {fileID: 1750057542}
   - {fileID: 1326696566}

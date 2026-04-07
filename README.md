@@ -30,17 +30,23 @@ Full chapter files are in [`.claude/outline-files/`](.claude/outline-files/READM
 
 - [x] Plan phase started
 - [x] Architecture defined (Chapter 04 — DOTS setup, asmdef, core ECS components, Authoring, Systems skeleton)
-  - [ ] (pending) Add `GameConfigSO` (craft time multiplier, power economy, prestige, environment config) — per ScriptableObject-Schemas.md
-  - [ ] (pending) Add `TierSO`, `FieldSO` SO classes — per ScriptableObject-Schemas.md
-  - [ ] (pending) Add `ResearchSO` (research tree nodes, prerequisites, unlock cascades) — per ScriptableObject-Schemas.md
+  - [x] Added `GameConfigSO`, `TierSO`, `FieldSO`, `ResearchSO` — per ScriptableObject-Schemas.md
 - [x] Crafting data foundation (Chapter 02 — ScriptableObjects, RecipeDatabase, recipes.json Tier 0–2)
-  - [ ] (pending) `ItemSO`: add `symbol`, `charge`, `category`, scientific data fields, `isRadioactive`, `decayType`, `isHarvested`, `fieldType`, `isSecondaryParticle`, `baseSellValue` — per ScriptableObject-Schemas.md
-  - [ ] (pending) `RecipeSO`: add `byproducts`, `powerCostIsDynamic`, `fixedPowerCostEV`, `validBuildings`, `knownFromStart`, `requiredResearch`, `unlocksResearch`, `simplificationNote` — per ScriptableObject-Schemas.md
+  - [x] `ItemSO`: full schema fields (symbol, charge, category, scientific data, harvesting, economy)
+  - [x] `RecipeSO`: full schema fields (byproducts, power cost, validBuildings, unlock, simplification)
 - [x] Buildings & Automation core (Chapter 03 — GridPosition, InventorySlot, RecipeInputSlot/RecipeOutputSlot, PlayerInventoryAuthoring, BuildingAuthoring recipe baking, complete ProductionSystem)
-  - [ ] (pending) `BuildingSO`: add `isPowerSource`, `baseOutputEV`, `influenceRadiusTiles`, `linkRadiusTiles`, `placementRule`, `upgradeLevels`, `hasSpecialUpgrade`, `collectsDecayParticles` — per ScriptableObject-Schemas.md
-  - [ ] (pending) Add `PersistentUpgradeSO`, `AchievementSO`, `CosmeticSO` — per ScriptableObject-Schemas.md
+  - [x] `BuildingSO`: full schema fields (power source, upgrade levels, placement rule, decay collection)
+  - [x] Added `PersistentUpgradeSO`, `AchievementSO`, `CosmeticSO`
 - [x] Test infrastructure (Chapter 05 — Tests asmdef, RecipeValidationTests for Tier 0–2 science)
-- [ ] Prototype
+- [ ] Prototype (in progress)
+  - [x] `GameBootstrap` — startup order, `GameConfigSO` holder
+  - [x] `ItemDatabase` — string id → int itemId runtime lookup
+  - [x] `ManualCraftService` — managed ECS bridge (CanCraft / TryCraft / GetInventoryCounts)
+  - [x] `BuildingPlacer` — runtime DOTS entity creation for placing buildings
+  - [x] `GridRenderer` — procedural placeholder tile grid
+  - [x] `HUDController` — UIDocument driver (inventory bar, recipe panel, button wiring)
+  - [x] `GameHUD.uxml` / `GameHUD.uss` — sci-fi HUD layout with design tokens
+  - [ ] Scene wiring (set up GameObjects + SubScene in Unity Editor — see below)
 - [ ] Alpha
 - [ ] Beta
 - [ ] Launch

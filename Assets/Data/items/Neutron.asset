@@ -12,9 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
   m_Name: Neutron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
-  itemId: 5
-  itemName: Neutron
-  tierLevel: 1
+  id: neutron
+  displayName: Neutron
+  symbol: "n\u2070"
   icon: {fileID: 0}
-  codexDescription: A baryon composed of one up quark and two down quarks. Electrically
-    neutral.
+  itemId: 5
+  tier: 1
+  category: 0
+  tierData: {fileID: 0}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: A baryon made of 1 up quark and 2 down quarks. Electrically neutral.
+    Determines the isotope.
+  codexUnlocked: 0
+  baseSellValue: 0
+  isotopeSellMultiplier: 0

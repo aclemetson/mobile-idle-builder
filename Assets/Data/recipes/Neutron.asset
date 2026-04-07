@@ -12,12 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
   m_Name: Neutron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: neutron
+  displayName: Neutron
   recipeId: 2
+  tier: 0
+  category: 0
   inputs:
-  - {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
-  - {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
-  inputQuantities: 0100000002000000
-  output: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+  - item: {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
+    quantity: 2
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
   outputQuantity: 1
-  craftTime: 1
-  requiresBuilding: 0
+  byproducts: []
+  baseCraftTime: 1
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 0
+  validBuildings: []
+  canCraftManually: 1
+  knownFromStart: 0
+  requiredResearch: {fileID: 0}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

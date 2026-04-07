@@ -25,6 +25,7 @@ namespace MobileIdleBuilder.HelperScripts
         {
             public string id;       // e.g. "up_quark"
             public string name;     // e.g. "Up Quark"
+            public string symbol;   // e.g. "u", "p⁺", "H"
             public int    tier;
             public string codex;
         }
@@ -80,6 +81,7 @@ namespace MobileIdleBuilder.HelperScripts
                 so.id          = itemData.id;
                 so.itemId      = itemEcsId++;   // sequential int for ECS
                 so.displayName = itemData.name;
+                so.symbol      = itemData.symbol;
                 so.tier        = itemData.tier;
                 so.codexEntry  = itemData.codex;
 

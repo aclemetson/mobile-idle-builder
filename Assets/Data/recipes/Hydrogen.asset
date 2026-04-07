@@ -12,12 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
   m_Name: Hydrogen
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: hydrogen
+  displayName: Hydrogen
   recipeId: 3
+  tier: 0
+  category: 0
   inputs:
-  - {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
-  - {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
-  inputQuantities: 0100000001000000
-  output: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
+  - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
   outputQuantity: 1
-  craftTime: 2
-  requiresBuilding: 0
+  byproducts: []
+  baseCraftTime: 2
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 0
+  validBuildings: []
+  canCraftManually: 1
+  knownFromStart: 0
+  requiredResearch: {fileID: 0}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

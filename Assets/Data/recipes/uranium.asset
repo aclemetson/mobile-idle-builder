@@ -10,28 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: Proton
+  m_Name: uranium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: proton
-  displayName: Proton
-  recipeId: 1
+  id: uranium
+  displayName: Uranium
+  recipeId: 10
   tier: 0
   category: 0
   inputs:
-  - item: {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
-    quantity: 2
-  - item: {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
-    quantity: 1
+  - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+    quantity: 92
+  - item: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+    quantity: 146
+  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+    quantity: 92
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+  outputItem: {fileID: 0}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 1
+  baseCraftTime: 238
   manualCraftTime: 0
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings: []
-  canCraftManually: 1
+  canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 0}
   unlocksResearch: {fileID: 0}

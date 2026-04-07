@@ -12,9 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
   m_Name: Up_Quark
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
-  itemId: 1
-  itemName: Up Quark
-  tierLevel: 0
+  id: up_quark
+  displayName: Up Quark
+  symbol: u
   icon: {fileID: 0}
-  codexDescription: "An up quark \u2014 one of the two lightest quarks. Electric
-    charge +2/3."
+  itemId: 1
+  tier: 1
+  category: 0
+  tierData: {fileID: 0}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: One of two quark types that make up protons and neutrons. Carries a
+    +2/3 electric charge.
+  codexUnlocked: 0
+  baseSellValue: 0
+  isotopeSellMultiplier: 0
