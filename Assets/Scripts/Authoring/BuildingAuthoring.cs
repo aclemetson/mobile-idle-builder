@@ -35,8 +35,8 @@ namespace MobileIdleBuilder
                 });
 
                 var r = authoring.recipe;
-                int recipeID   = r != null ? r.recipeId : -1;
-                float craftTime = r != null ? r.craftTime : 0f;
+                int recipeID    = r != null ? r.recipeId : -1;
+                float craftTime = r != null ? r.baseCraftTime : 0f;
 
                 AddComponent(entity, new RecipeProcessData
                 {
@@ -52,22 +52,22 @@ namespace MobileIdleBuilder
                 {
                     for (int i = 0; i < r.inputs.Length; i++)
                     {
-                        if (r.inputs[i] == null) continue;
+                        if (r.inputs[i].item == null) continue;
                         inputBuffer.Add(new RecipeInputSlot
                         {
-                            ItemID   = r.inputs[i].itemId,
-                            Quantity = (i < r.inputQuantities.Length) ? r.inputQuantities[i] : 1
+                            ItemID   = r.inputs[i].item.itemId,
+                            Quantity = r.inputs[i].quantity
                         });
                     }
                 }
 
                 // Bake recipe output slot
                 var outputBuffer = AddBuffer<RecipeOutputSlot>(entity);
-                if (r != null && r.output != null)
+                if (r != null && r.outputItem != null)
                 {
                     outputBuffer.Add(new RecipeOutputSlot
                     {
-                        ItemID   = r.output.itemId,
+                        ItemID   = r.outputItem.itemId,
                         Quantity = r.outputQuantity
                     });
                 }

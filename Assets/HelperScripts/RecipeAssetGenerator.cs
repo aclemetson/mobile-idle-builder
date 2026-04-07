@@ -15,24 +15,23 @@ namespace MobileIdleBuilder.HelperScripts
     /// </summary>
     public static class RecipeAssetGenerator
     {
-        private const string ItemsJsonPath   = "Assets/Data/items.json";
-        private const string RecipesJsonPath = "Assets/Data/recipes.json";
-        private const string ItemsOutputDir  = "Assets/Data/Items";
+        private const string ItemsJsonPath    = "Assets/Data/items.json";
+        private const string RecipesJsonPath  = "Assets/Data/recipes.json";
+        private const string ItemsOutputDir   = "Assets/Data/Items";
         private const string RecipesOutputDir = "Assets/Data/Recipes";
 
         [System.Serializable]
         private class ItemJson
         {
-            public int    itemId;
-            public string itemName;
-            public int    tierLevel;
-            public string codexDescription;
+            public string id;       // e.g. "up_quark"
+            public string name;     // e.g. "Up Quark"
+            public int    tier;
+            public string codex;
         }
 
         [System.Serializable]
         private class ItemListJson
         {
-            public string version;
             public List<ItemJson> items;
         }
 
@@ -57,17 +56,20 @@ namespace MobileIdleBuilder.HelperScripts
 
             var itemList   = JsonUtility.FromJson<ItemListJson>(itemsJson.text);
             var recipeList = JsonUtility.FromJson<RecipeListJson>(recipesJson.text);
+            var validRecipes = RecipeDatabase.ParseValidRecipes(recipeList.recipes);
 
             EnsureDirectory(ItemsOutputDir);
             EnsureDirectory(RecipesOutputDir);
 
             // ── Generate ItemSO assets ─────────────────────────────────────
+            // itemLookup keyed by string id (e.g. "up_quark")
 
-            var itemLookup = new Dictionary<int, ItemSO>();
+            var itemLookup = new Dictionary<string, ItemSO>();
+            int itemEcsId = 1;
 
             foreach (var itemData in itemList.items)
             {
-                string assetPath = $"{ItemsOutputDir}/{Sanitize(itemData.itemName)}.asset";
+                string assetPath = $"{ItemsOutputDir}/{Sanitize(itemData.id)}.asset";
                 var so = AssetDatabase.LoadAssetAtPath<ItemSO>(assetPath);
                 if (so == null)
                 {
@@ -75,21 +77,24 @@ namespace MobileIdleBuilder.HelperScripts
                     AssetDatabase.CreateAsset(so, assetPath);
                 }
 
-                so.itemId           = itemData.itemId;
-                so.itemName         = itemData.itemName;
-                so.tierLevel        = itemData.tierLevel;
-                so.codexDescription = itemData.codexDescription;
+                so.id          = itemData.id;
+                so.itemId      = itemEcsId++;   // sequential int for ECS
+                so.displayName = itemData.name;
+                so.tier        = itemData.tier;
+                so.codexEntry  = itemData.codex;
 
                 EditorUtility.SetDirty(so);
-                itemLookup[itemData.itemId] = so;
-                Debug.Log($"[Generator] ItemSO: {itemData.itemName} (id {itemData.itemId})");
+                itemLookup[itemData.id] = so;
+                Debug.Log($"[Generator] ItemSO: {itemData.name} (id '{itemData.id}')");
             }
 
             // ── Generate RecipeSO assets ───────────────────────────────────
 
-            foreach (var recipeData in recipeList.recipes)
+            int recipeEcsId = 1;
+
+            foreach (var recipeData in validRecipes)
             {
-                string assetPath = $"{RecipesOutputDir}/{Sanitize(recipeData.recipeName)}.asset";
+                string assetPath = $"{RecipesOutputDir}/{Sanitize(recipeData.id)}.asset";
                 var so = AssetDatabase.LoadAssetAtPath<RecipeSO>(assetPath);
                 if (so == null)
                 {
@@ -97,42 +102,45 @@ namespace MobileIdleBuilder.HelperScripts
                     AssetDatabase.CreateAsset(so, assetPath);
                 }
 
-                so.recipeId       = recipeData.recipeId;
-                so.craftTime      = recipeData.craftTime;
-                so.outputQuantity = recipeData.outputQuantity;
-                so.requiresBuilding = recipeData.requiresBuilding;
+                so.id             = recipeData.id;
+                so.recipeId       = recipeEcsId++;   // sequential int for ECS
+                so.displayName    = recipeData.name;
+                so.baseCraftTime  = recipeData.base_craft_time;
+                so.outputQuantity = recipeData.output.quantity;
+                so.canCraftManually = !recipeData.requiresBuilding;
 
-                // Wire output
-                so.output = itemLookup.TryGetValue(recipeData.outputItemId, out var outputItem)
+                // Wire output item
+                so.outputItem = itemLookup.TryGetValue(recipeData.output.id, out var outputItem)
                     ? outputItem
                     : null;
 
-                if (so.output == null)
-                    Debug.LogWarning($"[Generator] Recipe '{recipeData.recipeName}': output itemId {recipeData.outputItemId} not found in items.json");
+                if (so.outputItem == null)
+                    Debug.LogWarning($"[Generator] Recipe '{recipeData.name}': output '{recipeData.output.id}' not found in items.json");
 
-                // Wire inputs
-                int inputCount = recipeData.inputs?.Count ?? 0;
-                so.inputs          = new ItemSO[inputCount];
-                so.inputQuantities = new int[inputCount];
+                // Wire inputs as RecipeIngredient[]
+                so.inputs = new RecipeIngredient[recipeData.inputs.Count];
 
-                for (int i = 0; i < inputCount; i++)
+                for (int i = 0; i < recipeData.inputs.Count; i++)
                 {
                     var inputData = recipeData.inputs[i];
-                    so.inputs[i]          = itemLookup.TryGetValue(inputData.itemId, out var inputItem) ? inputItem : null;
-                    so.inputQuantities[i] = inputData.quantity;
+                    so.inputs[i] = new RecipeIngredient
+                    {
+                        item     = itemLookup.TryGetValue(inputData.id, out var inputItem) ? inputItem : null,
+                        quantity = inputData.quantity
+                    };
 
-                    if (so.inputs[i] == null)
-                        Debug.LogWarning($"[Generator] Recipe '{recipeData.recipeName}': input itemId {inputData.itemId} not found in items.json");
+                    if (so.inputs[i].item == null)
+                        Debug.LogWarning($"[Generator] Recipe '{recipeData.name}': input '{inputData.id}' not found in items.json");
                 }
 
                 EditorUtility.SetDirty(so);
-                Debug.Log($"[Generator] RecipeSO: {recipeData.recipeName} (id {recipeData.recipeId})");
+                Debug.Log($"[Generator] RecipeSO: {recipeData.name} (id '{recipeData.id}')");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"[Generator] Done — {itemList.items.Count} items, {recipeList.recipes.Count} recipes.");
+            Debug.Log($"[Generator] Done — {itemList.items.Count} items, {validRecipes.Count} recipes.");
         }
 
         private static void EnsureDirectory(string path)

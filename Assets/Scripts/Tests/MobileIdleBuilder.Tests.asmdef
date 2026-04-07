@@ -2,9 +2,15 @@
     "name": "MobileIdleBuilder.Tests",
     "rootNamespace": "MobileIdleBuilder.Tests",
     "references": [
-        "MobileIdleBuilder"
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "MobileIdleBuilder",
+        "Unity.Entities",
+        "Unity.Collections"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
@@ -14,8 +20,5 @@
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false,
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ]
+    "noEngineReferences": false
 }

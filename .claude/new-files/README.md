@@ -31,17 +31,12 @@ Players begin crafting manually, then unlock **buildings** that automate product
 | 14 | [14-deployment-monetization.md](14-deployment-monetization.md) | Full deployment & monetization strategy |
 | 15 | [15-research-system.md](15-research-system.md) | Research system & content gating |
 | 16 | [16-narrative-dialogue.md](16-narrative-dialogue.md) | Narrative layer & in-game dialogue |
-| SO | [ScriptableObject-Schemas.md](ScriptableObject-Schemas.md) | Full field definitions for all ScriptableObject types |
 
 ---
 
 ## Project Status
 - [x] Plan phase started
-- [x] Architecture defined (Chapter 04 — DOTS setup, asmdef, core ECS components, Authoring, Systems skeleton)
-- [x] Crafting data foundation (Chapter 02 — ScriptableObjects, RecipeDatabase, recipes.json Tier 0–2)
-- [x] Buildings & Automation core (Chapter 03 — GridPosition, InventorySlot, RecipeInputSlot/RecipeOutputSlot, PlayerInventoryAuthoring, BuildingAuthoring recipe baking, complete ProductionSystem)
-- [x] Test infrastructure (Chapter 05 — Tests asmdef, RecipeValidationTests for Tier 0–2 science)
-- [x] Game design systems (Chapter 01 — GameEnums, full SO schemas, PrestigeData/System, PlayerProgressData, TutorialStateData/System)
+- [ ] Architecture defined
 - [ ] Prototype
 - [ ] Alpha
 - [ ] Beta
