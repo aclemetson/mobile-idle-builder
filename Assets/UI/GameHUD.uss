@@ -1,35 +1,10 @@
 /* ================================================================
-   GameHUD.uss — Design token system for Mobile Idle Builder HUD
-   All colours, spacing and typography live here.
+   GameHUD.uss — HUD component styles for Mobile Idle Builder
+   Design tokens are defined in tokens.uss — do not hardcode values here.
    ================================================================ */
 
-/* ---- Design tokens ---- */
-:root {
-    --color-primary:        #00e5ff;
-    --color-secondary:      #7c4dff;
-    --color-background:     #0a0e1a;
-    --color-surface:        #111827;
-    --color-surface-raised: #1a2336;
-    --color-text-primary:   #e0f7fa;
-    --color-text-secondary: #546e7a;
-    --color-warning:        #ffab00;
-    --color-danger:         #ff1744;
-    --color-success:        #00e676;
-    --color-border:         #1e3a5f;
-
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-
-    --font-size-sm: 11px;
-    --font-size-md: 14px;
-    --font-size-lg: 18px;
-    --font-size-xl: 24px;
-
-    --border-radius: 4px;
-    --panel-height:  60%;
-}
+@import url("tokens.uss");
+@import url("components.uss");
 
 /* ---- Root ---- */
 .root {
@@ -68,6 +43,43 @@
     color: var(--color-warning);
     font-size: var(--font-size-md);
     margin-left: var(--spacing-sm);
+}
+
+/* ---- Top bar buttons ---- */
+.prestige-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: rgba(0, 230, 118, 0.12);
+    border-color: var(--color-success);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-success);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    display: none; /* hidden until prestige threshold is met — C# toggles display */
+}
+
+.prestige-btn:hover {
+    background-color: rgba(0, 230, 118, 0.24);
+}
+
+.settings-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: rgba(255,255,255,0.06);
+    border-color: var(--color-border);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin-left: var(--spacing-sm);
+}
+
+.settings-btn:hover {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 /* ---- Grid area (passthrough — touch events fall through to world) ---- */
@@ -117,7 +129,7 @@
     left: 0;
     right: 0;
     bottom: 56px;   /* sits above the bottom bar */
-    height: var(--panel-height);
+    height: 60%;
     background-color: var(--color-surface);
     border-top-width: 1px;
     border-top-color: var(--color-border);

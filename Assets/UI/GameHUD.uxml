@@ -1,12 +1,22 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Reusable component templates -->
+    <ui:Template name="ItemSlot"           src="Components/ItemSlot.uxml" />
+    <ui:Template name="ProgressBar"        src="Components/ProgressBar.uxml" />
+    <ui:Template name="TierBadge"          src="Components/TierBadge.uxml" />
+    <ui:Template name="TooltipPopup"       src="Components/TooltipPopup.uxml" />
+    <ui:Template name="NotificationBanner" src="Components/NotificationBanner.uxml" />
+
+    <Style src="tokens.uss" />
     <Style src="GameHUD.uss" />
 
     <ui:VisualElement name="root" class="root">
 
         <!-- ═══ TOP BAR ═══ -->
         <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:Button name="btn-prestige"   text="⬆ Prestige" class="prestige-btn" />
             <ui:VisualElement name="inventory-bar" class="inventory-bar" />
             <ui:Label name="power-label" text="⚡ 0 eV" class="power-label" />
+            <ui:Button name="btn-settings"   text="⚙"           class="settings-btn" />
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
@@ -43,6 +53,52 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
+        <!-- ═══ CODEX PANEL ═══ -->
+        <ui:VisualElement name="codex-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Codex" class="panel-title" />
+                <ui:Button name="btn-close-codex" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="codex-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ RESEARCH PANEL ═══ -->
+        <ui:VisualElement name="research-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Research" class="panel-title" />
+                <ui:Button name="btn-close-research" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="research-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ UPGRADES PANEL ═══ -->
+        <ui:VisualElement name="upgrades-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Upgrades" class="panel-title" />
+                <ui:Button name="btn-close-upgrades" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="upgrades-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ PRESTIGE PANEL ═══ -->
+        <ui:VisualElement name="prestige-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Prestige" class="panel-title" />
+                <ui:Button name="btn-close-prestige" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="prestige-content" class="recipe-list">
+                <ui:Label name="prestige-summary"  text="Net worth: —"      class="recipe-name" />
+                <ui:Label name="prestige-currency" text="You will receive: —" class="recipe-inputs" />
+                <ui:Button name="btn-confirm-prestige" text="Prestige Now" class="craft-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ═══ PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="placement-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="placement-bar" class="placement-bar">
@@ -51,6 +107,12 @@
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
+        <ui:Instance template="NotificationBanner" name="notification-instance" />
+
+        <!-- ═══ TOOLTIP POPUP (singleton, positioned in C#) ═══ -->
+        <ui:Instance template="TooltipPopup" name="tooltip-instance" />
 
     </ui:VisualElement>
 </ui:UXML>

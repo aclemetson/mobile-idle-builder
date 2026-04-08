@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        TierBadge — displays a colour-coded tier number on an item or building.
+        Usage: clone this template in C#, query ".tier-badge", then call
+               AddToClassList("tier-badge-[N]") where N is 0 through 5.
+    -->
+    <Style src="../tokens.uss" />
+    <Style src="../components.uss" />
+
+    <ui:Label name="tier-badge" text="T0" class="tier-badge tier-badge--0" />
+</ui:UXML>

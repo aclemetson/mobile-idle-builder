@@ -1,0 +1,40 @@
+/* ================================================================
+   tokens.uss — Design token system for Mobile Idle Builder
+   Single source of truth for all colours, spacing, typography,
+   and border values. Import this file in every USS stylesheet;
+   never hardcode these values directly in components.
+   ================================================================ */
+
+:root {
+    /* ---- Colours ---- */
+    --color-primary:        #00e5ff;   /* Cyan accent */
+    --color-secondary:      #7c4dff;   /* Purple accent */
+    --color-background:     #0a0e1a;   /* Deep space dark */
+    --color-surface:        #111827;   /* Panel background */
+    --color-surface-raised: #1a2336;   /* Elevated card / row */
+    --color-text-primary:   #e0f7fa;   /* Light cyan text */
+    --color-text-secondary: #546e7a;   /* Muted / secondary text */
+    --color-warning:        #ffab00;   /* Alerts, energy warnings */
+    --color-danger:         #ff1744;   /* Errors, decay events */
+    --color-success:        #00e676;   /* Unlock, completion */
+    --color-border:         #1e3a5f;   /* Subtle panel borders */
+
+    /* ---- Spacing ---- */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+
+    /* ---- Typography ---- */
+    --font-size-sm: 11px;
+    --font-size-md: 14px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+
+    /* ---- Borders ---- */
+    --border-radius:  4px;
+    /* Note: UI Toolkit does not support box-shadow, so --border-glow cannot be
+       applied directly. Use it as a reference value in C# via IStyle or custom
+       shader effects when a glow is needed. */
+    --border-glow-color: #00e5ff;  /* matches --color-primary; drive opacity in code */
+}

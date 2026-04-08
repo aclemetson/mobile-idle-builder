@@ -1,8 +1,10 @@
 name: Tests
 
-on:
-  pull_request:
-    branches: [main, develop, "release/*"]
+# CI disabled temporarily — re-enable when GitHub Actions issues are resolved
+# on:
+#   pull_request:
+#     branches: [main, develop, "release/*"]
+on: workflow_dispatch:
 
 concurrency:
   group: test-${{ github.ref }}

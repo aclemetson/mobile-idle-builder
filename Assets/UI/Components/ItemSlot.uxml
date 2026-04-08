@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        ItemSlot — displays one inventory item: icon, name, quantity, tier badge.
+        Clone in C# via VisualTreeAsset.Instantiate(), then set:
+          - item-slot__icon   background-image to the item's sprite
+          - item-slot__name   text to item display name
+          - item-slot__quantity text to formatted quantity ("x 42")
+          - tier-badge        AddToClassList("tier-badge-[N]") + set text "TN"
+    -->
+    <Style src="../tokens.uss" />
+    <Style src="../components.uss" />
+
+    <ui:VisualElement name="item-slot" class="item-slot">
+        <ui:VisualElement name="item-slot__icon" class="item-slot__icon" />
+        <ui:VisualElement name="item-slot__info" class="item-slot__info">
+            <ui:Label name="item-slot__name"     text="Item Name" class="item-slot__name" />
+            <ui:Label name="item-slot__quantity"  text="x 0"       class="item-slot__quantity" />
+        </ui:VisualElement>
+        <ui:Label name="tier-badge" text="T0" class="tier-badge tier-badge--0" />
+    </ui:VisualElement>
+</ui:UXML>

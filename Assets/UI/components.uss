@@ -1,0 +1,172 @@
+/* ================================================================
+   components.uss — Reusable UI component styles
+   Covers: TierBadge, ItemSlot, ProgressBar, TooltipPopup,
+           NotificationBanner, PanelContainer.
+   Import tokens.uss before this file.
+   ================================================================ */
+
+@import url("tokens.uss");
+
+/* ================================================================
+   TierBadge
+   ================================================================ */
+
+.tier-badge {
+    padding: 1px var(--spacing-xs);
+    border-radius: 3px;
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    min-width: 20px;
+}
+
+/* One modifier class per tier — set in C# via AddToClassList */
+.tier-badge--0 { background-color: #2a2a2a; color: #9e9e9e; border-color: #444; border-width: 1px; }
+.tier-badge--1 { background-color: #1b3a1b; color: #00e676; border-color: #00e676; border-width: 1px; }
+.tier-badge--2 { background-color: #0d2d4a; color: #00e5ff; border-color: #00e5ff; border-width: 1px; }
+.tier-badge--3 { background-color: #2a1b4a; color: #7c4dff; border-color: #7c4dff; border-width: 1px; }
+.tier-badge--4 { background-color: #3a2800; color: #ffab00; border-color: #ffab00; border-width: 1px; }
+.tier-badge--5 { background-color: #3a0d1b; color: #ff1744; border-color: #ff1744; border-width: 1px; }
+
+/* ================================================================
+   ItemSlot
+   ================================================================ */
+
+.item-slot {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    min-width: 80px;
+}
+
+.item-slot__icon {
+    width: 32px;
+    height: 32px;
+    margin-right: var(--spacing-xs);
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.item-slot__info {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.item-slot__name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.item-slot__quantity {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* ================================================================
+   ProgressBar
+   ================================================================ */
+
+.progress-bar {
+    flex-direction: column;
+}
+
+.progress-bar__label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: 2px;
+}
+
+.progress-bar__track {
+    height: 6px;
+    background-color: var(--color-surface);
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: var(--color-border);
+    overflow: hidden;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    background-color: var(--color-primary);
+    border-radius: 3px;
+    /* width is set in C# as a percentage */
+}
+
+/* Colour modifiers — swap class in C# based on context */
+.progress-bar__fill--warning { background-color: var(--color-warning); }
+.progress-bar__fill--danger  { background-color: var(--color-danger); }
+.progress-bar__fill--success { background-color: var(--color-success); }
+
+/* ================================================================
+   TooltipPopup
+   ================================================================ */
+
+.tooltip-popup {
+    position: absolute;
+    min-width: 180px;
+    max-width: 260px;
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    padding: var(--spacing-sm);
+    flex-direction: column;
+    /* position is set in C# based on the triggering element */
+}
+
+.tooltip-popup__title {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.tooltip-popup__body {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+}
+
+/* ================================================================
+   NotificationBanner
+   ================================================================ */
+
+.notification-banner {
+    position: absolute;
+    left: var(--spacing-md);
+    right: var(--spacing-md);
+    top: 56px; /* below top bar */
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-success);
+    /* shown/hidden via .hidden class toggled in C# */
+}
+
+.notification-banner__icon {
+    font-size: var(--font-size-lg);
+    margin-right: var(--spacing-sm);
+    color: var(--color-success);
+}
+
+.notification-banner__message {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    flex-grow: 1;
+}
+
+.notification-banner--warning { border-color: var(--color-warning); }
+.notification-banner--warning .notification-banner__icon { color: var(--color-warning); }
+
+.notification-banner--danger { border-color: var(--color-danger); }
+.notification-banner--danger .notification-banner__icon { color: var(--color-danger); }

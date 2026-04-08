@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        NotificationBanner — transient unlock / achievement / prestige-ready alert.
+        One instance lives in GameHUD. C# sets the icon + message text,
+        optionally swaps the modifier class (warning / danger),
+        then removes .hidden. Auto-hides after a delay via C#.
+    -->
+    <Style src="../tokens.uss" />
+    <Style src="../components.uss" />
+
+    <ui:VisualElement name="notification-banner" class="notification-banner hidden">
+        <ui:Label name="notification-banner__icon"    text="✓" class="notification-banner__icon" />
+        <ui:Label name="notification-banner__message" text=""  class="notification-banner__message" />
+    </ui:VisualElement>
+</ui:UXML>

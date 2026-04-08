@@ -1,8 +1,10 @@
 name: Build
 
-on:
-  push:
-    branches: [main, develop, "release/*"]
+# CI disabled temporarily — re-enable when GitHub Actions issues are resolved
+# on:
+#   push:
+#     branches: [main, develop, "release/*"]
+on: workflow_dispatch:
 
 concurrency:
   group: build-${{ github.ref }}

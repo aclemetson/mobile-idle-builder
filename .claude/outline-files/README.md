@@ -42,6 +42,8 @@ Players begin crafting manually, then unlock **buildings** that automate product
 - [x] Buildings & Automation core (Chapter 03 — GridPosition, InventorySlot, RecipeInputSlot/RecipeOutputSlot, PlayerInventoryAuthoring, BuildingAuthoring recipe baking, complete ProductionSystem)
 - [x] Test infrastructure (Chapter 05 — Tests asmdef, RecipeValidationTests for Tier 0–2 science)
 - [x] Game design systems (Chapter 01 — GameEnums, full SO schemas, PrestigeData/System, PlayerProgressData, TutorialStateData/System)
+- [ ] CI/CD (Chapter 06 — PARKED: workflows disabled, to be revisited)
+- [x] Reusable components (Chapter 07 — tokens.uss, components.uss, UXML templates: ItemSlot/ProgressBar/TierBadge/TooltipPopup/NotificationBanner, full HUD with all 6 panels)
 - [ ] Prototype
 - [ ] Alpha
 - [ ] Beta

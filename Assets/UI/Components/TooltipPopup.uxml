@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        TooltipPopup — educational tooltip / codex preview overlay.
+        One instance lives in GameHUD; C# positions it near the triggering element
+        and populates title + body, then removes .hidden to show it.
+    -->
+    <Style src="../tokens.uss" />
+    <Style src="../components.uss" />
+
+    <ui:VisualElement name="tooltip-popup" class="tooltip-popup hidden">
+        <ui:Label name="tooltip-popup__title" text="Title"       class="tooltip-popup__title" />
+        <ui:Label name="tooltip-popup__body"  text="Description" class="tooltip-popup__body" />
+    </ui:VisualElement>
+</ui:UXML>

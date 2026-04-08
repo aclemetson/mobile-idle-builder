@@ -73,7 +73,8 @@ namespace MobileIdleBuilder
 
         void OnDestroy()
         {
-            if (_buildingQuery != default)
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (_buildingQuery != null && world != null && world.IsCreated)
                 _buildingQuery.Dispose();
         }
     }
