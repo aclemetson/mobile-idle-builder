@@ -69,21 +69,25 @@ jobs:
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
           New-Item -ItemType Directory -Force -Path build/Android | Out-Null
+          New-Item -ItemType Directory -Force -Path Logs | Out-Null
           & $env:UNITY_PATH `
             -batchmode `
             -quit `
             -projectPath . `
             -buildTarget Android `
-            -logFile - `
+            -logFile Logs/build.log `
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
-          exit $LASTEXITCODE
+          $exitCode = $LASTEXITCODE
+          Write-Host "=== Unity Build Log ==="
+          Get-Content Logs/build.log -ErrorAction SilentlyContinue
+          exit $exitCode
 
-      - name: Upload Unity Editor Log
+      - name: Upload Unity Build Log
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: unity-editor-log
-          path: C:\Users\Anthony Clemetson\AppData\Local\Unity\Editor\Editor.log
+          name: unity-build-log
+          path: Logs/build.log
           retention-days: 3
 
       - name: List Build Output
