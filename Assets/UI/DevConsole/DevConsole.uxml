@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../tokens.uss" />
+    <Style src="DevConsole.uss" />
+
+    <ui:VisualElement name="dev-console-root" class="dev-console hidden">
+
+        <ui:VisualElement name="dev-console-header" class="dev-console__header">
+            <ui:Label name="dev-console-title" text="&#x26A0; DEV CONSOLE &#x2014; NOT FOR RELEASE" class="dev-console__title" />
+            <ui:Button name="btn-close-console" text="&#x2715;" class="dev-console__close-btn" />
+        </ui:VisualElement>
+
+        <ui:ScrollView name="dev-console-log"
+                       class="dev-console__log"
+                       vertical-scroller-visibility="Auto"
+                       horizontal-scroller-visibility="Hidden" />
+
+        <ui:VisualElement name="dev-console-input-row" class="dev-console__input-row">
+            <ui:Label text=">" class="dev-console__prompt" />
+            <ui:TextField name="dev-console-input" class="dev-console__input" />
+            <ui:Button name="btn-submit-console" text="Run" class="dev-console__submit-btn" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

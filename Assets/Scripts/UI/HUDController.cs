@@ -13,6 +13,8 @@ namespace MobileIdleBuilder
     {
         [SerializeField] private ManualCraftService          craftService;
         [SerializeField] private BuildingPlacementController placementController;
+        [SerializeField] private AchievementService          achievementService;
+        [SerializeField] private PVPService                  pvpService;
         [SerializeField] private float                       notificationDuration = 3f;
 
         // ---- ECS ----
@@ -25,13 +27,15 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _placementOverlay;
+                              _achievementsPanel, _pvpPanel, _placementOverlay;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
-                           _researchList, _upgradesList;
-        private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
+                           _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
+        private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+        private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
+        private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
         private VisualElement _inventoryBar;
@@ -67,12 +71,24 @@ namespace MobileIdleBuilder
 
             if (placementController != null)
                 placementController.OnPlacingChanged += OnPlacingChanged;
+
+            if (achievementService != null)
+                achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
+
+            if (pvpService != null)
+                pvpService.OnStateChanged += OnPVPStateChanged;
         }
 
         void OnDisable()
         {
             if (placementController != null)
                 placementController.OnPlacingChanged -= OnPlacingChanged;
+
+            if (achievementService != null)
+                achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
+
+            if (pvpService != null)
+                pvpService.OnStateChanged -= OnPVPStateChanged;
         }
 
         void Start()
@@ -106,30 +122,41 @@ namespace MobileIdleBuilder
             _btnPrestige  = root.Q<Button>("btn-prestige");
 
             // Panels
-            _recipePanel    = root.Q("recipe-panel");
-            _buildingsPanel = root.Q("buildings-panel");
-            _codexPanel     = root.Q("codex-panel");
-            _researchPanel  = root.Q("research-panel");
-            _upgradesPanel  = root.Q("upgrades-panel");
-            _prestigePanel  = root.Q("prestige-panel");
-            _placementOverlay = root.Q("placement-overlay");
+            _recipePanel       = root.Q("recipe-panel");
+            _buildingsPanel    = root.Q("buildings-panel");
+            _codexPanel        = root.Q("codex-panel");
+            _researchPanel     = root.Q("research-panel");
+            _upgradesPanel     = root.Q("upgrades-panel");
+            _achievementsPanel = root.Q("achievements-panel");
+            _pvpPanel          = root.Q("pvp-panel");
+            _prestigePanel     = root.Q("prestige-panel");
+            _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _prestigePanel
+                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel
             };
 
             // Panel content
-            _recipeList    = root.Q<ScrollView>("recipe-list");
-            _buildingsList = root.Q<ScrollView>("buildings-list");
-            _codexList     = root.Q<ScrollView>("codex-list");
-            _researchList  = root.Q<ScrollView>("research-list");
-            _upgradesList  = root.Q<ScrollView>("upgrades-list");
+            _recipeList       = root.Q<ScrollView>("recipe-list");
+            _buildingsList    = root.Q<ScrollView>("buildings-list");
+            _codexList        = root.Q<ScrollView>("codex-list");
+            _researchList     = root.Q<ScrollView>("research-list");
+            _upgradesList     = root.Q<ScrollView>("upgrades-list");
+            _achievementsList    = root.Q<ScrollView>("achievements-list");
+            _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
+
+            _pvpStateLabel     = root.Q<Label>("pvp-state-label");
+            _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
+            _pvpLockLabel      = root.Q<Label>("pvp-lock-label");
+            _pvpCompletedLabel = root.Q<Label>("pvp-completed-label");
+            _btnEnterPVP       = root.Q<Button>("btn-enter-pvp");
 
             _prestigeSummary  = root.Q<Label>("prestige-summary");
             _prestigeCurrency = root.Q<Label>("prestige-currency");
             _placementLabel   = root.Q<Label>("placement-label");
+            _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Notification banner — inner element inside "notification-instance" TemplateContainer
             _notificationBanner  = root.Q("notification-banner");
@@ -145,23 +172,36 @@ namespace MobileIdleBuilder
         private void BindButtons(VisualElement root)
         {
             // Bottom bar panel launchers
-            root.Q<Button>("btn-recipes").clicked   += OpenRecipePanel;
-            root.Q<Button>("btn-buildings").clicked += OpenBuildingsPanel;
-            root.Q<Button>("btn-codex").clicked     += OpenCodexPanel;
-            root.Q<Button>("btn-research").clicked  += OpenResearchPanel;
-            root.Q<Button>("btn-upgrades").clicked  += OpenUpgradesPanel;
+            root.Q<Button>("btn-recipes").clicked      += OpenRecipePanel;
+            root.Q<Button>("btn-buildings").clicked    += OpenBuildingsPanel;
+            root.Q<Button>("btn-codex").clicked        += OpenCodexPanel;
+            root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
+            root.Q<Button>("btn-upgrades").clicked     += OpenUpgradesPanel;
+            root.Q<Button>("btn-achievements").clicked += OpenAchievementsPanel;
+            root.Q<Button>("btn-pvp").clicked          += OpenPVPPanel;
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
             root.Q<Button>("btn-settings").clicked += () => Debug.Log("[HUD] Settings — coming soon");
 
             // Panel close buttons
-            root.Q<Button>("btn-close-recipes").clicked   += () => SetElementVisible(_recipePanel,    false);
-            root.Q<Button>("btn-close-buildings").clicked += () => SetElementVisible(_buildingsPanel, false);
-            root.Q<Button>("btn-close-codex").clicked     += () => SetElementVisible(_codexPanel,     false);
-            root.Q<Button>("btn-close-research").clicked  += () => SetElementVisible(_researchPanel,  false);
-            root.Q<Button>("btn-close-upgrades").clicked  += () => SetElementVisible(_upgradesPanel,  false);
-            root.Q<Button>("btn-close-prestige").clicked  += () => SetElementVisible(_prestigePanel,  false);
+            root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
+            root.Q<Button>("btn-close-buildings").clicked    += () => SetElementVisible(_buildingsPanel,    false);
+            root.Q<Button>("btn-close-codex").clicked        += () => SetElementVisible(_codexPanel,        false);
+            root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
+            root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
+            root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
+            root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
+            root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
+
+            // PVP actions (queried after _btnEnterPVP is set in QueryElements)
+            if (_btnEnterPVP != null)
+                _btnEnterPVP.clicked += OnEnterPVPPressed;
+            root.Q<Button>("btn-refresh-leaderboard").clicked += () =>
+            {
+                if (pvpService != null)
+                    StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
+            };
 
             // Placement
             root.Q<Button>("btn-cancel-placement").clicked += () => placementController?.CancelPlacement();
@@ -271,6 +311,137 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             // Content is populated when SpecialUpgradeSO data is wired in
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenAchievementsPanel()
+        {
+            CloseAllPanels();
+            BuildAchievementsList();
+            SetElementVisible(_achievementsPanel, true);
+        }
+
+        private void OnAchievementUnlocked(AchievementSO _)
+        {
+            // Refresh the title counter whenever a new achievement completes
+            if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
+                BuildAchievementsList();
+        }
+
+        // ============================================================
+        // PVP panel
+        // ============================================================
+
+        private void OpenPVPPanel()
+        {
+            CloseAllPanels();
+            BuildPVPPanel();
+            SetElementVisible(_pvpPanel, true);
+
+            // Kick off leaderboard fetch whenever the panel opens
+            if (pvpService != null)
+                StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
+        }
+
+        private void OnPVPStateChanged()
+        {
+            if (_pvpPanel != null && !_pvpPanel.ClassListContains("hidden"))
+                BuildPVPPanel();
+        }
+
+        private void BuildPVPPanel()
+        {
+            if (pvpService == null) return;
+
+            var state = pvpService.State;
+
+            // --- state label ---
+            if (_pvpStateLabel != null)
+                _pvpStateLabel.text = state switch
+                {
+                    PVPState.Locked    => "Locked",
+                    PVPState.Available => "Available — this week's competition is open!",
+                    PVPState.InRun     => $"In Run — {pvpService.FormatTimeRemaining()} remaining",
+                    PVPState.Completed => "Run complete — score submitted",
+                    _                  => "—"
+                };
+
+            // --- timer (only visible during a run) ---
+            if (_pvpTimerLabel != null)
+                _pvpTimerLabel.text = state == PVPState.InRun ? pvpService.FormatTimeRemaining() : "";
+
+            // --- lock label ---
+            if (_pvpLockLabel != null)
+            {
+                bool showLock = state == PVPState.Locked;
+                _pvpLockLabel.text = showLock
+                    ? $"Complete {PVPService.PvpPrestigeUnlockCount} prestiges to unlock Weekly Competition."
+                    : "";
+                SetElementVisible(_pvpLockLabel, showLock);
+            }
+
+            // --- enter button (only when available) ---
+            if (_btnEnterPVP != null)
+                SetElementVisible(_btnEnterPVP, state == PVPState.Available);
+
+            // --- completed label ---
+            if (_pvpCompletedLabel != null)
+            {
+                bool showCompleted = state == PVPState.Completed;
+                _pvpCompletedLabel.text = showCompleted
+                    ? "Your score has been submitted. Rewards are distributed after the competition window closes."
+                    : "";
+                SetElementVisible(_pvpCompletedLabel, showCompleted);
+            }
+        }
+
+        private void OnEnterPVPPressed()
+        {
+            if (pvpService == null || !pvpService.CanEnterCompetition) return;
+            if (!_ecsReady || _progressQuery.IsEmpty) return;
+
+            // Reset the grid/inventory via ECS (same mechanism as prestige)
+            var entity   = _progressQuery.GetSingletonEntity();
+            var progress = _em.GetComponentData<PlayerProgressData>(entity);
+            progress.PVPRunRequested = true;
+            _em.SetComponentData(entity, progress);
+
+            // Record run start in save data
+            pvpService.MarkRunStarted();
+
+            SetElementVisible(_pvpPanel, false);
+            ShowNotification("⚔", "Competition run started! 48 hours on the clock.");
+        }
+
+        private void PopulatePVPLeaderboard(System.Collections.Generic.List<LeaderboardEntry> entries)
+        {
+            if (_pvpLeaderboardList == null) return;
+            _pvpLeaderboardList.Clear();
+
+            if (entries == null || entries.Count == 0)
+            {
+                _pvpLeaderboardList.Add(new Label("No leaderboard data yet."));
+                return;
+            }
+
+            foreach (var entry in entries)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("leaderboard-row");
+
+                var rankLabel   = new Label($"#{entry.rank}");
+                rankLabel.AddToClassList("leaderboard-row__rank");
+
+                var playerLabel = new Label(entry.playerId);
+                playerLabel.AddToClassList("leaderboard-row__player");
+
+                var scoreLabel  = new Label(entry.score.ToString("N0"));
+                scoreLabel.AddToClassList("leaderboard-row__score");
+
+                row.Add(rankLabel);
+                row.Add(playerLabel);
+                row.Add(scoreLabel);
+                _pvpLeaderboardList.Add(row);
+            }
         }
 
         private void OpenPrestigePanel()
@@ -394,6 +565,77 @@ namespace MobileIdleBuilder
                 card.Add(recipeLabel);
                 card.Add(placeBtn);
                 _buildingsList.Add(card);
+            }
+        }
+
+        // ============================================================
+        // Achievements list
+        // ============================================================
+
+        private void BuildAchievementsList()
+        {
+            if (_achievementsList == null) return;
+            _achievementsList.Clear();
+
+            var all = achievementService?.GetAll();
+            if (all == null || all.Count == 0)
+            {
+                _achievementsList.Add(new Label("No achievements defined."));
+                return;
+            }
+
+            int completed = achievementService.CompletedCount;
+            if (_achievementsTitle != null)
+                _achievementsTitle.text = $"Achievements ({completed} / {all.Count})";
+
+            foreach (var achievement in all)
+            {
+                bool isDone   = achievementService.IsCompleted(achievement.id);
+                bool isHidden = achievement.isHidden && !isDone;
+
+                var row = new VisualElement();
+                row.AddToClassList("achievement-row");
+                if (isDone) row.AddToClassList("achievement-row--completed");
+
+                // Check / lock indicator
+                var checkLabel = new Label(isDone ? "✓" : "○");
+                checkLabel.AddToClassList("achievement-row__check");
+
+                // Body
+                var body = new VisualElement();
+                body.AddToClassList("achievement-row__body");
+
+                var nameLabel = new Label(isHidden ? "???" : achievement.displayName);
+                nameLabel.AddToClassList("achievement-row__name");
+
+                var descLabel = new Label(isHidden ? "Complete a hidden objective to reveal." : achievement.description);
+                descLabel.AddToClassList("achievement-row__description");
+
+                body.Add(nameLabel);
+                body.Add(descLabel);
+
+                // Progress (only for quantity > 1 and not hidden)
+                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                {
+                    int progress = achievementService.GetProgress(achievement.id);
+                    var progLabel = new Label($"{progress} / {achievement.triggerQuantity}");
+                    progLabel.AddToClassList("achievement-row__progress");
+                    body.Add(progLabel);
+                }
+
+                // Rewards (only if not hidden)
+                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
+                {
+                    var rewardNames = string.Join(", ", System.Array.ConvertAll(
+                        achievement.rewards, r => r != null ? r.displayName : "?"));
+                    var rewardLabel = new Label($"Reward: {rewardNames}");
+                    rewardLabel.AddToClassList("achievement-row__rewards");
+                    body.Add(rewardLabel);
+                }
+
+                row.Add(checkLabel);
+                row.Add(body);
+                _achievementsList.Add(row);
             }
         }
 

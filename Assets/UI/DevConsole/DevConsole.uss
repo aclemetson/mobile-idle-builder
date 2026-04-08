@@ -1,0 +1,107 @@
+/* DevConsole.uss — Dev-only overlay panel styles */
+
+.hidden {
+    display: none;
+}
+
+.dev-console {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 45%;
+    background-color: rgba(10, 5, 0, 0.95);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--color-warning);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    flex-direction: column;
+}
+
+.dev-console__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: rgba(255, 171, 0, 0.18);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-warning);
+}
+
+.dev-console__title {
+    color: var(--color-warning);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.dev-console__close-btn {
+    padding: 2px 8px;
+    background-color: rgba(255, 171, 0, 0.15);
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    min-width: 28px;
+}
+
+.dev-console__log {
+    flex-grow: 1;
+    padding: 6px 12px;
+}
+
+.dev-console__log .log-entry {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+.dev-console__log .log-entry--error {
+    color: var(--color-danger);
+}
+
+.dev-console__log .log-entry--success {
+    color: var(--color-success);
+}
+
+.dev-console__log .log-entry--info {
+    color: var(--color-text-secondary);
+}
+
+.dev-console__input-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 12px;
+    border-top-width: 1px;
+    border-top-color: var(--color-warning);
+    min-height: 40px;
+}
+
+.dev-console__prompt {
+    color: var(--color-warning);
+    font-size: var(--font-size-md);
+    margin-right: 6px;
+    -unity-font-style: bold;
+}
+
+.dev-console__input {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-warning);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+}
+
+.dev-console__input .unity-base-text-field__input {
+    color: #000000;
+}
+
+.dev-console__submit-btn {
+    margin-left: 8px;
+    padding: 4px 12px;
+    background-color: rgba(255, 171, 0, 0.15);
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+}

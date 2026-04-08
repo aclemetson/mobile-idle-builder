@@ -44,6 +44,9 @@ Players begin crafting manually, then unlock **buildings** that automate product
 - [x] Game design systems (Chapter 01 — GameEnums, full SO schemas, PrestigeData/System, PlayerProgressData, TutorialStateData/System)
 - [ ] CI/CD (Chapter 06 — PARKED: workflows disabled, to be revisited)
 - [x] Reusable components (Chapter 07 — tokens.uss, components.uss, UXML templates: ItemSlot/ProgressBar/TierBadge/TooltipPopup/NotificationBanner, full HUD with all 6 panels)
+- [x] Online Storage (Chapter 08 — Unity save system: SaveData, LocalSaveService, ICloudSaveService, CloudSaveService, SaveManager; infra/: Terraform modules for DynamoDB/Lambda/API Gateway/Cognito/AppSync/SNS + dev/staging/prod environments + Makefile)
+- [x] Achievements (Chapter 09 — AchievementDatabase SO, AchievementService (singleton MonoBehaviour with Notify* API, trigger evaluation, cosmetic unlock stubs, platform SDK stubs), AchievementProgressEntry in SaveData, AchievementRow.uxml component, achievements panel in GameHUD.uxml + HUDController wired with BuildAchievementsList)
+- [x] PVP / Competitive (Chapter 10 — PVPState enum, PVPRunData in SaveData, PVPService singleton (MarkRunStarted, FetchLeaderboardAsync, ExpireRunAsync → POST /pvp/submit, ResetForNewWeek), PVPSystem (ECS reset on PVPRunRequested), PVPRunRequested on PlayerProgressData, LeaderboardEntry/LeaderboardRow.uxml, pvp-panel in GameHUD.uxml + HUDController fully wired (BuildPVPPanel, OnEnterPVPPressed, PopulatePVPLeaderboard))
 - [ ] Prototype
 - [ ] Alpha
 - [ ] Beta

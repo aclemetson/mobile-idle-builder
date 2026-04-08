@@ -13,5 +13,6 @@ namespace MobileIdleBuilder
         public float NetWorth;              // calculated from all placed buildings + inventory
         public bool PrestigeAvailable;      // set true by PrestigeSystem when wall is hit
         public bool PrestigeRequested;      // set true by UI when player taps prestige button
+        public bool PVPRunRequested;        // set true by UI when player enters competition
     }
 }

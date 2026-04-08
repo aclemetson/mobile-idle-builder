@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../components.uss" />
+
+    <ui:VisualElement name="achievement-row" class="achievement-row">
+
+        <!-- Icon / completed badge -->
+        <ui:VisualElement name="achievement-row__icon-wrap" class="achievement-row__icon-wrap">
+            <ui:VisualElement name="achievement-row__icon"    class="achievement-row__icon" />
+            <ui:Label         name="achievement-row__check"   class="achievement-row__check" text="✓" />
+        </ui:VisualElement>
+
+        <!-- Text block -->
+        <ui:VisualElement name="achievement-row__body" class="achievement-row__body">
+            <ui:Label name="achievement-row__name"        class="achievement-row__name"        text="???" />
+            <ui:Label name="achievement-row__description" class="achievement-row__description" text="???" />
+            <ui:Label name="achievement-row__progress"    class="achievement-row__progress"    text="" />
+            <ui:Label name="achievement-row__rewards"     class="achievement-row__rewards"     text="" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

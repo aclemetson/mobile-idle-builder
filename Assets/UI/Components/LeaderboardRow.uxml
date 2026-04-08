@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="leaderboard-row" class="leaderboard-row">
+        <ui:Label name="leaderboard-row__rank"   text="#1"       class="leaderboard-row__rank" />
+        <ui:Label name="leaderboard-row__player" text="player"   class="leaderboard-row__player" />
+        <ui:Label name="leaderboard-row__score"  text="0"        class="leaderboard-row__score" />
+    </ui:VisualElement>
+</ui:UXML>

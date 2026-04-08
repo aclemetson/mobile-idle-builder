@@ -383,6 +383,74 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &481950131
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 481950134}
+  - component: {fileID: 481950133}
+  - component: {fileID: 481950132}
+  m_Layer: 0
+  m_Name: DevConsole
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &481950132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481950131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8976096ffd7a27c4392624022eba4022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.Dev.DevConsoleController
+--- !u!114 &481950133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481950131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: deb81829a2178004a9aa3bd4a85a25ef, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 9deed7c9944f7a1429e4c413f3f418f3, type: 3}
+  m_SortingOrder: 10
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &481950134
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481950131}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &827826008
 GameObject:
   m_ObjectHideFlags: 0
@@ -396,6 +464,7 @@ GameObject:
   - component: {fileID: 827826011}
   - component: {fileID: 827826010}
   - component: {fileID: 827826009}
+  - component: {fileID: 827826014}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -476,6 +545,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &827826014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bdc864bfdefbe24bb503eecce832124, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.Dev.DevConsoleBootstrap
+  devConsolePrefab: {fileID: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -623,6 +705,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDController
   craftService: {fileID: 827826009}
   placementController: {fileID: 1750057545}
+  achievementService: {fileID: 0}
+  pvpService: {fileID: 0}
+  notificationDuration: 3
 --- !u!114 &1347028483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -815,4 +900,5 @@ SceneRoots:
   - {fileID: 827826013}
   - {fileID: 1347028484}
   - {fileID: 1750057542}
+  - {fileID: 481950134}
   - {fileID: 1326696566}

@@ -5,6 +5,8 @@
     <ui:Template name="TierBadge"          src="Components/TierBadge.uxml" />
     <ui:Template name="TooltipPopup"       src="Components/TooltipPopup.uxml" />
     <ui:Template name="NotificationBanner" src="Components/NotificationBanner.uxml" />
+    <ui:Template name="AchievementRow"     src="Components/AchievementRow.uxml" />
+    <ui:Template name="LeaderboardRow"    src="Components/LeaderboardRow.uxml" />
 
     <Style src="tokens.uss" />
     <Style src="GameHUD.uss" />
@@ -24,11 +26,13 @@
 
         <!-- ═══ BOTTOM BAR ═══ -->
         <ui:VisualElement name="bottom-bar" class="bottom-bar">
-            <ui:Button name="btn-buildings" text="Buildings" class="panel-btn" />
-            <ui:Button name="btn-recipes"   text="Recipes"   class="panel-btn" />
-            <ui:Button name="btn-codex"     text="Codex"     class="panel-btn" />
-            <ui:Button name="btn-research"  text="Research"  class="panel-btn" />
-            <ui:Button name="btn-upgrades"  text="Upgrades"  class="panel-btn" />
+            <ui:Button name="btn-buildings"    text="Buildings"    class="panel-btn" />
+            <ui:Button name="btn-recipes"      text="Recipes"      class="panel-btn" />
+            <ui:Button name="btn-codex"        text="Codex"        class="panel-btn" />
+            <ui:Button name="btn-research"     text="Research"     class="panel-btn" />
+            <ui:Button name="btn-upgrades"     text="Upgrades"     class="panel-btn" />
+            <ui:Button name="btn-achievements" text="Achievements" class="panel-btn" />
+            <ui:Button name="btn-pvp"          text="Competition"  class="panel-btn" />
         </ui:VisualElement>
 
         <!-- ═══ RECIPE PANEL ═══ -->
@@ -86,6 +90,17 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
+        <!-- ═══ ACHIEVEMENTS PANEL ═══ -->
+        <ui:VisualElement name="achievements-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label name="achievements-title" text="Achievements (0)" class="panel-title" />
+                <ui:Button name="btn-close-achievements" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="achievements-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
         <!-- ═══ PRESTIGE PANEL ═══ -->
         <ui:VisualElement name="prestige-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
@@ -97,6 +112,32 @@
                 <ui:Label name="prestige-currency" text="You will receive: —" class="recipe-inputs" />
                 <ui:Button name="btn-confirm-prestige" text="Prestige Now" class="craft-btn" />
             </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ PVP PANEL ═══ -->
+        <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Weekly Competition" class="panel-title" />
+                <ui:Button name="btn-close-pvp" text="✕" class="close-btn" />
+            </ui:VisualElement>
+
+            <!-- Status section -->
+            <ui:VisualElement name="pvp-status-section" class="recipe-list">
+                <ui:Label name="pvp-state-label"    text="—"                    class="recipe-name" />
+                <ui:Label name="pvp-timer-label"    text=""                     class="recipe-inputs" />
+                <ui:Label name="pvp-lock-label"     text=""                     class="recipe-inputs" />
+                <ui:Button name="btn-enter-pvp"     text="Enter Competition"    class="craft-btn" />
+                <ui:Label name="pvp-completed-label" text=""                    class="recipe-inputs" />
+            </ui:VisualElement>
+
+            <!-- Leaderboard section -->
+            <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
+                <ui:Label text="Leaderboard" class="panel-title" />
+                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
         <!-- ═══ PLACEMENT OVERLAY ═══ -->
