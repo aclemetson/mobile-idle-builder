@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: carbon_14
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: carbon_14
+  displayName: Carbon-14
+  recipeId: 13
+  tier: 0
+  category: 0
+  inputs:
+  - item: {fileID: 0}
+    quantity: 1
+  - item: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+    quantity: 2
+  neutronAdjustment: []
+  outputItem: {fileID: 0}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 16
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 0
+  validBuildings: []
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 0}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

@@ -1,0 +1,56 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="GameHUD.uss" />
+
+    <ui:VisualElement name="root" class="root">
+
+        <!-- ═══ TOP BAR ═══ -->
+        <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:VisualElement name="inventory-bar" class="inventory-bar" />
+            <ui:Label name="power-label" text="⚡ 0 eV" class="power-label" />
+        </ui:VisualElement>
+
+        <!-- ═══ GRID AREA ═══ -->
+        <ui:VisualElement name="grid-area" class="grid-area" />
+
+        <!-- ═══ BOTTOM BAR ═══ -->
+        <ui:VisualElement name="bottom-bar" class="bottom-bar">
+            <ui:Button name="btn-buildings" text="Buildings" class="panel-btn" />
+            <ui:Button name="btn-recipes"   text="Recipes"   class="panel-btn" />
+            <ui:Button name="btn-codex"     text="Codex"     class="panel-btn" />
+            <ui:Button name="btn-research"  text="Research"  class="panel-btn" />
+            <ui:Button name="btn-upgrades"  text="Upgrades"  class="panel-btn" />
+        </ui:VisualElement>
+
+        <!-- ═══ RECIPE PANEL ═══ -->
+        <ui:VisualElement name="recipe-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Recipes" class="panel-title" />
+                <ui:Button name="btn-close-recipes" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="recipe-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ BUILDINGS PANEL ═══ -->
+        <ui:VisualElement name="buildings-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Buildings" class="panel-title" />
+                <ui:Button name="btn-close-buildings" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="buildings-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ PLACEMENT OVERLAY ═══ -->
+        <ui:VisualElement name="placement-overlay" class="placement-overlay hidden">
+            <ui:VisualElement name="placement-bar" class="placement-bar">
+                <ui:Label name="placement-label" text="Tap an empty tile to place  ·  Esc to cancel"
+                          class="placement-label" />
+                <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,556 @@
+{
+  "_comment": "recipes.json — Canonical source of truth for all crafting recipes. All base_craft_time values are in seconds and should be tuned here, never hardcoded in game logic.",
+
+  "config": {
+    "version": "0.1.0",
+    "base_craft_time_multiplier": 1.0,
+    "_comment": "Multiply all base_craft_time values by this for global tuning. Persistent upgrade 'craft_speed' reduces this multiplier.",
+    "atomic_assembler_ev_per_mass_unit": 5,
+    "_comment_ev": "Base eV cost per atomic mass unit for Atomic Assembler recipes. Recipe power_cost_ev = atomic_mass × atomic_assembler_ev_per_mass_unit. Tune this single value to rebalance the entire power economy.",
+    "isotopic_manipulator_ev_per_neutron": 8,
+    "_comment_isotope_ev": "Base eV cost per neutron added/removed in the Isotopic Manipulator.",
+    "manual_craft_time_base": 1.0,
+    "_comment_manual": "Base manual craft time in seconds for tier 1 nucleons. More complex recipes scale from this."
+  },
+
+  "raw_resources": [
+    {
+      "id": "up_quark",
+      "name": "Up Quark",
+      "symbol": "u",
+      "charge": "+2/3",
+      "field_type": "positive",
+      "tier": 1,
+      "harvested": true,
+      "codex": "One of two quark types that make up protons and neutrons. Carries a +2/3 electric charge."
+    },
+    {
+      "id": "down_quark",
+      "name": "Down Quark",
+      "symbol": "d",
+      "charge": "-1/3",
+      "field_type": "negative",
+      "tier": 1,
+      "harvested": true,
+      "codex": "One of two quark types that make up protons and neutrons. Carries a -1/3 electric charge."
+    },
+    {
+      "id": "electron",
+      "name": "Electron",
+      "symbol": "e⁻",
+      "charge": "-1",
+      "field_type": "lepton",
+      "tier": 1,
+      "harvested": true,
+      "codex": "A fundamental particle with a negative charge. Orbits the nucleus of atoms and determines chemical bonding behavior."
+    }
+  ],
+
+  "recipes": [
+
+    {
+      "_section": "TIER 1 — SUBATOMIC"
+    },
+
+    {
+      "id": "proton",
+      "name": "Proton",
+      "symbol": "p⁺",
+      "tier": 1,
+      "charge": "+1",
+      "inputs": [
+        { "id": "up_quark", "quantity": 2 },
+        { "id": "down_quark", "quantity": 1 }
+      ],
+      "output": { "id": "proton", "quantity": 1 },
+      "base_craft_time": 1.0,
+      "manual_craft_time": 1.0,
+      "power_cost_ev": 0,
+      "crafted_in": ["inventory_menu", "strong_force_combiner"],
+      "simplification": null,
+      "codex": "A positively charged nucleon made of 2 up quarks and 1 down quark, bound by the strong nuclear force. The number of protons in a nucleus defines which element it is."
+    },
+
+    {
+      "id": "neutron",
+      "name": "Neutron",
+      "symbol": "n⁰",
+      "tier": 1,
+      "charge": "0",
+      "inputs": [
+        { "id": "up_quark", "quantity": 1 },
+        { "id": "down_quark", "quantity": 2 }
+      ],
+      "output": { "id": "neutron", "quantity": 1 },
+      "base_craft_time": 1.0,
+      "manual_craft_time": 1.0,
+      "power_cost_ev": 0,
+      "crafted_in": ["inventory_menu", "strong_force_combiner"],
+      "simplification": null,
+      "codex": "A neutral nucleon made of 1 up quark and 2 down quarks. Neutrons stabilize the nucleus — changing the neutron count produces isotopes of the same element."
+    },
+
+    {
+      "_section": "TIER 2 — ATOMIC (standard isotopes via Atomic Assembler)"
+    },
+
+    {
+      "id": "hydrogen",
+      "name": "Hydrogen",
+      "symbol": "H",
+      "atomic_number": 1,
+      "atomic_mass": 1,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 1 },
+        { "id": "neutron", "quantity": 0 },
+        { "id": "electron", "quantity": 1 }
+      ],
+      "output": { "id": "hydrogen", "quantity": 1 },
+      "base_craft_time": 2.0,
+      "manual_craft_time": 2.0,
+      "power_cost_ev": 5,
+      "_comment_ev": "power_cost_ev = atomic_mass(1) × atomic_assembler_ev_per_mass_unit(5)",
+      "crafted_in": ["inventory_menu", "atomic_assembler"],
+      "simplification": null,
+      "codex": "The simplest and most abundant element in the universe. One proton, one electron — no neutrons in its most common form. The primary fuel of stars."
+    },
+
+    {
+      "id": "helium",
+      "name": "Helium",
+      "symbol": "He",
+      "atomic_number": 2,
+      "atomic_mass": 4,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 2 },
+        { "id": "neutron", "quantity": 2 },
+        { "id": "electron", "quantity": 2 }
+      ],
+      "output": { "id": "helium", "quantity": 1 },
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_ev": 20,
+      "_comment_ev": "power_cost_ev = atomic_mass(4) × atomic_assembler_ev_per_mass_unit(5)",
+      "crafted_in": ["atomic_assembler"],
+      "alternate_recipe": {
+        "id": "helium_fusion",
+        "crafted_in": ["fusion_generator"],
+        "inputs": [
+          { "id": "deuterium", "quantity": 1 },
+          { "id": "tritium", "quantity": 1 }
+        ],
+        "byproducts": [
+          { "id": "neutron", "quantity": 1 },
+          { "id": "alpha_particle", "quantity": 1 }
+        ],
+        "requires_research": "nuclear_fusion",
+        "note": "Fusion path produces alpha particles as byproduct energy source"
+      },
+      "simplification": null,
+      "codex": "The second lightest element, produced in stellar cores through hydrogen fusion. Noble gas — chemically inert. Its nucleus (2 protons + 2 neutrons) is also known as an alpha particle."
+    },
+
+    {
+      "id": "lithium",
+      "name": "Lithium",
+      "symbol": "Li",
+      "atomic_number": 3,
+      "atomic_mass": 7,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 3 },
+        { "id": "neutron", "quantity": 4 },
+        { "id": "electron", "quantity": 3 }
+      ],
+      "output": { "id": "lithium", "quantity": 1 },
+      "base_craft_time": 7.0,
+      "manual_craft_time": 7.0,
+      "power_cost_ev": 35,
+      "crafted_in": ["atomic_assembler"],
+      "simplification": null,
+      "codex": "A soft alkali metal and the lightest solid element. Critical in battery technology — the backbone of rechargeable batteries used in mobile devices."
+    },
+
+    {
+      "id": "carbon",
+      "name": "Carbon",
+      "symbol": "C",
+      "atomic_number": 6,
+      "atomic_mass": 12,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 6 },
+        { "id": "neutron", "quantity": 6 },
+        { "id": "electron", "quantity": 6 }
+      ],
+      "output": { "id": "carbon", "quantity": 1 },
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_ev": 60,
+      "crafted_in": ["atomic_assembler"],
+      "simplification": null,
+      "codex": "The basis of all organic chemistry. Carbon's ability to form four bonds makes it the backbone of life. Also exists as graphite, diamond, and graphene."
+    },
+
+    {
+      "id": "oxygen",
+      "name": "Oxygen",
+      "symbol": "O",
+      "atomic_number": 8,
+      "atomic_mass": 16,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 8 },
+        { "id": "neutron", "quantity": 8 },
+        { "id": "electron", "quantity": 8 }
+      ],
+      "output": { "id": "oxygen", "quantity": 1 },
+      "base_craft_time": 16.0,
+      "manual_craft_time": 16.0,
+      "power_cost_ev": 80,
+      "crafted_in": ["atomic_assembler"],
+      "simplification": null,
+      "codex": "The third most abundant element in the universe. Highly reactive, essential for combustion and respiration. Makes up 21% of Earth's atmosphere."
+    },
+
+    {
+      "id": "silicon",
+      "name": "Silicon",
+      "symbol": "Si",
+      "atomic_number": 14,
+      "atomic_mass": 28,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 14 },
+        { "id": "neutron", "quantity": 14 },
+        { "id": "electron", "quantity": 14 }
+      ],
+      "output": { "id": "silicon", "quantity": 1 },
+      "base_craft_time": 28.0,
+      "manual_craft_time": 28.0,
+      "power_cost_ev": 140,
+      "crafted_in": ["atomic_assembler"],
+      "simplification": null,
+      "codex": "A semiconductor at the heart of modern electronics. Silicon wafers are the foundation of processors, solar cells, and transistors."
+    },
+
+    {
+      "id": "iron",
+      "name": "Iron",
+      "symbol": "Fe",
+      "atomic_number": 26,
+      "atomic_mass": 56,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 26 },
+        { "id": "neutron", "quantity": 30 },
+        { "id": "electron", "quantity": 26 }
+      ],
+      "output": { "id": "iron", "quantity": 1 },
+      "base_craft_time": 56.0,
+      "manual_craft_time": 56.0,
+      "power_cost_ev": 280,
+      "crafted_in": ["atomic_assembler"],
+      "simplification": null,
+      "codex": "The most common element on Earth by mass. The endpoint of stellar fusion — stars cannot fuse elements heavier than iron without consuming more energy than they produce."
+    },
+
+    {
+      "id": "uranium",
+      "name": "Uranium",
+      "symbol": "U",
+      "atomic_number": 92,
+      "atomic_mass": 238,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 92 },
+        { "id": "neutron", "quantity": 146 },
+        { "id": "electron", "quantity": 92 }
+      ],
+      "output": { "id": "uranium", "quantity": 1 },
+      "base_craft_time": 238.0,
+      "manual_craft_time": 238.0,
+      "power_cost_ev": 1190,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "heavy_elements",
+      "simplification": null,
+      "codex": "The heaviest naturally occurring element. Radioactive — decays slowly over billions of years. The primary fuel for nuclear fission reactors."
+    },
+
+    {
+      "_section": "TIER 2 — ISOTOPES (via Isotopic Manipulator)"
+    },
+
+    {
+      "id": "deuterium",
+      "name": "Deuterium",
+      "symbol": "H-2",
+      "base_element": "hydrogen",
+      "atomic_number": 1,
+      "atomic_mass": 2,
+      "neutrons_added": 1,
+      "radioactive": false,
+      "tier": 2,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 1 },
+        { "id": "neutron", "quantity": 1 }
+      ],
+      "output": { "id": "deuterium", "quantity": 1 },
+      "base_craft_time": 8.0,
+      "power_cost_ev": 8,
+      "_comment_ev": "power_cost_ev = neutrons_added(1) × isotopic_manipulator_ev_per_neutron(8)",
+      "crafted_in": ["isotopic_manipulator"],
+      "requires_research": "isotopes",
+      "simplification": null,
+      "codex": "A stable isotope of hydrogen with one neutron added. Found naturally in heavy water. Essential fuel for nuclear fusion reactions."
+    },
+
+    {
+      "id": "tritium",
+      "name": "Tritium",
+      "symbol": "H-3",
+      "base_element": "hydrogen",
+      "atomic_number": 1,
+      "atomic_mass": 3,
+      "neutrons_added": 2,
+      "radioactive": true,
+      "decay_type": "beta",
+      "decay_byproduct": "beta_particle",
+      "half_life_note": "12.3 years",
+      "tier": 2,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 1 },
+        { "id": "neutron", "quantity": 2 }
+      ],
+      "output": { "id": "tritium", "quantity": 1 },
+      "base_craft_time": 16.0,
+      "power_cost_ev": 16,
+      "crafted_in": ["isotopic_manipulator"],
+      "requires_research": "isotopes",
+      "simplification": null,
+      "codex": "A radioactive isotope of hydrogen with two neutrons. Undergoes beta decay. Combined with deuterium in the most efficient known fusion reaction."
+    },
+
+    {
+      "id": "carbon_14",
+      "name": "Carbon-14",
+      "symbol": "C-14",
+      "base_element": "carbon",
+      "atomic_number": 6,
+      "atomic_mass": 14,
+      "neutrons_added": 2,
+      "radioactive": true,
+      "decay_type": "beta",
+      "decay_byproduct": "beta_particle",
+      "half_life_note": "5,730 years",
+      "tier": 2,
+      "inputs": [
+        { "id": "carbon", "quantity": 1 },
+        { "id": "neutron", "quantity": 2 }
+      ],
+      "output": { "id": "carbon_14", "quantity": 1 },
+      "base_craft_time": 16.0,
+      "power_cost_ev": 16,
+      "crafted_in": ["isotopic_manipulator"],
+      "requires_research": "isotopes",
+      "unlocks_research": "carbon_dating",
+      "simplification": null,
+      "codex": "A radioactive isotope of carbon used in archaeological dating. Its predictable decay rate allows scientists to estimate the age of organic materials up to 50,000 years old."
+    },
+
+    {
+      "id": "uranium_235",
+      "name": "Uranium-235",
+      "symbol": "U-235",
+      "base_element": "uranium",
+      "atomic_number": 92,
+      "atomic_mass": 235,
+      "neutrons_removed": 3,
+      "radioactive": true,
+      "decay_type": "alpha",
+      "decay_byproduct": "alpha_particle",
+      "fissile": true,
+      "half_life_note": "703.8 million years",
+      "tier": 2,
+      "inputs": [
+        { "id": "uranium", "quantity": 1 }
+      ],
+      "neutron_adjustment": -3,
+      "output": { "id": "uranium_235", "quantity": 1 },
+      "base_craft_time": 24.0,
+      "power_cost_ev": 24,
+      "crafted_in": ["isotopic_manipulator"],
+      "requires_research": "radioactive_isotopes",
+      "simplification": null,
+      "codex": "The fissile isotope of uranium used in nuclear reactors and weapons. Splitting U-235 releases enormous energy and produces alpha particles as decay byproducts."
+    },
+
+    {
+      "_section": "SPECIAL PARTICLES (byproducts and secondary currency)"
+    },
+
+    {
+      "id": "alpha_particle",
+      "name": "Alpha Particle",
+      "symbol": "α",
+      "tier": 2,
+      "harvested": false,
+      "produced_by": "radioactive_decay",
+      "equivalent_to": "helium_nucleus",
+      "use": ["secondary_currency", "late_game_recipe_input", "energy_recovery"],
+      "codex": "Emitted during alpha decay of heavy radioactive isotopes. Equivalent to a helium-4 nucleus. Collected by Radioactive Containment buildings and used as a secondary energy currency."
+    },
+
+    {
+      "id": "beta_particle",
+      "name": "Beta Particle",
+      "symbol": "β",
+      "tier": 2,
+      "harvested": false,
+      "produced_by": "radioactive_decay",
+      "equivalent_to": "high_energy_electron",
+      "use": ["secondary_currency", "energy_recovery"],
+      "codex": "Emitted during beta decay of unstable isotopes like Tritium and Carbon-14. A high-energy electron. Collected by Radioactive Containment buildings and fed back into the power grid."
+    }
+
+  ],
+
+  "buildings": [
+
+    {
+      "_section": "TIER 1 BUILDINGS"
+    },
+
+    {
+      "id": "harvester",
+      "name": "Harvester",
+      "tier": 1,
+      "category": "core",
+      "requires_power": false,
+      "base_output_rate": 1.0,
+      "_comment": "Output rate is items/second. Works on any field type, outputs that field's resource.",
+      "compatible_fields": ["positive", "negative", "lepton"],
+      "placement_rule": "must_be_on_field",
+      "upgrade_path": [
+        { "level": 2, "output_rate": 2.0, "cost_base_currency": 500 },
+        { "level": 3, "output_rate": 4.0, "cost_base_currency": 2000 },
+        { "level": 4, "output_rate": 8.0, "cost_base_currency": 8000 }
+      ],
+      "special_upgrade": {
+        "id": "nucleon_harvester",
+        "name": "Nucleon Harvester",
+        "requirement": "two_adjacent_harvesters_on_opposite_polarity_fields",
+        "description": "Merges a positive-field and negative-field harvester into a single Nucleon Harvester. Player selects output: Proton or Neutron. Abstracts quark combination entirely.",
+        "output_options": ["proton", "neutron"],
+        "requires_research": "nucleon_harvesting"
+      },
+      "codex": "Extracts fundamental particles from quantum fields. Place on a field to begin harvesting. Positive fields yield Up Quarks, negative fields yield Down Quarks, lepton fields yield Electrons."
+    },
+
+    {
+      "id": "strong_force_combiner",
+      "name": "Strong Force Combiner",
+      "tier": 1,
+      "category": "transient",
+      "requires_power": true,
+      "base_power_cost_ev": 10,
+      "base_output_rate": 1.0,
+      "recipes_supported": ["proton", "neutron"],
+      "upgrade_path": [
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 18, "cost_base_currency": 300 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 30, "cost_base_currency": 1200 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 50, "cost_base_currency": 5000 }
+      ],
+      "becomes_obsolete_when": "nucleon_harvester_unlocked",
+      "tutorial_note": "First powered building. Placement triggers power system tutorial.",
+      "codex": "Uses the strong nuclear force to bind quarks into nucleons. Requires a power source within range to operate."
+    },
+
+    {
+      "id": "basic_generator",
+      "name": "Basic Generator",
+      "tier": 1,
+      "category": "core",
+      "requires_power": false,
+      "base_output_ev": 50,
+      "influence_radius_tiles": 3,
+      "link_radius_tiles": 5,
+      "upgrade_path": [
+        { "level": 2, "output_ev": 100, "influence_radius_tiles": 4, "cost_base_currency": 400 },
+        { "level": 3, "output_ev": 200, "influence_radius_tiles": 5, "cost_base_currency": 1600 },
+        { "level": 4, "output_ev": 400, "influence_radius_tiles": 6, "cost_base_currency": 6000 }
+      ],
+      "tutorial_note": "Introduced immediately after Strong Force Combiner placement. Teaches power radius and energy grid.",
+      "codex": "Generates electron volts (eV) to power nearby buildings. Link multiple generators to share power across the grid."
+    },
+
+    {
+      "_section": "TIER 2 BUILDINGS"
+    },
+
+    {
+      "id": "atomic_assembler",
+      "name": "Atomic Assembler",
+      "tier": 2,
+      "category": "transient",
+      "requires_power": true,
+      "power_cost_ev": "recipe_defined",
+      "_comment_ev": "Power cost determined per recipe: atomic_mass × config.atomic_assembler_ev_per_mass_unit",
+      "input_slots": 3,
+      "input_slot_labels": ["Protons", "Neutrons", "Electrons"],
+      "recipes_supported": "all_standard_isotope_elements",
+      "base_output_rate": 1.0,
+      "upgrade_path": [
+        { "level": 2, "output_rate": 2.0, "cost_base_currency": 1000 },
+        { "level": 3, "output_rate": 4.0, "cost_base_currency": 4000 },
+        { "level": 4, "output_rate": 8.0, "cost_base_currency": 16000 }
+      ],
+      "requires_research": "atomic_assembly",
+      "codex": "Combines protons, neutrons, and electrons into complete atoms. Power cost scales with the complexity of the element being assembled — heavier elements demand more energy."
+    },
+
+    {
+      "id": "isotopic_manipulator",
+      "name": "Isotopic Manipulator",
+      "tier": 2,
+      "category": "transient",
+      "requires_power": true,
+      "power_cost_ev": "recipe_defined",
+      "_comment_ev": "Power cost: neutrons_adjusted × config.isotopic_manipulator_ev_per_neutron",
+      "input_slots": 2,
+      "input_slot_labels": ["Base Element", "Neutrons"],
+      "operation": "add_or_remove_neutrons",
+      "recipes_supported": "all_isotope_recipes",
+      "base_output_rate": 0.5,
+      "_comment_rate": "Slower than Atomic Assembler by default — isotope production is a specialised process",
+      "upgrade_path": [
+        { "level": 2, "output_rate": 1.0, "cost_base_currency": 2000 },
+        { "level": 3, "output_rate": 2.0, "cost_base_currency": 8000 },
+        { "level": 4, "output_rate": 4.0, "cost_base_currency": 32000 }
+      ],
+      "requires_research": "isotopes",
+      "codex": "Adds or removes neutrons from a base element to produce isotopes. Radioactive isotopes produced here will emit decay particles over time if housed in a Radioactive Containment building."
+    },
+
+    {
+      "id": "radioactive_containment",
+      "name": "Radioactive Containment",
+      "tier": 2,
+      "category": "core",
+      "requires_power": true,
+      "base_power_cost_ev": 30,
+      "houses_buildings": ["isotopic_manipulator"],
+      "decay_particle_collection_rate": 1.0,
+      "_comment": "Collects alpha/beta particles emitted by radioactive isotopes being produced inside. Feeds them to Resource Vault as secondary currency.",
+      "upgrade_path": [
+        { "level": 2, "decay_collection_rate": 2.0, "power_cost_ev": 50, "cost_base_currency": 3000 },
+        { "level": 3, "decay_collection_rate": 4.0, "power_cost_ev": 80, "cost_base_currency": 12000 }
+      ],
+      "requires_research": "radioactive_isotopes",
+      "codex": "Required housing for any building producing radioactive isotopes. Safely contains decay events and harvests alpha and beta particles as usable energy currency."
+    }
+
+  ]
+}

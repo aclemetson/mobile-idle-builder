@@ -1,0 +1,53 @@
+{
+  "items": [
+    {
+      "id": "up_quark",
+      "name": "Up Quark",
+      "symbol": "u",
+      "tier": 1,
+      "codex": "One of two quark types that make up protons and neutrons. Carries a +2/3 electric charge."
+    },
+    {
+      "id": "down_quark",
+      "name": "Down Quark",
+      "symbol": "d",
+      "tier": 1,
+      "codex": "One of two quark types that make up protons and neutrons. Carries a -1/3 electric charge."
+    },
+    {
+      "id": "electron",
+      "name": "Electron",
+      "symbol": "e⁻",
+      "tier": 1,
+      "codex": "A fundamental particle with a negative charge. Orbits the nucleus of atoms and determines chemical bonding behavior."
+    },
+    {
+      "id": "proton",
+      "name": "Proton",
+      "symbol": "p⁺",
+      "tier": 1,
+      "codex": "A baryon made of 2 up quarks and 1 down quark. Charge +1. Defines the element."
+    },
+    {
+      "id": "neutron",
+      "name": "Neutron",
+      "symbol": "n⁰",
+      "tier": 1,
+      "codex": "A baryon made of 1 up quark and 2 down quarks. Electrically neutral. Determines the isotope."
+    },
+    {
+      "id": "hydrogen",
+      "name": "Hydrogen",
+      "symbol": "H",
+      "tier": 2,
+      "codex": "The simplest atom — one proton orbited by one electron. Most abundant element in the universe."
+    },
+    {
+      "id": "helium_4",
+      "name": "Helium-4",
+      "symbol": "He",
+      "tier": 2,
+      "codex": "Two protons, two neutrons, two electrons. The primary product of stellar nucleosynthesis."
+    }
+  ]
+}

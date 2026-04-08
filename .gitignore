@@ -76,6 +76,16 @@ mono_crash.*
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Secrets — never commit these
+/secrets/
+*.keystore
+google-services.json
+google-services.json.meta
+GoogleService-Info.plist
+GoogleService-Info.plist.meta
+*.alf
+*.ulf
+
 # TestRunner generated files
 InitTestScene*.unity*
 
