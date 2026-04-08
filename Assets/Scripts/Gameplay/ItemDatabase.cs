@@ -30,6 +30,8 @@ namespace MobileIdleBuilder
             }
         }
 
+        public IReadOnlyList<ItemSO> All => items;
+
         public ItemSO Get(string id)   => _byId.TryGetValue(id, out var v)     ? v : null;
         public ItemSO Get(int itemId)  => _byItemId.TryGetValue(itemId, out var v) ? v : null;
 

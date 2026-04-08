@@ -74,7 +74,7 @@
     padding: 6px 12px;
     border-top-width: 1px;
     border-top-color: var(--color-warning);
-    min-height: 40px;
+    min-height: 56px;
 }
 
 .dev-console__prompt {
@@ -86,6 +86,7 @@
 
 .dev-console__input {
     flex-grow: 1;
+    height: 40px;
     background-color: rgba(255, 255, 255, 0.06);
     border-color: var(--color-warning);
     color: var(--color-text-primary);

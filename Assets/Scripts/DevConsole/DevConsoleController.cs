@@ -230,6 +230,20 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("help", "List all commands",
                 _ => _registry.GetHelpText());
 
+            // ── item listing ─────────────────────────────────────────────────
+            _registry.Register("list items", "List all items with their string IDs",
+                _ =>
+                {
+                    var db = ItemDatabase.Instance;
+                    if (db?.All == null || db.All.Count == 0)
+                        return "Error: ItemDatabase not ready or empty.";
+                    var sb = new System.Text.StringBuilder();
+                    foreach (var item in db.All)
+                        if (item != null)
+                            sb.AppendLine($"  {item.id,-24} {item.symbol} {item.displayName}");
+                    return sb.ToString().TrimEnd();
+                });
+
             // ── currency & prestige currency ─────────────────────────────────
             _registry.Register("add currency <amount>", "Add BaseCurrency",
                 args =>
