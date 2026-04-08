@@ -78,10 +78,22 @@ jobs:
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
           exit $LASTEXITCODE
 
+      - name: Upload Unity Editor Log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unity-editor-log
+          path: C:\Users\Anthony Clemetson\AppData\Local\Unity\Editor\Editor.log
+          retention-days: 3
+
       - name: List Build Output
         shell: powershell
         if: always()
-        run: Get-ChildItem -Recurse build/ -ErrorAction SilentlyContinue | Select-Object FullName
+        run: |
+          Write-Host "=== build/ directory ==="
+          Get-ChildItem -Recurse build/ -ErrorAction SilentlyContinue | Select-Object FullName, Length
+          Write-Host "=== Searching entire workspace for .aab ==="
+          Get-ChildItem -Recurse "${{ github.workspace }}" -Filter "*.aab" -ErrorAction SilentlyContinue | Select-Object FullName, Length
 
       - name: Upload Android Build
         uses: actions/upload-artifact@v4
