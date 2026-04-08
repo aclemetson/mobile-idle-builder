@@ -12,8 +12,8 @@ env:
   UNITY_PATH: "C:/Program Files/Unity/Hub/Editor/6000.3.6f1/Editor/Unity.exe"
 
 jobs:
-  test:
-    name: Run Edit-Mode Tests
+  test-and-build-android:
+    name: Test and Build Android
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -44,16 +44,6 @@ jobs:
           path: test-results
           retention-days: 7
 
-  build-android:
-    name: Build Android
-    needs: test
-    runs-on: self-hosted
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          lfs: true
-
       - name: Decode Keystore
         shell: powershell
         run: |
@@ -74,6 +64,7 @@ jobs:
             -batchmode `
             -quit `
             -projectPath . `
+            -buildTarget Android `
             -logFile Logs/build.log `
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
           $exitCode = $LASTEXITCODE
@@ -88,15 +79,6 @@ jobs:
           name: unity-build-log
           path: Logs/build.log
           retention-days: 3
-
-      - name: List Build Output
-        shell: powershell
-        if: always()
-        run: |
-          Write-Host "=== build/ directory ==="
-          Get-ChildItem -Recurse build/ -ErrorAction SilentlyContinue | Select-Object FullName, Length
-          Write-Host "=== Searching entire workspace for .aab ==="
-          Get-ChildItem -Recurse "${{ github.workspace }}" -Filter "*.aab" -ErrorAction SilentlyContinue | Select-Object FullName, Length
 
       - name: Upload Android Build
         uses: actions/upload-artifact@v4
