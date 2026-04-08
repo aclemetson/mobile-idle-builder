@@ -63,6 +63,10 @@ jobs:
 
       - name: Build Android (.aab)
         shell: powershell
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
           New-Item -ItemType Directory -Force -Path build/Android | Out-Null
           & $env:UNITY_PATH `
@@ -71,7 +75,7 @@ jobs:
             -projectPath . `
             -buildTarget Android `
             -logFile build/unity-build.log `
-            -executeMethod BuildScript.BuildAndroid
+            -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
           $exitCode = $LASTEXITCODE
           Get-Content build/unity-build.log -ErrorAction SilentlyContinue
           exit $exitCode
@@ -92,7 +96,8 @@ jobs:
           $credPath = "${{ github.workspace }}/secrets/firebase-credentials.json"
           Set-Content -Path $credPath -Value $env:GOOGLE_APPLICATION_CREDENTIALS_CONTENT
           $env:GOOGLE_APPLICATION_CREDENTIALS = $credPath
-          $aab = Get-ChildItem "build/Android/*.aab" | Select-Object -First 1
+          $aab = Get-ChildItem "build/Android/*.aab" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $aab) { Write-Error "No .aab file found in build/Android/"; exit 1 }
           firebase appdistribution:distribute $aab.FullName `
             --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" `
             --groups "internal-testers"
