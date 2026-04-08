@@ -57,6 +57,7 @@ jobs:
       - name: Decode Keystore
         shell: powershell
         run: |
+          New-Item -ItemType Directory -Force -Path "${{ github.workspace }}/secrets" | Out-Null
           $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
           [IO.File]::WriteAllBytes("${{ github.workspace }}/secrets/user.keystore", $bytes)
 
