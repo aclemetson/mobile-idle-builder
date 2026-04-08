@@ -80,6 +80,11 @@ jobs:
           Get-Content build/unity-build.log -ErrorAction SilentlyContinue
           exit $exitCode
 
+      - name: List Build Output
+        shell: powershell
+        if: always()
+        run: Get-ChildItem -Recurse build/ -ErrorAction SilentlyContinue | Select-Object FullName
+
       - name: Upload Android Build
         uses: actions/upload-artifact@v4
         with:
