@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
+        private EntityQuery   _buildingQuery;
 
         public bool IsReady { get; private set; }
 
@@ -39,6 +41,12 @@ namespace MobileIdleBuilder
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
+            );
+            _buildingQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<BuildingData>(),
+                ComponentType.ReadWrite<RecipeProcessData>(),
+                ComponentType.ReadOnly<RecipeInputSlot>(),
+                ComponentType.ReadOnly<RecipeOutputSlot>()
             );
             IsReady = true;
         }
@@ -92,6 +100,111 @@ namespace MobileIdleBuilder
             for (int i = 0; i < buffer.Length; i++)
                 result[buffer[i].ItemID] = buffer[i].Quantity;
             return result;
+        }
+
+        // ---- Building craft trigger ----
+
+        /// <summary>
+        /// Returns true if a placed building produces this recipe's output,
+        /// is not already mid-cycle, and the inventory has the required inputs.
+        /// </summary>
+        public bool CanTriggerBuildingCraft(RecipeJson recipe)
+        {
+            if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
+
+            int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
+            if (outputItemId < 0) return false;
+
+            var inventoryBuffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
+
+            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            try
+            {
+                foreach (var entity in entities)
+                {
+                    var process = _em.GetComponentData<RecipeProcessData>(entity);
+                    if (process.IsCrafting) continue;
+
+                    var outputs = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+                    bool outputMatches = false;
+                    for (int i = 0; i < outputs.Length; i++)
+                    {
+                        if (outputs[i].ItemID == outputItemId) { outputMatches = true; break; }
+                    }
+                    if (!outputMatches) continue;
+
+                    // Check inputs
+                    var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+                    bool hasInputs = true;
+                    for (int i = 0; i < inputsBuf.Length; i++)
+                    {
+                        if (Count(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
+                        {
+                            hasInputs = false;
+                            break;
+                        }
+                    }
+                    if (hasInputs) return true;
+                }
+            }
+            finally
+            {
+                entities.Dispose();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Starts one production cycle on a placed building that outputs this recipe's item.
+        /// Returns false if no eligible building is found or inputs are insufficient.
+        /// </summary>
+        public bool TriggerBuildingCraft(RecipeJson recipe)
+        {
+            if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
+
+            int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
+            if (outputItemId < 0) return false;
+
+            var inventoryBuffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
+
+            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            try
+            {
+                foreach (var entity in entities)
+                {
+                    var process = _em.GetComponentData<RecipeProcessData>(entity);
+                    if (process.IsCrafting) continue;
+
+                    var outputs = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+                    bool outputMatches = false;
+                    for (int i = 0; i < outputs.Length; i++)
+                    {
+                        if (outputs[i].ItemID == outputItemId) { outputMatches = true; break; }
+                    }
+                    if (!outputMatches) continue;
+
+                    var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+                    bool hasInputs = true;
+                    for (int i = 0; i < inputsBuf.Length; i++)
+                    {
+                        if (Count(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
+                        {
+                            hasInputs = false;
+                            break;
+                        }
+                    }
+                    if (!hasInputs) continue;
+
+                    process.IsCrafting = true;
+                    _em.SetComponentData(entity, process);
+                    return true;
+                }
+            }
+            finally
+            {
+                entities.Dispose();
+            }
+            return false;
         }
 
         // ---- Buffer helpers ----

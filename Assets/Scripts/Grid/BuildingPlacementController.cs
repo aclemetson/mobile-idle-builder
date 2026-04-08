@@ -104,25 +104,10 @@ namespace MobileIdleBuilder
             }
         }
 
-        // ---- Input helpers (supports both new Input System and editor mouse) ----
+        // ---- Input helpers — delegate to shared InputUtils ----
 
-        private static Vector2 GetPointerPosition()
-        {
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-                return Touchscreen.current.primaryTouch.position.ReadValue();
-            if (Mouse.current != null)
-                return Mouse.current.position.ReadValue();
-            return Vector2.zero;
-        }
-
-        private static bool WasPointerPressed()
-        {
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-                return true;
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-                return true;
-            return false;
-        }
+        private static Vector2 GetPointerPosition() => InputUtils.GetPointerPosition();
+        private static bool    WasPointerPressed()  => InputUtils.WasPointerPressed();
 
         // ---- Grid helpers ----
 

@@ -488,14 +488,13 @@ namespace MobileIdleBuilder
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
-            var manual = recipes.Where(r => !r.requiresBuilding).ToList();
-            if (manual.Count == 0)
+            if (recipes.Count == 0)
             {
-                _recipeList.Add(new Label("No manual recipes available."));
+                _recipeList.Add(new Label("No recipes available."));
                 return;
             }
 
-            foreach (var recipe in manual)
+            foreach (var recipe in recipes)
             {
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
@@ -508,6 +507,13 @@ namespace MobileIdleBuilder
 
                 var inputsLabel = new Label(BuildInputsText(recipe));
                 inputsLabel.AddToClassList("recipe-inputs");
+
+                if (recipe.requiresBuilding)
+                {
+                    var buildingTag = new Label("[Building]");
+                    buildingTag.AddToClassList("recipe-building-tag");
+                    info.Add(buildingTag);
+                }
 
                 info.Add(nameLabel);
                 info.Add(inputsLabel);
@@ -525,8 +531,16 @@ namespace MobileIdleBuilder
 
         private void OnCraftPressed(RecipeJson recipe)
         {
-            if (!craftService.TryCraft(recipe))
-                Debug.Log($"[HUD] Can't craft {recipe.name} — not enough inputs.");
+            if (recipe.requiresBuilding)
+            {
+                if (!craftService.TriggerBuildingCraft(recipe))
+                    Debug.Log($"[HUD] Can't craft {recipe.name} — no eligible building or missing inputs.");
+            }
+            else
+            {
+                if (!craftService.TryCraft(recipe))
+                    Debug.Log($"[HUD] Can't craft {recipe.name} — not enough inputs.");
+            }
         }
 
         // ============================================================

@@ -11,7 +11,7 @@
     <Style src="tokens.uss" />
     <Style src="GameHUD.uss" />
 
-    <ui:VisualElement name="root" class="root">
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
 
         <!-- ═══ TOP BAR ═══ -->
         <ui:VisualElement name="top-bar" class="top-bar">
@@ -22,7 +22,7 @@
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
-        <ui:VisualElement name="grid-area" class="grid-area" />
+        <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
         <!-- ═══ BOTTOM BAR ═══ -->
         <ui:VisualElement name="bottom-bar" class="bottom-bar">

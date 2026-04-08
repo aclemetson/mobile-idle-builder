@@ -32,7 +32,12 @@ namespace MobileIdleBuilder
         private Vector2Int    _ghostCell = new(-1, -1);
 
         void Awake()  => BuildGrid();
-        void Start()  => CentreCamera();
+        void Start()
+        {
+            // Skip if IsometricCameraFollow is driving the camera
+            if (Camera.main == null || Camera.main.GetComponent<IsometricCameraFollow>() == null)
+                CentreCamera();
+        }
 
         void BuildGrid()
         {

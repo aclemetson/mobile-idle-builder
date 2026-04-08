@@ -43,7 +43,8 @@ namespace MobileIdleBuilder
                     RecipeID        = recipeID,
                     CraftTime       = craftTime,
                     Progress        = 0f,
-                    InputsSatisfied = false
+                    InputsSatisfied = false,
+                    IsCrafting      = false
                 });
 
                 // Bake recipe input slots

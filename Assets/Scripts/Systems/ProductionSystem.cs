@@ -36,7 +36,7 @@ namespace MobileIdleBuilder
                 if (!building.ValueRO.IsActive)  continue;
                 if (process.ValueRO.RecipeID < 0) continue;
 
-                // --- Input check ---
+                // --- Input check (for display / UI feedback) ---
                 bool satisfied = true;
                 for (int i = 0; i < inputs.Length; i++)
                 {
@@ -48,22 +48,36 @@ namespace MobileIdleBuilder
                 }
                 process.ValueRW.InputsSatisfied = satisfied;
 
-                if (!satisfied) continue;
+                // --- Manual trigger gate: only run if the player started this cycle ---
+                if (!process.ValueRO.IsCrafting) continue;
 
                 // --- Progress ---
                 process.ValueRW.Progress += deltaTime * building.ValueRO.ProductionSpeed;
 
                 if (process.ValueRO.Progress < process.ValueRO.CraftTime) continue;
 
-                // --- Recipe completion ---
+                // --- Recipe completion: re-verify inputs in case they were spent elsewhere ---
+                bool canComplete = true;
                 for (int i = 0; i < inputs.Length; i++)
-                    RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
+                {
+                    if (CountInInventory(inventory, inputs[i].ItemID) < inputs[i].Quantity)
+                    {
+                        canComplete = false;
+                        break;
+                    }
+                }
 
-                for (int i = 0; i < outputs.Length; i++)
-                    AddToInventory(ref inventory, outputs[i].ItemID, outputs[i].Quantity);
+                if (canComplete)
+                {
+                    for (int i = 0; i < inputs.Length; i++)
+                        RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
 
-                process.ValueRW.Progress        = 0f;
-                process.ValueRW.InputsSatisfied = false;
+                    for (int i = 0; i < outputs.Length; i++)
+                        AddToInventory(ref inventory, outputs[i].ItemID, outputs[i].Quantity);
+                }
+
+                process.ValueRW.Progress   = 0f;
+                process.ValueRW.IsCrafting = false;
             }
         }
 
