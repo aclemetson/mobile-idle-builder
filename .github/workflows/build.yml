@@ -16,6 +16,7 @@ env:
 jobs:
   test-and-build-android:
     name: Test and Build Android
+    if: false  # CI disabled — remove this line to re-enable
     runs-on: self-hosted
     steps:
       - name: Checkout

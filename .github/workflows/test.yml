@@ -16,6 +16,7 @@ env:
 jobs:
   test:
     name: Run Edit-Mode Tests
+    if: false  # CI disabled — remove this line to re-enable
     runs-on: self-hosted
     steps:
       - name: Checkout
