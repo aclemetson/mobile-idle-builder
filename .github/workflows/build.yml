@@ -74,11 +74,9 @@ jobs:
             -quit `
             -projectPath . `
             -buildTarget Android `
-            -logFile build/unity-build.log `
+            -logFile - `
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
-          $exitCode = $LASTEXITCODE
-          Get-Content build/unity-build.log -ErrorAction SilentlyContinue
-          exit $exitCode
+          exit $LASTEXITCODE
 
       - name: List Build Output
         shell: powershell
