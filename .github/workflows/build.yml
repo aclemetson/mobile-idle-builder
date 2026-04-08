@@ -85,12 +85,18 @@ jobs:
 
       - name: Deploy to Firebase (Android)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
-          groups: internal-testers
-          file: build/Android/*.aab
+        shell: powershell
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
+        run: |
+          $credPath = "${{ github.workspace }}/secrets/firebase-credentials.json"
+          Set-Content -Path $credPath -Value $env:GOOGLE_APPLICATION_CREDENTIALS_CONTENT
+          $env:GOOGLE_APPLICATION_CREDENTIALS = $credPath
+          $aab = Get-ChildItem "build/Android/*.aab" | Select-Object -First 1
+          firebase appdistribution:distribute $aab.FullName `
+            --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" `
+            --groups "internal-testers"
+          Remove-Item -Force $credPath -ErrorAction SilentlyContinue
 
       - name: Cleanup Keystore
         if: always()
