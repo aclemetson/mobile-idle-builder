@@ -5,7 +5,8 @@
         "MobileIdleBuilder",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
-        "Unity.Entities.Editor"
+        "Unity.Entities.Editor",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"
