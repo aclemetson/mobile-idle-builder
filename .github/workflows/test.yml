@@ -22,7 +22,7 @@ jobs:
           lfs: true
 
       - name: Run Edit-Mode Tests
-        shell: pwsh
+        shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path test-results | Out-Null
           & $env:UNITY_PATH `

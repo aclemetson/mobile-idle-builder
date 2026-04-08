@@ -22,7 +22,7 @@ jobs:
           lfs: true
 
       - name: Run Edit-Mode Tests
-        shell: pwsh
+        shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path test-results | Out-Null
           & $env:UNITY_PATH `
@@ -55,13 +55,13 @@ jobs:
           lfs: true
 
       - name: Decode Keystore
-        shell: pwsh
+        shell: powershell
         run: |
           $bytes = [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
           [IO.File]::WriteAllBytes("${{ github.workspace }}/secrets/user.keystore", $bytes)
 
       - name: Build Android (.aab)
-        shell: pwsh
+        shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path build/Android | Out-Null
           & $env:UNITY_PATH `
@@ -93,5 +93,5 @@ jobs:
 
       - name: Cleanup Keystore
         if: always()
-        shell: pwsh
+        shell: powershell
         run: Remove-Item -Force "${{ github.workspace }}/secrets/user.keystore" -ErrorAction SilentlyContinue
