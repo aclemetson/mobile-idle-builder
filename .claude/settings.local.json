@@ -6,7 +6,10 @@
       "Bash(unzip -p .claude/outline-files.zip README.md)",
       "Bash(unzip -l outline-files.zip)",
       "Bash(unzip -o outline-files.zip -d outline-files/)",
-      "Bash(wc -l E:/Programming/unity/mobile-idle-builder/.claude/outline-files/*.md E:/Programming/unity/mobile-idle-builder/.claude/new-files/*.md)"
+      "Bash(wc -l E:/Programming/unity/mobile-idle-builder/.claude/outline-files/*.md E:/Programming/unity/mobile-idle-builder/.claude/new-files/*.md)",
+      "Read(//c/actions-runner/_work/mobile-idle-builder/mobile-idle-builder//**)",
+      "Read(//c/Users/Anthony Clemetson/actions-runner/**)",
+      "Bash(find /c -name \"_diag\" -type d)"
     ]
   }
 }

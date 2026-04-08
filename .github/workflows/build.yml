@@ -64,7 +64,6 @@ jobs:
             -batchmode `
             -quit `
             -projectPath . `
-            -buildTarget Android `
             -logFile Logs/build.log `
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid
           $exitCode = $LASTEXITCODE
