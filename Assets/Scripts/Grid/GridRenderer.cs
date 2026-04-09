@@ -17,10 +17,11 @@ namespace MobileIdleBuilder
         [SerializeField] private float cellSize = 1f;
 
         [Header("Colours")]
-        [SerializeField] private Color tileColor      = new Color(0.067f, 0.094f, 0.102f, 1f); // #111827 default tile
-        [SerializeField] private Color occupiedColor  = new Color(0f,     0.565f, 0.612f, 1f); // #009090 placed building
-        [SerializeField] private Color ghostValidColor = new Color(0f,    0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
-        [SerializeField] private Color ghostInvalidColor = new Color(1f,  0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
+        [SerializeField] private Color tileColor             = new Color(0.067f, 0.094f, 0.102f, 1f); // #111827 default tile
+        [SerializeField] private Color occupiedColor         = new Color(0f,     0.565f, 0.612f, 1f); // #009090 placed building
+        [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
+        [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
+        [SerializeField] private Color deconstructHoverColor = new Color(0.9f,   0.15f,  0.15f, 0.9f); // solid danger red
 
         [Header("Tile gap (0 = flush, 0.05 = small gap)")]
         [SerializeField] [Range(0f, 0.5f)] private float gap = 0.05f;
@@ -29,9 +30,15 @@ namespace MobileIdleBuilder
         public int   Width    => width;
         public int   Height   => height;
 
+        private static readonly Color ConveyorGhostColor    = new Color(1f,    0.5f,  0f,    0.7f); // orange
+        private static readonly Color ConveyorEndpointColor = new Color(0.25f, 0.88f, 0.35f, 0.9f); // green
+
         private GameObject[,]        _tiles;
         private Vector2Int           _ghostCell   = new(-1, -1);
-        private readonly List<Vector2Int> _ghostCells = new();
+        private readonly List<Vector2Int> _ghostCells            = new();
+        private readonly List<Vector2Int> _conveyorGhostCells    = new();
+        private readonly List<Vector2Int> _deconstructHoverCells = new();
+        private Vector2Int               _conveyorHoverCell      = new(-1, -1);
 
         void Awake()  => BuildGrid();
         void Start()
@@ -124,6 +131,89 @@ namespace MobileIdleBuilder
                 RestoreCell(c.x, c.y);
             _ghostCells.Clear();
             _ghostCell = new(-1, -1);
+        }
+
+        // ---- Conveyor ghost helpers ----
+
+        /// <summary>
+        /// Highlights a single cell with the conveyor-belt ghost colour without disturbing other ghosts.
+        /// Call ClearConveyorGhost() to undo all conveyor highlights.
+        /// </summary>
+        public void AddConveyorGhostCell(int x, int y)
+        {
+            if (!IsInBounds(x, y)) return;
+            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), ConveyorGhostColor);
+            _conveyorGhostCells.Add(new Vector2Int(x, y));
+        }
+
+        /// <summary>Clears all conveyor ghost highlights, restoring each cell to its normal colour.</summary>
+        public void ClearConveyorGhost()
+        {
+            foreach (var c in _conveyorGhostCells)
+                RestoreCell(c.x, c.y);
+            _conveyorGhostCells.Clear();
+        }
+
+        /// <summary>
+        /// Highlights the cell under the pointer green before the player starts dragging.
+        /// Automatically restores the previous hover cell.
+        /// </summary>
+        public void SetConveyorHoverCell(int x, int y)
+        {
+            if (_conveyorHoverCell.x >= 0)
+                RestoreCell(_conveyorHoverCell.x, _conveyorHoverCell.y);
+
+            _conveyorHoverCell = new(x, y);
+            if (IsInBounds(x, y))
+                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+        }
+
+        /// <summary>Clears the pre-drag hover highlight.</summary>
+        public void ClearConveyorHoverCell()
+        {
+            if (_conveyorHoverCell.x >= 0)
+                RestoreCell(_conveyorHoverCell.x, _conveyorHoverCell.y);
+            _conveyorHoverCell = new(-1, -1);
+        }
+
+        /// <summary>
+        /// Paints the start and end anchor cells green on top of the already-drawn orange path.
+        /// The cells must already be tracked in _conveyorGhostCells so ClearConveyorGhost restores them.
+        /// </summary>
+        public void PaintConveyorEndpoints(int sx, int sy, int ex, int ey)
+        {
+            if (IsInBounds(sx, sy))
+                SetColor(_tiles[sx, sy].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+            if ((ex != sx || ey != sy) && IsInBounds(ex, ey))
+                SetColor(_tiles[ex, ey].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+        }
+
+        // ---- Deconstruct hover ----
+
+        /// <summary>
+        /// Highlights a building footprint in danger-red to indicate it will be deconstructed.
+        /// Call ClearDeconstructHover() first if a previous highlight is active.
+        /// </summary>
+        public void SetDeconstructHover(int x, int y, int w = 1, int h = 1)
+        {
+            for (int dx = 0; dx < w; dx++)
+            {
+                for (int dy = 0; dy < h; dy++)
+                {
+                    int cx = x + dx, cy = y + dy;
+                    if (!IsInBounds(cx, cy)) continue;
+                    SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), deconstructHoverColor);
+                    _deconstructHoverCells.Add(new Vector2Int(cx, cy));
+                }
+            }
+        }
+
+        /// <summary>Clears the deconstruct hover highlight, restoring each cell to its normal colour.</summary>
+        public void ClearDeconstructHover()
+        {
+            foreach (var c in _deconstructHoverCells)
+                RestoreCell(c.x, c.y);
+            _deconstructHoverCells.Clear();
         }
 
         // ---- Helpers ----

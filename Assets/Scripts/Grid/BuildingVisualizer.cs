@@ -182,6 +182,39 @@ namespace MobileIdleBuilder
             };
         }
 
+        /// <summary>
+        /// Removes all visual artifacts for the building anchored at (x, y).
+        /// Call after destroying the corresponding ECS entity.
+        /// </summary>
+        public void RemoveBuilding(int x, int y)
+        {
+            var cell = (x, y);
+
+            int fw = 1, fh = 1;
+            if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
+
+            for (int dx = 0; dx < fw; dx++)
+                for (int dy = 0; dy < fh; dy++)
+                    gridRenderer?.SetTileHighlight(x + dx, y + dy, false);
+
+            _highlighted.Remove(cell);
+            _footprints.Remove(cell);
+
+            if (_spawnedCubes.TryGetValue(cell, out var cube))
+            {
+                if (cube != null) Destroy(cube);
+                _spawnedCubes.Remove(cell);
+            }
+
+            if (_spawnedPortArrows.TryGetValue(cell, out var arrows))
+            {
+                foreach (var go in arrows)
+                    if (go != null) Destroy(go);
+                _spawnedPortArrows.Remove(cell);
+            }
+            _portedCells.Remove(cell);
+        }
+
         void OnDestroy()
         {
             var world = World.DefaultGameObjectInjectionWorld;

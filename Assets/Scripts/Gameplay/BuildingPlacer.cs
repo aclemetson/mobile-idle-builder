@@ -47,7 +47,10 @@ namespace MobileIdleBuilder
                 typeof(RecipeProcessData),
                 typeof(RecipeInputSlot),
                 typeof(RecipeOutputSlot),
-                typeof(PlacedPortData)
+                typeof(PlacedPortData),
+                typeof(BuildingOutputSlot),
+                typeof(BuildingInputSlot),
+                typeof(BuildingInventoryConfig)
             );
 
             var entity = _em.CreateEntity(archetype);
@@ -74,6 +77,12 @@ namespace MobileIdleBuilder
                 CraftTime       = craftTime,
                 Progress        = 0f,
                 InputsSatisfied = false
+            });
+
+            _em.SetComponentData(entity, new BuildingInventoryConfig
+            {
+                OutputCapacity = 20,
+                InputCapacity  = 20
             });
 
             if (recipe != null)

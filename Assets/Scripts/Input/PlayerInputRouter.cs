@@ -15,14 +15,24 @@ namespace MobileIdleBuilder
     [DefaultExecutionOrder(-10)]
     public class PlayerInputRouter : MonoBehaviour
     {
-        [SerializeField] private BuildingPlacementController placementController;
-        [SerializeField] private CharacterMover              characterMover;
-        [SerializeField] private UIDocument                  hudDocument;
+        [SerializeField] private BuildingPlacementController  placementController;
+        [SerializeField] private ConveyorPlacementController  conveyorController;
+        [SerializeField] private DeconstructController        deconstructController;
+        [SerializeField] private CharacterMover               characterMover;
+        [SerializeField] private UIDocument                   hudDocument;
+
+        void Awake()
+        {
+            if (deconstructController == null)
+                deconstructController = FindAnyObjectByType<DeconstructController>();
+        }
 
         void Update()
         {
             if (!InputUtils.WasPointerPressed()) return;
-            if (placementController != null && placementController.IsPlacing) return;
+            if (placementController   != null && placementController.IsPlacing)      return;
+            if (conveyorController    != null && conveyorController.IsPlacing)       return;
+            if (deconstructController != null && deconstructController.IsDeconstructing) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
             if (IsPointerOverUI(screenPos)) return;

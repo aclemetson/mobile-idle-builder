@@ -11,11 +11,13 @@ namespace MobileIdleBuilder
     [RequireComponent(typeof(UIDocument))]
     public class HUDController : MonoBehaviour
     {
-        [SerializeField] private ManualCraftService          craftService;
-        [SerializeField] private BuildingPlacementController placementController;
-        [SerializeField] private AchievementService          achievementService;
-        [SerializeField] private PVPService                  pvpService;
-        [SerializeField] private float                       notificationDuration = 3f;
+        [SerializeField] private ManualCraftService           craftService;
+        [SerializeField] private BuildingPlacementController  placementController;
+        [SerializeField] private ConveyorPlacementController  conveyorController;
+        [SerializeField] private DeconstructController        deconstructController;
+        [SerializeField] private AchievementService           achievementService;
+        [SerializeField] private PVPService                   pvpService;
+        [SerializeField] private float                        notificationDuration = 3f;
 
         // ---- ECS ----
         private EntityManager _em;
@@ -56,6 +58,12 @@ namespace MobileIdleBuilder
         private Button _btnRotateOutput;
         private Button _btnFlipBuilding;
 
+        // ---- Conveyor placement ----
+        private VisualElement _conveyorOverlay;
+
+        // ---- Deconstruct mode ----
+        private VisualElement _deconstructOverlay;
+
         // ---- Output selector ----
         private VisualElement _outputSelector;
         private VisualElement _outputSelectorOptions;
@@ -72,6 +80,12 @@ namespace MobileIdleBuilder
         // Unity lifecycle
         // ============================================================
 
+        void Awake()
+        {
+            if (deconstructController == null)
+                deconstructController = FindAnyObjectByType<DeconstructController>();
+        }
+
         void OnEnable()
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
@@ -79,7 +93,9 @@ namespace MobileIdleBuilder
             BindButtons(root);
 
             CloseAllPanels();
-            SetElementVisible(_placementOverlay, false);
+            SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_conveyorOverlay,    false);
+            SetElementVisible(_deconstructOverlay, false);
             SetElementVisible(_notificationBanner, false);
             SetElementVisible(_fieldBanner, false);
             SetElementVisible(_outputSelector, false);
@@ -90,6 +106,12 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
             }
+
+            if (conveyorController != null)
+                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+
+            if (deconstructController != null)
+                deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
@@ -105,6 +127,12 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
             }
+
+            if (conveyorController != null)
+                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+
+            if (deconstructController != null)
+                deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
@@ -197,6 +225,12 @@ namespace MobileIdleBuilder
             _outputSelectorOptions = root.Q("output-selector__options");
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
+            // Conveyor placement
+            _conveyorOverlay = root.Q("conveyor-overlay");
+
+            // Deconstruct mode
+            _deconstructOverlay = root.Q("deconstruct-overlay");
+
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
             _tooltipTitle = root.Q<Label>("tooltip-popup__title");
@@ -237,12 +271,29 @@ namespace MobileIdleBuilder
                     StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
             };
 
-            // Placement
+            // Deconstruct (header button inside buildings panel)
+            var btnDeconstruct = root.Q<Button>("btn-deconstruct");
+            if (btnDeconstruct != null)
+                btnDeconstruct.clicked += () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    deconstructController?.BeginDeconstructMode();
+                };
+
+            // Building placement
             root.Q<Button>("btn-cancel-placement").clicked += () => placementController?.CancelPlacement();
             if (_btnRotateOutput != null)
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+
+            // Conveyor cancel (button inside the conveyor overlay)
+            root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
+                conveyorController?.CancelConveyorMode());
+
+            // Deconstruct cancel
+            root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
+                deconstructController?.CancelDeconstructMode());
 
             // Prestige confirm
             root.Q<Button>("btn-confirm-prestige").clicked += OnPrestigeConfirmed;
@@ -588,6 +639,33 @@ namespace MobileIdleBuilder
         private void BuildBuildingsList()
         {
             _buildingsList.Clear();
+
+            // ---- Conveyor Belt entry (always first) ----
+            if (conveyorController != null)
+            {
+                var conveyorCard = new VisualElement();
+                conveyorCard.AddToClassList("building-card");
+
+                var nameLabel = new Label("Conveyor Belt");
+                nameLabel.AddToClassList("building-card-name");
+
+                var descLabel = new Label("Draw paths to move items between buildings");
+                descLabel.AddToClassList("building-card-recipe");
+
+                var placeBtn = new Button { text = "Place" };
+                placeBtn.AddToClassList("craft-btn");
+                placeBtn.clicked += () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    conveyorController.BeginConveyorMode();
+                };
+
+                conveyorCard.Add(nameLabel);
+                conveyorCard.Add(descLabel);
+                conveyorCard.Add(placeBtn);
+                _buildingsList.Add(conveyorCard);
+            }
+
             if (placementController == null) return;
 
             foreach (var entry in placementController.availableBuildings)
@@ -713,6 +791,16 @@ namespace MobileIdleBuilder
                         ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
                         : "Tap an empty tile to place  ·  Esc to cancel";
             }
+        }
+
+        private void OnConveyorPlacingChanged(bool isPlacing)
+        {
+            SetElementVisible(_conveyorOverlay, isPlacing);
+        }
+
+        private void OnDeconstructingChanged(bool isDeconstructing)
+        {
+            SetElementVisible(_deconstructOverlay, isDeconstructing);
         }
 
         // ============================================================
@@ -867,6 +955,14 @@ namespace MobileIdleBuilder
         {
             foreach (var panel in _allPanels)
                 SetElementVisible(panel, false);
+            CancelActiveModes();
+        }
+
+        private void CancelActiveModes()
+        {
+            placementController?.CancelPlacement();
+            conveyorController?.CancelConveyorMode();
+            deconstructController?.CancelDeconstructMode();
         }
 
         // ============================================================

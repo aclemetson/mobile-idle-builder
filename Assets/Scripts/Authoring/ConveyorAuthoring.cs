@@ -1,27 +1,19 @@
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace MobileIdleBuilder
 {
+    /// <summary>
+    /// Legacy authoring component — kept for SubScene compatibility.
+    /// Runtime conveyor belts are created by ConveyorPlacer (not baked from SubScenes).
+    /// </summary>
     public class ConveyorAuthoring : MonoBehaviour
     {
-        public Vector2Int source;
-        public Vector2Int destination;
-        public float speed = 1f;
-
         public class Baker : Baker<ConveyorAuthoring>
         {
             public override void Bake(ConveyorAuthoring authoring)
             {
-                var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new ConveyorData
-                {
-                    Source        = new int2(authoring.source.x, authoring.source.y),
-                    Destination   = new int2(authoring.destination.x, authoring.destination.y),
-                    Speed         = authoring.speed,
-                    CarriedItemID = -1
-                });
+                // No-op: runtime belts are placed by ConveyorPlacer.
             }
         }
     }
