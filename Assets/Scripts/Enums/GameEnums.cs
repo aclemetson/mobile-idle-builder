@@ -17,6 +17,8 @@ namespace MobileIdleBuilder
 
     public enum RecipeCategory
     {
+        Quark,
+        Lepton,
         Nucleon,
         Element,
         Isotope,
@@ -38,9 +40,8 @@ namespace MobileIdleBuilder
     public enum FieldType
     {
         None,
-        Positive,
-        Negative,
-        Lepton
+        Quark,    // Generic quark field — collector buildings specify up/down quark output via their recipe
+        Lepton    // Electron field — outputItem on FieldSO is Electron
     }
 
     public enum DecayType
@@ -64,6 +65,21 @@ namespace MobileIdleBuilder
         Anywhere,
         MustBeOnField,
         AdjacentToBuilding
+    }
+
+    /// <summary>Cardinal output direction for field collector buildings.</summary>
+    public enum OutputDirection
+    {
+        North = 0, // +Z
+        East  = 1, // +X
+        South = 2, // -Z
+        West  = 3  // -X
+    }
+
+    public enum PortType
+    {
+        Input  = 0,
+        Output = 1
     }
 
     public enum ResearchBranch

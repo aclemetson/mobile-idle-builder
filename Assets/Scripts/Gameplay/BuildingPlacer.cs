@@ -21,21 +21,33 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Places a building entity at (gridX, gridY).
         /// Returns true on success, false if the cell is already occupied.
+        /// Pass outputDirection for field-collector buildings; omit (null) for all others.
         /// </summary>
-        public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe)
+        public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
+                                  int? outputDirection = null, int rotation = 0, bool flipped = false)
         {
-            if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupy(gridX, gridY))
+            int fw = 1, fh = 1;
+            if (building != null)
             {
-                Debug.Log($"[BuildingPlacer] Cell ({gridX},{gridY}) is occupied.");
+                fw = Mathf.Max(1, building.footprint.x);
+                fh = Mathf.Max(1, building.footprint.y);
+            }
+
+            if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
+            {
+                Debug.Log($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
                 return false;
             }
+
+            bool hasPorts = building?.ports != null && building.ports.Length > 0;
 
             var archetype = _em.CreateArchetype(
                 typeof(BuildingData),
                 typeof(GridPosition),
                 typeof(RecipeProcessData),
                 typeof(RecipeInputSlot),
-                typeof(RecipeOutputSlot)
+                typeof(RecipeOutputSlot),
+                typeof(PlacedPortData)
             );
 
             var entity = _em.CreateEntity(archetype);
@@ -86,7 +98,31 @@ namespace MobileIdleBuilder
                     });
             }
 
-            Debug.Log($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY})");
+            if (outputDirection.HasValue)
+                _em.AddComponentData(entity, new OutputDirectionData { Direction = outputDirection.Value });
+
+            if (fw > 1 || fh > 1)
+                _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
+
+            // Write port layout
+            if (hasPorts)
+            {
+                var baseFp  = new UnityEngine.Vector2Int(fw, fh);
+                var portBuf = _em.GetBuffer<PlacedPortData>(entity);
+                foreach (var port in building.ports)
+                {
+                    var (relCell, dir) = PortUtils.TransformPort(port, baseFp, flipped, rotation);
+                    portBuf.Add(new PlacedPortData
+                    {
+                        PortType = (int)port.portType,
+                        CellX    = gridX + relCell.x,
+                        CellY    = gridY + relCell.y,
+                        Facing   = (int)dir
+                    });
+                }
+            }
+
+            Debug.Log($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
         }
     }

@@ -13,7 +13,9 @@
       "Bash(xargs grep:*)",
       "Bash(find:*)",
       "Bash(xargs ls:*)",
-      "Bash(grep -v \"^ *m_Name: $\")"
+      "Bash(grep -v \"^ *m_Name: $\")",
+      "Bash(grep -E \"\\\\.\\(cs|prefab|asset\\)$\")",
+      "Bash(xargs wc:*)"
     ]
   }
 }

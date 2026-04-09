@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Lithium
   recipeId: 5
   tier: 0
-  category: 0
+  category: 3
   inputs:
   - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
     quantity: 3

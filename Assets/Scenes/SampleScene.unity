@@ -856,6 +856,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1384596490
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1384596492}
+  - component: {fileID: 1384596491}
+  m_Layer: 0
+  m_Name: FieldGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1384596491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1384596490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4745564e6f7972d48a055269866896ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldGenerator
+  gridRenderer: {fileID: 1750057541}
+  edgeMargin: 2
+  fields:
+  - fieldDefinition: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
+    count: 2
+    groupAdjacent: 1
+  - fieldDefinition: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
+    count: 1
+    groupAdjacent: 0
+--- !u!4 &1384596492
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1384596490}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1590349487
 GameObject:
   m_ObjectHideFlags: 0
@@ -994,8 +1047,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingPlacementController
   availableBuildings:
-  - building: {fileID: 0}
-    defaultRecipe: {fileID: 11400000, guid: 990c172c58c320d4b9570223e9ad447a, type: 2}
+  - building: {fileID: 11400000, guid: 4b8308837a6e7de4fac79d125b57b9ab, type: 2}
+    defaultRecipe: {fileID: 0}
+  - building: {fileID: 11400000, guid: 2a0e9be0da7ffa54f9f235f0818f77ed, type: 2}
+    defaultRecipe: {fileID: 0}
   gridRenderer: {fileID: 1750057541}
   buildingPlacer: {fileID: 1347028481}
   buildingVisualizer: {fileID: 1750057543}
@@ -1057,6 +1112,7 @@ SceneRoots:
   - {fileID: 827826013}
   - {fileID: 1347028484}
   - {fileID: 1750057542}
+  - {fileID: 1384596492}
   - {fileID: 2080509635}
   - {fileID: 229646052}
   - {fileID: 1326696566}
