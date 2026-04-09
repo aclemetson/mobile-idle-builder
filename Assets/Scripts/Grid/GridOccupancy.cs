@@ -34,5 +34,40 @@ namespace MobileIdleBuilder
 
         /// <summary>Used by BuildingVisualizer to register pre-baked buildings.</summary>
         public void Register(int x, int y) => _occupied.Add((x, y));
+
+        // ---- Multi-cell helpers ----
+
+        /// <summary>Returns true if every cell in the rect is free.</summary>
+        public bool IsRectFree(int x, int y, int w, int h)
+        {
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    if (_occupied.Contains((x + dx, y + dy))) return false;
+            return true;
+        }
+
+        /// <summary>Marks all cells in the rect as occupied. Returns false if any cell is taken (no partial writes).</summary>
+        public bool TryOccupyRect(int x, int y, int w, int h)
+        {
+            if (!IsRectFree(x, y, w, h)) return false;
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    _occupied.Add((x + dx, y + dy));
+            return true;
+        }
+
+        public void ReleaseRect(int x, int y, int w, int h)
+        {
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    _occupied.Remove((x + dx, y + dy));
+        }
+
+        public void RegisterRect(int x, int y, int w, int h)
+        {
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    _occupied.Add((x + dx, y + dy));
+        }
     }
 }

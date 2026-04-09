@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Deuterium
   recipeId: 11
   tier: 0
-  category: 0
+  category: 4
   inputs:
   - item: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
     quantity: 1

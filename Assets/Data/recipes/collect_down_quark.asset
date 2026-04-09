@@ -10,28 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: Hydrogen
+  m_Name: collect_down_quark
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: hydrogen
-  displayName: Hydrogen
-  recipeId: 3
+  id: collect_down_quark
+  displayName: Collect Down Quark
+  recipeId: 0
   tier: 0
   category: 0
-  inputs:
-  - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
-    quantity: 1
-  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
-    quantity: 1
+  inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
+  outputItem: {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 2
+  baseCraftTime: 1
   manualCraftTime: 0
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings: []
-  canCraftManually: 1
+  canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 0}
   unlocksResearch: {fileID: 0}

@@ -47,6 +47,20 @@ namespace MobileIdleBuilder
         private Label         _notificationIcon, _notificationMessage;
         private Coroutine     _hideNotificationCoroutine;
 
+        // ---- Field proximity banner ----
+        private VisualElement _fieldBanner;
+        private Label         _fieldBannerName;
+        private Label         _fieldBannerType;
+
+        // ---- Placement controls ----
+        private Button _btnRotateOutput;
+        private Button _btnFlipBuilding;
+
+        // ---- Output selector ----
+        private VisualElement _outputSelector;
+        private VisualElement _outputSelectorOptions;
+        private Label         _outputSelectorTitle;
+
         // ---- Tooltip ----
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
@@ -67,10 +81,15 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             SetElementVisible(_placementOverlay, false);
             SetElementVisible(_notificationBanner, false);
+            SetElementVisible(_fieldBanner, false);
+            SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
 
             if (placementController != null)
-                placementController.OnPlacingChanged += OnPlacingChanged;
+            {
+                placementController.OnPlacingChanged         += OnPlacingChanged;
+                placementController.OnOutputSelectionRequired += ShowOutputSelector;
+            }
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
@@ -82,7 +101,10 @@ namespace MobileIdleBuilder
         void OnDisable()
         {
             if (placementController != null)
-                placementController.OnPlacingChanged -= OnPlacingChanged;
+            {
+                placementController.OnPlacingChanged         -= OnPlacingChanged;
+                placementController.OnOutputSelectionRequired -= ShowOutputSelector;
+            }
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
@@ -156,12 +178,24 @@ namespace MobileIdleBuilder
             _prestigeSummary  = root.Q<Label>("prestige-summary");
             _prestigeCurrency = root.Q<Label>("prestige-currency");
             _placementLabel   = root.Q<Label>("placement-label");
+            _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
+            _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Notification banner — inner element inside "notification-instance" TemplateContainer
             _notificationBanner  = root.Q("notification-banner");
             _notificationIcon    = root.Q<Label>("notification-banner__icon");
             _notificationMessage = root.Q<Label>("notification-banner__message");
+
+            // Field proximity banner — inner element inside "field-proximity-instance" TemplateContainer
+            _fieldBanner     = root.Q("field-proximity-banner");
+            _fieldBannerName = root.Q<Label>("field-proximity-banner__name");
+            _fieldBannerType = root.Q<Label>("field-proximity-banner__type");
+
+            // Output selector
+            _outputSelector        = root.Q("output-selector");
+            _outputSelectorOptions = root.Q("output-selector__options");
+            _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -205,6 +239,10 @@ namespace MobileIdleBuilder
 
             // Placement
             root.Q<Button>("btn-cancel-placement").clicked += () => placementController?.CancelPlacement();
+            if (_btnRotateOutput != null)
+                _btnRotateOutput.clicked += () => placementController?.Rotate();
+            if (_btnFlipBuilding != null)
+                _btnFlipBuilding.clicked += () => placementController?.Flip();
 
             // Prestige confirm
             root.Q<Button>("btn-confirm-prestige").clicked += OnPrestigeConfirmed;
@@ -488,14 +526,13 @@ namespace MobileIdleBuilder
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
-            var manual = recipes.Where(r => !r.requiresBuilding).ToList();
-            if (manual.Count == 0)
+            if (recipes.Count == 0)
             {
-                _recipeList.Add(new Label("No manual recipes available."));
+                _recipeList.Add(new Label("No recipes available."));
                 return;
             }
 
-            foreach (var recipe in manual)
+            foreach (var recipe in recipes)
             {
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
@@ -508,6 +545,13 @@ namespace MobileIdleBuilder
 
                 var inputsLabel = new Label(BuildInputsText(recipe));
                 inputsLabel.AddToClassList("recipe-inputs");
+
+                if (recipe.requiresBuilding)
+                {
+                    var buildingTag = new Label("[Building]");
+                    buildingTag.AddToClassList("recipe-building-tag");
+                    info.Add(buildingTag);
+                }
 
                 info.Add(nameLabel);
                 info.Add(inputsLabel);
@@ -525,8 +569,16 @@ namespace MobileIdleBuilder
 
         private void OnCraftPressed(RecipeJson recipe)
         {
-            if (!craftService.TryCraft(recipe))
-                Debug.Log($"[HUD] Can't craft {recipe.name} — not enough inputs.");
+            if (recipe.requiresBuilding)
+            {
+                if (!craftService.TriggerBuildingCraft(recipe))
+                    Debug.Log($"[HUD] Can't craft {recipe.name} — no eligible building or missing inputs.");
+            }
+            else
+            {
+                if (!craftService.TryCraft(recipe))
+                    Debug.Log($"[HUD] Can't craft {recipe.name} — not enough inputs.");
+            }
         }
 
         // ============================================================
@@ -646,8 +698,21 @@ namespace MobileIdleBuilder
         private void OnPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_placementOverlay, isPlacing);
+
+            bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
+            bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
+            SetElementVisible(_btnRotateOutput, canRotate);
+            SetElementVisible(_btnFlipBuilding, canFlip);
+
             if (isPlacing && _placementLabel != null)
-                _placementLabel.text = "Tap an empty tile to place  ·  Esc to cancel";
+            {
+                bool isField = placementController?.RequiresOutputDirection ?? false;
+                _placementLabel.text = isField
+                    ? "Tap a field tile to place  ·  R rotate  ·  Esc cancel"
+                    : canRotate
+                        ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
+                        : "Tap an empty tile to place  ·  Esc to cancel";
+            }
         }
 
         // ============================================================
@@ -682,6 +747,80 @@ namespace MobileIdleBuilder
         {
             yield return new WaitForSeconds(notificationDuration);
             SetElementVisible(_notificationBanner, false);
+        }
+
+        // ============================================================
+        // Field proximity banner
+        // ============================================================
+
+        /// <summary>
+        /// Shows the persistent field proximity banner for the given field.
+        /// Remains visible until <see cref="HideFieldBanner"/> is called.
+        /// </summary>
+        public void ShowFieldBanner(FieldSO field)
+        {
+            if (field == null) return;
+
+            if (_fieldBannerName != null) _fieldBannerName.text = field.displayName;
+            if (_fieldBannerType != null) _fieldBannerType.text = field.fieldType.ToString();
+
+            if (_fieldBanner != null)
+            {
+                // Accent strip color driven by field's identity color
+                var accent = _fieldBanner.Q("field-proximity-banner__accent");
+                if (accent != null)
+                    accent.style.backgroundColor = new StyleColor(field.fieldColor);
+            }
+
+            SetElementVisible(_fieldBanner, true);
+        }
+
+        /// <summary>Hides the field proximity banner.</summary>
+        public void HideFieldBanner() => SetElementVisible(_fieldBanner, false);
+
+        // ============================================================
+        // Output selector
+        // ============================================================
+
+        private void ShowOutputSelector(List<RecipeSO> options)
+        {
+            if (_outputSelector == null || _outputSelectorOptions == null) return;
+
+            _outputSelectorOptions.Clear();
+
+            foreach (var recipe in options)
+            {
+                var captured = recipe;
+                var item     = recipe.outputItem;
+                string label = item != null
+                    ? (item.displayName ?? item.name)
+                    : recipe.displayName;
+
+                var btn = new Button { text = label };
+                btn.AddToClassList("output-option-btn");
+                btn.clicked += () =>
+                {
+                    SetElementVisible(_outputSelector, false);
+                    placementController?.SelectOutput(captured);
+                };
+                _outputSelectorOptions.Add(btn);
+            }
+
+            // Wire cancel button once (clear existing callbacks by replacing via query each time)
+            var cancelBtn = _outputSelector.Q<Button>("btn-cancel-output");
+            if (cancelBtn != null)
+            {
+                cancelBtn.clicked -= OnCancelOutputSelector;
+                cancelBtn.clicked += OnCancelOutputSelector;
+            }
+
+            SetElementVisible(_outputSelector, true);
+        }
+
+        private void OnCancelOutputSelector()
+        {
+            SetElementVisible(_outputSelector, false);
+            placementController?.CancelPlacement();
         }
 
         // ============================================================

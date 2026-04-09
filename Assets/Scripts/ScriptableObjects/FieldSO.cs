@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -6,10 +7,15 @@ namespace MobileIdleBuilder
     public class FieldSO : ScriptableObject
     {
         public string id;
-        public string displayName;      // e.g. "Positive Quark Field"
+        public string displayName;
         public FieldType fieldType;
-        public ItemSO outputItem;       // what this field produces when harvested
-        public Color fieldColor;        // grid tile tint
+        /// <summary>
+        /// Items that can be harvested from this field.
+        /// Single-item fields (e.g. Electron) auto-select on placement.
+        /// Multi-item fields (e.g. Quark) prompt the player to choose.
+        /// </summary>
+        public List<ItemSO> outputItems;
+        public Color fieldColor;
         public Sprite fieldIcon;
         [TextArea(2, 5)]
         public string codexEntry;

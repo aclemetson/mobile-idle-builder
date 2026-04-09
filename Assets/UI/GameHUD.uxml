@@ -11,7 +11,7 @@
     <Style src="tokens.uss" />
     <Style src="GameHUD.uss" />
 
-    <ui:VisualElement name="root" class="root">
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
 
         <!-- ═══ TOP BAR ═══ -->
         <ui:VisualElement name="top-bar" class="top-bar">
@@ -22,7 +22,7 @@
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
-        <ui:VisualElement name="grid-area" class="grid-area" />
+        <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
         <!-- ═══ BOTTOM BAR ═══ -->
         <ui:VisualElement name="bottom-bar" class="bottom-bar">
@@ -145,7 +145,26 @@
             <ui:VisualElement name="placement-bar" class="placement-bar">
                 <ui:Label name="placement-label" text="Tap an empty tile to place  ·  Esc to cancel"
                           class="placement-label" />
+                <ui:Button name="btn-rotate-output" text="↻ Rotate" class="rotate-output-btn hidden" />
+                <ui:Button name="btn-flip-building" text="⇄ Flip"   class="rotate-output-btn hidden" />
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ OUTPUT SELECTOR (shown when a field has multiple harvestable items) ═══ -->
+        <ui:VisualElement name="output-selector" class="output-selector hidden">
+            <ui:Label name="output-selector__title" text="Select output to collect"
+                      class="output-selector__title" />
+            <ui:VisualElement name="output-selector__options" class="output-selector__options" />
+            <ui:Button name="btn-cancel-output" text="Cancel" class="cancel-placement-btn" />
+        </ui:VisualElement>
+
+        <!-- ═══ FIELD PROXIMITY BANNER (persistent while near a field) ═══ -->
+        <ui:VisualElement name="field-proximity-banner" class="field-proximity-banner hidden">
+            <ui:VisualElement name="field-proximity-banner__accent" class="field-proximity-banner__accent" />
+            <ui:VisualElement class="field-proximity-banner__body">
+                <ui:Label name="field-proximity-banner__name" text="" class="field-proximity-banner__name" />
+                <ui:Label name="field-proximity-banner__type" text="" class="field-proximity-banner__type" />
             </ui:VisualElement>
         </ui:VisualElement>
 

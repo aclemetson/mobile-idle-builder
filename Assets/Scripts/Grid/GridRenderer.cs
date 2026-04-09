@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -28,11 +29,17 @@ namespace MobileIdleBuilder
         public int   Width    => width;
         public int   Height   => height;
 
-        private GameObject[,] _tiles;
-        private Vector2Int    _ghostCell = new(-1, -1);
+        private GameObject[,]        _tiles;
+        private Vector2Int           _ghostCell   = new(-1, -1);
+        private readonly List<Vector2Int> _ghostCells = new();
 
         void Awake()  => BuildGrid();
-        void Start()  => CentreCamera();
+        void Start()
+        {
+            // Skip if IsometricCameraFollow is driving the camera
+            if (Camera.main == null || Camera.main.GetComponent<IsometricCameraFollow>() == null)
+                CentreCamera();
+        }
 
         void BuildGrid()
         {
@@ -85,25 +92,37 @@ namespace MobileIdleBuilder
                      highlighted ? occupiedColor : tileColor);
         }
 
-        /// <summary>Shows a ghost tile at the given cell. Pass isValid=false for red (occupied/OOB).</summary>
-        public void ShowGhost(int x, int y, bool isValid)
+        /// <summary>Shows a single-cell ghost. Convenience overload for 1x1 buildings.</summary>
+        public void ShowGhost(int x, int y, bool isValid) => ShowGhost(x, y, 1, 1, isValid);
+
+        /// <summary>Shows a ghost footprint of (w x h) cells starting at (x, y). Pass isValid=false for red.</summary>
+        public void ShowGhost(int x, int y, int w, int h, bool isValid)
         {
-            // Clear previous ghost if it moved
-            if (_ghostCell.x >= 0)
-                RestoreCell(_ghostCell.x, _ghostCell.y);
+            // Clear previous ghost cells
+            foreach (var c in _ghostCells)
+                RestoreCell(c.x, c.y);
+            _ghostCells.Clear();
+            _ghostCell = new(-1, -1);
 
-            if (!IsInBounds(x, y)) { _ghostCell = new(-1, -1); return; }
-
-            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(),
-                     isValid ? ghostValidColor : ghostInvalidColor);
-            _ghostCell = new(x, y);
+            var color = isValid ? ghostValidColor : ghostInvalidColor;
+            for (int dx = 0; dx < w; dx++)
+            {
+                for (int dy = 0; dy < h; dy++)
+                {
+                    int cx = x + dx, cy = y + dy;
+                    if (!IsInBounds(cx, cy)) continue;
+                    SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), color);
+                    _ghostCells.Add(new Vector2Int(cx, cy));
+                }
+            }
         }
 
-        /// <summary>Clears the ghost tile, restoring the cell to its normal colour.</summary>
+        /// <summary>Clears all ghost tiles, restoring cells to their normal colour.</summary>
         public void HideGhost()
         {
-            if (_ghostCell.x < 0) return;
-            RestoreCell(_ghostCell.x, _ghostCell.y);
+            foreach (var c in _ghostCells)
+                RestoreCell(c.x, c.y);
+            _ghostCells.Clear();
             _ghostCell = new(-1, -1);
         }
 

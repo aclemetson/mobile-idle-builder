@@ -10,7 +10,12 @@
       "Read(//c/actions-runner/_work/mobile-idle-builder/mobile-idle-builder//**)",
       "Read(//c/Users/Anthony Clemetson/actions-runner/**)",
       "Bash(find /c -name \"_diag\" -type d)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(find:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep -v \"^ *m_Name: $\")",
+      "Bash(grep -E \"\\\\.\\(cs|prefab|asset\\)$\")",
+      "Bash(xargs wc:*)"
     ]
   }
 }

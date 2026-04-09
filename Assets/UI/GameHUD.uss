@@ -296,3 +296,14 @@
     color: var(--color-danger);
     font-size: var(--font-size-sm);
 }
+
+.rotate-output-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+}

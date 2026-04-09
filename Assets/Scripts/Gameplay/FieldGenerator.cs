@@ -1,0 +1,186 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace MobileIdleBuilder
+{
+    /// <summary>
+    /// Spawns resource fields randomly on the grid at game start.
+    /// Configure the field list in the Inspector to add/remove field types
+    /// and counts as the player progresses.
+    ///
+    /// Default setup: 2 adjacent quark fields + 1 electron field.
+    /// Fields are placed at least <see cref="edgeMargin"/> cells from the grid edge.
+    /// </summary>
+    [DefaultExecutionOrder(-10)]
+    public class FieldGenerator : MonoBehaviour
+    {
+        // Keyed by grid cell — lets BuildingPlacementController check field compatibility at any cell.
+        private static readonly Dictionary<Vector2Int, FieldSO> _fieldMap = new();
+
+        /// <summary>Returns the FieldSO at a grid cell, or null if none.</summary>
+        public static FieldSO GetFieldAt(int x, int y) =>
+            _fieldMap.TryGetValue(new Vector2Int(x, y), out var f) ? f : null;
+
+        [Serializable]
+        public struct FieldEntry
+        {
+            public FieldSO fieldDefinition;
+            [Min(1)] public int count;
+            [Tooltip("Place the first two fields as adjacent neighbors (e.g. quark pair).")]
+            public bool groupAdjacent;
+        }
+
+        [SerializeField] private GridRenderer gridRenderer;
+        [SerializeField] [Min(0)] private int edgeMargin = 2;
+        [SerializeField] private List<FieldEntry> fields = new();
+
+        private static readonly Vector2Int[] Cardinals =
+        {
+            new( 1,  0),
+            new(-1,  0),
+            new( 0,  1),
+            new( 0, -1),
+        };
+
+        void OnDestroy() => _fieldMap.Clear();   // clean up between Play sessions in the editor
+
+        void Start()
+        {
+            _fieldMap.Clear();
+            if (gridRenderer == null)
+            {
+                Debug.LogError("[FieldGenerator] GridRenderer reference is missing.", this);
+                return;
+            }
+
+            var candidates = BuildCandidateList();
+            Shuffle(candidates);
+
+            int candidateIndex = 0;
+
+            foreach (var entry in fields)
+            {
+                if (entry.fieldDefinition == null) continue;
+
+                if (entry.groupAdjacent && entry.count >= 2)
+                {
+                    PlaceAdjacentGroup(entry, ref candidateIndex, candidates);
+                }
+                else
+                {
+                    for (int i = 0; i < entry.count; i++)
+                        PlaceSingle(entry.fieldDefinition, ref candidateIndex, candidates);
+                }
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // Placement helpers
+        // ----------------------------------------------------------------
+
+        private void PlaceAdjacentGroup(FieldEntry entry, ref int index, List<Vector2Int> candidates)
+        {
+            // Find first valid anchor cell
+            Vector2Int anchor = FindNextFreeCandidate(ref index, candidates);
+            if (anchor.x < 0) return;
+
+            OccupyAndSpawn(anchor.x, anchor.y, entry.fieldDefinition);
+
+            // Place second field adjacent to anchor
+            bool placedSecond = false;
+            foreach (var dir in Cardinals)
+            {
+                var neighbor = anchor + dir;
+                if (!IsValidCandidate(neighbor.x, neighbor.y)) continue;
+                if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(neighbor.x, neighbor.y)) continue;
+
+                OccupyAndSpawn(neighbor.x, neighbor.y, entry.fieldDefinition);
+                placedSecond = true;
+                break;
+            }
+
+            if (!placedSecond)
+                Debug.LogWarning($"[FieldGenerator] Could not place adjacent neighbor for {entry.fieldDefinition.displayName}. Placing fallback at next candidate.");
+
+            // Place any remaining count beyond the first pair
+            for (int i = 2; i < entry.count; i++)
+                PlaceSingle(entry.fieldDefinition, ref index, candidates);
+        }
+
+        private void PlaceSingle(FieldSO fieldSO, ref int index, List<Vector2Int> candidates)
+        {
+            Vector2Int cell = FindNextFreeCandidate(ref index, candidates);
+            if (cell.x < 0) return;
+            OccupyAndSpawn(cell.x, cell.y, fieldSO);
+        }
+
+        private Vector2Int FindNextFreeCandidate(ref int index, List<Vector2Int> candidates)
+        {
+            while (index < candidates.Count)
+            {
+                var c = candidates[index++];
+                // Skip cells already claimed by another field or a pre-placed building
+                if (_fieldMap.ContainsKey(c)) continue;
+                if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) continue;
+                return c;
+            }
+            Debug.LogWarning("[FieldGenerator] Ran out of candidate cells for field placement.");
+            return new Vector2Int(-1, -1);
+        }
+
+        private void OccupyAndSpawn(int x, int y, FieldSO fieldSO)
+        {
+            // Do NOT register in GridOccupancy — _fieldMap tracks field cells.
+            // GridOccupancy is reserved for placed buildings so RestoreCell colours correctly.
+            _fieldMap[new Vector2Int(x, y)] = fieldSO;
+
+            float cs  = gridRenderer.CellSize;
+            var   pos = new Vector3(x * cs, 0.5f, y * cs);
+
+            var go = new GameObject();
+            go.transform.SetParent(transform, worldPositionStays: false);
+            go.transform.position = pos;
+
+            var instance = go.AddComponent<FieldInstance>();
+            instance.Initialize(fieldSO);
+
+            var effect = go.AddComponent<FieldEffect>();
+            effect.Initialize(fieldSO.fieldColor);
+        }
+
+        // ----------------------------------------------------------------
+        // Candidate list
+        // ----------------------------------------------------------------
+
+        private List<Vector2Int> BuildCandidateList()
+        {
+            var list = new List<Vector2Int>();
+            int w = gridRenderer.Width;
+            int h = gridRenderer.Height;
+
+            for (int x = edgeMargin; x < w - edgeMargin; x++)
+            for (int y = edgeMargin; y < h - edgeMargin; y++)
+                list.Add(new Vector2Int(x, y));
+
+            return list;
+        }
+
+        private bool IsValidCandidate(int x, int y)
+        {
+            int w = gridRenderer.Width;
+            int h = gridRenderer.Height;
+            return x >= edgeMargin && x < w - edgeMargin &&
+                   y >= edgeMargin && y < h - edgeMargin;
+        }
+
+        private static void Shuffle<T>(List<T> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
+        }
+    }
+}

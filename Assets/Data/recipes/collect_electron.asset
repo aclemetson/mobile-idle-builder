@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: collect_electron
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: collect_electron
+  displayName: Collect Electron
+  recipeId: 0
+  tier: 0
+  category: 1
+  inputs: []
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 1
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 0
+  validBuildings: []
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 0}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

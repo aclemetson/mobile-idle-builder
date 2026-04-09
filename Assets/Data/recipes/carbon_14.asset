@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Carbon-14
   recipeId: 13
   tier: 0
-  category: 0
+  category: 4
   inputs:
   - item: {fileID: 0}
     quantity: 1
