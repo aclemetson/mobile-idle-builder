@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
     {
         private EntityQuery _segmentQuery;
         private EntityQuery _buildingQuery;
+        private float       _debugTimer;
 
         protected override void OnCreate()
         {
@@ -37,6 +38,9 @@ namespace MobileIdleBuilder
         protected override void OnUpdate()
         {
             float dt = SystemAPI.Time.DeltaTime;
+            _debugTimer += dt;
+            bool debugLog = _debugTimer >= 2f;
+            if (debugLog) _debugTimer = 0f;
 
             // ----------------------------------------------------------------
             // Pass 1 — Build cell→entity lookup maps
@@ -68,7 +72,12 @@ namespace MobileIdleBuilder
             }
 
             // ----------------------------------------------------------------
-            // Pass 2 — Advance item progress
+            // Pass 2 — Advance item progress (back-pressure aware)
+            //
+            // Items advance freely up to 0.5 (visual centre of their segment).
+            // Past 0.5 they only continue if the next step is clear; otherwise
+            // they stop at 0.5 so queued items rest in the middle of each cell
+            // rather than all piling at the exit edge of the last segment.
             // ----------------------------------------------------------------
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -77,7 +86,37 @@ namespace MobileIdleBuilder
 
                 var seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
                 var item = EntityManager.GetComponentData<ConveyorItemData>(e);
-                item.Progress += dt / seg.TransportTime;
+
+                float newProg = item.Progress + dt / seg.TransportTime;
+
+                if (newProg >= 0.5f)
+                {
+                    bool canAdvance;
+
+                    if (seg.NextSegment != Entity.Null)
+                    {
+                        // Mid-chain: clear if the next segment is empty
+                        canAdvance = !EntityManager.HasComponent<ConveyorItemData>(seg.NextSegment);
+                    }
+                    else
+                    {
+                        // Tail: clear if an accepting building input is adjacent
+                        int2 destCell = AdjacentCell(seg.Cell, seg.ExitDir);
+                        canAdvance = false;
+                        if (buildingMap.TryGetValue(destCell, out Entity destBldg) &&
+                            HasMatchingPort(destBldg, destCell, seg.ExitDir, PortType.Input))
+                        {
+                            var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(destBldg);
+                            var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(destBldg);
+                            canAdvance = TotalInInputBuffer(inputBuf) < invConfig.InputCapacity;
+                        }
+                    }
+
+                    if (!canAdvance)
+                        newProg = Mathf.Min(newProg, 0.5f);
+                }
+
+                item.Progress = Mathf.Min(newProg, 1f);
                 EntityManager.SetComponentData(e, item);
             }
 
@@ -129,6 +168,13 @@ namespace MobileIdleBuilder
                     // Deposit to building input buffer
                     AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(toBuilding), itemID, 1);
                     EntityManager.RemoveComponent<ConveyorItemData>(from);
+
+                    // Input particle burst at the building's entry face
+                    if (BuildingInputFX.Instance != null)
+                    {
+                        var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
+                        BuildingInputFX.Instance.Trigger(seg.Cell, seg.ExitDir, itemID);
+                    }
                 }
                 else if (toSeg != Entity.Null && !EntityManager.HasComponent<ConveyorItemData>(toSeg))
                 {
@@ -153,19 +199,69 @@ namespace MobileIdleBuilder
                 if (!seg.IsChainHead) continue;
                 if (EntityManager.HasComponent<ConveyorItemData>(e)) continue; // occupied
 
-                // The source building cell is adjacent in the opposite of the entry direction
-                int2 sourceCell = AdjacentCell(seg.Cell, OppositeDir(seg.EntryDir));
-                if (!buildingMap.TryGetValue(sourceCell, out Entity bldg)) continue;
+                // Scan all 4 neighbours for a building whose output port faces this segment.
+                // We cannot rely solely on EntryDir because the belt's travel direction may be
+                // perpendicular to the direction the connected building outputs toward us.
+                Entity bldg       = Entity.Null;
+                int2   sourceCell = default;
+                int    portFacing = -1; // the facing stored on the port (direction from bldg toward belt)
 
-                // Building must have an output port facing in the entry direction (toward the belt)
-                if (!HasMatchingPort(bldg, sourceCell, seg.EntryDir, PortType.Output)) continue;
+                for (int dir = 0; dir < 4; dir++)
+                {
+                    int2 candidate = AdjacentCell(seg.Cell, dir);
+                    if (!buildingMap.TryGetValue(candidate, out Entity candidateBldg)) continue;
+
+                    // Port must face from the building toward this chain head, i.e. OppositeDir(dir)
+                    int facing = OppositeDir(dir);
+                    if (!HasMatchingPort(candidateBldg, candidate, facing, PortType.Output)) continue;
+
+                    bldg       = candidateBldg;
+                    sourceCell = candidate;
+                    portFacing = facing;
+                    break;
+                }
+
+                if (bldg == Entity.Null)
+                {
+                    if (debugLog)
+                    {
+                        // Collect neighbour info for diagnosis
+                        string neighbourInfo = "";
+                        for (int dir = 0; dir < 4; dir++)
+                        {
+                            int2 candidate = AdjacentCell(seg.Cell, dir);
+                            if (!buildingMap.TryGetValue(candidate, out Entity nb)) continue;
+                            string portDump = "no buffer";
+                            if (EntityManager.HasBuffer<PlacedPortData>(nb))
+                            {
+                                var pb = EntityManager.GetBuffer<PlacedPortData>(nb, isReadOnly: true);
+                                portDump = pb.Length == 0 ? "empty" : "";
+                                for (int p = 0; p < pb.Length; p++)
+                                    portDump += $"[t={pb[p].PortType} ({pb[p].CellX},{pb[p].CellY}) f={pb[p].Facing}]";
+                            }
+                            neighbourInfo += $"\n    dir={dir} cell={candidate} ports={portDump}";
+                        }
+                        Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell} (EntryDir={seg.EntryDir}): " +
+                                  $"no adjacent building with a matching Output port.{neighbourInfo}");
+                    }
+                    continue;
+                }
 
                 var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
-                if (outputBuf.Length == 0) continue;
+                if (outputBuf.Length == 0)
+                {
+                    if (debugLog)
+                        Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell}: building at {sourceCell} " +
+                                  $"output buffer is empty (collector not yet producing?)");
+                    continue;
+                }
 
                 int itemID = outputBuf[0].ItemID;
                 RemoveFromOutputBuffer(outputBuf, itemID, 1);
                 pulls.Add((e, itemID));
+                if (debugLog)
+                    Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell}: pulled itemID={itemID} " +
+                              $"from building at {sourceCell} (portFacing={portFacing}) onto belt.");
             }
 
             foreach (var (head, itemID) in pulls)

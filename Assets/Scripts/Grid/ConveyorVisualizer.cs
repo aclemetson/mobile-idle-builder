@@ -31,6 +31,7 @@ namespace MobileIdleBuilder
 
         private static readonly Color BeltBaseColor   = new Color(0.25f, 0.25f, 0.25f);
         private static readonly Color BeltStripeColor = new Color(1f, 0.5f, 0f);
+        private static readonly Color EndCapColor     = Color.yellow;
 
         // ----------------------------------------------------------------
         // Unity lifecycle
@@ -137,6 +138,44 @@ namespace MobileIdleBuilder
         // Refresh — spawn missing belt track visuals
         // ----------------------------------------------------------------
 
+        /// <summary>
+        /// Destroys and re-spawns the belt track at (x, y) with updated entry/exit directions.
+        /// Call after modifying an existing segment's turn at a connection point.
+        /// </summary>
+        public void RefreshBelt(int x, int y, int entryDir, int exitDir)
+        {
+            var cell = (x, y);
+            if (_spawnedBelts.TryGetValue(cell, out var existing))
+            {
+                if (existing != null) Destroy(existing);
+                _spawnedBelts.Remove(cell);
+            }
+
+            if (!_queriesReady) return;
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+
+            bool isTail = IsTailCell(x, y, world.EntityManager);
+            var  parent = SpawnBeltTrack(x, y, entryDir, exitDir, isTail, gridRenderer.CellSize);
+            _spawnedBelts[cell] = parent;
+        }
+
+        /// <summary>Returns true if the segment at (x,y) has no NextSegment (chain tail).</summary>
+        private bool IsTailCell(int x, int y, EntityManager em)
+        {
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (seg.Cell.x != x || seg.Cell.y != y) continue;
+                bool isTail = seg.NextSegment == Entity.Null;
+                entities.Dispose();
+                return isTail;
+            }
+            entities.Dispose();
+            return false;
+        }
+
         /// <summary>Removes the belt track visual at (x, y). Call after destroying the segment entity.</summary>
         public void RemoveBelt(int x, int y)
         {
@@ -167,7 +206,8 @@ namespace MobileIdleBuilder
 
                 if (_spawnedBelts.ContainsKey(cell)) continue;
 
-                var parent = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, seg.ExitDir, cs);
+                bool isTail = seg.NextSegment == Entity.Null;
+                var  parent = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, seg.ExitDir, isTail, cs);
                 _spawnedBelts[cell] = parent;
             }
 
@@ -178,7 +218,7 @@ namespace MobileIdleBuilder
         // Belt track construction
         // ----------------------------------------------------------------
 
-        private GameObject SpawnBeltTrack(int x, int y, int entryDir, int exitDir, float cs)
+        private GameObject SpawnBeltTrack(int x, int y, int entryDir, int exitDir, bool isTail, float cs)
         {
             var root = new GameObject($"Belt_{x}_{y}");
             root.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
@@ -197,20 +237,104 @@ namespace MobileIdleBuilder
 
             if (isStraight)
             {
-                // Single orange stripe aligned with travel direction
-                AddStripe(root.transform, exitDir, cs, full: true);
+                AddArrow(root.transform, exitDir, cs, full: true);
             }
             else
             {
-                // Turn piece: two shorter stripes
-                int incomingFace = OppositeDir(entryDir); // direction items come from
-                AddStripe(root.transform, incomingFace, cs, full: false);
-                AddStripe(root.transform, exitDir, cs, full: false);
+                // Turn: plain entry stub + arrowed exit stub
+                AddStripe(root.transform, OppositeDir(entryDir), cs, full: false);
+                AddArrow(root.transform, exitDir, cs, full: false);
             }
+
+            if (isTail)
+                AddEndCap(root.transform, exitDir, cs);
 
             return root;
         }
 
+        /// <summary>
+        /// Adds a yellow bar across the exit face to mark this segment as a chain endpoint.
+        /// </summary>
+        private void AddEndCap(Transform parent, int dir, float cs)
+        {
+            var cap = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cap.name = "EndCap";
+            Destroy(cap.GetComponent<Collider>());
+            cap.transform.SetParent(parent, worldPositionStays: false);
+
+            // Position just inside the exit edge, above the arrow
+            Vector3 offset = DirOffset(dir, cs * 0.42f);
+            cap.transform.localPosition = new Vector3(offset.x, 0.14f, offset.z);
+
+            // Bar runs perpendicular to the exit direction
+            bool isNS = (dir == (int)OutputDirection.North || dir == (int)OutputDirection.South);
+            cap.transform.localScale = isNS
+                ? new Vector3(cs * 0.7f, 0.03f, cs * 0.06f)
+                : new Vector3(cs * 0.06f, 0.03f, cs * 0.7f);
+
+            SetupRenderer(cap, EndCapColor);
+        }
+
+        /// <summary>
+        /// Draws a shaft cube + two angled wing cubes forming a ">" arrowhead pointing in dir.
+        /// full = true  → full-width shaft centred on the cell (straight segments).
+        /// full = false → short shaft offset toward the exit side (turn segments).
+        /// </summary>
+        private void AddArrow(Transform parent, int dir, float cs, bool full)
+        {
+            const float h         = 0.02f;
+            float shaftWidth      = cs * 0.10f;
+            float wingLen         = cs * 0.18f;
+            float wingWidth       = cs * 0.08f;
+
+            // Y rotation that makes local +Z face this direction
+            float fwdAngle = dir switch
+            {
+                (int)OutputDirection.North => 0f,
+                (int)OutputDirection.East  => 90f,
+                (int)OutputDirection.South => 180f,
+                _                          => 270f   // West
+            };
+
+            // --- Shaft ---
+            float   shaftLen    = full ? cs * 0.45f : cs * 0.20f;
+            float   shaftCenter = full ? 0f         : cs * 0.10f; // push toward exit for turn stubs
+            Vector3 shaftPos    = DirOffset(dir, shaftCenter);
+
+            var shaft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            shaft.name = "Shaft";
+            Destroy(shaft.GetComponent<Collider>());
+            shaft.transform.SetParent(parent, worldPositionStays: false);
+            shaft.transform.localPosition = new Vector3(shaftPos.x, 0.11f, shaftPos.z);
+            shaft.transform.localRotation = Quaternion.Euler(0f, fwdAngle, 0f);
+            shaft.transform.localScale    = new Vector3(shaftWidth, h, shaftLen);
+            SetupRenderer(shaft, BeltStripeColor);
+
+            // --- Arrowhead wings ---
+            // Tip sits just past the shaft end, near the exit edge.
+            Vector3 tipPos = DirOffset(dir, cs * 0.30f);
+
+            // Two wings at fwdAngle+135° and fwdAngle+45°.
+            // Each wing's local +X (scale axis) extends in the wing direction from the tip,
+            // forming the backward-diagonal arms of the ">" chevron.
+            foreach (float wAngle in new[] { fwdAngle + 135f, fwdAngle + 45f })
+            {
+                var     rot     = Quaternion.Euler(0f, wAngle, 0f);
+                Vector3 wingDir = rot * Vector3.right;           // world direction the wing extends
+                Vector3 center  = tipPos + wingDir * (wingLen * 0.5f);
+
+                var wing = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                wing.name = "ArrowWing";
+                Destroy(wing.GetComponent<Collider>());
+                wing.transform.SetParent(parent, worldPositionStays: false);
+                wing.transform.localPosition = new Vector3(center.x, 0.11f, center.z);
+                wing.transform.localRotation = rot;
+                wing.transform.localScale    = new Vector3(wingLen, h, wingWidth);
+                SetupRenderer(wing, BeltStripeColor);
+            }
+        }
+
+        // Entry-side stub for turn pieces — plain stripe, no arrowhead.
         private void AddStripe(Transform parent, int dir, float cs, bool full)
         {
             var stripe = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -222,11 +346,9 @@ namespace MobileIdleBuilder
             float width  = cs * 0.15f;
             float height = 0.02f;
 
-            // Stripe sits slightly above the platform
             Vector3 offset = DirOffset(dir, cs * (full ? 0f : 0.2f));
             stripe.transform.localPosition = new Vector3(offset.x, 0.11f, offset.z);
 
-            // Orient along the direction axis
             bool isNS = (dir == (int)OutputDirection.North || dir == (int)OutputDirection.South);
             stripe.transform.localScale = isNS
                 ? new Vector3(width, height, length)

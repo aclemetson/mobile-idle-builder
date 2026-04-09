@@ -251,7 +251,7 @@ namespace MobileIdleBuilder
                 }
 
                 _em.DestroyEntity(e);
-                GridOccupancy.Instance.Release(x, y);
+                GridOccupancy.Instance.UnregisterConveyor(x, y);
                 conveyorVisualizer?.RemoveBelt(x, y);
                 gridRenderer?.ClearDeconstructHover();
                 _hoveredCell = new(-1, -1);

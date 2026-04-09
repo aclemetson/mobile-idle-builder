@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Takes quarks and makes either protons or neutrons
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  buildingId: 1
+  buildingId: 2
   tier: 0
   category: 0
   isObsoleteable: 0

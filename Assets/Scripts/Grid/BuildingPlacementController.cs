@@ -269,7 +269,10 @@ namespace MobileIdleBuilder
 
         private void ConfirmPlacement(int x, int y, RecipeSO recipe)
         {
-            int? legacyDir = (!HasPortLayout && _pending.building != null &&
+            // Check port layout directly on the SO — HasPortLayout depends on IsPlacing, which
+            // the output-selector flow clears before calling ConfirmPlacement.
+            bool hasPortLayout = _pending.building?.ports != null && _pending.building.ports.Length > 0;
+            int? legacyDir = (!hasPortLayout && _pending.building != null &&
                               _pending.building.placementRule == PlacementRule.MustBeOnField)
                              ? (int?)_outputDirection : null;
 

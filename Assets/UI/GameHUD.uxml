@@ -187,6 +187,17 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ BUILDING INSPECTOR (tap a placed building to open) ═══ -->
+        <ui:VisualElement name="building-inspector-panel" class="output-selector hidden">
+            <ui:VisualElement class="panel-header">
+                <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
+                <ui:Button name="btn-close-inspector" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="inspector-content" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
         <ui:Instance template="NotificationBanner" name="notification-instance" />
 

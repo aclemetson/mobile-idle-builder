@@ -73,6 +73,13 @@ namespace MobileIdleBuilder
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
 
+        // ---- Building inspector ----
+        private VisualElement _buildingInspectorPanel;
+        private ScrollView    _inspectorContent;
+        private Label         _inspectorBuildingName;
+        private Entity        _inspectorEntity = Entity.Null;
+        private float         _inspectorRefreshTimer;
+
         // ---- Inventory label cache ----
         private readonly Dictionary<int, Label> _inventoryLabels = new();
 
@@ -100,6 +107,7 @@ namespace MobileIdleBuilder
             SetElementVisible(_fieldBanner, false);
             SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
+            SetElementVisible(_buildingInspectorPanel, false);
 
             if (placementController != null)
             {
@@ -143,6 +151,9 @@ namespace MobileIdleBuilder
 
         void Start()
         {
+            if (placementController == null)
+                placementController = FindAnyObjectByType<BuildingPlacementController>();
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
 
@@ -158,6 +169,7 @@ namespace MobileIdleBuilder
             RefreshInventoryBar();
             RefreshPowerLabel();
             RefreshPrestigeButton();
+            TickBuildingInspector();
         }
 
         // ============================================================
@@ -235,6 +247,11 @@ namespace MobileIdleBuilder
             _tooltipPopup = root.Q("tooltip-popup");
             _tooltipTitle = root.Q<Label>("tooltip-popup__title");
             _tooltipBody  = root.Q<Label>("tooltip-popup__body");
+
+            // Building inspector
+            _buildingInspectorPanel = root.Q("building-inspector-panel");
+            _inspectorContent       = root.Q<ScrollView>("inspector-content");
+            _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
         }
 
         private void BindButtons(VisualElement root)
@@ -294,6 +311,10 @@ namespace MobileIdleBuilder
             // Deconstruct cancel
             root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
                 deconstructController?.CancelDeconstructMode());
+
+            // Building inspector close
+            var btnCloseInspector = root.Q<Button>("btn-close-inspector");
+            if (btnCloseInspector != null) btnCloseInspector.clicked += HideBuildingInspector;
 
             // Prestige confirm
             root.Q<Button>("btn-confirm-prestige").clicked += OnPrestigeConfirmed;
@@ -932,6 +953,201 @@ namespace MobileIdleBuilder
         }
 
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
+
+        // ============================================================
+        // Building inspector
+        // ============================================================
+
+        /// <summary>
+        /// Opens the building inspector panel for <paramref name="entity"/>.
+        /// Called by <see cref="BuildingInspectorController"/> when the player taps a building.
+        /// </summary>
+        public void ShowBuildingInspector(Entity entity, string buildingName)
+        {
+            if (!_ecsReady) return;
+            _inspectorEntity = entity;
+            if (_inspectorBuildingName != null) _inspectorBuildingName.text = buildingName;
+            RefreshInspectorContent();
+            SetElementVisible(_buildingInspectorPanel, true);
+        }
+
+        public void HideBuildingInspector()
+        {
+            SetElementVisible(_buildingInspectorPanel, false);
+            _inspectorEntity = Entity.Null;
+        }
+
+        private void TickBuildingInspector()
+        {
+            if (_inspectorEntity == Entity.Null) return;
+            _inspectorRefreshTimer += Time.deltaTime;
+            if (_inspectorRefreshTimer < 0.5f) return;
+            _inspectorRefreshTimer = 0f;
+            RefreshInspectorContent();
+        }
+
+        private void RefreshInspectorContent()
+        {
+            if (_inspectorContent == null || !_ecsReady) return;
+            if (_inspectorEntity == Entity.Null) return;
+            if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
+
+            _inspectorContent.Clear();
+
+            // Active / type
+            if (_em.HasComponent<BuildingData>(_inspectorEntity))
+            {
+                var d = _em.GetComponentData<BuildingData>(_inspectorEntity);
+                AddInspectorRow($"Active: {(d.IsActive ? "Yes" : "No")}");
+            }
+
+            // Grid position
+            if (_em.HasComponent<GridPosition>(_inspectorEntity))
+            {
+                var p = _em.GetComponentData<GridPosition>(_inspectorEntity);
+                AddInspectorRow($"Cell: ({p.Cell.x}, {p.Cell.y})");
+            }
+
+            // Collector rate & timer
+            if (_em.HasComponent<CollectorData>(_inspectorEntity))
+            {
+                var col      = _em.GetComponentData<CollectorData>(_inspectorEntity);
+                float rate   = col.OutputRate > 0f ? col.OutputRate : 1f;
+                float next   = Mathf.Max(0f, (1f / rate) - col.Timer);
+                AddInspectorRow("—— Collector ——");
+                AddInspectorRow($"Output rate: {col.OutputRate:F1} /s");
+                AddInspectorRow($"Next item in: {next:F2}s");
+            }
+
+            // Output inventory
+            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                AddInspectorRow("—— Output Buffer ——");
+                if (buf.Length == 0)
+                {
+                    AddInspectorRow("  (empty)");
+                }
+                else
+                {
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // Input inventory
+            if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
+                if (buf.Length > 0)
+                {
+                    AddInspectorRow("—— Input Buffer ——");
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // What this building produces (recipe output)
+            if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
+                if (buf.Length > 0)
+                {
+                    AddInspectorRow("—— Produces ——");
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // Recipe picker — shown for buildings with multiple supported recipes
+            var buildingSO = GetBuildingSO(_inspectorEntity);
+            if (buildingSO?.supportedRecipes != null && buildingSO.supportedRecipes.Length > 1)
+            {
+                AddInspectorRow("—— Set Recipe ——");
+                foreach (var r in buildingSO.supportedRecipes)
+                {
+                    if (r == null) continue;
+                    var captured = r;
+                    var btn = new Button { text = r.displayName ?? r.name };
+                    btn.AddToClassList("craft-btn");
+                    btn.clicked += () =>
+                    {
+                        SetBuildingRecipe(_inspectorEntity, captured);
+                        RefreshInspectorContent();
+                    };
+                    _inspectorContent?.Add(btn);
+                }
+            }
+        }
+
+        private BuildingSO GetBuildingSO(Entity entity)
+        {
+            if (!_ecsReady || !_em.HasComponent<BuildingData>(entity)) return null;
+            int buildingType = _em.GetComponentData<BuildingData>(entity).BuildingType;
+            if (placementController?.availableBuildings == null) return null;
+            foreach (var entry in placementController.availableBuildings)
+            {
+                if (entry.building != null && entry.building.buildingId == buildingType)
+                    return entry.building;
+            }
+            return null;
+        }
+
+        private void SetBuildingRecipe(Entity entity, RecipeSO recipe)
+        {
+            if (!_ecsReady || !_em.Exists(entity) || recipe == null) return;
+
+            _em.SetComponentData(entity, new RecipeProcessData
+            {
+                RecipeID        = recipe.recipeId,
+                CraftTime       = recipe.baseCraftTime,
+                Progress        = 0f,
+                InputsSatisfied = false,
+                IsCrafting      = false
+            });
+
+            var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);
+            inputBuf.Clear();
+            if (recipe.inputs != null)
+            {
+                foreach (var input in recipe.inputs)
+                {
+                    if (input.item == null) continue;
+                    inputBuf.Add(new RecipeInputSlot { ItemID = input.item.itemId, Quantity = input.quantity });
+                }
+            }
+
+            var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
+            outputBuf.Clear();
+            if (recipe.outputItem != null)
+                outputBuf.Add(new RecipeOutputSlot
+                {
+                    ItemID   = recipe.outputItem.itemId,
+                    Quantity = recipe.outputQuantity
+                });
+        }
+
+        private void AddInspectorRow(string text)
+        {
+            var lbl = new Label(text);
+            lbl.AddToClassList("recipe-inputs");
+            _inspectorContent?.Add(lbl);
+        }
+
+        private static string ItemName(int itemID)
+        {
+            var item = ItemDatabase.Instance?.Get(itemID);
+            return item?.displayName ?? item?.symbol ?? $"Item {itemID}";
+        }
 
         private void PositionTooltip(VisualElement anchor)
         {

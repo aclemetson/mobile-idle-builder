@@ -10,14 +10,15 @@ namespace MobileIdleBuilder
     ///
     /// Interaction model:
     ///   1. Player opens the Buildings panel and taps "Place" on the Conveyor Belt card.
-    ///   2. A conveyor overlay appears. Player presses down on any free cell — this becomes
-    ///      the START point.
+    ///   2. A conveyor overlay appears. Player presses down on any free cell OR any existing
+    ///      conveyor cell — this becomes the START point.
     ///   3. While held, the END point tracks the pointer. The path is recalculated every frame
     ///      as an L-shape (start → corner → end), with at most one 90° turn.
-    ///      The corner is placed so the longer axis comes first. If that path is blocked, the
-    ///      alternate orientation is tried automatically.
-    ///   4. On release: the displayed path is placed. Draw state resets so the player can
-    ///      immediately start the next segment (still in conveyor mode).
+    ///      The end point may also land on an existing conveyor cell.
+    ///      All intermediate cells must be free.
+    ///   4. On release: the displayed path is placed. Existing conveyor cells at the endpoints
+    ///      have their ExitDir / EntryDir updated for any 90° turn, and any old chain links at
+    ///      those endpoints are severed (the cut-off segments become independent chains).
     ///   5. Escape / Cancel button exits conveyor mode entirely.
     /// </summary>
     public class ConveyorPlacementController : MonoBehaviour
@@ -40,13 +41,11 @@ namespace MobileIdleBuilder
         private bool               _isDragging;
         private Vector2Int         _startCell;
         private Vector2Int         _endCell;
-        private List<Vector2Int>   _currentPath = new(); // live-calculated, may be empty if blocked
+        private List<Vector2Int>   _currentPath = new();
         private bool               _pathValid;
 
-        // Orientation lock: set on the first step away from the start cell;
-        // cleared when the end returns to the start so the player can restart in a new direction.
         private bool               _orientationLocked;
-        private bool               _horizontalFirst; // true = EW leg first, false = NS leg first
+        private bool               _horizontalFirst;
 
         // ----------------------------------------------------------------
         // Public API
@@ -87,7 +86,7 @@ namespace MobileIdleBuilder
             if (InputUtils.WasPointerPressed())
             {
                 gridRenderer.ClearConveyorHoverCell();
-                if (IsFreecell(cell))
+                if (IsFreecell(cell) || IsConveyorCell(cell))
                 {
                     ResetDraw();
                     _isDragging = true;
@@ -101,7 +100,7 @@ namespace MobileIdleBuilder
             // ---- Pre-drag hover: show green on valid start cells ----
             if (!_isDragging)
             {
-                if (gridRenderer.IsInBounds(cell.x, cell.y) && IsFreecell(cell))
+                if (gridRenderer.IsInBounds(cell.x, cell.y) && (IsFreecell(cell) || IsConveyorCell(cell)))
                     gridRenderer.SetConveyorHoverCell(cell.x, cell.y);
                 else
                     gridRenderer.ClearConveyorHoverCell();
@@ -126,7 +125,7 @@ namespace MobileIdleBuilder
                 if (_pathValid && _currentPath.Count >= 1)
                     conveyorPlacer.PlaceConveyorChain(_currentPath);
 
-                ResetDraw(); // clear ghost + path, stay in conveyor mode
+                ResetDraw();
             }
         }
 
@@ -134,30 +133,20 @@ namespace MobileIdleBuilder
         // Path calculation
         // ----------------------------------------------------------------
 
-        /// <summary>
-        /// Recalculates _currentPath from _startCell to _endCell and refreshes the ghost.
-        /// Tries the primary orientation first; falls back to the alternate if it is blocked.
-        /// </summary>
         private void UpdatePath()
         {
             gridRenderer.ClearConveyorGhost();
 
-            // Lock orientation on the first step away from start; unlock if back at start.
             int dx = _endCell.x - _startCell.x;
             int dy = _endCell.y - _startCell.y;
 
             if (dx == 0 && dy == 0)
-            {
-                // End is back at start — release the lock so the next move picks a fresh direction
                 _orientationLocked = false;
-            }
             else if (!_orientationLocked)
             {
-                // First movement away from start: whichever axis moved more determines the first leg
                 _horizontalFirst   = Mathf.Abs(dx) >= Mathf.Abs(dy);
                 _orientationLocked = true;
             }
-            // else: orientation stays locked — moving far in the other axis won't flip it
 
             var primary   = BuildLPath(_startCell, _endCell, preferHorizontalFirst: _horizontalFirst);
             var alternate = BuildLPath(_startCell, _endCell, preferHorizontalFirst: !_horizontalFirst);
@@ -165,50 +154,47 @@ namespace MobileIdleBuilder
             bool primaryValid   = IsPathFree(primary);
             bool alternateValid = IsPathFree(alternate);
 
-            // Prefer primary unless it is blocked and alternate is free
             List<Vector2Int> chosen;
             if (primaryValid)
                 chosen = primary;
             else if (alternateValid)
                 chosen = alternate;
             else
-                chosen = primary; // both blocked — show primary as visual feedback
+                chosen = primary;
 
             _currentPath = chosen;
             _pathValid   = primaryValid || alternateValid;
 
-            // Paint ghost tiles in orange, then overlay start/end in green
-            foreach (var c in _currentPath)
-                gridRenderer.AddConveyorGhostCell(c.x, c.y);
+            // Paint ghost tiles; skip cells that are existing conveyors at the endpoints
+            for (int i = 0; i < _currentPath.Count; i++)
+            {
+                var  c              = _currentPath[i];
+                bool isExistingEndpoint =
+                    (i == 0                      && IsConveyorCell(c)) ||
+                    (i == _currentPath.Count - 1 && IsConveyorCell(c));
+                if (!isExistingEndpoint)
+                    gridRenderer.AddConveyorGhostCell(c.x, c.y);
+            }
 
             if (_currentPath.Count > 0)
                 gridRenderer.PaintConveyorEndpoints(_startCell.x, _startCell.y, _endCell.x, _endCell.y);
         }
 
-        /// <summary>
-        /// Builds an L-shaped path from <paramref name="start"/> to <paramref name="end"/>.
-        /// <paramref name="preferHorizontalFirst"/>: if true, the horizontal leg comes first
-        /// (corner at (end.x, start.y)); otherwise the vertical leg comes first
-        /// (corner at (start.x, end.y)).
-        /// Returns a straight line when start and end share a row or column.
-        /// </summary>
         private static List<Vector2Int> BuildLPath(Vector2Int start, Vector2Int end, bool preferHorizontalFirst)
         {
             int dx = end.x - start.x;
             int dy = end.y - start.y;
 
-            // Straight line — no turn needed
             if (dx == 0 || dy == 0)
                 return BuildStraightLine(start, end);
 
-            // Determine elbow cell
             Vector2Int corner = preferHorizontalFirst
-                ? new Vector2Int(end.x,   start.y)  // horizontal first
-                : new Vector2Int(start.x, end.y);    // vertical first
+                ? new Vector2Int(end.x,   start.y)
+                : new Vector2Int(start.x, end.y);
 
             var path = new List<Vector2Int>();
             AddLineCells(path, start,  corner, skipFirst: false);
-            AddLineCells(path, corner, end,    skipFirst: true);   // skip corner (already added)
+            AddLineCells(path, corner, end,    skipFirst: true);
             return path;
         }
 
@@ -219,10 +205,6 @@ namespace MobileIdleBuilder
             return path;
         }
 
-        /// <summary>
-        /// Appends each cell on the straight line from <paramref name="a"/> to
-        /// <paramref name="b"/> (which must share a row or column) into <paramref name="path"/>.
-        /// </summary>
         private static void AddLineCells(List<Vector2Int> path, Vector2Int a, Vector2Int b, bool skipFirst)
         {
             int dx    = b.x - a.x;
@@ -240,11 +222,22 @@ namespace MobileIdleBuilder
         // Validity helpers
         // ----------------------------------------------------------------
 
-        /// <summary>True if every cell in the path is free (bounds + not occupied).</summary>
+        /// <summary>
+        /// True if the path is placeable: start and end cells may be existing conveyors;
+        /// all intermediate cells must be free.
+        /// </summary>
         private bool IsPathFree(List<Vector2Int> path)
         {
-            foreach (var c in path)
+            for (int i = 0; i < path.Count; i++)
+            {
+                var  c       = path[i];
+                bool isFirst = (i == 0);
+                bool isLast  = (i == path.Count - 1);
+
+                if ((isFirst || isLast) && IsConveyorCell(c)) continue;
+
                 if (!IsFreecell(c)) return false;
+            }
             return true;
         }
 
@@ -255,6 +248,9 @@ namespace MobileIdleBuilder
             if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)) return false;
             return true;
         }
+
+        private bool IsConveyorCell(Vector2Int c) =>
+            GridOccupancy.Instance != null && GridOccupancy.Instance.IsConveyorCell(c.x, c.y);
 
         // ----------------------------------------------------------------
         // Reset helper

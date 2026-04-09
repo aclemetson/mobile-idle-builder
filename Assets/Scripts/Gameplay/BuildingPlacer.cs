@@ -108,7 +108,29 @@ namespace MobileIdleBuilder
             }
 
             if (outputDirection.HasValue)
+            {
                 _em.AddComponentData(entity, new OutputDirectionData { Direction = outputDirection.Value });
+
+                // Legacy field-collector: no port layout defined in BuildingSO, so add the output
+                // port manually from the chosen output direction.
+                var portBuf = _em.GetBuffer<PlacedPortData>(entity);
+                portBuf.Add(new PlacedPortData
+                {
+                    PortType = (int)PortType.Output,
+                    CellX    = gridX,
+                    CellY    = gridY,
+                    Facing   = outputDirection.Value
+                });
+            }
+
+            // Any MustBeOnField building (port-layout or legacy) is an autonomous collector.
+            // CollectorData must be added AFTER the entity archetype is fixed by AddComponentData
+            // calls above, and regardless of whether the building defines a port layout.
+            if (building?.placementRule == PlacementRule.MustBeOnField)
+            {
+                float rate = building.baseOutputRate > 0f ? building.baseOutputRate : 1f;
+                _em.AddComponentData(entity, new CollectorData { OutputRate = rate, Timer = 0f });
+            }
 
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });

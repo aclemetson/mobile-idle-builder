@@ -15,7 +15,9 @@
       "Bash(xargs ls:*)",
       "Bash(grep -v \"^ *m_Name: $\")",
       "Bash(grep -E \"\\\\.\\(cs|prefab|asset\\)$\")",
-      "Bash(xargs wc:*)"
+      "Bash(xargs wc:*)",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(grep:*)"
     ]
   }
 }

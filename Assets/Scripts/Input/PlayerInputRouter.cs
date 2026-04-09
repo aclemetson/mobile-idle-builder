@@ -18,6 +18,7 @@ namespace MobileIdleBuilder
         [SerializeField] private BuildingPlacementController  placementController;
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
+        [SerializeField] private BuildingInspectorController  buildingInspector;
         [SerializeField] private CharacterMover               characterMover;
         [SerializeField] private UIDocument                   hudDocument;
 
@@ -25,17 +26,26 @@ namespace MobileIdleBuilder
         {
             if (deconstructController == null)
                 deconstructController = FindAnyObjectByType<DeconstructController>();
+            if (buildingInspector == null)
+                buildingInspector = FindAnyObjectByType<BuildingInspectorController>();
         }
 
         void Update()
         {
             if (!InputUtils.WasPointerPressed()) return;
-            if (placementController   != null && placementController.IsPlacing)      return;
-            if (conveyorController    != null && conveyorController.IsPlacing)       return;
+            if (placementController   != null && placementController.IsPlacing)         return;
+            if (conveyorController    != null && conveyorController.IsPlacing)          return;
             if (deconstructController != null && deconstructController.IsDeconstructing) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
             if (IsPointerOverUI(screenPos)) return;
+
+            // Tapping a placed building opens the inspector instead of moving the character.
+            if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
+                return;
+
+            // Tapping empty ground clears any building selection and moves the character.
+            buildingInspector?.ClearSelection();
 
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
 

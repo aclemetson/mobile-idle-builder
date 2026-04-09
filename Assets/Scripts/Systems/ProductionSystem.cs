@@ -58,7 +58,12 @@ namespace MobileIdleBuilder
                 }
                 process.ValueRW.InputsSatisfied = satisfied;
 
-                // ---- Manual trigger gate ----
+                // Auto-start: begin a new craft cycle whenever inputs are ready.
+                // Guard: collectors have no RecipeInputSlots and are driven by CollectorSystem;
+                // only trigger ProductionSystem auto-start for buildings that consume inputs.
+                if (inputs.Length > 0 && satisfied && !process.ValueRO.IsCrafting)
+                    process.ValueRW.IsCrafting = true;
+
                 if (!process.ValueRO.IsCrafting) continue;
 
                 // ---- Output capacity check — pause if output buffer full ----
