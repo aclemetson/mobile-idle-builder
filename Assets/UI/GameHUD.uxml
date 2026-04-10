@@ -6,7 +6,8 @@
     <ui:Template name="TooltipPopup"       src="Components/TooltipPopup.uxml" />
     <ui:Template name="NotificationBanner" src="Components/NotificationBanner.uxml" />
     <ui:Template name="AchievementRow"     src="Components/AchievementRow.uxml" />
-    <ui:Template name="LeaderboardRow"    src="Components/LeaderboardRow.uxml" />
+    <ui:Template name="LeaderboardRow"     src="Components/LeaderboardRow.uxml" />
+    <ui:Template name="DialogueBox"        src="Components/DialogueBox.uxml" />
 
     <Style src="tokens.uss" />
     <Style src="GameHUD.uss" />
@@ -198,6 +199,14 @@
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
+
+        <!-- ═══ DIALOGUE BLOCKER (absorbs all input when dialogue is active) ═══ -->
+        <ui:VisualElement name="dialogue-blocker" class="dialogue-blocker hidden" />
+
+        <!-- ═══ DIALOGUE BOX (bottom-bar panel for tutorial/story) ═══ -->
+        <ui:Instance template="DialogueBox" name="dialogue-instance"
+                     picking-mode="Ignore"
+                     style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;" />
 
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
         <ui:Instance template="NotificationBanner" name="notification-instance" />

@@ -32,8 +32,29 @@ namespace MobileIdleBuilder
             switch (tutorial.CurrentStep)
             {
                 case TutorialStep.None:
-                    tutorial.CurrentStep = TutorialStep.CraftFirstQuarks;
+                    tutorial.CurrentStep = TutorialStep.IntroDialogue;
                     advanced = true;
+                    break;
+
+                case TutorialStep.IntroDialogue:
+                    // Skip intro for returning players who already have research unlocked
+                    if (SaveManager.Instance != null &&
+                        SaveManager.Instance.Current.unlockedResearch.Contains("recombination_i"))
+                    {
+                        tutorial.CurrentStep = TutorialStep.CraftFirstQuarks;
+                        advanced = true;
+                    }
+                    // Otherwise TutorialOverlayController plays the dialogue and advances this step
+                    break;
+
+                case TutorialStep.BuyRecombinationI:
+                    // Advance once Recombination I appears in the persistent unlock list
+                    if (SaveManager.Instance != null &&
+                        SaveManager.Instance.Current.unlockedResearch.Contains("recombination_i"))
+                    {
+                        tutorial.CurrentStep = TutorialStep.CraftFirstQuarks;
+                        advanced = true;
+                    }
                     break;
 
                 case TutorialStep.CraftFirstQuarks:

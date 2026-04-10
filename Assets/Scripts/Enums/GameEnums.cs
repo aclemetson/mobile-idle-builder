@@ -149,17 +149,19 @@ namespace MobileIdleBuilder
 
     public enum TutorialStep
     {
-        None               = 0,
-        CraftFirstQuarks   = 1,
-        CraftFirstProton   = 2,
-        CraftFirstNeutron  = 3,
-        CraftFirstHydrogen = 4,
-        PlaceFirstBuilding = 5,
-        AutomationStarted  = 6,
-        ReachPrestigeWall  = 7,
-        PrestigePromptShown = 8,
-        FirstPrestigeComplete = 9,
-        SpendPrestigeCurrency = 10,
-        Completed          = 99
+        None                  = 0,
+        IntroDialogue         = 1,   // Show Architect intro; TutorialOverlayController advances this
+        BuyRecombinationI     = 2,   // Wait for Recombination I research to be purchased
+        CraftFirstQuarks      = 3,
+        CraftFirstProton      = 4,
+        CraftFirstNeutron     = 5,
+        CraftFirstHydrogen    = 6,
+        PlaceFirstBuilding    = 7,
+        AutomationStarted     = 8,
+        ReachPrestigeWall     = 9,
+        PrestigePromptShown   = 10,
+        FirstPrestigeComplete = 11,
+        SpendPrestigeCurrency = 12,
+        Completed             = 99
     }
 }

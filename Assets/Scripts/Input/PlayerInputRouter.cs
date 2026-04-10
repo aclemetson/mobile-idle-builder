@@ -19,7 +19,9 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private BuildingInspectorController  buildingInspector;
+        [SerializeField] private ManualFieldCollector         fieldCollector;
         [SerializeField] private CharacterMover               characterMover;
+        [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private UIDocument                   hudDocument;
 
         void Awake()
@@ -32,6 +34,8 @@ namespace MobileIdleBuilder
 
         void Update()
         {
+            UpdateFieldHover();
+
             if (!InputUtils.WasPointerPressed()) return;
             if (placementController   != null && placementController.IsPlacing)         return;
             if (conveyorController    != null && conveyorController.IsPlacing)          return;
@@ -42,6 +46,10 @@ namespace MobileIdleBuilder
 
             // Tapping a placed building opens the inspector instead of moving the character.
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
+                return;
+
+            // Tapping a nearby field collects one item from it.
+            if (fieldCollector != null && fieldCollector.TryCollect(screenPos))
                 return;
 
             // Tapping empty ground clears any building selection and moves the character.
@@ -55,6 +63,39 @@ namespace MobileIdleBuilder
             Vector3 worldPos = ray.origin + ray.direction * t;
 
             characterMover.SetMoveTarget(worldPos);
+        }
+
+        // ---- Field hover highlight ----
+
+        private void UpdateFieldHover()
+        {
+            if (gridRenderer == null) return;
+
+            // Don't show field hover during any exclusive placement/deconstruct mode
+            bool busy = (placementController   != null && placementController.IsPlacing)          ||
+                        (conveyorController    != null && conveyorController.IsPlacing)           ||
+                        (deconstructController != null && deconstructController.IsDeconstructing);
+            if (busy) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            Vector2 screenPos = InputUtils.GetPointerPosition();
+            if (screenPos == Vector2.zero) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            // Map screen → ground plane → grid cell (same logic as BuildingPlacementController)
+            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            float   t     = -ray.origin.y / ray.direction.y;
+            Vector3 world = ray.origin + ray.direction * t;
+            int     cx    = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
+            int     cy    = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
+
+            bool isField    = FieldGenerator.GetFieldAt(cx, cy) != null;
+            bool isOccupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy);
+
+            if (isField && !isOccupied)
+                gridRenderer.SetFieldHoverCell(cx, cy);
+            else
+                gridRenderer.ClearFieldHoverCell();
         }
 
         private bool IsPointerOverUI(Vector2 screenPos)

@@ -22,6 +22,7 @@ namespace MobileIdleBuilder
         [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
         [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
         [SerializeField] private Color deconstructHoverColor = new Color(0.9f,   0.15f,  0.15f, 0.9f); // solid danger red
+        [SerializeField] private Color fieldHoverColor       = new Color(0.15f,  0.85f,  0.35f, 0.55f); // soft green — interactable field
 
         [Header("Tile gap (0 = flush, 0.05 = small gap)")]
         [SerializeField] [Range(0f, 0.5f)] private float gap = 0.05f;
@@ -39,6 +40,7 @@ namespace MobileIdleBuilder
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
         private readonly List<Vector2Int> _deconstructHoverCells = new();
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
+        private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
         void Awake()  => BuildGrid();
         void Start()
@@ -214,6 +216,31 @@ namespace MobileIdleBuilder
             foreach (var c in _deconstructHoverCells)
                 RestoreCell(c.x, c.y);
             _deconstructHoverCells.Clear();
+        }
+
+        // ---- Field hover ----
+
+        /// <summary>
+        /// Highlights the cell under the pointer to indicate an interactable field.
+        /// Automatically restores the previous hover cell.
+        /// </summary>
+        public void SetFieldHoverCell(int x, int y)
+        {
+            if (_fieldHoverCell.x == x && _fieldHoverCell.y == y) return;
+            if (_fieldHoverCell.x >= 0)
+                RestoreCell(_fieldHoverCell.x, _fieldHoverCell.y);
+
+            _fieldHoverCell = new(x, y);
+            if (IsInBounds(x, y))
+                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), fieldHoverColor);
+        }
+
+        /// <summary>Clears the field hover highlight, restoring the cell to its normal colour.</summary>
+        public void ClearFieldHoverCell()
+        {
+            if (_fieldHoverCell.x < 0) return;
+            RestoreCell(_fieldHoverCell.x, _fieldHoverCell.y);
+            _fieldHoverCell = new(-1, -1);
         }
 
         // ---- Helpers ----

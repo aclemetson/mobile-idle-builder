@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: recombination_i
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: recombination_i
+  displayName: Recombination I
+  description: Masters the binding of quarks into nucleons. Enables construction
+    of Field Collectors and Nucleon Factories.
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites: []
+  depthInTree: 0
+  costBaseCurrency: 50
+  costPrestigeCurrency: 0
+  unlocksItems: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 0daa7275c8aeed24cab9fe209b3b9b4e, type: 2}
+  - {fileID: 11400000, guid: 85d8fb163051b424b8ede5685010ac68, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 4b8308837a6e7de4fac79d125b57b9ab, type: 2}
+  - {fileID: 11400000, guid: 2a0e9be0da7ffa54f9f235f0818f77ed, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0
+  codexEntry: The first step toward structure. By understanding the colour charge
+    interactions of quarks, you can now bind them into stable nucleons.

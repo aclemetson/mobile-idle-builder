@@ -58,7 +58,7 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void WhenStepIsNone_AdvancesToCraftFirstQuarks()
+        public void WhenStepIsNone_AdvancesToIntroDialogue()
         {
             _em.SetComponentData(_playerEntity, new TutorialStateData
             {
@@ -69,7 +69,7 @@ namespace MobileIdleBuilder.Tests
             _world.Update();
 
             var state = _em.GetComponentData<TutorialStateData>(_playerEntity);
-            Assert.AreEqual(TutorialStep.CraftFirstQuarks, state.CurrentStep);
+            Assert.AreEqual(TutorialStep.IntroDialogue, state.CurrentStep);
         }
 
         // ── Step: CraftFirstQuarks → CraftFirstProton ────────────────────────

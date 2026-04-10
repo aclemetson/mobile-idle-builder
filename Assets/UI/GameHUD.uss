@@ -123,6 +123,20 @@
     background-color: rgba(0, 229, 255, 0.12);
 }
 
+/* Tutorial highlight — toggled by TutorialOverlayController to pulse a button */
+.panel-btn--highlight {
+    background-color: rgba(0, 229, 255, 0.20);
+    border-color: var(--color-primary);
+    border-width: 2px;
+    color: var(--color-primary);
+    -unity-font-style: bold;
+}
+
+/* Unlocked research card */
+.research-card--unlocked {
+    opacity: 0.55;
+}
+
 /* ---- Slide-up panel ---- */
 .slide-panel {
     position: absolute;
@@ -140,6 +154,16 @@
 
 .hidden {
     display: none;
+}
+
+/* Full-screen overlay that blocks all input while dialogue is active */
+.dialogue-blocker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 /* ---- Panel header ---- */
@@ -210,6 +234,16 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     margin-top: 2px;
+}
+
+.recipe-row--locked {
+    opacity: 0.5;
+}
+
+.recipe-lock-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: italic;
 }
 
 .craft-btn {

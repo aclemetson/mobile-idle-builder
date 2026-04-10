@@ -1,0 +1,76 @@
+/* ================================================================
+   DialogueBox.uss — Bottom-bar dialogue panel styles
+   Token variables (--color-*, --spacing-*, etc.) are inherited
+   from the parent GameHUD document — no need to re-import tokens.uss.
+   ================================================================ */
+
+
+.dialogue-box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 56px;   /* anchored above the 56px bottom nav bar */
+    height: 30%;
+    background-color: rgba(10, 14, 26, 0.96);
+    border-top-width: 2px;
+    border-top-color: var(--color-primary);
+    padding: var(--spacing-md);
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Speaker row: portrait thumbnail + name */
+.dialogue-box__speaker-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.dialogue-portrait {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    margin-right: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.dialogue-speaker {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+/* Main dialogue text */
+.dialogue-text {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    flex-grow: 1;
+    white-space: normal;
+    -unity-text-align: upper-left;
+}
+
+/* Next / confirm button, right-aligned */
+.dialogue-next-btn {
+    align-self: flex-end;
+    min-width: 64px;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.dialogue-next-btn:hover {
+    background-color: rgba(0, 229, 255, 0.24);
+}
+
+.dialogue-next-btn:active {
+    background-color: rgba(0, 229, 255, 0.36);
+}

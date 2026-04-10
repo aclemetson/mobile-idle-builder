@@ -210,6 +210,11 @@ namespace MobileIdleBuilder
             var instance = go.AddComponent<FieldInstance>();
             instance.Initialize(fieldSO);
 
+            // Collider lets ManualFieldCollector confirm the player tapped this specific field.
+            var col = go.AddComponent<SphereCollider>();
+            col.center = new Vector3(0f, 0.5f, 0f);
+            col.radius = 0.5f;
+
             var effect = go.AddComponent<FieldEffect>();
             effect.Initialize(fieldSO.fieldColor);
         }

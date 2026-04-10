@@ -1,0 +1,18 @@
+{
+    "entries": [
+        { "id": "proton",       "previous_research": false },
+        { "id": "neutron",      "previous_research": false },
+        { "id": "hydrogen",     "previous_research": false },
+        { "id": "helium",       "previous_research": false },
+        { "id": "lithium",      "previous_research": false },
+        { "id": "carbon",       "previous_research": false },
+        { "id": "oxygen",       "previous_research": false },
+        { "id": "silicon",      "previous_research": false },
+        { "id": "iron",         "previous_research": false },
+        { "id": "uranium",      "previous_research": false },
+        { "id": "deuterium",    "previous_research": false },
+        { "id": "tritium",      "previous_research": false },
+        { "id": "carbon_14",    "previous_research": false },
+        { "id": "uranium_235",  "previous_research": false }
+    ]
+}

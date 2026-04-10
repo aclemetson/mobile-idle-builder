@@ -15,8 +15,9 @@ MonoBehaviour:
   id: electron_field
   displayName: Electron Field
   fieldType: 2
-  outputItems:
-  - {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+  drops:
+  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+    weight: 1
   fieldColor: {r: 0, g: 0.68429875, b: 0.6981132, a: 0}
   fieldIcon: {fileID: 0}
   codexEntry: 

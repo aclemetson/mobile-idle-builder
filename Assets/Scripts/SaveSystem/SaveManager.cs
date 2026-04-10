@@ -28,13 +28,18 @@ namespace MobileIdleBuilder
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            _local = new LocalSaveService();
-            _cloud = new CloudSaveService(gameConfig.apiBaseUrl);
+            _local   = new LocalSaveService();
+            _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
+
+            _cloud = gameConfig != null
+                ? new CloudSaveService(gameConfig.apiBaseUrl)
+                : null;
         }
 
         IEnumerator Start()
         {
-            yield return LoadAsync();
+            // Cloud reconciliation happens asynchronously after local is already ready
+            yield return ReconcileWithCloud();
             StartCoroutine(AutoSaveLoop());
         }
 
@@ -47,22 +52,20 @@ namespace MobileIdleBuilder
 
         // ── Public API ────────────────────────────────────────────────────────
 
-        /// <summary>Initialises from local, then reconciles with cloud if available.</summary>
-        public IEnumerator LoadAsync()
+        /// <summary>Reconciles the already-loaded local save with cloud if available.</summary>
+        private IEnumerator ReconcileWithCloud()
         {
-            _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
-
-            if (!_cloud.IsAvailable) yield break;
+            if (_cloud == null || !_cloud.IsAvailable) yield break;
 
             var task = _cloud.FetchAsync(_current.playerId);
             yield return new WaitUntil(() => task.IsCompleted);
 
             if (task.Result != null && IsCloudNewer(task.Result))
             {
-                _local.SaveWithBackup(_current);   // keep old local as .bak
+                _local.SaveWithBackup(_current);
                 _current = task.Result;
                 _local.Save(_current);
-                Debug.Log("[SaveManager] Loaded from cloud (newer).");
+                Debug.Log("[SaveManager] Reconciled with cloud (cloud was newer).");
             }
         }
 
@@ -70,7 +73,7 @@ namespace MobileIdleBuilder
 
         public IEnumerator SaveToCloud()
         {
-            if (!_cloud.IsAvailable) { SaveLocal(); yield break; }
+            if (_cloud == null || !_cloud.IsAvailable) { SaveLocal(); yield break; }
 
             SaveLocal();
             var task = _cloud.PushAsync(_current);

@@ -67,6 +67,7 @@
       "manual_craft_time": 1.0,
       "power_cost_ev": 0,
       "crafted_in": ["inventory_menu", "strong_force_combiner"],
+      "requires_research": "recombination_i",
       "simplification": null,
       "codex": "A positively charged nucleon made of 2 up quarks and 1 down quark, bound by the strong nuclear force. The number of protons in a nucleus defines which element it is."
     },
@@ -86,6 +87,7 @@
       "manual_craft_time": 1.0,
       "power_cost_ev": 0,
       "crafted_in": ["inventory_menu", "strong_force_combiner"],
+      "requires_research": "recombination_i",
       "simplification": null,
       "codex": "A neutral nucleon made of 1 up quark and 2 down quarks. Neutrons stabilize the nucleus — changing the neutron count produces isotopes of the same element."
     },

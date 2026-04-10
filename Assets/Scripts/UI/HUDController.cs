@@ -17,6 +17,7 @@ namespace MobileIdleBuilder
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private AchievementService           achievementService;
         [SerializeField] private PVPService                   pvpService;
+        [SerializeField] private ResearchService              researchService;
         [SerializeField] private float                        notificationDuration = 3f;
 
         // ---- ECS ----
@@ -128,6 +129,9 @@ namespace MobileIdleBuilder
 
             if (pvpService != null)
                 pvpService.OnStateChanged += OnPVPStateChanged;
+
+            if (researchService != null)
+                researchService.OnResearchUnlocked += OnResearchUnlocked;
         }
 
         void OnDisable()
@@ -150,6 +154,9 @@ namespace MobileIdleBuilder
 
             if (pvpService != null)
                 pvpService.OnStateChanged -= OnPVPStateChanged;
+
+            if (researchService != null)
+                researchService.OnResearchUnlocked -= OnResearchUnlocked;
         }
 
         void Start()
@@ -425,8 +432,108 @@ namespace MobileIdleBuilder
         private void OpenResearchPanel()
         {
             CloseAllPanels();
-            // Content is populated when ResearchSO data is wired in
+            BuildResearchList();
             SetElementVisible(_researchPanel, true);
+        }
+
+        private void BuildResearchList()
+        {
+            if (_researchList == null) return;
+            _researchList.Clear();
+
+            if (researchService == null || researchService.AllResearch == null ||
+                researchService.AllResearch.Count == 0)
+            {
+                _researchList.Add(new Label("No research available."));
+                return;
+            }
+
+            long currentEntropy = 0;
+            if (_ecsReady && !_progressQuery.IsEmpty)
+                currentEntropy = _em.GetComponentData<PlayerProgressData>(
+                    _progressQuery.GetSingletonEntity()).BaseCurrency;
+
+            foreach (var research in researchService.AllResearch)
+            {
+                if (research == null) continue;
+
+                bool unlocked    = researchService.IsUnlocked(research.id);
+                bool canPurchase = !unlocked && researchService.CanPurchase(research);
+
+                var card = new VisualElement();
+                card.AddToClassList("building-card");
+                if (unlocked) card.AddToClassList("research-card--unlocked");
+
+                // Name row
+                var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
+                nameLabel.AddToClassList("building-card-name");
+                card.Add(nameLabel);
+
+                // Description
+                if (!string.IsNullOrEmpty(research.description))
+                {
+                    var descLabel = new Label(research.description);
+                    descLabel.AddToClassList("building-card-recipe");
+                    card.Add(descLabel);
+                }
+
+                if (!unlocked)
+                {
+                    // Cost
+                    bool affordable = currentEntropy >= research.costBaseCurrency;
+                    var costLabel = new Label($"◈ {research.costBaseCurrency:N0}");
+                    costLabel.AddToClassList("building-card-recipe");
+                    if (!affordable)
+                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    card.Add(costLabel);
+
+                    // Prerequisites (if locked)
+                    if (research.prerequisites != null && research.prerequisites.Length > 0)
+                    {
+                        bool prereqsMet = canPurchase || unlocked;
+                        if (!prereqsMet)
+                        {
+                            var prereqNames = string.Join(", ",
+                                System.Array.ConvertAll(research.prerequisites,
+                                    p => p != null ? p.displayName : "?"));
+                            var prereqLabel = new Label($"Requires: {prereqNames}");
+                            prereqLabel.AddToClassList("building-card-recipe");
+                            prereqLabel.style.color = new UnityEngine.Color(0.6f, 0.6f, 0.6f);
+                            card.Add(prereqLabel);
+                        }
+                    }
+
+                    // Purchase button
+                    var purchaseBtn = new Button { text = "Research" };
+                    purchaseBtn.AddToClassList("craft-btn");
+                    purchaseBtn.SetEnabled(canPurchase);
+
+                    var captured = research;
+                    purchaseBtn.clicked += () =>
+                    {
+                        researchService.Purchase(captured);
+                        BuildResearchList(); // refresh after purchase
+                    };
+                    card.Add(purchaseBtn);
+                }
+
+                _researchList.Add(card);
+            }
+        }
+
+        private void OnResearchUnlocked(ResearchSO research)
+        {
+            // Refresh research panel if it is currently open
+            if (_researchPanel != null && !_researchPanel.ClassListContains("hidden"))
+                BuildResearchList();
+
+            // Refresh buildings panel if it is open (newly unlocked buildings will appear)
+            if (_buildingsPanel != null && !_buildingsPanel.ClassListContains("hidden"))
+                BuildBuildingsList();
+
+            // Refresh recipe panel — newly learned recipes will appear
+            if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
+                BuildRecipeList();
         }
 
         private void OpenUpgradesPanel()
@@ -619,8 +726,16 @@ namespace MobileIdleBuilder
 
             foreach (var recipe in recipes)
             {
+                // Hide recipes the player has never unlocked
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false))
+                    continue;
+
+                bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
+                bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
+
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
+                if (isLocked) row.AddToClassList("recipe-row--locked");
 
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
@@ -638,13 +753,22 @@ namespace MobileIdleBuilder
                     info.Add(buildingTag);
                 }
 
+                if (isLocked)
+                {
+                    var lockLabel = new Label($"[Requires research]");
+                    lockLabel.AddToClassList("recipe-lock-hint");
+                    info.Add(lockLabel);
+                }
+
                 info.Add(nameLabel);
                 info.Add(inputsLabel);
 
-                var craftBtn = new Button { text = "Craft" };
+                var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
+                craftBtn.SetEnabled(!isLocked);
                 var captured = recipe;
-                craftBtn.clicked += () => OnCraftPressed(captured);
+                if (!isLocked)
+                    craftBtn.clicked += () => OnCraftPressed(captured);
 
                 row.Add(info);
                 row.Add(craftBtn);
@@ -709,6 +833,14 @@ namespace MobileIdleBuilder
 
             foreach (var entry in placementController.availableBuildings)
             {
+                // Skip buildings whose required research has not been purchased yet
+                var bso = entry.building;
+                if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                {
+                    if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
+                        continue;
+                }
+
                 var card = new VisualElement();
                 card.AddToClassList("building-card");
 
