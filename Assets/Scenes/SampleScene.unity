@@ -268,7 +268,7 @@ MonoBehaviour:
   holdFraction: 0.35
   stackOffset: 0.4
   textColor: {r: 1, g: 1, b: 1, a: 1}
-  fontSize: 0.45
+  fontSize: 4
   spawnHeight: 2
 --- !u!1 &262970759
 GameObject:
@@ -280,6 +280,8 @@ GameObject:
   m_Component:
   - component: {fileID: 262970761}
   - component: {fileID: 262970760}
+  - component: {fileID: 262970763}
+  - component: {fileID: 262970762}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -316,6 +318,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &262970762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e992acbd9735e646bad81078035f410, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeDatabase
+  recipesJsonAsset: {fileID: 4900000, guid: fabdbb24d26dea3448a77ed089ff3f01, type: 3}
+--- !u!114 &262970763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5cb70d1957ec0e48b3ccab4d0dfd305, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeKnowledgeService
+  _defaultKnowledgeAsset: {fileID: 4900000, guid: 1073107cdb4fef84684a9c1f14d500fc, type: 3}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
