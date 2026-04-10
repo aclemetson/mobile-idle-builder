@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
-  m_Name: nucleon_factory
+  m_Name: maxwells_demon
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
-  id: nucleon_factory
-  displayName: Nucleon Factory
-  description: Takes quarks and makes either protons or neutrons
+  id: maxwells_demon
+  displayName: Maxwell's Demon
+  description: Consumes any items fed into it and converts them to entropy.
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  buildingId: 2
+  buildingId: 3
   tier: 0
   category: 0
   isObsoleteable: 0
@@ -30,13 +30,11 @@ MonoBehaviour:
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
   baseOutputRate: 0
-  supportedRecipes:
-  - {fileID: 11400000, guid: 0daa7275c8aeed24cab9fe209b3b9b4e, type: 2}
-  - {fileID: 11400000, guid: 85d8fb163051b424b8ede5685010ac68, type: 2}
-  inputSlotCount: 2
+  supportedRecipes: []
+  inputSlotCount: 12
   inputSlotLabels: []
-  isEntropySink: 0
-  footprint: {x: 2, y: 1}
+  isEntropySink: 1
+  footprint: {x: 3, y: 3}
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
@@ -44,18 +42,45 @@ MonoBehaviour:
   - portType: 0
     localCell: {x: 1, y: 0}
     localFacing: 0
-  - portType: 1
-    localCell: {x: 0, y: 0}
+  - portType: 0
+    localCell: {x: 2, y: 0}
     localFacing: 0
+  - portType: 0
+    localCell: {x: 2, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 2, y: 1}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 2, y: 2}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 2}
+    localFacing: 2
+  - portType: 0
+    localCell: {x: 1, y: 2}
+    localFacing: 2
+  - portType: 0
+    localCell: {x: 2, y: 2}
+    localFacing: 2
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 0, y: 1}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 0, y: 2}
+    localFacing: 1
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
-  entropyCost: 200
+  entropyCost: 1000
   upgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 0}
-  availableFromStart: 0
+  availableFromStart: 1
   tutorialNote: 
   collectsDecayParticles: 0
   decayCollectionRate: 0

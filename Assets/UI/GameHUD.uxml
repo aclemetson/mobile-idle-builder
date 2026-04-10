@@ -17,6 +17,7 @@
         <ui:VisualElement name="top-bar" class="top-bar">
             <ui:Button name="btn-prestige"   text="⬆ Prestige" class="prestige-btn" />
             <ui:VisualElement name="inventory-bar" class="inventory-bar" />
+            <ui:Label name="entropy-label" text="◈ 0" class="power-label" />
             <ui:Label name="power-label" text="⚡ 0 eV" class="power-label" />
             <ui:Button name="btn-settings"   text="⚙"           class="settings-btn" />
         </ui:VisualElement>

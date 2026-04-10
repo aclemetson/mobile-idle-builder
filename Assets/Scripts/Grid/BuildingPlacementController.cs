@@ -117,6 +117,9 @@ namespace MobileIdleBuilder
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
 
+        /// <summary>Raised after a building is successfully placed. Carries the placed entry.</summary>
+        public event Action<BuildingEntry> OnBuildingPlaced;
+
         /// <summary>
         /// Raised when the player taps a field that has multiple possible outputs.
         /// Call SelectOutput() with the chosen recipe to resume placement.
@@ -181,14 +184,14 @@ namespace MobileIdleBuilder
         {
             if (_awaitingSelection)
             {
-                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                if (InputUtils.WasCancelPressed())
                     CancelPlacement();
                 return;
             }
 
             if (!IsPlacing) return;
 
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (InputUtils.WasCancelPressed())
             {
                 CancelPlacement();
                 return;
@@ -286,6 +289,7 @@ namespace MobileIdleBuilder
                     for (int dy = 0; dy < fp.y; dy++)
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
+                OnBuildingPlaced?.Invoke(_pending);
             }
 
             DestroyGhostArrow();
@@ -315,8 +319,9 @@ namespace MobileIdleBuilder
                 if (!gridRenderer.IsInBounds(wx, wy)) continue;
 
                 bool isOutput      = port.portType == PortType.Output;
-                Vector3 edgeOffset = FacingEdgeOffset(dir, cs);
-                var displayDir     = isOutput ? dir : (OutputDirection)(((int)dir + 2) % 4);
+                var  oppDir        = (OutputDirection)(((int)dir + 2) % 4);
+                Vector3 edgeOffset = isOutput ? FacingEdgeOffset(dir, cs) : FacingEdgeOffset(oppDir, cs);
+                var displayDir     = dir;
 
                 var go = new GameObject($"GhostPort_{port.portType}");
                 go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);

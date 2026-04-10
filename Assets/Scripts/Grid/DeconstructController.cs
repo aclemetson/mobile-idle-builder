@@ -102,7 +102,7 @@ namespace MobileIdleBuilder
         {
             if (!IsDeconstructing) return;
 
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (InputUtils.WasCancelPressed())
             {
                 CancelDeconstructMode();
                 return;

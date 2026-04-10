@@ -41,6 +41,7 @@ namespace MobileIdleBuilder
 
         // ---- HUD chrome ----
         private VisualElement _inventoryBar;
+        private Label         _entropyLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
 
@@ -113,6 +114,7 @@ namespace MobileIdleBuilder
             {
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
+                placementController.OnBuildingPlaced         += OnBuildingPlaced;
             }
 
             if (conveyorController != null)
@@ -134,6 +136,7 @@ namespace MobileIdleBuilder
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
+                placementController.OnBuildingPlaced         -= OnBuildingPlaced;
             }
 
             if (conveyorController != null)
@@ -167,6 +170,7 @@ namespace MobileIdleBuilder
         void Update()
         {
             RefreshInventoryBar();
+            RefreshEntropyLabel();
             RefreshPowerLabel();
             RefreshPrestigeButton();
             TickBuildingInspector();
@@ -180,6 +184,7 @@ namespace MobileIdleBuilder
         {
             // HUD chrome
             _inventoryBar = root.Q("inventory-bar");
+            _entropyLabel = root.Q<Label>("entropy-label");
             _powerLabel   = root.Q<Label>("power-label");
             _btnPrestige  = root.Q<Button>("btn-prestige");
 
@@ -352,6 +357,14 @@ namespace MobileIdleBuilder
                 if (!counts.ContainsKey(itemId))
                     lbl.style.display = DisplayStyle.None;
             }
+        }
+
+        private void RefreshEntropyLabel()
+        {
+            if (!_ecsReady || _entropyLabel == null || _progressQuery.IsEmpty) return;
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
+            _entropyLabel.text = $"◈ {progress.BaseCurrency:N0}";
         }
 
         private void RefreshPowerLabel()
@@ -661,7 +674,12 @@ namespace MobileIdleBuilder
         {
             _buildingsList.Clear();
 
-            // ---- Conveyor Belt entry (always first) ----
+            long currentEntropy = 0;
+            if (_ecsReady && !_progressQuery.IsEmpty)
+                currentEntropy = _em.GetComponentData<PlayerProgressData>(
+                    _progressQuery.GetSingletonEntity()).BaseCurrency;
+
+            // ---- Conveyor Belt entry (always first, always free) ----
             if (conveyorController != null)
             {
                 var conveyorCard = new VisualElement();
@@ -702,8 +720,21 @@ namespace MobileIdleBuilder
                     : "No recipe");
                 recipeLabel.AddToClassList("building-card-recipe");
 
+                int cost = entry.building?.entropyCost ?? 0;
+                bool canAfford = currentEntropy >= cost;
+
+                if (cost > 0)
+                {
+                    var costLabel = new Label($"◈ {cost:N0}");
+                    costLabel.AddToClassList("building-card-recipe");
+                    if (!canAfford)
+                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    card.Add(costLabel);
+                }
+
                 var placeBtn = new Button { text = "Place" };
                 placeBtn.AddToClassList("craft-btn");
+                placeBtn.SetEnabled(canAfford);
 
                 var captured = entry;
                 placeBtn.clicked += () =>
@@ -717,6 +748,17 @@ namespace MobileIdleBuilder
                 card.Add(placeBtn);
                 _buildingsList.Add(card);
             }
+        }
+
+        private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
+        {
+            int cost = entry.building?.entropyCost ?? 0;
+            if (cost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+
+            var entity   = _progressQuery.GetSingletonEntity();
+            var progress = _em.GetComponentData<PlayerProgressData>(entity);
+            progress.BaseCurrency = System.Math.Max(0, progress.BaseCurrency - cost);
+            _em.SetComponentData(entity, progress);
         }
 
         // ============================================================

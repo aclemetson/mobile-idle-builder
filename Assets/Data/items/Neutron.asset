@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: A baryon made of 1 up quark and 2 down quarks. Electrically neutral.
     Determines the isotope.
   codexUnlocked: 0
-  baseSellValue: 0
+  baseSellValue: 5
   isotopeSellMultiplier: 0

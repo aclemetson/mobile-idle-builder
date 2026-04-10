@@ -27,10 +27,15 @@ namespace MobileIdleBuilder
                                   int? outputDirection = null, int rotation = 0, bool flipped = false)
         {
             int fw = 1, fh = 1;
+            var baseFootprint = new UnityEngine.Vector2Int(1, 1);
             if (building != null)
             {
-                fw = Mathf.Max(1, building.footprint.x);
-                fh = Mathf.Max(1, building.footprint.y);
+                baseFootprint = new UnityEngine.Vector2Int(
+                    Mathf.Max(1, building.footprint.x),
+                    Mathf.Max(1, building.footprint.y));
+                var rotatedFp = PortUtils.RotatedFootprint(baseFootprint, rotation);
+                fw = rotatedFp.x;
+                fh = rotatedFp.y;
             }
 
             if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
@@ -123,6 +128,9 @@ namespace MobileIdleBuilder
                 });
             }
 
+            if (building?.isEntropySink == true)
+                _em.AddComponentData(entity, new EntropySinkTag());
+
             // Any MustBeOnField building (port-layout or legacy) is an autonomous collector.
             // CollectorData must be added AFTER the entity archetype is fixed by AddComponentData
             // calls above, and regardless of whether the building defines a port layout.
@@ -138,11 +146,10 @@ namespace MobileIdleBuilder
             // Write port layout
             if (hasPorts)
             {
-                var baseFp  = new UnityEngine.Vector2Int(fw, fh);
                 var portBuf = _em.GetBuffer<PlacedPortData>(entity);
                 foreach (var port in building.ports)
                 {
-                    var (relCell, dir) = PortUtils.TransformPort(port, baseFp, flipped, rotation);
+                    var (relCell, dir) = PortUtils.TransformPort(port, baseFootprint, flipped, rotation);
                     portBuf.Add(new PlacedPortData
                     {
                         PortType = (int)port.portType,

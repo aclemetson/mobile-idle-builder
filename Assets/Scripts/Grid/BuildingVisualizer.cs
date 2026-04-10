@@ -158,10 +158,12 @@ namespace MobileIdleBuilder
                     var  dir    = (OutputDirection)port.Facing;
                     bool isOut  = port.PortType == (int)PortType.Output;
 
-                    // localFacing = which face the port is on.
-                    // Output arrow points outward (dir). Input arrow points inward (opposite).
-                    Vector3 edgeOffset = FacingEdgeOffset(dir, cs2);
-                    var     displayDir = isOut ? dir : (OutputDirection)(((int)dir + 2) % 4);
+                    // localFacing = direction items arrive from (= conveyor exit direction).
+                    // Output: arrow on facing edge, pointing outward.
+                    // Input:  arrow on opposite edge (exterior face), pointing inward (= facing direction).
+                    var     oppDir     = (OutputDirection)(((int)dir + 2) % 4);
+                    Vector3 edgeOffset = isOut ? FacingEdgeOffset(dir, cs2) : FacingEdgeOffset(oppDir, cs2);
+                    var     displayDir = dir;
 
                     var arrowGO = new GameObject($"Port_{(isOut ? "Out" : "In")}_{wx}_{wy}");
                     arrowGO.transform.SetParent(gridRenderer.transform, worldPositionStays: false);

@@ -15,12 +15,22 @@ namespace MobileIdleBuilder
         [Tooltip("Items placed in the inventory at the start of a run.")]
         public StartingItem[] startingItems;
 
+        [Header("Starting Entropy")]
+        [Tooltip("How much entropy (BaseCurrency) the player starts with.")]
+        public long startingEntropy = 0;
+
         public class Baker : Baker<PlayerInventoryAuthoring>
         {
             public override void Bake(PlayerInventoryAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new PlayerInventoryTag());
+
+                AddComponent(entity, new PlayerProgressData
+                {
+                    BaseCurrency = authoring.startingEntropy
+                });
+
                 var buffer = AddBuffer<InventorySlot>(entity);
 
                 if (authoring.startingItems == null) return;

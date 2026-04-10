@@ -151,6 +151,9 @@ MonoBehaviour:
   gridRenderer: {fileID: 1750057541}
   hudController: {fileID: 1347028482}
   placementController: {fileID: 1750057545}
+  conveyorController: {fileID: 2094864785}
+  deconstructController: {fileID: 1750057546}
+  buildingVisualizer: {fileID: 1750057543}
 --- !u!4 &109061290
 Transform:
   m_ObjectHideFlags: 0
@@ -908,7 +911,7 @@ MonoBehaviour:
   craftService: {fileID: 827826009}
   placementController: {fileID: 1750057545}
   conveyorController: {fileID: 2094864785}
-  deconstructController: {fileID: 0}
+  deconstructController: {fileID: 1750057546}
   achievementService: {fileID: 0}
   pvpService: {fileID: 0}
   notificationDuration: 3
@@ -1146,6 +1149,8 @@ MonoBehaviour:
   - building: {fileID: 11400000, guid: 4b8308837a6e7de4fac79d125b57b9ab, type: 2}
     defaultRecipe: {fileID: 0}
   - building: {fileID: 11400000, guid: 2a0e9be0da7ffa54f9f235f0818f77ed, type: 2}
+    defaultRecipe: {fileID: 0}
+  - building: {fileID: 11400000, guid: 4627c4887e022a84781725d823f1b2a0, type: 2}
     defaultRecipe: {fileID: 0}
   gridRenderer: {fileID: 1750057541}
   buildingPlacer: {fileID: 1347028481}

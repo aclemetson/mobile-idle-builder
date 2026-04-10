@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: "The simplest atom \u2014 one proton orbited by one electron. Most
     abundant element in the universe."
   codexUnlocked: 0
-  baseSellValue: 0
+  baseSellValue: 10
   isotopeSellMultiplier: 0

@@ -74,7 +74,7 @@ namespace MobileIdleBuilder
         {
             if (!IsPlacing) return;
 
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (InputUtils.WasCancelPressed())
             {
                 CancelConveyorMode();
                 return;
