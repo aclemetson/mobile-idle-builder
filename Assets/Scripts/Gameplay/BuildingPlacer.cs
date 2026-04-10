@@ -27,10 +27,15 @@ namespace MobileIdleBuilder
                                   int? outputDirection = null, int rotation = 0, bool flipped = false)
         {
             int fw = 1, fh = 1;
+            var baseFootprint = new UnityEngine.Vector2Int(1, 1);
             if (building != null)
             {
-                fw = Mathf.Max(1, building.footprint.x);
-                fh = Mathf.Max(1, building.footprint.y);
+                baseFootprint = new UnityEngine.Vector2Int(
+                    Mathf.Max(1, building.footprint.x),
+                    Mathf.Max(1, building.footprint.y));
+                var rotatedFp = PortUtils.RotatedFootprint(baseFootprint, rotation);
+                fw = rotatedFp.x;
+                fh = rotatedFp.y;
             }
 
             if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
@@ -47,7 +52,10 @@ namespace MobileIdleBuilder
                 typeof(RecipeProcessData),
                 typeof(RecipeInputSlot),
                 typeof(RecipeOutputSlot),
-                typeof(PlacedPortData)
+                typeof(PlacedPortData),
+                typeof(BuildingOutputSlot),
+                typeof(BuildingInputSlot),
+                typeof(BuildingInventoryConfig)
             );
 
             var entity = _em.CreateEntity(archetype);
@@ -76,6 +84,12 @@ namespace MobileIdleBuilder
                 InputsSatisfied = false
             });
 
+            _em.SetComponentData(entity, new BuildingInventoryConfig
+            {
+                OutputCapacity = 20,
+                InputCapacity  = 20
+            });
+
             if (recipe != null)
             {
                 var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);
@@ -99,7 +113,32 @@ namespace MobileIdleBuilder
             }
 
             if (outputDirection.HasValue)
+            {
                 _em.AddComponentData(entity, new OutputDirectionData { Direction = outputDirection.Value });
+
+                // Legacy field-collector: no port layout defined in BuildingSO, so add the output
+                // port manually from the chosen output direction.
+                var portBuf = _em.GetBuffer<PlacedPortData>(entity);
+                portBuf.Add(new PlacedPortData
+                {
+                    PortType = (int)PortType.Output,
+                    CellX    = gridX,
+                    CellY    = gridY,
+                    Facing   = outputDirection.Value
+                });
+            }
+
+            if (building?.isEntropySink == true)
+                _em.AddComponentData(entity, new EntropySinkTag());
+
+            // Any MustBeOnField building (port-layout or legacy) is an autonomous collector.
+            // CollectorData must be added AFTER the entity archetype is fixed by AddComponentData
+            // calls above, and regardless of whether the building defines a port layout.
+            if (building?.placementRule == PlacementRule.MustBeOnField)
+            {
+                float rate = building.baseOutputRate > 0f ? building.baseOutputRate : 1f;
+                _em.AddComponentData(entity, new CollectorData { OutputRate = rate, Timer = 0f });
+            }
 
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
@@ -107,11 +146,10 @@ namespace MobileIdleBuilder
             // Write port layout
             if (hasPorts)
             {
-                var baseFp  = new UnityEngine.Vector2Int(fw, fh);
                 var portBuf = _em.GetBuffer<PlacedPortData>(entity);
                 foreach (var port in building.ports)
                 {
-                    var (relCell, dir) = PortUtils.TransformPort(port, baseFp, flipped, rotation);
+                    var (relCell, dir) = PortUtils.TransformPort(port, baseFootprint, flipped, rotation);
                     portBuf.Add(new PlacedPortData
                     {
                         PortType = (int)port.portType,

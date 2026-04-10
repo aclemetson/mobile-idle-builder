@@ -50,6 +50,7 @@ namespace MobileIdleBuilder
         public RecipeSO[] supportedRecipes;
         public int inputSlotCount;
         public string[] inputSlotLabels;    // e.g. ["Protons", "Neutrons", "Electrons"]
+        public bool isEntropySink;          // true = Maxwell's Demon; items in input buffer are consumed for entropy
 
         [Header("Placement")]
         public Vector2Int footprint = Vector2Int.one; // width x height in grid cells
@@ -57,6 +58,9 @@ namespace MobileIdleBuilder
         public PlacementRule placementRule;
         public BuildingCategory[] compatibleAdjacentCategories;
         public FieldType[] compatibleFields;
+
+        [Header("Economy")]
+        public int entropyCost;             // entropy spent to place this building
 
         [Header("Upgrades")]
         public BuildingUpgradeLevel[] upgradeLevels;

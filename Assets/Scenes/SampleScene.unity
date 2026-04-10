@@ -119,6 +119,56 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &109061288
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 109061290}
+  - component: {fileID: 109061289}
+  m_Layer: 0
+  m_Name: BuildingInspector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &109061289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109061288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78ccf451f3e25ff40a3793a50169c0c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingInspectorController
+  gridRenderer: {fileID: 1750057541}
+  hudController: {fileID: 1347028482}
+  placementController: {fileID: 1750057545}
+  conveyorController: {fileID: 2094864785}
+  deconstructController: {fileID: 1750057546}
+  buildingVisualizer: {fileID: 1750057543}
+--- !u!4 &109061290
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109061288}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &229646050
 GameObject:
   m_ObjectHideFlags: 0
@@ -561,6 +611,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 531450811}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &645627586
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 645627588}
+  - component: {fileID: 645627587}
+  m_Layer: 0
+  m_Name: Debugger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &645627587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645627586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e8b805041b7b124398502b7ed298593, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.CollectorDebugger
+  logInterval: 2
+--- !u!4 &645627588
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645627586}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &827826008
 GameObject:
   m_ObjectHideFlags: 0
@@ -815,6 +910,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDController
   craftService: {fileID: 827826009}
   placementController: {fileID: 1750057545}
+  conveyorController: {fileID: 2094864785}
+  deconstructController: {fileID: 1750057546}
   achievementService: {fileID: 0}
   pvpService: {fileID: 0}
   notificationDuration: 3
@@ -967,6 +1064,7 @@ GameObject:
   - component: {fileID: 1750057543}
   - component: {fileID: 1750057545}
   - component: {fileID: 1750057544}
+  - component: {fileID: 1750057546}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -993,6 +1091,7 @@ MonoBehaviour:
   occupiedColor: {r: 0, g: 0.565, b: 0.612, a: 1}
   ghostValidColor: {r: 0, g: 0.898, b: 1, a: 0.6}
   ghostInvalidColor: {r: 1, g: 0.09, b: 0.267, a: 0.6}
+  deconstructHoverColor: {r: 0.9, g: 0.15, b: 0.15, a: 0.9}
   gap: 0.05
 --- !u!4 &1750057542
 Transform:
@@ -1051,9 +1150,27 @@ MonoBehaviour:
     defaultRecipe: {fileID: 0}
   - building: {fileID: 11400000, guid: 2a0e9be0da7ffa54f9f235f0818f77ed, type: 2}
     defaultRecipe: {fileID: 0}
+  - building: {fileID: 11400000, guid: 4627c4887e022a84781725d823f1b2a0, type: 2}
+    defaultRecipe: {fileID: 0}
   gridRenderer: {fileID: 1750057541}
   buildingPlacer: {fileID: 1347028481}
   buildingVisualizer: {fileID: 1750057543}
+--- !u!114 &1750057546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750057540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e371b815fa002d4ebaba03cce6ea68d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DeconstructController
+  gridRenderer: {fileID: 1750057541}
+  buildingVisualizer: {fileID: 1750057543}
+  conveyorVisualizer: {fileID: 2094864783}
+  hudDocument: {fileID: 1347028483}
 --- !u!1 &2080509633
 GameObject:
   m_ObjectHideFlags: 0
@@ -1084,6 +1201,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PlayerInputRouter
   placementController: {fileID: 1750057545}
+  conveyorController: {fileID: 2094864785}
+  deconstructController: {fileID: 1750057546}
+  buildingInspector: {fileID: 109061289}
   characterMover: {fileID: 229646051}
   hudDocument: {fileID: 1347028483}
 --- !u!4 &2080509635
@@ -1093,6 +1213,80 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2080509633}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2094864782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2094864786}
+  - component: {fileID: 2094864785}
+  - component: {fileID: 2094864784}
+  - component: {fileID: 2094864783}
+  m_Layer: 0
+  m_Name: ConveyorController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2094864783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094864782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7aa7fb1f93bee640a65646001fcb4ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ConveyorVisualizer
+  gridRenderer: {fileID: 1750057541}
+--- !u!114 &2094864784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094864782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0a240afac2701e4dae2f392130dca66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ConveyorPlacer
+  conveyorVisualizer: {fileID: 2094864783}
+--- !u!114 &2094864785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094864782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 248a99b9226ee4147bb1cab6d9823ee1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ConveyorPlacementController
+  gridRenderer: {fileID: 1750057541}
+  conveyorPlacer: {fileID: 2094864784}
+--- !u!4 &2094864786
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094864782}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1113,6 +1307,9 @@ SceneRoots:
   - {fileID: 1347028484}
   - {fileID: 1750057542}
   - {fileID: 1384596492}
+  - {fileID: 109061290}
   - {fileID: 2080509635}
+  - {fileID: 2094864786}
   - {fileID: 229646052}
   - {fileID: 1326696566}
+  - {fileID: 645627588}

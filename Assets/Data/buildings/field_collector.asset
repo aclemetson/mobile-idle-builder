@@ -36,6 +36,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6211149976db10e4ebd805300b5afa5c, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
+  isEntropySink: 0
   footprint: {x: 1, y: 1}
   ports:
   - portType: 1
@@ -44,6 +45,7 @@ MonoBehaviour:
   placementRule: 1
   compatibleAdjacentCategories: 
   compatibleFields: 0100000002000000
+  entropyCost: 100
   upgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}

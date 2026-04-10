@@ -17,6 +17,7 @@
         <ui:VisualElement name="top-bar" class="top-bar">
             <ui:Button name="btn-prestige"   text="⬆ Prestige" class="prestige-btn" />
             <ui:VisualElement name="inventory-bar" class="inventory-bar" />
+            <ui:Label name="entropy-label" text="◈ 0" class="power-label" />
             <ui:Label name="power-label" text="⚡ 0 eV" class="power-label" />
             <ui:Button name="btn-settings"   text="⚙"           class="settings-btn" />
         </ui:VisualElement>
@@ -26,7 +27,7 @@
 
         <!-- ═══ BOTTOM BAR ═══ -->
         <ui:VisualElement name="bottom-bar" class="bottom-bar">
-            <ui:Button name="btn-buildings"    text="Buildings"    class="panel-btn" />
+            <ui:Button name="btn-buildings"    text="Builder"      class="panel-btn" />
             <ui:Button name="btn-recipes"      text="Recipes"      class="panel-btn" />
             <ui:Button name="btn-codex"        text="Codex"        class="panel-btn" />
             <ui:Button name="btn-research"     text="Research"     class="panel-btn" />
@@ -49,7 +50,8 @@
         <!-- ═══ BUILDINGS PANEL ═══ -->
         <ui:VisualElement name="buildings-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Buildings" class="panel-title" />
+                <ui:Label text="Builder" class="panel-title" />
+                <ui:Button name="btn-deconstruct" text="Deconstruct" class="craft-btn" />
                 <ui:Button name="btn-close-buildings" text="✕" class="close-btn" />
             </ui:VisualElement>
             <ui:ScrollView name="buildings-list" class="recipe-list"
@@ -151,6 +153,24 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
+        <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden">
+            <ui:VisualElement name="conveyor-bar" class="placement-bar">
+                <ui:Label text="Press and drag to draw a belt  ·  Esc to cancel"
+                          class="placement-label" />
+                <ui:Button name="btn-cancel-conveyor" text="Cancel" class="cancel-placement-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ DECONSTRUCT OVERLAY ═══ -->
+        <ui:VisualElement name="deconstruct-overlay" class="placement-overlay hidden" picking-mode="Ignore">
+            <ui:VisualElement name="deconstruct-bar" class="placement-bar">
+                <ui:Label text="Tap a building or belt to remove it  ·  Esc to cancel"
+                          class="placement-label" />
+                <ui:Button name="btn-cancel-deconstruct" text="Cancel" class="cancel-placement-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ═══ OUTPUT SELECTOR (shown when a field has multiple harvestable items) ═══ -->
         <ui:VisualElement name="output-selector" class="output-selector hidden">
             <ui:Label name="output-selector__title" text="Select output to collect"
@@ -166,6 +186,17 @@
                 <ui:Label name="field-proximity-banner__name" text="" class="field-proximity-banner__name" />
                 <ui:Label name="field-proximity-banner__type" text="" class="field-proximity-banner__type" />
             </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ BUILDING INSPECTOR (tap a placed building to open) ═══ -->
+        <ui:VisualElement name="building-inspector-panel" class="output-selector hidden">
+            <ui:VisualElement class="panel-header">
+                <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
+                <ui:Button name="btn-close-inspector" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="inspector-content" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->

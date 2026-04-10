@@ -11,11 +11,13 @@ namespace MobileIdleBuilder
     [RequireComponent(typeof(UIDocument))]
     public class HUDController : MonoBehaviour
     {
-        [SerializeField] private ManualCraftService          craftService;
-        [SerializeField] private BuildingPlacementController placementController;
-        [SerializeField] private AchievementService          achievementService;
-        [SerializeField] private PVPService                  pvpService;
-        [SerializeField] private float                       notificationDuration = 3f;
+        [SerializeField] private ManualCraftService           craftService;
+        [SerializeField] private BuildingPlacementController  placementController;
+        [SerializeField] private ConveyorPlacementController  conveyorController;
+        [SerializeField] private DeconstructController        deconstructController;
+        [SerializeField] private AchievementService           achievementService;
+        [SerializeField] private PVPService                   pvpService;
+        [SerializeField] private float                        notificationDuration = 3f;
 
         // ---- ECS ----
         private EntityManager _em;
@@ -39,6 +41,7 @@ namespace MobileIdleBuilder
 
         // ---- HUD chrome ----
         private VisualElement _inventoryBar;
+        private Label         _entropyLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
 
@@ -56,6 +59,12 @@ namespace MobileIdleBuilder
         private Button _btnRotateOutput;
         private Button _btnFlipBuilding;
 
+        // ---- Conveyor placement ----
+        private VisualElement _conveyorOverlay;
+
+        // ---- Deconstruct mode ----
+        private VisualElement _deconstructOverlay;
+
         // ---- Output selector ----
         private VisualElement _outputSelector;
         private VisualElement _outputSelectorOptions;
@@ -65,12 +74,25 @@ namespace MobileIdleBuilder
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
 
+        // ---- Building inspector ----
+        private VisualElement _buildingInspectorPanel;
+        private ScrollView    _inspectorContent;
+        private Label         _inspectorBuildingName;
+        private Entity        _inspectorEntity = Entity.Null;
+        private float         _inspectorRefreshTimer;
+
         // ---- Inventory label cache ----
         private readonly Dictionary<int, Label> _inventoryLabels = new();
 
         // ============================================================
         // Unity lifecycle
         // ============================================================
+
+        void Awake()
+        {
+            if (deconstructController == null)
+                deconstructController = FindAnyObjectByType<DeconstructController>();
+        }
 
         void OnEnable()
         {
@@ -79,17 +101,27 @@ namespace MobileIdleBuilder
             BindButtons(root);
 
             CloseAllPanels();
-            SetElementVisible(_placementOverlay, false);
+            SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_conveyorOverlay,    false);
+            SetElementVisible(_deconstructOverlay, false);
             SetElementVisible(_notificationBanner, false);
             SetElementVisible(_fieldBanner, false);
             SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
+            SetElementVisible(_buildingInspectorPanel, false);
 
             if (placementController != null)
             {
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
+                placementController.OnBuildingPlaced         += OnBuildingPlaced;
             }
+
+            if (conveyorController != null)
+                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+
+            if (deconstructController != null)
+                deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
@@ -104,7 +136,14 @@ namespace MobileIdleBuilder
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
+                placementController.OnBuildingPlaced         -= OnBuildingPlaced;
             }
+
+            if (conveyorController != null)
+                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+
+            if (deconstructController != null)
+                deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
 
             if (achievementService != null)
                 achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
@@ -115,6 +154,9 @@ namespace MobileIdleBuilder
 
         void Start()
         {
+            if (placementController == null)
+                placementController = FindAnyObjectByType<BuildingPlacementController>();
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
 
@@ -128,8 +170,10 @@ namespace MobileIdleBuilder
         void Update()
         {
             RefreshInventoryBar();
+            RefreshEntropyLabel();
             RefreshPowerLabel();
             RefreshPrestigeButton();
+            TickBuildingInspector();
         }
 
         // ============================================================
@@ -140,6 +184,7 @@ namespace MobileIdleBuilder
         {
             // HUD chrome
             _inventoryBar = root.Q("inventory-bar");
+            _entropyLabel = root.Q<Label>("entropy-label");
             _powerLabel   = root.Q<Label>("power-label");
             _btnPrestige  = root.Q<Button>("btn-prestige");
 
@@ -197,10 +242,21 @@ namespace MobileIdleBuilder
             _outputSelectorOptions = root.Q("output-selector__options");
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
+            // Conveyor placement
+            _conveyorOverlay = root.Q("conveyor-overlay");
+
+            // Deconstruct mode
+            _deconstructOverlay = root.Q("deconstruct-overlay");
+
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
             _tooltipTitle = root.Q<Label>("tooltip-popup__title");
             _tooltipBody  = root.Q<Label>("tooltip-popup__body");
+
+            // Building inspector
+            _buildingInspectorPanel = root.Q("building-inspector-panel");
+            _inspectorContent       = root.Q<ScrollView>("inspector-content");
+            _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
         }
 
         private void BindButtons(VisualElement root)
@@ -237,12 +293,33 @@ namespace MobileIdleBuilder
                     StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
             };
 
-            // Placement
+            // Deconstruct (header button inside buildings panel)
+            var btnDeconstruct = root.Q<Button>("btn-deconstruct");
+            if (btnDeconstruct != null)
+                btnDeconstruct.clicked += () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    deconstructController?.BeginDeconstructMode();
+                };
+
+            // Building placement
             root.Q<Button>("btn-cancel-placement").clicked += () => placementController?.CancelPlacement();
             if (_btnRotateOutput != null)
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+
+            // Conveyor cancel (button inside the conveyor overlay)
+            root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
+                conveyorController?.CancelConveyorMode());
+
+            // Deconstruct cancel
+            root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
+                deconstructController?.CancelDeconstructMode());
+
+            // Building inspector close
+            var btnCloseInspector = root.Q<Button>("btn-close-inspector");
+            if (btnCloseInspector != null) btnCloseInspector.clicked += HideBuildingInspector;
 
             // Prestige confirm
             root.Q<Button>("btn-confirm-prestige").clicked += OnPrestigeConfirmed;
@@ -280,6 +357,14 @@ namespace MobileIdleBuilder
                 if (!counts.ContainsKey(itemId))
                     lbl.style.display = DisplayStyle.None;
             }
+        }
+
+        private void RefreshEntropyLabel()
+        {
+            if (!_ecsReady || _entropyLabel == null || _progressQuery.IsEmpty) return;
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
+            _entropyLabel.text = $"◈ {progress.BaseCurrency:N0}";
         }
 
         private void RefreshPowerLabel()
@@ -588,6 +673,38 @@ namespace MobileIdleBuilder
         private void BuildBuildingsList()
         {
             _buildingsList.Clear();
+
+            long currentEntropy = 0;
+            if (_ecsReady && !_progressQuery.IsEmpty)
+                currentEntropy = _em.GetComponentData<PlayerProgressData>(
+                    _progressQuery.GetSingletonEntity()).BaseCurrency;
+
+            // ---- Conveyor Belt entry (always first, always free) ----
+            if (conveyorController != null)
+            {
+                var conveyorCard = new VisualElement();
+                conveyorCard.AddToClassList("building-card");
+
+                var nameLabel = new Label("Conveyor Belt");
+                nameLabel.AddToClassList("building-card-name");
+
+                var descLabel = new Label("Draw paths to move items between buildings");
+                descLabel.AddToClassList("building-card-recipe");
+
+                var placeBtn = new Button { text = "Place" };
+                placeBtn.AddToClassList("craft-btn");
+                placeBtn.clicked += () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    conveyorController.BeginConveyorMode();
+                };
+
+                conveyorCard.Add(nameLabel);
+                conveyorCard.Add(descLabel);
+                conveyorCard.Add(placeBtn);
+                _buildingsList.Add(conveyorCard);
+            }
+
             if (placementController == null) return;
 
             foreach (var entry in placementController.availableBuildings)
@@ -603,8 +720,21 @@ namespace MobileIdleBuilder
                     : "No recipe");
                 recipeLabel.AddToClassList("building-card-recipe");
 
+                int cost = entry.building?.entropyCost ?? 0;
+                bool canAfford = currentEntropy >= cost;
+
+                if (cost > 0)
+                {
+                    var costLabel = new Label($"◈ {cost:N0}");
+                    costLabel.AddToClassList("building-card-recipe");
+                    if (!canAfford)
+                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    card.Add(costLabel);
+                }
+
                 var placeBtn = new Button { text = "Place" };
                 placeBtn.AddToClassList("craft-btn");
+                placeBtn.SetEnabled(canAfford);
 
                 var captured = entry;
                 placeBtn.clicked += () =>
@@ -618,6 +748,17 @@ namespace MobileIdleBuilder
                 card.Add(placeBtn);
                 _buildingsList.Add(card);
             }
+        }
+
+        private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
+        {
+            int cost = entry.building?.entropyCost ?? 0;
+            if (cost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+
+            var entity   = _progressQuery.GetSingletonEntity();
+            var progress = _em.GetComponentData<PlayerProgressData>(entity);
+            progress.BaseCurrency = System.Math.Max(0, progress.BaseCurrency - cost);
+            _em.SetComponentData(entity, progress);
         }
 
         // ============================================================
@@ -713,6 +854,16 @@ namespace MobileIdleBuilder
                         ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
                         : "Tap an empty tile to place  ·  Esc to cancel";
             }
+        }
+
+        private void OnConveyorPlacingChanged(bool isPlacing)
+        {
+            SetElementVisible(_conveyorOverlay, isPlacing);
+        }
+
+        private void OnDeconstructingChanged(bool isDeconstructing)
+        {
+            SetElementVisible(_deconstructOverlay, isDeconstructing);
         }
 
         // ============================================================
@@ -845,6 +996,201 @@ namespace MobileIdleBuilder
 
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
 
+        // ============================================================
+        // Building inspector
+        // ============================================================
+
+        /// <summary>
+        /// Opens the building inspector panel for <paramref name="entity"/>.
+        /// Called by <see cref="BuildingInspectorController"/> when the player taps a building.
+        /// </summary>
+        public void ShowBuildingInspector(Entity entity, string buildingName)
+        {
+            if (!_ecsReady) return;
+            _inspectorEntity = entity;
+            if (_inspectorBuildingName != null) _inspectorBuildingName.text = buildingName;
+            RefreshInspectorContent();
+            SetElementVisible(_buildingInspectorPanel, true);
+        }
+
+        public void HideBuildingInspector()
+        {
+            SetElementVisible(_buildingInspectorPanel, false);
+            _inspectorEntity = Entity.Null;
+        }
+
+        private void TickBuildingInspector()
+        {
+            if (_inspectorEntity == Entity.Null) return;
+            _inspectorRefreshTimer += Time.deltaTime;
+            if (_inspectorRefreshTimer < 0.5f) return;
+            _inspectorRefreshTimer = 0f;
+            RefreshInspectorContent();
+        }
+
+        private void RefreshInspectorContent()
+        {
+            if (_inspectorContent == null || !_ecsReady) return;
+            if (_inspectorEntity == Entity.Null) return;
+            if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
+
+            _inspectorContent.Clear();
+
+            // Active / type
+            if (_em.HasComponent<BuildingData>(_inspectorEntity))
+            {
+                var d = _em.GetComponentData<BuildingData>(_inspectorEntity);
+                AddInspectorRow($"Active: {(d.IsActive ? "Yes" : "No")}");
+            }
+
+            // Grid position
+            if (_em.HasComponent<GridPosition>(_inspectorEntity))
+            {
+                var p = _em.GetComponentData<GridPosition>(_inspectorEntity);
+                AddInspectorRow($"Cell: ({p.Cell.x}, {p.Cell.y})");
+            }
+
+            // Collector rate & timer
+            if (_em.HasComponent<CollectorData>(_inspectorEntity))
+            {
+                var col      = _em.GetComponentData<CollectorData>(_inspectorEntity);
+                float rate   = col.OutputRate > 0f ? col.OutputRate : 1f;
+                float next   = Mathf.Max(0f, (1f / rate) - col.Timer);
+                AddInspectorRow("—— Collector ——");
+                AddInspectorRow($"Output rate: {col.OutputRate:F1} /s");
+                AddInspectorRow($"Next item in: {next:F2}s");
+            }
+
+            // Output inventory
+            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                AddInspectorRow("—— Output Buffer ——");
+                if (buf.Length == 0)
+                {
+                    AddInspectorRow("  (empty)");
+                }
+                else
+                {
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // Input inventory
+            if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
+                if (buf.Length > 0)
+                {
+                    AddInspectorRow("—— Input Buffer ——");
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // What this building produces (recipe output)
+            if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
+            {
+                var buf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
+                if (buf.Length > 0)
+                {
+                    AddInspectorRow("—— Produces ——");
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        string name = ItemName(buf[i].ItemID);
+                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
+                    }
+                }
+            }
+
+            // Recipe picker — shown for buildings with multiple supported recipes
+            var buildingSO = GetBuildingSO(_inspectorEntity);
+            if (buildingSO?.supportedRecipes != null && buildingSO.supportedRecipes.Length > 1)
+            {
+                AddInspectorRow("—— Set Recipe ——");
+                foreach (var r in buildingSO.supportedRecipes)
+                {
+                    if (r == null) continue;
+                    var captured = r;
+                    var btn = new Button { text = r.displayName ?? r.name };
+                    btn.AddToClassList("craft-btn");
+                    btn.clicked += () =>
+                    {
+                        SetBuildingRecipe(_inspectorEntity, captured);
+                        RefreshInspectorContent();
+                    };
+                    _inspectorContent?.Add(btn);
+                }
+            }
+        }
+
+        private BuildingSO GetBuildingSO(Entity entity)
+        {
+            if (!_ecsReady || !_em.HasComponent<BuildingData>(entity)) return null;
+            int buildingType = _em.GetComponentData<BuildingData>(entity).BuildingType;
+            if (placementController?.availableBuildings == null) return null;
+            foreach (var entry in placementController.availableBuildings)
+            {
+                if (entry.building != null && entry.building.buildingId == buildingType)
+                    return entry.building;
+            }
+            return null;
+        }
+
+        private void SetBuildingRecipe(Entity entity, RecipeSO recipe)
+        {
+            if (!_ecsReady || !_em.Exists(entity) || recipe == null) return;
+
+            _em.SetComponentData(entity, new RecipeProcessData
+            {
+                RecipeID        = recipe.recipeId,
+                CraftTime       = recipe.baseCraftTime,
+                Progress        = 0f,
+                InputsSatisfied = false,
+                IsCrafting      = false
+            });
+
+            var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);
+            inputBuf.Clear();
+            if (recipe.inputs != null)
+            {
+                foreach (var input in recipe.inputs)
+                {
+                    if (input.item == null) continue;
+                    inputBuf.Add(new RecipeInputSlot { ItemID = input.item.itemId, Quantity = input.quantity });
+                }
+            }
+
+            var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
+            outputBuf.Clear();
+            if (recipe.outputItem != null)
+                outputBuf.Add(new RecipeOutputSlot
+                {
+                    ItemID   = recipe.outputItem.itemId,
+                    Quantity = recipe.outputQuantity
+                });
+        }
+
+        private void AddInspectorRow(string text)
+        {
+            var lbl = new Label(text);
+            lbl.AddToClassList("recipe-inputs");
+            _inspectorContent?.Add(lbl);
+        }
+
+        private static string ItemName(int itemID)
+        {
+            var item = ItemDatabase.Instance?.Get(itemID);
+            return item?.displayName ?? item?.symbol ?? $"Item {itemID}";
+        }
+
         private void PositionTooltip(VisualElement anchor)
         {
             if (anchor == null || _tooltipPopup == null) return;
@@ -867,6 +1213,14 @@ namespace MobileIdleBuilder
         {
             foreach (var panel in _allPanels)
                 SetElementVisible(panel, false);
+            CancelActiveModes();
+        }
+
+        private void CancelActiveModes()
+        {
+            placementController?.CancelPlacement();
+            conveyorController?.CancelConveyorMode();
+            deconstructController?.CancelDeconstructMode();
         }
 
         // ============================================================

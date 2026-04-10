@@ -26,6 +26,15 @@ namespace MobileIdleBuilder
         private readonly HashSet<(int, int)>                      _portedCells       = new();
         private readonly Dictionary<(int, int), List<GameObject>> _spawnedPortArrows = new();
 
+        // Maps every occupied cell (including non-anchor cells of multi-tile buildings)
+        // back to the anchor cell so SetHover can find the right cube.
+        private readonly Dictionary<(int, int), (int, int)>      _cellToAnchor      = new();
+
+        private (int, int) _hoveredCell = (-1, -1);
+
+        private static readonly Color DefaultCubeColor = Color.white;
+        private static readonly Color HoverCubeColor   = new Color(0.35f, 0.9f, 1f);
+
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;
@@ -101,6 +110,7 @@ namespace MobileIdleBuilder
                     {
                         gridRenderer?.SetTileHighlight(x + dx, y + dy, true);
                         GridOccupancy.Instance?.Register(x + dx, y + dy);
+                        _cellToAnchor[(x + dx, y + dy)] = cell;
                     }
                 _highlighted.Add(cell);
 
@@ -148,10 +158,12 @@ namespace MobileIdleBuilder
                     var  dir    = (OutputDirection)port.Facing;
                     bool isOut  = port.PortType == (int)PortType.Output;
 
-                    // localFacing = which face the port is on.
-                    // Output arrow points outward (dir). Input arrow points inward (opposite).
-                    Vector3 edgeOffset = FacingEdgeOffset(dir, cs2);
-                    var     displayDir = isOut ? dir : (OutputDirection)(((int)dir + 2) % 4);
+                    // localFacing = direction items arrive from (= conveyor exit direction).
+                    // Output: arrow on facing edge, pointing outward.
+                    // Input:  arrow on opposite edge (exterior face), pointing inward (= facing direction).
+                    var     oppDir     = (OutputDirection)(((int)dir + 2) % 4);
+                    Vector3 edgeOffset = isOut ? FacingEdgeOffset(dir, cs2) : FacingEdgeOffset(oppDir, cs2);
+                    var     displayDir = dir;
 
                     var arrowGO = new GameObject($"Port_{(isOut ? "Out" : "In")}_{wx}_{wy}");
                     arrowGO.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
@@ -180,6 +192,84 @@ namespace MobileIdleBuilder
                 OutputDirection.West  => new Vector3(-h,  0,  0),
                 _                     => Vector3.zero
             };
+        }
+
+        /// <summary>
+        /// Removes all visual artifacts for the building anchored at (x, y).
+        /// Call after destroying the corresponding ECS entity.
+        /// </summary>
+        public void RemoveBuilding(int x, int y)
+        {
+            var cell = (x, y);
+
+            int fw = 1, fh = 1;
+            if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
+
+            for (int dx = 0; dx < fw; dx++)
+                for (int dy = 0; dy < fh; dy++)
+                {
+                    gridRenderer?.SetTileHighlight(x + dx, y + dy, false);
+                    _cellToAnchor.Remove((x + dx, y + dy));
+                }
+
+            if (_hoveredCell == cell) _hoveredCell = (-1, -1);
+
+            _highlighted.Remove(cell);
+            _footprints.Remove(cell);
+
+            if (_spawnedCubes.TryGetValue(cell, out var cube))
+            {
+                if (cube != null) Destroy(cube);
+                _spawnedCubes.Remove(cell);
+            }
+
+            if (_spawnedPortArrows.TryGetValue(cell, out var arrows))
+            {
+                foreach (var go in arrows)
+                    if (go != null) Destroy(go);
+                _spawnedPortArrows.Remove(cell);
+            }
+            _portedCells.Remove(cell);
+        }
+
+        // ----------------------------------------------------------------
+        // Hover highlight
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Tints the building at the given grid cell (any cell within its footprint).
+        /// Automatically restores the previously hovered building to its default color.
+        /// </summary>
+        public void SetHover(int x, int y)
+        {
+            if (!_cellToAnchor.TryGetValue((x, y), out var anchorCell)) return;
+            if (anchorCell == _hoveredCell) return;
+
+            // Restore previous
+            if (_spawnedCubes.TryGetValue(_hoveredCell, out var prev) && prev != null)
+                ApplyCubeColor(prev, DefaultCubeColor);
+
+            _hoveredCell = anchorCell;
+
+            if (_spawnedCubes.TryGetValue(anchorCell, out var cur) && cur != null)
+                ApplyCubeColor(cur, HoverCubeColor);
+        }
+
+        /// <summary>Removes the hover highlight from whichever building is currently hovered.</summary>
+        public void ClearHover()
+        {
+            if (_spawnedCubes.TryGetValue(_hoveredCell, out var prev) && prev != null)
+                ApplyCubeColor(prev, DefaultCubeColor);
+            _hoveredCell = (-1, -1);
+        }
+
+        private static void ApplyCubeColor(GameObject go, Color color)
+        {
+            var mr = go.GetComponent<MeshRenderer>();
+            if (mr == null) return;
+            var mpb = new MaterialPropertyBlock();
+            mpb.SetColor("_BaseColor", color);
+            mr.SetPropertyBlock(mpb);
         }
 
         void OnDestroy()

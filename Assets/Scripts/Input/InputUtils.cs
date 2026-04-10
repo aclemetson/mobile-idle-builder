@@ -26,5 +26,18 @@ namespace MobileIdleBuilder
                 return true;
             return false;
         }
+
+        /// <summary>
+        /// Returns true if the player pressed a cancel input this frame —
+        /// Escape key or right mouse button.
+        /// </summary>
+        public static bool WasCancelPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                return true;
+            if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+                return true;
+            return false;
+        }
     }
 }

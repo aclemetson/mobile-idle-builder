@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: A baryon made of 2 up quarks and 1 down quark. Charge +1. Defines the
     element.
   codexUnlocked: 0
-  baseSellValue: 0
+  baseSellValue: 5
   isotopeSellMultiplier: 0

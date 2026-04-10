@@ -12,7 +12,8 @@ namespace MobileIdleBuilder
     {
         public static GridOccupancy Instance { get; private set; }
 
-        private readonly HashSet<(int, int)> _occupied = new();
+        private readonly HashSet<(int, int)> _occupied      = new();
+        private readonly HashSet<(int, int)> _conveyorCells = new();
 
         void Awake()
         {
@@ -20,7 +21,8 @@ namespace MobileIdleBuilder
             Instance = this;
         }
 
-        public bool IsOccupied(int x, int y) => _occupied.Contains((x, y));
+        public bool IsOccupied(int x, int y)    => _occupied.Contains((x, y));
+        public bool IsConveyorCell(int x, int y) => _conveyorCells.Contains((x, y));
 
         /// <summary>Marks the cell as occupied. Returns false if already taken.</summary>
         public bool TryOccupy(int x, int y)
@@ -34,6 +36,20 @@ namespace MobileIdleBuilder
 
         /// <summary>Used by BuildingVisualizer to register pre-baked buildings.</summary>
         public void Register(int x, int y) => _occupied.Add((x, y));
+
+        /// <summary>Marks a cell as occupied by a conveyor segment (tracked separately from buildings).</summary>
+        public void RegisterConveyor(int x, int y)
+        {
+            _occupied.Add((x, y));
+            _conveyorCells.Add((x, y));
+        }
+
+        /// <summary>Removes a conveyor cell from all occupancy tracking.</summary>
+        public void UnregisterConveyor(int x, int y)
+        {
+            _occupied.Remove((x, y));
+            _conveyorCells.Remove((x, y));
+        }
 
         // ---- Multi-cell helpers ----
 

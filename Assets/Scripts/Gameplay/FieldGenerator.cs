@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -45,14 +48,18 @@ namespace MobileIdleBuilder
 
         void OnDestroy() => _fieldMap.Clear();   // clean up between Play sessions in the editor
 
-        void Start()
+        IEnumerator Start()
         {
             _fieldMap.Clear();
             if (gridRenderer == null)
             {
                 Debug.LogError("[FieldGenerator] GridRenderer reference is missing.", this);
-                return;
+                yield break;
             }
+
+            // Wait for baked buildings from the SubScene to appear in the ECS world,
+            // then register their footprints in GridOccupancy before placing any fields.
+            yield return RegisterBakedBuildings();
 
             var candidates = BuildCandidateList();
             Shuffle(candidates);
@@ -73,6 +80,64 @@ namespace MobileIdleBuilder
                         PlaceSingle(entry.fieldDefinition, ref candidateIndex, candidates);
                 }
             }
+        }
+
+        /// <summary>
+        /// Waits up to 5 seconds for baked building entities to appear in the ECS world,
+        /// then registers every occupied cell into GridOccupancy so field placement can
+        /// avoid them. Safe to call when no buildings exist — exits immediately.
+        /// </summary>
+        private IEnumerator RegisterBakedBuildings()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) yield break;
+
+            var buildingQuery = world.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<BuildingData>(),
+                ComponentType.ReadOnly<GridPosition>());
+
+            float timeout = 5f;
+            while (buildingQuery.IsEmpty && timeout > 0f)
+            {
+                timeout -= Time.deltaTime;
+                yield return null;
+            }
+
+            if (buildingQuery.IsEmpty || GridOccupancy.Instance == null)
+            {
+                buildingQuery.Dispose();
+                yield break;
+            }
+
+            // Collect multi-cell footprints
+            var footprintMap = new Dictionary<(int, int), (int, int)>();
+            var footprintQuery = world.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<GridPosition>(),
+                ComponentType.ReadOnly<BuildingFootprint>());
+
+            if (!footprintQuery.IsEmpty)
+            {
+                var fpPos  = footprintQuery.ToComponentDataArray<GridPosition>(Allocator.Temp);
+                var fpData = footprintQuery.ToComponentDataArray<BuildingFootprint>(Allocator.Temp);
+                for (int i = 0; i < fpPos.Length; i++)
+                    footprintMap[(fpPos[i].Cell.x, fpPos[i].Cell.y)] = (fpData[i].Width, fpData[i].Height);
+                fpPos.Dispose();
+                fpData.Dispose();
+            }
+            footprintQuery.Dispose();
+
+            // Register every building cell — RegisterRect is idempotent (HashSet internally)
+            var positions = buildingQuery.ToComponentDataArray<GridPosition>(Allocator.Temp);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                int x = positions[i].Cell.x;
+                int y = positions[i].Cell.y;
+                int fw = 1, fh = 1;
+                if (footprintMap.TryGetValue((x, y), out var fp)) { fw = fp.Item1; fh = fp.Item2; }
+                GridOccupancy.Instance.RegisterRect(x, y, fw, fh);
+            }
+            positions.Dispose();
+            buildingQuery.Dispose();
         }
 
         // ----------------------------------------------------------------
