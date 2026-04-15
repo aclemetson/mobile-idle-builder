@@ -32,7 +32,11 @@ namespace MobileIdleBuilder
                 _btnResearch = uiDocument.rootVisualElement.Q<Button>("btn-research");
 
             if (dialogueController != null)
-                dialogueController.OnDialogueComplete += OnIntroComplete;
+            {
+                dialogueController.OnDialogueComplete    += OnIntroComplete;
+                dialogueController.OnHighlightRequested  += OnHighlightRequested;
+                dialogueController.OnActionTriggered     += OnActionTriggered;
+            }
 
             var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
             if (world != null)
@@ -46,7 +50,11 @@ namespace MobileIdleBuilder
         void OnDestroy()
         {
             if (dialogueController != null)
-                dialogueController.OnDialogueComplete -= OnIntroComplete;
+            {
+                dialogueController.OnDialogueComplete   -= OnIntroComplete;
+                dialogueController.OnHighlightRequested -= OnHighlightRequested;
+                dialogueController.OnActionTriggered    -= OnActionTriggered;
+            }
         }
 
         void Update()
@@ -125,9 +133,9 @@ namespace MobileIdleBuilder
             while (true)
             {
                 btn.AddToClassList("panel-btn--highlight");
-                yield return new WaitForSeconds(0.7f);
+                yield return new WaitForSecondsRealtime(0.7f);
                 btn.RemoveFromClassList("panel-btn--highlight");
-                yield return new WaitForSeconds(0.7f);
+                yield return new WaitForSecondsRealtime(0.7f);
             }
         }
 
@@ -135,6 +143,41 @@ namespace MobileIdleBuilder
         {
             var hud = FindAnyObjectByType<HUDController>();
             hud?.ShowNotification("→", message, null);
+        }
+
+        // ── Dialogue event handlers ──────────────────────────────────────────
+
+        private void OnHighlightRequested(string target)
+        {
+            // Clear previous UI highlights
+            SetResearchButtonHighlight(false);
+
+            if (string.IsNullOrEmpty(target)) return;
+
+            switch (target)
+            {
+                case "btn-research":
+                    SetResearchButtonHighlight(true);
+                    break;
+                default:
+                    // World-space object (field, building on grid) — stub until grid system exists
+                    HighlightWorldObject(target);
+                    break;
+            }
+        }
+
+        private void OnActionTriggered(string action)
+        {
+            if (string.IsNullOrEmpty(action)) return;
+            // Stub: grid/camera actions implemented when the grid system is built
+            Debug.Log($"[TutorialOverlay] Action: {action}");
+        }
+
+        private void HighlightWorldObject(string targetId)
+        {
+            // Stub: future implementation finds the GameObject or grid cell by ID
+            // and applies a world-space highlight (arrow, glow, etc.)
+            Debug.Log($"[TutorialOverlay] World highlight: {targetId}");
         }
     }
 }

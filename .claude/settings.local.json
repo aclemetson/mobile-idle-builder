@@ -17,7 +17,18 @@
       "Bash(grep -E \"\\\\.\\(cs|prefab|asset\\)$\")",
       "Bash(xargs wc:*)",
       "Bash(grep -E \"\\\\.cs$\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/buildings/*.asset)",
+      "Bash(xargs -n1 basename)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/items/*.asset)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/recipes/*.asset)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/research/*.asset)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/fields/*.asset)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/dialogue/*.asset)",
+      "Bash(ls -1 /e/Programming/unity/mobile-idle-builder/Assets/Data/settings/*.asset)",
+      "Bash(xargs cat:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)"
     ]
   }
 }

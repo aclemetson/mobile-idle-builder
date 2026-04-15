@@ -20,6 +20,14 @@ namespace MobileIdleBuilder
         /// <summary>The field instance the player is currently standing near, or null.</summary>
         public FieldInstance CurrentField => _currentField;
 
+        /// <summary>Returns true if <paramref name="field"/> is within the proximity radius.</summary>
+        public bool IsInRange(FieldInstance field)
+        {
+            if (field == null) return false;
+            float sqr = (field.transform.position - transform.position).sqrMagnitude;
+            return sqr <= proximityRadius * proximityRadius;
+        }
+
         void Update()
         {
             // FieldGenerator.Start() is a coroutine that yields before spawning fields,

@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingInspectorController
   gridRenderer: {fileID: 1750057541}
   hudController: {fileID: 1347028482}
+  maxwellsDemon: {fileID: 1180912084}
   placementController: {fileID: 1750057545}
   conveyorController: {fileID: 2094864785}
   deconstructController: {fileID: 1750057546}
@@ -939,6 +940,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1180912083
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1180912085}
+  - component: {fileID: 1180912084}
+  m_Layer: 0
+  m_Name: MaxwellsDemonController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1180912084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180912083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84021b39ded435e4880d93c31356088b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MaxwellsDemonController
+  _uiDocument: {fileID: 1347028483}
+--- !u!4 &1180912085
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180912083}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1326696564
 GameObject:
   m_ObjectHideFlags: 0
@@ -1581,6 +1627,7 @@ SceneRoots:
   - {fileID: 1384596492}
   - {fileID: 109061290}
   - {fileID: 2080509635}
+  - {fileID: 1180912085}
   - {fileID: 2094864786}
   - {fileID: 262970761}
   - {fileID: 229646052}

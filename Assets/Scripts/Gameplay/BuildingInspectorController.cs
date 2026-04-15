@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
     {
         [SerializeField] private GridRenderer                gridRenderer;
         [SerializeField] private HUDController               hudController;
+        [SerializeField] private MaxwellsDemonController     maxwellsDemon;
         [SerializeField] private BuildingPlacementController placementController;
         [SerializeField] private ConveyorPlacementController conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
@@ -31,10 +32,11 @@ namespace MobileIdleBuilder
 
         void Start()
         {
-            if (gridRenderer        == null) gridRenderer        = FindAnyObjectByType<GridRenderer>();
-            if (buildingVisualizer  == null) buildingVisualizer  = FindAnyObjectByType<BuildingVisualizer>();
-            if (conveyorController  == null) conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
+            if (gridRenderer         == null) gridRenderer         = FindAnyObjectByType<GridRenderer>();
+            if (buildingVisualizer   == null) buildingVisualizer   = FindAnyObjectByType<BuildingVisualizer>();
+            if (conveyorController   == null) conveyorController   = FindAnyObjectByType<ConveyorPlacementController>();
             if (deconstructController == null) deconstructController = FindAnyObjectByType<DeconstructController>();
+            if (maxwellsDemon        == null) maxwellsDemon        = FindAnyObjectByType<MaxwellsDemonController>();
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
@@ -121,6 +123,14 @@ namespace MobileIdleBuilder
             if (found == Entity.Null) return false;
 
             HasSelection = true;
+
+            // Maxwell's Demon gets its own interaction panel instead of the generic inspector
+            if (_em.HasComponent<EntropySinkTag>(found))
+            {
+                maxwellsDemon?.Open();
+                return true;
+            }
+
             hudController?.ShowBuildingInspector(found, GetBuildingDisplayName(found));
             return true;
         }
@@ -131,6 +141,7 @@ namespace MobileIdleBuilder
             if (!HasSelection) return;
             HasSelection = false;
             hudController?.HideBuildingInspector();
+            maxwellsDemon?.Close();
         }
 
         // ================================================================

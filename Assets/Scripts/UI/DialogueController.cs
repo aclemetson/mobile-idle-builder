@@ -17,6 +17,16 @@ namespace MobileIdleBuilder
         [SerializeField] private UIDocument _uiDocument;
 
         public event Action OnDialogueComplete;
+        /// <summary>
+        /// Fired each time a new line is shown. Passes the highlight_target string
+        /// (empty string = clear any existing highlight).
+        /// </summary>
+        public event Action<string> OnHighlightRequested;
+        /// <summary>
+        /// Fired each time a new line is shown and that line has a non-empty action string.
+        /// Routed to TutorialOverlayController for one-shot directives.
+        /// </summary>
+        public event Action<string> OnActionTriggered;
 
         private VisualElement _box;
         private VisualElement _blocker;
@@ -119,6 +129,16 @@ namespace MobileIdleBuilder
             bool isLast = _current == null || _lineIndex >= _current.lines.Length - 1;
             if (_nextBtn != null)
                 _nextBtn.text = isLast ? "✓" : "▶";
+
+            // Pause / unpause game time based on line directive
+            Time.timeScale = line.pauseGame ? 0f : 1f;
+
+            // Broadcast highlight target (empty string = clear)
+            OnHighlightRequested?.Invoke(line.highlightTarget ?? "");
+
+            // Fire one-shot action if present
+            if (!string.IsNullOrEmpty(line.action))
+                OnActionTriggered?.Invoke(line.action);
         }
 
         private void SetBoxVisible(bool visible)
@@ -133,6 +153,10 @@ namespace MobileIdleBuilder
             {
                 _box.AddToClassList("hidden");
                 _blocker?.AddToClassList("hidden");
+
+                // Always restore time and clear highlights when dialogue closes
+                Time.timeScale = 1f;
+                OnHighlightRequested?.Invoke("");
             }
         }
     }

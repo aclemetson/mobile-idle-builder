@@ -1,0 +1,230 @@
+/* ================================================================
+   MaxwellsDemonPanel.uss — Styles for the Maxwell's Demon deposit panel.
+   Token variables inherited from GameHUD parent document.
+   ================================================================ */
+
+/* ── Outer panel ─────────────────────────────────────────────────── */
+
+.demon-panel {
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    top: 10%;
+    bottom: 10%;
+    background-color: rgba(10, 14, 26, 0.97);
+    border-width: 2px;
+    border-color: var(--color-primary);
+    border-radius: var(--border-radius);
+    flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.demon-panel__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-surface-raised);
+}
+
+.demon-panel__title {
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+    -unity-font-style: bold;
+}
+
+/* ── Body (two-column layout) ────────────────────────────────────── */
+
+.demon-panel__body {
+    flex-direction: row;
+    flex-grow: 1;
+    overflow: hidden;
+    padding: var(--spacing-sm);
+}
+
+/* ── Inventory column (left) ─────────────────────────────────────── */
+
+.demon-inventory-column {
+    flex: 1;
+    flex-direction: column;
+    margin-right: var(--spacing-sm);
+}
+
+.demon-column-title {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-xs);
+    -unity-text-align: middle-center;
+}
+
+.demon-inventory-grid {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-surface-raised);
+    padding: var(--spacing-xs);
+}
+
+/* ── Inventory item row ──────────────────────────────────────────── */
+
+.demon-item {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    margin-bottom: 4px;
+    background-color: rgba(0, 229, 255, 0.06);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: rgba(0, 229, 255, 0.15);
+    /* Signal draggability */
+    cursor: link;
+    transition-duration: 0.15s;
+    transition-property: background-color, border-color;
+}
+
+.demon-item:hover {
+    background-color: rgba(0, 229, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.35);
+}
+
+.demon-item--dragging {
+    background-color: rgba(0, 229, 255, 0.22);
+    border-color: var(--color-primary);
+    opacity: 0.6;
+}
+
+.demon-item__name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    flex-grow: 1;
+}
+
+.demon-item__count {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-right: var(--spacing-sm);
+}
+
+.demon-item__value {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.demon-empty-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-center;
+    padding: var(--spacing-md);
+}
+
+/* ── Vertical divider ────────────────────────────────────────────── */
+
+.demon-divider {
+    width: 1px;
+    background-color: var(--color-surface-raised);
+    margin: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* ── Demon column (right) ────────────────────────────────────────── */
+
+.demon-demon-column {
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: var(--spacing-sm);
+}
+
+/* ── Drop zone ───────────────────────────────────────────────────── */
+
+.demon-drop-zone {
+    flex-grow: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.35);
+    border-radius: var(--border-radius);
+    border-width: 2px;
+    border-color: rgba(0, 229, 255, 0.25);
+    transition-duration: 0.15s;
+    transition-property: background-color, border-color;
+}
+
+.demon-drop-zone--active {
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+}
+
+.demon-icon {
+    font-size: 48px;
+    color: var(--color-primary);
+    opacity: 0.6;
+    margin-bottom: var(--spacing-sm);
+}
+
+.demon-drop-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    max-width: 120px;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+
+.demon-panel__footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-top-width: 1px;
+    border-top-color: var(--color-surface-raised);
+}
+
+.demon-earn-preview {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    flex-grow: 1;
+}
+
+.demon-deposit-all-btn {
+    min-width: 100px;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.demon-deposit-all-btn:hover {
+    background-color: rgba(0, 229, 255, 0.24);
+}
+
+.demon-deposit-all-btn:active {
+    background-color: rgba(0, 229, 255, 0.36);
+}
+
+/* ── Drag ghost ──────────────────────────────────────────────────── */
+
+.demon-drag-ghost {
+    position: absolute;
+    background-color: rgba(0, 229, 255, 0.85);
+    border-radius: var(--border-radius);
+    padding: 4px var(--spacing-sm);
+    /* Pointer events pass through the ghost so it doesn't block drop zone detection */
+    /* Note: use picking-mode: Ignore in UXML for this element */
+}
+
+.demon-drag-ghost__label {
+    color: rgba(10, 14, 26, 1);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}

@@ -10,6 +10,20 @@ namespace MobileIdleBuilder
         [TextArea(2, 4)]
         public string text;
         public Sprite portrait;
+        /// <summary>Freeze Time.timeScale while this line is displayed.</summary>
+        public bool   pauseGame;
+        /// <summary>
+        /// ID of a UI element or world object to highlight while this line is shown.
+        /// Examples: "electron_field", "quark_field", "maxwells_demon", "btn-research".
+        /// Empty string = no highlight / clear previous.
+        /// </summary>
+        public string highlightTarget;
+        /// <summary>
+        /// Optional one-shot directive fired when this line is shown.
+        /// Examples: "pulse_field", "pulse_building", "zoom_field".
+        /// Routed to TutorialOverlayController via DialogueController.OnActionTriggered.
+        /// </summary>
+        public string action;
     }
 
     /// <summary>

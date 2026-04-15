@@ -88,42 +88,153 @@
     /* picking-mode: ignore is set via C# where needed */
 }
 
-/* ---- Bottom bar ---- */
-.bottom-bar {
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    background-color: rgba(10, 14, 26, 0.92);
+/* ---- Left drawer ---- */
+
+/* Full-height anchor column on the left edge — holds the handle, doesn't intercept input */
+.drawer-handle-anchor {
+    position: absolute;
+    left: 0;
+    top: 48px;
+    bottom: 0;
+    width: 36px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.drawer-handle {
+    width: 36px;
+    height: 56px;
+    background-color: rgba(10, 14, 26, 0.90);
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 0;
     border-top-width: 1px;
-    border-top-color: var(--color-border);
-    min-height: 56px;
-}
-
-.panel-btn {
-    flex-grow: 1;
-    margin: 0 var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-xs);
-    background-color: var(--color-surface);
+    border-right-width: 1px;
+    border-bottom-width: 1px;
     border-color: var(--color-border);
-    border-width: 1px;
-    border-radius: var(--border-radius);
     color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-lg);
     -unity-text-align: middle-center;
+    padding: 0;
 }
 
-.panel-btn:hover {
+.drawer-handle:hover {
     background-color: var(--color-surface-raised);
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
-.panel-btn:active {
-    background-color: rgba(0, 229, 255, 0.12);
+/* Semi-transparent backdrop behind the drawer — tap to close */
+.drawer-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 45;
 }
 
-/* Tutorial highlight — toggled by TutorialOverlayController to pulse a button */
+/* The drawer panel itself */
+.left-drawer {
+    position: absolute;
+    left: 0;
+    top: 48px; /* below top bar */
+    bottom: 0;
+    width: 220px;
+    background-color: rgba(10, 14, 26, 0.97);
+    border-right-width: 1px;
+    border-right-color: var(--color-border);
+    flex-direction: column;
+    z-index: 50;
+    translate: -220px 0;
+    transition-property: translate;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+}
+
+.left-drawer--open {
+    translate: 0px 0px;
+}
+
+.drawer-header {
+    padding: var(--spacing-md);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+    align-items: center;
+}
+
+.drawer-title {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.drawer-section {
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xs);
+}
+
+.drawer-section-title {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs, 10px);
+    -unity-font-style: bold;
+    margin-bottom: var(--spacing-xs);
+    padding: 0 var(--spacing-xs);
+    letter-spacing: 1px;
+}
+
+/* Inventory items in the drawer */
+.drawer-inventory {
+    flex-direction: column;
+}
+
+.drawer-inventory-item {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.drawer-divider {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: var(--spacing-xs) var(--spacing-sm);
+}
+
+.drawer-nav-scroll {
+    flex-grow: 1;
+    padding: 0 var(--spacing-sm) var(--spacing-sm);
+}
+
+/* Nav buttons in the drawer */
+.drawer-nav-btn {
+    width: 100%;
+    margin-bottom: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: transparent;
+    border-color: transparent;
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-left;
+}
+
+.drawer-nav-btn:hover {
+    background-color: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.2);
+    color: var(--color-primary);
+}
+
+.drawer-nav-btn:active {
+    background-color: rgba(0, 229, 255, 0.15);
+}
+
+/* Tutorial highlight — works on drawer-nav-btn via class addition */
 .panel-btn--highlight {
     background-color: rgba(0, 229, 255, 0.20);
     border-color: var(--color-primary);
@@ -142,8 +253,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 56px;   /* sits above the bottom bar */
-    height: 60%;
+    bottom: 0;
+    height: 65%;
     background-color: var(--color-surface);
     border-top-width: 1px;
     border-top-color: var(--color-border);
@@ -297,8 +408,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 48px;    /* below top bar */
-    bottom: 56px; /* above bottom bar */
+    top: 48px; /* below top bar */
+    bottom: 0;
     /* transparent — lets the world show through, pointer events pass to the grid */
     background-color: rgba(0, 0, 0, 0);
     flex-direction: column;
