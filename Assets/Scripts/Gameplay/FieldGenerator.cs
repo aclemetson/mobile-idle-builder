@@ -19,11 +19,16 @@ namespace MobileIdleBuilder
     public class FieldGenerator : MonoBehaviour
     {
         // Keyed by grid cell — lets BuildingPlacementController check field compatibility at any cell.
-        private static readonly Dictionary<Vector2Int, FieldSO> _fieldMap = new();
+        private static readonly Dictionary<Vector2Int, FieldSO>      _fieldMap    = new();
+        private static readonly Dictionary<Vector2Int, FieldInstance> _instanceMap = new();
 
         /// <summary>Returns the FieldSO at a grid cell, or null if none.</summary>
         public static FieldSO GetFieldAt(int x, int y) =>
             _fieldMap.TryGetValue(new Vector2Int(x, y), out var f) ? f : null;
+
+        /// <summary>Returns the FieldInstance at a grid cell, or null if none.</summary>
+        public static FieldInstance GetFieldInstanceAt(int x, int y) =>
+            _instanceMap.TryGetValue(new Vector2Int(x, y), out var fi) ? fi : null;
 
         [Serializable]
         public struct FieldEntry
@@ -36,7 +41,12 @@ namespace MobileIdleBuilder
 
         [SerializeField] private GridRenderer gridRenderer;
         [SerializeField] [Min(0)] private int edgeMargin = 2;
+        [Tooltip("No field may spawn within this many cells (Chebyshev) of a Maxwell's Demon building.")]
+        [SerializeField] [Min(0)] private int demonClearance = 2;
         [SerializeField] private List<FieldEntry> fields = new();
+
+        /// <summary>Cells excluded from field placement because they are too close to an EntropySink building.</summary>
+        private readonly HashSet<Vector2Int> _demonExclusionZone = new();
 
         private static readonly Vector2Int[] Cardinals =
         {
@@ -46,7 +56,7 @@ namespace MobileIdleBuilder
             new( 0, -1),
         };
 
-        void OnDestroy() => _fieldMap.Clear();   // clean up between Play sessions in the editor
+        void OnDestroy() { _fieldMap.Clear(); _instanceMap.Clear(); } // clean up between Play sessions in the editor
 
         IEnumerator Start()
         {
@@ -60,6 +70,9 @@ namespace MobileIdleBuilder
             // Wait for baked buildings from the SubScene to appear in the ECS world,
             // then register their footprints in GridOccupancy before placing any fields.
             yield return RegisterBakedBuildings();
+
+            // Mark cells too close to Maxwell's Demon as off-limits for field spawning.
+            BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
             Shuffle(candidates);
@@ -198,7 +211,8 @@ namespace MobileIdleBuilder
         {
             // Do NOT register in GridOccupancy — _fieldMap tracks field cells.
             // GridOccupancy is reserved for placed buildings so RestoreCell colours correctly.
-            _fieldMap[new Vector2Int(x, y)] = fieldSO;
+            var key = new Vector2Int(x, y);
+            _fieldMap[key] = fieldSO;
 
             float cs  = gridRenderer.CellSize;
             var   pos = new Vector3(x * cs, 0.5f, y * cs);
@@ -209,6 +223,7 @@ namespace MobileIdleBuilder
 
             var instance = go.AddComponent<FieldInstance>();
             instance.Initialize(fieldSO);
+            _instanceMap[key] = instance;
 
             // Collider lets ManualFieldCollector confirm the player tapped this specific field.
             var col = go.AddComponent<SphereCollider>();
@@ -217,6 +232,41 @@ namespace MobileIdleBuilder
 
             var effect = go.AddComponent<FieldEffect>();
             effect.Initialize(fieldSO.fieldColor);
+        }
+
+        // ----------------------------------------------------------------
+        // Exclusion zone
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Populates <see cref="_demonExclusionZone"/> with every grid cell whose Chebyshev
+        /// distance to any <see cref="EntropySinkTag"/> building is ≤ <see cref="demonClearance"/>.
+        /// </summary>
+        private void BuildDemonExclusionZone()
+        {
+            _demonExclusionZone.Clear();
+            if (demonClearance <= 0) return;
+
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) return;
+
+            using var query = world.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<EntropySinkTag>(),
+                ComponentType.ReadOnly<GridPosition>()
+            );
+
+            if (query.IsEmpty) return;
+
+            var positions = query.ToComponentDataArray<GridPosition>(Allocator.Temp);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                int cx = positions[i].Cell.x;
+                int cy = positions[i].Cell.y;
+                for (int dx = -demonClearance; dx <= demonClearance; dx++)
+                for (int dy = -demonClearance; dy <= demonClearance; dy++)
+                    _demonExclusionZone.Add(new Vector2Int(cx + dx, cy + dy));
+            }
+            positions.Dispose();
         }
 
         // ----------------------------------------------------------------
@@ -231,7 +281,10 @@ namespace MobileIdleBuilder
 
             for (int x = edgeMargin; x < w - edgeMargin; x++)
             for (int y = edgeMargin; y < h - edgeMargin; y++)
-                list.Add(new Vector2Int(x, y));
+            {
+                if (!_demonExclusionZone.Contains(new Vector2Int(x, y)))
+                    list.Add(new Vector2Int(x, y));
+            }
 
             return list;
         }
@@ -241,7 +294,8 @@ namespace MobileIdleBuilder
             int w = gridRenderer.Width;
             int h = gridRenderer.Height;
             return x >= edgeMargin && x < w - edgeMargin &&
-                   y >= edgeMargin && y < h - edgeMargin;
+                   y >= edgeMargin && y < h - edgeMargin &&
+                   !_demonExclusionZone.Contains(new Vector2Int(x, y));
         }
 
         private static void Shuffle<T>(List<T> list)

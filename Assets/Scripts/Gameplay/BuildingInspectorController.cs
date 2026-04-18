@@ -19,11 +19,20 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private BuildingVisualizer           buildingVisualizer;
+        [SerializeField] private CharacterMover               characterMover;
+        [SerializeField] private IsometricCameraFollow        cameraFollow;
+
+        /// <summary>World-unit radius within which the player can interact with a building.</summary>
+        [SerializeField] private float interactionRange = 3f;
 
         public bool HasSelection { get; private set; }
 
+        /// <summary>An EntropySinkTag building the player is walking toward before opening.</summary>
+        private Entity _pendingOpenEntity = Entity.Null;
+
         private EntityManager _em;
         private EntityQuery   _buildingQuery;
+        private EntityQuery   _tutorialQuery;
         private bool          _ecsReady;
 
         // ================================================================
@@ -37,6 +46,8 @@ namespace MobileIdleBuilder
             if (conveyorController   == null) conveyorController   = FindAnyObjectByType<ConveyorPlacementController>();
             if (deconstructController == null) deconstructController = FindAnyObjectByType<DeconstructController>();
             if (maxwellsDemon        == null) maxwellsDemon        = FindAnyObjectByType<MaxwellsDemonController>();
+            if (characterMover       == null) characterMover       = FindAnyObjectByType<CharacterMover>();
+            if (cameraFollow         == null) cameraFollow         = FindAnyObjectByType<IsometricCameraFollow>();
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
@@ -46,6 +57,9 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<BuildingData>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
+            _tutorialQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<TutorialStateData>()
+            );
             _ecsReady = true;
         }
 
@@ -53,11 +67,29 @@ namespace MobileIdleBuilder
         {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated && _ecsReady)
+            {
                 _buildingQuery.Dispose();
+                _tutorialQuery.Dispose();
+            }
         }
 
         void Update()
         {
+            // Check whether the player has walked close enough to open a pending building
+            if (_ecsReady && _pendingOpenEntity != Entity.Null)
+            {
+                if (!_em.Exists(_pendingOpenEntity))
+                {
+                    _pendingOpenEntity = Entity.Null;
+                }
+                else if (IsPlayerInRange(_pendingOpenEntity))
+                {
+                    HasSelection = true;
+                    maxwellsDemon?.Open();
+                    _pendingOpenEntity = Entity.Null;
+                }
+            }
+
             if (buildingVisualizer == null || gridRenderer == null) return;
 
             // Suppress hover while any special placement/deconstruct mode is active
@@ -97,6 +129,15 @@ namespace MobileIdleBuilder
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return false;
             if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y)) return false;
 
+            // Tutorial gating: restrict building taps during early steps
+            TutorialStep tutorialStep = TutorialStep.Completed;
+            if (!_tutorialQuery.IsEmpty)
+                tutorialStep = _tutorialQuery.GetSingleton<TutorialStateData>().CurrentStep;
+
+            // During "collect electrons" phase, block all building interactions entirely
+            if (tutorialStep == TutorialStep.CollectFirstElectron)
+                return false;
+
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
             Entity found = Entity.Null;
 
@@ -122,22 +163,41 @@ namespace MobileIdleBuilder
 
             if (found == Entity.Null) return false;
 
-            HasSelection = true;
+            // During "direct to Maxwell's Demon" step, only allow opening the Demon panel
+            if (tutorialStep == TutorialStep.DirectToMaxwellsDemon &&
+                !_em.HasComponent<EntropySinkTag>(found))
+                return false;
 
-            // Maxwell's Demon gets its own interaction panel instead of the generic inspector
+            // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
+            // The player must be close enough; if not, start walking toward it.
             if (_em.HasComponent<EntropySinkTag>(found))
             {
-                maxwellsDemon?.Open();
+                if (IsPlayerInRange(found))
+                {
+                    _pendingOpenEntity = Entity.Null;
+                    HasSelection = true;
+                    maxwellsDemon?.Open();
+                }
+                else
+                {
+                    _pendingOpenEntity = found;
+                    MoveCharacterToBuilding(found);
+                    // Resume camera follow so the player can see their character walk to the building.
+                    cameraFollow?.ResumeFollow();
+                }
                 return true;
             }
+
+            HasSelection = true;
 
             hudController?.ShowBuildingInspector(found, GetBuildingDisplayName(found));
             return true;
         }
 
-        /// <summary>Clears the current selection and hides the inspector panel.</summary>
+        /// <summary>Clears the current selection and cancels any pending building approach.</summary>
         public void ClearSelection()
         {
+            _pendingOpenEntity = Entity.Null;
             if (!HasSelection) return;
             HasSelection = false;
             hudController?.HideBuildingInspector();
@@ -176,6 +236,32 @@ namespace MobileIdleBuilder
                 Mathf.FloorToInt(world.x / gridRenderer.CellSize),
                 Mathf.FloorToInt(world.z / gridRenderer.CellSize)
             );
+        }
+
+        /// <summary>Returns the world-space XZ centre of the building entity's grid cell.</summary>
+        private Vector3 BuildingWorldCenter(Entity e)
+        {
+            float cs  = gridRenderer != null ? gridRenderer.CellSize : 1f;
+            var   pos = _em.GetComponentData<GridPosition>(e);
+            return new Vector3((pos.Cell.x + 0.5f) * cs, 0f, (pos.Cell.y + 0.5f) * cs);
+        }
+
+        /// <summary>True when the character is within <see cref="interactionRange"/> of the building.</summary>
+        private bool IsPlayerInRange(Entity e)
+        {
+            if (characterMover == null || !_em.HasComponent<GridPosition>(e)) return true;
+            var  center   = BuildingWorldCenter(e);
+            var  charPos  = characterMover.transform.position;
+            float dx = charPos.x - center.x;
+            float dz = charPos.z - center.z;
+            return (dx * dx + dz * dz) <= interactionRange * interactionRange;
+        }
+
+        /// <summary>Tells the character to walk toward the centre of the building's grid cell.</summary>
+        private void MoveCharacterToBuilding(Entity e)
+        {
+            if (characterMover == null || !_em.HasComponent<GridPosition>(e)) return;
+            characterMover.SetMoveTarget(BuildingWorldCenter(e));
         }
     }
 }

@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
+        private EntityQuery   _tutorialQuery;
         private float         _collectTimer;
 
         /// <summary>The field the player has explicitly activated by tapping. Null when none.</summary>
@@ -45,6 +46,19 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
             );
+            _tutorialQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<TutorialStateData>()
+            );
+        }
+
+        void OnDestroy()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world != null && world.IsCreated)
+            {
+                _inventoryQuery.Dispose();
+                _tutorialQuery.Dispose();
+            }
         }
 
         // ----------------------------------------------------------------
@@ -53,6 +67,13 @@ namespace MobileIdleBuilder
 
         void Update()
         {
+            // If tutorial blocks collection, deactivate any active field and skip auto-collect.
+            if (!IsCollectionAllowed(out _))
+            {
+                if (_activeField != null) { _activeField = null; _collectTimer = 0f; }
+                return;
+            }
+
             // Deactivate if the player walked out of range of the active field.
             if (_activeField != null && proximityChecker != null &&
                 !proximityChecker.IsInRange(_activeField))
@@ -81,11 +102,45 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Activates the tapped field (if it is within proximity range) and collects one item.
-        /// Switches away from any previously active field. Returns true if a field was activated.
+        /// Activates the field at the given grid cell (if any, and within proximity range)
+        /// and collects one item. Returns true when a field was successfully activated.
+        /// This is the primary tap path — it works for clicks anywhere on the tile quad.
+        /// </summary>
+        public bool TryCollectAtGridCell(int cx, int cy)
+        {
+            if (!IsCollectionAllowed(out var tutStep))
+                return false;
+
+            var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
+            if (tappedInstance == null)
+                return false;
+
+            if (proximityChecker != null && !proximityChecker.IsInRange(tappedInstance))
+                return false;
+
+            var field = tappedInstance.Field;
+            if (field == null || field.drops == null || field.drops.Count == 0)
+                return false;
+
+            if (tutStep == TutorialStep.CollectFirstElectron && field.fieldType != FieldType.Lepton)
+                return false;
+
+            _activeField  = tappedInstance;
+            _collectTimer = 0f;
+            CollectOne(field);
+            return true;
+        }
+
+        /// <summary>
+        /// Activates the tapped field via Physics raycast against the field's 3D collider.
+        /// Kept as a fallback for taps that land on the particle effect above the tile.
         /// </summary>
         public bool TryCollect(Vector2 screenPos)
         {
+            // Tutorial gates — block collection entirely on restricted steps
+            if (!IsCollectionAllowed(out var tutStep))
+                return false;
+
             if (proximityChecker == null)
             {
                 Debug.LogWarning("[FieldCollector] proximityChecker is not wired up.");
@@ -115,6 +170,10 @@ namespace MobileIdleBuilder
                 Debug.LogWarning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
                 return false;
             }
+
+            // During CollectFirstElectron only the lepton field may be tapped
+            if (tutStep == TutorialStep.CollectFirstElectron && field.fieldType != FieldType.Lepton)
+                return false;
 
             // Switch active field (deactivates the previous one automatically).
             _activeField  = tappedInstance;
@@ -179,6 +238,38 @@ namespace MobileIdleBuilder
                 return;
             }
             buf.Add(new InventorySlot { ItemID = itemId, Quantity = qty });
+        }
+
+        // ----------------------------------------------------------------
+        // Tutorial helpers
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Returns true if manual field collection is permitted given the current tutorial state.
+        /// Also outputs the current <paramref name="step"/> so callers can apply further filters
+        /// (e.g. lepton-only restriction) without a second ECS read.
+        /// </summary>
+        private bool IsCollectionAllowed(out TutorialStep step)
+        {
+            step = TutorialStep.Completed;
+            if (_tutorialQuery.IsEmpty) return true;
+
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+            if (!state.IsActive) return true;
+
+            step = state.CurrentStep;
+            switch (step)
+            {
+                // Dialogue is playing — player should not be interacting with the world
+                case TutorialStep.IntroDialogue:
+                // Player has been directed to sell; no more collecting until after the demon step
+                case TutorialStep.DirectToMaxwellsDemon:
+                case TutorialStep.SellElectronsInDemon:
+                case TutorialStep.CloseDemonPanel:
+                    return false;
+                default:
+                    return true;
+            }
         }
     }
 }

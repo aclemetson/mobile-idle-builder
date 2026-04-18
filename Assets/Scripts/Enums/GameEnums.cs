@@ -151,17 +151,21 @@ namespace MobileIdleBuilder
     {
         None                  = 0,
         IntroDialogue         = 1,   // Show Architect intro; TutorialOverlayController advances this
-        BuyRecombinationI     = 2,   // Wait for Recombination I research to be purchased
-        CraftFirstQuarks      = 3,
-        CraftFirstProton      = 4,
-        CraftFirstNeutron     = 5,
-        CraftFirstHydrogen    = 6,
-        PlaceFirstBuilding    = 7,
-        AutomationStarted     = 8,
-        ReachPrestigeWall     = 9,
-        PrestigePromptShown   = 10,
-        FirstPrestigeComplete = 11,
-        SpendPrestigeCurrency = 12,
+        CollectFirstElectron  = 2,   // Wait for player to collect 5 electrons (lepton field only)
+        DirectToMaxwellsDemon = 3,   // Highlight Maxwell's Demon; wait for player to open it
+        SellElectronsInDemon  = 4,   // Demon panel open; highlight electrons, prompt drag-to-sell
+        CloseDemonPanel       = 5,   // Electrons sold; prompt player to close the panel
+        BuyRecombinationI     = 6,   // Wait for Recombination I research to be purchased
+        CraftFirstQuarks      = 7,
+        CraftFirstProton      = 8,
+        CraftFirstNeutron     = 9,
+        CraftFirstHydrogen    = 10,
+        PlaceFirstBuilding    = 11,
+        AutomationStarted     = 12,
+        ReachPrestigeWall     = 13,
+        PrestigePromptShown   = 14,
+        FirstPrestigeComplete = 15,
+        SpendPrestigeCurrency = 16,
         Completed             = 99
     }
 }

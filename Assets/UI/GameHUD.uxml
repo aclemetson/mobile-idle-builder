@@ -10,6 +10,7 @@
     <ui:Template name="DialogueBox"        src="Components/DialogueBox.uxml" />
 
     <Style src="tokens.uss" />
+    <Style src="components.uss" />
     <Style src="GameHUD.uss" />
 
     <ui:VisualElement name="root" class="root" picking-mode="Ignore">
@@ -273,6 +274,11 @@
         <ui:Instance template="DialogueBox" name="dialogue-instance"
                      picking-mode="Ignore"
                      style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;" />
+
+        <!-- ═══ TUTORIAL HINT BANNER (persistent, cleared on step change) ═══ -->
+        <ui:VisualElement name="tutorial-hint-banner" class="tutorial-hint-banner hidden">
+            <ui:Label name="tutorial-hint-banner__message" text="" class="tutorial-hint-banner__message" />
+        </ui:VisualElement>
 
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
         <ui:Instance template="NotificationBanner" name="notification-instance" />

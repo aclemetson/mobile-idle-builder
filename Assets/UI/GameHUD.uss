@@ -3,9 +3,6 @@
    Design tokens are defined in tokens.uss — do not hardcode values here.
    ================================================================ */
 
-@import url("tokens.uss");
-@import url("components.uss");
-
 /* ---- Root ---- */
 .root {
     flex-direction: column;

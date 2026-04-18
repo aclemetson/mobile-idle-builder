@@ -48,8 +48,18 @@ namespace MobileIdleBuilder
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
                 return;
 
-            // Tapping a nearby field collects one item from it.
-            if (fieldCollector != null && fieldCollector.TryCollect(screenPos))
+            // Tapping a field tile or its particle collider collects from it.
+            // Grid-cell path is primary (works for the whole visible tile area);
+            // raycast fallback handles taps directly on the 3D particle object.
+            bool collectedByCell = false;
+            if (fieldCollector != null && gridRenderer != null)
+            {
+                if (ScreenToGridCell(screenPos, out int cx, out int cy))
+                    collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
+            }
+            if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))
+                return;
+            if (collectedByCell)
                 return;
 
             // Tapping empty ground clears any building selection and moves the character.
@@ -80,14 +90,7 @@ namespace MobileIdleBuilder
             Vector2 screenPos = InputUtils.GetPointerPosition();
             if (screenPos == Vector2.zero) { gridRenderer.ClearFieldHoverCell(); return; }
 
-            // Map screen → ground plane → grid cell (same logic as BuildingPlacementController)
-            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
-            if (Mathf.Abs(ray.direction.y) < 0.0001f) { gridRenderer.ClearFieldHoverCell(); return; }
-
-            float   t     = -ray.origin.y / ray.direction.y;
-            Vector3 world = ray.origin + ray.direction * t;
-            int     cx    = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
-            int     cy    = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
+            if (!ScreenToGridCell(screenPos, out int cx, out int cy)) { gridRenderer.ClearFieldHoverCell(); return; }
 
             bool isField    = FieldGenerator.GetFieldAt(cx, cy) != null;
             bool isOccupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy);
@@ -96,6 +99,26 @@ namespace MobileIdleBuilder
                 gridRenderer.SetFieldHoverCell(cx, cy);
             else
                 gridRenderer.ClearFieldHoverCell();
+        }
+
+        /// <summary>
+        /// Maps a screen position to a grid cell on the Y=0 ground plane.
+        /// Returns false if the ray is nearly horizontal (degenerate) or there is no camera.
+        /// </summary>
+        private bool ScreenToGridCell(Vector2 screenPos, out int cx, out int cy)
+        {
+            cx = cy = -1;
+            if (Camera.main == null || gridRenderer == null) return false;
+            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
+            float   t     = -ray.origin.y / ray.direction.y;
+            Vector3 world = ray.origin + ray.direction * t;
+            // Tile centers sit at x*cellSize (not (x+0.5)*cellSize), so +0.5 before floor
+            // snaps to the nearest tile center rather than the lower-left cell corner.
+            float cs = gridRenderer.CellSize;
+            cx = Mathf.FloorToInt(world.x / cs + 0.5f);
+            cy = Mathf.FloorToInt(world.z / cs + 0.5f);
+            return true;
         }
 
         private bool IsPointerOverUI(Vector2 screenPos)

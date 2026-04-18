@@ -14,11 +14,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: You've arrived.
+    text: Simulation initialized.
     portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget:
+    action:
   - speakerName: The Architect
-    text: I've left you with entropy — enough to begin. Use it wisely.
+    text: You are ARCH. This substrate is your construction environment. Matter, built from nothing.
     portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget:
+    action:
   - speakerName: The Architect
-    text: The Research panel holds what you need first. Find Recombination I.
+    text: "Begin with the simplest particle. The lepton field \u2014 it generates electrons."
     portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: electron_field
+    action: pulse_field
+  - speakerName: The Architect
+    text: Tap it. Collect what it offers.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: electron_field
+    action:
+  - speakerName: The Architect
+    text: You will need electrons for every atom you construct.
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget:
+    action:

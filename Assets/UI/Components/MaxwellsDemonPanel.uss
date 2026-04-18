@@ -97,6 +97,15 @@
     opacity: 0.6;
 }
 
+/* Tutorial: amber pulsing ring drawn around the highlighted item */
+.demon-item--tutorial-highlight {
+    border-color: rgba(255, 200, 40, 0.9);
+    border-width: 2px;
+    background-color: rgba(255, 200, 40, 0.1);
+    transition-duration: 0.6s;
+    transition-property: border-color, background-color;
+}
+
 .demon-item__name {
     color: var(--color-text-primary);
     font-size: var(--font-size-sm);

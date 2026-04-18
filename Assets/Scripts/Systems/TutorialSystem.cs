@@ -47,6 +47,34 @@ namespace MobileIdleBuilder
                     // Otherwise TutorialOverlayController plays the dialogue and advances this step
                     break;
 
+                case TutorialStep.CollectFirstElectron:
+                    // Advance once the player has collected at least 5 electrons (itemId = 3)
+                    if (CountInInventory(inventory, 3) >= 5)
+                    {
+                        tutorial.CurrentStep = TutorialStep.DirectToMaxwellsDemon;
+                        advanced = true;
+                    }
+                    break;
+
+                case TutorialStep.DirectToMaxwellsDemon:
+                    // UI-driven — TutorialOverlayController advances to SellElectronsInDemon
+                    // when the player opens Maxwell's Demon panel
+                    break;
+
+                case TutorialStep.SellElectronsInDemon:
+                    // Advance once the player has sold all electrons (inventory count reaches 0)
+                    if (CountInInventory(inventory, 3) == 0)
+                    {
+                        tutorial.CurrentStep = TutorialStep.CloseDemonPanel;
+                        advanced = true;
+                    }
+                    break;
+
+                case TutorialStep.CloseDemonPanel:
+                    // UI-driven — TutorialOverlayController advances to BuyRecombinationI
+                    // when the player closes the Maxwell's Demon panel
+                    break;
+
                 case TutorialStep.BuyRecombinationI:
                     // Advance once Recombination I appears in the persistent unlock list
                     if (SaveManager.Instance != null &&

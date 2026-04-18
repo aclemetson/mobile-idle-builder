@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: One of two quark types that make up protons and neutrons. Carries a
     -1/3 electric charge.
   codexUnlocked: 0
-  baseSellValue: 0
+  baseSellValue: 1
   isotopeSellMultiplier: 0

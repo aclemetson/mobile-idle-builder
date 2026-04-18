@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -57,6 +58,14 @@ namespace MobileIdleBuilder
         private const string CSS_Hidden      = "hidden";
 
         public bool IsOpen { get; private set; }
+
+        // ── Tutorial events ───────────────────────────────────────────────
+        /// <summary>Fired when the panel is opened by the player.</summary>
+        public event Action OnOpened;
+        /// <summary>Fired when the panel is closed by the player.</summary>
+        public event Action OnClosed;
+        /// <summary>Fired after any successful deposit (manual drag or Deposit All).</summary>
+        public event Action OnItemsDeposited;
 
         // ================================================================
         // Unity lifecycle
@@ -121,6 +130,7 @@ namespace MobileIdleBuilder
             IsOpen = true;
             RefreshInventory();
             _panel.RemoveFromClassList(CSS_Hidden);
+            OnOpened?.Invoke();
         }
 
         public void Close()
@@ -129,6 +139,35 @@ namespace MobileIdleBuilder
             IsOpen = false;
             CancelDrag();
             _panel?.AddToClassList(CSS_Hidden);
+            OnClosed?.Invoke();
+        }
+
+        // ================================================================
+        // Tutorial API
+        // ================================================================
+
+        private const string CSS_ItemTutorial = "demon-item--tutorial-highlight";
+
+        /// <summary>
+        /// Adds a pulsing highlight border to every inventory row whose item ID matches.
+        /// Call <see cref="ClearTutorialHighlight"/> to remove it when the step is done.
+        /// </summary>
+        public void HighlightTutorialItem(int itemId)
+        {
+            if (_inventoryGrid == null) return;
+            _inventoryGrid.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+            {
+                // Each row stores its itemId in UserData when built — check it.
+                if (row.userData is int id && id == itemId)
+                    row.AddToClassList(CSS_ItemTutorial);
+            });
+        }
+
+        /// <summary>Removes the tutorial highlight from all inventory rows.</summary>
+        public void ClearTutorialHighlight()
+        {
+            _inventoryGrid?.Query<VisualElement>(className: CSS_ItemTutorial)
+                .ForEach(e => e.RemoveFromClassList(CSS_ItemTutorial));
         }
 
         // ================================================================
@@ -195,6 +234,7 @@ namespace MobileIdleBuilder
         {
             var row = new VisualElement();
             row.AddToClassList(CSS_Item);
+            row.userData = item.itemId; // used by HighlightTutorialItem
 
             var nameLabel  = new Label(item.displayName);
             nameLabel.AddToClassList("demon-item__name");
@@ -340,6 +380,9 @@ namespace MobileIdleBuilder
             // -- Feedback --
             InventoryPopupController.Notify("entropy", (int)earned);
 
+            // -- Tutorial hook --
+            OnItemsDeposited?.Invoke();
+
             // -- Refresh panel --
             RefreshInventory();
         }
@@ -374,6 +417,7 @@ namespace MobileIdleBuilder
             _progressQuery.SetSingleton(progress);
 
             InventoryPopupController.Notify("entropy", (int)totalEarned);
+            OnItemsDeposited?.Invoke();
             RefreshInventory();
         }
 

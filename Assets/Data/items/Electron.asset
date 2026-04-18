@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: A fundamental particle with a negative charge. Orbits the nucleus of
     atoms and determines chemical bonding behavior.
   codexUnlocked: 0
-  baseSellValue: 0
+  baseSellValue: 1
   isotopeSellMultiplier: 0

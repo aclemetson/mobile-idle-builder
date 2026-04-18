@@ -15,9 +15,12 @@ namespace MobileIdleBuilder
     /// </summary>
     public class TutorialOverlayController : MonoBehaviour
     {
-        [SerializeField] private DialogueController dialogueController;
-        [SerializeField] private DialogueSO         introDialogue;
-        [SerializeField] private UIDocument         uiDocument;
+        [SerializeField] private DialogueController      dialogueController;
+        [SerializeField] private DialogueSO              introDialogue;
+        [SerializeField] private UIDocument              uiDocument;
+        [SerializeField] private TutorialHighlighter     tutorialHighlighter;
+        [SerializeField] private MaxwellsDemonController maxwellsDemon;
+        [SerializeField] private HUDController           hudController;
 
         private TutorialStep _lastStep    = TutorialStep.None;
         private Coroutine    _pulseRoutine;
@@ -38,6 +41,19 @@ namespace MobileIdleBuilder
                 dialogueController.OnActionTriggered     += OnActionTriggered;
             }
 
+            if (hudController == null)
+                hudController = FindAnyObjectByType<HUDController>();
+
+            if (maxwellsDemon == null)
+                maxwellsDemon = FindAnyObjectByType<MaxwellsDemonController>();
+
+            if (maxwellsDemon != null)
+            {
+                maxwellsDemon.OnOpened         += OnDemonOpened;
+                maxwellsDemon.OnItemsDeposited += OnDemonItemsDeposited;
+                maxwellsDemon.OnClosed         += OnDemonClosed;
+            }
+
             var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
             if (world != null)
             {
@@ -54,6 +70,13 @@ namespace MobileIdleBuilder
                 dialogueController.OnDialogueComplete   -= OnIntroComplete;
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
+            }
+
+            if (maxwellsDemon != null)
+            {
+                maxwellsDemon.OnOpened         -= OnDemonOpened;
+                maxwellsDemon.OnItemsDeposited -= OnDemonItemsDeposited;
+                maxwellsDemon.OnClosed         -= OnDemonClosed;
             }
         }
 
@@ -72,9 +95,11 @@ namespace MobileIdleBuilder
 
         private void OnStepChanged(TutorialStep step)
         {
-            // Stop any previous pulse
+            // Clear state from the previous step
             if (_pulseRoutine != null) { StopCoroutine(_pulseRoutine); _pulseRoutine = null; }
             SetResearchButtonHighlight(false);
+            tutorialHighlighter?.ClearHighlight();
+            hudController?.HideTutorialHint();
 
             switch (step)
             {
@@ -82,19 +107,40 @@ namespace MobileIdleBuilder
                     if (dialogueController != null && introDialogue != null)
                         dialogueController.PlayDialogue(introDialogue);
                     else
-                        AdvanceECSStep(TutorialStep.BuyRecombinationI);
+                        AdvanceECSStep(TutorialStep.CollectFirstElectron);
+                    break;
+
+                case TutorialStep.CollectFirstElectron:
+                    tutorialHighlighter?.ShowVisualOnly("electron_field");
+                    hudController?.ShowTutorialHint("Tap the electron field to collect 5 electrons.");
+                    break;
+
+                case TutorialStep.DirectToMaxwellsDemon:
+                    tutorialHighlighter?.ShowHighlight("maxwells_demon");
+                    hudController?.ShowTutorialHint("Tap Maxwell's Demon to sell your electrons.");
+                    break;
+
+                case TutorialStep.SellElectronsInDemon:
+                    // Item highlight inside the panel is applied via OnDemonOpened.
+                    hudController?.ShowTutorialHint("Drag your electrons to the right side to sell them.");
+                    break;
+
+                case TutorialStep.CloseDemonPanel:
+                    maxwellsDemon?.ClearTutorialHighlight();
+                    hudController?.ShowTutorialHint("Great! Close the panel when you're ready.");
                     break;
 
                 case TutorialStep.BuyRecombinationI:
                     _pulseRoutine = StartCoroutine(PulseButton(_btnResearch));
+                    hudController?.ShowTutorialHint("Open Research and buy Recombination I.");
                     break;
 
                 case TutorialStep.CraftFirstQuarks:
-                    ShowHint("Place a Field Collector on a quark field to harvest quarks.");
+                    hudController?.ShowTutorialHint("Place a Field Collector on a quark field to harvest quarks.");
                     break;
 
                 case TutorialStep.CraftFirstProton:
-                    ShowHint("Place a Nucleon Factory and connect it to your Field Collector.");
+                    hudController?.ShowTutorialHint("Place a Nucleon Factory and connect it to your Field Collector.");
                     break;
             }
         }
@@ -102,7 +148,7 @@ namespace MobileIdleBuilder
         private void OnIntroComplete()
         {
             // Move the ECS tutorial step forward after the intro dialogue finishes
-            AdvanceECSStep(TutorialStep.BuyRecombinationI);
+            AdvanceECSStep(TutorialStep.CollectFirstElectron);
         }
 
         // ── ECS helper ───────────────────────────────────────────────────────
@@ -115,7 +161,10 @@ namespace MobileIdleBuilder
             state.CurrentStep = next;
             _tutorialQuery.SetSingleton(state);
 
+            // Set _lastStep first so Update() won't fire OnStepChanged a second time,
+            // then call it directly so the UI reacts this frame rather than next.
             _lastStep = next;
+            OnStepChanged(next);
         }
 
         // ── UI helpers ───────────────────────────────────────────────────────
@@ -139,20 +188,18 @@ namespace MobileIdleBuilder
             }
         }
 
-        private void ShowHint(string message)
-        {
-            var hud = FindAnyObjectByType<HUDController>();
-            hud?.ShowNotification("→", message, null);
-        }
-
         // ── Dialogue event handlers ──────────────────────────────────────────
 
         private void OnHighlightRequested(string target)
         {
-            // Clear previous UI highlights
             SetResearchButtonHighlight(false);
 
-            if (string.IsNullOrEmpty(target)) return;
+            if (string.IsNullOrEmpty(target))
+            {
+                // Empty target = clear all highlights and return camera to character
+                tutorialHighlighter?.ClearHighlight();
+                return;
+            }
 
             switch (target)
             {
@@ -175,9 +222,47 @@ namespace MobileIdleBuilder
 
         private void HighlightWorldObject(string targetId)
         {
-            // Stub: future implementation finds the GameObject or grid cell by ID
-            // and applies a world-space highlight (arrow, glow, etc.)
-            Debug.Log($"[TutorialOverlay] World highlight: {targetId}");
+            tutorialHighlighter?.ShowHighlight(targetId);
+        }
+
+        // ── Maxwell's Demon event handlers ───────────────────────────────────
+
+        private void OnDemonOpened()
+        {
+            if (!_queryReady || _tutorialQuery.IsEmpty) return;
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+
+            if (state.CurrentStep == TutorialStep.DirectToMaxwellsDemon)
+            {
+                tutorialHighlighter?.ClearHighlight();
+                AdvanceECSStep(TutorialStep.SellElectronsInDemon);
+
+                // Highlight the electron item row (itemId = 3) inside the panel
+                maxwellsDemon?.HighlightTutorialItem(3);
+            }
+        }
+
+        private void OnDemonItemsDeposited()
+        {
+            if (!_queryReady || _tutorialQuery.IsEmpty) return;
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+
+            // TutorialSystem advances SellElectronsInDemon → CloseDemonPanel automatically
+            // once inventory hits 0, but we also clear the item highlight immediately.
+            if (state.CurrentStep == TutorialStep.SellElectronsInDemon ||
+                state.CurrentStep == TutorialStep.CloseDemonPanel)
+            {
+                maxwellsDemon?.ClearTutorialHighlight();
+            }
+        }
+
+        private void OnDemonClosed()
+        {
+            if (!_queryReady || _tutorialQuery.IsEmpty) return;
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+
+            if (state.CurrentStep == TutorialStep.CloseDemonPanel)
+                AdvanceECSStep(TutorialStep.BuyRecombinationI);
         }
     }
 }

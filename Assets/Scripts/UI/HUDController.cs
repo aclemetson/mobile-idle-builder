@@ -55,6 +55,10 @@ namespace MobileIdleBuilder
         private Label         _notificationIcon, _notificationMessage;
         private Coroutine     _hideNotificationCoroutine;
 
+        // ---- Tutorial hint banner ----
+        private VisualElement _tutorialHintBanner;
+        private Label         _tutorialHintMessage;
+
         // ---- Field proximity banner ----
         private VisualElement _fieldBanner;
         private Label         _fieldBannerName;
@@ -110,6 +114,7 @@ namespace MobileIdleBuilder
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
             SetElementVisible(_notificationBanner, false);
+            SetElementVisible(_tutorialHintBanner, false);
             SetElementVisible(_fieldBanner, false);
             SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
@@ -248,6 +253,10 @@ namespace MobileIdleBuilder
             _notificationBanner  = root.Q("notification-banner");
             _notificationIcon    = root.Q<Label>("notification-banner__icon");
             _notificationMessage = root.Q<Label>("notification-banner__message");
+
+            // Tutorial hint banner
+            _tutorialHintBanner  = root.Q("tutorial-hint-banner");
+            _tutorialHintMessage = root.Q<Label>("tutorial-hint-banner__message");
 
             // Field proximity banner — inner element inside "field-proximity-instance" TemplateContainer
             _fieldBanner     = root.Q("field-proximity-banner");
@@ -1083,6 +1092,24 @@ namespace MobileIdleBuilder
 
         /// <summary>Hides the field proximity banner.</summary>
         public void HideFieldBanner() => SetElementVisible(_fieldBanner, false);
+
+        // ============================================================
+        // Tutorial hint banner
+        // ============================================================
+
+        /// <summary>
+        /// Shows a persistent tutorial hint at the bottom of the screen.
+        /// Unlike <see cref="ShowNotification"/>, this stays visible until
+        /// <see cref="HideTutorialHint"/> is called.
+        /// </summary>
+        public void ShowTutorialHint(string message)
+        {
+            if (_tutorialHintMessage != null) _tutorialHintMessage.text = message;
+            SetElementVisible(_tutorialHintBanner, true);
+        }
+
+        /// <summary>Hides the persistent tutorial hint banner.</summary>
+        public void HideTutorialHint() => SetElementVisible(_tutorialHintBanner, false);
 
         // ============================================================
         // Output selector
