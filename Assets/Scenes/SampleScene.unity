@@ -155,6 +155,9 @@ MonoBehaviour:
   conveyorController: {fileID: 2094864785}
   deconstructController: {fileID: 1750057546}
   buildingVisualizer: {fileID: 1750057543}
+  characterMover: {fileID: 0}
+  cameraFollow: {fileID: 0}
+  interactionRange: 3
 --- !u!4 &109061290
 Transform:
   m_ObjectHideFlags: 0
@@ -1205,6 +1208,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldGenerator
   gridRenderer: {fileID: 1750057541}
   edgeMargin: 2
+  demonClearance: 2
   fields:
   - fieldDefinition: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
     count: 2
@@ -1315,6 +1319,7 @@ MonoBehaviour:
   deconstructHoverColor: {r: 0.9, g: 0.15, b: 0.15, a: 0.9}
   fieldHoverColor: {r: 0.15, g: 0.85, b: 0.35, a: 0.55}
   tutorialHighlightColor: {r: 1, g: 0.78, b: 0.15, a: 0.75}
+  tutorialHoverColor: {r: 1, g: 0.97, b: 0.7, a: 1}
   gap: 0.05
 --- !u!4 &1750057542
 Transform:
@@ -1504,10 +1509,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialOverlayController
   dialogueController: {fileID: 2042840131}
-  introDialogue: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3cb, type: 2}
   uiDocument: {fileID: 1347028483}
   tutorialHighlighter: {fileID: 1320393313}
-  maxwellsDemon: {fileID: 0}
+  maxwellsDemon: {fileID: 1180912084}
+  hudController: {fileID: 1347028482}
 --- !u!114 &2042840131
 MonoBehaviour:
   m_ObjectHideFlags: 0

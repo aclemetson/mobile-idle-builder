@@ -3,11 +3,11 @@ using Unity.Entities;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Advances the tutorial step when each step's completion condition is met.
-    /// Checks inventory state and entity counts — does NOT drive UI directly.
-    /// The UI bridge MonoBehaviour reads TutorialStateData and shows appropriate prompts.
+    /// Advances the tutorial step index when each step's completion condition is met.
+    /// Reads step definitions from TutorialFlowSO.Current — all step logic is data-driven.
+    /// Does NOT drive UI directly; TutorialOverlayController watches CurrentStepIndex.
     ///
-    /// Item IDs used for condition checks (must match recipes.json):
+    /// Item IDs used for inventory condition checks (must match recipes.json):
     ///   1 = Up Quark | 2 = Down Quark | 3 = Electron
     ///   4 = Proton   | 5 = Neutron    | 6 = Hydrogen
     /// </summary>
@@ -26,151 +26,123 @@ namespace MobileIdleBuilder
             var tutorial = SystemAPI.GetSingleton<TutorialStateData>();
             if (!tutorial.IsActive) return;
 
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || flow.steps == null || flow.steps.Length == 0) return;
+
+            // Tutorial complete — index ran past the last step
+            if (tutorial.CurrentStepIndex >= flow.steps.Length)
+            {
+                tutorial.IsActive = false;
+                SystemAPI.SetSingleton(tutorial);
+                return;
+            }
+
+            var step = flow.steps[tutorial.CurrentStepIndex];
+
+            // Check skip condition before the normal advance condition.
+            // Lets returning players who already have research jump ahead automatically.
+            if (step.skipCondition != null && !string.IsNullOrEmpty(step.skipCondition.researchId))
+            {
+                if (SaveManager.Instance != null &&
+                    SaveManager.Instance.Current.unlockedResearch.Contains(step.skipCondition.researchId))
+                {
+                    int skipIdx = FindStepIndex(flow, step.skipCondition.skipToId);
+                    if (skipIdx >= 0)
+                    {
+                        tutorial.CurrentStepIndex = skipIdx;
+                        SystemAPI.SetSingleton(tutorial);
+                    }
+                    return;
+                }
+            }
+
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>(true); // read-only
 
-            bool advanced = false;
-            switch (tutorial.CurrentStep)
+            if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
+
+            // Side-effect: mark first run complete when the prestige-run condition triggers
+            if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.PrestigeRunMin)
+                tutorial.FirstRunComplete = true;
+
+            tutorial.CurrentStepIndex++;
+
+            if (tutorial.CurrentStepIndex >= flow.steps.Length)
+                tutorial.IsActive = false;
+
+            SystemAPI.SetSingleton(tutorial);
+
+            string nextId = tutorial.IsActive && tutorial.CurrentStepIndex < flow.steps.Length
+                ? flow.steps[tutorial.CurrentStepIndex].id
+                : "(complete)";
+            UnityEngine.Debug.Log($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
+        }
+
+        // ── Condition evaluator ───────────────────────────────────────────────
+
+        private bool EvaluateCondition(TutorialConditionDef c,
+            DynamicBuffer<InventorySlot> inv, ref SystemState state)
+        {
+            if (c == null) return true; // null condition = auto-advance
+
+            switch (c.type)
             {
-                case TutorialStep.None:
-                    tutorial.CurrentStep = TutorialStep.IntroDialogue;
-                    advanced = true;
-                    break;
+                case ConditionType.Auto:
+                    return true;
 
-                case TutorialStep.IntroDialogue:
-                    // Skip intro for returning players who already have research unlocked
-                    if (SaveManager.Instance != null &&
-                        SaveManager.Instance.Current.unlockedResearch.Contains("recombination_i"))
+                case ConditionType.UiEvent:
+                    // Always UI-driven — MonoBehaviour calls AdvanceStep via TutorialOverlayController
+                    return false;
+
+                case ConditionType.InventoryMin:
+                    if (c.items == null || c.items.Count == 0) return true;
+                    if (c.anyOf)
                     {
-                        tutorial.CurrentStep = TutorialStep.CraftFirstQuarks;
-                        advanced = true;
+                        foreach (var r in c.items)
+                            if (CountInInventory(inv, r.itemId) >= r.quantity) return true;
+                        return false;
                     }
-                    // Otherwise TutorialOverlayController plays the dialogue and advances this step
-                    break;
-
-                case TutorialStep.CollectFirstElectron:
-                    // Advance once the player has collected at least 5 electrons (itemId = 3)
-                    if (CountInInventory(inventory, 3) >= 5)
+                    else
                     {
-                        tutorial.CurrentStep = TutorialStep.DirectToMaxwellsDemon;
-                        advanced = true;
+                        foreach (var r in c.items)
+                            if (CountInInventory(inv, r.itemId) < r.quantity) return false;
+                        return true;
                     }
-                    break;
 
-                case TutorialStep.DirectToMaxwellsDemon:
-                    // UI-driven — TutorialOverlayController advances to SellElectronsInDemon
-                    // when the player opens Maxwell's Demon panel
-                    break;
+                case ConditionType.InventoryZero:
+                    if (c.items == null || c.items.Count == 0) return true;
+                    foreach (var r in c.items)
+                        if (CountInInventory(inv, r.itemId) > 0) return false;
+                    return true;
 
-                case TutorialStep.SellElectronsInDemon:
-                    // Advance once the player has sold all electrons (inventory count reaches 0)
-                    if (CountInInventory(inventory, 3) == 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.CloseDemonPanel;
-                        advanced = true;
-                    }
-                    break;
+                case ConditionType.ResearchUnlocked:
+                    return SaveManager.Instance != null &&
+                           SaveManager.Instance.Current.unlockedResearch.Contains(c.researchId);
 
-                case TutorialStep.CloseDemonPanel:
-                    // UI-driven — TutorialOverlayController advances to BuyRecombinationI
-                    // when the player closes the Maxwell's Demon panel
-                    break;
-
-                case TutorialStep.BuyRecombinationI:
-                    // Advance once Recombination I appears in the persistent unlock list
-                    if (SaveManager.Instance != null &&
-                        SaveManager.Instance.Current.unlockedResearch.Contains("recombination_i"))
-                    {
-                        tutorial.CurrentStep = TutorialStep.CraftFirstQuarks;
-                        advanced = true;
-                    }
-                    break;
-
-                case TutorialStep.CraftFirstQuarks:
-                    // Condition: player has at least one up quark or down quark
-                    if (CountInInventory(inventory, 1) > 0 || CountInInventory(inventory, 2) > 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.CraftFirstProton;
-                        advanced = true;
-                    }
-                    break;
-
-                case TutorialStep.CraftFirstProton:
-                    if (CountInInventory(inventory, 4) > 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.CraftFirstNeutron;
-                        advanced = true;
-                    }
-                    break;
-
-                case TutorialStep.CraftFirstNeutron:
-                    if (CountInInventory(inventory, 5) > 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.CraftFirstHydrogen;
-                        advanced = true;
-                    }
-                    break;
-
-                case TutorialStep.CraftFirstHydrogen:
-                    if (CountInInventory(inventory, 6) > 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.PlaceFirstBuilding;
-                        advanced = true;
-                    }
-                    break;
-
-                case TutorialStep.PlaceFirstBuilding:
-                    // Condition: at least one BuildingData entity exists
+                case ConditionType.BuildingMin:
                     int buildingCount = 0;
                     foreach (var _ in SystemAPI.Query<RefRO<BuildingData>>())
                         buildingCount++;
-                    if (buildingCount > 0)
-                    {
-                        tutorial.CurrentStep = TutorialStep.AutomationStarted;
-                        advanced = true;
-                    }
-                    break;
+                    return buildingCount >= c.minCount;
 
-                case TutorialStep.AutomationStarted:
-                    // Automation milestone — further steps driven by PlayerProgressData
-                    var progress = SystemAPI.GetSingleton<PlayerProgressData>();
-                    if (progress.PrestigeAvailable)
-                    {
-                        tutorial.CurrentStep = TutorialStep.ReachPrestigeWall;
-                        advanced = true;
-                    }
-                    break;
+                case ConditionType.PrestigeRunMin:
+                    return SystemAPI.GetSingleton<PrestigeData>().RunCount >= c.minCount;
 
-                case TutorialStep.ReachPrestigeWall:
-                    // PrestigeSystem sets PrestigeRequested — we just wait for it to complete
-                    var prestige = SystemAPI.GetSingleton<PrestigeData>();
-                    if (prestige.RunCount >= 1)
-                    {
-                        tutorial.CurrentStep = TutorialStep.FirstPrestigeComplete;
-                        tutorial.FirstRunComplete = true;
-                        advanced = true;
-                    }
-                    break;
+                case ConditionType.PrestigeAvailable:
+                    return SystemAPI.GetSingleton<PlayerProgressData>().PrestigeAvailable;
 
-                case TutorialStep.FirstPrestigeComplete:
-                    tutorial.CurrentStep = TutorialStep.SpendPrestigeCurrency;
-                    advanced = true;
-                    break;
-
-                case TutorialStep.SpendPrestigeCurrency:
-                    // Driven by UI interaction — UI sets this step to Completed externally
-                    break;
-
-                case TutorialStep.Completed:
-                    tutorial.IsActive = false;
-                    SystemAPI.SetSingleton(tutorial);
-                    return;
+                default:
+                    return false;
             }
+        }
 
-            if (advanced)
-            {
-                SystemAPI.SetSingleton(tutorial);
-                UnityEngine.Debug.Log($"[TutorialSystem] Advanced to step: {tutorial.CurrentStep}");
-            }
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        private static int FindStepIndex(TutorialFlowSO flow, string id)
+        {
+            if (string.IsNullOrEmpty(id) || flow.steps == null) return -1;
+            for (int i = 0; i < flow.steps.Length; i++)
+                if (flow.steps[i].id == id) return i;
+            return -1;
         }
 
         private static int CountInInventory(DynamicBuffer<InventorySlot> inv, int itemID)

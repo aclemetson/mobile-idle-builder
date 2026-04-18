@@ -129,13 +129,19 @@ namespace MobileIdleBuilder
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return false;
             if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y)) return false;
 
-            // Tutorial gating: restrict building taps during early steps
-            TutorialStep tutorialStep = TutorialStep.Completed;
+            // Tutorial gating: read restriction from current step definition
+            var buildingGate = BuildingInteractionGate.None;
             if (!_tutorialQuery.IsEmpty)
-                tutorialStep = _tutorialQuery.GetSingleton<TutorialStateData>().CurrentStep;
+            {
+                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
+                var flow = TutorialFlowSO.Current;
+                if (tutState.IsActive && flow != null &&
+                    tutState.CurrentStepIndex < flow.steps.Length)
+                    buildingGate = flow.steps[tutState.CurrentStepIndex].onEnter?.buildingInteractionGate
+                                   ?? BuildingInteractionGate.None;
+            }
 
-            // During "collect electrons" phase, block all building interactions entirely
-            if (tutorialStep == TutorialStep.CollectFirstElectron)
+            if (buildingGate == BuildingInteractionGate.BlockAll)
                 return false;
 
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
@@ -163,8 +169,8 @@ namespace MobileIdleBuilder
 
             if (found == Entity.Null) return false;
 
-            // During "direct to Maxwell's Demon" step, only allow opening the Demon panel
-            if (tutorialStep == TutorialStep.DirectToMaxwellsDemon &&
+            // EntropySinkOnly: only Maxwell's Demon may be opened
+            if (buildingGate == BuildingInteractionGate.EntropySinkOnly &&
                 !_em.HasComponent<EntropySinkTag>(found))
                 return false;
 

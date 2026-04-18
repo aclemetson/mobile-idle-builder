@@ -1242,8 +1242,21 @@
       "input_slot_labels": [],
       "is_entropy_sink": true,
       "_note_entropy": "EntropySinkTag is added by BuildingPlacer/BuildingAuthoring when is_entropy_sink=true. EntropySinkSystem handles conveyor-fed deposits (BuildingInputSlot). MaxwellsDemonController handles manual drag-and-drop deposits (InventorySlot). Both paths coexist.",
-      "footprint": [1, 1],
-      "ports": [],
+      "footprint": [3, 3],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [1, 0], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [2, 0], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input", "local_cell": [0, 1], "local_facing": "West"  },
+        { "port_type": "Input", "local_cell": [0, 2], "local_facing": "West"  },
+        { "port_type": "Input", "local_cell": [2, 0], "local_facing": "East"  },
+        { "port_type": "Input", "local_cell": [2, 1], "local_facing": "East"  },
+        { "port_type": "Input", "local_cell": [2, 2], "local_facing": "East"  },
+        { "port_type": "Input", "local_cell": [0, 2], "local_facing": "North" },
+        { "port_type": "Input", "local_cell": [1, 2], "local_facing": "North" },
+        { "port_type": "Input", "local_cell": [2, 2], "local_facing": "North" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
@@ -1508,91 +1521,222 @@
           "action": ""
         }
       ]
+    },
+    {
+      "id": "quark_field_explanation",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Good work. Those electrons gave you your first entropy — the currency that powers this facility. But entropy alone cannot build matter.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "That orange field is a Quark Field. It generates Up Quarks and Down Quarks in equal measure every time you mine it — the raw ingredients for every proton and neutron you will ever craft.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "quark_field",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Mine it. Collect 5 of each type, then bring them back here.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "quark_field",
+          "action": "pulse_field"
+        }
+      ]
     }
   ],
 
-  "tutorial_flow": {
-    "_comment": "Documentation only — the importer does not generate assets from this section. Edit TutorialStep enum in GameEnums.cs and TutorialSystem.cs for logic changes.",
-    "steps": [
-      {
-        "step": "IntroDialogue",
-        "step_id": 1,
-        "dialogue_id": "intro_architect",
-        "description": "Player sees intro dialogue. Directed to tap electron field, tap quark field, deposit at Maxwell's Demon, then open Research panel.",
-        "unlocks": ["quark_field", "electron_field", "harvester", "maxwells_demon"]
+  "tutorial_steps": [
+    {
+      "id": "intro_dialogue",
+      "hint": "",
+      "skip_condition": { "research_id": "recombination_i", "skip_to_id": "craft_first_quarks" },
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "intro_architect", "block_collection": true }
+    },
+    {
+      "id": "collect_first_electron",
+      "hint": "Tap the electron field to collect 5 electrons.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 3, "quantity": 5 }]
       },
-      {
-        "step": "BuyRecombinationI",
-        "step_id": 2,
-        "required_research": "recombination_i",
-        "hint_text": "Open the Research panel and purchase Recombination I.",
-        "description": "Research panel is pulsed. Player must purchase Recombination I to proceed.",
-        "unlocks": ["proton", "neutron", "strong_force_combiner"]
-      },
-      {
-        "step": "CraftFirstQuarks",
-        "step_id": 3,
-        "description": "Player taps the quark field to manually collect Up and Down Quarks.",
-        "hint_text": "Tap the Quark Field to collect particles."
-      },
-      {
-        "step": "CraftFirstProton",
-        "step_id": 4,
-        "required_recipe": "proton",
-        "hint_text": "Combine 2 Up Quarks + 1 Down Quark to craft a Proton.",
-        "description": "Player opens the craft menu and manually produces their first Proton."
-      },
-      {
-        "step": "CraftFirstNeutron",
-        "step_id": 5,
-        "required_recipe": "neutron",
-        "hint_text": "Combine 1 Up Quark + 2 Down Quarks to craft a Neutron."
-      },
-      {
-        "step": "CraftFirstHydrogen",
-        "step_id": 6,
-        "required_recipe": "hydrogen",
-        "hint_text": "Combine a Proton and an Electron to craft Hydrogen.",
-        "description": "First atomic element crafted. Unlocks awareness of Atomic Assembly research path."
-      },
-      {
-        "step": "PlaceFirstBuilding",
-        "step_id": 7,
-        "required_buildings": ["strong_force_combiner", "basic_generator"],
-        "hint_text": "Place a Strong Force Combiner, then a Basic Generator to power it.",
-        "description": "Teaches building placement and the power radius system."
-      },
-      {
-        "step": "AutomationStarted",
-        "step_id": 8,
-        "description": "At least one building is actively producing output automatically.",
-        "hint_text": "Your factory is running. Watch it produce particles on its own."
-      },
-      {
-        "step": "ReachPrestigeWall",
-        "step_id": 9,
-        "description": "Net worth reaches the prestige threshold. Prestige prompt is queued."
-      },
-      {
-        "step": "PrestigePromptShown",
-        "step_id": 10,
-        "description": "Player sees the prestige explanation overlay."
-      },
-      {
-        "step": "FirstPrestigeComplete",
-        "step_id": 11,
-        "description": "Player confirms prestige. Run resets. Prestige currency awarded."
-      },
-      {
-        "step": "SpendPrestigeCurrency",
-        "step_id": 12,
-        "description": "Player opens the persistent upgrade shop and makes their first purchase."
-      },
-      {
-        "step": "Completed",
-        "step_id": 99,
-        "description": "Tutorial is complete. All systems are unlocked for the player to explore freely."
+      "on_enter": {
+        "highlight_target": "electron_field",
+        "highlight_mode": "VisualOnly",
+        "collection_filter": "Lepton",
+        "building_interaction_gate": "BlockAll"
       }
-    ]
-  }
+    },
+    {
+      "id": "direct_to_maxwells_demon",
+      "hint": "Tap Maxwell's Demon to sell your electrons.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_opened" },
+      "on_enter": {
+        "highlight_target": "maxwells_demon",
+        "highlight_mode": "Full",
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "sell_electrons_in_demon",
+      "hint": "Drag your electrons to the right side to sell them.",
+      "advance_condition": {
+        "type": "InventoryZero",
+        "items": [{ "item_id": 3 }]
+      },
+      "on_enter": {
+        "block_collection": true,
+        "demon_highlight_item_ids": [3]
+      }
+    },
+    {
+      "id": "close_demon_panel",
+      "hint": "Great! Close the panel when you're ready.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_closed" },
+      "on_enter": { "block_collection": true }
+    },
+    {
+      "id": "explain_quark_field",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": {
+        "dialogue_id": "quark_field_explanation",
+        "block_collection": true
+      }
+    },
+    {
+      "id": "collect_quarks",
+      "hint": "Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [
+          { "item_id": 1, "quantity": 5 },
+          { "item_id": 2, "quantity": 5 }
+        ]
+      },
+      "on_enter": {
+        "highlight_target": "quark_field",
+        "highlight_mode": "VisualOnly",
+        "collection_filter": "Quark",
+        "building_interaction_gate": "BlockAll"
+      }
+    },
+    {
+      "id": "direct_to_maxwells_demon_quarks",
+      "hint": "Bring your quarks to Maxwell's Demon to convert them to entropy.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_opened" },
+      "on_enter": {
+        "highlight_target": "maxwells_demon",
+        "highlight_mode": "Full",
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "sell_quarks_in_demon",
+      "hint": "Drag your quarks to the right side to sell them.",
+      "advance_condition": {
+        "type": "InventoryZero",
+        "items": [
+          { "item_id": 1 },
+          { "item_id": 2 }
+        ]
+      },
+      "on_enter": {
+        "block_collection": true,
+        "demon_highlight_item_ids": [1, 2]
+      }
+    },
+    {
+      "id": "close_demon_panel_quarks",
+      "hint": "Great! Close the panel when you're ready.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_closed" },
+      "on_enter": { "block_collection": true }
+    },
+    {
+      "id": "buy_recombination_i",
+      "hint": "Open Research and buy Recombination I.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "recombination_i" },
+      "on_enter": { "pulse_button_id": "btn-research" }
+    },
+    {
+      "id": "craft_first_quarks",
+      "hint": "Place a Field Collector on a quark field to harvest quarks.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "any_of": true,
+        "items": [
+          { "item_id": 1, "quantity": 1 },
+          { "item_id": 2, "quantity": 1 }
+        ]
+      },
+      "on_enter": {}
+    },
+    {
+      "id": "craft_first_proton",
+      "hint": "Place a Nucleon Factory and connect it to your Field Collector.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 4, "quantity": 1 }]
+      },
+      "on_enter": {}
+    },
+    {
+      "id": "craft_first_neutron",
+      "hint": "Combine 1 Up Quark and 2 Down Quarks to craft a Neutron.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 5, "quantity": 1 }]
+      },
+      "on_enter": {}
+    },
+    {
+      "id": "craft_first_hydrogen",
+      "hint": "Combine a Proton and an Electron to craft Hydrogen.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 6, "quantity": 1 }]
+      },
+      "on_enter": {}
+    },
+    {
+      "id": "place_first_building",
+      "hint": "Place a building on the grid to begin automation.",
+      "advance_condition": { "type": "BuildingMin", "min_count": 1 },
+      "on_enter": {}
+    },
+    {
+      "id": "automation_started",
+      "hint": "Your factory is running. Watch it produce particles on its own.",
+      "advance_condition": { "type": "PrestigeAvailable" },
+      "on_enter": {}
+    },
+    {
+      "id": "reach_prestige_wall",
+      "hint": "You have reached the prestige threshold. Time to reset and grow stronger.",
+      "advance_condition": { "type": "PrestigeRunMin", "min_count": 1 },
+      "on_enter": {}
+    },
+    {
+      "id": "first_prestige_complete",
+      "hint": "",
+      "advance_condition": { "type": "Auto" },
+      "on_enter": {}
+    },
+    {
+      "id": "spend_prestige_currency",
+      "hint": "Open the upgrade shop and spend your prestige currency.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "prestige_currency_spent" },
+      "on_enter": {}
+    }
+  ]
 }

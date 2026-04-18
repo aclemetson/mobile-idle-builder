@@ -14,26 +14,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: tritium
   displayName: Tritium
-  recipeId: 12
-  tier: 0
+  recipeId: 15
+  tier: 2
   category: 4
   inputs:
   - item: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
     quantity: 1
   - item: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
     quantity: 2
-  neutronAdjustment: []
-  outputItem: {fileID: 0}
+  neutronAdjustment:
+  - {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+  outputItem: {fileID: 11400000, guid: 609d8d0189bb50246b0abc9028acd29a, type: 2}
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 16
-  manualCraftTime: 0
+  manualCraftTime: 16
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 0
-  validBuildings: []
+  fixedPowerCostEV: 16
+  validBuildings:
+  - {fileID: 11400000, guid: a6884992fc287db43896dc3de5c78638, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

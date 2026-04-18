@@ -18,11 +18,11 @@ MonoBehaviour:
   icon: {fileID: 0}
   itemId: 4
   tier: 1
-  category: 0
-  tierData: {fileID: 0}
-  atomicNumber: 0
-  atomicMass: 0
-  charge: 
+  category: 1
+  tierData: {fileID: 11400000, guid: 8c9d2e26b3e2ca94a934c54494d6f36f, type: 2}
+  atomicNumber: 1
+  atomicMass: 1
+  charge: +1
   isRadioactive: 0
   decayType: 0
   halfLifeNote: 
@@ -31,8 +31,9 @@ MonoBehaviour:
   fieldType: 0
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: A baryon made of 2 up quarks and 1 down quark. Charge +1. Defines the
-    element.
+  codexEntry: "A baryon composed of two up quarks and one down quark, bound by the
+    strong nuclear force. The number of protons in a nucleus defines which element
+    it is \u2014 this number is the atomic number."
   codexUnlocked: 0
-  baseSellValue: 5
-  isotopeSellMultiplier: 0
+  baseSellValue: 3
+  isotopeSellMultiplier: 1

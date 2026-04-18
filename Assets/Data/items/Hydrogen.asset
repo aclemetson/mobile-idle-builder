@@ -18,11 +18,11 @@ MonoBehaviour:
   icon: {fileID: 0}
   itemId: 6
   tier: 2
-  category: 0
-  tierData: {fileID: 0}
-  atomicNumber: 0
-  atomicMass: 0
-  charge: 
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 1
+  atomicMass: 1
+  charge: 0
   isRadioactive: 0
   decayType: 0
   halfLifeNote: 
@@ -31,8 +31,9 @@ MonoBehaviour:
   fieldType: 0
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: "The simplest atom \u2014 one proton orbited by one electron. Most
-    abundant element in the universe."
+  codexEntry: "The simplest and most abundant element in the universe. One proton,
+    one electron \u2014 the starting point for all atomic chemistry. The primary
+    fuel of stars."
   codexUnlocked: 0
-  baseSellValue: 10
-  isotopeSellMultiplier: 0
+  baseSellValue: 5
+  isotopeSellMultiplier: 1

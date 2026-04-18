@@ -19,8 +19,8 @@ namespace MobileIdleBuilder
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new TutorialStateData
                 {
-                    CurrentStep = TutorialStep.None,
-                    IsActive    = authoring.tutorialActive,
+                    CurrentStepIndex = 0,
+                    IsActive         = authoring.tutorialActive,
                     FirstRunComplete = false
                 });
             }

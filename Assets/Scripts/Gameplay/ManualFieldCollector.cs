@@ -68,7 +68,7 @@ namespace MobileIdleBuilder
         void Update()
         {
             // If tutorial blocks collection, deactivate any active field and skip auto-collect.
-            if (!IsCollectionAllowed(out _))
+            if (!IsCollectionAllowed(out var _))
             {
                 if (_activeField != null) { _activeField = null; _collectTimer = 0f; }
                 return;
@@ -108,7 +108,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollectAtGridCell(int cx, int cy)
         {
-            if (!IsCollectionAllowed(out var tutStep))
+            if (!IsCollectionAllowed(out var filterType))
                 return false;
 
             var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
@@ -122,7 +122,7 @@ namespace MobileIdleBuilder
             if (field == null || field.drops == null || field.drops.Count == 0)
                 return false;
 
-            if (tutStep == TutorialStep.CollectFirstElectron && field.fieldType != FieldType.Lepton)
+            if (filterType != FieldType.None && field.fieldType != filterType)
                 return false;
 
             _activeField  = tappedInstance;
@@ -137,8 +137,8 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollect(Vector2 screenPos)
         {
-            // Tutorial gates — block collection entirely on restricted steps
-            if (!IsCollectionAllowed(out var tutStep))
+            // Tutorial gates — block collection or restrict field type based on current step
+            if (!IsCollectionAllowed(out var filterType))
                 return false;
 
             if (proximityChecker == null)
@@ -171,8 +171,8 @@ namespace MobileIdleBuilder
                 return false;
             }
 
-            // During CollectFirstElectron only the lepton field may be tapped
-            if (tutStep == TutorialStep.CollectFirstElectron && field.fieldType != FieldType.Lepton)
+            // Restrict to the field type specified by the current tutorial step (None = no restriction)
+            if (filterType != FieldType.None && field.fieldType != filterType)
                 return false;
 
             // Switch active field (deactivates the previous one automatically).
@@ -245,31 +245,29 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Returns true if manual field collection is permitted given the current tutorial state.
-        /// Also outputs the current <paramref name="step"/> so callers can apply further filters
-        /// (e.g. lepton-only restriction) without a second ECS read.
+        /// Returns true if manual field collection is permitted given the current tutorial step.
+        /// Also outputs the <paramref name="collectionFilter"/> field type so callers can
+        /// restrict collection to a specific field without a second ECS read.
+        /// Both values are read directly from TutorialFlowSO — no step names in code.
         /// </summary>
-        private bool IsCollectionAllowed(out TutorialStep step)
+        private bool IsCollectionAllowed(out FieldType collectionFilter)
         {
-            step = TutorialStep.Completed;
+            collectionFilter = FieldType.None;
             if (_tutorialQuery.IsEmpty) return true;
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
             if (!state.IsActive) return true;
 
-            step = state.CurrentStep;
-            switch (step)
-            {
-                // Dialogue is playing — player should not be interacting with the world
-                case TutorialStep.IntroDialogue:
-                // Player has been directed to sell; no more collecting until after the demon step
-                case TutorialStep.DirectToMaxwellsDemon:
-                case TutorialStep.SellElectronsInDemon:
-                case TutorialStep.CloseDemonPanel:
-                    return false;
-                default:
-                    return true;
-            }
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || state.CurrentStepIndex >= flow.steps.Length) return true;
+
+            var enter = flow.steps[state.CurrentStepIndex].onEnter;
+            if (enter == null) return true;
+
+            if (enter.blockCollection) return false;
+
+            collectionFilter = enter.collectionFilter;
+            return true;
         }
     }
 }

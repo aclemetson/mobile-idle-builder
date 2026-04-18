@@ -13,32 +13,35 @@ namespace MobileIdleBuilder.Editor
     [Serializable]
     internal class GameDataJson
     {
-        public GameConfigJson       game_config  = new();
-        public List<TierJson>       tiers        = new();
-        public List<ResearchJson>   research     = new();
-        public List<ItemJson>       items        = new();
-        public List<RecipeJson>     recipes      = new();
-        public List<BuildingJson>   buildings    = new();
-        public List<FieldJson>      fields       = new();
-        public List<DialogueJson>   dialogues    = new();
+        public GameConfigJson            game_config     = new();
+        public List<TierJson>            tiers           = new();
+        public List<ResearchJson>        research        = new();
+        public List<ItemJson>            items           = new();
+        public List<RecipeJson>          recipes         = new();
+        public List<BuildingJson>        buildings       = new();
+        public List<FieldJson>           fields          = new();
+        public List<DialogueJson>        dialogues       = new();
+        public List<TutorialStepJson>    tutorial_steps  = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
         {
-            game_config ??= new GameConfigJson();
-            tiers       ??= new List<TierJson>();
-            research    ??= new List<ResearchJson>();
-            items       ??= new List<ItemJson>();
-            recipes     ??= new List<RecipeJson>();
-            buildings   ??= new List<BuildingJson>();
-            fields      ??= new List<FieldJson>();
-            dialogues   ??= new List<DialogueJson>();
+            game_config     ??= new GameConfigJson();
+            tiers           ??= new List<TierJson>();
+            research        ??= new List<ResearchJson>();
+            items           ??= new List<ItemJson>();
+            recipes         ??= new List<RecipeJson>();
+            buildings       ??= new List<BuildingJson>();
+            fields          ??= new List<FieldJson>();
+            dialogues       ??= new List<DialogueJson>();
+            tutorial_steps  ??= new List<TutorialStepJson>();
 
-            foreach (var r in research)  r?.Initialize();
-            foreach (var rec in recipes) rec?.Initialize();
-            foreach (var b in buildings) b?.Initialize();
-            foreach (var f in fields)    f?.Initialize();
-            foreach (var d in dialogues) d?.Initialize();
+            foreach (var r in research)       r?.Initialize();
+            foreach (var rec in recipes)      rec?.Initialize();
+            foreach (var b in buildings)      b?.Initialize();
+            foreach (var f in fields)         f?.Initialize();
+            foreach (var d in dialogues)      d?.Initialize();
+            foreach (var s in tutorial_steps) s?.Initialize();
         }
     }
 
@@ -285,5 +288,65 @@ namespace MobileIdleBuilder.Editor
         public List<DialogueLineJson>  lines = new();
 
         public void Initialize() { lines ??= new List<DialogueLineJson>(); }
+    }
+
+    // ── Tutorial step JSON models ─────────────────────────────────────────────
+
+    [Serializable]
+    internal class TutorialStepJson
+    {
+        public string                 id                = "";
+        public string                 hint              = "";
+        public TutorialConditionJson  advance_condition = new();
+        public TutorialSkipJson       skip_condition;
+        public TutorialOnEnterJson    on_enter          = new();
+
+        public void Initialize()
+        {
+            advance_condition ??= new TutorialConditionJson();
+            on_enter          ??= new TutorialOnEnterJson();
+        }
+    }
+
+    [Serializable]
+    internal class TutorialConditionJson
+    {
+        /// <summary>Must match a ConditionType enum value (case-insensitive).</summary>
+        public string   type       = "Auto";
+        public bool     any_of     = false;
+        public List<ItemCountReqJson> items = new();
+        public string   ui_event_id  = "";
+        public string   research_id  = "";
+        public int      min_count    = 0;
+    }
+
+    [Serializable]
+    internal class ItemCountReqJson
+    {
+        public int item_id   = 0;
+        public int quantity  = 1;
+    }
+
+    [Serializable]
+    internal class TutorialSkipJson
+    {
+        public string research_id = "";
+        public string skip_to_id  = "";
+    }
+
+    [Serializable]
+    internal class TutorialOnEnterJson
+    {
+        public string   dialogue_id              = "";
+        public string   highlight_target         = "";
+        /// <summary>Must match a HighlightMode enum value (case-insensitive).</summary>
+        public string   highlight_mode           = "None";
+        public bool     block_collection         = false;
+        /// <summary>Must match a FieldType enum value (case-insensitive). "None" = no restriction.</summary>
+        public string   collection_filter        = "None";
+        public string   pulse_button_id          = "";
+        public int[]    demon_highlight_item_ids       = new int[0];
+        /// <summary>Must match a BuildingInteractionGate enum value. "None" = no restriction.</summary>
+        public string   building_interaction_gate      = "None";
     }
 }

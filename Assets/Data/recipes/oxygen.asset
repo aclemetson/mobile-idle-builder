@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: oxygen
   displayName: Oxygen
-  recipeId: 7
-  tier: 0
+  recipeId: 10
+  tier: 2
   category: 3
   inputs:
   - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
@@ -25,17 +25,18 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
     quantity: 8
   neutronAdjustment: []
-  outputItem: {fileID: 0}
+  outputItem: {fileID: 11400000, guid: b28aee0cd61586e47a89417f3b61b964, type: 2}
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 16
-  manualCraftTime: 0
+  manualCraftTime: 16
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 0
-  validBuildings: []
+  fixedPowerCostEV: 80
+  validBuildings:
+  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

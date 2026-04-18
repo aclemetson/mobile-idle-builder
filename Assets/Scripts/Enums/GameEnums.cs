@@ -147,25 +147,35 @@ namespace MobileIdleBuilder
         PrestigeScreen
     }
 
-    public enum TutorialStep
+    /// <summary>
+    /// Condition types used by TutorialConditionDef to determine when a step advances.
+    /// Evaluated generically in TutorialSystem — no step names in code.
+    /// </summary>
+    public enum ConditionType
     {
-        None                  = 0,
-        IntroDialogue         = 1,   // Show Architect intro; TutorialOverlayController advances this
-        CollectFirstElectron  = 2,   // Wait for player to collect 5 electrons (lepton field only)
-        DirectToMaxwellsDemon = 3,   // Highlight Maxwell's Demon; wait for player to open it
-        SellElectronsInDemon  = 4,   // Demon panel open; highlight electrons, prompt drag-to-sell
-        CloseDemonPanel       = 5,   // Electrons sold; prompt player to close the panel
-        BuyRecombinationI     = 6,   // Wait for Recombination I research to be purchased
-        CraftFirstQuarks      = 7,
-        CraftFirstProton      = 8,
-        CraftFirstNeutron     = 9,
-        CraftFirstHydrogen    = 10,
-        PlaceFirstBuilding    = 11,
-        AutomationStarted     = 12,
-        ReachPrestigeWall     = 13,
-        PrestigePromptShown   = 14,
-        FirstPrestigeComplete = 15,
-        SpendPrestigeCurrency = 16,
-        Completed             = 99
+        Auto,               // Advance immediately on entry
+        InventoryMin,       // All (or any, if anyOf=true) listed items meet their minimum quantity
+        InventoryZero,      // All listed item IDs have quantity == 0 in inventory
+        UiEvent,            // A named UI event fires (demon_opened, demon_closed, dialogue_complete, …)
+        ResearchUnlocked,   // A specific research ID appears in SaveManager.unlockedResearch
+        BuildingMin,        // At least minCount BuildingData entities exist
+        PrestigeRunMin,     // PrestigeData.RunCount >= minCount
+        PrestigeAvailable   // PlayerProgressData.PrestigeAvailable == true
+    }
+
+    /// <summary>How TutorialOverlayController highlights a world target when a step activates.</summary>
+    public enum HighlightMode
+    {
+        None,        // No highlight
+        Full,        // Camera pan to target + amber tile pulse
+        VisualOnly   // Amber tile pulse only — camera stays on player
+    }
+
+    /// <summary>Restricts which buildings the player may tap during a tutorial step.</summary>
+    public enum BuildingInteractionGate
+    {
+        None,           // No restriction — all buildings are tappable (default)
+        BlockAll,       // Block all building taps (e.g. while collecting resources)
+        EntropySinkOnly // Only Maxwell's Demon may be opened (e.g. while directed to sell)
     }
 }

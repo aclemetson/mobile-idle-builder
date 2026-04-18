@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: harvester
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: harvester
+  displayName: Harvester
+  description: Extracts fundamental particles from quantum fields. Output depends
+    on the field type it is placed on.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 1
+  tier: 1
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 0
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: d88d56de2caf44a4ca4f40b9dbe3e44a, type: 2}
+  - {fileID: 11400000, guid: 03e3811952427644cbaa6368ab3ad449, type: 2}
+  - {fileID: 11400000, guid: 6211149976db10e4ebd805300b5afa5c, type: 2}
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  ports: []
+  placementRule: 1
+  compatibleAdjacentCategories: 
+  compatibleFields: 0100000002000000
+  entropyCost: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 500
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 2000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 8000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 1
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 0}
+  availableFromStart: 1
+  tutorialNote: First building the player can place. Goes on the quark or lepton
+    field.
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: Extracts fundamental particles from quantum fields. Place on a field
+    to begin harvesting. Positive fields yield Up Quarks, negative fields yield Down
+    Quarks, lepton fields yield Electrons.

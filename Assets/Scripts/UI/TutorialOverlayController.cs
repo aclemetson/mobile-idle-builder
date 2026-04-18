@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.IO;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -6,39 +8,36 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Watches TutorialStateData each frame and drives tutorial-specific UI:
-    ///   - Plays the intro dialogue sequence on IntroDialogue step
-    ///   - Pulses the Research button on BuyRecombinationI step
-    ///   - Shows hint notifications on later steps
+    /// Watches TutorialStateData.CurrentStepIndex each frame and drives all tutorial UI.
+    /// Step definitions — dialogues, highlights, hints, collection gates — are read entirely
+    /// from TutorialFlowSO.Current (generated from game_data.json). No step names live here.
     ///
-    /// This MonoBehaviour advances the ECS TutorialStep when dialogue completes.
+    /// UI events that advance UiEvent-conditioned steps are routed through TryAdvanceOnUiEvent().
+    /// On every step advance the current state is written to tutorial_state.json.
     /// </summary>
     public class TutorialOverlayController : MonoBehaviour
     {
+        [SerializeField] private TutorialFlowSO          tutorialFlow;
         [SerializeField] private DialogueController      dialogueController;
-        [SerializeField] private DialogueSO              introDialogue;
         [SerializeField] private UIDocument              uiDocument;
         [SerializeField] private TutorialHighlighter     tutorialHighlighter;
         [SerializeField] private MaxwellsDemonController maxwellsDemon;
         [SerializeField] private HUDController           hudController;
 
-        private TutorialStep _lastStep    = TutorialStep.None;
-        private Coroutine    _pulseRoutine;
-        private Button       _btnResearch;
+        private int    _lastStepIndex = -1;
+        private Button _pulsingButton;
+        private Coroutine _pulseRoutine;
 
-        private Unity.Entities.EntityQuery _tutorialQuery;
-        private bool                        _queryReady;
+        private EntityQuery _tutorialQuery;
+        private bool        _queryReady;
 
         void Start()
         {
-            if (uiDocument != null)
-                _btnResearch = uiDocument.rootVisualElement.Q<Button>("btn-research");
-
             if (dialogueController != null)
             {
-                dialogueController.OnDialogueComplete    += OnIntroComplete;
-                dialogueController.OnHighlightRequested  += OnHighlightRequested;
-                dialogueController.OnActionTriggered     += OnActionTriggered;
+                dialogueController.OnDialogueComplete   += OnDialogueComplete;
+                dialogueController.OnHighlightRequested += OnHighlightRequested;
+                dialogueController.OnActionTriggered    += OnActionTriggered;
             }
 
             if (hudController == null)
@@ -54,11 +53,11 @@ namespace MobileIdleBuilder
                 maxwellsDemon.OnClosed         += OnDemonClosed;
             }
 
-            var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
+            var world = World.DefaultGameObjectInjectionWorld;
             if (world != null)
             {
                 _tutorialQuery = world.EntityManager.CreateEntityQuery(
-                    Unity.Entities.ComponentType.ReadWrite<TutorialStateData>());
+                    ComponentType.ReadWrite<TutorialStateData>());
                 _queryReady = true;
             }
         }
@@ -67,7 +66,7 @@ namespace MobileIdleBuilder
         {
             if (dialogueController != null)
             {
-                dialogueController.OnDialogueComplete   -= OnIntroComplete;
+                dialogueController.OnDialogueComplete   -= OnDialogueComplete;
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
@@ -87,98 +86,171 @@ namespace MobileIdleBuilder
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
             if (!state.IsActive) return;
 
-            if (state.CurrentStep == _lastStep) return;
+            if (state.CurrentStepIndex == _lastStepIndex) return;
 
-            _lastStep = state.CurrentStep;
-            OnStepChanged(state.CurrentStep);
+            _lastStepIndex = state.CurrentStepIndex;
+            OnStepChanged(state.CurrentStepIndex);
         }
 
-        private void OnStepChanged(TutorialStep step)
+        // ── Step entry ────────────────────────────────────────────────────────
+
+        private void OnStepChanged(int stepIndex)
         {
-            // Clear state from the previous step
-            if (_pulseRoutine != null) { StopCoroutine(_pulseRoutine); _pulseRoutine = null; }
-            SetResearchButtonHighlight(false);
+            StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
 
-            switch (step)
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || stepIndex >= flow.steps.Length) return;
+
+            var step = flow.steps[stepIndex];
+
+            if (!string.IsNullOrEmpty(step.hintText))
+                hudController?.ShowTutorialHint(step.hintText);
+
+            ApplyOnEnterActions(step.onEnter);
+        }
+
+        private void ApplyOnEnterActions(TutorialOnEnter enter)
+        {
+            if (enter == null) return;
+
+            // Dialogue
+            if (enter.dialogue != null)
+                dialogueController?.PlayDialogue(enter.dialogue);
+
+            // World highlight
+            switch (enter.highlightMode)
             {
-                case TutorialStep.IntroDialogue:
-                    if (dialogueController != null && introDialogue != null)
-                        dialogueController.PlayDialogue(introDialogue);
-                    else
-                        AdvanceECSStep(TutorialStep.CollectFirstElectron);
+                case HighlightMode.Full:
+                    tutorialHighlighter?.ShowHighlight(enter.highlightTarget);
                     break;
-
-                case TutorialStep.CollectFirstElectron:
-                    tutorialHighlighter?.ShowVisualOnly("electron_field");
-                    hudController?.ShowTutorialHint("Tap the electron field to collect 5 electrons.");
-                    break;
-
-                case TutorialStep.DirectToMaxwellsDemon:
-                    tutorialHighlighter?.ShowHighlight("maxwells_demon");
-                    hudController?.ShowTutorialHint("Tap Maxwell's Demon to sell your electrons.");
-                    break;
-
-                case TutorialStep.SellElectronsInDemon:
-                    // Item highlight inside the panel is applied via OnDemonOpened.
-                    hudController?.ShowTutorialHint("Drag your electrons to the right side to sell them.");
-                    break;
-
-                case TutorialStep.CloseDemonPanel:
-                    maxwellsDemon?.ClearTutorialHighlight();
-                    hudController?.ShowTutorialHint("Great! Close the panel when you're ready.");
-                    break;
-
-                case TutorialStep.BuyRecombinationI:
-                    _pulseRoutine = StartCoroutine(PulseButton(_btnResearch));
-                    hudController?.ShowTutorialHint("Open Research and buy Recombination I.");
-                    break;
-
-                case TutorialStep.CraftFirstQuarks:
-                    hudController?.ShowTutorialHint("Place a Field Collector on a quark field to harvest quarks.");
-                    break;
-
-                case TutorialStep.CraftFirstProton:
-                    hudController?.ShowTutorialHint("Place a Nucleon Factory and connect it to your Field Collector.");
+                case HighlightMode.VisualOnly:
+                    tutorialHighlighter?.ShowVisualOnly(enter.highlightTarget);
                     break;
             }
+
+            // UI button pulse
+            if (!string.IsNullOrEmpty(enter.pulseButtonId))
+                StartPulseButton(enter.pulseButtonId);
+
+            // Maxwell's Demon panel item highlights
+            if (enter.demonHighlightItemIds != null)
+                foreach (var id in enter.demonHighlightItemIds)
+                    maxwellsDemon?.HighlightTutorialItem(id);
         }
 
-        private void OnIntroComplete()
+        // ── UI event routing ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Advances the current step if it is waiting for the named UI event.
+        /// Safe to call speculatively — no-ops if the current step expects a different event.
+        /// </summary>
+        private void TryAdvanceOnUiEvent(string eventId)
         {
-            // Move the ECS tutorial step forward after the intro dialogue finishes
-            AdvanceECSStep(TutorialStep.CollectFirstElectron);
+            if (!_queryReady || _tutorialQuery.IsEmpty) return;
+            var flow = TutorialFlowSO.Current;
+            if (flow == null) return;
+
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+            if (!state.IsActive || state.CurrentStepIndex >= flow.steps.Length) return;
+
+            var cond = flow.steps[state.CurrentStepIndex].advanceCondition;
+            if (cond == null || cond.type != ConditionType.UiEvent) return;
+            if (cond.uiEventId != eventId) return;
+
+            AdvanceECSStep();
         }
 
-        // ── ECS helper ───────────────────────────────────────────────────────
-
-        private void AdvanceECSStep(TutorialStep next)
+        private void AdvanceECSStep()
         {
             if (!_queryReady || _tutorialQuery.IsEmpty) return;
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
-            state.CurrentStep = next;
+            var flow  = TutorialFlowSO.Current;
+
+            state.CurrentStepIndex++;
+            if (flow == null || state.CurrentStepIndex >= flow.steps.Length)
+                state.IsActive = false;
+
             _tutorialQuery.SetSingleton(state);
 
-            // Set _lastStep first so Update() won't fire OnStepChanged a second time,
-            // then call it directly so the UI reacts this frame rather than next.
-            _lastStep = next;
-            OnStepChanged(next);
+            _lastStepIndex = state.CurrentStepIndex;
+            OnStepChanged(state.CurrentStepIndex);
+            WriteTutorialState(state);
         }
 
-        // ── UI helpers ───────────────────────────────────────────────────────
+        // ── Dialogue event handlers ───────────────────────────────────────────
 
-        private void SetResearchButtonHighlight(bool on)
+        private void OnDialogueComplete() => TryAdvanceOnUiEvent("dialogue_complete");
+
+        private void OnHighlightRequested(string target)
         {
-            if (_btnResearch == null) return;
-            if (on) _btnResearch.AddToClassList("panel-btn--highlight");
-            else    _btnResearch.RemoveFromClassList("panel-btn--highlight");
+            if (string.IsNullOrEmpty(target))
+            {
+                tutorialHighlighter?.ClearHighlight();
+                return;
+            }
+            if (target == "btn-research")
+                StartPulseButton("btn-research");
+            else
+                tutorialHighlighter?.ShowHighlight(target);
+        }
+
+        private void OnActionTriggered(string action)
+        {
+            if (string.IsNullOrEmpty(action)) return;
+            Debug.Log($"[TutorialOverlay] Action: {action}");
+        }
+
+        // ── Maxwell's Demon event handlers ────────────────────────────────────
+
+        private void OnDemonOpened()
+        {
+            tutorialHighlighter?.ClearHighlight();
+            TryAdvanceOnUiEvent("demon_opened");
+        }
+
+        private void OnDemonItemsDeposited()
+        {
+            if (!_queryReady || _tutorialQuery.IsEmpty) return;
+            var flow = TutorialFlowSO.Current;
+            if (flow == null) return;
+
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+            if (!state.IsActive || state.CurrentStepIndex >= flow.steps.Length) return;
+
+            // Clear demon panel item highlights as soon as any deposit occurs
+            var enter = flow.steps[state.CurrentStepIndex].onEnter;
+            if (enter?.demonHighlightItemIds != null && enter.demonHighlightItemIds.Length > 0)
+                maxwellsDemon?.ClearTutorialHighlight();
+        }
+
+        private void OnDemonClosed() => TryAdvanceOnUiEvent("demon_closed");
+
+        // ── UI helpers ────────────────────────────────────────────────────────
+
+        private void StartPulseButton(string buttonId)
+        {
+            if (uiDocument == null) return;
+            var btn = uiDocument.rootVisualElement.Q<Button>(buttonId);
+            if (btn == null) return;
+            _pulsingButton = btn;
+            _pulseRoutine  = StartCoroutine(PulseButton(btn));
+        }
+
+        private void StopPulseRoutine()
+        {
+            if (_pulseRoutine != null) { StopCoroutine(_pulseRoutine); _pulseRoutine = null; }
+            if (_pulsingButton != null)
+            {
+                _pulsingButton.RemoveFromClassList("panel-btn--highlight");
+                _pulsingButton = null;
+            }
         }
 
         private IEnumerator PulseButton(Button btn)
         {
-            if (btn == null) yield break;
             while (true)
             {
                 btn.AddToClassList("panel-btn--highlight");
@@ -188,81 +260,40 @@ namespace MobileIdleBuilder
             }
         }
 
-        // ── Dialogue event handlers ──────────────────────────────────────────
+        // ── State file ────────────────────────────────────────────────────────
 
-        private void OnHighlightRequested(string target)
+        [Serializable]
+        private class TutorialStateJson
         {
-            SetResearchButtonHighlight(false);
+            public string currentStepId;
+            public bool   isActive;
+            public bool   firstRunComplete;
+        }
 
-            if (string.IsNullOrEmpty(target))
+        private static void WriteTutorialState(TutorialStateData s)
+        {
+            var flow = TutorialFlowSO.Current;
+            string stepId = (flow != null && s.CurrentStepIndex < flow.steps.Length)
+                ? flow.steps[s.CurrentStepIndex].id
+                : "";
+
+            var payload = JsonUtility.ToJson(new TutorialStateJson
             {
-                // Empty target = clear all highlights and return camera to character
-                tutorialHighlighter?.ClearHighlight();
-                return;
-            }
+                currentStepId    = stepId,
+                isActive         = s.IsActive,
+                firstRunComplete = s.FirstRunComplete
+            }, prettyPrint: true);
 
-            switch (target)
+            try
             {
-                case "btn-research":
-                    SetResearchButtonHighlight(true);
-                    break;
-                default:
-                    // World-space object (field, building on grid) — stub until grid system exists
-                    HighlightWorldObject(target);
-                    break;
+                File.WriteAllText(
+                    Path.Combine(Application.persistentDataPath, "tutorial_state.json"),
+                    payload);
             }
-        }
-
-        private void OnActionTriggered(string action)
-        {
-            if (string.IsNullOrEmpty(action)) return;
-            // Stub: grid/camera actions implemented when the grid system is built
-            Debug.Log($"[TutorialOverlay] Action: {action}");
-        }
-
-        private void HighlightWorldObject(string targetId)
-        {
-            tutorialHighlighter?.ShowHighlight(targetId);
-        }
-
-        // ── Maxwell's Demon event handlers ───────────────────────────────────
-
-        private void OnDemonOpened()
-        {
-            if (!_queryReady || _tutorialQuery.IsEmpty) return;
-            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
-
-            if (state.CurrentStep == TutorialStep.DirectToMaxwellsDemon)
+            catch (Exception e)
             {
-                tutorialHighlighter?.ClearHighlight();
-                AdvanceECSStep(TutorialStep.SellElectronsInDemon);
-
-                // Highlight the electron item row (itemId = 3) inside the panel
-                maxwellsDemon?.HighlightTutorialItem(3);
+                Debug.LogWarning($"[TutorialOverlay] Could not write tutorial_state.json: {e.Message}");
             }
-        }
-
-        private void OnDemonItemsDeposited()
-        {
-            if (!_queryReady || _tutorialQuery.IsEmpty) return;
-            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
-
-            // TutorialSystem advances SellElectronsInDemon → CloseDemonPanel automatically
-            // once inventory hits 0, but we also clear the item highlight immediately.
-            if (state.CurrentStep == TutorialStep.SellElectronsInDemon ||
-                state.CurrentStep == TutorialStep.CloseDemonPanel)
-            {
-                maxwellsDemon?.ClearTutorialHighlight();
-            }
-        }
-
-        private void OnDemonClosed()
-        {
-            if (!_queryReady || _tutorialQuery.IsEmpty) return;
-            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
-
-            if (state.CurrentStep == TutorialStep.CloseDemonPanel)
-                AdvanceECSStep(TutorialStep.BuyRecombinationI);
         }
     }
 }

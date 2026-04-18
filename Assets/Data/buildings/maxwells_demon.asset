@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: maxwells_demon
   displayName: Maxwell's Demon
-  description: Consumes any items fed into it and converts them to entropy.
+  description: "Sorts raw particles from your inventory and converts their energy
+    into base currency. The act of sorting increases local entropy \u2014 a price
+    the Demon gladly pays."
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  buildingId: 3
-  tier: 0
+  buildingId: 7
+  tier: 1
   category: 0
   isObsoleteable: 0
   obsoleteCondition: 
@@ -31,57 +33,75 @@ MonoBehaviour:
   linkRadiusTiles: 0
   baseOutputRate: 0
   supportedRecipes: []
-  inputSlotCount: 12
+  inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 1
   footprint: {x: 3, y: 3}
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 0
+    localFacing: 2
   - portType: 0
     localCell: {x: 1, y: 0}
-    localFacing: 0
-  - portType: 0
-    localCell: {x: 2, y: 0}
-    localFacing: 0
-  - portType: 0
-    localCell: {x: 2, y: 0}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 2, y: 1}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 2, y: 2}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 0, y: 2}
     localFacing: 2
   - portType: 0
-    localCell: {x: 1, y: 2}
-    localFacing: 2
-  - portType: 0
-    localCell: {x: 2, y: 2}
+    localCell: {x: 2, y: 0}
     localFacing: 2
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 1
+    localFacing: 3
   - portType: 0
     localCell: {x: 0, y: 1}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 2}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 2, y: 0}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 2, y: 1}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 2, y: 2}
     localFacing: 1
   - portType: 0
     localCell: {x: 0, y: 2}
-    localFacing: 1
+    localFacing: 0
+  - portType: 0
+    localCell: {x: 1, y: 2}
+    localFacing: 0
+  - portType: 0
+    localCell: {x: 2, y: 2}
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
-  entropyCost: 1000
-  upgradeLevels: []
+  entropyCost: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 0
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 300
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 0
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 1200
+    costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 0}
   availableFromStart: 1
-  tutorialNote: 
+  tutorialNote: Pre-placed on the starting grid. Player deposits manually-collected
+    particles here to earn the 100 base currency needed for Recombination I.
   collectsDecayParticles: 0
   decayCollectionRate: 0
-  codexEntry: 
+  codexEntry: "A thermodynamic thought experiment made real. Maxwell's Demon appears
+    to violate the second law by sorting particles \u2014 but information erasure
+    always costs energy. That cost manifests as entropy. The currency it generates
+    is real. So is the entropy."

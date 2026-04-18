@@ -1,0 +1,457 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 981af5c3da3ff194dbbacff74738f3b0, type: 3}
+  m_Name: tutorial_flow
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialFlowSO
+  steps:
+  - id: intro_dialogue
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: recombination_i
+      skipToId: craft_first_quarks
+    onEnter:
+      dialogue: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3cb, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: collect_first_electron
+    hintText: Tap the electron field to collect 5 electrons.
+    advanceCondition:
+      type: 1
+      anyOf: 0
+      items:
+      - itemId: 3
+        quantity: 5
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: electron_field
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: 2
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 1
+  - id: direct_to_maxwells_demon
+    hintText: Tap Maxwell's Demon to sell your electrons.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: demon_opened
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: maxwells_demon
+      highlightMode: 1
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 2
+  - id: sell_electrons_in_demon
+    hintText: Drag your electrons to the right side to sell them.
+    advanceCondition:
+      type: 2
+      anyOf: 0
+      items:
+      - itemId: 3
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 03000000
+      buildingInteractionGate: 0
+  - id: close_demon_panel
+    hintText: Great! Close the panel when you're ready.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: demon_closed
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: explain_quark_field
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: e66c4f8154eb5c743a390caebea6173c, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: collect_quarks
+    hintText: Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.
+    advanceCondition:
+      type: 1
+      anyOf: 0
+      items:
+      - itemId: 1
+        quantity: 5
+      - itemId: 2
+        quantity: 5
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: quark_field
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: 1
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 1
+  - id: direct_to_maxwells_demon_quarks
+    hintText: Bring your quarks to Maxwell's Demon to convert them to entropy.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: demon_opened
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: maxwells_demon
+      highlightMode: 1
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 2
+  - id: sell_quarks_in_demon
+    hintText: Drag your quarks to the right side to sell them.
+    advanceCondition:
+      type: 2
+      anyOf: 0
+      items:
+      - itemId: 1
+        quantity: 1
+      - itemId: 2
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 0100000002000000
+      buildingInteractionGate: 0
+  - id: close_demon_panel_quarks
+    hintText: Great! Close the panel when you're ready.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: demon_closed
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: buy_recombination_i
+    hintText: Open Research and buy Recombination I.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: recombination_i
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: craft_first_quarks
+    hintText: Place a Field Collector on a quark field to harvest quarks.
+    advanceCondition:
+      type: 1
+      anyOf: 1
+      items:
+      - itemId: 1
+        quantity: 1
+      - itemId: 2
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: craft_first_proton
+    hintText: Place a Nucleon Factory and connect it to your Field Collector.
+    advanceCondition:
+      type: 1
+      anyOf: 0
+      items:
+      - itemId: 4
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: craft_first_neutron
+    hintText: Combine 1 Up Quark and 2 Down Quarks to craft a Neutron.
+    advanceCondition:
+      type: 1
+      anyOf: 0
+      items:
+      - itemId: 5
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: craft_first_hydrogen
+    hintText: Combine a Proton and an Electron to craft Hydrogen.
+    advanceCondition:
+      type: 1
+      anyOf: 0
+      items:
+      - itemId: 6
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: place_first_building
+    hintText: Place a building on the grid to begin automation.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: automation_started
+    hintText: Your factory is running. Watch it produce particles on its own.
+    advanceCondition:
+      type: 7
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: reach_prestige_wall
+    hintText: You have reached the prestige threshold. Time to reset and grow stronger.
+    advanceCondition:
+      type: 6
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: first_prestige_complete
+    hintText: 
+    advanceCondition:
+      type: 0
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+  - id: spend_prestige_currency
+    hintText: Open the upgrade shop and spend your prestige currency.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: prestige_currency_spent
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: quark_field_explanation
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "Good work. Those electrons gave you your first entropy \u2014 the currency
+      that powers this facility. But entropy alone cannot build matter."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "That orange field is a Quark Field. It generates Up Quarks and Down Quarks
+      in equal measure every time you mine it \u2014 the raw ingredients for every
+      proton and neutron you will ever craft."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: quark_field
+    action: 
+  - speakerName: The Architect
+    text: Mine it. Collect 5 of each type, then bring them back here.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: quark_field
+    action: pulse_field

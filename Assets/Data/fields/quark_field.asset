@@ -17,9 +17,12 @@ MonoBehaviour:
   fieldType: 1
   drops:
   - item: {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
-    weight: 1
+    weight: 0.5
   - item: {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
-    weight: 1
-  fieldColor: {r: 0.7264151, g: 0.20862433, b: 0, a: 0}
+    weight: 0.5
+  collectionRate: 1
+  fieldColor: {r: 1, g: 0.41960785, b: 0.20784314, a: 1}
   fieldIcon: {fileID: 0}
-  codexEntry: 
+  codexEntry: A region of space dense with confined quarks. Positive-polarity zones
+    yield Up Quarks; negative-polarity zones yield Down Quarks. Harvesters placed
+    here extract the field's particles automatically.

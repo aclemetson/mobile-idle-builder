@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: neutron
   displayName: Neutron
-  recipeId: 2
-  tier: 0
+  recipeId: 5
+  tier: 1
   category: 2
   inputs:
   - item: {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
@@ -27,10 +27,11 @@ MonoBehaviour:
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 1
-  manualCraftTime: 0
+  manualCraftTime: 1
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
-  validBuildings: []
+  validBuildings:
+  - {fileID: 11400000, guid: 72444c98b26dbee4f952490a77312ddc, type: 2}
   canCraftManually: 1
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}

@@ -12,30 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
   m_Name: helium_4
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: 
-  displayName: 
-  recipeId: 4
-  tier: 0
+  id: helium_4
+  displayName: Helium-4
+  recipeId: 7
+  tier: 2
   category: 3
   inputs:
-  - item: {fileID: 0}
-    quantity: 0
-  - item: {fileID: 0}
-    quantity: 0
-  - item: {fileID: 0}
-    quantity: 0
+  - item: {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+    quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 9e0c03f047215524aad47b723303b846, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 1
-  manualCraftTime: 0
+  baseCraftTime: 4
+  manualCraftTime: 4
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 0
-  validBuildings: []
+  fixedPowerCostEV: 20
+  validBuildings:
+  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

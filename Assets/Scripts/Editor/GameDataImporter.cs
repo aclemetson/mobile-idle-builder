@@ -37,8 +37,47 @@ namespace MobileIdleBuilder.Editor
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
         private const string DialogueDir   = "Assets/Data/dialogue";
+        private const string TutorialDir   = "Assets/Data/tutorial";
 
         // ── Entry point ───────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Automatically re-runs the importer after every script compilation if:
+        /// - any generated asset is missing, OR
+        /// - game_data.json has been modified more recently than the last generated asset.
+        /// </summary>
+        [InitializeOnLoadMethod]
+        private static void AutoImportIfMissing()
+        {
+            bool needsImport = false;
+
+            // Check for missing tutorial flow asset
+            if (AssetDatabase.LoadAssetAtPath<TutorialFlowSO>($"{TutorialDir}/tutorial_flow.asset") == null)
+                needsImport = true;
+
+            // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
+            if (!needsImport)
+            {
+                string jsonPath  = $"Assets/Data/game_data.json";
+                string assetPath = $"{TutorialDir}/tutorial_flow.asset";
+                string jsonFull  = Path.GetFullPath(jsonPath);
+                string assetFull = Path.GetFullPath(assetPath);
+                if (File.Exists(jsonFull) && File.Exists(assetFull))
+                {
+                    if (File.GetLastWriteTimeUtc(jsonFull) > File.GetLastWriteTimeUtc(assetFull))
+                        needsImport = true;
+                }
+            }
+
+            if (!needsImport) return;
+
+            // Delay one frame so the AssetDatabase has finished its own post-compile refresh.
+            EditorApplication.delayCall += () =>
+            {
+                var data = LoadJson();
+                if (data != null) RunImport(data);
+            };
+        }
 
         [MenuItem("MobileIdleBuilder/Import Game Data")]
         public static void Import()
@@ -82,6 +121,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
             EnsureDirectory(DialogueDir);
+            EnsureDirectory(TutorialDir);
 
             // ── Step 1: GameConfigSO ─────────────────────────────────────────
             GenerateGameConfig(data.game_config);
@@ -130,13 +170,17 @@ namespace MobileIdleBuilder.Editor
                 GenerateField(field, itemLookup);
 
             // ── Step 9: DialogueSO ───────────────────────────────────────────
+            var dialogueLookup = new Dictionary<string, DialogueSO>();
             foreach (var dlg in data.dialogues)
-                GenerateDialogue(dlg);
+                dialogueLookup[dlg.id] = GenerateDialogue(dlg);
 
             // ── Step 10: TierSO (pass 2 — cross-refs) ───────────────────────
             foreach (var t in data.tiers)
                 if (tierLookup.TryGetValue(t.id, out var so))
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
+
+            // ── Step 11: TutorialFlowSO ──────────────────────────────────────
+            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -145,7 +189,8 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.dialogues.Count} dialogues."
+                $"{data.fields.Count} fields, {data.dialogues.Count} dialogues, " +
+                $"{data.tutorial_steps.Count} tutorial steps."
             );
         }
 
@@ -431,7 +476,7 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateDialogue(DialogueJson data)
+        private static DialogueSO GenerateDialogue(DialogueJson data)
         {
             string path = $"{DialogueDir}/{Sanitize(data.id)}.asset";
             var so = LoadOrCreate<DialogueSO>(path);
@@ -452,6 +497,102 @@ namespace MobileIdleBuilder.Editor
                         action          = ld.action ?? ""
                     };
                 }
+            }
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
+            Dictionary<string, DialogueSO> dialogueLookup)
+        {
+            if (steps == null || steps.Count == 0) return;
+
+            string path = $"{TutorialDir}/tutorial_flow.asset";
+            var so = LoadOrCreate<TutorialFlowSO>(path);
+
+            so.steps = new TutorialStepDef[steps.Count];
+            for (int i = 0; i < steps.Count; i++)
+            {
+                var s = steps[i];
+                var def = new TutorialStepDef
+                {
+                    id       = s.id,
+                    hintText = s.hint,
+                };
+
+                // Advance condition
+                if (s.advance_condition != null)
+                {
+                    def.advanceCondition = new TutorialConditionDef
+                    {
+                        anyOf      = s.advance_condition.any_of,
+                        uiEventId  = s.advance_condition.ui_event_id  ?? "",
+                        researchId = s.advance_condition.research_id  ?? "",
+                        minCount   = s.advance_condition.min_count,
+                    };
+                    if (TryParseEnum<ConditionType>(s.advance_condition.type,
+                            $"TutorialStep '{s.id}'.advance_condition.type", out var ct))
+                        def.advanceCondition.type = ct;
+
+                    if (s.advance_condition.items != null && s.advance_condition.items.Count > 0)
+                    {
+                        def.advanceCondition.items = new System.Collections.Generic.List<ItemCountReq>(
+                            s.advance_condition.items.Count);
+                        foreach (var r in s.advance_condition.items)
+                            def.advanceCondition.items.Add(new ItemCountReq
+                                { itemId = r.item_id, quantity = r.quantity });
+                    }
+                }
+
+                // Skip condition
+                if (s.skip_condition != null && !string.IsNullOrEmpty(s.skip_condition.research_id))
+                {
+                    def.skipCondition = new TutorialSkipDef
+                    {
+                        researchId = s.skip_condition.research_id,
+                        skipToId   = s.skip_condition.skip_to_id ?? ""
+                    };
+                }
+
+                // On-enter actions
+                if (s.on_enter != null)
+                {
+                    def.onEnter = new TutorialOnEnter
+                    {
+                        highlightTarget       = s.on_enter.highlight_target ?? "",
+                        blockCollection       = s.on_enter.block_collection,
+                        pulseButtonId         = s.on_enter.pulse_button_id  ?? "",
+                        demonHighlightItemIds = s.on_enter.demon_highlight_item_ids,
+                    };
+
+                    if (TryParseEnum<HighlightMode>(s.on_enter.highlight_mode,
+                            $"TutorialStep '{s.id}'.on_enter.highlight_mode", out var hm))
+                        def.onEnter.highlightMode = hm;
+
+                    if (TryParseEnum<FieldType>(s.on_enter.collection_filter,
+                            $"TutorialStep '{s.id}'.on_enter.collection_filter", out var ft))
+                        def.onEnter.collectionFilter = ft;
+
+                    if (TryParseEnum<BuildingInteractionGate>(s.on_enter.building_interaction_gate,
+                            $"TutorialStep '{s.id}'.on_enter.building_interaction_gate", out var big))
+                        def.onEnter.buildingInteractionGate = big;
+
+                    if (!string.IsNullOrEmpty(s.on_enter.dialogue_id))
+                    {
+                        if (dialogueLookup.TryGetValue(s.on_enter.dialogue_id, out var dlg))
+                            def.onEnter.dialogue = dlg;
+                        else
+                            Debug.LogWarning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                             $"dialogue_id '{s.on_enter.dialogue_id}' not found.");
+                    }
+                }
+                else
+                {
+                    def.onEnter = new TutorialOnEnter();
+                }
+
+                so.steps[i] = def;
             }
 
             EditorUtility.SetDirty(so);

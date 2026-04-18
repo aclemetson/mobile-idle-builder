@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: radioactive_containment
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: radioactive_containment
+  displayName: Radioactive Containment
+  description: Required housing for any building producing radioactive isotopes.
+    Safely contains decay events and harvests alpha and beta particles.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 6
+  tier: 2
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 30
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 0
+  supportedRecipes: []
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 2, y: 2}
+  ports: []
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 0
+    powerCostEV: 50
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 3000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 0
+    powerCostEV: 80
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 12000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 1
+  decayCollectionRate: 1
+  codexEntry: Required housing for any building producing radioactive isotopes. Safely
+    contains decay events and harvests alpha and beta particles as usable energy
+    currency.
