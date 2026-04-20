@@ -18,11 +18,11 @@ MonoBehaviour:
   icon: {fileID: 0}
   itemId: 5
   tier: 1
-  category: 0
-  tierData: {fileID: 0}
+  category: 1
+  tierData: {fileID: 11400000, guid: 8c9d2e26b3e2ca94a934c54494d6f36f, type: 2}
   atomicNumber: 0
-  atomicMass: 0
-  charge: 
+  atomicMass: 1
+  charge: 0
   isRadioactive: 0
   decayType: 0
   halfLifeNote: 
@@ -31,8 +31,9 @@ MonoBehaviour:
   fieldType: 0
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: A baryon made of 1 up quark and 2 down quarks. Electrically neutral.
-    Determines the isotope.
+  codexEntry: A baryon composed of one up quark and two down quarks. Electrically
+    neutral. Adding or removing neutrons from a nucleus produces isotopes of the
+    same element.
   codexUnlocked: 0
-  baseSellValue: 5
-  isotopeSellMultiplier: 0
+  baseSellValue: 3
+  isotopeSellMultiplier: 1

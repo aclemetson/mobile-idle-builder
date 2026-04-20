@@ -22,6 +22,9 @@ namespace MobileIdleBuilder
         [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
         [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
         [SerializeField] private Color deconstructHoverColor = new Color(0.9f,   0.15f,  0.15f, 0.9f); // solid danger red
+        [SerializeField] private Color fieldHoverColor       = new Color(0.15f,  0.85f,  0.35f, 0.55f); // soft green — interactable field
+        [SerializeField] private Color tutorialHighlightColor = new Color(1f,    0.78f,  0.15f, 0.75f); // amber/gold — tutorial focus
+        [SerializeField] private Color tutorialHoverColor    = new Color(1f,    0.97f,  0.70f, 1.00f); // bright pale-yellow — hover over tutorial tile
 
         [Header("Tile gap (0 = flush, 0.05 = small gap)")]
         [SerializeField] [Range(0f, 0.5f)] private float gap = 0.05f;
@@ -34,17 +37,19 @@ namespace MobileIdleBuilder
         private static readonly Color ConveyorEndpointColor = new Color(0.25f, 0.88f, 0.35f, 0.9f); // green
 
         private GameObject[,]        _tiles;
-        private Vector2Int           _ghostCell   = new(-1, -1);
-        private readonly List<Vector2Int> _ghostCells            = new();
+        private Vector2Int           _ghostCell              = new(-1, -1);
+        private readonly HashSet<Vector2Int> _tutorialHighlightCells = new();
+        private readonly List<Vector2Int> _ghostCells             = new();
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
         private readonly List<Vector2Int> _deconstructHoverCells = new();
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
+        private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
         void Awake()  => BuildGrid();
         void Start()
         {
-            // Skip if IsometricCameraFollow is driving the camera
-            if (Camera.main == null || Camera.main.GetComponent<IsometricCameraFollow>() == null)
+            // Skip if CameraController is driving the camera (it initialises its own position)
+            if (Camera.main == null || Camera.main.GetComponent<CameraController>() == null)
                 CentreCamera();
         }
 
@@ -70,7 +75,11 @@ namespace MobileIdleBuilder
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 
-                    SetColor(mr, tileColor);
+                    // PresenceReceiver owns colour state so the presence ripple
+                    // can be blended on top of whatever the tile's current colour is.
+                    var pr = tile.AddComponent<PresenceReceiver>();
+                    pr.SetBaseColor(tileColor);
+
                     _tiles[x, y] = tile;
                 }
             }
@@ -216,18 +225,88 @@ namespace MobileIdleBuilder
             _deconstructHoverCells.Clear();
         }
 
+        // ---- Field hover ----
+
+        /// <summary>
+        /// Highlights the cell under the pointer to indicate an interactable field.
+        /// Automatically restores the previous hover cell.
+        /// </summary>
+        public void SetFieldHoverCell(int x, int y)
+        {
+            if (_fieldHoverCell.x == x && _fieldHoverCell.y == y) return;
+            if (_fieldHoverCell.x >= 0)
+                RestoreCell(_fieldHoverCell.x, _fieldHoverCell.y);
+
+            _fieldHoverCell = new(x, y);
+            if (IsInBounds(x, y))
+            {
+                bool isTutorialCell = _tutorialHighlightCells.Contains(new Vector2Int(x, y));
+                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(),
+                         isTutorialCell ? tutorialHoverColor : fieldHoverColor);
+            }
+        }
+
+        /// <summary>Clears the field hover highlight, restoring the cell to its normal colour.</summary>
+        public void ClearFieldHoverCell()
+        {
+            if (_fieldHoverCell.x < 0) return;
+            RestoreCell(_fieldHoverCell.x, _fieldHoverCell.y);
+            _fieldHoverCell = new(-1, -1);
+        }
+
+        // ---- Tutorial highlight ----
+
+        /// <summary>
+        /// Highlights a rect of cells amber/gold to draw attention during a tutorial step.
+        /// Replaces any previously active tutorial highlight. Defaults to 1×1 for fields.
+        /// </summary>
+        public void SetTutorialHighlightRect(int x, int y, int w = 1, int h = 1)
+        {
+            ClearTutorialHighlightCell();
+            for (int dx = 0; dx < w; dx++)
+            for (int dy = 0; dy < h; dy++)
+            {
+                int cx = x + dx, cy = y + dy;
+                if (!IsInBounds(cx, cy)) continue;
+                SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), tutorialHighlightColor);
+                _tutorialHighlightCells.Add(new Vector2Int(cx, cy));
+            }
+        }
+
+        /// <summary>Clears all tutorial highlight cells, restoring each to its normal colour.</summary>
+        public void ClearTutorialHighlightCell()
+        {
+            foreach (var c in _tutorialHighlightCells)
+                RestoreCell(c.x, c.y);
+            _tutorialHighlightCells.Clear();
+        }
+
         // ---- Helpers ----
 
         private void RestoreCell(int x, int y)
         {
             if (!IsInBounds(x, y)) return;
-            bool occupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y);
-            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(),
-                     occupied ? occupiedColor : tileColor);
+            var tile = _tiles[x, y];
+            if (tile == null) return;   // already destroyed (e.g. during scene shutdown)
+
+            Color color;
+            if (_tutorialHighlightCells.Contains(new Vector2Int(x, y)))
+                color = tutorialHighlightColor;
+            else
+            {
+                bool occupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y);
+                color = occupied ? occupiedColor : tileColor;
+            }
+            SetColor(tile.GetComponent<MeshRenderer>(), color);
         }
 
         private static void SetColor(MeshRenderer mr, Color color)
         {
+            // Route through PresenceReceiver so the presence ripple is preserved on top
+            var pr = mr.GetComponent<PresenceReceiver>();
+            if (pr != null) { pr.SetBaseColor(color); return; }
+
+            // Fallback for any renderer without a PresenceReceiver (shouldn't happen in practice)
             var mpb = new MaterialPropertyBlock();
             mpb.SetColor("_BaseColor", color);
             mr.SetPropertyBlock(mpb);

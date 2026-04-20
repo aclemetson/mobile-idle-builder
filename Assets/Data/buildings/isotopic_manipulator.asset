@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: isotopic_manipulator
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: isotopic_manipulator
+  displayName: Isotopic Manipulator
+  description: Adds or removes neutrons from a base element to produce isotopes.
+    Slower than the Atomic Assembler by design.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 5
+  tier: 2
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 1
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 0.5
+  supportedRecipes:
+  - {fileID: 11400000, guid: e06a77d34877ff84dafb8531a1ae1e97, type: 2}
+  - {fileID: 11400000, guid: 320d8f44744963e479aa45bce808200f, type: 2}
+  - {fileID: 11400000, guid: 534588c4ae9e1be4ea3e6db25bf28162, type: 2}
+  - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Base Element
+  - Neutrons
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  ports: []
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 1
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 2000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 8000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 32000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: Adds or removes neutrons from a base element to produce isotopes. Radioactive
+    isotopes produced here will emit decay particles over time if housed in a Radioactive
+    Containment building.

@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: intro_architect
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "Welcome. I am The Architect \u2014 your guide through the Quantum Foundry.
+      This facility builds matter from scratch, starting with the smallest particles
+      in existence."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "Everything solid in the universe \u2014 planets, stars, you \u2014 began
+      as fundamental particles. Your job is to harvest them, combine them, and build
+      upward."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "See that glowing blue field? That is a Lepton Field \u2014 saturated with
+      free electrons. Every atom you will ever build needs them."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: electron_field
+    action: 
+  - speakerName: The Architect
+    text: Tap it. Pull electrons into your inventory.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: electron_field
+    action: pulse_field
+  - speakerName: The Architect
+    text: "That orange field is a Quark Field. Up Quarks and Down Quarks \u2014 the
+      constituents of every proton and neutron you will ever craft."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: quark_field
+    action: 
+  - speakerName: The Architect
+    text: Tap it too. Raw quarks are the foundation of everything that comes next.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: quark_field
+    action: pulse_field
+  - speakerName: The Architect
+    text: "Good. Now bring those particles to Maxwell's Demon \u2014 that structure
+      at the edge of your grid."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: maxwells_demon
+    action: 
+  - speakerName: The Architect
+    text: The Demon sorts your raw particles and converts their energy into usable
+      currency. Deposit what you have collected. You will need it.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: maxwells_demon
+    action: pulse_building
+  - speakerName: The Architect
+    text: "With that currency, open the Research panel \u2014 the flask icon at the
+      bottom of your screen."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: btn-research
+    action: 
+  - speakerName: The Architect
+    text: Purchase Recombination I. It will teach you to bind quarks using the strong
+      nuclear force. That is where production truly begins.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

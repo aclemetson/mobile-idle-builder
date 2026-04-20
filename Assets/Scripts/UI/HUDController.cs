@@ -17,6 +17,7 @@ namespace MobileIdleBuilder
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private AchievementService           achievementService;
         [SerializeField] private PVPService                   pvpService;
+        [SerializeField] private ResearchService              researchService;
         [SerializeField] private float                        notificationDuration = 3f;
 
         // ---- ECS ----
@@ -24,6 +25,7 @@ namespace MobileIdleBuilder
         private EntityQuery   _progressQuery;
         private EntityQuery   _prestigeQuery;
         private EntityQuery   _powerQuery;
+        private EntityQuery   _inventoryQuery;
         private bool          _ecsReady;
 
         // ---- Panels ----
@@ -40,7 +42,10 @@ namespace MobileIdleBuilder
         private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
-        private VisualElement _inventoryBar;
+        private VisualElement _drawerInventory;
+        private VisualElement _drawerPanel;
+        private VisualElement _drawerBackdrop;
+        private bool          _drawerOpen;
         private Label         _entropyLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
@@ -49,6 +54,10 @@ namespace MobileIdleBuilder
         private VisualElement _notificationBanner;
         private Label         _notificationIcon, _notificationMessage;
         private Coroutine     _hideNotificationCoroutine;
+
+        // ---- Tutorial hint banner ----
+        private VisualElement _tutorialHintBanner;
+        private Label         _tutorialHintMessage;
 
         // ---- Field proximity banner ----
         private VisualElement _fieldBanner;
@@ -105,6 +114,7 @@ namespace MobileIdleBuilder
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
             SetElementVisible(_notificationBanner, false);
+            SetElementVisible(_tutorialHintBanner, false);
             SetElementVisible(_fieldBanner, false);
             SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
@@ -128,6 +138,9 @@ namespace MobileIdleBuilder
 
             if (pvpService != null)
                 pvpService.OnStateChanged += OnPVPStateChanged;
+
+            if (researchService != null)
+                researchService.OnResearchUnlocked += OnResearchUnlocked;
         }
 
         void OnDisable()
@@ -150,6 +163,9 @@ namespace MobileIdleBuilder
 
             if (pvpService != null)
                 pvpService.OnStateChanged -= OnPVPStateChanged;
+
+            if (researchService != null)
+                researchService.OnResearchUnlocked -= OnResearchUnlocked;
         }
 
         void Start()
@@ -160,11 +176,15 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
 
-            _em            = world.EntityManager;
-            _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
-            _prestigeQuery = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
-            _powerQuery    = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
-            _ecsReady      = true;
+            _em             = world.EntityManager;
+            _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
+            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
+            _inventoryQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInventoryTag>(),
+                ComponentType.ReadWrite<InventorySlot>()
+            );
+            _ecsReady       = true;
         }
 
         void Update()
@@ -183,8 +203,10 @@ namespace MobileIdleBuilder
         private void QueryElements(VisualElement root)
         {
             // HUD chrome
-            _inventoryBar = root.Q("inventory-bar");
-            _entropyLabel = root.Q<Label>("entropy-label");
+            _drawerInventory = root.Q("drawer-inventory");
+            _drawerPanel     = root.Q("left-drawer");
+            _drawerBackdrop  = root.Q("drawer-backdrop");
+            _entropyLabel    = root.Q<Label>("entropy-label");
             _powerLabel   = root.Q<Label>("power-label");
             _btnPrestige  = root.Q<Button>("btn-prestige");
 
@@ -232,6 +254,10 @@ namespace MobileIdleBuilder
             _notificationIcon    = root.Q<Label>("notification-banner__icon");
             _notificationMessage = root.Q<Label>("notification-banner__message");
 
+            // Tutorial hint banner
+            _tutorialHintBanner  = root.Q("tutorial-hint-banner");
+            _tutorialHintMessage = root.Q<Label>("tutorial-hint-banner__message");
+
             // Field proximity banner — inner element inside "field-proximity-instance" TemplateContainer
             _fieldBanner     = root.Q("field-proximity-banner");
             _fieldBannerName = root.Q<Label>("field-proximity-banner__name");
@@ -261,7 +287,12 @@ namespace MobileIdleBuilder
 
         private void BindButtons(VisualElement root)
         {
-            // Bottom bar panel launchers
+            // Drawer toggle
+            root.Q<Button>("btn-drawer-handle").clicked += ToggleDrawer;
+            if (_drawerBackdrop != null)
+                _drawerBackdrop.RegisterCallback<ClickEvent>(_ => CloseDrawer());
+
+            // Drawer nav buttons
             root.Q<Button>("btn-recipes").clicked      += OpenRecipePanel;
             root.Q<Button>("btn-buildings").clicked    += OpenBuildingsPanel;
             root.Q<Button>("btn-codex").clicked        += OpenCodexPanel;
@@ -331,30 +362,38 @@ namespace MobileIdleBuilder
 
         private void RefreshInventoryBar()
         {
-            if (craftService == null || !craftService.IsReady) return;
+            if (!_ecsReady || _drawerInventory == null || _inventoryQuery.IsEmpty) return;
 
-            var counts = craftService.GetInventoryCounts();
+            var buffer = _em.GetBuffer<InventorySlot>(
+                _inventoryQuery.GetSingletonEntity(), isReadOnly: true);
 
-            foreach (var (itemId, qty) in counts)
+            var seen = new HashSet<int>();
+            for (int i = 0; i < buffer.Length; i++)
             {
-                var item = ItemDatabase.Instance?.Get(itemId);
-                if (item == null) continue;
+                var slot = buffer[i];
+                if (slot.Quantity <= 0) continue;
 
-                if (!_inventoryLabels.TryGetValue(itemId, out var lbl))
+                seen.Add(slot.ItemID);
+                var item = ItemDatabase.GetStatic(slot.ItemID);
+                string label = item != null
+                    ? $"{item.symbol ?? item.displayName}  ×{slot.Quantity}"
+                    : $"#{slot.ItemID}  ×{slot.Quantity}";
+
+                if (!_inventoryLabels.TryGetValue(slot.ItemID, out var lbl))
                 {
                     lbl = new Label();
-                    lbl.AddToClassList("inventory-item");
-                    _inventoryBar.Add(lbl);
-                    _inventoryLabels[itemId] = lbl;
+                    lbl.AddToClassList("drawer-inventory-item");
+                    _drawerInventory.Add(lbl);
+                    _inventoryLabels[slot.ItemID] = lbl;
                 }
 
-                lbl.text = $"{item.symbol ?? item.displayName}: {qty}";
+                lbl.text = label;
                 lbl.style.display = DisplayStyle.Flex;
             }
 
             foreach (var (itemId, lbl) in _inventoryLabels)
             {
-                if (!counts.ContainsKey(itemId))
+                if (!seen.Contains(itemId))
                     lbl.style.display = DisplayStyle.None;
             }
         }
@@ -425,8 +464,108 @@ namespace MobileIdleBuilder
         private void OpenResearchPanel()
         {
             CloseAllPanels();
-            // Content is populated when ResearchSO data is wired in
+            BuildResearchList();
             SetElementVisible(_researchPanel, true);
+        }
+
+        private void BuildResearchList()
+        {
+            if (_researchList == null) return;
+            _researchList.Clear();
+
+            if (researchService == null || researchService.AllResearch == null ||
+                researchService.AllResearch.Count == 0)
+            {
+                _researchList.Add(new Label("No research available."));
+                return;
+            }
+
+            long currentEntropy = 0;
+            if (_ecsReady && !_progressQuery.IsEmpty)
+                currentEntropy = _em.GetComponentData<PlayerProgressData>(
+                    _progressQuery.GetSingletonEntity()).BaseCurrency;
+
+            foreach (var research in researchService.AllResearch)
+            {
+                if (research == null) continue;
+
+                bool unlocked    = researchService.IsUnlocked(research.id);
+                bool canPurchase = !unlocked && researchService.CanPurchase(research);
+
+                var card = new VisualElement();
+                card.AddToClassList("building-card");
+                if (unlocked) card.AddToClassList("research-card--unlocked");
+
+                // Name row
+                var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
+                nameLabel.AddToClassList("building-card-name");
+                card.Add(nameLabel);
+
+                // Description
+                if (!string.IsNullOrEmpty(research.description))
+                {
+                    var descLabel = new Label(research.description);
+                    descLabel.AddToClassList("building-card-recipe");
+                    card.Add(descLabel);
+                }
+
+                if (!unlocked)
+                {
+                    // Cost
+                    bool affordable = currentEntropy >= research.costBaseCurrency;
+                    var costLabel = new Label($"◈ {research.costBaseCurrency:N0}");
+                    costLabel.AddToClassList("building-card-recipe");
+                    if (!affordable)
+                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    card.Add(costLabel);
+
+                    // Prerequisites (if locked)
+                    if (research.prerequisites != null && research.prerequisites.Length > 0)
+                    {
+                        bool prereqsMet = canPurchase || unlocked;
+                        if (!prereqsMet)
+                        {
+                            var prereqNames = string.Join(", ",
+                                System.Array.ConvertAll(research.prerequisites,
+                                    p => p != null ? p.displayName : "?"));
+                            var prereqLabel = new Label($"Requires: {prereqNames}");
+                            prereqLabel.AddToClassList("building-card-recipe");
+                            prereqLabel.style.color = new UnityEngine.Color(0.6f, 0.6f, 0.6f);
+                            card.Add(prereqLabel);
+                        }
+                    }
+
+                    // Purchase button
+                    var purchaseBtn = new Button { text = "Research" };
+                    purchaseBtn.AddToClassList("craft-btn");
+                    purchaseBtn.SetEnabled(canPurchase);
+
+                    var captured = research;
+                    purchaseBtn.clicked += () =>
+                    {
+                        researchService.Purchase(captured);
+                        BuildResearchList(); // refresh after purchase
+                    };
+                    card.Add(purchaseBtn);
+                }
+
+                _researchList.Add(card);
+            }
+        }
+
+        private void OnResearchUnlocked(ResearchSO research)
+        {
+            // Refresh research panel if it is currently open
+            if (_researchPanel != null && !_researchPanel.ClassListContains("hidden"))
+                BuildResearchList();
+
+            // Refresh buildings panel if it is open (newly unlocked buildings will appear)
+            if (_buildingsPanel != null && !_buildingsPanel.ClassListContains("hidden"))
+                BuildBuildingsList();
+
+            // Refresh recipe panel — newly learned recipes will appear
+            if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
+                BuildRecipeList();
         }
 
         private void OpenUpgradesPanel()
@@ -619,8 +758,16 @@ namespace MobileIdleBuilder
 
             foreach (var recipe in recipes)
             {
+                // Hide recipes the player has never unlocked
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false))
+                    continue;
+
+                bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
+                bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
+
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
+                if (isLocked) row.AddToClassList("recipe-row--locked");
 
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
@@ -638,13 +785,22 @@ namespace MobileIdleBuilder
                     info.Add(buildingTag);
                 }
 
+                if (isLocked)
+                {
+                    var lockLabel = new Label($"[Requires research]");
+                    lockLabel.AddToClassList("recipe-lock-hint");
+                    info.Add(lockLabel);
+                }
+
                 info.Add(nameLabel);
                 info.Add(inputsLabel);
 
-                var craftBtn = new Button { text = "Craft" };
+                var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
+                craftBtn.SetEnabled(!isLocked);
                 var captured = recipe;
-                craftBtn.clicked += () => OnCraftPressed(captured);
+                if (!isLocked)
+                    craftBtn.clicked += () => OnCraftPressed(captured);
 
                 row.Add(info);
                 row.Add(craftBtn);
@@ -709,6 +865,14 @@ namespace MobileIdleBuilder
 
             foreach (var entry in placementController.availableBuildings)
             {
+                // Skip buildings whose required research has not been purchased yet
+                var bso = entry.building;
+                if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                {
+                    if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
+                        continue;
+                }
+
                 var card = new VisualElement();
                 card.AddToClassList("building-card");
 
@@ -928,6 +1092,24 @@ namespace MobileIdleBuilder
 
         /// <summary>Hides the field proximity banner.</summary>
         public void HideFieldBanner() => SetElementVisible(_fieldBanner, false);
+
+        // ============================================================
+        // Tutorial hint banner
+        // ============================================================
+
+        /// <summary>
+        /// Shows a persistent tutorial hint at the bottom of the screen.
+        /// Unlike <see cref="ShowNotification"/>, this stays visible until
+        /// <see cref="HideTutorialHint"/> is called.
+        /// </summary>
+        public void ShowTutorialHint(string message)
+        {
+            if (_tutorialHintMessage != null) _tutorialHintMessage.text = message;
+            SetElementVisible(_tutorialHintBanner, true);
+        }
+
+        /// <summary>Hides the persistent tutorial hint banner.</summary>
+        public void HideTutorialHint() => SetElementVisible(_tutorialHintBanner, false);
 
         // ============================================================
         // Output selector
@@ -1213,7 +1395,30 @@ namespace MobileIdleBuilder
         {
             foreach (var panel in _allPanels)
                 SetElementVisible(panel, false);
+            CloseDrawer();
             CancelActiveModes();
+        }
+
+        private void ToggleDrawer()
+        {
+            if (_drawerOpen) CloseDrawer();
+            else             OpenDrawer();
+        }
+
+        private void OpenDrawer()
+        {
+            if (_drawerPanel == null) return;
+            _drawerOpen = true;
+            _drawerPanel.AddToClassList("left-drawer--open");
+            SetElementVisible(_drawerBackdrop, true);
+        }
+
+        private void CloseDrawer()
+        {
+            if (_drawerPanel == null) return;
+            _drawerOpen = false;
+            _drawerPanel.RemoveFromClassList("left-drawer--open");
+            SetElementVisible(_drawerBackdrop, false);
         }
 
         private void CancelActiveModes()

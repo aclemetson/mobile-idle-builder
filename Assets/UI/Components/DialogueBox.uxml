@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="DialogueBox.uss" />
+
+    <ui:VisualElement name="dialogue-box" class="dialogue-box hidden">
+        <ui:VisualElement class="dialogue-box__speaker-row">
+            <ui:VisualElement name="dialogue-portrait" class="dialogue-portrait" />
+            <ui:Label name="dialogue-speaker" text="" class="dialogue-speaker" />
+        </ui:VisualElement>
+        <ui:Label name="dialogue-text" text="" class="dialogue-text" />
+        <ui:Button name="btn-dialogue-next" text="▶" class="dialogue-next-btn" />
+    </ui:VisualElement>
+</ui:UXML>

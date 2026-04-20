@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: radioactive_isotopes
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: radioactive_isotopes
+  displayName: Radioactive Isotopes
+  description: Unlock uranium enrichment to U-235 and decay particle containment
+    buildings.
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
+  - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  depthInTree: 3
+  costBaseCurrency: 5000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 0f6ba7a448c69f14086721d661166a19, type: 2}
+  - {fileID: 11400000, guid: 1fb7441bef4f2e84990c0d4f152f9499, type: 2}
+  - {fileID: 11400000, guid: 2101361793d0afa4a800d37d1c442e01, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: a04311d95f751514d9d93d850530272d, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "Some isotopes are inherently unstable, shedding mass as alpha or beta
+    particles. With proper containment, decay is not a hazard \u2014 it is a resource."

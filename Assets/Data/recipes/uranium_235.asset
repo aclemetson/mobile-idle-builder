@@ -14,24 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: uranium_235
   displayName: Uranium-235
-  recipeId: 14
-  tier: 0
-  category: 0
+  recipeId: 17
+  tier: 2
+  category: 4
   inputs:
-  - item: {fileID: 0}
+  - item: {fileID: 11400000, guid: ad80e727d639c6b4caaad7a68bbcaa81, type: 2}
     quantity: 1
   neutronAdjustment: []
-  outputItem: {fileID: 0}
+  outputItem: {fileID: 11400000, guid: 0f6ba7a448c69f14086721d661166a19, type: 2}
   outputQuantity: 1
-  byproducts: []
+  byproducts:
+  - item: {fileID: 11400000, guid: 1fb7441bef4f2e84990c0d4f152f9499, type: 2}
+    quantity: 1
   baseCraftTime: 24
-  manualCraftTime: 0
+  manualCraftTime: 24
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 0
-  validBuildings: []
+  fixedPowerCostEV: 24
+  validBuildings:
+  - {fileID: 11400000, guid: a6884992fc287db43896dc3de5c78638, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

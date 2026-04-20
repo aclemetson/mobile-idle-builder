@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
     {
         [SerializeField] private GridRenderer                gridRenderer;
         [SerializeField] private HUDController               hudController;
+        [SerializeField] private MaxwellsDemonController     maxwellsDemon;
         [SerializeField] private BuildingPlacementController placementController;
         [SerializeField] private ConveyorPlacementController conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
@@ -23,6 +24,7 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery   _buildingQuery;
+        private EntityQuery   _tutorialQuery;
         private bool          _ecsReady;
 
         // ================================================================
@@ -31,10 +33,11 @@ namespace MobileIdleBuilder
 
         void Start()
         {
-            if (gridRenderer        == null) gridRenderer        = FindAnyObjectByType<GridRenderer>();
-            if (buildingVisualizer  == null) buildingVisualizer  = FindAnyObjectByType<BuildingVisualizer>();
-            if (conveyorController  == null) conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
+            if (gridRenderer         == null) gridRenderer         = FindAnyObjectByType<GridRenderer>();
+            if (buildingVisualizer   == null) buildingVisualizer   = FindAnyObjectByType<BuildingVisualizer>();
+            if (conveyorController   == null) conveyorController   = FindAnyObjectByType<ConveyorPlacementController>();
             if (deconstructController == null) deconstructController = FindAnyObjectByType<DeconstructController>();
+            if (maxwellsDemon        == null) maxwellsDemon        = FindAnyObjectByType<MaxwellsDemonController>();
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
@@ -44,6 +47,9 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<BuildingData>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
+            _tutorialQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<TutorialStateData>()
+            );
             _ecsReady = true;
         }
 
@@ -51,7 +57,10 @@ namespace MobileIdleBuilder
         {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated && _ecsReady)
+            {
                 _buildingQuery.Dispose();
+                _tutorialQuery.Dispose();
+            }
         }
 
         void Update()
@@ -95,6 +104,21 @@ namespace MobileIdleBuilder
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return false;
             if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y)) return false;
 
+            // Tutorial gating: read restriction from current step definition
+            var buildingGate = BuildingInteractionGate.None;
+            if (!_tutorialQuery.IsEmpty)
+            {
+                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
+                var flow = TutorialFlowSO.Current;
+                if (tutState.IsActive && flow != null &&
+                    tutState.CurrentStepIndex < flow.steps.Length)
+                    buildingGate = flow.steps[tutState.CurrentStepIndex].onEnter?.buildingInteractionGate
+                                   ?? BuildingInteractionGate.None;
+            }
+
+            if (buildingGate == BuildingInteractionGate.BlockAll)
+                return false;
+
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
             Entity found = Entity.Null;
 
@@ -120,17 +144,33 @@ namespace MobileIdleBuilder
 
             if (found == Entity.Null) return false;
 
+            // EntropySinkOnly: only Maxwell's Demon may be opened
+            if (buildingGate == BuildingInteractionGate.EntropySinkOnly &&
+                !_em.HasComponent<EntropySinkTag>(found))
+                return false;
+
+            // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
+            // ARCH has no physical form, so there is no proximity requirement — open immediately.
+            if (_em.HasComponent<EntropySinkTag>(found))
+            {
+                HasSelection = true;
+                maxwellsDemon?.Open();
+                return true;
+            }
+
             HasSelection = true;
+
             hudController?.ShowBuildingInspector(found, GetBuildingDisplayName(found));
             return true;
         }
 
-        /// <summary>Clears the current selection and hides the inspector panel.</summary>
+        /// <summary>Clears the current building selection.</summary>
         public void ClearSelection()
         {
             if (!HasSelection) return;
             HasSelection = false;
             hudController?.HideBuildingInspector();
+            maxwellsDemon?.Close();
         }
 
         // ================================================================
@@ -166,5 +206,6 @@ namespace MobileIdleBuilder
                 Mathf.FloorToInt(world.z / gridRenderer.CellSize)
             );
         }
+
     }
 }

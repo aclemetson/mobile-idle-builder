@@ -18,11 +18,11 @@ MonoBehaviour:
   icon: {fileID: 0}
   itemId: 7
   tier: 2
-  category: 0
-  tierData: {fileID: 0}
-  atomicNumber: 0
-  atomicMass: 0
-  charge: 
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 2
+  atomicMass: 4
+  charge: 0
   isRadioactive: 0
   decayType: 0
   halfLifeNote: 
@@ -31,8 +31,9 @@ MonoBehaviour:
   fieldType: 0
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: Two protons, two neutrons, two electrons. The primary product of stellar
-    nucleosynthesis.
+  codexEntry: "The second lightest element, produced in stellar cores through hydrogen
+    fusion. A noble gas \u2014 chemically inert. Its nucleus (2 protons + 2 neutrons)
+    is identical to an alpha particle."
   codexUnlocked: 0
-  baseSellValue: 0
-  isotopeSellMultiplier: 0
+  baseSellValue: 20
+  isotopeSellMultiplier: 1

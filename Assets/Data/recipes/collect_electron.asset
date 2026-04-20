@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_electron
   displayName: Collect Electron
-  recipeId: 0
-  tier: 0
+  recipeId: 3
+  tier: 1
   category: 1
   inputs: []
   neutronAdjustment: []
@@ -23,12 +23,13 @@ MonoBehaviour:
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 1
-  manualCraftTime: 0
+  manualCraftTime: 1
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
-  validBuildings: []
-  canCraftManually: 0
-  knownFromStart: 0
+  validBuildings:
+  - {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
+  canCraftManually: 1
+  knownFromStart: 1
   requiredResearch: {fileID: 0}
   unlocksResearch: {fileID: 0}
   isSimplified: 0

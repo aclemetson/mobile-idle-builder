@@ -54,7 +54,7 @@ MonoBehaviour:
   upgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

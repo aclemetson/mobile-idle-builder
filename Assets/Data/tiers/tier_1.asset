@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 810c6fcf4d6b7844eaaa1559e7d18a5f, type: 3}
+  m_Name: tier_1
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TierSO
+  tierNumber: 1
+  displayName: Subatomic
+  description: Fundamental particles harvested from quantum fields. Quarks and leptons,
+    the building blocks of everything.
+  tierColor: {r: 1, g: 0.41960785, b: 0.20784314, a: 1}
+  tierIcon: {fileID: 0}
+  unlockResearch: []
+  starterItems:
+  - {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
+  - {fileID: 11400000, guid: b5326123fc0d10b4f976bc91076075ee, type: 2}
+  - {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}

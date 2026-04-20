@@ -17,16 +17,26 @@ namespace MobileIdleBuilder
         private FieldInstance[] _fields;
         private FieldInstance   _currentField;
 
-        void Start()
+        /// <summary>The field instance the player is currently standing near, or null.</summary>
+        public FieldInstance CurrentField => _currentField;
+
+        /// <summary>Returns true if <paramref name="field"/> is within the proximity radius.</summary>
+        public bool IsInRange(FieldInstance field)
         {
-            // FieldGenerator runs at execution order -10, so all FieldInstances
-            // are already created by the time this Start() is called.
-            _fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+            if (field == null) return false;
+            float sqr = (field.transform.position - transform.position).sqrMagnitude;
+            return sqr <= proximityRadius * proximityRadius;
         }
 
         void Update()
         {
-            if (_fields == null || _fields.Length == 0) return;
+            // FieldGenerator.Start() is a coroutine that yields before spawning fields,
+            // so we cannot rely on Start() order. Re-scan until fields appear.
+            if (_fields == null || _fields.Length == 0)
+            {
+                _fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+                if (_fields.Length == 0) return;
+            }
 
             FieldInstance closest    = null;
             float         closestSqr = proximityRadius * proximityRadius;

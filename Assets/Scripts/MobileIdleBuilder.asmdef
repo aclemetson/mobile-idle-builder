@@ -8,7 +8,8 @@
         "Unity.Burst",
         "Unity.Mathematics",
         "Unity.InputSystem",
-        "Unity.Transforms"
+        "Unity.Transforms",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

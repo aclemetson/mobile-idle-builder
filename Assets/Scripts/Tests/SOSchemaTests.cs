@@ -15,11 +15,53 @@ namespace MobileIdleBuilder.Tests
         // ── Enum value contracts ──────────────────────────────────────────────
 
         [Test]
-        public void TutorialStep_NoneIsZero()        => Assert.AreEqual(0,  (int)TutorialStep.None);
+        public void ConditionType_HasExpectedValues()
+        {
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "Auto"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "InventoryMin"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "InventoryZero"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "UiEvent"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "ResearchUnlocked"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "BuildingMin"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "PrestigeRunMin"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ConditionType), "PrestigeAvailable"));
+        }
+
         [Test]
-        public void TutorialStep_CompletedIs99()     => Assert.AreEqual(99, (int)TutorialStep.Completed);
+        public void BuildingInteractionGate_HasExpectedValues()
+        {
+            Assert.IsTrue(System.Enum.IsDefined(typeof(BuildingInteractionGate), "None"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(BuildingInteractionGate), "BlockAll"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(BuildingInteractionGate), "EntropySinkOnly"));
+        }
+
         [Test]
-        public void TutorialStep_FirstPrestigeIs9()  => Assert.AreEqual(9,  (int)TutorialStep.FirstPrestigeComplete);
+        public void TutorialFlowSO_HasStepsField()
+        {
+            var type = typeof(TutorialFlowSO);
+            Assert.IsNotNull(type.GetField("steps"), "TutorialFlowSO missing: steps");
+        }
+
+        [Test]
+        public void TutorialStepDef_HasRequiredFields()
+        {
+            var type = typeof(TutorialStepDef);
+            Assert.IsNotNull(type.GetField("id"),               "TutorialStepDef missing: id");
+            Assert.IsNotNull(type.GetField("hintText"),         "TutorialStepDef missing: hintText");
+            Assert.IsNotNull(type.GetField("advanceCondition"), "TutorialStepDef missing: advanceCondition");
+            Assert.IsNotNull(type.GetField("onEnter"),          "TutorialStepDef missing: onEnter");
+        }
+
+        [Test]
+        public void TutorialOnEnter_HasRequiredFields()
+        {
+            var type = typeof(TutorialOnEnter);
+            Assert.IsNotNull(type.GetField("dialogue"),                "TutorialOnEnter missing: dialogue");
+            Assert.IsNotNull(type.GetField("highlightTarget"),         "TutorialOnEnter missing: highlightTarget");
+            Assert.IsNotNull(type.GetField("blockCollection"),         "TutorialOnEnter missing: blockCollection");
+            Assert.IsNotNull(type.GetField("collectionFilter"),        "TutorialOnEnter missing: collectionFilter");
+            Assert.IsNotNull(type.GetField("buildingInteractionGate"), "TutorialOnEnter missing: buildingInteractionGate");
+        }
 
         [Test]
         public void ItemCategory_HasExpectedValues()

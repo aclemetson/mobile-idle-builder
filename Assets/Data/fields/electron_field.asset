@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: electron_field
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: electron_field
-  displayName: Electron Field
+  displayName: Lepton Field
   fieldType: 2
-  outputItems:
-  - {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
-  fieldColor: {r: 0, g: 0.68429875, b: 0.6981132, a: 0}
+  drops:
+  - item: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+    weight: 1
+  collectionRate: 1
+  fieldColor: {r: 0.30588236, g: 0.8039216, b: 0.76862746, a: 1}
   fieldIcon: {fileID: 0}
-  codexEntry: 
+  codexEntry: A region saturated with free leptons. Harvesters placed here collect
+    Electrons continuously. Electrons are essential for completing any atom.

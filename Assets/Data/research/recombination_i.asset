@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: recombination_i
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: recombination_i
+  displayName: Recombination I
+  description: Harness the strong nuclear force to bind quarks into protons and neutrons.
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites: []
+  depthInTree: 0
+  costBaseCurrency: 100
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
+  - {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 0daa7275c8aeed24cab9fe209b3b9b4e, type: 2}
+  - {fileID: 11400000, guid: 85d8fb163051b424b8ede5685010ac68, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 72444c98b26dbee4f952490a77312ddc, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.25
+  codexEntry: The foundational discovery enabling nucleon synthesis. By controlling
+    the strong force, quarks can be permanently bound into stable protons and neutrons.

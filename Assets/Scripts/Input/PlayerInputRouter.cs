@@ -4,13 +4,18 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Routes tap input to character movement when not in building placement mode.
-    /// Taps that land on the HUD are ignored — the UI intercepts them first.
-    /// When IsPlacing is true, BuildingPlacementController owns the tap — this router
-    /// does nothing so there's no conflict.
+    /// Routes confirmed tap input to building selection, field collection, and
+    /// ARCH's presence anchor. Swipe-to-pan is handled entirely by CameraController.
     ///
-    /// Scene setup: attach to any GameObject, wire placementController, characterMover,
-    /// and hudDocument (the UIDocument used by the HUD).
+    /// Tap vs. swipe discrimination:
+    ///   - On pointer DOWN  : record start position.
+    ///   - While held       : accumulate drag distance.
+    ///   - On pointer UP    : if drag distance &lt; CameraController.TapThreshold → treat as tap.
+    ///
+    /// Taps fire on RELEASE (not press) so swipes never accidentally trigger gameplay.
+    ///
+    /// Scene setup: attach to any GameObject, wire placementController, buildingInspector,
+    /// gridRenderer, and hudDocument. CharacterMover is no longer needed.
     /// </summary>
     [DefaultExecutionOrder(-10)]
     public class PlayerInputRouter : MonoBehaviour
@@ -19,8 +24,12 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private BuildingInspectorController  buildingInspector;
-        [SerializeField] private CharacterMover               characterMover;
+        [SerializeField] private ManualFieldCollector         fieldCollector;
+        [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private UIDocument                   hudDocument;
+
+        private Vector2 _pressStart;
+        private float   _dragAccum;
 
         void Awake()
         {
@@ -32,29 +41,120 @@ namespace MobileIdleBuilder
 
         void Update()
         {
-            if (!InputUtils.WasPointerPressed()) return;
-            if (placementController   != null && placementController.IsPlacing)         return;
-            if (conveyorController    != null && conveyorController.IsPlacing)          return;
+            UpdateFieldHover();
+
+            // Track gesture on press start
+            if (InputUtils.WasPointerPressed())
+            {
+                _pressStart = InputUtils.GetPointerPosition();
+                _dragAccum  = 0f;
+            }
+
+            // Accumulate drag while held
+            if (InputUtils.IsPointerHeld())
+                _dragAccum = Vector2.Distance(InputUtils.GetPointerPosition(), _pressStart);
+
+            // Only act on confirmed tap (release + small drag)
+            if (!InputUtils.WasPointerReleased()) return;
+            if (_dragAccum > CameraController.TapThreshold) return;
+
+            // Exclusive modes consume all taps
+            if (placementController   != null && placementController.IsPlacing)          return;
+            if (conveyorController    != null && conveyorController.IsPlacing)           return;
             if (deconstructController != null && deconstructController.IsDeconstructing) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
             if (IsPointerOverUI(screenPos)) return;
 
-            // Tapping a placed building opens the inspector instead of moving the character.
+            // Building inspector — tapping a placed building opens it
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
+            {
+                AnchorPresence(screenPos);
                 return;
+            }
 
-            // Tapping empty ground clears any building selection and moves the character.
+            // Field collection — tapping a field tile or its particle collider
+            bool collectedByCell = false;
+            if (fieldCollector != null && gridRenderer != null)
+            {
+                if (ScreenToGridCell(screenPos, out int cx, out int cy))
+                    collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
+            }
+
+            if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))
+            {
+                AnchorPresence(screenPos);
+                return;
+            }
+
+            if (collectedByCell)
+            {
+                AnchorPresence(screenPos);
+                return;
+            }
+
+            // Tap on empty ground — clear any building selection and anchor presence
             buildingInspector?.ClearSelection();
+            AnchorPresence(screenPos);
+        }
 
+        // ── Presence anchor ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Converts a screen-space tap to a world position on the Y=0 ground plane
+        /// and sends it to PresenceSystem as the new anchor.
+        /// </summary>
+        private void AnchorPresence(Vector2 screenPos)
+        {
+            if (Camera.main == null) { Debug.LogWarning("[InputRouter] AnchorPresence — Camera.main is null"); return; }
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
-
-            // Intersect the ray with the Y=0 ground plane
-            if (Mathf.Abs(ray.direction.y) < 0.0001f) return;
-            float   t        = (0f - ray.origin.y) / ray.direction.y;
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) { Debug.LogWarning("[InputRouter] AnchorPresence — degenerate ray"); return; }
+            float   t        = -ray.origin.y / ray.direction.y;
             Vector3 worldPos = ray.origin + ray.direction * t;
+            var ps = PresenceSystem.Instance;
+            if (ps != null) ps.SetAnchor(worldPos);
+        }
 
-            characterMover.SetMoveTarget(worldPos);
+        // ── Field hover highlight ─────────────────────────────────────────────
+
+        private void UpdateFieldHover()
+        {
+            if (gridRenderer == null) return;
+
+            bool busy = (placementController   != null && placementController.IsPlacing)           ||
+                        (conveyorController    != null && conveyorController.IsPlacing)            ||
+                        (deconstructController != null && deconstructController.IsDeconstructing);
+            if (busy) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            Vector2 screenPos = InputUtils.GetPointerPosition();
+            if (screenPos == Vector2.zero) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            if (!ScreenToGridCell(screenPos, out int cx, out int cy)) { gridRenderer.ClearFieldHoverCell(); return; }
+
+            bool isField    = FieldGenerator.GetFieldAt(cx, cy) != null;
+            bool isOccupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy);
+
+            if (isField && !isOccupied)
+                gridRenderer.SetFieldHoverCell(cx, cy);
+            else
+                gridRenderer.ClearFieldHoverCell();
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        /// <summary>Maps a screen position to a grid cell on the Y=0 ground plane.</summary>
+        private bool ScreenToGridCell(Vector2 screenPos, out int cx, out int cy)
+        {
+            cx = cy = -1;
+            if (Camera.main == null || gridRenderer == null) return false;
+            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
+            float   t     = -ray.origin.y / ray.direction.y;
+            Vector3 world = ray.origin + ray.direction * t;
+            float   cs    = gridRenderer.CellSize;
+            cx = Mathf.FloorToInt(world.x / cs + 0.5f);
+            cy = Mathf.FloorToInt(world.z / cs + 0.5f);
+            return true;
         }
 
         private bool IsPointerOverUI(Vector2 screenPos)
@@ -62,11 +162,8 @@ namespace MobileIdleBuilder
             if (hudDocument == null) return false;
             var panel = hudDocument.rootVisualElement?.panel;
             if (panel == null) return false;
-
-            // UIToolkit panel space has Y=0 at the top; Unity screen space has Y=0 at the bottom
             Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
                 panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-
             return panel.Pick(panelPos) != null;
         }
     }

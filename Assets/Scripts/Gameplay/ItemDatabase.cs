@@ -6,6 +6,9 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Builds a runtime lookup from string id → ItemSO and int itemId → ItemSO.
     /// Assign all ItemSO assets in the Inspector. Place on the same GameObject as GameBootstrap.
+    ///
+    /// The lookup dictionaries are static so they survive even if Unity destroys the
+    /// MonoBehaviour (e.g. when Bootstrap lives inside a SubScene that bakes at runtime).
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public class ItemDatabase : MonoBehaviour
@@ -14,13 +17,24 @@ namespace MobileIdleBuilder
 
         [SerializeField] private ItemSO[] items;
 
-        private readonly Dictionary<string, ItemSO> _byId     = new();
-        private readonly Dictionary<int,    ItemSO> _byItemId = new();
+        // Static so the data outlives the MonoBehaviour if it gets destroyed.
+        private static readonly Dictionary<string, ItemSO> _byId     = new();
+        private static readonly Dictionary<int,    ItemSO> _byItemId = new();
+        private static ItemSO[] _allItems;
 
         void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning($"[ItemDatabase] Duplicate on '{gameObject.name}' — destroying. Keeping instance on '{Instance.gameObject.name}'.");
+                Destroy(this);
+                return;
+            }
             Instance = this;
+
+            _byId.Clear();
+            _byItemId.Clear();
+            _allItems = items;
 
             foreach (var item in items)
             {
@@ -28,14 +42,19 @@ namespace MobileIdleBuilder
                 _byId[item.id]         = item;
                 _byItemId[item.itemId] = item;
             }
+
+            Debug.Log($"[ItemDatabase] Registered on '{gameObject.name}' with {_byItemId.Count} items.");
         }
 
-        public IReadOnlyList<ItemSO> All => items;
+        public IReadOnlyList<ItemSO> All => _allItems;
 
-        public ItemSO Get(string id)   => _byId.TryGetValue(id, out var v)     ? v : null;
-        public ItemSO Get(int itemId)  => _byItemId.TryGetValue(itemId, out var v) ? v : null;
+        // Instance methods kept for backwards compatibility — delegate to static lookups.
+        public ItemSO Get(string id)   => GetStatic(id);
+        public ItemSO Get(int itemId)  => GetStatic(itemId);
+        public int GetItemId(string id) => GetStatic(id)?.itemId ?? -1;
 
-        /// <summary>Returns -1 if the id is not registered.</summary>
-        public int GetItemId(string id) => Get(id)?.itemId ?? -1;
+        // Static accessors — work even after the MonoBehaviour is destroyed.
+        public static ItemSO GetStatic(string id)   => _byId.TryGetValue(id, out var v)     ? v : null;
+        public static ItemSO GetStatic(int itemId)  => _byItemId.TryGetValue(itemId, out var v) ? v : null;
     }
 }

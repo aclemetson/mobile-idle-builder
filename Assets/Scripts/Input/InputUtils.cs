@@ -27,6 +27,26 @@ namespace MobileIdleBuilder
             return false;
         }
 
+        /// <summary>Returns true while the primary pointer is held down this frame.</summary>
+        public static bool IsPointerHeld()
+        {
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+                return true;
+            if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+                return true;
+            return false;
+        }
+
+        /// <summary>Returns true on the frame the primary pointer is released.</summary>
+        public static bool WasPointerReleased()
+        {
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasReleasedThisFrame)
+                return true;
+            if (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame)
+                return true;
+            return false;
+        }
+
         /// <summary>
         /// Returns true if the player pressed a cancel input this frame —
         /// Escape key or right mouse button.

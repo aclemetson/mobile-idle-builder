@@ -19,20 +19,21 @@ MonoBehaviour:
   itemId: 1
   tier: 1
   category: 0
-  tierData: {fileID: 0}
+  tierData: {fileID: 11400000, guid: 8c9d2e26b3e2ca94a934c54494d6f36f, type: 2}
   atomicNumber: 0
   atomicMass: 0
-  charge: 
+  charge: +2/3
   isRadioactive: 0
   decayType: 0
   halfLifeNote: 
   isFissile: 0
-  isHarvested: 0
-  fieldType: 0
+  isHarvested: 1
+  fieldType: 1
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: One of two quark types that make up protons and neutrons. Carries a
-    +2/3 electric charge.
+  codexEntry: "One of two quark flavours that compose protons and neutrons. Carries
+    a +2/3 electric charge. Quarks are permanently confined \u2014 they cannot exist
+    freely outside a hadron."
   codexUnlocked: 0
-  baseSellValue: 0
-  isotopeSellMultiplier: 0
+  baseSellValue: 1
+  isotopeSellMultiplier: 1
