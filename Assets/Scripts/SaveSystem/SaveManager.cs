@@ -24,7 +24,7 @@ namespace MobileIdleBuilder
 
         void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
+            if (Instance != null) { Debug.LogError($"[SaveManager] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
 

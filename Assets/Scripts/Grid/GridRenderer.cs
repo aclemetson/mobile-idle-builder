@@ -48,8 +48,8 @@ namespace MobileIdleBuilder
         void Awake()  => BuildGrid();
         void Start()
         {
-            // Skip if IsometricCameraFollow is driving the camera
-            if (Camera.main == null || Camera.main.GetComponent<IsometricCameraFollow>() == null)
+            // Skip if CameraController is driving the camera (it initialises its own position)
+            if (Camera.main == null || Camera.main.GetComponent<CameraController>() == null)
                 CentreCamera();
         }
 
@@ -75,7 +75,11 @@ namespace MobileIdleBuilder
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 
-                    SetColor(mr, tileColor);
+                    // PresenceReceiver owns colour state so the presence ripple
+                    // can be blended on top of whatever the tile's current colour is.
+                    var pr = tile.AddComponent<PresenceReceiver>();
+                    pr.SetBaseColor(tileColor);
+
                     _tiles[x, y] = tile;
                 }
             }
@@ -298,6 +302,11 @@ namespace MobileIdleBuilder
 
         private static void SetColor(MeshRenderer mr, Color color)
         {
+            // Route through PresenceReceiver so the presence ripple is preserved on top
+            var pr = mr.GetComponent<PresenceReceiver>();
+            if (pr != null) { pr.SetBaseColor(color); return; }
+
+            // Fallback for any renderer without a PresenceReceiver (shouldn't happen in practice)
             var mpb = new MaterialPropertyBlock();
             mpb.SetColor("_BaseColor", color);
             mr.SetPropertyBlock(mpb);

@@ -17,7 +17,8 @@ namespace MobileIdleBuilder
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Debug.LogError($"[GameBootstrap] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
+                Destroy(this);
                 return;
             }
             Instance = this;

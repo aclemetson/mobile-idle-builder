@@ -45,7 +45,7 @@ namespace MobileIdleBuilder
 
         void Awake()
         {
-            if (Instance != null) { Destroy(gameObject); return; }
+            if (Instance != null) { Debug.LogError($"[RecipeKnowledgeService] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
             Instance = this;
             _filePath = Path.Combine(Application.persistentDataPath, FileName);
         }

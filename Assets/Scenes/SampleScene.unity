@@ -155,9 +155,6 @@ MonoBehaviour:
   conveyorController: {fileID: 2094864785}
   deconstructController: {fileID: 1750057546}
   buildingVisualizer: {fileID: 1750057543}
-  characterMover: {fileID: 0}
-  cameraFollow: {fileID: 0}
-  interactionRange: 3
 --- !u!4 &109061290
 Transform:
   m_ObjectHideFlags: 0
@@ -173,107 +170,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &229646050
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 229646052}
-  - component: {fileID: 229646051}
-  - component: {fileID: 229646054}
-  - component: {fileID: 229646053}
-  - component: {fileID: 229646055}
-  m_Layer: 0
-  m_Name: Character
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &229646051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 229646050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d95f4f580d08d5418be68cd4286f786, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.CharacterMover
-  moveSpeed: 4
-  stoppingDistance: 0.05
-  gridRenderer: {fileID: 1750057541}
---- !u!4 &229646052
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 229646050}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 531450812}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &229646053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 229646050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a859ab611cdbe374cb8d6468f46b7863, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldProximityChecker
-  hud: {fileID: 1347028482}
-  proximityRadius: 2.5
---- !u!114 &229646054
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 229646050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b080d0fa90605d4eaa7c69f6cfc960a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManualFieldCollector
-  proximityChecker: {fileID: 229646053}
-  fieldLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
---- !u!114 &229646055
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 229646050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e5d225e367be1842ad6224d5e1f832f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.InventoryPopupController
-  anchor: {fileID: 0}
-  duration: 1.4
-  floatDistance: 1.4
-  holdFraction: 0.35
-  stackOffset: 0.4
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  fontSize: 4
-  spawnHeight: 2
 --- !u!1 &262970759
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,6 +182,9 @@ GameObject:
   - component: {fileID: 262970760}
   - component: {fileID: 262970763}
   - component: {fileID: 262970762}
+  - component: {fileID: 262970766}
+  - component: {fileID: 262970765}
+  - component: {fileID: 262970764}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -348,6 +247,48 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeKnowledgeService
   _defaultKnowledgeAsset: {fileID: 4900000, guid: 1073107cdb4fef84684a9c1f14d500fc, type: 3}
+--- !u!114 &262970764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd0ec8740d99ba3439585b9e95b82e9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PVPService
+  gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
+  hudController: {fileID: 1347028482}
+--- !u!114 &262970765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b18c6ce5242fbf7459b527d2d2058b1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.AchievementService
+  database: {fileID: 0}
+  hudController: {fileID: 1347028482}
+--- !u!114 &262970766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 813334b4233cb7440bc447d95b1a5831, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
+  gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
+  autoSaveIntervalSeconds: 60
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -495,13 +436,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8d6d2cf6e55f184297984d548e41269, type: 3}
+  m_Script: {fileID: 11500000, guid: 1056aab919193f14ebbf4555cfa9c6ce, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.IsometricCameraFollow
-  target: {fileID: 229646052}
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.CameraController
   offset: {x: 0, y: 8, z: -6}
-  followSpeed: 8
-  panSpeed: 4
+  minFOV: 30
+  maxFOV: 80
+  zoomSpeed: 0.05
+  scrollZoom: 4
+  tutorialPanSpeed: 4
+  gridRenderer: {fileID: 1750057541}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,120 +573,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &531450811
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 531450812}
-  - component: {fileID: 531450815}
-  - component: {fileID: 531450814}
-  - component: {fileID: 531450813}
-  m_Layer: 0
-  m_Name: CharacterVisual
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &531450812
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531450811}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 229646052}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &531450813
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531450811}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &531450814
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531450811}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &531450815
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531450811}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &645627586
 GameObject:
   m_ObjectHideFlags: 0
@@ -799,7 +629,6 @@ GameObject:
   - component: {fileID: 827826013}
   - component: {fileID: 827826012}
   - component: {fileID: 827826011}
-  - component: {fileID: 827826010}
   - component: {fileID: 827826009}
   - component: {fileID: 827826014}
   m_Layer: 0
@@ -821,19 +650,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74fa8ba505b73ae4c8b92500ff91209a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManualCraftService
---- !u!114 &827826010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 827826008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e992acbd9735e646bad81078035f410, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeDatabase
-  recipesJsonAsset: {fileID: 4900000, guid: fabdbb24d26dea3448a77ed089ff3f01, type: 3}
 --- !u!114 &827826011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1135,8 +951,8 @@ MonoBehaviour:
   placementController: {fileID: 1750057545}
   conveyorController: {fileID: 2094864785}
   deconstructController: {fileID: 1750057546}
-  achievementService: {fileID: 0}
-  pvpService: {fileID: 0}
+  achievementService: {fileID: 262970765}
+  pvpService: {fileID: 262970764}
   researchService: {fileID: 262970760}
   notificationDuration: 3
 --- !u!114 &1347028483
@@ -1240,7 +1056,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1590349489}
-  - component: {fileID: 1590349488}
+  - component: {fileID: 1590349490}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1248,19 +1064,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1590349488
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590349487}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e992acbd9735e646bad81078035f410, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeDatabase
-  recipesJsonAsset: {fileID: 4900000, guid: fabdbb24d26dea3448a77ed089ff3f01, type: 3}
 --- !u!4 &1590349489
 Transform:
   m_ObjectHideFlags: 0
@@ -1276,6 +1079,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1590349490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590349487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a7ab2e3ebdea7449b9b3d5ae5a51d3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PresenceSystem
+  rippleSpeed: 7
+  rippleMaxRadius: 15
+  rippleWidth: 1.8
+  ripplePeak: 0.45
+  ambientRadius: 5
+  ambientPeak: 0.22
+  ambientFadeDuration: 4.5
 --- !u!1 &1750057540
 GameObject:
   m_ObjectHideFlags: 0
@@ -1575,8 +1397,7 @@ MonoBehaviour:
   conveyorController: {fileID: 2094864785}
   deconstructController: {fileID: 1750057546}
   buildingInspector: {fileID: 109061289}
-  fieldCollector: {fileID: 229646054}
-  characterMover: {fileID: 229646051}
+  fieldCollector: {fileID: 0}
   gridRenderer: {fileID: 1750057541}
   hudDocument: {fileID: 1347028483}
 --- !u!4 &2080509635
@@ -1687,7 +1508,6 @@ SceneRoots:
   - {fileID: 1180912085}
   - {fileID: 2094864786}
   - {fileID: 262970761}
-  - {fileID: 229646052}
   - {fileID: 1326696566}
   - {fileID: 645627588}
   - {fileID: 1989330745}

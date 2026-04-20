@@ -127,6 +127,11 @@ namespace MobileIdleBuilder
                     var mr = cube.GetComponent<MeshRenderer>();
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
+
+                    // PresenceReceiver owns all colour state for this cube
+                    var pr = cube.AddComponent<PresenceReceiver>();
+                    pr.SetBaseColor(DefaultCubeColor);
+
                     _spawnedCubes[cell] = cube;
                 }
             }
@@ -265,6 +270,11 @@ namespace MobileIdleBuilder
 
         private static void ApplyCubeColor(GameObject go, Color color)
         {
+            // Route through PresenceReceiver so the presence boost is preserved on top
+            var pr = go.GetComponent<PresenceReceiver>();
+            if (pr != null) { pr.SetBaseColor(color); return; }
+
+            // Fallback for any cube that doesn't have a PresenceReceiver (shouldn't happen)
             var mr = go.GetComponent<MeshRenderer>();
             if (mr == null) return;
             var mpb = new MaterialPropertyBlock();

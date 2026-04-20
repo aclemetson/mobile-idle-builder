@@ -22,12 +22,12 @@ namespace MobileIdleBuilder
     ///   (ECS building IDs can be added to FindWorldPosition when needed)
     ///
     /// Inspector wiring required:
-    ///   cameraFollow  → IsometricCameraFollow on Main Camera
+    ///   cameraFollow  → CameraController on Main Camera
     ///   gridRenderer  → GridRenderer in scene
     /// </summary>
     public class TutorialHighlighter : MonoBehaviour
     {
-        [SerializeField] private IsometricCameraFollow cameraFollow;
+        [SerializeField] private CameraController cameraFollow;
         [SerializeField] private GridRenderer          gridRenderer;
 
         private TutorialTileHighlight _activeHighlight;
