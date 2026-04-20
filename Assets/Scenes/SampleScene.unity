@@ -1508,6 +1508,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialOverlayController
+  tutorialFlow: {fileID: 11400000, guid: 11e1906fd8423b543ba23084c7f1fbc0, type: 2}
   dialogueController: {fileID: 2042840131}
   uiDocument: {fileID: 1347028483}
   tutorialHighlighter: {fileID: 1320393313}
