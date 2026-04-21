@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -18,9 +17,13 @@ namespace MobileIdleBuilder
         [SerializeField] private AchievementService           achievementService;
         [SerializeField] private PVPService                   pvpService;
         [SerializeField] private ResearchService              researchService;
-        [SerializeField] private float                        notificationDuration = 3f;
 
-        // ---- ECS ----
+        // Sub-controllers (siblings on same GameObject)
+        private HUDStatusBarController              _statusBar;
+        private HUDBuildingInspectorSubController   _inspector;
+        private HUDBannerController                 _banner;
+
+        // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
         private EntityQuery   _progressQuery;
         private EntityQuery   _prestigeQuery;
@@ -42,27 +45,9 @@ namespace MobileIdleBuilder
         private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
-        private VisualElement _drawerInventory;
         private VisualElement _drawerPanel;
         private VisualElement _drawerBackdrop;
         private bool          _drawerOpen;
-        private Label         _entropyLabel;
-        private Label         _powerLabel;
-        private Button        _btnPrestige;
-
-        // ---- Notification banner ----
-        private VisualElement _notificationBanner;
-        private Label         _notificationIcon, _notificationMessage;
-        private Coroutine     _hideNotificationCoroutine;
-
-        // ---- Tutorial hint banner ----
-        private VisualElement _tutorialHintBanner;
-        private Label         _tutorialHintMessage;
-
-        // ---- Field proximity banner ----
-        private VisualElement _fieldBanner;
-        private Label         _fieldBannerName;
-        private Label         _fieldBannerType;
 
         // ---- Placement controls ----
         private Button _btnRotateOutput;
@@ -83,15 +68,6 @@ namespace MobileIdleBuilder
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
 
-        // ---- Building inspector ----
-        private VisualElement _buildingInspectorPanel;
-        private ScrollView    _inspectorContent;
-        private Label         _inspectorBuildingName;
-        private Entity        _inspectorEntity = Entity.Null;
-        private float         _inspectorRefreshTimer;
-
-        // ---- Inventory label cache ----
-        private readonly Dictionary<int, Label> _inventoryLabels = new();
 
         // ============================================================
         // Unity lifecycle
@@ -101,24 +77,31 @@ namespace MobileIdleBuilder
         {
             if (deconstructController == null)
                 deconstructController = FindAnyObjectByType<DeconstructController>();
+
+            _statusBar = GetComponent<HUDStatusBarController>();
+            _inspector = GetComponent<HUDBuildingInspectorSubController>();
+            _banner    = GetComponent<HUDBannerController>();
         }
 
         void OnEnable()
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
             QueryElements(root);
+            _statusBar?.Init(root);
+            _inspector?.Init(root, placementController);
+            _banner?.Init(root);
             BindButtons(root);
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
-            SetElementVisible(_notificationBanner, false);
-            SetElementVisible(_tutorialHintBanner, false);
-            SetElementVisible(_fieldBanner, false);
+            SetElementVisible(root.Q("notification-banner"),   false);
+            SetElementVisible(root.Q("tutorial-hint-banner"),  false);
+            SetElementVisible(root.Q("field-proximity-banner"), false);
             SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
-            SetElementVisible(_buildingInspectorPanel, false);
+            SetElementVisible(root.Q("building-inspector-panel"), false);
 
             if (placementController != null)
             {
@@ -184,16 +167,16 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
             );
-            _ecsReady       = true;
+            _ecsReady = true;
+
+            _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
+            _inspector?.SetECSContext(_em);
         }
 
         void Update()
         {
-            RefreshInventoryBar();
-            RefreshEntropyLabel();
-            RefreshPowerLabel();
-            RefreshPrestigeButton();
-            TickBuildingInspector();
+            _statusBar?.Tick();
+            _inspector?.Tick();
         }
 
         // ============================================================
@@ -203,12 +186,8 @@ namespace MobileIdleBuilder
         private void QueryElements(VisualElement root)
         {
             // HUD chrome
-            _drawerInventory = root.Q("drawer-inventory");
-            _drawerPanel     = root.Q("left-drawer");
-            _drawerBackdrop  = root.Q("drawer-backdrop");
-            _entropyLabel    = root.Q<Label>("entropy-label");
-            _powerLabel   = root.Q<Label>("power-label");
-            _btnPrestige  = root.Q<Button>("btn-prestige");
+            _drawerPanel    = root.Q("left-drawer");
+            _drawerBackdrop = root.Q("drawer-backdrop");
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -249,20 +228,6 @@ namespace MobileIdleBuilder
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
-            // Notification banner — inner element inside "notification-instance" TemplateContainer
-            _notificationBanner  = root.Q("notification-banner");
-            _notificationIcon    = root.Q<Label>("notification-banner__icon");
-            _notificationMessage = root.Q<Label>("notification-banner__message");
-
-            // Tutorial hint banner
-            _tutorialHintBanner  = root.Q("tutorial-hint-banner");
-            _tutorialHintMessage = root.Q<Label>("tutorial-hint-banner__message");
-
-            // Field proximity banner — inner element inside "field-proximity-instance" TemplateContainer
-            _fieldBanner     = root.Q("field-proximity-banner");
-            _fieldBannerName = root.Q<Label>("field-proximity-banner__name");
-            _fieldBannerType = root.Q<Label>("field-proximity-banner__type");
-
             // Output selector
             _outputSelector        = root.Q("output-selector");
             _outputSelectorOptions = root.Q("output-selector__options");
@@ -279,10 +244,6 @@ namespace MobileIdleBuilder
             _tooltipTitle = root.Q<Label>("tooltip-popup__title");
             _tooltipBody  = root.Q<Label>("tooltip-popup__body");
 
-            // Building inspector
-            _buildingInspectorPanel = root.Q("building-inspector-panel");
-            _inspectorContent       = root.Q<ScrollView>("inspector-content");
-            _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
         }
 
         private void BindButtons(VisualElement root)
@@ -357,84 +318,12 @@ namespace MobileIdleBuilder
         }
 
         // ============================================================
-        // Per-frame refresh
+        // Per-frame refresh (delegated to HUDStatusBarController)
         // ============================================================
-
-        private void RefreshInventoryBar()
-        {
-            if (!_ecsReady || _drawerInventory == null || _inventoryQuery.IsEmpty) return;
-
-            var buffer = _em.GetBuffer<InventorySlot>(
-                _inventoryQuery.GetSingletonEntity(), isReadOnly: true);
-
-            var seen = new HashSet<int>();
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                var slot = buffer[i];
-                if (slot.Quantity <= 0) continue;
-
-                seen.Add(slot.ItemID);
-                var item = ItemDatabase.GetStatic(slot.ItemID);
-                string label = item != null
-                    ? $"{item.symbol ?? item.displayName}  ×{slot.Quantity}"
-                    : $"#{slot.ItemID}  ×{slot.Quantity}";
-
-                if (!_inventoryLabels.TryGetValue(slot.ItemID, out var lbl))
-                {
-                    lbl = new Label();
-                    lbl.AddToClassList("drawer-inventory-item");
-                    _drawerInventory.Add(lbl);
-                    _inventoryLabels[slot.ItemID] = lbl;
-                }
-
-                lbl.text = label;
-                lbl.style.display = DisplayStyle.Flex;
-            }
-
-            foreach (var (itemId, lbl) in _inventoryLabels)
-            {
-                if (!seen.Contains(itemId))
-                    lbl.style.display = DisplayStyle.None;
-            }
-        }
-
-        private void RefreshEntropyLabel()
-        {
-            if (!_ecsReady || _entropyLabel == null || _progressQuery.IsEmpty) return;
-
-            var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            _entropyLabel.text = $"◈ {progress.BaseCurrency:N0}";
-        }
-
-        private void RefreshPowerLabel()
-        {
-            if (!_ecsReady || _powerLabel == null || _powerQuery.IsEmpty) return;
-
-            var nodes = _powerQuery.ToComponentDataArray<PowerNodeData>(Allocator.Temp);
-            float current = 0f, max = 0f;
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                current += nodes[i].CurrentEV;
-                max     += nodes[i].MaxEV;
-            }
-            nodes.Dispose();
-
-            _powerLabel.text = FormatPowerLabel(current, max);
-        }
 
         /// <summary>Formats the power readout for the top bar label.</summary>
         internal static string FormatPowerLabel(float current, float max) =>
             max > 0f ? $"⚡ {current:0.#} / {max:0.#} eV" : "⚡ No power";
-
-        private void RefreshPrestigeButton()
-        {
-            if (!_ecsReady || _btnPrestige == null || _progressQuery.IsEmpty) return;
-
-            var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            _btnPrestige.style.display = progress.PrestigeAvailable
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-        }
 
         // ============================================================
         // Panel openers
@@ -1031,85 +920,16 @@ namespace MobileIdleBuilder
         }
 
         // ============================================================
-        // Notification banner
+        // Banner pass-throughs (delegated to HUDBannerController)
         // ============================================================
 
-        /// <summary>
-        /// Shows a transient notification banner that auto-hides after
-        /// <see cref="notificationDuration"/> seconds.
-        /// <paramref name="modifier"/> can be null (success/green), "warning", or "danger".
-        /// </summary>
-        public void ShowNotification(string icon, string message, string modifier = null)
-        {
-            if (_notificationBanner == null) return;
+        public void ShowNotification(string icon, string message, string modifier = null) =>
+            _banner?.ShowNotification(icon, message, modifier);
 
-            if (_notificationIcon    != null) _notificationIcon.text    = icon;
-            if (_notificationMessage != null) _notificationMessage.text = message;
-
-            _notificationBanner.RemoveFromClassList("notification-banner--warning");
-            _notificationBanner.RemoveFromClassList("notification-banner--danger");
-            if (modifier != null)
-                _notificationBanner.AddToClassList($"notification-banner--{modifier}");
-
-            SetElementVisible(_notificationBanner, true);
-
-            if (_hideNotificationCoroutine != null)
-                StopCoroutine(_hideNotificationCoroutine);
-            _hideNotificationCoroutine = StartCoroutine(HideNotificationAfterDelay());
-        }
-
-        private IEnumerator HideNotificationAfterDelay()
-        {
-            yield return new WaitForSeconds(notificationDuration);
-            SetElementVisible(_notificationBanner, false);
-        }
-
-        // ============================================================
-        // Field proximity banner
-        // ============================================================
-
-        /// <summary>
-        /// Shows the persistent field proximity banner for the given field.
-        /// Remains visible until <see cref="HideFieldBanner"/> is called.
-        /// </summary>
-        public void ShowFieldBanner(FieldSO field)
-        {
-            if (field == null) return;
-
-            if (_fieldBannerName != null) _fieldBannerName.text = field.displayName;
-            if (_fieldBannerType != null) _fieldBannerType.text = field.fieldType.ToString();
-
-            if (_fieldBanner != null)
-            {
-                // Accent strip color driven by field's identity color
-                var accent = _fieldBanner.Q("field-proximity-banner__accent");
-                if (accent != null)
-                    accent.style.backgroundColor = new StyleColor(field.fieldColor);
-            }
-
-            SetElementVisible(_fieldBanner, true);
-        }
-
-        /// <summary>Hides the field proximity banner.</summary>
-        public void HideFieldBanner() => SetElementVisible(_fieldBanner, false);
-
-        // ============================================================
-        // Tutorial hint banner
-        // ============================================================
-
-        /// <summary>
-        /// Shows a persistent tutorial hint at the bottom of the screen.
-        /// Unlike <see cref="ShowNotification"/>, this stays visible until
-        /// <see cref="HideTutorialHint"/> is called.
-        /// </summary>
-        public void ShowTutorialHint(string message)
-        {
-            if (_tutorialHintMessage != null) _tutorialHintMessage.text = message;
-            SetElementVisible(_tutorialHintBanner, true);
-        }
-
-        /// <summary>Hides the persistent tutorial hint banner.</summary>
-        public void HideTutorialHint() => SetElementVisible(_tutorialHintBanner, false);
+        public void ShowFieldBanner(FieldSO field)   => _banner?.ShowFieldBanner(field);
+        public void HideFieldBanner()                => _banner?.HideFieldBanner();
+        public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
+        public void HideTutorialHint()               => _banner?.HideTutorialHint();
 
         // ============================================================
         // Output selector
@@ -1179,199 +999,13 @@ namespace MobileIdleBuilder
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
 
         // ============================================================
-        // Building inspector
+        // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
         // ============================================================
 
-        /// <summary>
-        /// Opens the building inspector panel for <paramref name="entity"/>.
-        /// Called by <see cref="BuildingInspectorController"/> when the player taps a building.
-        /// </summary>
-        public void ShowBuildingInspector(Entity entity, string buildingName)
-        {
-            if (!_ecsReady) return;
-            _inspectorEntity = entity;
-            if (_inspectorBuildingName != null) _inspectorBuildingName.text = buildingName;
-            RefreshInspectorContent();
-            SetElementVisible(_buildingInspectorPanel, true);
-        }
+        public void ShowBuildingInspector(Entity entity, string buildingName) =>
+            _inspector?.ShowBuildingInspector(entity, buildingName);
 
-        public void HideBuildingInspector()
-        {
-            SetElementVisible(_buildingInspectorPanel, false);
-            _inspectorEntity = Entity.Null;
-        }
-
-        private void TickBuildingInspector()
-        {
-            if (_inspectorEntity == Entity.Null) return;
-            _inspectorRefreshTimer += Time.deltaTime;
-            if (_inspectorRefreshTimer < 0.5f) return;
-            _inspectorRefreshTimer = 0f;
-            RefreshInspectorContent();
-        }
-
-        private void RefreshInspectorContent()
-        {
-            if (_inspectorContent == null || !_ecsReady) return;
-            if (_inspectorEntity == Entity.Null) return;
-            if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
-
-            _inspectorContent.Clear();
-
-            // Active / type
-            if (_em.HasComponent<BuildingData>(_inspectorEntity))
-            {
-                var d = _em.GetComponentData<BuildingData>(_inspectorEntity);
-                AddInspectorRow($"Active: {(d.IsActive ? "Yes" : "No")}");
-            }
-
-            // Grid position
-            if (_em.HasComponent<GridPosition>(_inspectorEntity))
-            {
-                var p = _em.GetComponentData<GridPosition>(_inspectorEntity);
-                AddInspectorRow($"Cell: ({p.Cell.x}, {p.Cell.y})");
-            }
-
-            // Collector rate & timer
-            if (_em.HasComponent<CollectorData>(_inspectorEntity))
-            {
-                var col      = _em.GetComponentData<CollectorData>(_inspectorEntity);
-                float rate   = col.OutputRate > 0f ? col.OutputRate : 1f;
-                float next   = Mathf.Max(0f, (1f / rate) - col.Timer);
-                AddInspectorRow("—— Collector ——");
-                AddInspectorRow($"Output rate: {col.OutputRate:F1} /s");
-                AddInspectorRow($"Next item in: {next:F2}s");
-            }
-
-            // Output inventory
-            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
-            {
-                var buf = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
-                AddInspectorRow("—— Output Buffer ——");
-                if (buf.Length == 0)
-                {
-                    AddInspectorRow("  (empty)");
-                }
-                else
-                {
-                    for (int i = 0; i < buf.Length; i++)
-                    {
-                        string name = ItemName(buf[i].ItemID);
-                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
-                    }
-                }
-            }
-
-            // Input inventory
-            if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
-            {
-                var buf = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
-                if (buf.Length > 0)
-                {
-                    AddInspectorRow("—— Input Buffer ——");
-                    for (int i = 0; i < buf.Length; i++)
-                    {
-                        string name = ItemName(buf[i].ItemID);
-                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
-                    }
-                }
-            }
-
-            // What this building produces (recipe output)
-            if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
-            {
-                var buf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
-                if (buf.Length > 0)
-                {
-                    AddInspectorRow("—— Produces ——");
-                    for (int i = 0; i < buf.Length; i++)
-                    {
-                        string name = ItemName(buf[i].ItemID);
-                        AddInspectorRow($"  {name}  ×  {buf[i].Quantity}");
-                    }
-                }
-            }
-
-            // Recipe picker — shown for buildings with multiple supported recipes
-            var buildingSO = GetBuildingSO(_inspectorEntity);
-            if (buildingSO?.supportedRecipes != null && buildingSO.supportedRecipes.Length > 1)
-            {
-                AddInspectorRow("—— Set Recipe ——");
-                foreach (var r in buildingSO.supportedRecipes)
-                {
-                    if (r == null) continue;
-                    var captured = r;
-                    var btn = new Button { text = r.displayName ?? r.name };
-                    btn.AddToClassList("craft-btn");
-                    btn.clicked += () =>
-                    {
-                        SetBuildingRecipe(_inspectorEntity, captured);
-                        RefreshInspectorContent();
-                    };
-                    _inspectorContent?.Add(btn);
-                }
-            }
-        }
-
-        private BuildingSO GetBuildingSO(Entity entity)
-        {
-            if (!_ecsReady || !_em.HasComponent<BuildingData>(entity)) return null;
-            int buildingType = _em.GetComponentData<BuildingData>(entity).BuildingType;
-            if (placementController?.availableBuildings == null) return null;
-            foreach (var entry in placementController.availableBuildings)
-            {
-                if (entry.building != null && entry.building.buildingId == buildingType)
-                    return entry.building;
-            }
-            return null;
-        }
-
-        private void SetBuildingRecipe(Entity entity, RecipeSO recipe)
-        {
-            if (!_ecsReady || !_em.Exists(entity) || recipe == null) return;
-
-            _em.SetComponentData(entity, new RecipeProcessData
-            {
-                RecipeID        = recipe.recipeId,
-                CraftTime       = recipe.baseCraftTime,
-                Progress        = 0f,
-                InputsSatisfied = false,
-                IsCrafting      = false
-            });
-
-            var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);
-            inputBuf.Clear();
-            if (recipe.inputs != null)
-            {
-                foreach (var input in recipe.inputs)
-                {
-                    if (input.item == null) continue;
-                    inputBuf.Add(new RecipeInputSlot { ItemID = input.item.itemId, Quantity = input.quantity });
-                }
-            }
-
-            var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
-            outputBuf.Clear();
-            if (recipe.outputItem != null)
-                outputBuf.Add(new RecipeOutputSlot
-                {
-                    ItemID   = recipe.outputItem.itemId,
-                    Quantity = recipe.outputQuantity
-                });
-        }
-
-        private void AddInspectorRow(string text)
-        {
-            var lbl = new Label(text);
-            lbl.AddToClassList("recipe-inputs");
-            _inspectorContent?.Add(lbl);
-        }
-
-        private static string ItemName(int itemID)
-        {
-            var item = ItemDatabase.Instance?.Get(itemID);
-            return item?.displayName ?? item?.symbol ?? $"Item {itemID}";
-        }
+        public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
 
         private void PositionTooltip(VisualElement anchor)
         {
