@@ -8,18 +8,10 @@ namespace MobileIdleBuilder
     /// Populated at startup by BuildingVisualizer (for pre-baked SubScene buildings)
     /// and updated by BuildingPlacer when buildings are placed at runtime.
     /// </summary>
-    public class GridOccupancy : MonoBehaviour
+    public class GridOccupancy : SingletonMonoBehaviour<GridOccupancy>
     {
-        public static GridOccupancy Instance { get; private set; }
-
         private readonly HashSet<(int, int)> _occupied      = new();
         private readonly HashSet<(int, int)> _conveyorCells = new();
-
-        void Awake()
-        {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
-            Instance = this;
-        }
 
         public bool IsOccupied(int x, int y)    => _occupied.Contains((x, y));
         public bool IsConveyorCell(int x, int y) => _conveyorCells.Contains((x, y));

@@ -108,7 +108,7 @@ namespace MobileIdleBuilder
                         {
                             var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(destBldg);
                             var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(destBldg);
-                            canAdvance = TotalInInputBuffer(inputBuf) < invConfig.InputCapacity;
+                            canAdvance = SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity;
                         }
                     }
 
@@ -153,7 +153,7 @@ namespace MobileIdleBuilder
                     {
                         var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
                         var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg);
-                        if (TotalInInputBuffer(inputBuf) < invConfig.InputCapacity)
+                        if (SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity)
                             transfers.Add((e, Entity.Null, bldg, item.ItemID, 0f));
                         // else: input full — item waits
                     }
@@ -166,7 +166,7 @@ namespace MobileIdleBuilder
                 if (toBuilding != Entity.Null)
                 {
                     // Deposit to building input buffer
-                    AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(toBuilding), itemID, 1);
+                    SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(toBuilding), itemID, 1);
                     EntityManager.RemoveComponent<ConveyorItemData>(from);
 
                     // Input particle burst at the building's entry face
@@ -257,7 +257,7 @@ namespace MobileIdleBuilder
                 }
 
                 int itemID = outputBuf[0].ItemID;
-                RemoveFromOutputBuffer(outputBuf, itemID, 1);
+                SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
                 pulls.Add((e, itemID));
                 if (debugLog)
                     Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell}: pulled itemID={itemID} " +
@@ -303,40 +303,6 @@ namespace MobileIdleBuilder
                 if (p.Facing == dir) return true;
             }
             return false;
-        }
-
-        // ----------------------------------------------------------------
-        // Buffer helpers
-        // ----------------------------------------------------------------
-
-        private static int TotalInInputBuffer(DynamicBuffer<BuildingInputSlot> buf)
-        {
-            int n = 0;
-            for (int i = 0; i < buf.Length; i++) n += buf[i].Quantity;
-            return n;
-        }
-
-        private static void AddToInputBuffer(DynamicBuffer<BuildingInputSlot> buf, int itemID, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemID) continue;
-                buf[i] = new BuildingInputSlot { ItemID = itemID, Quantity = buf[i].Quantity + qty };
-                return;
-            }
-            buf.Add(new BuildingInputSlot { ItemID = itemID, Quantity = qty });
-        }
-
-        private static void RemoveFromOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf, int itemID, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemID) continue;
-                int rem = buf[i].Quantity - qty;
-                if (rem <= 0) buf.RemoveAt(i);
-                else buf[i] = new BuildingOutputSlot { ItemID = itemID, Quantity = rem };
-                return;
-            }
         }
 
         // ----------------------------------------------------------------

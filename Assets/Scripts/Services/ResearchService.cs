@@ -9,11 +9,9 @@ namespace MobileIdleBuilder
     /// Manages the research tree: tracks unlock state, checks affordability,
     /// and processes purchases by deducting entropy and updating SaveData.
     /// </summary>
-    public class ResearchService : MonoBehaviour
+    public class ResearchService : SingletonMonoBehaviour<ResearchService>
     {
         [SerializeField] private ResearchSO[] _allResearch;
-
-        public static ResearchService Instance { get; private set; }
 
         /// <summary>Fired whenever a research is successfully purchased.</summary>
         public event Action<ResearchSO> OnResearchUnlocked;
@@ -22,14 +20,18 @@ namespace MobileIdleBuilder
 
         private readonly HashSet<string> _unlockedIds = new();
 
-        void Awake()
-        {
-            if (Instance != null) { Debug.LogError($"[ResearchService] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
-            Instance = this;
-        }
+        private EntityManager _em;
+        private EntityQuery _progressQuery;
 
         void Start()
         {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world != null)
+            {
+                _em = world.EntityManager;
+                _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            }
+
             var saved = SaveManager.Instance?.Current?.unlockedResearch;
             if (saved != null)
                 foreach (var id in saved) _unlockedIds.Add(id);
@@ -105,24 +107,16 @@ namespace MobileIdleBuilder
 
         private long GetCurrentEntropy()
         {
-            var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null) return 0;
-            var query = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<PlayerProgressData>());
-            if (query.IsEmpty) return 0;
-            return query.GetSingleton<PlayerProgressData>().BaseCurrency;
+            if (_progressQuery.IsEmpty) return 0;
+            return _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
         }
 
         private void DeductEntropy(int amount)
         {
-            var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null) return;
-            var em    = world.EntityManager;
-            var query = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
-            if (query.IsEmpty) return;
-            var progress = query.GetSingleton<PlayerProgressData>();
+            if (_progressQuery.IsEmpty) return;
+            var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency = Math.Max(0, progress.BaseCurrency - amount);
-            query.SetSingleton(progress);
+            _progressQuery.SetSingleton(progress);
         }
     }
 }

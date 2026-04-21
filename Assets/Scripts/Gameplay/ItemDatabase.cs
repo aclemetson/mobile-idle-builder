@@ -11,10 +11,8 @@ namespace MobileIdleBuilder
     /// MonoBehaviour (e.g. when Bootstrap lives inside a SubScene that bakes at runtime).
     /// </summary>
     [DefaultExecutionOrder(-90)]
-    public class ItemDatabase : MonoBehaviour
+    public class ItemDatabase : SingletonMonoBehaviour<ItemDatabase>
     {
-        public static ItemDatabase Instance { get; private set; }
-
         [SerializeField] private ItemSO[] items;
 
         // Static so the data outlives the MonoBehaviour if it gets destroyed.
@@ -22,15 +20,10 @@ namespace MobileIdleBuilder
         private static readonly Dictionary<int,    ItemSO> _byItemId = new();
         private static ItemSO[] _allItems;
 
-        void Awake()
+        protected override void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogWarning($"[ItemDatabase] Duplicate on '{gameObject.name}' — destroying. Keeping instance on '{Instance.gameObject.name}'.");
-                Destroy(this);
-                return;
-            }
-            Instance = this;
+            base.Awake();
+            if (Instance != this) return;
 
             _byId.Clear();
             _byItemId.Clear();

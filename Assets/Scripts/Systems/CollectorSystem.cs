@@ -54,22 +54,11 @@ namespace MobileIdleBuilder
                     total += outputSlots[i].Quantity;
 
                 if (total < invConfig.ValueRO.OutputCapacity)
-                    AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, 1);
+                    SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, 1);
 
                 // Subtract interval rather than resetting to preserve sub-interval remainder
                 collector.ValueRW.Timer -= interval;
             }
-        }
-
-        private static void AddToOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf, int itemID, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemID) continue;
-                buf[i] = new BuildingOutputSlot { ItemID = itemID, Quantity = buf[i].Quantity + qty };
-                return;
-            }
-            buf.Add(new BuildingOutputSlot { ItemID = itemID, Quantity = qty });
         }
     }
 }

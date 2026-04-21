@@ -7,22 +7,10 @@ namespace MobileIdleBuilder
     /// Add this to a persistent GameObject in the main scene alongside RecipeDatabase.
     /// </summary>
     [DefaultExecutionOrder(-100)]
-    public class GameBootstrap : MonoBehaviour
+    public class GameBootstrap : SingletonMonoBehaviour<GameBootstrap>
     {
-        public static GameBootstrap Instance { get; private set; }
+        protected override bool PersistAcrossScenes => true;
 
         [SerializeField] public GameConfigSO gameConfig;
-
-        void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogError($"[GameBootstrap] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
-                Destroy(this);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
     }
 }

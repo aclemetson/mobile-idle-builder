@@ -40,7 +40,7 @@ namespace MobileIdleBuilder
     /// Call <see cref="MarkRunStarted"/> from HUDController after the ECS
     /// PVPRunRequested flag has been set.
     /// </summary>
-    public class PVPService : MonoBehaviour
+    public class PVPService : SingletonMonoBehaviour<PVPService>
     {
         /// <summary>Minimum prestige runs required to unlock PVP mode.</summary>
         public const int PvpPrestigeUnlockCount = 2;
@@ -51,7 +51,7 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO  gameConfig;
         [SerializeField] HUDController hudController;
 
-        public static PVPService Instance { get; private set; }
+        protected override bool PersistAcrossScenes => true;
 
         /// <summary>Fired when State changes — HUD panel should rebuild.</summary>
         public event Action OnStateChanged;
@@ -60,15 +60,6 @@ namespace MobileIdleBuilder
         public TimeSpan TimeRemaining { get; private set; }
 
         bool _expiryTriggered;
-
-        // ── Unity lifecycle ───────────────────────────────────────────────────
-
-        void Awake()
-        {
-            if (Instance != null) { Debug.LogError($"[PVPService] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
 
         void Start() => RefreshState();
 

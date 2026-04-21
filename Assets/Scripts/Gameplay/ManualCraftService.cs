@@ -12,21 +12,13 @@ namespace MobileIdleBuilder
     /// and a snapshot of current inventory counts for the HUD.
     /// </summary>
     [DefaultExecutionOrder(-80)]
-    public class ManualCraftService : MonoBehaviour
+    public class ManualCraftService : SingletonMonoBehaviour<ManualCraftService>
     {
-        public static ManualCraftService Instance { get; private set; }
-
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _buildingQuery;
 
         public bool IsReady { get; private set; }
-
-        void Awake()
-        {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
-            Instance = this;
-        }
 
         void Start()
         {
@@ -60,7 +52,7 @@ namespace MobileIdleBuilder
             foreach (var input in recipe.inputs)
             {
                 int itemId = ItemDatabase.Instance.GetItemId(input.id);
-                if (itemId < 0 || Count(buffer, itemId) < input.quantity)
+                if (itemId < 0 || SlotBufferUtils.CountInInventory(buffer, itemId) < input.quantity)
                     return false;
             }
             return true;
@@ -80,12 +72,12 @@ namespace MobileIdleBuilder
             foreach (var input in recipe.inputs)
             {
                 int itemId = ItemDatabase.Instance.GetItemId(input.id);
-                RemoveFromBuffer(ref buffer, itemId, input.quantity);
+                SlotBufferUtils.RemoveFromInventory(ref buffer, itemId, input.quantity);
             }
 
             int outputId = ItemDatabase.Instance.GetItemId(recipe.output.id);
             if (outputId >= 0)
-                AddToBuffer(ref buffer, outputId, recipe.output.quantity);
+                SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
 
             return true;
         }
@@ -138,7 +130,7 @@ namespace MobileIdleBuilder
                     bool hasInputs = true;
                     for (int i = 0; i < inputsBuf.Length; i++)
                     {
-                        if (Count(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
+                        if (SlotBufferUtils.CountInInventory(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
                         {
                             hasInputs = false;
                             break;
@@ -187,7 +179,7 @@ namespace MobileIdleBuilder
                     bool hasInputs = true;
                     for (int i = 0; i < inputsBuf.Length; i++)
                     {
-                        if (Count(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
+                        if (SlotBufferUtils.CountInInventory(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
                         {
                             hasInputs = false;
                             break;
@@ -207,38 +199,5 @@ namespace MobileIdleBuilder
             return false;
         }
 
-        // ---- Buffer helpers ----
-
-        private static int Count(DynamicBuffer<InventorySlot> buf, int itemId)
-        {
-            for (int i = 0; i < buf.Length; i++)
-                if (buf[i].ItemID == itemId) return buf[i].Quantity;
-            return 0;
-        }
-
-        private static void AddToBuffer(ref DynamicBuffer<InventorySlot> buf, int itemId, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemId) continue;
-                buf[i] = new InventorySlot { ItemID = itemId, Quantity = buf[i].Quantity + qty };
-                return;
-            }
-            buf.Add(new InventorySlot { ItemID = itemId, Quantity = qty });
-        }
-
-        private static void RemoveFromBuffer(ref DynamicBuffer<InventorySlot> buf, int itemId, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemId) continue;
-                int remaining = buf[i].Quantity - qty;
-                if (remaining <= 0)
-                    buf.RemoveAt(i);
-                else
-                    buf[i] = new InventorySlot { ItemID = itemId, Quantity = remaining };
-                return;
-            }
-        }
     }
 }

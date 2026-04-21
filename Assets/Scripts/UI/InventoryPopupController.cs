@@ -15,10 +15,8 @@ namespace MobileIdleBuilder
     /// The <see cref="anchor"/> defaults to this transform — override if the popup
     /// origin should differ from the component's GameObject.
     /// </summary>
-    public class InventoryPopupController : MonoBehaviour
+    public class InventoryPopupController : SingletonMonoBehaviour<InventoryPopupController>
     {
-        public static InventoryPopupController Instance { get; private set; }
-
         [Header("Spawn anchor")]
         [Tooltip("World-space origin for popups. Defaults to this GameObject if left empty.")]
         [SerializeField] private Transform anchor;
@@ -43,10 +41,10 @@ namespace MobileIdleBuilder
         // Lifecycle
         // ----------------------------------------------------------------
 
-        void Awake()
+        protected override void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(this); return; }
-            Instance = this;
+            base.Awake();
+            if (Instance != this) return;
             if (anchor == null) anchor = transform;
         }
 

@@ -19,9 +19,8 @@ namespace MobileIdleBuilder
     /// Place on any persistent scene GameObject (e.g. GameManager).
     /// </summary>
     [DefaultExecutionOrder(-5)]
-    public class PresenceSystem : MonoBehaviour
+    public class PresenceSystem : SingletonMonoBehaviour<PresenceSystem>
     {
-        public static PresenceSystem Instance { get; private set; }
 
         [Header("Ripple")]
         [Tooltip("How fast the ripple ring expands (world units / second).")]
@@ -50,22 +49,6 @@ namespace MobileIdleBuilder
         private readonly List<PresenceReceiver> _receivers = new();
 
         // ── Lifecycle ────────────────────────────────────────────────────────
-
-        void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogWarning($"[PresenceSystem] DUPLICATE — destroying component only on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
-                Destroy(this);
-                return;
-            }
-            Instance = this;
-        }
-
-        void OnDestroy()
-        {
-            if (Instance == this) Instance = null;
-        }
 
         void Update()
         {

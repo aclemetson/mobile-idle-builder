@@ -30,23 +30,21 @@ namespace MobileIdleBuilder
     /// as disabled in the recipe list rather than being hidden entirely.
     /// </summary>
     [DefaultExecutionOrder(-70)]
-    public class RecipeKnowledgeService : MonoBehaviour
+    public class RecipeKnowledgeService : SingletonMonoBehaviour<RecipeKnowledgeService>
     {
         const string FileName = "recipe_knowledge.json";
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
-
-        public static RecipeKnowledgeService Instance { get; private set; }
 
         private RecipeKnowledgeSave _data;
         private string _filePath;
 
         // ── Lifecycle ────────────────────────────────────────────────────────
 
-        void Awake()
+        protected override void Awake()
         {
-            if (Instance != null) { Debug.LogError($"[RecipeKnowledgeService] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
-            Instance = this;
+            base.Awake();
+            if (Instance != this) return;
             _filePath = Path.Combine(Application.persistentDataPath, FileName);
         }
 

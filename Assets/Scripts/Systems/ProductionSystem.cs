@@ -51,8 +51,8 @@ namespace MobileIdleBuilder
                 for (int i = 0; i < inputs.Length; i++)
                 {
                     int have = useLocalInput
-                        ? CountInInputBuffer(localIn, inputs[i].ItemID)
-                        : CountInInventory(inventory, inputs[i].ItemID);
+                        ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
+                        : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
 
                     if (have < inputs[i].Quantity) { satisfied = false; break; }
                 }
@@ -87,8 +87,8 @@ namespace MobileIdleBuilder
                 for (int i = 0; i < inputs.Length; i++)
                 {
                     int have = useLocalInput
-                        ? CountInInputBuffer(localIn, inputs[i].ItemID)
-                        : CountInInventory(inventory, inputs[i].ItemID);
+                        ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
+                        : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
 
                     if (have < inputs[i].Quantity) { canComplete = false; break; }
                 }
@@ -99,14 +99,14 @@ namespace MobileIdleBuilder
                     for (int i = 0; i < inputs.Length; i++)
                     {
                         if (useLocalInput)
-                            RemoveFromInputBuffer(localIn, inputs[i].ItemID, inputs[i].Quantity);
+                            SlotBufferUtils.RemoveFromInputBuffer(localIn, inputs[i].ItemID, inputs[i].Quantity);
                         else
-                            RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
+                            SlotBufferUtils.RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
                     }
 
                     // Deposit outputs to local output buffer
                     for (int i = 0; i < outputs.Length; i++)
-                        AddToOutputBuffer(localOut, outputs[i].ItemID, outputs[i].Quantity);
+                        SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, outputs[i].Quantity);
                 }
 
                 process.ValueRW.Progress   = 0f;
@@ -114,69 +114,5 @@ namespace MobileIdleBuilder
             }
         }
 
-        // ================================================================
-        // Local BuildingInputSlot helpers
-        // ================================================================
-
-        private static int CountInInputBuffer(DynamicBuffer<BuildingInputSlot> buf, int itemID)
-        {
-            for (int i = 0; i < buf.Length; i++)
-                if (buf[i].ItemID == itemID) return buf[i].Quantity;
-            return 0;
-        }
-
-        private static void RemoveFromInputBuffer(DynamicBuffer<BuildingInputSlot> buf, int itemID, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemID) continue;
-                int remaining = buf[i].Quantity - qty;
-                if (remaining <= 0)
-                    buf.RemoveAt(i);
-                else
-                    buf[i] = new BuildingInputSlot { ItemID = itemID, Quantity = remaining };
-                return;
-            }
-        }
-
-        // ================================================================
-        // Local BuildingOutputSlot helpers
-        // ================================================================
-
-        private static void AddToOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf, int itemID, int qty)
-        {
-            for (int i = 0; i < buf.Length; i++)
-            {
-                if (buf[i].ItemID != itemID) continue;
-                buf[i] = new BuildingOutputSlot { ItemID = itemID, Quantity = buf[i].Quantity + qty };
-                return;
-            }
-            buf.Add(new BuildingOutputSlot { ItemID = itemID, Quantity = qty });
-        }
-
-        // ================================================================
-        // Global InventorySlot helpers (used as fallback when no local input)
-        // ================================================================
-
-        private static int CountInInventory(DynamicBuffer<InventorySlot> inv, int itemID)
-        {
-            for (int i = 0; i < inv.Length; i++)
-                if (inv[i].ItemID == itemID) return inv[i].Quantity;
-            return 0;
-        }
-
-        private static void RemoveFromInventory(ref DynamicBuffer<InventorySlot> inv, int itemID, int qty)
-        {
-            for (int i = 0; i < inv.Length; i++)
-            {
-                if (inv[i].ItemID != itemID) continue;
-                int remaining = inv[i].Quantity - qty;
-                if (remaining <= 0)
-                    inv.RemoveAt(i);
-                else
-                    inv[i] = new InventorySlot { ItemID = itemID, Quantity = remaining };
-                return;
-            }
-        }
     }
 }
