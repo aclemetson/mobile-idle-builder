@@ -43,9 +43,9 @@ namespace MobileIdleBuilder
         public List<RecipeJson> recipes;
     }
 
-    public class RecipeDatabase : MonoBehaviour
+    public class RecipeDatabase : SingletonMonoBehaviour<RecipeDatabase>
     {
-        public static RecipeDatabase Instance { get; private set; }
+        protected override bool PersistAcrossScenes => true;
 
         [SerializeField] private TextAsset recipesJsonAsset;
 
@@ -54,16 +54,10 @@ namespace MobileIdleBuilder
 
         private List<RecipeJson> _validRecipes;
 
-        private void Awake()
+        protected override void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogError($"[RecipeDatabase] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
-                Destroy(this);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            base.Awake();
+            if (Instance != this) return;
             Load();
         }
 

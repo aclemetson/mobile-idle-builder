@@ -98,20 +98,20 @@ namespace MobileIdleBuilder
                     if (c.anyOf)
                     {
                         foreach (var r in c.items)
-                            if (CountInInventory(inv, r.itemId) >= r.quantity) return true;
+                            if (SlotBufferUtils.CountInInventory(inv, r.itemId) >= r.quantity) return true;
                         return false;
                     }
                     else
                     {
                         foreach (var r in c.items)
-                            if (CountInInventory(inv, r.itemId) < r.quantity) return false;
+                            if (SlotBufferUtils.CountInInventory(inv, r.itemId) < r.quantity) return false;
                         return true;
                     }
 
                 case ConditionType.InventoryZero:
                     if (c.items == null || c.items.Count == 0) return true;
                     foreach (var r in c.items)
-                        if (CountInInventory(inv, r.itemId) > 0) return false;
+                        if (SlotBufferUtils.CountInInventory(inv, r.itemId) > 0) return false;
                     return true;
 
                 case ConditionType.ResearchUnlocked:
@@ -145,11 +145,5 @@ namespace MobileIdleBuilder
             return -1;
         }
 
-        private static int CountInInventory(DynamicBuffer<InventorySlot> inv, int itemID)
-        {
-            for (int i = 0; i < inv.Length; i++)
-                if (inv[i].ItemID == itemID) return inv[i].Quantity;
-            return 0;
-        }
     }
 }

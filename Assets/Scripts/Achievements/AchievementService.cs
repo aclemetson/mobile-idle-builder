@@ -12,12 +12,12 @@ namespace MobileIdleBuilder
     ///
     /// Call the Notify* methods from gameplay code whenever the relevant event occurs.
     /// </summary>
-    public class AchievementService : MonoBehaviour
+    public class AchievementService : SingletonMonoBehaviour<AchievementService>
     {
+        protected override bool PersistAcrossScenes => true;
+
         [SerializeField] AchievementDatabase database;
         [SerializeField] HUDController       hudController;
-
-        public static AchievementService Instance { get; private set; }
 
         /// <summary>Fired whenever a new achievement is completed.</summary>
         public event Action<AchievementSO> OnAchievementUnlocked;
@@ -25,15 +25,6 @@ namespace MobileIdleBuilder
         // Runtime state — rebuilt from save on Start
         readonly Dictionary<string, int>  _progress  = new();
         readonly HashSet<string>          _completed = new();
-
-        // ── Unity lifecycle ───────────────────────────────────────────────────
-
-        void Awake()
-        {
-            if (Instance != null) { Debug.LogError($"[AchievementService] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
 
         void Start() => LoadFromSave();
 

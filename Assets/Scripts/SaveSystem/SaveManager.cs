@@ -9,8 +9,10 @@ namespace MobileIdleBuilder
     /// Strategy: local is source of truth while offline. On reconnect compare server
     /// timestamp — take newest, keep the other as a 24-hour backup.
     /// </summary>
-    public class SaveManager : MonoBehaviour
+    public class SaveManager : SingletonMonoBehaviour<SaveManager>
     {
+        protected override bool PersistAcrossScenes => true;
+
         [Header("Config")]
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
@@ -20,13 +22,11 @@ namespace MobileIdleBuilder
         SaveData _current;
 
         public SaveData Current => _current;
-        public static SaveManager Instance { get; private set; }
 
-        void Awake()
+        protected override void Awake()
         {
-            if (Instance != null) { Debug.LogError($"[SaveManager] DUPLICATE detected — destroying component on '{gameObject.name}', keeping '{Instance.gameObject.name}'"); Destroy(this); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            base.Awake();
+            if (Instance != this) return;
 
             _local   = new LocalSaveService();
             _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
