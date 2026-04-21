@@ -37,6 +37,9 @@ namespace MobileIdleBuilder
                 deconstructController = FindAnyObjectByType<DeconstructController>();
             if (buildingInspector == null)
                 buildingInspector = FindAnyObjectByType<BuildingInspectorController>();
+            if (fieldCollector == null)
+                fieldCollector = FindAnyObjectByType<ManualFieldCollector>()
+                                 ?? gameObject.AddComponent<ManualFieldCollector>();
         }
 
         void Update()
@@ -78,7 +81,15 @@ namespace MobileIdleBuilder
             if (fieldCollector != null && gridRenderer != null)
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
+                {
+                    Debug.Log($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
+                    Debug.Log($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
             }
 
             if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))

@@ -6,20 +6,16 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Handles field-based item collection.
     ///
-    /// A field must be both in proximity range AND explicitly tapped to become the
-    /// <em>active</em> field. Only the active field auto-collects items on its timer.
-    /// Only one field can be active at a time — tapping a different in-range field
-    /// switches the active field immediately. Walking out of range deactivates it.
+    /// Tapping any field makes it the <em>active</em> field. Only one field can be active
+    /// at a time — tapping a different field switches immediately. The active field
+    /// auto-collects items at <see cref="FieldSO.collectionRate"/> items/second until
+    /// a new field is tapped or the tutorial blocks collection.
     ///
     /// Both the tap and auto-timer paths fire <see cref="InventoryPopupController.Notify"/>
     /// so the player sees floating "+1 Item" text.
-    ///
-    /// Scene setup: attach alongside <see cref="FieldProximityChecker"/> on the Character.
-    /// Wire <see cref="proximityChecker"/> in the Inspector.
     /// </summary>
     public class ManualFieldCollector : MonoBehaviour
     {
-        [SerializeField] private FieldProximityChecker proximityChecker;
         [Tooltip("Physics layers checked by the tap raycast. Leave as Everything when fields use the Default layer.")]
         [SerializeField] private LayerMask fieldLayerMask = ~0;
 
@@ -74,14 +70,6 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // Deactivate if the player walked out of range of the active field.
-            if (_activeField != null && proximityChecker != null &&
-                !proximityChecker.IsInRange(_activeField))
-            {
-                _activeField  = null;
-                _collectTimer = 0f;
-            }
-
             if (_activeField == null) return;
 
             var field = _activeField.Field;
@@ -102,31 +90,38 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Activates the field at the given grid cell (if any, and within proximity range)
-        /// and collects one item. Returns true when a field was successfully activated.
-        /// This is the primary tap path — it works for clicks anywhere on the tile quad.
+        /// Activates the field at the given grid cell and collects one item immediately.
+        /// Returns true when a field was successfully activated.
+        /// Primary tap path — works for clicks anywhere on the tile quad.
         /// </summary>
         public bool TryCollectAtGridCell(int cx, int cy)
         {
             if (!IsCollectionAllowed(out var filterType))
+            {
+                Debug.Log("[FieldCollector] Collection blocked by tutorial.");
                 return false;
+            }
 
             var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
             if (tappedInstance == null)
                 return false;
 
-            if (proximityChecker != null && !proximityChecker.IsInRange(tappedInstance))
-                return false;
-
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
+            {
+                Debug.LogWarning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
                 return false;
+            }
 
             if (filterType != FieldType.None && field.fieldType != filterType)
+            {
+                Debug.Log($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
                 return false;
+            }
 
             _activeField  = tappedInstance;
             _collectTimer = 0f;
+            Debug.Log($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
             CollectOne(field);
             return true;
         }
@@ -141,12 +136,6 @@ namespace MobileIdleBuilder
             if (!IsCollectionAllowed(out var filterType))
                 return false;
 
-            if (proximityChecker == null)
-            {
-                Debug.LogWarning("[FieldCollector] proximityChecker is not wired up.");
-                return false;
-            }
-
             // Raycast to find which field was tapped.
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
             if (!Physics.Raycast(ray, out var hit, 100f, fieldLayerMask))
@@ -155,14 +144,6 @@ namespace MobileIdleBuilder
             var tappedInstance = hit.collider.GetComponentInParent<FieldInstance>();
             if (tappedInstance == null)
                 return false;
-
-            // Must be within the proximity radius — not necessarily the single closest field,
-            // so the player can activate either of two adjacent fields.
-            if (!proximityChecker.IsInRange(tappedInstance))
-            {
-                Debug.Log($"[FieldCollector] Tapped '{tappedInstance.name}' is out of range.");
-                return false;
-            }
 
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
