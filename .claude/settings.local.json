@@ -29,7 +29,10 @@
       "Bash(xargs cat:*)",
       "Bash(python3:*)",
       "Bash(node:*)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
