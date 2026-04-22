@@ -220,6 +220,7 @@ MonoBehaviour:
   holdFraction: 0.35
   stackOffset: 0.4
   textColor: {r: 1, g: 1, b: 1, a: 1}
+  warningColor: {r: 1, g: 0.65, b: 0.1, a: 1}
   fontSize: 8
   spawnHeight: 2
 --- !u!1 &190675426
@@ -268,6 +269,7 @@ GameObject:
   - component: {fileID: 262970766}
   - component: {fileID: 262970765}
   - component: {fileID: 262970764}
+  - component: {fileID: 262970767}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -372,6 +374,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
   autoSaveIntervalSeconds: 60
+--- !u!114 &262970767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6452d90a3da3b8e499dfa2cf97125c47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ToastService
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1746,7 +1760,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDBannerController
-  notificationDuration: 3
+  notificationDuration: 4.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
