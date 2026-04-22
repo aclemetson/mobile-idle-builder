@@ -34,6 +34,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: collect_first_electron
     hintText: Tap the electron field to collect 5 electrons.
     advanceCondition:
@@ -57,6 +58,15 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
+      lockedMessages:
+      - triggerId: quark_field
+        message: Collect electrons first!
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: building
+        message: No building interaction yet.
+        icon: "\u26A0"
+        modifier: warning
   - id: direct_to_maxwells_demon
     hintText: Tap Maxwell's Demon to sell your electrons.
     advanceCondition:
@@ -78,6 +88,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
+      lockedMessages: []
   - id: sell_electrons_in_demon
     hintText: Drag your electrons to the right side to sell them.
     advanceCondition:
@@ -101,6 +112,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 03000000
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: close_demon_panel
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -122,6 +134,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: explain_quark_field
     hintText: 
     advanceCondition:
@@ -136,13 +149,14 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: e66c4f8154eb5c743a390caebea6173c, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: quark_field
+      highlightMode: 2
       blockCollection: 1
       collectionFilter: 0
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: collect_quarks
     hintText: Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.
     advanceCondition:
@@ -168,6 +182,15 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
+      lockedMessages:
+      - triggerId: electron_field
+        message: Time to collect quarks!
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: building
+        message: Focus on the quark field for now.
+        icon: "\u26A0"
+        modifier: warning
   - id: direct_to_maxwells_demon_quarks
     hintText: Bring your quarks to Maxwell's Demon to convert them to entropy.
     advanceCondition:
@@ -189,6 +212,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
+      lockedMessages: []
   - id: sell_quarks_in_demon
     hintText: Drag your quarks to the right side to sell them.
     advanceCondition:
@@ -214,6 +238,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 0100000002000000
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: close_demon_panel_quarks
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -235,6 +260,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: buy_recombination_i
     hintText: Open Research and buy Recombination I.
     advanceCondition:
@@ -256,6 +282,7 @@ MonoBehaviour:
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: craft_first_quarks
     hintText: Place a Field Collector on a quark field to harvest quarks.
     advanceCondition:
@@ -281,6 +308,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: craft_first_proton
     hintText: Place a Nucleon Factory and connect it to your Field Collector.
     advanceCondition:
@@ -304,6 +332,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: craft_first_neutron
     hintText: Combine 1 Up Quark and 2 Down Quarks to craft a Neutron.
     advanceCondition:
@@ -327,6 +356,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: craft_first_hydrogen
     hintText: Combine a Proton and an Electron to craft Hydrogen.
     advanceCondition:
@@ -350,6 +380,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: place_first_building
     hintText: Place a building on the grid to begin automation.
     advanceCondition:
@@ -371,6 +402,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: automation_started
     hintText: Your factory is running. Watch it produce particles on its own.
     advanceCondition:
@@ -392,6 +424,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: reach_prestige_wall
     hintText: You have reached the prestige threshold. Time to reset and grow stronger.
     advanceCondition:
@@ -413,6 +446,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: first_prestige_complete
     hintText: 
     advanceCondition:
@@ -434,6 +468,7 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []
   - id: spend_prestige_currency
     hintText: Open the upgrade shop and spend your prestige currency.
     advanceCondition:
@@ -455,3 +490,4 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
+      lockedMessages: []

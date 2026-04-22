@@ -51,6 +51,9 @@ namespace MobileIdleBuilder
         private EntityQuery   _progressQuery;
         private bool          _ecsReady;
 
+        // ── Camera ────────────────────────────────────────────────────────
+        private CameraController _cameraController;
+
         // ── CSS class constants ───────────────────────────────────────────
         private const string CSS_Item        = "demon-item";
         private const string CSS_ItemDragging= "demon-item--dragging";
@@ -79,6 +82,8 @@ namespace MobileIdleBuilder
 
 
             BindElements(_uiDocument.rootVisualElement);
+
+            _cameraController = FindAnyObjectByType<CameraController>();
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
@@ -128,6 +133,7 @@ namespace MobileIdleBuilder
             }
 
             IsOpen = true;
+            _cameraController?.SetPanLocked(true);
             RefreshInventory();
             _panel.RemoveFromClassList(CSS_Hidden);
             OnOpened?.Invoke();
@@ -137,6 +143,7 @@ namespace MobileIdleBuilder
         {
             if (!IsOpen) return;
             IsOpen = false;
+            _cameraController?.SetPanLocked(false);
             CancelDrag();
             _panel?.AddToClassList(CSS_Hidden);
             OnClosed?.Invoke();

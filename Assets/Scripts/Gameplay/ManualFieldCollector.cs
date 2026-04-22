@@ -116,6 +116,7 @@ namespace MobileIdleBuilder
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
                 Debug.Log($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
 
@@ -154,7 +155,10 @@ namespace MobileIdleBuilder
 
             // Restrict to the field type specified by the current tutorial step (None = no restriction)
             if (filterType != FieldType.None && field.fieldType != filterType)
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
+            }
 
             // Switch active field (deactivates the previous one automatically).
             _activeField  = tappedInstance;
@@ -250,5 +254,13 @@ namespace MobileIdleBuilder
             collectionFilter = enter.collectionFilter;
             return true;
         }
+
+        private static string FieldTypeToTriggerId(FieldType fieldType) =>
+            fieldType switch
+            {
+                FieldType.Quark  => "quark_field",
+                FieldType.Lepton => "electron_field",
+                _                => $"{fieldType.ToString().ToLowerInvariant()}_field"
+            };
     }
 }

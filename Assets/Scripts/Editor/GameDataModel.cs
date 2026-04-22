@@ -305,6 +305,7 @@ namespace MobileIdleBuilder.Editor
         {
             advance_condition ??= new TutorialConditionJson();
             on_enter          ??= new TutorialOnEnterJson();
+            on_enter.locked_messages ??= new List<InteractableMessageJson>();
         }
     }
 
@@ -335,6 +336,15 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class InteractableMessageJson
+    {
+        public string trigger_id = "";
+        public string message    = "";
+        public string icon       = "⚠";
+        public string modifier   = "warning";
+    }
+
+    [Serializable]
     internal class TutorialOnEnterJson
     {
         public string   dialogue_id              = "";
@@ -348,5 +358,6 @@ namespace MobileIdleBuilder.Editor
         public int[]    demon_highlight_item_ids       = new int[0];
         /// <summary>Must match a BuildingInteractionGate enum value. "None" = no restriction.</summary>
         public string   building_interaction_gate      = "None";
+        public List<InteractableMessageJson> locked_messages = new();
     }
 }

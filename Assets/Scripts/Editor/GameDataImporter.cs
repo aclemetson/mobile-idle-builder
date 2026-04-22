@@ -578,6 +578,26 @@ namespace MobileIdleBuilder.Editor
                             $"TutorialStep '{s.id}'.on_enter.building_interaction_gate", out var big))
                         def.onEnter.buildingInteractionGate = big;
 
+                    if (s.on_enter.locked_messages is { Count: > 0 })
+                    {
+                        def.onEnter.lockedMessages = new InteractableMessage[s.on_enter.locked_messages.Count];
+                        for (int m = 0; m < s.on_enter.locked_messages.Count; m++)
+                        {
+                            var lm = s.on_enter.locked_messages[m];
+                            def.onEnter.lockedMessages[m] = new InteractableMessage
+                            {
+                                triggerId = lm.trigger_id ?? "",
+                                message   = lm.message    ?? "",
+                                icon      = string.IsNullOrEmpty(lm.icon) ? "⚠" : lm.icon,
+                                modifier  = lm.modifier   ?? "warning"
+                            };
+                        }
+                    }
+                    else
+                    {
+                        def.onEnter.lockedMessages = System.Array.Empty<InteractableMessage>();
+                    }
+
                     if (!string.IsNullOrEmpty(s.on_enter.dialogue_id))
                     {
                         if (dialogueLookup.TryGetValue(s.on_enter.dialogue_id, out var dlg))

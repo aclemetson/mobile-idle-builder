@@ -12,12 +12,50 @@ namespace MobileIdleBuilder
     {
         private ParticleSystem _particles;
         private Light          _light;
+        private Color          _fieldColor;
+        private bool           _locked;
 
         public void Initialize(Color fieldColor)
         {
-            _particles = GetComponent<ParticleSystem>();
+            _fieldColor = fieldColor;
+            _particles  = GetComponent<ParticleSystem>();
             ConfigureParticles(fieldColor);
             CreateLight(fieldColor);
+        }
+
+        /// <summary>
+        /// Dims particles and light when the field is locked by the tutorial.
+        /// Call with locked=false to restore full visuals when the field becomes available.
+        /// </summary>
+        public void SetLocked(bool locked)
+        {
+            if (_locked == locked) return;
+            _locked = locked;
+
+            if (_particles != null)
+            {
+                var emission = _particles.emission;
+                emission.rateOverTime = locked ? 2f : 15f;
+
+                var main = _particles.main;
+                if (locked)
+                {
+                    var grey = Color.grey * 0.35f;
+                    main.startColor = new ParticleSystem.MinMaxGradient(grey, grey);
+                }
+                else
+                {
+                    var bright  = new Color(_fieldColor.r, _fieldColor.g, _fieldColor.b, 0.9f);
+                    var lighter = new Color(
+                        Mathf.Clamp01(_fieldColor.r + 0.15f),
+                        Mathf.Clamp01(_fieldColor.g + 0.15f),
+                        Mathf.Clamp01(_fieldColor.b + 0.15f), 0.6f);
+                    main.startColor = new ParticleSystem.MinMaxGradient(bright, lighter);
+                }
+            }
+
+            if (_light != null)
+                _light.intensity = locked ? 0.2f : 1.5f;
         }
 
         private void ConfigureParticles(Color baseColor)

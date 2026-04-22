@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
         [SerializeField] private HUDController           hudController;
 
         private int    _lastStepIndex = -1;
+        private bool   _wasActive;
         private Button _pulsingButton;
         private Coroutine _pulseRoutine;
 
@@ -84,7 +85,17 @@ namespace MobileIdleBuilder
             if (!_queryReady || _tutorialQuery.IsEmpty) return;
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+
+            // Tutorial just ended — unlock all fields and stop watching.
+            if (_wasActive && !state.IsActive)
+            {
+                _wasActive = false;
+                UnlockAllFields();
+                return;
+            }
+
             if (!state.IsActive) return;
+            _wasActive = true;
 
             if (state.CurrentStepIndex == _lastStepIndex) return;
 
@@ -114,6 +125,8 @@ namespace MobileIdleBuilder
         private void ApplyOnEnterActions(TutorialOnEnter enter)
         {
             if (enter == null) return;
+
+            ApplyFieldLockStates(enter);
 
             // Dialogue
             if (enter.dialogue != null)
@@ -227,6 +240,38 @@ namespace MobileIdleBuilder
         }
 
         private void OnDemonClosed() => TryAdvanceOnUiEvent("demon_closed");
+
+        // ── Field lock states ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Dims fields that are not accessible in the given step and restores those that are.
+        /// - blockCollection=true  → all fields locked
+        /// - collectionFilter set  → fields of the filtered type unlocked, all others locked
+        /// - neither               → all fields unlocked
+        /// </summary>
+        private void ApplyFieldLockStates(TutorialOnEnter enter)
+        {
+            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+            foreach (var fi in allFields)
+            {
+                if (fi.Field == null) continue;
+                bool locked;
+                if (enter.blockCollection)
+                    locked = true;
+                else if (enter.collectionFilter != FieldType.None)
+                    locked = fi.Field.fieldType != enter.collectionFilter;
+                else
+                    locked = false;
+                fi.SetLocked(locked);
+            }
+        }
+
+        private void UnlockAllFields()
+        {
+            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+            foreach (var fi in allFields)
+                fi.SetLocked(false);
+        }
 
         // ── UI helpers ────────────────────────────────────────────────────────
 
