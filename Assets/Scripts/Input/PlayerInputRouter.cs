@@ -24,9 +24,10 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private BuildingInspectorController  buildingInspector;
-        [SerializeField] private ManualFieldCollector         fieldCollector;
+        private ManualFieldCollector         fieldCollector;
         [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private UIDocument                   hudDocument;
+        [SerializeField] private Transform                    tapAnchor;
 
         private Vector2 _pressStart;
         private float   _dragAccum;
@@ -122,6 +123,7 @@ namespace MobileIdleBuilder
             if (Mathf.Abs(ray.direction.y) < 0.0001f) { Debug.LogWarning("[InputRouter] AnchorPresence — degenerate ray"); return; }
             float   t        = -ray.origin.y / ray.direction.y;
             Vector3 worldPos = ray.origin + ray.direction * t;
+            if (tapAnchor != null) tapAnchor.position = worldPos;
             var ps = PresenceSystem.Instance;
             if (ps != null) ps.SetAnchor(worldPos);
         }
