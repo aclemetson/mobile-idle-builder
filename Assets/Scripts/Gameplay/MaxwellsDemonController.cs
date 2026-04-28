@@ -45,6 +45,24 @@ namespace MobileIdleBuilder
         private int    _dragQuantity;
         private float  _dragSellValue;
 
+        // ── Selection / sell tray state ───────────────────────────────────
+        private int  _selectedItemId = -1;
+        private int  _selectedMax;
+        private int  _sellQty;
+
+        // ── New sell tray elements ────────────────────────────────────────
+        private VisualElement _footerNormal;
+        private VisualElement _sellTray;
+        private Label         _sellItemNameLabel;
+        private Label         _sellQtyLabel;
+        private Button        _btnSellDecrease;
+        private Button        _btnSellIncrease;
+        private Button        _btnSellConfirm;
+
+        // ── Per-gesture state ─────────────────────────────────────────────
+        private Vector2 _pointerDownPos;
+        private bool    _isDragging;
+
         // ── ECS ───────────────────────────────────────────────────────────
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
@@ -55,10 +73,14 @@ namespace MobileIdleBuilder
         private CameraController _cameraController;
 
         // ── CSS class constants ───────────────────────────────────────────
-        private const string CSS_Item        = "demon-item";
-        private const string CSS_ItemDragging= "demon-item--dragging";
-        private const string CSS_DropActive  = "demon-drop-zone--active";
-        private const string CSS_Hidden      = "hidden";
+        private const string CSS_Item         = "demon-item";
+        private const string CSS_ItemDragging = "demon-item--dragging";
+        private const string CSS_ItemSelected = "demon-item--selected";
+        private const string CSS_DropActive   = "demon-drop-zone--active";
+        private const string CSS_Hidden       = "hidden";
+
+        // ── Drag threshold (pixels before a touch is treated as a drag) ───
+        private const float DragThreshold = 10f;
 
         public bool IsOpen { get; private set; }
 
@@ -145,6 +167,7 @@ namespace MobileIdleBuilder
             IsOpen = false;
             _cameraController?.SetPanLocked(false);
             CancelDrag();
+            DeselectItem();
             _panel?.AddToClassList(CSS_Hidden);
             OnClosed?.Invoke();
         }
@@ -192,11 +215,25 @@ namespace MobileIdleBuilder
             _dragGhost        = root.Q("demon-drag-ghost");
             _dragGhostLabel   = root.Q<Label>("demon-drag-ghost__label");
 
+            _footerNormal      = root.Q("demon-footer-normal");
+            _sellTray          = root.Q("demon-sell-tray");
+            _sellItemNameLabel = root.Q<Label>("demon-sell-item-name");
+            _sellQtyLabel      = root.Q<Label>("demon-sell-qty");
+            _btnSellDecrease   = root.Q<Button>("btn-sell-decrease");
+            _btnSellIncrease   = root.Q<Button>("btn-sell-increase");
+            _btnSellConfirm    = root.Q<Button>("btn-sell-confirm");
+
             _panel?.AddToClassList(CSS_Hidden);
             _dragGhost?.AddToClassList(CSS_Hidden);
 
-            if (_btnClose    != null) _btnClose.clicked    += Close;
+            if (_btnClose      != null) _btnClose.clicked      += Close;
             if (_btnDepositAll != null) _btnDepositAll.clicked += DepositAll;
+            if (_btnSellDecrease != null)
+                _btnSellDecrease.clicked += () => { _sellQty = _sellQty <= 1 ? _selectedMax : _sellQty - 1; UpdateSellTray(); };
+            if (_btnSellIncrease != null)
+                _btnSellIncrease.clicked += () => { _sellQty = _sellQty >= _selectedMax ? 1 : _sellQty + 1; UpdateSellTray(); };
+            if (_btnSellConfirm != null)
+                _btnSellConfirm.clicked += OnSellConfirm;
         }
 
         // ================================================================
@@ -234,7 +271,38 @@ namespace MobileIdleBuilder
                 _inventoryGrid.Add(empty);
             }
 
-            UpdateEarnPreview();
+            // Sync sell tray if an item is selected
+            if (_selectedItemId >= 0)
+            {
+                int newMax = 0;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    if (buffer[i].ItemID == _selectedItemId && buffer[i].Quantity > 0)
+                    {
+                        newMax = buffer[i].Quantity;
+                        break;
+                    }
+                }
+
+                if (newMax <= 0)
+                    DeselectItem();
+                else
+                {
+                    _selectedMax = newMax;
+                    _sellQty     = Mathf.Min(_sellQty, _selectedMax);
+                    UpdateSellTray();
+                    // Re-apply selected highlight on the freshly rebuilt rows
+                    _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+                    {
+                        bool isSelected = row.userData is int id && id == _selectedItemId;
+                        row.EnableInClassList(CSS_ItemSelected, isSelected);
+                    });
+                }
+            }
+            else
+            {
+                UpdateEarnPreview();
+            }
         }
 
         private VisualElement BuildItemRow(ItemSO item, int quantity)
@@ -265,21 +333,13 @@ namespace MobileIdleBuilder
 
             row.RegisterCallback<PointerDownEvent>(evt =>
             {
-                _dragItemId    = capturedItemId;
-                _dragQuantity  = capturedQuantity;
-                _dragSellValue = capturedSellValue;
+                _dragItemId     = capturedItemId;
+                _dragQuantity   = capturedQuantity;
+                _dragSellValue  = capturedSellValue;
+                _pointerDownPos = evt.position;
+                _isDragging     = false;
 
-                row.AddToClassList(CSS_ItemDragging);
                 row.CapturePointer(evt.pointerId);
-
-                if (_dragGhost != null && _dragGhostLabel != null)
-                {
-                    _dragGhostLabel.text = capturedName;
-                    _dragGhost.RemoveFromClassList(CSS_Hidden);
-                    MoveDragGhost(evt.position);
-                }
-
-                UpdateEarnPreview();
                 evt.StopPropagation();
             });
 
@@ -287,15 +347,28 @@ namespace MobileIdleBuilder
             {
                 if (!row.HasPointerCapture(evt.pointerId)) return;
 
-                MoveDragGhost(evt.position);
-
-                // Highlight drop zone while hovering over it
-                if (_dropZone != null)
+                if (!_isDragging && Vector2.Distance(evt.position, _pointerDownPos) > DragThreshold)
                 {
-                    if (_dropZone.worldBound.Contains(evt.position))
-                        _dropZone.AddToClassList(CSS_DropActive);
-                    else
-                        _dropZone.RemoveFromClassList(CSS_DropActive);
+                    _isDragging = true;
+                    row.AddToClassList(CSS_ItemDragging);
+                    if (_dragGhost != null && _dragGhostLabel != null)
+                    {
+                        _dragGhostLabel.text = capturedName;
+                        _dragGhost.RemoveFromClassList(CSS_Hidden);
+                    }
+                    UpdateEarnPreview();
+                }
+
+                if (_isDragging)
+                {
+                    MoveDragGhost(evt.position);
+                    if (_dropZone != null)
+                    {
+                        if (_dropZone.worldBound.Contains(evt.position))
+                            _dropZone.AddToClassList(CSS_DropActive);
+                        else
+                            _dropZone.RemoveFromClassList(CSS_DropActive);
+                    }
                 }
 
                 evt.StopPropagation();
@@ -306,12 +379,23 @@ namespace MobileIdleBuilder
                 if (!row.HasPointerCapture(evt.pointerId)) return;
                 row.ReleasePointer(evt.pointerId);
 
-                bool droppedOnDemon = _dropZone != null &&
-                                      _dropZone.worldBound.Contains(evt.position);
-                if (droppedOnDemon && _dragItemId >= 0)
-                    CommitDeposit(_dragItemId, _dragQuantity);
+                if (_isDragging)
+                {
+                    bool droppedOnDemon = _dropZone != null &&
+                                          _dropZone.worldBound.Contains(evt.position);
+                    if (droppedOnDemon && _dragItemId >= 0)
+                        CommitDeposit(_dragItemId, _dragQuantity);
+                    CancelDrag();
+                }
+                else
+                {
+                    CancelDrag();
+                    if (_selectedItemId == capturedItemId)
+                        DeselectItem();
+                    else
+                        SelectItem(capturedItemId, capturedQuantity);
+                }
 
-                CancelDrag();
                 evt.StopPropagation();
             });
 
@@ -347,6 +431,60 @@ namespace MobileIdleBuilder
             }
 
             UpdateEarnPreview();
+        }
+
+        // ================================================================
+        // Selection / sell tray
+        // ================================================================
+
+        private void SelectItem(int itemId, int maxQty)
+        {
+            _selectedItemId = itemId;
+            _selectedMax    = maxQty;
+            _sellQty        = 1;
+
+            var itemSO = ItemDatabase.GetStatic(itemId);
+            if (_sellItemNameLabel != null)
+                _sellItemNameLabel.text = itemSO?.displayName ?? "";
+
+            _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+            {
+                bool isSelected = row.userData is int id && id == itemId;
+                row.EnableInClassList(CSS_ItemSelected, isSelected);
+            });
+
+            UpdateSellTray();
+            _footerNormal?.AddToClassList(CSS_Hidden);
+            _sellTray?.RemoveFromClassList(CSS_Hidden);
+        }
+
+        private void DeselectItem()
+        {
+            _selectedItemId = -1;
+            _inventoryGrid?.Query<VisualElement>(className: CSS_ItemSelected)
+                .ForEach(e => e.RemoveFromClassList(CSS_ItemSelected));
+            _sellTray?.AddToClassList(CSS_Hidden);
+            _footerNormal?.RemoveFromClassList(CSS_Hidden);
+            UpdateEarnPreview();
+        }
+
+        private void UpdateSellTray()
+        {
+            if (_sellQtyLabel != null) _sellQtyLabel.text = _sellQty.ToString();
+
+            var itemSO = ItemDatabase.GetStatic(_selectedItemId);
+            if (_btnSellConfirm != null && itemSO != null)
+            {
+                long val = CalcEntropy(itemSO, _sellQty);
+                _btnSellConfirm.text = $"Sell (+{val} entropy)";
+            }
+        }
+
+        private void OnSellConfirm()
+        {
+            if (_selectedItemId < 0) return;
+            CommitDeposit(_selectedItemId, _sellQty);
+            DeselectItem();
         }
 
         // ================================================================
@@ -397,6 +535,7 @@ namespace MobileIdleBuilder
         private void DepositAll()
         {
             if (!_ecsReady || _inventoryQuery.IsEmpty || _progressQuery.IsEmpty) return;
+            DeselectItem();
 
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity);

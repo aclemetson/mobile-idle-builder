@@ -254,9 +254,22 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="demon-panel__footer">
-                <ui:Label name="demon-earn-preview" text="" class="demon-earn-preview" />
-                <ui:Button name="btn-demon-deposit-all" text="Deposit All"
-                           class="demon-deposit-all-btn" />
+                <!-- Normal footer (default visible) -->
+                <ui:VisualElement name="demon-footer-normal" class="demon-footer-normal">
+                    <ui:Label name="demon-earn-preview" text="" class="demon-earn-preview" />
+                    <ui:Button name="btn-demon-deposit-all" text="Deposit All"
+                               class="demon-deposit-all-btn" />
+                </ui:VisualElement>
+                <!-- Sell tray (hidden until item is tapped) -->
+                <ui:VisualElement name="demon-sell-tray" class="demon-sell-tray hidden">
+                    <ui:Label name="demon-sell-item-name" text="" class="demon-sell-item-name" />
+                    <ui:VisualElement class="demon-sell-qty-row">
+                        <ui:Button name="btn-sell-decrease" text="−" class="demon-qty-btn" />
+                        <ui:Label name="demon-sell-qty" text="1" class="demon-sell-qty" />
+                        <ui:Button name="btn-sell-increase" text="+" class="demon-qty-btn" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-sell-confirm" text="Sell (+0)" class="demon-sell-btn" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <!-- Drag ghost — floats above everything during drag; must not intercept pointer events -->
             <ui:VisualElement name="demon-drag-ghost" class="demon-drag-ghost hidden"
