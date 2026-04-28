@@ -218,20 +218,23 @@
    TutorialHintBanner
    Persistent bottom banner that stays visible for the duration of a
    tutorial step. Hidden/shown in C# via HUDController.ShowTutorialHint /
-   HideTutorialHint. Stacks above the field-proximity-banner.
+   HideTutorialHint. Sits at the very bottom of the screen, below the
+   demon panel (bottom: 10%) and below the dialogue box (bottom: 56px).
+   z-index: 55 keeps it above the drawer (z-index: 50) when open.
    ================================================================ */
 
 .tutorial-hint-banner {
     position: absolute;
     left: var(--spacing-md);
     right: var(--spacing-md);
-    bottom: 130px;
+    bottom: 4px;
     align-items: center;
     padding: var(--spacing-sm) var(--spacing-md);
     background-color: rgba(10, 14, 26, 0.92);
     border-radius: var(--border-radius);
     border-width: 1px;
     border-color: var(--color-primary);
+    z-index: 55;
 }
 
 .tutorial-hint-banner__message {
