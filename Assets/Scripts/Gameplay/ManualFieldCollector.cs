@@ -28,6 +28,16 @@ namespace MobileIdleBuilder
         public FieldInstance ActiveField => _activeField;
         private FieldInstance _activeField;
 
+        /// <summary>
+        /// Clears the active field so auto-collection stops.
+        /// Called by PlayerInputRouter whenever a tap lands anywhere other than a field.
+        /// </summary>
+        public void DeactivateField()
+        {
+            _activeField  = null;
+            _collectTimer = 0f;
+        }
+
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;
@@ -96,12 +106,6 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollectAtGridCell(int cx, int cy)
         {
-            if (!IsCollectionAllowed(out var filterType))
-            {
-                Debug.Log("[FieldCollector] Collection blocked by tutorial.");
-                return false;
-            }
-
             var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
             if (tappedInstance == null)
                 return false;
@@ -113,6 +117,12 @@ namespace MobileIdleBuilder
                 return false;
             }
 
+            if (!IsCollectionAllowed(out var filterType))
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
+                return false;
+            }
+
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
                 Debug.Log($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
@@ -120,10 +130,12 @@ namespace MobileIdleBuilder
                 return false;
             }
 
-            _activeField  = tappedInstance;
-            _collectTimer = 0f;
+            if (_activeField != tappedInstance)
+            {
+                _activeField  = tappedInstance;
+                _collectTimer = 0f;
+            }
             Debug.Log($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
-            CollectOne(field);
             return true;
         }
 
@@ -133,11 +145,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollect(Vector2 screenPos)
         {
-            // Tutorial gates — block collection or restrict field type based on current step
-            if (!IsCollectionAllowed(out var filterType))
-                return false;
-
-            // Raycast to find which field was tapped.
+            // Raycast first so we know which field was tapped before checking gates.
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
             if (!Physics.Raycast(ray, out var hit, 100f, fieldLayerMask))
                 return false;
@@ -153,19 +161,24 @@ namespace MobileIdleBuilder
                 return false;
             }
 
-            // Restrict to the field type specified by the current tutorial step (None = no restriction)
+            // Tutorial gates — block or filter, posting a toast so the player gets feedback.
+            if (!IsCollectionAllowed(out var filterType))
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
+                return false;
+            }
+
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
                 ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
 
-            // Switch active field (deactivates the previous one automatically).
-            _activeField  = tappedInstance;
-            _collectTimer = 0f;
-
-            // Collect one item immediately on tap.
-            CollectOne(field);
+            if (_activeField != tappedInstance)
+            {
+                _activeField  = tappedInstance;
+                _collectTimer = 0f;
+            }
             return true;
         }
 

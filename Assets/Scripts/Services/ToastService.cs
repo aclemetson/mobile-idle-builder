@@ -57,6 +57,26 @@ namespace MobileIdleBuilder
         // ── Public API ────────────────────────────────────────────────────────
 
         /// <summary>
+        /// Returns true if the current tutorial step has a locked message for triggerId.
+        /// Does not show any popup — use Post() to also show the message.
+        /// </summary>
+        public bool IsLocked(string triggerId)
+        {
+            if (string.IsNullOrEmpty(triggerId)) return false;
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || !_ecsReady || _tutorialQuery.IsEmpty) return false;
+            var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+            if (!state.IsActive) return false;
+            int idx = state.CurrentStepIndex;
+            if (idx >= flow.steps.Length) return false;
+            var msgs = flow.steps[idx].onEnter?.lockedMessages;
+            if (msgs == null) return false;
+            foreach (var msg in msgs)
+                if (msg?.triggerId == triggerId) return true;
+            return false;
+        }
+
+        /// <summary>
         /// Looks up the current tutorial step's lockedMessages for a matching triggerId
         /// and shows the warning popup if found. Silent no-op if no match.
         /// </summary>

@@ -52,14 +52,14 @@
       "_comment": "First research — unlocked from the start of the tutorial",
       "id": "recombination_i",
       "display_name": "Recombination I",
-      "description": "Harness the strong nuclear force to bind quarks into protons and neutrons.",
+      "description": "Harness the strong nuclear force to bind quarks into protons and neutrons — and combine them with electrons to form the first atoms.",
       "branch": "Nuclear",
       "prerequisites": [],
       "depth_in_tree": 0,
       "cost_base_currency": 100,
       "cost_prestige_currency": 0,
-      "unlocks_items": ["proton", "neutron"],
-      "unlocks_recipes": ["proton", "neutron"],
+      "unlocks_items": ["proton", "neutron", "hydrogen"],
+      "unlocks_recipes": ["proton", "neutron", "hydrogen"],
       "unlocks_buildings": ["strong_force_combiner"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["atomic_assembly", "nucleon_harvesting"],
@@ -77,8 +77,8 @@
       "depth_in_tree": 1,
       "cost_base_currency": 500,
       "cost_prestige_currency": 0,
-      "unlocks_items": ["hydrogen", "helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
-      "unlocks_recipes": ["hydrogen", "helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
+      "unlocks_items": ["helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
+      "unlocks_recipes": ["helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
       "unlocks_buildings": ["atomic_assembler"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["isotopes", "heavy_elements"],
@@ -779,7 +779,7 @@
       "valid_buildings": ["atomic_assembler"],
       "can_craft_manually": true,
       "known_from_start": false,
-      "required_research": "atomic_assembly",
+      "required_research": "recombination_i",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -1557,7 +1557,7 @@
     {
       "id": "intro_dialogue",
       "hint": "",
-      "skip_condition": { "research_id": "recombination_i", "skip_to_id": "craft_first_quarks" },
+      "skip_condition": { "research_id": "recombination_i", "skip_to_id": "collect_materials_for_hydrogen" },
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "intro_architect", "block_collection": true }
     },
@@ -1587,7 +1587,11 @@
         "highlight_target": "maxwells_demon",
         "highlight_mode": "Full",
         "block_collection": true,
-        "building_interaction_gate": "EntropySinkOnly"
+        "building_interaction_gate": "EntropySinkOnly",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Deposit your electrons in Maxwell's Demon!", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Deposit your electrons in Maxwell's Demon!", "icon": "⚠", "modifier": "warning" }
+        ]
       }
     },
     {
@@ -1648,7 +1652,11 @@
         "highlight_target": "maxwells_demon",
         "highlight_mode": "Full",
         "block_collection": true,
-        "building_interaction_gate": "EntropySinkOnly"
+        "building_interaction_gate": "EntropySinkOnly",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Deposit your quarks in Maxwell's Demon!", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Deposit your quarks in Maxwell's Demon!", "icon": "⚠", "modifier": "warning" }
+        ]
       }
     },
     {
@@ -1673,50 +1681,82 @@
       "on_enter": { "block_collection": true }
     },
     {
-      "id": "buy_recombination_i",
-      "hint": "Open Research and buy Recombination I.",
-      "advance_condition": { "type": "ResearchUnlocked", "research_id": "recombination_i" },
-      "on_enter": { "pulse_button_id": "btn-research" }
+      "id": "open_research_drawer",
+      "hint": "Open the menu on the left to find the Research panel.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "drawer_opened" },
+      "on_enter": {
+        "pulse_button_id": "btn-drawer-handle",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Open the Research panel first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Open the Research panel first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Open the Research panel first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "nav_other",      "message": "Find the Research panel.",       "icon": "⚠", "modifier": "warning" }
+        ]
+      }
     },
     {
-      "id": "craft_first_quarks",
-      "hint": "Place a Field Collector on a quark field to harvest quarks.",
+      "id": "buy_recombination_i",
+      "hint": "Purchase Recombination I to unlock nucleon synthesis.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "recombination_i" },
+      "on_enter": {
+        "pulse_button_id": "btn-research",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Purchase Recombination I first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Purchase Recombination I first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Purchase Recombination I first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "nav_other",      "message": "Use the Research panel.",         "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "collect_materials_for_hydrogen",
+      "hint": "Collect 2 Up Quarks, 1 Down Quark, and 1 Electron — you'll need them to synthesize Hydrogen.",
       "advance_condition": {
         "type": "InventoryMin",
-        "any_of": true,
         "items": [
-          { "item_id": 1, "quantity": 1 },
-          { "item_id": 2, "quantity": 1 }
+          { "item_id": 1, "quantity": 2 },
+          { "item_id": 2, "quantity": 1 },
+          { "item_id": 3, "quantity": 1 }
         ]
       },
       "on_enter": {}
     },
     {
+      "id": "open_build_menu",
+      "hint": "Open the Build menu to combine your particles.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "recipe_panel_opened" },
+      "on_enter": {
+        "pulse_button_id": "btn-recipes",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll"
+      }
+    },
+    {
       "id": "craft_first_proton",
-      "hint": "Place a Nucleon Factory and connect it to your Field Collector.",
+      "hint": "Tap Craft next to Proton to combine 2 Up Quarks and 1 Down Quark.",
       "advance_condition": {
         "type": "InventoryMin",
         "items": [{ "item_id": 4, "quantity": 1 }]
       },
-      "on_enter": {}
-    },
-    {
-      "id": "craft_first_neutron",
-      "hint": "Combine 1 Up Quark and 2 Down Quarks to craft a Neutron.",
-      "advance_condition": {
-        "type": "InventoryMin",
-        "items": [{ "item_id": 5, "quantity": 1 }]
-      },
-      "on_enter": {}
+      "on_enter": {
+        "block_collection": true
+      }
     },
     {
       "id": "craft_first_hydrogen",
-      "hint": "Combine a Proton and an Electron to craft Hydrogen.",
+      "hint": "Now combine your Proton and Electron to make Hydrogen.",
       "advance_condition": {
         "type": "InventoryMin",
         "items": [{ "item_id": 6, "quantity": 1 }]
       },
-      "on_enter": {}
+      "on_enter": {
+        "pulse_button_id": "btn-recipes",
+        "block_collection": true
+      }
     },
     {
       "id": "place_first_building",

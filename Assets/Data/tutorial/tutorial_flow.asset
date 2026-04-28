@@ -24,7 +24,7 @@ MonoBehaviour:
       minCount: 0
     skipCondition:
       researchId: recombination_i
-      skipToId: craft_first_quarks
+      skipToId: collect_materials_for_hydrogen
     onEnter:
       dialogue: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3cb, type: 2}
       highlightTarget: 
@@ -88,7 +88,15 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
-      lockedMessages: []
+      lockedMessages:
+      - triggerId: electron_field
+        message: Deposit your electrons in Maxwell's Demon!
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: quark_field
+        message: Deposit your electrons in Maxwell's Demon!
+        icon: "\u26A0"
+        modifier: warning
   - id: sell_electrons_in_demon
     hintText: Drag your electrons to the right side to sell them.
     advanceCondition:
@@ -212,7 +220,15 @@ MonoBehaviour:
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
-      lockedMessages: []
+      lockedMessages:
+      - triggerId: electron_field
+        message: Deposit your quarks in Maxwell's Demon!
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: quark_field
+        message: Deposit your quarks in Maxwell's Demon!
+        icon: "\u26A0"
+        modifier: warning
   - id: sell_quarks_in_demon
     hintText: Drag your quarks to the right side to sell them.
     advanceCondition:
@@ -261,8 +277,46 @@ MonoBehaviour:
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
+  - id: open_research_drawer
+    hintText: Open the menu on the left to find the Research panel.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: drawer_opened
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: btn-drawer-handle
+      demonHighlightItemIds: 
+      buildingInteractionGate: 1
+      lockedMessages:
+      - triggerId: electron_field
+        message: Open the Research panel first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: quark_field
+        message: Open the Research panel first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: building
+        message: Open the Research panel first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: nav_other
+        message: Find the Research panel.
+        icon: "\u26A0"
+        modifier: warning
   - id: buy_recombination_i
-    hintText: Open Research and buy Recombination I.
+    hintText: Purchase Recombination I to unlock nucleon synthesis.
     advanceCondition:
       type: 4
       anyOf: 0
@@ -277,21 +331,40 @@ MonoBehaviour:
       dialogue: {fileID: 0}
       highlightTarget: 
       highlightMode: 0
-      blockCollection: 0
+      blockCollection: 1
       collectionFilter: 0
       pulseButtonId: btn-research
       demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-  - id: craft_first_quarks
-    hintText: Place a Field Collector on a quark field to harvest quarks.
+      buildingInteractionGate: 1
+      lockedMessages:
+      - triggerId: electron_field
+        message: Purchase Recombination I first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: quark_field
+        message: Purchase Recombination I first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: building
+        message: Purchase Recombination I first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: nav_other
+        message: Use the Research panel.
+        icon: "\u26A0"
+        modifier: warning
+  - id: collect_materials_for_hydrogen
+    hintText: "Collect 2 Up Quarks, 1 Down Quark, and 1 Electron \u2014 you'll need
+      them to synthesize Hydrogen."
     advanceCondition:
       type: 1
-      anyOf: 1
+      anyOf: 0
       items:
       - itemId: 1
-        quantity: 1
+        quantity: 2
       - itemId: 2
+        quantity: 1
+      - itemId: 3
         quantity: 1
       uiEventId: 
       researchId: 
@@ -309,8 +382,30 @@ MonoBehaviour:
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
+  - id: open_build_menu
+    hintText: Open the Build menu to combine your particles.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: recipe_panel_opened
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: btn-recipes
+      demonHighlightItemIds: 
+      buildingInteractionGate: 1
+      lockedMessages: []
   - id: craft_first_proton
-    hintText: Place a Nucleon Factory and connect it to your Field Collector.
+    hintText: Tap Craft next to Proton to combine 2 Up Quarks and 1 Down Quark.
     advanceCondition:
       type: 1
       anyOf: 0
@@ -327,38 +422,14 @@ MonoBehaviour:
       dialogue: {fileID: 0}
       highlightTarget: 
       highlightMode: 0
-      blockCollection: 0
-      collectionFilter: 0
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-  - id: craft_first_neutron
-    hintText: Combine 1 Up Quark and 2 Down Quarks to craft a Neutron.
-    advanceCondition:
-      type: 1
-      anyOf: 0
-      items:
-      - itemId: 5
-        quantity: 1
-      uiEventId: 
-      researchId: 
-      minCount: 0
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
+      blockCollection: 1
       collectionFilter: 0
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
   - id: craft_first_hydrogen
-    hintText: Combine a Proton and an Electron to craft Hydrogen.
+    hintText: Now combine your Proton and Electron to make Hydrogen.
     advanceCondition:
       type: 1
       anyOf: 0
@@ -375,9 +446,9 @@ MonoBehaviour:
       dialogue: {fileID: 0}
       highlightTarget: 
       highlightMode: 0
-      blockCollection: 0
+      blockCollection: 1
       collectionFilter: 0
-      pulseButtonId: 
+      pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
