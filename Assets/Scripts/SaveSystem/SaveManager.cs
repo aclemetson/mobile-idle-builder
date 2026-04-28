@@ -17,6 +17,12 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
 
+#if UNITY_EDITOR
+        [Header("Debug (Editor only)")]
+        [Tooltip("When checked, wipes unlocked research, recipes, and the current run on each Play so the tutorial restarts from step 1.")]
+        [SerializeField] bool _resetTutorialOnPlay;
+#endif
+
         LocalSaveService _local;
         ICloudSaveService _cloud;
         SaveData _current;
@@ -30,6 +36,16 @@ namespace MobileIdleBuilder
 
             _local   = new LocalSaveService();
             _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
+
+#if UNITY_EDITOR
+            if (_resetTutorialOnPlay)
+            {
+                _current.unlockedResearch = new();
+                _current.unlockedRecipes  = new();
+                _current.currentRun       = new();
+                Debug.Log("[SaveManager] _resetTutorialOnPlay: cleared run state for fresh tutorial.");
+            }
+#endif
 
             _cloud = gameConfig != null
                 ? new CloudSaveService(gameConfig.apiBaseUrl)

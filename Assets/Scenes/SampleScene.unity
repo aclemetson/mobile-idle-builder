@@ -374,6 +374,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
   autoSaveIntervalSeconds: 60
+  _resetTutorialOnPlay: 1
 --- !u!114 &262970767
 MonoBehaviour:
   m_ObjectHideFlags: 0

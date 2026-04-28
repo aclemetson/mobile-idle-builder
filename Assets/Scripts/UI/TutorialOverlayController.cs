@@ -44,6 +44,13 @@ namespace MobileIdleBuilder
             if (hudController == null)
                 hudController = FindAnyObjectByType<HUDController>();
 
+            if (hudController != null)
+            {
+                hudController.OnDrawerOpened        += OnDrawerOpenedHandler;
+                hudController.OnResearchPanelOpened += OnResearchPanelOpened;
+                hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
+            }
+
             if (maxwellsDemon == null)
                 maxwellsDemon = FindAnyObjectByType<MaxwellsDemonController>();
 
@@ -70,6 +77,13 @@ namespace MobileIdleBuilder
                 dialogueController.OnDialogueComplete   -= OnDialogueComplete;
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
+            }
+
+            if (hudController != null)
+            {
+                hudController.OnDrawerOpened        -= OnDrawerOpenedHandler;
+                hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
+                hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
             }
 
             if (maxwellsDemon != null)
@@ -99,13 +113,14 @@ namespace MobileIdleBuilder
 
             if (state.CurrentStepIndex == _lastStepIndex) return;
 
+            int prevIdx = _lastStepIndex;
             _lastStepIndex = state.CurrentStepIndex;
-            OnStepChanged(state.CurrentStepIndex);
+            OnStepChanged(state.CurrentStepIndex, prevIdx);
         }
 
         // ── Step entry ────────────────────────────────────────────────────────
 
-        private void OnStepChanged(int stepIndex)
+        private void OnStepChanged(int stepIndex, int prevStepIndex = -1)
         {
             StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
@@ -115,6 +130,17 @@ namespace MobileIdleBuilder
             if (flow == null || stepIndex >= flow.steps.Length) return;
 
             var step = flow.steps[stepIndex];
+
+            // When an inventory goal was just met, flash the next instruction as a popup
+            // so the player knows both that the goal is done and what to do next.
+            if (!string.IsNullOrEmpty(step.hintText)
+                && prevStepIndex >= 0 && prevStepIndex < flow.steps.Length)
+            {
+                var prevCond = flow.steps[prevStepIndex].advanceCondition;
+                if (prevCond?.type == ConditionType.InventoryMin
+                    || prevCond?.type == ConditionType.InventoryZero)
+                    hudController?.ShowNotification("→", step.hintText);
+            }
 
             if (!string.IsNullOrEmpty(step.hintText))
                 hudController?.ShowTutorialHint(step.hintText);
@@ -240,6 +266,10 @@ namespace MobileIdleBuilder
         }
 
         private void OnDemonClosed() => TryAdvanceOnUiEvent("demon_closed");
+
+        private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
+        private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
+        private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
 
         // ── Field lock states ─────────────────────────────────────────────────
 

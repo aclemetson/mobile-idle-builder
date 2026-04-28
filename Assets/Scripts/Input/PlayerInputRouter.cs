@@ -73,6 +73,7 @@ namespace MobileIdleBuilder
             // Building inspector — tapping a placed building opens it
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
             {
+                fieldCollector?.DeactivateField();
                 AnchorPresence(screenPos);
                 return;
             }
@@ -106,6 +107,7 @@ namespace MobileIdleBuilder
             }
 
             // Tap on empty ground — clear any building selection and anchor presence
+            fieldCollector?.DeactivateField();
             buildingInspector?.ClearSelection();
             AnchorPresence(screenPos);
         }
