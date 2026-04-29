@@ -29,6 +29,7 @@ namespace MobileIdleBuilder
         private EntityQuery   _prestigeQuery;
         private EntityQuery   _powerQuery;
         private EntityQuery   _inventoryQuery;
+        private EntityQuery   _tutorialQuery;
         private bool          _ecsReady;
 
         // ---- Panels ----
@@ -172,6 +173,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
             );
+            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<TutorialStateData>());
             _ecsReady = true;
 
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
@@ -381,12 +383,28 @@ namespace MobileIdleBuilder
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
+            // Collect research IDs gated by the current tutorial step.
+            System.Collections.Generic.HashSet<string> tutorialLockedResearch = null;
+            var flow = TutorialFlowSO.Current;
+            if (flow != null && _ecsReady && !_tutorialQuery.IsEmpty)
+            {
+                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
+                if (tutState.IsActive && tutState.CurrentStepIndex < flow.steps.Length)
+                {
+                    var ids = flow.steps[tutState.CurrentStepIndex].lockedResearchIds;
+                    if (ids != null && ids.Length > 0)
+                        tutorialLockedResearch = new System.Collections.Generic.HashSet<string>(ids);
+                }
+            }
+
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
 
-                bool unlocked    = researchService.IsUnlocked(research.id);
-                bool canPurchase = !unlocked && researchService.CanPurchase(research);
+                bool unlocked        = researchService.IsUnlocked(research.id);
+                bool tutorialGated   = tutorialLockedResearch != null &&
+                                       tutorialLockedResearch.Contains(research.id);
+                bool canPurchase     = !unlocked && !tutorialGated && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
                 card.AddToClassList("building-card");

@@ -28,9 +28,3 @@ MonoBehaviour:
     pauseGame: 1
     highlightTarget: quark_field
     action: 
-  - speakerName: The Architect
-    text: Mine it. Collect 5 of each type, then bring them back here.
-    portrait: {fileID: 0}
-    pauseGame: 0
-    highlightTarget: quark_field
-    action: pulse_field

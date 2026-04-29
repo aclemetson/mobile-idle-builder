@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: prestige_complete_context
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "The reset is complete. The facility rebuilds, but you are not starting
+      over \u2014 you are starting ahead."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: You carry prestige currency now. Unlike entropy, it does not reset between
+      runs. Spend it on permanent upgrades that will accelerate every future run.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

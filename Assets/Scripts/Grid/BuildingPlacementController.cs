@@ -35,9 +35,10 @@ namespace MobileIdleBuilder
         public BuildingEntry[] availableBuildings;
 
         [Header("Scene references")]
-        [SerializeField] private GridRenderer       gridRenderer;
-        [SerializeField] private BuildingPlacer     buildingPlacer;
-        [SerializeField] private BuildingVisualizer buildingVisualizer;
+        [SerializeField] private GridRenderer        gridRenderer;
+        [SerializeField] private BuildingPlacer      buildingPlacer;
+        [SerializeField] private BuildingVisualizer  buildingVisualizer;
+        [SerializeField] private CameraController    cameraController;
 
         public bool IsPlacing { get; private set; }
 
@@ -127,6 +128,16 @@ namespace MobileIdleBuilder
         public event Action<List<RecipeSO>> OnOutputSelectionRequired;
 
         // ================================================================
+        // Lifecycle
+        // ================================================================
+
+        void Awake()
+        {
+            if (cameraController == null)
+                cameraController = FindAnyObjectByType<CameraController>();
+        }
+
+        // ================================================================
         // Public API
         // ================================================================
 
@@ -139,6 +150,7 @@ namespace MobileIdleBuilder
             _rotation          = 0;
             _flipped           = false;
             IsPlacing          = true;
+            cameraController?.SetPanLocked(true);
 
             DestroyGhostArrow();
             DestroyGhostPortArrows();
@@ -165,6 +177,7 @@ namespace MobileIdleBuilder
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             IsPlacing          = false;
+            cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
         }
 

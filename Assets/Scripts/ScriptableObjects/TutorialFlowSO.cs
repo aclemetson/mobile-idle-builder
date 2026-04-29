@@ -45,6 +45,8 @@ namespace MobileIdleBuilder
         public TutorialSkipDef skipCondition;
         /// <summary>Actions applied immediately when this step becomes active.</summary>
         public TutorialOnEnter onEnter;
+        /// <summary>Research IDs whose purchase button is disabled while this step is active. Prevents early purchase before the tutorial is ready.</summary>
+        public string[] lockedResearchIds;
     }
 
     /// <summary>Defines when a tutorial step is considered complete.</summary>

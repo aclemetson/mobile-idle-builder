@@ -381,6 +381,136 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, GetStepIndex());
         }
 
+        // ── Nucleon arc (new tutorial steps) ─────────────────────────────────
+
+        [Test]
+        public void CollectQuarksForNucleons_AdvancesWhen8UpAnd8DownPresent()
+        {
+            MakeFlow(
+                new TutorialStepDef
+                {
+                    id = "collect_quarks_for_nucleons",
+                    advanceCondition = new TutorialConditionDef
+                    {
+                        type  = ConditionType.InventoryMin,
+                        anyOf = false,
+                        items = new List<ItemCountReq>
+                        {
+                            new ItemCountReq { itemId = 1, quantity = 8 },
+                            new ItemCountReq { itemId = 2, quantity = 8 }
+                        }
+                    },
+                    onEnter = new TutorialOnEnter()
+                },
+                InventoryMinStep("next", itemId: 1, qty: 1)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 1, qty: 8);
+            AddToInventory(itemId: 2, qty: 8);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void CraftTwoProtons_AdvancesWhenTwoProtonsInInventory()
+        {
+            MakeFlow(
+                InventoryMinStep("craft_two_protons",  itemId: 4, qty: 2),
+                InventoryMinStep("craft_two_neutrons", itemId: 5, qty: 2)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 4, qty: 2);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void CraftTwoNeutrons_AdvancesWhenTwoNeutronsInInventory()
+        {
+            MakeFlow(
+                InventoryMinStep("craft_two_neutrons", itemId: 5, qty: 2),
+                InventoryMinStep("next",               itemId: 1, qty: 1)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 5, qty: 2);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void SellNucleons_DoesNotAdvanceUntilBothProtonsAndNeutronsGone()
+        {
+            MakeFlow(
+                new TutorialStepDef
+                {
+                    id = "sell_protons_and_neutrons",
+                    advanceCondition = new TutorialConditionDef
+                    {
+                        type  = ConditionType.InventoryZero,
+                        items = new List<ItemCountReq>
+                        {
+                            new ItemCountReq { itemId = 4 },
+                            new ItemCountReq { itemId = 5 }
+                        }
+                    },
+                    onEnter = new TutorialOnEnter()
+                },
+                InventoryMinStep("next", itemId: 1, qty: 1)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 4, qty: 1); // proton still present
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex(), "Must not advance while protons remain in inventory");
+        }
+
+        [Test]
+        public void BuyHydrogenSynthesis_NeverAdvancesFromECS()
+        {
+            // ResearchUnlocked is driven by SaveManager (MonoBehaviour), not ECS —
+            // TutorialOverlayController calls AdvanceStep when the research is purchased.
+            MakeFlow(
+                new TutorialStepDef
+                {
+                    id = "buy_hydrogen_synthesis",
+                    advanceCondition = new TutorialConditionDef
+                    {
+                        type       = ConditionType.ResearchUnlocked,
+                        researchId = "hydrogen_synthesis"
+                    },
+                    onEnter = new TutorialOnEnter()
+                },
+                InventoryMinStep("next", itemId: 1, qty: 1)
+            );
+            SetStepIndex(0);
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex(), "ResearchUnlocked must not advance from the ECS system");
+        }
+
+        [Test]
+        public void CraftHydrogen_AdvancesWhenTwoHydrogenInInventory()
+        {
+            MakeFlow(
+                InventoryMinStep("craft_hydrogen",       itemId: 6, qty: 2),
+                BuildingMinStep("place_first_building",  minCount: 1)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 6, qty: 2);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
         // ── Completion ────────────────────────────────────────────────────────
 
         [Test]

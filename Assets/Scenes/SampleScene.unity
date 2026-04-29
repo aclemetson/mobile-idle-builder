@@ -289,8 +289,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchService
-  _allResearch:
-  - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
 --- !u!4 &262970761
 Transform:
   m_ObjectHideFlags: 0

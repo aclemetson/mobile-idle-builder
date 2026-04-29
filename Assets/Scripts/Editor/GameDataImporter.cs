@@ -38,6 +38,7 @@ namespace MobileIdleBuilder.Editor
         private const string FieldsDir     = "Assets/Data/fields";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
+        private const string ResourcesDir  = "Assets/Resources";
 
         // ── Entry point ───────────────────────────────────────────────────────
 
@@ -51,8 +52,10 @@ namespace MobileIdleBuilder.Editor
         {
             bool needsImport = false;
 
-            // Check for missing tutorial flow asset
+            // Check for missing tutorial flow asset or research database
             if (AssetDatabase.LoadAssetAtPath<TutorialFlowSO>($"{TutorialDir}/tutorial_flow.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
                 needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
@@ -122,6 +125,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(FieldsDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
+            EnsureDirectory(ResourcesDir);
 
             // ── Step 1: GameConfigSO ─────────────────────────────────────────
             GenerateGameConfig(data.game_config);
@@ -181,6 +185,9 @@ namespace MobileIdleBuilder.Editor
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
             GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
+
+            // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
+            GenerateResearchDatabase(data.research, researchLookup);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -606,16 +613,35 @@ namespace MobileIdleBuilder.Editor
                             Debug.LogWarning($"[GameDataImporter] TutorialStep '{s.id}': " +
                                              $"dialogue_id '{s.on_enter.dialogue_id}' not found.");
                     }
+
                 }
                 else
                 {
                     def.onEnter = new TutorialOnEnter();
                 }
 
+                def.lockedResearchIds = s.locked_research_ids ?? System.Array.Empty<string>();
+
                 so.steps[i] = def;
             }
 
             EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateResearchDatabase(List<ResearchJson> research,
+            Dictionary<string, ResearchSO> researchLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/ResearchDatabase.asset";
+            var db = LoadOrCreate<ResearchDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<ResearchSO>(research.Count);
+            foreach (var r in research)
+                if (researchLookup.TryGetValue(r.id, out var so))
+                    list.Add(so);
+
+            db.allResearch = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
