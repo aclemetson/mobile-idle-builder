@@ -11,7 +11,7 @@ namespace MobileIdleBuilder
     /// </summary>
     public class ResearchService : SingletonMonoBehaviour<ResearchService>
     {
-        [SerializeField] private ResearchSO[] _allResearch;
+        private ResearchSO[] _allResearch;
 
         /// <summary>Fired whenever a research is successfully purchased.</summary>
         public event Action<ResearchSO> OnResearchUnlocked;
@@ -22,6 +22,12 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery _progressQuery;
+
+        void Awake()
+        {
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            _allResearch = db != null ? db.allResearch : System.Array.Empty<ResearchSO>();
+        }
 
         void Start()
         {

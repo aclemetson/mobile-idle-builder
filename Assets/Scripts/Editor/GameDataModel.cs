@@ -295,17 +295,19 @@ namespace MobileIdleBuilder.Editor
     [Serializable]
     internal class TutorialStepJson
     {
-        public string                 id                = "";
-        public string                 hint              = "";
-        public TutorialConditionJson  advance_condition = new();
+        public string                 id                   = "";
+        public string                 hint                 = "";
+        public TutorialConditionJson  advance_condition    = new();
         public TutorialSkipJson       skip_condition;
-        public TutorialOnEnterJson    on_enter          = new();
+        public TutorialOnEnterJson    on_enter             = new();
+        public string[]               locked_research_ids  = new string[0];
 
         public void Initialize()
         {
-            advance_condition ??= new TutorialConditionJson();
-            on_enter          ??= new TutorialOnEnterJson();
+            advance_condition    ??= new TutorialConditionJson();
+            on_enter             ??= new TutorialOnEnterJson();
             on_enter.locked_messages ??= new List<InteractableMessageJson>();
+            locked_research_ids  ??= new string[0];
         }
     }
 

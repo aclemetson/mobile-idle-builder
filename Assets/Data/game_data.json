@@ -58,14 +58,33 @@
       "depth_in_tree": 0,
       "cost_base_currency": 100,
       "cost_prestige_currency": 0,
-      "unlocks_items": ["proton", "neutron", "hydrogen"],
-      "unlocks_recipes": ["proton", "neutron", "hydrogen"],
+      "unlocks_items": ["proton", "neutron"],
+      "unlocks_recipes": ["proton", "neutron"],
       "unlocks_buildings": ["strong_force_combiner"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["atomic_assembly", "nucleon_harvesting"],
+      "unlocks_research": ["hydrogen_synthesis", "nucleon_harvesting"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.25,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "hydrogen_synthesis",
+      "display_name": "Hydrogen Synthesis",
+      "description": "Combine a proton and an electron to form the simplest atom: hydrogen.",
+      "branch": "Nuclear",
+      "prerequisites": ["recombination_i"],
+      "depth_in_tree": 1,
+      "cost_base_currency": 50,
+      "cost_prestige_currency": 0,
+      "unlocks_items": ["hydrogen"],
+      "unlocks_recipes": ["hydrogen"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["atomic_assembly"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.25,
+      "codex_entry": "The simplest atom: one proton orbited by one electron. Hydrogen is the most abundant element in the universe and the gateway to all atomic chemistry.",
       "icon_path": "TODO"
     },
     {
@@ -73,7 +92,7 @@
       "display_name": "Atomic Assembly",
       "description": "Unlock the Atomic Assembler and the ability to build complete atoms from nucleons and electrons.",
       "branch": "Chemistry",
-      "prerequisites": ["recombination_i"],
+      "prerequisites": ["hydrogen_synthesis"],
       "depth_in_tree": 1,
       "cost_base_currency": 500,
       "cost_prestige_currency": 0,
@@ -779,7 +798,7 @@
       "valid_buildings": ["atomic_assembler"],
       "can_craft_manually": true,
       "known_from_start": false,
-      "required_research": "recombination_i",
+      "required_research": "hydrogen_synthesis",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -1471,54 +1490,6 @@
           "pause_game": false,
           "highlight_target": "electron_field",
           "action": "pulse_field"
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "That orange field is a Quark Field. Up Quarks and Down Quarks — the constituents of every proton and neutron you will ever craft.",
-          "portrait_path": "TODO",
-          "pause_game": true,
-          "highlight_target": "quark_field",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Tap it too. Raw quarks are the foundation of everything that comes next.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "quark_field",
-          "action": "pulse_field"
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Good. Now bring those particles to Maxwell's Demon — that structure at the edge of your grid.",
-          "portrait_path": "TODO",
-          "pause_game": true,
-          "highlight_target": "maxwells_demon",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "The Demon sorts your raw particles and converts their energy into usable currency. Deposit what you have collected. You will need it.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "maxwells_demon",
-          "action": "pulse_building"
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "With that currency, open the Research panel — the flask icon at the bottom of your screen.",
-          "portrait_path": "TODO",
-          "pause_game": true,
-          "highlight_target": "btn-research",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Purchase Recombination I. It will teach you to bind quarks using the strong nuclear force. That is where production truly begins.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "",
-          "action": ""
         }
       ]
     },
@@ -1540,14 +1511,426 @@
           "pause_game": true,
           "highlight_target": "quark_field",
           "action": ""
+        }
+      ]
+    },
+    {
+      "id": "unlock_hydrogen_synthesis",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Excellent work. You've synthesized protons and neutrons and converted them to entropy — the fundamental energy of this facility.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "first_electron_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The field glows where particles accumulate. Tap it to pull electrons into your inventory.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "electron_field",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "demon_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Maxwell's Demon extracts entropy from the energy difference between sorted particles. Deposit what you have collected.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "maxwells_demon",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "sell_electrons_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Drag the electrons to the deposit side. The Demon converts particle energy into entropy — the base currency of this facility.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "close_demon_first",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Good. Those electrons built your first entropy. It is a small number for now.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "demon_quarks_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Quarks carry more energy potential than leptons. The Demon will extract more entropy from them. Bring them in.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "maxwells_demon",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "sell_quarks_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Deposit all of them. Notice how much more entropy quarks generate compared to electrons. Organized matter will generate more still.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "close_demon_quarks",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "You have enough to begin. Open the menu on the left — the Research panel is there.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "research_panel_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The research tree is your progression map. Each node unlocks new processes, new materials, new machinery. Nothing in this facility advances without it.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "recombination_i_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Recombination I. This unlocks the strong nuclear force — the force that binds quarks into nucleons. Purchase it.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "recombination_unlocked_dialogue",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Recombination I is active. The strong nuclear force is now at your disposal — the most powerful fundamental force in nature, and the one that makes atomic structure possible.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
         },
         {
           "speaker_name": "The Architect",
-          "text": "Mine it. Collect 5 of each type, then bring them back here.",
+          "text": "A proton is two Up Quarks and one Down Quark — net charge +1, the core of every hydrogen atom. A neutron is one Up Quark and two Down Quarks — net charge zero, the stabilizing mass inside every nucleus beyond hydrogen.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "open_recipe_panel_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The recipe panel holds every synthesis process you have unlocked. Open it and find the proton recipe.",
           "portrait_path": "TODO",
           "pause_game": false,
-          "highlight_target": "quark_field",
-          "action": "pulse_field"
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "craft_protons_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Two Up Quarks, one Down Quark, bound by the strong force. The result: a proton. Charge +1. The nucleus of the simplest atom in existence. Craft two.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "craft_neutrons_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Now the neutron — one Up Quark, two Down Quarks. Net charge zero, but nearly identical mass to the proton. Inside a nucleus, neutrons neutralize the repulsion between protons. Craft two.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "nucleons_to_demon_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Protons and neutrons carry significantly more energy than raw quarks. The Demon values organized matter — each layer of complexity compounds your entropy yield. Bring them in.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "maxwells_demon",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "sell_nucleons_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Deposit both the protons and the neutrons. You have built the first organized matter this facility has produced.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "close_demon_nucleons_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Complexity yields more entropy. That principle will drive every decision as this facility scales.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "gather_hydrogen_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Hydrogen synthesis is unlocked. To build a hydrogen atom you need a proton — which you now know how to build — and one electron from the Lepton Field.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Gather your materials: 4 Up Quarks and 2 Down Quarks to build two protons, plus 2 electrons to complete the atoms.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "craft_protons_for_h_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Build the protons first. Two Up Quarks, one Down Quark each. Two protons means two hydrogen atoms.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "craft_hydrogen_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The final step: combine a proton and an electron. The electromagnetic attraction between the positive nucleus and the negative lepton creates a stable atomic orbital. Craft your hydrogen.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "hydrogen_crafted_dialogue",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Hydrogen. Atomic number 1. The most abundant element in the observable universe — and you built two of them from quarks and energy alone.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "hydrogen_to_demon",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Hydrogen atoms carry more bound energy than raw particles. Organized matter always yields more entropy — the Demon knows the difference. Bring it in.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "maxwells_demon",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_automation_i",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "That entropy unlocks Automation I. A Field Collector — a Harvester placed directly on a quantum field — gathers particles automatically on a continuous cycle. No tapping required.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "This is the transition point. Manual harvesting was a lesson. The Field Collector is how you scale.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Open the Build menu and place a Harvester on the quark or lepton field. Once it is running, the facility collects without you.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "place_building_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Open the build menu and place a building on an open grid tile. It will begin production immediately.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "automation_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Your factory is running. Buildings produce at their rated output continuously — no manual input required.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "As production scales, entropy accumulates. But there is a ceiling on each run. When your net worth approaches the prestige threshold, you will have extracted most of this run's value — and it will be time to reset.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "prestige_wall_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "You have reached the ceiling. Prestige is not failure — it is the mechanism that converts one-time progress into permanent power.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The reset clears your inventory, buildings, and entropy. What you keep: prestige currency and a research memory discount on nodes you have already unlocked. Initiate it — you will return faster than you left.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "prestige_complete_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The reset is complete. The facility rebuilds, but you are not starting over — you are starting ahead.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "You carry prestige currency now. Unlike entropy, it does not reset between runs. Spend it on permanent upgrades that will accelerate every future run.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "spend_prestige_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Open the upgrade shop. Each purchase compounds across every future run. Spend wisely.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
         }
       ]
     }
@@ -1557,7 +1940,7 @@
     {
       "id": "intro_dialogue",
       "hint": "",
-      "skip_condition": { "research_id": "recombination_i", "skip_to_id": "collect_materials_for_hydrogen" },
+      "skip_condition": { "research_id": "recombination_i", "skip_to_id": "collect_quarks_for_nucleons" },
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "intro_architect", "block_collection": true }
     },
@@ -1569,6 +1952,7 @@
         "items": [{ "item_id": 3, "quantity": 5 }]
       },
       "on_enter": {
+        "dialogue_id": "first_electron_intro",
         "highlight_target": "electron_field",
         "highlight_mode": "VisualOnly",
         "collection_filter": "Lepton",
@@ -1584,6 +1968,7 @@
       "hint": "Tap Maxwell's Demon to sell your electrons.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_opened" },
       "on_enter": {
+        "dialogue_id": "demon_intro",
         "highlight_target": "maxwells_demon",
         "highlight_mode": "Full",
         "block_collection": true,
@@ -1713,45 +2098,157 @@
       }
     },
     {
-      "id": "collect_materials_for_hydrogen",
-      "hint": "Collect 2 Up Quarks, 1 Down Quark, and 1 Electron — you'll need them to synthesize Hydrogen.",
-      "advance_condition": {
-        "type": "InventoryMin",
-        "items": [
-          { "item_id": 1, "quantity": 2 },
-          { "item_id": 2, "quantity": 1 },
-          { "item_id": 3, "quantity": 1 }
-        ]
-      },
-      "on_enter": {}
-    },
-    {
-      "id": "open_build_menu",
-      "hint": "Open the Build menu to combine your particles.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "recipe_panel_opened" },
+      "id": "recombination_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": {
-        "pulse_button_id": "btn-recipes",
+        "dialogue_id": "recombination_unlocked_dialogue",
         "block_collection": true,
         "building_interaction_gate": "BlockAll"
       }
     },
     {
-      "id": "craft_first_proton",
-      "hint": "Tap Craft next to Proton to combine 2 Up Quarks and 1 Down Quark.",
+      "id": "collect_quarks_for_nucleons",
+      "hint": "Collect 8 Up Quarks and 8 Down Quarks — you'll need them to synthesize 2 Protons and 2 Neutrons.",
       "advance_condition": {
         "type": "InventoryMin",
-        "items": [{ "item_id": 4, "quantity": 1 }]
+        "items": [
+          { "item_id": 1, "quantity": 8 },
+          { "item_id": 2, "quantity": 8 }
+        ]
       },
+      "locked_research_ids": ["hydrogen_synthesis"],
       "on_enter": {
-        "block_collection": true
+        "highlight_target": "quark_field",
+        "highlight_mode": "VisualOnly",
+        "collection_filter": "Quark",
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Focus on quarks for now.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Gather quarks first.",       "icon": "⚠", "modifier": "warning" }
+        ]
       }
     },
     {
-      "id": "craft_first_hydrogen",
-      "hint": "Now combine your Proton and Electron to make Hydrogen.",
+      "id": "open_recipe_panel_for_nucleons",
+      "hint": "Open the Build menu to craft nucleons from quarks.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "recipe_panel_opened" },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": {
+        "dialogue_id": "open_recipe_panel_context",
+        "pulse_button_id": "btn-recipes",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "building", "message": "Open the Build menu first.", "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "craft_two_protons",
+      "hint": "Craft 2 Protons. Each requires 2 Up Quarks + 1 Down Quark.",
       "advance_condition": {
         "type": "InventoryMin",
-        "items": [{ "item_id": 6, "quantity": 1 }]
+        "items": [{ "item_id": 4, "quantity": 2 }]
+      },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": { "dialogue_id": "craft_protons_context", "block_collection": true }
+    },
+    {
+      "id": "craft_two_neutrons",
+      "hint": "Now craft 2 Neutrons. Each requires 1 Up Quark + 2 Down Quarks.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 5, "quantity": 2 }]
+      },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": { "dialogue_id": "craft_neutrons_context", "block_collection": true }
+    },
+    {
+      "id": "direct_to_demon_for_nucleons",
+      "hint": "Tap Maxwell's Demon to sell your Protons and Neutrons for entropy.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_opened" },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": {
+        "highlight_target": "maxwells_demon",
+        "highlight_mode": "VisualOnly",
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Sell your nucleons first.",       "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Sell your nucleons first.",       "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Tap Maxwell's Demon to sell.",   "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "sell_protons_and_neutrons",
+      "hint": "Deposit your Protons and Neutrons into the Demon.",
+      "advance_condition": {
+        "type": "InventoryZero",
+        "items": [
+          { "item_id": 4 },
+          { "item_id": 5 }
+        ]
+      },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": {
+        "block_collection": true,
+        "demon_highlight_item_ids": [4, 5],
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "close_demon_after_nucleons",
+      "hint": "Close Maxwell's Demon.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_closed" },
+      "locked_research_ids": ["hydrogen_synthesis"],
+      "on_enter": {
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "buy_hydrogen_synthesis",
+      "hint": "Purchase Hydrogen Synthesis in the Research panel to unlock atomic assembly.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "hydrogen_synthesis" },
+      "on_enter": {
+        "dialogue_id": "unlock_hydrogen_synthesis",
+        "pulse_button_id": "btn-research",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Purchase Hydrogen Synthesis first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Purchase Hydrogen Synthesis first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Purchase Hydrogen Synthesis first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "nav_other",      "message": "Use the Research panel.",            "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "gather_for_hydrogen",
+      "hint": "Collect 4 Up Quarks, 2 Down Quarks, and 2 Electrons to craft Hydrogen atoms.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [
+          { "item_id": 1, "quantity": 4 },
+          { "item_id": 2, "quantity": 2 },
+          { "item_id": 3, "quantity": 2 }
+        ]
+      },
+      "on_enter": {
+        "building_interaction_gate": "BlockAll",
+        "locked_messages": [
+          { "trigger_id": "building", "message": "Gather resources first.", "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "craft_protons_for_hydrogen",
+      "hint": "Craft 2 Protons to use in Hydrogen synthesis.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 4, "quantity": 2 }]
       },
       "on_enter": {
         "pulse_button_id": "btn-recipes",
@@ -1759,28 +2256,102 @@
       }
     },
     {
+      "id": "craft_hydrogen",
+      "hint": "Combine a Proton and an Electron to craft 2 Hydrogen atoms.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 6, "quantity": 2 }]
+      },
+      "on_enter": {
+        "dialogue_id": "craft_hydrogen_context",
+        "pulse_button_id": "btn-recipes",
+        "block_collection": true
+      }
+    },
+    {
+      "id": "hydrogen_crafted",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": {
+        "dialogue_id": "hydrogen_crafted_dialogue",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll"
+      }
+    },
+    {
+      "id": "direct_to_demon_for_hydrogen",
+      "hint": "Bring your Hydrogen atoms to Maxwell's Demon.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_opened" },
+      "on_enter": {
+        "dialogue_id": "hydrogen_to_demon",
+        "highlight_target": "maxwells_demon",
+        "highlight_mode": "Full",
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly",
+        "locked_messages": [
+          { "trigger_id": "electron_field", "message": "Sell your hydrogen first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "quark_field",    "message": "Sell your hydrogen first.", "icon": "⚠", "modifier": "warning" },
+          { "trigger_id": "building",       "message": "Tap Maxwell's Demon to sell.",    "icon": "⚠", "modifier": "warning" }
+        ]
+      }
+    },
+    {
+      "id": "sell_hydrogen_in_demon",
+      "hint": "Deposit your Hydrogen atoms to earn entropy.",
+      "advance_condition": {
+        "type": "InventoryZero",
+        "items": [{ "item_id": 6 }]
+      },
+      "on_enter": {
+        "block_collection": true,
+        "demon_highlight_item_ids": [6],
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "close_demon_after_hydrogen",
+      "hint": "Close Maxwell's Demon when ready.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "demon_closed" },
+      "on_enter": {
+        "block_collection": true,
+        "building_interaction_gate": "EntropySinkOnly"
+      }
+    },
+    {
+      "id": "intro_automation_i",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": {
+        "dialogue_id": "intro_automation_i",
+        "block_collection": true,
+        "building_interaction_gate": "BlockAll"
+      }
+    },
+    {
       "id": "place_first_building",
-      "hint": "Place a building on the grid to begin automation.",
+      "hint": "Place a Harvester on the quark or lepton field to begin automatic collection.",
       "advance_condition": { "type": "BuildingMin", "min_count": 1 },
-      "on_enter": {}
+      "on_enter": {
+        "pulse_button_id": "btn-recipes"
+      }
     },
     {
       "id": "automation_started",
       "hint": "Your factory is running. Watch it produce particles on its own.",
       "advance_condition": { "type": "PrestigeAvailable" },
-      "on_enter": {}
+      "on_enter": { "dialogue_id": "automation_context" }
     },
     {
       "id": "reach_prestige_wall",
       "hint": "You have reached the prestige threshold. Time to reset and grow stronger.",
       "advance_condition": { "type": "PrestigeRunMin", "min_count": 1 },
-      "on_enter": {}
+      "on_enter": { "dialogue_id": "prestige_wall_context" }
     },
     {
       "id": "first_prestige_complete",
       "hint": "",
       "advance_condition": { "type": "Auto" },
-      "on_enter": {}
+      "on_enter": { "dialogue_id": "prestige_complete_context" }
     },
     {
       "id": "spend_prestige_currency",

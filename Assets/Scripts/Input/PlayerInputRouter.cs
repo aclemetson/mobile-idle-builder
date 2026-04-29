@@ -31,6 +31,7 @@ namespace MobileIdleBuilder
 
         private Vector2 _pressStart;
         private float   _dragAccum;
+        private bool    _pressWasOnUI;
 
         void Awake()
         {
@@ -50,8 +51,9 @@ namespace MobileIdleBuilder
             // Track gesture on press start
             if (InputUtils.WasPointerPressed())
             {
-                _pressStart = InputUtils.GetPointerPosition();
-                _dragAccum  = 0f;
+                _pressStart    = InputUtils.GetPointerPosition();
+                _dragAccum     = 0f;
+                _pressWasOnUI  = IsPointerOverUI(_pressStart);
             }
 
             // Accumulate drag while held
@@ -68,7 +70,9 @@ namespace MobileIdleBuilder
             if (deconstructController != null && deconstructController.IsDeconstructing) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
-            if (IsPointerOverUI(screenPos)) return;
+            // Block the tap if the press started on UI (handles click-through when panels
+            // close on the same frame as the release) or if UI still covers the release pos.
+            if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))

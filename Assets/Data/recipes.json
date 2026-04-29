@@ -114,6 +114,7 @@
       "power_cost_ev": 5,
       "_comment_ev": "power_cost_ev = atomic_mass(1) × atomic_assembler_ev_per_mass_unit(5)",
       "crafted_in": ["inventory_menu", "atomic_assembler"],
+      "requires_research": "hydrogen_synthesis",
       "simplification": null,
       "codex": "The simplest and most abundant element in the universe. One proton, one electron — no neutrons in its most common form. The primary fuel of stars."
     },
