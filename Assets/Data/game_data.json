@@ -2330,7 +2330,7 @@
     {
       "id": "place_first_building",
       "hint": "Place a Harvester on the quark or lepton field to begin automatic collection.",
-      "advance_condition": { "type": "BuildingMin", "min_count": 1 },
+      "advance_condition": { "type": "BuildingMin", "min_count": 2 },
       "on_enter": {
         "pulse_button_id": "btn-recipes"
       }

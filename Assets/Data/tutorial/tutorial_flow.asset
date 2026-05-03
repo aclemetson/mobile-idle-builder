@@ -854,7 +854,7 @@ MonoBehaviour:
       items: []
       uiEventId: 
       researchId: 
-      minCount: 1
+      minCount: 2
     skipCondition:
       researchId: 
       skipToId: 

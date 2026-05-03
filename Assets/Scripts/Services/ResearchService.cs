@@ -23,8 +23,10 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery _progressQuery;
 
-        void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+            if (Instance != this) return;
             var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
             _allResearch = db != null ? db.allResearch : System.Array.Empty<ResearchSO>();
         }
@@ -108,6 +110,39 @@ namespace MobileIdleBuilder
             Debug.Log($"[ResearchService] Purchased: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Debug-only: unlock research by ID without checking prerequisites or cost.
+        /// Updates both the live in-memory set and SaveData, and marks gated recipes as known.
+        /// Safe to call any time after ResearchService.Start() has run.
+        /// </summary>
+        public void ForceUnlock(string researchId)
+        {
+            if (string.IsNullOrEmpty(researchId) || _unlockedIds.Contains(researchId)) return;
+
+            _unlockedIds.Add(researchId);
+
+            var save = SaveManager.Instance?.Current;
+            if (save != null)
+            {
+                save.unlockedResearch ??= new();
+                if (!save.unlockedResearch.Contains(researchId))
+                    save.unlockedResearch.Add(researchId);
+            }
+
+            if (RecipeDatabase.Instance != null)
+                foreach (var r in RecipeDatabase.Instance.Recipes)
+                    if (r.requires_research == researchId)
+                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
+
+            var so = System.Array.Find(_allResearch, r => r.id == researchId);
+            if (so != null)
+                OnResearchUnlocked?.Invoke(so);
+
+            Debug.Log($"[TutorialSkip] Force-unlocked research: {researchId}");
+        }
+#endif
 
         // ── ECS helpers ──────────────────────────────────────────────────────
 
