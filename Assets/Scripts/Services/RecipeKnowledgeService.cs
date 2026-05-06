@@ -104,7 +104,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to read runtime save: {e.Message}");
+                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to read runtime save: {e}");
                 }
             }
 
@@ -122,7 +122,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to parse default asset: {e.Message}");
+                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to parse default asset: {e}");
                 }
             }
 
@@ -171,7 +171,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception e)
             {
-                Debug.LogError($"[RecipeKnowledgeService] Failed to save {FileName}: {e.Message}");
+                Debug.LogError($"[RecipeKnowledgeService] Failed to save {FileName}: {e}");
             }
         }
 

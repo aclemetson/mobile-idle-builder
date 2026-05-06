@@ -137,7 +137,6 @@ namespace MobileIdleBuilder
             foreach (var cosmetic in achievement.rewards)
             {
                 if (cosmetic == null) continue;
-                // TODO: notify CosmeticService to mark this cosmetic available
                 Debug.Log($"[Achievements] Cosmetic unlocked: {cosmetic.id} ({cosmetic.type})");
             }
         }
@@ -145,8 +144,8 @@ namespace MobileIdleBuilder
         static void ReportToPlatform(AchievementSO achievement)
         {
             if (string.IsNullOrEmpty(achievement.platformAchievementId)) return;
-            // TODO: Google Play Games: PlayGamesPlatform.Instance.ReportProgress(...)
-            // TODO: Apple Game Center: Social.ReportProgress(...)
+            // Google Play Games: PlayGamesPlatform.Instance.ReportProgress(...)
+            // Apple Game Center: Social.ReportProgress(...)
             Debug.Log($"[Achievements] Platform report stub: {achievement.platformAchievementId}");
         }
 

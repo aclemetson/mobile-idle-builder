@@ -113,8 +113,8 @@ namespace MobileIdleBuilder
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Debug-only: unlock research by ID without checking prerequisites or cost.
-        /// Updates both the live in-memory set and SaveData, and marks gated recipes as known.
+        /// Unlocks research by ID without checking prerequisites or cost.
+        /// Updates the live in-memory set, SaveData, and marks gated recipes as known.
         /// Safe to call any time after ResearchService.Start() has run.
         /// </summary>
         public void ForceUnlock(string researchId)
