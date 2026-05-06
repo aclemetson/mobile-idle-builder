@@ -1,0 +1,149 @@
+/* ================================================================
+   MainMenu.uss — Main menu screen styles
+   Imports design tokens; no hardcoded colours or spacing values.
+   Swap art assets via MainMenuController serialized fields.
+   ================================================================ */
+
+@import url("tokens.uss");
+
+/* ---- Root ---- */
+.main-menu-root {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-background);
+}
+
+/* ---- Background layer ---- */
+/* Assign a Sprite via MainMenuController.backgroundSprite to override the tint. */
+.menu-bg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(15, 22, 35, 0.85);
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+/* ---- Top accent rule ---- */
+.menu-top-accent {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+}
+
+/* ---- Center column ---- */
+.menu-content {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+/* ---- Logo block ---- */
+.menu-logo-block {
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 48px;
+}
+
+/* Hero display size — intentionally larger than --font-size-xl (24px) */
+.menu-title {
+    color: var(--color-primary);
+    font-size: 52px;
+    -unity-font-style: bold;
+    letter-spacing: 8px;
+    -unity-text-align: middle-center;
+}
+
+.menu-subtitle {
+    color: var(--color-text-primary);
+    font-size: 32px;
+    -unity-font-style: bold;
+    letter-spacing: 12px;
+    -unity-text-align: middle-center;
+    margin-top: -8px;
+}
+
+.menu-title-underline {
+    width: 120px;
+    height: 2px;
+    background-color: var(--color-primary);
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.menu-tagline {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    letter-spacing: 2px;
+    -unity-text-align: middle-center;
+}
+
+/* ---- Navigation column ---- */
+.menu-nav {
+    flex-direction: column;
+    align-items: center;
+    width: 280px;
+}
+
+/* ---- Ghost button (secondary actions) ---- */
+.menu-btn {
+    width: 100%;
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    -unity-text-align: middle-center;
+    letter-spacing: 2px;
+    transition-duration: 0.15s;
+    transition-property: background-color, border-color, color;
+}
+
+.menu-btn:hover {
+    background-color: rgba(0, 229, 255, 0.08);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.menu-btn:active {
+    background-color: rgba(0, 229, 255, 0.18);
+}
+
+/* ---- Primary button (Play) ---- */
+.menu-btn--primary {
+    background-color: rgba(0, 229, 255, 0.15);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    -unity-font-style: bold;
+}
+
+.menu-btn--primary:hover {
+    background-color: rgba(0, 229, 255, 0.28);
+}
+
+.menu-btn--primary:active {
+    background-color: rgba(0, 229, 255, 0.40);
+}
+
+/* ---- Version label ---- */
+.menu-version {
+    position: absolute;
+    right: var(--spacing-md);
+    bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}

@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="tokens.uss" />
+    <Style src="MainMenu.uss" />
+
+    <ui:VisualElement name="main-menu-root" class="main-menu-root">
+
+        <!-- Separate layer so a background sprite/shader can be dropped in without touching layout -->
+        <ui:VisualElement name="menu-bg" class="menu-bg" picking-mode="Ignore" />
+
+        <!-- 2px cyan rule along the very top -->
+        <ui:VisualElement name="menu-top-accent" class="menu-top-accent" picking-mode="Ignore" />
+
+        <!-- Center column: logo + nav -->
+        <ui:VisualElement name="menu-content" class="menu-content">
+
+            <ui:VisualElement name="menu-logo-block" class="menu-logo-block">
+                <ui:Label name="menu-title"          text="QUANTUM"                  class="menu-title" />
+                <ui:Label name="menu-subtitle"       text="FOUNDRY"                  class="menu-subtitle" />
+                <ui:VisualElement name="menu-title-underline" class="menu-title-underline" picking-mode="Ignore" />
+                <ui:Label name="menu-tagline"        text="Build. Collapse. Repeat." class="menu-tagline" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="menu-nav" class="menu-nav">
+                <ui:Button name="btn-play"        text="PLAY"        class="menu-btn menu-btn--primary" />
+                <ui:Button name="btn-leaderboard" text="LEADERBOARD" class="menu-btn" />
+                <ui:Button name="btn-settings"    text="SETTINGS"    class="menu-btn" />
+                <ui:Button name="btn-credits"     text="CREDITS"     class="menu-btn" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <ui:Label name="menu-version" text="v0.1.0" class="menu-version" />
+
+    </ui:VisualElement>
+</ui:UXML>
