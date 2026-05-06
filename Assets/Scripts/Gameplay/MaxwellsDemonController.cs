@@ -582,8 +582,7 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Override point for research and prestige entropy multipliers.
-        /// Returns 1f (no bonus) until unlockable upgrades are implemented.
+        /// Override point for research and prestige entropy multipliers. Base returns 1f.
         /// </summary>
         protected virtual float GetMultiplier(ItemSO item) => 1f;
 

@@ -102,7 +102,7 @@ namespace MobileIdleBuilder.Editor
             try { data = JsonUtility.FromJson<GameDataJson>(jsonAsset.text); }
             catch (Exception e)
             {
-                Debug.LogError($"[GameDataImporter] JSON parse error: {e.Message}");
+                Debug.LogError($"[GameDataImporter] JSON parse error: {e}");
                 return null;
             }
             if (data == null)

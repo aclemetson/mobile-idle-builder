@@ -367,7 +367,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[TutorialOverlay] Could not write tutorial_state.json: {e.Message}");
+                Debug.LogWarning($"[TutorialOverlay] Could not write tutorial_state.json: {e}");
             }
         }
     }
