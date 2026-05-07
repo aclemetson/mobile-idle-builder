@@ -23,6 +23,8 @@ namespace MobileIdleBuilder
             _baseUrl = apiBaseUrl.TrimEnd('/');
         }
 
+        public Task InitializeAsync() => Task.CompletedTask;
+
         public void SetAuthToken(string token) => _authToken = token;
 
         public async Task<SaveData> FetchAsync(string playerId)

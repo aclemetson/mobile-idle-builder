@@ -9,7 +9,10 @@
         "Unity.Mathematics",
         "Unity.InputSystem",
         "Unity.Transforms",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.CloudSave"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

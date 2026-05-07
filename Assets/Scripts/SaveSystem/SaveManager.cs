@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.Services.Authentication;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -58,9 +59,7 @@ namespace MobileIdleBuilder
             }
 #endif
 
-            _cloud = gameConfig != null
-                ? new CloudSaveService(gameConfig.apiBaseUrl)
-                : null;
+            _cloud = new UGSCloudSaveService();
         }
 
         IEnumerator Start()
@@ -82,15 +81,24 @@ namespace MobileIdleBuilder
         /// <summary>Reconciles the already-loaded local save with cloud if available.</summary>
         private IEnumerator ReconcileWithCloud()
         {
-            if (_cloud == null || !_cloud.IsAvailable) yield break;
+            if (_cloud == null) yield break;
 
-            var task = _cloud.FetchAsync(_current.playerId);
-            yield return new WaitUntil(() => task.IsCompleted);
+            // Init UGS (anonymous sign-in). IsAvailable is false until this completes.
+            var initTask = _cloud.InitializeAsync();
+            yield return new WaitUntil(() => initTask.IsCompleted);
 
-            if (task.Result != null && IsCloudNewer(task.Result))
+            if (!_cloud.IsAvailable) yield break;
+
+            // Sync local playerId to UGS identity for cross-device consistency.
+            _current.playerId = AuthenticationService.Instance.PlayerId;
+
+            var fetchTask = _cloud.FetchAsync(_current.playerId);
+            yield return new WaitUntil(() => fetchTask.IsCompleted);
+
+            if (fetchTask.Result != null && IsCloudNewer(fetchTask.Result))
             {
                 _local.SaveWithBackup(_current);
-                _current = task.Result;
+                _current = fetchTask.Result;
                 _local.Save(_current);
                 Debug.Log("[SaveManager] Reconciled with cloud (cloud was newer).");
             }
