@@ -52,7 +52,8 @@
       "Bash(rtk wc *)",
       "Bash(Get-ChildItem *)",
       "Bash(Select-Object Name)",
-      "Bash(dir \"Programming\\\\unity\\\\mobile-idle-builder\\\\Assets\\\\Scenes\" /b)"
+      "Bash(dir \"Programming\\\\unity\\\\mobile-idle-builder\\\\Assets\\\\Scenes\" /b)",
+      "Bash(python *)"
     ]
   },
   "hooks": {
