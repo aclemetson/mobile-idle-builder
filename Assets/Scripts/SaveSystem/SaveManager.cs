@@ -27,15 +27,24 @@ namespace MobileIdleBuilder
         ICloudSaveService _cloud;
         SaveData _current;
 
-        public SaveData Current => _current;
+        public SaveData Current   => _current;
+        public bool     IsNewGame { get; private set; }
 
         protected override void Awake()
         {
             base.Awake();
             if (Instance != this) return;
 
-            _local   = new LocalSaveService();
-            _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
+            _local = new LocalSaveService();
+            SaveData loaded = _local.Load();
+            IsNewGame = loaded == null;
+            _current  = loaded ?? new SaveData { playerId = GeneratePlayerId() };
+
+            if (IsNewGame)
+                Debug.Log("[Save] No save file found — starting fresh.");
+            else
+                Debug.Log($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
+                          $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
 
 #if UNITY_EDITOR
             if (_resetTutorialOnPlay)
@@ -43,7 +52,9 @@ namespace MobileIdleBuilder
                 _current.unlockedResearch = new();
                 _current.unlockedRecipes  = new();
                 _current.currentRun       = new();
-                Debug.Log("[SaveManager] _resetTutorialOnPlay: cleared run state for fresh tutorial.");
+                _current.tutorial         = new();
+                IsNewGame = true; // treat as fresh install so baked starting items are preserved
+                Debug.Log("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
             }
 #endif
 
@@ -85,7 +96,14 @@ namespace MobileIdleBuilder
             }
         }
 
-        public void SaveLocal() => _local.SaveWithBackup(_current);
+        public void SaveLocal()
+        {
+            ECSLoadBridge.Instance?.FlushToSave();
+            GridSaveService.Instance?.FlushToSave();
+            Debug.Log($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
+                      $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventory?.Count ?? 0}");
+            _local.SaveWithBackup(_current);
+        }
 
         public IEnumerator SaveToCloud()
         {

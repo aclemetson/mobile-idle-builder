@@ -166,7 +166,8 @@ namespace MobileIdleBuilder
 
             if (query.IsEmpty) return null;
 
-            var entity = query.GetSingletonEntity();
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            var entity = entities[0];
             var pos    = em.GetComponentData<GridPosition>(entity);
             float cs   = gridRenderer != null ? gridRenderer.CellSize : 1f;
 
