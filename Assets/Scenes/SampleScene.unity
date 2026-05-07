@@ -266,10 +266,11 @@ GameObject:
   - component: {fileID: 262970760}
   - component: {fileID: 262970763}
   - component: {fileID: 262970762}
-  - component: {fileID: 262970766}
   - component: {fileID: 262970765}
   - component: {fileID: 262970764}
   - component: {fileID: 262970767}
+  - component: {fileID: 262970769}
+  - component: {fileID: 262970768}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -358,21 +359,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.AchievementService
   database: {fileID: 0}
   hudController: {fileID: 1347028482}
---- !u!114 &262970766
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 262970759}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 813334b4233cb7440bc447d95b1a5831, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
-  gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
-  autoSaveIntervalSeconds: 60
-  _resetTutorialOnPlay: 1
 --- !u!114 &262970767
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -385,6 +371,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6452d90a3da3b8e499dfa2cf97125c47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ToastService
+--- !u!114 &262970768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d67df0ed074f4840bad3f83f2996a96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ECSLoadBridge
+--- !u!114 &262970769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f71fb7245f4c264498fcb75db3a4bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GridSaveService
+  placementController: {fileID: 1750057545}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -723,7 +734,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 827826013}
-  - component: {fileID: 827826012}
   - component: {fileID: 827826011}
   - component: {fileID: 827826009}
   - component: {fileID: 827826014}
@@ -766,19 +776,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a8d81c732e8de374f84d03e0760c6c66, type: 2}
   - {fileID: 11400000, guid: 052bff40fe3d4f943b6b1d51ae46f81b, type: 2}
   - {fileID: 11400000, guid: f4084dd38c8ffde4a831811baa79cdc4, type: 2}
---- !u!114 &827826012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 827826008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13ac5b8072fb8774b806c1f2fcf9ef71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GameBootstrap
-  gameConfig: {fileID: 0}
 --- !u!4 &827826013
 Transform:
   m_ObjectHideFlags: 0
@@ -1303,6 +1300,7 @@ MonoBehaviour:
   gridRenderer: {fileID: 1750057541}
   buildingPlacer: {fileID: 1347028481}
   buildingVisualizer: {fileID: 1750057543}
+  cameraController: {fileID: 0}
 --- !u!114 &1750057546
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1573,6 +1571,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ConveyorPlacementController
   gridRenderer: {fileID: 1750057541}
   conveyorPlacer: {fileID: 2094864784}
+  cameraController: {fileID: 0}
 --- !u!4 &2094864786
 Transform:
   m_ObjectHideFlags: 0

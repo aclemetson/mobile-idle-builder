@@ -68,6 +68,12 @@ namespace MobileIdleBuilder
                 IsActive        = true
             });
 
+            _em.AddComponentData(entity, new BuildingTransformData
+            {
+                Rotation = rotation,
+                Flipped  = flipped
+            });
+
             _em.SetComponentData(entity, new GridPosition
             {
                 Cell = new int2(gridX, gridY)

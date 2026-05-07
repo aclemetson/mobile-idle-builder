@@ -23,17 +23,6 @@ namespace MobileIdleBuilder
         private EntityQuery _tutorialQuery;
         private bool        _ecsReady;
 
-        // ── Auto-instantiation ────────────────────────────────────────────────
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureExists()
-        {
-            if (Instance != null) return;
-            var go = new GameObject("[ToastService]");
-            DontDestroyOnLoad(go);
-            go.AddComponent<ToastService>();
-        }
-
         // ── Unity lifecycle ───────────────────────────────────────────────────
 
         void Start()

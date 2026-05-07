@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.IO;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -98,6 +96,12 @@ namespace MobileIdleBuilder
         {
             if (!_queryReady || _tutorialQuery.IsEmpty) return;
 
+            // Don't react until ECSLoadBridge has applied saved progress to ECS.
+            // Without this guard the baked step-0 default fires OnStepChanged before
+            // the saved step index is written, replaying the intro dialogue on every load.
+            var bridge = ECSLoadBridge.Instance;
+            if (bridge != null && !bridge.IsLoaded) return;
+
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
 
             // Tutorial just ended — unlock all fields and stop watching.
@@ -125,6 +129,9 @@ namespace MobileIdleBuilder
             StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
+
+            // Checkpoint: persist the new step immediately rather than waiting for auto-save.
+            SaveManager.Instance?.SaveLocal();
 
             var flow = TutorialFlowSO.Current;
             if (flow == null || stepIndex >= flow.steps.Length) return;
@@ -216,7 +223,6 @@ namespace MobileIdleBuilder
 
             _lastStepIndex = state.CurrentStepIndex;
             OnStepChanged(state.CurrentStepIndex);
-            WriteTutorialState(state);
         }
 
         // ── Dialogue event handlers ───────────────────────────────────────────
@@ -335,40 +341,5 @@ namespace MobileIdleBuilder
             }
         }
 
-        // ── State file ────────────────────────────────────────────────────────
-
-        [Serializable]
-        private class TutorialStateJson
-        {
-            public string currentStepId;
-            public bool   isActive;
-            public bool   firstRunComplete;
-        }
-
-        private static void WriteTutorialState(TutorialStateData s)
-        {
-            var flow = TutorialFlowSO.Current;
-            string stepId = (flow != null && s.CurrentStepIndex < flow.steps.Length)
-                ? flow.steps[s.CurrentStepIndex].id
-                : "";
-
-            var payload = JsonUtility.ToJson(new TutorialStateJson
-            {
-                currentStepId    = stepId,
-                isActive         = s.IsActive,
-                firstRunComplete = s.FirstRunComplete
-            }, prettyPrint: true);
-
-            try
-            {
-                File.WriteAllText(
-                    Path.Combine(Application.persistentDataPath, "tutorial_state.json"),
-                    payload);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[TutorialOverlay] Could not write tutorial_state.json: {e}");
-            }
-        }
     }
 }

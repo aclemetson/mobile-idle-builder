@@ -31,6 +31,12 @@ namespace MobileIdleBuilder
                     BaseCurrency = authoring.startingEntropy
                 });
 
+                AddComponent(entity, new PrestigeData
+                {
+                    SpeedMultiplier  = 1f,
+                    OutputMultiplier = 1f,
+                });
+
                 var buffer = AddBuffer<InventorySlot>(entity);
 
                 if (authoring.startingItems == null) return;

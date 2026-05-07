@@ -49,7 +49,10 @@
       "PowerShell(Get-ChildItem -Path \"E:/Programming/unity/mobile-idle-builder/Assets\" -Recurse -Directory | Where-Object {$_.Name -match \"Tests|EditMode|PlayMode\"} | Select-Object FullName)",
       "PowerShell(ls -Recurse \"E:/Programming/unity/mobile-idle-builder/Assets\" | Where-Object {$_.PSIsContainer -and $_.Name -match \"Tests|EditMode|PlayMode\"})",
       "Bash(rtk git *)",
-      "Bash(rtk wc *)"
+      "Bash(rtk wc *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object Name)",
+      "Bash(dir \"Programming\\\\unity\\\\mobile-idle-builder\\\\Assets\\\\Scenes\" /b)"
     ]
   },
   "hooks": {
