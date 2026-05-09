@@ -109,7 +109,7 @@ namespace MobileIdleBuilder
             ECSLoadBridge.Instance?.FlushToSave();
             GridSaveService.Instance?.FlushToSave();
             Debug.Log($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
-                      $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventory?.Count ?? 0}");
+                      $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventoryKeys?.Count ?? 0}");
             _local.SaveWithBackup(_current);
         }
 
