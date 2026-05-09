@@ -10,7 +10,7 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// ICloudSaveService backed by Unity Gaming Services Cloud Save.
-    /// Uses anonymous sign-in — no account required.
+    /// Uses Google Sign-In on Android device; falls back to anonymous in Editor and unsupported platforms.
     /// Call InitializeAsync() once before FetchAsync / PushAsync.
     /// </summary>
     public class UGSCloudSaveService : ICloudSaveService
@@ -19,30 +19,59 @@ namespace MobileIdleBuilder
 
         bool _initialized;
         bool _initFailed;
+        string _env;
+
+        // Set by GoogleSignInBridge on Android before InitializeAsync is called.
+        // Null = fall back to anonymous sign-in (Editor, unsupported platforms).
+        public static Func<Task<string>> GoogleAuthProvider;
+
+#if UNITY_EDITOR
+        // Set by UGSEditorAuth before scene load. Calls SignInWithUsernamePasswordAsync internally.
+        public static Func<Task> EditorAuthProvider;
+#endif
 
         public bool IsAvailable =>
             _initialized &&
             !_initFailed &&
             Application.internetReachability != NetworkReachability.NotReachable;
 
-        /// <summary>
-        /// Initializes Unity Services and signs in anonymously.
-        /// Idempotent — subsequent calls return immediately.
-        /// On any failure, IsAvailable stays false and the manager falls back to local-only.
-        /// </summary>
+        // Idempotent. On any failure IsAvailable stays false and SaveManager falls back to local-only.
         public async Task InitializeAsync()
         {
             if (_initialized || _initFailed) return;
 
             try
             {
-                await UnityServices.InitializeAsync();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                _env = "development";
+#else
+                _env = "production";
+#endif
+                // "com.unity.services.core.environment-name" is the internal key used by
+                // Unity.Services.Core.Environments.EnvironmentsOptionsExtensions.SetEnvironmentName.
+                var initOptions = new InitializationOptions().SetOption("com.unity.services.core.environment-name", _env);
+                await UnityServices.InitializeAsync(initOptions);
 
                 if (!AuthenticationService.Instance.IsSignedIn)
-                    await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                {
+#if UNITY_EDITOR
+                    if (EditorAuthProvider != null)
+                        await EditorAuthProvider();
+                    else
+#endif
+                    if (GoogleAuthProvider != null)
+                    {
+                        string idToken = await GoogleAuthProvider();
+                        await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                    }
+                    else
+                    {
+                        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                    }
+                }
 
                 _initialized = true;
-                Debug.Log($"[UGSCloudSave] Initialized. PlayerId: {AuthenticationService.Instance.PlayerId}");
+                Debug.Log($"[UGSCloudSave] Initialized. Env: {_env}  PlayerId: {AuthenticationService.Instance.PlayerId}");
             }
             catch (Exception ex)
             {
