@@ -249,14 +249,11 @@ namespace MobileIdleBuilder
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: true);
 
-            Debug.Log($"[Demon] Buffer length={buffer.Length}");
-
             bool anyItems = false;
             for (int i = 0; i < buffer.Length; i++)
             {
                 var slot = buffer[i];
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
-                Debug.Log($"[Demon] Slot {i}: itemId={slot.ItemID}, qty={slot.Quantity}, found={itemSO != null}");
                 if (slot.Quantity <= 0) continue;
                 if (itemSO == null) continue;
 

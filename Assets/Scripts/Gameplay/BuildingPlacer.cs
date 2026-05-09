@@ -39,10 +39,7 @@ namespace MobileIdleBuilder
             }
 
             if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
-            {
-                Debug.Log($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
                 return false;
-            }
 
             bool hasPorts = building?.ports != null && building.ports.Length > 0;
 
