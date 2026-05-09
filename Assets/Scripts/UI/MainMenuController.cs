@@ -19,9 +19,6 @@ namespace MobileIdleBuilder
         [Tooltip("Overrides the tagline label. Leave blank to use the UXML default.")]
         [SerializeField] private string taglineOverride;
 
-        [Header("Build")]
-        [Tooltip("Version string shown in the bottom-right corner.")]
-        [SerializeField] private string versionString = "v0.1.0";
 
         private Button _btnPlay;
         private Button _btnLeaderboard;
@@ -77,7 +74,7 @@ namespace MobileIdleBuilder
             if (!string.IsNullOrEmpty(taglineOverride))
                 _taglineLabel.text = taglineOverride;
 
-            _versionLabel.text = versionString;
+            _versionLabel.text = $"v{Application.version}";
         }
 
         private void BindButtons()
