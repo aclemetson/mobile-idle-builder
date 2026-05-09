@@ -13,6 +13,61 @@ namespace MobileIdleBuilder.Editor
         public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
         public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
 
+        public static void BuildWindows()
+        {
+            string version    = PlayerSettings.bundleVersion;
+            string outputDir  = Path.Combine(Directory.GetCurrentDirectory(), "build", "Windows");
+            Directory.CreateDirectory(outputDir);
+            string outputPath = Path.Combine(outputDir, $"{Application.productName}-v{version}.exe");
+
+            var options = new BuildPlayerOptions
+            {
+                scenes           = Scenes,
+                locationPathName = outputPath,
+                target           = BuildTarget.StandaloneWindows64,
+                options          = BuildOptions.None,
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                GameLogger.Error($"Windows build failed: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+            else
+            {
+                GameLogger.Info($"Windows build succeeded: {outputPath}");
+                EditorApplication.Exit(0);
+            }
+        }
+
+        public static void BuildIOS()
+        {
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
+            Directory.CreateDirectory(outputDir);
+
+            // iOS build output is a folder (Xcode project), not a single file.
+            var options = new BuildPlayerOptions
+            {
+                scenes           = Scenes,
+                locationPathName = outputDir,
+                target           = BuildTarget.iOS,
+                options          = BuildOptions.None,
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                GameLogger.Error($"iOS build failed: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+            else
+            {
+                GameLogger.Info($"iOS Xcode project generated: {outputDir}");
+                EditorApplication.Exit(0);
+            }
+        }
+
         private static void BuildAndroidInternal(bool appBundle)
         {
             string version   = PlayerSettings.bundleVersion;

@@ -1118,6 +1118,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldGenerator
   gridRenderer: {fileID: 1750057541}
+  _fieldParticleMaterial: {fileID: 2100000, guid: b02a5e7df834add4d8b99f5fb74834c5, type: 2}
   edgeMargin: 2
   demonClearance: 2
   fields:

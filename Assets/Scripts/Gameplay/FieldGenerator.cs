@@ -40,6 +40,7 @@ namespace MobileIdleBuilder
         }
 
         [SerializeField] private GridRenderer gridRenderer;
+        [SerializeField] private Material _fieldParticleMaterial;
         [SerializeField] [Min(0)] private int edgeMargin = 2;
         [Tooltip("No field may spawn within this many cells (Chebyshev) of a Maxwell's Demon building.")]
         [SerializeField] [Min(0)] private int demonClearance = 2;
@@ -231,7 +232,7 @@ namespace MobileIdleBuilder
             col.radius = 0.5f;
 
             var effect = go.AddComponent<FieldEffect>();
-            effect.Initialize(fieldSO.fieldColor);
+            effect.Initialize(fieldSO.fieldColor, _fieldParticleMaterial);
         }
 
         // ----------------------------------------------------------------
