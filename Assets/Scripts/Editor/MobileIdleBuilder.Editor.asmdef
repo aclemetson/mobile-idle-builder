@@ -6,7 +6,9 @@
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Entities.Editor",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication"
     ],
     "includePlatforms": [
         "Editor"

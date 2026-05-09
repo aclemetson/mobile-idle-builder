@@ -39,7 +39,7 @@ namespace MobileIdleBuilder.Dev
             pState.BaseCurrency = entropy;
             SystemAPI.SetSingleton(pState);
 
-            Debug.Log($"[TutorialSkip] Step → {stepIdx}, Entropy → {entropy}");
+            GameLogger.Debug($"[TutorialSkip] Step → {stepIdx}, Entropy → {entropy}");
             state.Enabled = false;
         }
     }
@@ -70,7 +70,7 @@ namespace MobileIdleBuilder.Dev
         {
             var flow = TutorialFlowSO.Current;
             var rs   = ResearchService.Instance;
-            Debug.Log($"[TutorialSkip] Applicator Start — flow={(flow == null ? "NULL" : "OK")}, ResearchService={(rs == null ? "NULL" : "OK")}");
+            GameLogger.Debug($"[TutorialSkip] Applicator Start — flow={(flow == null ? "NULL" : "OK")}, ResearchService={(rs == null ? "NULL" : "OK")}");
             if (flow == null || rs == null) { Destroy(gameObject); return; }
 
             int stepIdx = EditorPrefs.GetInt("TutorialSkip.StepIndex", 0);

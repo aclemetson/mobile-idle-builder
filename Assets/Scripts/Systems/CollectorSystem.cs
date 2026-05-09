@@ -48,7 +48,6 @@ namespace MobileIdleBuilder
 
                 if (collector.ValueRO.Timer < interval) continue;
 
-                // Check output capacity before depositing
                 int total = 0;
                 for (int i = 0; i < outputSlots.Length; i++)
                     total += outputSlots[i].Quantity;

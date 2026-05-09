@@ -90,8 +90,8 @@ namespace MobileIdleBuilder
         }
 
         private void OnPlayPressed()        => SceneManager.LoadScene("SampleScene");
-        private void OnLeaderboardPressed() => Debug.Log("[MainMenu] Leaderboard — coming soon");
-        private void OnSettingsPressed()    => Debug.Log("[MainMenu] Settings — coming soon");
-        private void OnCreditsPressed()     => Debug.Log("[MainMenu] Credits — coming soon");
+        private void OnLeaderboardPressed() => GameLogger.Debug("[MainMenu] Leaderboard — coming soon");
+        private void OnSettingsPressed()    => GameLogger.Debug("[MainMenu] Settings — coming soon");
+        private void OnCreditsPressed()     => GameLogger.Debug("[MainMenu] Credits — coming soon");
     }
 }

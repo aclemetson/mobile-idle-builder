@@ -18,7 +18,7 @@ namespace MobileIdleBuilder.Dev
         {
             if (devConsolePrefab == null)
             {
-                Debug.LogWarning("[DevConsole] devConsolePrefab not assigned on DevConsoleBootstrap.");
+                GameLogger.Warning("[DevConsole] devConsolePrefab not assigned on DevConsoleBootstrap.");
                 return;
             }
 

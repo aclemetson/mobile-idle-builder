@@ -114,7 +114,6 @@ namespace MobileIdleBuilder
         /// <summary>Shows a ghost footprint of (w x h) cells starting at (x, y). Pass isValid=false for red.</summary>
         public void ShowGhost(int x, int y, int w, int h, bool isValid)
         {
-            // Clear previous ghost cells
             foreach (var c in _ghostCells)
                 RestoreCell(c.x, c.y);
             _ghostCells.Clear();

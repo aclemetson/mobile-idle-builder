@@ -104,7 +104,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to read runtime save: {e}");
+                    GameLogger.Warning($"[RecipeKnowledgeService] Failed to read runtime save: {e}");
                 }
             }
 
@@ -122,7 +122,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to parse default asset: {e}");
+                    GameLogger.Warning($"[RecipeKnowledgeService] Failed to parse default asset: {e}");
                 }
             }
 
@@ -140,7 +140,7 @@ namespace MobileIdleBuilder
             var db = RecipeDatabase.Instance;
             if (db == null || db.Recipes == null)
             {
-                Debug.LogWarning("[RecipeKnowledgeService] RecipeDatabase not ready — skipping sync.");
+                GameLogger.Warning("[RecipeKnowledgeService] RecipeDatabase not ready — skipping sync.");
                 return;
             }
 
@@ -171,7 +171,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception e)
             {
-                Debug.LogError($"[RecipeKnowledgeService] Failed to save {FileName}: {e}");
+                GameLogger.Error($"[RecipeKnowledgeService] Failed to save {FileName}: {e}");
             }
         }
 

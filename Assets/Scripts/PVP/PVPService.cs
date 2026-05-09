@@ -138,7 +138,7 @@ namespace MobileIdleBuilder
 
             if (req.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[PVP] Leaderboard fetch failed: {req.error}");
+                GameLogger.Warning($"[PVP] Leaderboard fetch failed: {req.error}");
                 callback?.Invoke(new List<LeaderboardEntry>());
                 yield break;
             }
@@ -243,9 +243,9 @@ namespace MobileIdleBuilder
             yield return new WaitUntil(() => task.IsCompleted);
 
             if (req.result != UnityWebRequest.Result.Success)
-                Debug.LogWarning($"[PVP] Score submission failed: {req.error}");
+                GameLogger.Warning($"[PVP] Score submission failed: {req.error}");
             else
-                Debug.Log($"[PVP] Score submission sent for {playerId}");
+                GameLogger.Info($"[PVP] Score submission sent for {playerId}");
         }
 
         static Task SendAsync(UnityWebRequest req)

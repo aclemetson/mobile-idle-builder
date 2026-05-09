@@ -136,7 +136,6 @@ namespace MobileIdleBuilder
             // Broadcast highlight target (empty string = clear)
             OnHighlightRequested?.Invoke(line.highlightTarget ?? "");
 
-            // Fire one-shot action if present
             if (!string.IsNullOrEmpty(line.action))
                 OnActionTriggered?.Invoke(line.action);
         }

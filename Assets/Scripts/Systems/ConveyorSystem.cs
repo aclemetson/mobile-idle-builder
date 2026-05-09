@@ -241,7 +241,7 @@ namespace MobileIdleBuilder
                             }
                             neighbourInfo += $"\n    dir={dir} cell={candidate} ports={portDump}";
                         }
-                        Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell} (EntryDir={seg.EntryDir}): " +
+                        GameLogger.Develop($"[ConveyorSystem] Chain head @ {seg.Cell} (EntryDir={seg.EntryDir}): " +
                                   $"no adjacent building with a matching Output port.{neighbourInfo}");
                     }
                     continue;
@@ -251,7 +251,7 @@ namespace MobileIdleBuilder
                 if (outputBuf.Length == 0)
                 {
                     if (debugLog)
-                        Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell}: building at {sourceCell} " +
+                        GameLogger.Develop($"[ConveyorSystem] Chain head @ {seg.Cell}: building at {sourceCell} " +
                                   $"output buffer is empty (collector not yet producing?)");
                     continue;
                 }
@@ -260,7 +260,7 @@ namespace MobileIdleBuilder
                 SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
                 pulls.Add((e, itemID));
                 if (debugLog)
-                    Debug.Log($"[ConveyorSystem] Chain head @ {seg.Cell}: pulled itemID={itemID} " +
+                    GameLogger.Develop($"[ConveyorSystem] Chain head @ {seg.Cell}: pulled itemID={itemID} " +
                               $"from building at {sourceCell} (portFacing={portFacing}) onto belt.");
             }
 

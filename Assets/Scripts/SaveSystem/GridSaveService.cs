@@ -131,7 +131,6 @@ namespace MobileIdleBuilder
             bool hasConveyors = save.currentRun.grid.conveyors?.Count > 0;
             if (!hasBuildings && !hasConveyors) return;
 
-            // Build BuildingSO lookup by buildingId
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
             {
@@ -153,7 +152,7 @@ namespace MobileIdleBuilder
                 {
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
                     {
-                        Debug.LogWarning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
+                        GameLogger.Warning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
                         continue;
                     }
 

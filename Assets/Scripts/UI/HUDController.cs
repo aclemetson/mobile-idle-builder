@@ -271,7 +271,7 @@ namespace MobileIdleBuilder
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => Debug.Log("[HUD] Settings — coming soon");
+            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);

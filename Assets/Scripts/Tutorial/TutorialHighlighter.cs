@@ -98,7 +98,7 @@ namespace MobileIdleBuilder
 
                 if (timeout <= 0f)
                 {
-                    Debug.LogWarning($"[TutorialHighlighter] Timed out searching for target '{targetId}'. " +
+                    GameLogger.Warning($"[TutorialHighlighter] Timed out searching for target '{targetId}'. " +
                                      "Check that the FieldSO id matches exactly.");
                     _searchRoutine = null;
                     yield break;

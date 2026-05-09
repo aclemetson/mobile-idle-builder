@@ -35,7 +35,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ECSLoadBridge] No ECS world found.");
+                GameLogger.Error("[ECSLoadBridge] No ECS world found.");
                 yield break;
             }
 
@@ -61,14 +61,14 @@ namespace MobileIdleBuilder
 
             if (_progressQuery.IsEmpty || _prestigeQuery.IsEmpty || _inventoryQuery.IsEmpty)
             {
-                Debug.LogError("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
+                GameLogger.Error("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
                 yield break;
             }
 
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
             IsLoaded = true;
-            Debug.Log("[ECSLoadBridge] Save applied to ECS.");
+            GameLogger.Info("[ECSLoadBridge] Save applied to ECS.");
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -95,14 +95,14 @@ namespace MobileIdleBuilder
                 {
                     ts.IsActive         = false;
                     ts.FirstRunComplete = true;
-                    Debug.Log("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
+                    GameLogger.Info("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
                 }
                 else
                 {
                     ts.IsActive            = save.tutorial.isActive;
                     ts.FirstRunComplete    = false;
                     ts.CurrentStepIndex    = ResolveStepIndex(save.tutorial.currentStepId);
-                    Debug.Log($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
+                    GameLogger.Info($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
                 _tutorialQuery.SetSingleton(ts);
@@ -120,14 +120,14 @@ namespace MobileIdleBuilder
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: false);
             buffer.Clear();
-            if (save.currentRun.inventory != null)
+            var iKeys  = save.currentRun.inventoryKeys;
+            var iVals  = save.currentRun.inventoryValues;
+            int iCount = System.Math.Min(iKeys?.Count ?? 0, iVals?.Count ?? 0);
+            for (int i = 0; i < iCount; i++)
             {
-                foreach (var kv in save.currentRun.inventory)
-                {
-                    if (!int.TryParse(kv.Key, out int itemId)) continue;
-                    if (kv.Value > 0)
-                        buffer.Add(new InventorySlot { ItemID = itemId, Quantity = kv.Value });
-                }
+                if (!int.TryParse(iKeys[i], out int itemId)) continue;
+                if (iVals[i] > 0)
+                    buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
             }
         }
 
@@ -159,13 +159,20 @@ namespace MobileIdleBuilder
             // Inventory
             if (!_inventoryQuery.IsEmpty)
             {
-                save.currentRun.inventory ??= new System.Collections.Generic.Dictionary<string, int>();
-                save.currentRun.inventory.Clear();
+                save.currentRun.inventoryKeys   ??= new List<string>();
+                save.currentRun.inventoryValues ??= new List<int>();
+                save.currentRun.inventoryKeys.Clear();
+                save.currentRun.inventoryValues.Clear();
                 var invEntity = _inventoryQuery.GetSingletonEntity();
                 var buf = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: true);
                 foreach (var slot in buf)
+                {
                     if (slot.Quantity > 0)
-                        save.currentRun.inventory[slot.ItemID.ToString()] = slot.Quantity;
+                    {
+                        save.currentRun.inventoryKeys.Add(slot.ItemID.ToString());
+                        save.currentRun.inventoryValues.Add(slot.Quantity);
+                    }
+                }
             }
 
             // Tutorial
@@ -178,7 +185,7 @@ namespace MobileIdleBuilder
                 save.tutorial.currentStepId = (flow?.steps != null && ts.CurrentStepIndex < flow.steps.Length)
                     ? flow.steps[ts.CurrentStepIndex].id
                     : save.tutorial.currentStepId;
-                Debug.Log($"[Save] Flush tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  active={ts.IsActive}");
+                GameLogger.Debug($"[Save] Flush tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  active={ts.IsActive}");
             }
         }
 

@@ -59,7 +59,6 @@ namespace MobileIdleBuilder
             if (research == null) return false;
             if (IsUnlocked(research.id)) return false;
 
-            // Check prerequisites
             if (research.prerequisites != null)
             {
                 foreach (var prereq in research.prerequisites)
@@ -69,7 +68,6 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Check entropy
             long currentEntropy = GetCurrentEntropy();
             return currentEntropy >= research.costBaseCurrency;
         }
@@ -107,7 +105,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[ResearchService] Purchased: {research.displayName}");
+            GameLogger.Info($"[ResearchService] Purchased: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
         }
 
@@ -140,7 +138,7 @@ namespace MobileIdleBuilder
             if (so != null)
                 OnResearchUnlocked?.Invoke(so);
 
-            Debug.Log($"[TutorialSkip] Force-unlocked research: {researchId}");
+            GameLogger.Debug($"[TutorialSkip] Force-unlocked research: {researchId}");
         }
 #endif
 
