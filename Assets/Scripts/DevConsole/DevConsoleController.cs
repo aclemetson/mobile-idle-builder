@@ -428,14 +428,14 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     new LocalSaveService().Delete();
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Save cleared. Reloading...";
                 });
 
             _registry.Register("reload", "Reload the active scene",
                 _ =>
                 {
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Reloading...";
                 });
         }

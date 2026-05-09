@@ -92,6 +92,13 @@ namespace MobileIdleBuilder
         void OnEnable()
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
+
+            if (SceneLoader.IsTransitioning)
+            {
+                root.style.display = DisplayStyle.None;
+                SceneLoader.OnTransitionComplete += () => root.style.display = DisplayStyle.Flex;
+            }
+
             QueryElements(root);
             _statusBar?.Init(root);
             _inspector?.Init(root, placementController);

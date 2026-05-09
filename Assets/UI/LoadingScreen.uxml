@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/LoadingScreen.uss?fileID=7433441132597879392&amp;guid=9a5d0a56fa6d76b499f6d1bd72f48e2b&amp;type=3#LoadingScreen"/>
+    <ui:VisualElement name="loading-root" class="loading-root">
+        <ui:VisualElement class="loading-content">
+            <ui:Label name="loading-label" text="Loading..." class="loading-label"/>
+            <ui:ProgressBar name="progress-bar" low-value="0" high-value="100" value="0" class="loading-progress"/>
+            <ui:Label name="percent-label" text="0%" class="percent-label"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

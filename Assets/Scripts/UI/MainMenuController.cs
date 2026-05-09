@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace MobileIdleBuilder
@@ -89,7 +88,7 @@ namespace MobileIdleBuilder
             _btnCredits.clicked     += OnCreditsPressed;
         }
 
-        private void OnPlayPressed()        => SceneManager.LoadScene("SampleScene");
+        private void OnPlayPressed()        => SceneLoader.GoTo("SampleScene");
         private void OnLeaderboardPressed() => GameLogger.Debug("[MainMenu] Leaderboard — coming soon");
         private void OnSettingsPressed()    => GameLogger.Debug("[MainMenu] Settings — coming soon");
         private void OnCreditsPressed()     => GameLogger.Debug("[MainMenu] Credits — coming soon");
