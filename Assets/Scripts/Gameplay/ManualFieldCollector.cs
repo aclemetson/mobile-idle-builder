@@ -125,6 +125,7 @@ namespace MobileIdleBuilder
 
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
+                GameLogger.Develop($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
                 ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
@@ -134,6 +135,7 @@ namespace MobileIdleBuilder
                 _activeField  = tappedInstance;
                 _collectTimer = 0f;
             }
+            GameLogger.Develop($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
             return true;
         }
 

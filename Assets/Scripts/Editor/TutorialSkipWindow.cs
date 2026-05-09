@@ -163,7 +163,7 @@ namespace MobileIdleBuilder.Editor
             }
 
             sb.AppendLine("=================================");
-            Debug.Log(sb.ToString());
+            GameLogger.Debug(sb.ToString());
         }
 
         private void SavePrefs()

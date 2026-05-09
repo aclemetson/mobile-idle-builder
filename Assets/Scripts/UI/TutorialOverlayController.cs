@@ -245,6 +245,7 @@ namespace MobileIdleBuilder
         private void OnActionTriggered(string action)
         {
             if (string.IsNullOrEmpty(action)) return;
+            GameLogger.Develop($"[TutorialOverlay] Action: {action}");
         }
 
         // ── Maxwell's Demon event handlers ────────────────────────────────────

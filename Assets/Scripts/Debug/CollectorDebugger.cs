@@ -29,7 +29,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<GridPosition>()
             );
             _ready = true;
-            GameLogger.Debug("[CollectorDebugger] Initialized — will log collector state every " + logInterval + "s.");
+            GameLogger.Develop("[CollectorDebugger] Initialized — will log collector state every " + logInterval + "s.");
         }
 
         void OnDestroy()
@@ -52,7 +52,7 @@ namespace MobileIdleBuilder
         {
             if (_collectorQuery.IsEmpty)
             {
-                GameLogger.Debug("[CollectorDebugger] No collector entities found. " +
+                GameLogger.Develop("[CollectorDebugger] No collector entities found. " +
                           "Ensure the building was placed via BuildingPlacer with a non-null outputDirection.");
                 return;
             }

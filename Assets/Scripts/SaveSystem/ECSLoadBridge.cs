@@ -95,14 +95,14 @@ namespace MobileIdleBuilder
                 {
                     ts.IsActive         = false;
                     ts.FirstRunComplete = true;
-                    GameLogger.Info("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
+                    GameLogger.Debug("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
                 }
                 else
                 {
                     ts.IsActive            = save.tutorial.isActive;
                     ts.FirstRunComplete    = false;
                     ts.CurrentStepIndex    = ResolveStepIndex(save.tutorial.currentStepId);
-                    GameLogger.Info($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
+                    GameLogger.Debug($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
                 _tutorialQuery.SetSingleton(ts);

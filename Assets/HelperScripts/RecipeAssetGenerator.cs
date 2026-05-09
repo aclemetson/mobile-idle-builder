@@ -46,12 +46,12 @@ namespace MobileIdleBuilder.HelperScripts
 
             if (itemsJson == null)
             {
-                Debug.LogError($"[Generator] Could not find {ItemsJsonPath}");
+                GameLogger.Error($"[Generator] Could not find {ItemsJsonPath}");
                 return;
             }
             if (recipesJson == null)
             {
-                Debug.LogError($"[Generator] Could not find {RecipesJsonPath}");
+                GameLogger.Error($"[Generator] Could not find {RecipesJsonPath}");
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace MobileIdleBuilder.HelperScripts
 
                 EditorUtility.SetDirty(so);
                 itemLookup[itemData.id] = so;
-                Debug.Log($"[Generator] ItemSO: {itemData.name} (id '{itemData.id}')");
+                GameLogger.Debug($"[Generator] ItemSO: {itemData.name} (id '{itemData.id}')");
             }
 
             // ── Generate RecipeSO assets ───────────────────────────────────
@@ -117,7 +117,7 @@ namespace MobileIdleBuilder.HelperScripts
                     : null;
 
                 if (so.outputItem == null)
-                    Debug.LogWarning($"[Generator] Recipe '{recipeData.name}': output '{recipeData.output.id}' not found in items.json");
+                    GameLogger.Warning($"[Generator] Recipe '{recipeData.name}': output '{recipeData.output.id}' not found in items.json");
 
                 // Wire inputs as RecipeIngredient[]
                 so.inputs = new RecipeIngredient[recipeData.inputs.Count];
@@ -132,17 +132,17 @@ namespace MobileIdleBuilder.HelperScripts
                     };
 
                     if (so.inputs[i].item == null)
-                        Debug.LogWarning($"[Generator] Recipe '{recipeData.name}': input '{inputData.id}' not found in items.json");
+                        GameLogger.Warning($"[Generator] Recipe '{recipeData.name}': input '{inputData.id}' not found in items.json");
                 }
 
                 EditorUtility.SetDirty(so);
-                Debug.Log($"[Generator] RecipeSO: {recipeData.name} (id '{recipeData.id}')");
+                GameLogger.Debug($"[Generator] RecipeSO: {recipeData.name} (id '{recipeData.id}')");
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"[Generator] Done — {itemList.items.Count} items, {validRecipes.Count} recipes.");
+            GameLogger.Info($"[Generator] Done — {itemList.items.Count} items, {validRecipes.Count} recipes.");
         }
 
         private static void EnsureDirectory(string path)

@@ -94,7 +94,7 @@ namespace MobileIdleBuilder.Editor
             File.WriteAllText(fullPath, json);
             AssetDatabase.ImportAsset(GameDataImporter.DataPath);
             _dirty = false;
-            Debug.Log("[GameDataEditor] Saved game_data.json");
+            GameLogger.Info("[GameDataEditor] Saved game_data.json");
         }
 
         // ── Root GUI ──────────────────────────────────────────────────────────

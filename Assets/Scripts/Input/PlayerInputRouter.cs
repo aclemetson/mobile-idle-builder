@@ -88,7 +88,9 @@ namespace MobileIdleBuilder
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
                 {
+                    GameLogger.Develop($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
+                    GameLogger.Develop($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
                 }
             }
             else

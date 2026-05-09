@@ -33,12 +33,12 @@ namespace MobileIdleBuilder.Editor
 
             if (report.summary.result != BuildResult.Succeeded)
             {
-                Debug.LogError($"Android build failed: {report.summary.result}");
+                GameLogger.Error($"Android build failed: {report.summary.result}");
                 EditorApplication.Exit(1);
             }
             else
             {
-                Debug.Log($"Android build succeeded: {outputPath}");
+                GameLogger.Info($"Android build succeeded: {outputPath}");
                 EditorApplication.Exit(0);
             }
         }
