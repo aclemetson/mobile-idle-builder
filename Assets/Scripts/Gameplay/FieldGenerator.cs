@@ -63,7 +63,7 @@ namespace MobileIdleBuilder
             _fieldMap.Clear();
             if (gridRenderer == null)
             {
-                Debug.LogError("[FieldGenerator] GridRenderer reference is missing.", this);
+                GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
                 yield break;
             }
 
@@ -179,7 +179,7 @@ namespace MobileIdleBuilder
             }
 
             if (!placedSecond)
-                Debug.LogWarning($"[FieldGenerator] Could not place adjacent neighbor for {entry.fieldDefinition.displayName}. Placing fallback at next candidate.");
+                GameLogger.Warning($"[FieldGenerator] Could not place adjacent neighbor for {entry.fieldDefinition.displayName}. Placing fallback at next candidate.");
 
             // Place any remaining count beyond the first pair
             for (int i = 2; i < entry.count; i++)
@@ -203,7 +203,7 @@ namespace MobileIdleBuilder
                 if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) continue;
                 return c;
             }
-            Debug.LogWarning("[FieldGenerator] Ran out of candidate cells for field placement.");
+            GameLogger.Warning("[FieldGenerator] Ran out of candidate cells for field placement.");
             return new Vector2Int(-1, -1);
         }
 

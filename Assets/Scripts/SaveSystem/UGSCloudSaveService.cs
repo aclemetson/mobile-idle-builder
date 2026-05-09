@@ -71,12 +71,12 @@ namespace MobileIdleBuilder
                 }
 
                 _initialized = true;
-                Debug.Log($"[UGSCloudSave] Initialized. Env: {_env}  PlayerId: {AuthenticationService.Instance.PlayerId}");
+                GameLogger.Info($"[UGSCloudSave] Initialized. Env: {_env}  PlayerId: {AuthenticationService.Instance.PlayerId}");
             }
             catch (Exception ex)
             {
                 _initFailed = true;
-                Debug.LogWarning($"[UGSCloudSave] Init failed — falling back to local-only. Reason: {ex.Message}");
+                GameLogger.Warning($"[UGSCloudSave] Init failed — falling back to local-only. Reason: {ex.Message}");
             }
         }
 
@@ -95,18 +95,18 @@ namespace MobileIdleBuilder
 
                 if (!result.TryGetValue(k_SaveKey, out var item))
                 {
-                    Debug.Log("[UGSCloudSave] No cloud save found (first run on this account).");
+                    GameLogger.Info("[UGSCloudSave] No cloud save found (first run on this account).");
                     return null;
                 }
 
                 string json = item.Value.GetAsString();
                 var data = JsonUtility.FromJson<SaveData>(json);
-                Debug.Log($"[UGSCloudSave] Fetched. lastSaved: {data?.lastSaved}");
+                GameLogger.Info($"[UGSCloudSave] Fetched. lastSaved: {data?.lastSaved}");
                 return data;
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[UGSCloudSave] FetchAsync failed: {ex.Message}");
+                GameLogger.Warning($"[UGSCloudSave] FetchAsync failed: {ex.Message}");
                 return null;
             }
         }
@@ -121,11 +121,11 @@ namespace MobileIdleBuilder
                 string json    = JsonUtility.ToJson(data);
                 var    payload = new Dictionary<string, object> { { k_SaveKey, json } };
                 await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.SaveAsync(payload);
-                Debug.Log($"[UGSCloudSave] Pushed. lastSaved: {data.lastSaved}");
+                GameLogger.Info($"[UGSCloudSave] Pushed. lastSaved: {data.lastSaved}");
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[UGSCloudSave] PushAsync failed: {ex.Message}");
+                GameLogger.Warning($"[UGSCloudSave] PushAsync failed: {ex.Message}");
             }
         }
     }

@@ -152,7 +152,7 @@ namespace MobileIdleBuilder
                 {
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
                     {
-                        Debug.LogWarning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
+                        GameLogger.Warning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
                         continue;
                     }
 

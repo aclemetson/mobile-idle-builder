@@ -43,7 +43,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ManualFieldCollector] No default DOTS world found.");
+                GameLogger.Error("[ManualFieldCollector] No default DOTS world found.");
                 return;
             }
 
@@ -113,7 +113,7 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
+                GameLogger.Warning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
                 return false;
             }
 
@@ -155,7 +155,7 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
+                GameLogger.Warning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
                 return false;
             }
 

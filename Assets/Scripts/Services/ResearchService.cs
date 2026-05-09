@@ -105,7 +105,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[ResearchService] Purchased: {research.displayName}");
+            GameLogger.Info($"[ResearchService] Purchased: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
         }
 
@@ -138,7 +138,7 @@ namespace MobileIdleBuilder
             if (so != null)
                 OnResearchUnlocked?.Invoke(so);
 
-            Debug.Log($"[TutorialSkip] Force-unlocked research: {researchId}");
+            GameLogger.Debug($"[TutorialSkip] Force-unlocked research: {researchId}");
         }
 #endif
 

@@ -162,7 +162,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
+            GameLogger.Debug($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
         }
     }
