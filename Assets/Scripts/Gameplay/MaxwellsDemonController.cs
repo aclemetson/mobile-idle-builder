@@ -251,6 +251,7 @@ namespace MobileIdleBuilder
 
             GameLogger.Develop($"[Demon] Buffer length={buffer.Length}");
 
+
             bool anyItems = false;
             for (int i = 0; i < buffer.Length; i++)
             {

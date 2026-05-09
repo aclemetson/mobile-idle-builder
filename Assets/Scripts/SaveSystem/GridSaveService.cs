@@ -131,7 +131,6 @@ namespace MobileIdleBuilder
             bool hasConveyors = save.currentRun.grid.conveyors?.Count > 0;
             if (!hasBuildings && !hasConveyors) return;
 
-            // Build BuildingSO lookup by buildingId
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
             {

@@ -51,10 +51,8 @@ namespace MobileIdleBuilder
 
             int count = path.Count;
 
-            // Build a cell→entity map from all existing segments
             Dictionary<Vector2Int, Entity> segMap = BuildSegmentMap();
 
-            // Determine which endpoints land on existing segments
             bool startIsExisting = segMap.ContainsKey(path[0]);
             bool endIsExisting   = count > 1 && segMap.ContainsKey(path[count - 1]);
 

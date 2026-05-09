@@ -43,7 +43,6 @@ namespace MobileIdleBuilder
             progress.PrestigeAvailable = false;
             progress.PrestigeRequested = false;
 
-            // Write updated singletons back
             SystemAPI.SetSingleton(prestige);
             SystemAPI.SetSingleton(progress);
 

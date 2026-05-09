@@ -89,6 +89,12 @@ GoogleService-Info.plist.meta
 # TestRunner generated files
 InitTestScene*.unity*
 
+# Claude Code local settings — machine-specific
+.claude/settings.local.json
+
+# Unity editor scene dependency cache — auto-generated
+/[Aa]ssets/SceneDependencyCache/
+
 # Addressables default ignores, before user customizations
 /ServerData
 /[Aa]ssets/StreamingAssets/aa*

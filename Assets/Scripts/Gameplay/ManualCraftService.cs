@@ -125,7 +125,6 @@ namespace MobileIdleBuilder
                     }
                     if (!outputMatches) continue;
 
-                    // Check inputs
                     var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
                     bool hasInputs = true;
                     for (int i = 0; i < inputsBuf.Length; i++)

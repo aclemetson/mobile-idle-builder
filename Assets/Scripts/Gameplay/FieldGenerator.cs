@@ -203,7 +203,7 @@ namespace MobileIdleBuilder
                 if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) continue;
                 return c;
             }
-                GameLogger.Warning("[FieldGenerator] Ran out of candidate cells for field placement.");
+            GameLogger.Warning("[FieldGenerator] Ran out of candidate cells for field placement.");
             return new Vector2Int(-1, -1);
         }
 

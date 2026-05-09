@@ -120,14 +120,14 @@ namespace MobileIdleBuilder
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: false);
             buffer.Clear();
-            if (save.currentRun.inventory != null)
+            var iKeys  = save.currentRun.inventoryKeys;
+            var iVals  = save.currentRun.inventoryValues;
+            int iCount = System.Math.Min(iKeys?.Count ?? 0, iVals?.Count ?? 0);
+            for (int i = 0; i < iCount; i++)
             {
-                foreach (var kv in save.currentRun.inventory)
-                {
-                    if (!int.TryParse(kv.Key, out int itemId)) continue;
-                    if (kv.Value > 0)
-                        buffer.Add(new InventorySlot { ItemID = itemId, Quantity = kv.Value });
-                }
+                if (!int.TryParse(iKeys[i], out int itemId)) continue;
+                if (iVals[i] > 0)
+                    buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
             }
         }
 
@@ -159,13 +159,20 @@ namespace MobileIdleBuilder
             // Inventory
             if (!_inventoryQuery.IsEmpty)
             {
-                save.currentRun.inventory ??= new System.Collections.Generic.Dictionary<string, int>();
-                save.currentRun.inventory.Clear();
+                save.currentRun.inventoryKeys   ??= new List<string>();
+                save.currentRun.inventoryValues ??= new List<int>();
+                save.currentRun.inventoryKeys.Clear();
+                save.currentRun.inventoryValues.Clear();
                 var invEntity = _inventoryQuery.GetSingletonEntity();
                 var buf = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: true);
                 foreach (var slot in buf)
+                {
                     if (slot.Quantity > 0)
-                        save.currentRun.inventory[slot.ItemID.ToString()] = slot.Quantity;
+                    {
+                        save.currentRun.inventoryKeys.Add(slot.ItemID.ToString());
+                        save.currentRun.inventoryValues.Add(slot.Quantity);
+                    }
+                }
             }
 
             // Tutorial

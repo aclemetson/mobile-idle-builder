@@ -32,10 +32,12 @@ namespace MobileIdleBuilder
     public class CurrentRunData
     {
         public long baseCurrency;
-        public Dictionary<string, int> inventory         = new();
-        public List<string> nonPersistentUpgrades        = new();
-        public GridSaveData grid                         = new();
-        public Dictionary<string, float> researchProgress = new();
+        public List<string> inventoryKeys           = new();
+        public List<int>    inventoryValues         = new();
+        public List<string> nonPersistentUpgrades   = new();
+        public GridSaveData grid                    = new();
+        public List<string> researchProgressKeys    = new();
+        public List<float>  researchProgressValues  = new();
     }
 
     [Serializable]

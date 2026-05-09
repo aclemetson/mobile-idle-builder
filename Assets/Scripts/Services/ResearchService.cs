@@ -59,7 +59,6 @@ namespace MobileIdleBuilder
             if (research == null) return false;
             if (IsUnlocked(research.id)) return false;
 
-            // Check prerequisites
             if (research.prerequisites != null)
             {
                 foreach (var prereq in research.prerequisites)
@@ -69,7 +68,6 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Check entropy
             long currentEntropy = GetCurrentEntropy();
             return currentEntropy >= research.costBaseCurrency;
         }
