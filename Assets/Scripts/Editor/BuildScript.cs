@@ -10,13 +10,21 @@ namespace MobileIdleBuilder.Editor
     {
         private static readonly string[] Scenes = GetScenePaths();
 
-        public static void BuildAndroid()
+        public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
+        public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
+
+        private static void BuildAndroidInternal(bool appBundle)
         {
+            string version   = PlayerSettings.bundleVersion;
+            string ext       = appBundle ? "aab" : "apk";
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "Android");
             Directory.CreateDirectory(outputDir);
-            string outputPath = Path.Combine(outputDir, $"{Application.productName}.aab");
+            string outputPath = Path.Combine(outputDir, $"{Application.productName}-v{version}.{ext}");
 
             ConfigureAndroidKeystore();
+
+            PlayerSettings.Android.useCustomKeystore = true;
+            EditorUserBuildSettings.buildAppBundle = appBundle;
 
             var options = new BuildPlayerOptions
             {
@@ -25,9 +33,6 @@ namespace MobileIdleBuilder.Editor
                 target = BuildTarget.Android,
                 options = BuildOptions.None,
             };
-
-            PlayerSettings.Android.useCustomKeystore = true;
-            EditorUserBuildSettings.buildAppBundle = true;
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
 
