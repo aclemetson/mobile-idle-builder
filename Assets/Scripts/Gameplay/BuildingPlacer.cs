@@ -40,7 +40,7 @@ namespace MobileIdleBuilder
 
             if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
             {
-                Debug.Log($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
+                GameLogger.Develop($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
                 return false;
             }
 
@@ -166,7 +166,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
+            GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
         }
     }

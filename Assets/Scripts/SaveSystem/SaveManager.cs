@@ -41,9 +41,9 @@ namespace MobileIdleBuilder
             _current  = loaded ?? new SaveData { playerId = GeneratePlayerId() };
 
             if (IsNewGame)
-                Debug.Log("[Save] No save file found — starting fresh.");
+                GameLogger.Info("[Save] No save file found — starting fresh.");
             else
-                Debug.Log($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
+                GameLogger.Info($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
                           $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
 
 #if UNITY_EDITOR
@@ -54,7 +54,7 @@ namespace MobileIdleBuilder
                 _current.currentRun       = new();
                 _current.tutorial         = new();
                 IsNewGame = true; // treat as fresh install so baked starting items are preserved
-                Debug.Log("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
+                GameLogger.Debug("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
             }
 #endif
 
@@ -92,7 +92,7 @@ namespace MobileIdleBuilder
                 _local.SaveWithBackup(_current);
                 _current = task.Result;
                 _local.Save(_current);
-                Debug.Log("[SaveManager] Reconciled with cloud (cloud was newer).");
+                GameLogger.Info("[SaveManager] Reconciled with cloud (cloud was newer).");
             }
         }
 
@@ -100,7 +100,7 @@ namespace MobileIdleBuilder
         {
             ECSLoadBridge.Instance?.FlushToSave();
             GridSaveService.Instance?.FlushToSave();
-            Debug.Log($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
+            GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
                       $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventory?.Count ?? 0}");
             _local.SaveWithBackup(_current);
         }

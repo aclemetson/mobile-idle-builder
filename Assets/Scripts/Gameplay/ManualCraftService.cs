@@ -25,7 +25,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ManualCraftService] No default DOTS world found.");
+                GameLogger.Error("[ManualCraftService] No default DOTS world found.");
                 return;
             }
 

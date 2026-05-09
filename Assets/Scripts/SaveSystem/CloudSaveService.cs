@@ -35,7 +35,7 @@ namespace MobileIdleBuilder
 
             if (req.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[CloudSave] Fetch failed: {req.error}");
+                GameLogger.Warning($"[CloudSave] Fetch failed: {req.error}");
                 return null;
             }
 
@@ -59,7 +59,7 @@ namespace MobileIdleBuilder
             await SendAsync(req);
 
             if (req.result != UnityWebRequest.Result.Success)
-                Debug.LogWarning($"[CloudSave] Push failed: {req.error}");
+                GameLogger.Warning($"[CloudSave] Push failed: {req.error}");
         }
 
         void AddAuthHeader(UnityWebRequest req)

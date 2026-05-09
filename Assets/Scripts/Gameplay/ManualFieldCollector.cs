@@ -43,7 +43,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ManualFieldCollector] No default DOTS world found.");
+                GameLogger.Error("[ManualFieldCollector] No default DOTS world found.");
                 return;
             }
 
@@ -113,7 +113,7 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
+                GameLogger.Warning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
                 return false;
             }
 
@@ -125,7 +125,7 @@ namespace MobileIdleBuilder
 
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
-                Debug.Log($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
+                GameLogger.Develop($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
                 ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
@@ -135,7 +135,7 @@ namespace MobileIdleBuilder
                 _activeField  = tappedInstance;
                 _collectTimer = 0f;
             }
-            Debug.Log($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
+            GameLogger.Develop($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
             return true;
         }
 
@@ -157,7 +157,7 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
+                GameLogger.Warning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
                 return false;
             }
 

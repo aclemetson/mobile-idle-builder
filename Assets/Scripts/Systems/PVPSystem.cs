@@ -46,7 +46,7 @@ namespace MobileIdleBuilder
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
 
-            UnityEngine.Debug.Log("[PVPSystem] Competition run started — grid and inventory reset.");
+            GameLogger.Info("[PVPSystem] Competition run started — grid and inventory reset.");
         }
     }
 }

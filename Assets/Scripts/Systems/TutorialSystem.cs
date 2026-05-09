@@ -34,7 +34,7 @@ namespace MobileIdleBuilder
             var flow = TutorialFlowSO.Current;
             if (flow == null || flow.steps == null || flow.steps.Length == 0)
             {
-                UnityEngine.Debug.LogWarning("[TutorialSystem] TutorialFlowSO.Current is null or empty — cannot evaluate.");
+                GameLogger.Warning("[TutorialSystem] TutorialFlowSO.Current is null or empty — cannot evaluate.");
                 return;
             }
 
@@ -52,7 +52,7 @@ namespace MobileIdleBuilder
             {
                 _diagLastStep  = tutorial.CurrentStepIndex;
                 _diagLastCount = -1;
-                UnityEngine.Debug.Log($"[TutorialSystem] Now evaluating step {tutorial.CurrentStepIndex}: '{step.id}'  condition={step.advanceCondition?.type}");
+                GameLogger.Develop($"[TutorialSystem] Now evaluating step {tutorial.CurrentStepIndex}: '{step.id}'  condition={step.advanceCondition?.type}");
             }
 
             // Check skip condition before the normal advance condition.
@@ -83,7 +83,7 @@ namespace MobileIdleBuilder
                 if (have != _diagLastCount)
                 {
                     _diagLastCount = have;
-                    UnityEngine.Debug.Log($"[TutorialSystem] Step '{step.id}' — item {req.itemId}: {have}/{req.quantity}  IsActive={tutorial.IsActive}  FlowSteps={flow.steps.Length}");
+                    GameLogger.Develop($"[TutorialSystem] Step '{step.id}' — item {req.itemId}: {have}/{req.quantity}  IsActive={tutorial.IsActive}  FlowSteps={flow.steps.Length}");
                 }
             }
 
@@ -103,7 +103,7 @@ namespace MobileIdleBuilder
             string nextId = tutorial.IsActive && tutorial.CurrentStepIndex < flow.steps.Length
                 ? flow.steps[tutorial.CurrentStepIndex].id
                 : "(complete)";
-            UnityEngine.Debug.Log($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
+            GameLogger.Debug($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
         }
 
         // ── Condition evaluator ───────────────────────────────────────────────

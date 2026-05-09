@@ -35,7 +35,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ECSLoadBridge] No ECS world found.");
+                GameLogger.Error("[ECSLoadBridge] No ECS world found.");
                 yield break;
             }
 
@@ -61,14 +61,14 @@ namespace MobileIdleBuilder
 
             if (_progressQuery.IsEmpty || _prestigeQuery.IsEmpty || _inventoryQuery.IsEmpty)
             {
-                Debug.LogError("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
+                GameLogger.Error("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
                 yield break;
             }
 
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
             IsLoaded = true;
-            Debug.Log("[ECSLoadBridge] Save applied to ECS.");
+            GameLogger.Info("[ECSLoadBridge] Save applied to ECS.");
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -95,14 +95,14 @@ namespace MobileIdleBuilder
                 {
                     ts.IsActive         = false;
                     ts.FirstRunComplete = true;
-                    Debug.Log("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
+                    GameLogger.Debug("[Save] Tutorial → disabled (hasCompletedFirstRun=true)");
                 }
                 else
                 {
                     ts.IsActive            = save.tutorial.isActive;
                     ts.FirstRunComplete    = false;
                     ts.CurrentStepIndex    = ResolveStepIndex(save.tutorial.currentStepId);
-                    Debug.Log($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
+                    GameLogger.Debug($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
                 _tutorialQuery.SetSingleton(ts);
@@ -178,7 +178,7 @@ namespace MobileIdleBuilder
                 save.tutorial.currentStepId = (flow?.steps != null && ts.CurrentStepIndex < flow.steps.Length)
                     ? flow.steps[ts.CurrentStepIndex].id
                     : save.tutorial.currentStepId;
-                Debug.Log($"[Save] Flush tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  active={ts.IsActive}");
+                GameLogger.Debug($"[Save] Flush tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  active={ts.IsActive}");
             }
         }
 

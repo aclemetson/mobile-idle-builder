@@ -65,13 +65,13 @@ namespace MobileIdleBuilder
         {
             if (recipesJsonAsset == null)
             {
-                Debug.LogError("[RecipeDatabase] recipesJsonAsset is not assigned.");
+                GameLogger.Error("[RecipeDatabase] recipesJsonAsset is not assigned.");
                 return;
             }
 
             var raw = JsonUtility.FromJson<RecipeListJson>(recipesJsonAsset.text);
             _validRecipes = ParseValidRecipes(raw.recipes);
-            Debug.Log($"[RecipeDatabase] Loaded {_validRecipes.Count} recipes.");
+            GameLogger.Info($"[RecipeDatabase] Loaded {_validRecipes.Count} recipes.");
         }
 
         public RecipeJson GetRecipe(string id) =>

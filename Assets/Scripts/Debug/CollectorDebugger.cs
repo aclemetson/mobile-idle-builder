@@ -21,7 +21,7 @@ namespace MobileIdleBuilder
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null) { Debug.LogWarning("[CollectorDebugger] No ECS world found."); return; }
+            if (world == null) { GameLogger.Warning("[CollectorDebugger] No ECS world found."); return; }
             _em = world.EntityManager;
             _collectorQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<CollectorData>(),
@@ -29,7 +29,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<GridPosition>()
             );
             _ready = true;
-            Debug.Log("[CollectorDebugger] Initialized — will log collector state every " + logInterval + "s.");
+            GameLogger.Develop("[CollectorDebugger] Initialized — will log collector state every " + logInterval + "s.");
         }
 
         void OnDestroy()
@@ -52,7 +52,7 @@ namespace MobileIdleBuilder
         {
             if (_collectorQuery.IsEmpty)
             {
-                Debug.Log("[CollectorDebugger] No collector entities found. " +
+                GameLogger.Develop("[CollectorDebugger] No collector entities found. " +
                           "Ensure the building was placed via BuildingPlacer with a non-null outputDirection.");
                 return;
             }
@@ -106,7 +106,7 @@ namespace MobileIdleBuilder
 
                 float interval = col.OutputRate > 0f ? 1f / col.OutputRate : 1f;
 
-                Debug.Log($"[CollectorDebugger] Entity {e.Index} @ cell ({pos.Cell.x},{pos.Cell.y})\n" +
+                GameLogger.Develop($"[CollectorDebugger] Entity {e.Index} @ cell ({pos.Cell.x},{pos.Cell.y})\n" +
                           $"  IsActive={bldg.IsActive} | BuildingType={bldg.BuildingType}\n" +
                           $"  Rate={col.OutputRate}/s | Interval={interval:F2}s | Timer={col.Timer:F2}s\n" +
                           $"  OutputCapacity={outputCap}\n" +

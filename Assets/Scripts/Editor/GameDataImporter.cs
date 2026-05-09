@@ -95,19 +95,19 @@ namespace MobileIdleBuilder.Editor
             var jsonAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(DataPath);
             if (jsonAsset == null)
             {
-                Debug.LogError($"[GameDataImporter] Could not find {DataPath}");
+                GameLogger.Error($"[GameDataImporter] Could not find {DataPath}");
                 return null;
             }
             GameDataJson data;
             try { data = JsonUtility.FromJson<GameDataJson>(jsonAsset.text); }
             catch (Exception e)
             {
-                Debug.LogError($"[GameDataImporter] JSON parse error: {e}");
+                GameLogger.Error($"[GameDataImporter] JSON parse error: {e}");
                 return null;
             }
             if (data == null)
             {
-                Debug.LogError("[GameDataImporter] JSON root object was null.");
+                GameLogger.Error("[GameDataImporter] JSON root object was null.");
                 return null;
             }
             data.Initialize();
@@ -192,7 +192,7 @@ namespace MobileIdleBuilder.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log(
+            GameLogger.Info(
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
@@ -322,7 +322,7 @@ namespace MobileIdleBuilder.Editor
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
             else if (!string.IsNullOrEmpty(data.tier_ref))
-                Debug.LogWarning($"[GameDataImporter] ItemSO '{data.id}': tier_ref '{data.tier_ref}' not found.");
+                GameLogger.Warning($"[GameDataImporter] ItemSO '{data.id}': tier_ref '{data.tier_ref}' not found.");
 
             EditorUtility.SetDirty(so);
             return so;
@@ -610,7 +610,7 @@ namespace MobileIdleBuilder.Editor
                         if (dialogueLookup.TryGetValue(s.on_enter.dialogue_id, out var dlg))
                             def.onEnter.dialogue = dlg;
                         else
-                            Debug.LogWarning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
                                              $"dialogue_id '{s.on_enter.dialogue_id}' not found.");
                     }
 
@@ -660,7 +660,7 @@ namespace MobileIdleBuilder.Editor
             if (IsTodo(path)) return null;
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset == null)
-                Debug.LogWarning($"[GameDataImporter] {context}: could not load {typeof(T).Name} at '{path}'");
+                GameLogger.Warning($"[GameDataImporter] {context}: could not load {typeof(T).Name} at '{path}'");
             return asset;
         }
 
@@ -669,7 +669,7 @@ namespace MobileIdleBuilder.Editor
         {
             if (string.IsNullOrEmpty(id)) return null;
             if (lookup.TryGetValue(id, out var result)) return result;
-            Debug.LogWarning($"[GameDataImporter] {context}: ID '{id}' not found.");
+            GameLogger.Warning($"[GameDataImporter] {context}: ID '{id}' not found.");
             return null;
         }
 
@@ -682,7 +682,7 @@ namespace MobileIdleBuilder.Editor
             {
                 if (string.IsNullOrEmpty(id)) continue;
                 if (lookup.TryGetValue(id, out var item)) list.Add(item);
-                else Debug.LogWarning($"[GameDataImporter] {context}: ID '{id}' not found.");
+                else GameLogger.Warning($"[GameDataImporter] {context}: ID '{id}' not found.");
             }
             return list.ToArray();
         }
@@ -706,7 +706,7 @@ namespace MobileIdleBuilder.Editor
         {
             if (string.IsNullOrEmpty(value)) { result = default; return false; }
             if (Enum.TryParse<TEnum>(value, ignoreCase: true, out result)) return true;
-            Debug.LogWarning($"[GameDataImporter] {context}: could not parse '{value}' as {typeof(TEnum).Name}.");
+            GameLogger.Warning($"[GameDataImporter] {context}: could not parse '{value}' as {typeof(TEnum).Name}.");
             result = default;
             return false;
         }

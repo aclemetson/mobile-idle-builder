@@ -50,7 +50,7 @@ namespace MobileIdleBuilder
             ECSLoadBridge.Instance?.FlushToSave();  // writes updated prestige totals
             SaveManager.Instance?.SaveLocal();
 
-            Debug.Log($"[PrestigeSaveWatcher] Run {current} saved after prestige.");
+            GameLogger.Info($"[PrestigeSaveWatcher] Run {current} saved after prestige.");
         }
     }
 }

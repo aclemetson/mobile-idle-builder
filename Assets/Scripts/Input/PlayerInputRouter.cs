@@ -88,14 +88,14 @@ namespace MobileIdleBuilder
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
                 {
-                    Debug.Log($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
+                    GameLogger.Develop($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
-                    Debug.Log($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
+                    GameLogger.Develop($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
                 }
             }
             else
             {
-                Debug.LogWarning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
+                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
             }
 
             if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))
@@ -124,9 +124,9 @@ namespace MobileIdleBuilder
         /// </summary>
         private void AnchorPresence(Vector2 screenPos)
         {
-            if (Camera.main == null) { Debug.LogWarning("[InputRouter] AnchorPresence — Camera.main is null"); return; }
+            if (Camera.main == null) { GameLogger.Warning("[InputRouter] AnchorPresence — Camera.main is null"); return; }
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
-            if (Mathf.Abs(ray.direction.y) < 0.0001f) { Debug.LogWarning("[InputRouter] AnchorPresence — degenerate ray"); return; }
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) { GameLogger.Warning("[InputRouter] AnchorPresence — degenerate ray"); return; }
             float   t        = -ray.origin.y / ray.direction.y;
             Vector3 worldPos = ray.origin + ray.direction * t;
             if (tapAnchor != null) tapAnchor.position = worldPos;

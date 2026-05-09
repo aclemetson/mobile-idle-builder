@@ -62,7 +62,7 @@ namespace MobileIdleBuilder
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
 
-            UnityEngine.Debug.Log(
+            GameLogger.Info(
                 $"[PrestigeSystem] Run {prestige.RunCount} complete. " +
                 $"Earned {earned} prestige currency. Total: {prestige.PrestigeCurrency}.");
         }
