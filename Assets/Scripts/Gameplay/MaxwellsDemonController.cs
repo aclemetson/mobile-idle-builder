@@ -68,7 +68,6 @@ namespace MobileIdleBuilder
         private Vector2 _pointerDownPos;
         private bool    _isDragging;
         private int     _activePointerId    = -1;
-        private Vector2 _lockedScrollOffset;
 
         // ── Portrait/landscape layout tracking ────────────────────────────
         private bool _isPortrait;
@@ -139,13 +138,6 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (!IsOpen) return;
-
-            // Unity's ScrollView ignores PreventDefault and scrolls regardless when its
-            // internal manipulator runs. Forcing the offset back every frame while a row
-            // touch is active is the only reliable way to prevent scroll from consuming
-            // the same gesture as a drag.
-            if (_activePointerId >= 0 && _inventoryGrid != null)
-                _inventoryGrid.scrollOffset = _lockedScrollOffset;
 
             bool portrait = Screen.height > Screen.width;
             if (portrait == _isPortrait) return;
@@ -275,22 +267,33 @@ namespace MobileIdleBuilder
             if (_btnSellConfirm != null)
                 _btnSellConfirm.clicked += OnSellConfirm;
 
-            // Panel-level fallback drag handlers: fire when pointer capture routing fails on
-            // mobile (i.e. the row-level handlers never receive the event). Each handler
-            // no-ops if _activePointerId is unset or the pointerId doesn't match.
-            _panel?.RegisterCallback<PointerMoveEvent>(OnPanelPointerMove);
+            // ── Drag vs. scroll arbitration ───────────────────────────────
+            // ScrollView's ContentDragger runs in the trickle-down phase. When the
+            // user moves past the scroll threshold it calls CapturePointer() on the
+            // contentViewport, stealing capture from our item row. That triggers
+            // PointerCaptureOutEvent on the row → CancelDrag() → ghost disappears.
+            //
+            // Fix: two trickle-down hooks, parent before child in event order.
+            //
+            //  1. Panel TrickleDown PointerMove — fires first; moves the ghost while
+            //     a drag is active so the ghost always follows the finger.
+            //
+            //  2. ScrollView TrickleDown PointerMove — fires second; calls
+            //     StopImmediatePropagation() while a drag is active. This prevents
+            //     contentViewport (and ContentDragger) from ever seeing the event,
+            //     so ContentDragger can never steal capture.
+            //     In portrait with no drag active it also blocks touch-scroll so
+            //     the scrollbar is the only scroll mechanism.
+
+            _panel?.RegisterCallback<PointerMoveEvent>(OnPanelPointerMove, TrickleDown.TrickleDown);
             _panel?.RegisterCallback<PointerUpEvent>(OnPanelPointerUp);
             _panel?.RegisterCallback<PointerCancelEvent>(OnPanelPointerCancel);
 
-            // ScrollView registers its scroll-tracking handler in the trickle-down phase,
-            // so it fires before our bubbling row handlers and ignores StopPropagation.
-            // We intercept PointerMove in trickle-down to prevent scroll from firing:
-            //   • In portrait: always suppress touch-drag scroll (scrollbar is the only scroll).
-            //   • In landscape: suppress only while an item drag is active.
             _inventoryGrid?.RegisterCallback<PointerMoveEvent>(evt =>
             {
-                if (_isPortrait || (_activePointerId >= 0 && evt.pointerId == _activePointerId))
-                    evt.PreventDefault();
+                bool dragActive = _activePointerId >= 0 && evt.pointerId == _activePointerId;
+                if (dragActive || _isPortrait)
+                    evt.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
         }
 
@@ -417,7 +420,6 @@ namespace MobileIdleBuilder
                 _pointerDownPos     = evt.position;
                 _isDragging         = false;
                 _activePointerId    = evt.pointerId;
-                _lockedScrollOffset = _inventoryGrid?.scrollOffset ?? Vector2.zero;
 
                 row.CapturePointer(evt.pointerId);
                 // Prevent the ScrollView from treating this touch as a scroll gesture.
