@@ -18,6 +18,10 @@ namespace MobileIdleBuilder
             var doc = GetComponent<UIDocument>();
             if (doc != null)
             {
+                // Ensure this overlay renders above all game UI (DontDestroyOnLoad means it
+                // survives into the destination scene where other UIDocuments exist at order 0).
+                doc.sortingOrder = 100;
+
                 var root = doc.rootVisualElement;
                 _progressBar  = root?.Q<ProgressBar>("progress-bar");
                 _percentLabel = root?.Q<Label>("percent-label");
@@ -38,7 +42,9 @@ namespace MobileIdleBuilder
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)
             {
-                GameLogger.Info($"[LoadingScreen] Scene '{targetScene}' not found in Build Profile.");
+                GameLogger.Error($"[LoadingScreen] Scene '{targetScene}' not found in Build Profile.");
+                SceneLoader.CompleteTransition();
+                Destroy(gameObject);
                 yield break;
             }
             op.allowSceneActivation = false;

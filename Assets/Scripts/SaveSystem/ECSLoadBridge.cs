@@ -32,10 +32,20 @@ namespace MobileIdleBuilder
         {
             if (Instance != this) yield break;
 
+            // Poll for the ECS world — it may not be ready on the first frame on Android.
+            const float kWorldTimeout = 5f;
+            float worldElapsed = 0f;
+            while (World.DefaultGameObjectInjectionWorld == null && worldElapsed < kWorldTimeout)
+            {
+                worldElapsed += Time.deltaTime;
+                yield return null;
+            }
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                GameLogger.Error("[ECSLoadBridge] No ECS world found.");
+                GameLogger.Error("[ECSLoadBridge] No ECS world found — save load skipped.");
+                IsLoaded = true;
                 yield break;
             }
 
@@ -62,6 +72,7 @@ namespace MobileIdleBuilder
             if (_progressQuery.IsEmpty || _prestigeQuery.IsEmpty || _inventoryQuery.IsEmpty)
             {
                 GameLogger.Error("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
+                IsLoaded = true;
                 yield break;
             }
 
