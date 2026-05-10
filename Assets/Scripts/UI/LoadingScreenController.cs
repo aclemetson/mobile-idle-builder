@@ -94,7 +94,7 @@ namespace MobileIdleBuilder
             catch (System.Exception ex) { GameLogger.Error($"[LoadingScreen] UpdateProgress(100f) threw: {ex.Message}"); }
 
             GameLogger.Info("[LoadingScreen] Phase3 — pre-yield");
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSecondsRealtime(0.3f);
 
             GameLogger.Info("[LoadingScreen] Phase3 — post-yield, calling CompleteTransition");
             SceneLoader.CompleteTransition();
