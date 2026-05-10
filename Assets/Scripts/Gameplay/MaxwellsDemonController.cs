@@ -71,6 +71,7 @@ namespace MobileIdleBuilder
 
         // ── Portrait/landscape layout tracking ────────────────────────────
         private bool _isPortrait;
+        private bool _inventoryOverflows;
 
         // ── ECS ───────────────────────────────────────────────────────────
         private EntityManager _em;
@@ -292,7 +293,12 @@ namespace MobileIdleBuilder
             _inventoryGrid?.RegisterCallback<PointerMoveEvent>(evt =>
             {
                 bool dragActive = _activePointerId >= 0 && evt.pointerId == _activePointerId;
-                if (dragActive || _isPortrait)
+                // Block ContentDragger from seeing PointerMove when:
+                //   • a drag is in progress (prevents capture-stealing in all orientations), OR
+                //   • portrait + content overflows (scrollbar is the only scroll mechanism).
+                // When content fits the view, _inventoryOverflows is false and no blocking
+                // is needed outside of drag — ContentDragger backs off at scroll boundaries.
+                if (dragActive || (_isPortrait && _inventoryOverflows))
                     evt.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
         }
@@ -308,11 +314,39 @@ namespace MobileIdleBuilder
             _inventoryColumnElement?.EnableInClassList(CSS_InvColPortrait, _isPortrait);
             _demonColumnElement?.EnableInClassList(CSS_DmnColPortrait, _isPortrait);
 
-            // In portrait, keep the scrollbar always visible so it's the clear scroll mechanism.
-            if (_inventoryGrid != null)
+            // Viewport size changes on rotation, so recheck overflow after the next layout pass.
+            _inventoryGrid?.schedule.Execute(UpdateScrollability);
+        }
+
+        /// <summary>
+        /// Checks whether inventory content overflows the visible viewport and
+        /// shows/hides the scrollbar accordingly. Call after any change that could
+        /// affect item count or viewport dimensions; always schedule via
+        /// _inventoryGrid.schedule.Execute so layout is settled before reading.
+        /// </summary>
+        private void UpdateScrollability()
+        {
+            if (_inventoryGrid == null) return;
+
+            float contentH  = _inventoryGrid.contentContainer.layout.height;
+            float viewportH = _inventoryGrid.contentViewport.layout.height;
+            _inventoryOverflows = contentH > viewportH + 1f; // 1 px tolerance for float rounding
+
+            if (!_inventoryOverflows)
+            {
+                // Content fits: no scrollbar needed. ContentDragger backs off at the scroll
+                // boundary, so drag gestures work without any extra interception.
+                _inventoryGrid.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            }
+            else
+            {
+                // Content overflows: show the scrollbar. In portrait the scrollbar is the
+                // only scroll mechanism (touch-drag scroll is blocked by the TrickleDown
+                // handler above). In landscape auto-visibility is fine.
                 _inventoryGrid.verticalScrollerVisibility = _isPortrait
                     ? ScrollerVisibility.AlwaysVisible
                     : ScrollerVisibility.Auto;
+            }
         }
 
         // ================================================================
@@ -383,6 +417,9 @@ namespace MobileIdleBuilder
             {
                 UpdateEarnPreview();
             }
+
+            // Recheck overflow after layout settles — item count may have changed.
+            _inventoryGrid.schedule.Execute(UpdateScrollability);
         }
 
         private VisualElement BuildItemRow(ItemSO item, int quantity)
