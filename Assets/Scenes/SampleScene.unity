@@ -1013,6 +1013,7 @@ GameObject:
   - component: {fileID: 4000000002}
   - component: {fileID: 4000000003}
   - component: {fileID: 4000000004}
+  - component: {fileID: 4000000005}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1773,6 +1774,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475114c3c2ced8342897028f661da987, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UI.SafeAreaAdapter
+--- !u!114 &4000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab74f8cf1129064488e5bc433b47a3f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UIScaler
+  designWidth: 1080
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

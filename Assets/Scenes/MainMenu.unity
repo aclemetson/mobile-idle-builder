@@ -210,6 +210,7 @@ GameObject:
   - component: {fileID: 384025008}
   - component: {fileID: 384025007}
   - component: {fileID: 384025010}
+  - component: {fileID: 384025011}
   m_Layer: 0
   m_Name: MainMenuUI
   m_TagString: Untagged
@@ -283,6 +284,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475114c3c2ced8342897028f661da987, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UI.SafeAreaAdapter
+--- !u!114 &384025011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384025006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab74f8cf1129064488e5bc433b47a3f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UIScaler
+  designWidth: 1080
 --- !u!1 &1121101505
 GameObject:
   m_ObjectHideFlags: 0
