@@ -20,7 +20,7 @@ namespace MobileIdleBuilder
         /// <paramref name="footprintCenter"/> is the XZ centre of the full footprint (Y = 0).
         /// <paramref name="w"/> and <paramref name="h"/> are the footprint dimensions in cells.
         /// </summary>
-        public static TutorialTileHighlight Spawn(Vector3 footprintCenter, float cellSize, int w = 1, int h = 1)
+        public static TutorialTileHighlight Spawn(Vector3 footprintCenter, float cellSize, int w = 1, int h = 1, Material material = null)
         {
             var go  = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = "TutorialHighlight";
@@ -33,6 +33,8 @@ namespace MobileIdleBuilder
             go.transform.localScale = new Vector3(scaleX, scaleZ, 1f);
 
             var mr = go.GetComponent<MeshRenderer>();
+            if (material != null)
+                mr.sharedMaterial = material;
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
 

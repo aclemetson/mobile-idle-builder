@@ -124,7 +124,7 @@ namespace MobileIdleBuilder
             mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_ZWrite", 0f);
-            mat.SetColor("_BaseColor", Color.white);
+            mat.SetColor("_BaseColor", baseColor);
             mat.enableInstancing = true;
             rend.material = mat;
 

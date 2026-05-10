@@ -929,6 +929,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialHighlighter
   cameraFollow: {fileID: 330585548}
   gridRenderer: {fileID: 1750057541}
+  _highlightMaterial: {fileID: 2100000, guid: 61e6223e582109c4aa37afd5e41c5532, type: 2}
 --- !u!4 &1320393314
 Transform:
   m_ObjectHideFlags: 0
@@ -1270,6 +1271,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingVisualizer
   gridRenderer: {fileID: 1750057541}
+  _buildingMaterial: {fileID: 2100000, guid: 61e6223e582109c4aa37afd5e41c5532, type: 2}
 --- !u!114 &1750057544
 MonoBehaviour:
   m_ObjectHideFlags: 0

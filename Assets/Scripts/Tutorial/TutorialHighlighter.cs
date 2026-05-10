@@ -28,7 +28,8 @@ namespace MobileIdleBuilder
     public class TutorialHighlighter : MonoBehaviour
     {
         [SerializeField] private CameraController cameraFollow;
-        [SerializeField] private GridRenderer          gridRenderer;
+        [SerializeField] private GridRenderer     gridRenderer;
+        [SerializeField] private Material         _highlightMaterial;  // URP Unlit Transparent — assign in Inspector
 
         private TutorialTileHighlight _activeHighlight;
         private Coroutine             _searchRoutine;
@@ -121,7 +122,7 @@ namespace MobileIdleBuilder
 
             float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
             ClearVisual();
-            _activeHighlight = TutorialTileHighlight.Spawn(t.CameraTarget, cs, t.FootprintW, t.FootprintH);
+            _activeHighlight = TutorialTileHighlight.Spawn(t.CameraTarget, cs, t.FootprintW, t.FootprintH, _highlightMaterial);
         }
 
         private WorldTarget? FindWorldTarget(string targetId)
