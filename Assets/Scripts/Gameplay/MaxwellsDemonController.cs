@@ -265,6 +265,54 @@ namespace MobileIdleBuilder
                 if (_isPortrait && _inventoryOverflows)
                     evt.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
+
+            // Tap detection lives at the ScrollView level, not on individual rows.
+            // ContentDragger calls CapturePointer() on PointerDown (trickle-down), which
+            // means the row's PointerUpEvent handler never fires for a captured pointer.
+            // However, a captured PointerUp is still dispatched to the capturing element
+            // (contentViewport) and then bubbles up — so handlers on _inventoryGrid fire.
+            _inventoryGrid?.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                _rowPointerDownPos = evt.position;
+            }, TrickleDown.TrickleDown);
+
+            _inventoryGrid?.RegisterCallback<PointerUpEvent>(OnInventoryGridPointerUp);
+        }
+
+        // ================================================================
+        // Inventory tap detection
+        // ================================================================
+
+        private void OnInventoryGridPointerUp(PointerUpEvent evt)
+        {
+            // Reject scroll gestures — only short taps select an item
+            if (Vector2.Distance(evt.position, _rowPointerDownPos) > TapThreshold) return;
+
+            // Hit-test against the down position (where the user actually intended to tap)
+            _inventoryGrid.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+            {
+                if (!row.worldBound.Contains(_rowPointerDownPos)) return;
+                if (!(row.userData is int itemId)) return;
+
+                if (_selectedItemId == itemId)
+                    DeselectItem();
+                else
+                {
+                    int qty = GetInventoryQuantity(itemId);
+                    if (qty > 0) SelectItem(itemId, qty, evt.position);
+                }
+            });
+        }
+
+        private int GetInventoryQuantity(int itemId)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty) return 0;
+            var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i].ItemID == itemId) return buffer[i].Quantity;
+            }
+            return 0;
         }
 
         // ================================================================
@@ -379,29 +427,6 @@ namespace MobileIdleBuilder
             row.Add(nameLabel);
             row.Add(countLabel);
             row.Add(valLabel);
-
-            int   capturedItemId   = item.itemId;
-            int   capturedQuantity = quantity;
-
-            row.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                _rowPointerDownPos = evt.position;
-                evt.PreventDefault();  // stop ScrollView starting a scroll on this touch
-                evt.StopPropagation();
-            });
-
-            row.RegisterCallback<PointerUpEvent>(evt =>
-            {
-                // Only register as a tap if the finger didn't travel far (not a scroll swipe)
-                if (Vector2.Distance(evt.position, _rowPointerDownPos) <= TapThreshold)
-                {
-                    if (_selectedItemId == capturedItemId)
-                        DeselectItem();
-                    else
-                        SelectItem(capturedItemId, capturedQuantity, evt.position);
-                }
-                evt.StopPropagation();
-            });
 
             return row;
         }
