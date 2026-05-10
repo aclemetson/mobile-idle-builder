@@ -58,7 +58,6 @@ namespace MobileIdleBuilder
         private Button        _btnSellConfirm;
 
         // ── Chip drag gesture state ───────────────────────────────────────
-        private bool _isDragging;
         private int  _activePointerId = -1;
 
         // ── Portrait/landscape layout tracking ────────────────────────────
@@ -448,7 +447,6 @@ namespace MobileIdleBuilder
 
         private void HideChip()
         {
-            _isDragging      = false;
             _activePointerId = -1;
             _dragItemId      = -1;
             _dragQuantity    = 0;
@@ -461,7 +459,6 @@ namespace MobileIdleBuilder
         {
             if (_selectedItemId < 0) return;
             _activePointerId = evt.pointerId;
-            _isDragging      = true;
             _dragGhost?.CapturePointer(evt.pointerId);
             evt.StopPropagation();
         }
@@ -483,7 +480,6 @@ namespace MobileIdleBuilder
             int  savedQty       = _dragQuantity;
 
             _activePointerId = -1;
-            _isDragging      = false;
             _dropZone?.RemoveFromClassList(CSS_DropActive);
             _dragGhost?.ReleasePointer(evt.pointerId);
 
@@ -509,7 +505,6 @@ namespace MobileIdleBuilder
         {
             if (evt.pointerId != _activePointerId) return;
             _activePointerId = -1;
-            _isDragging      = false;
             // Keep chip visible at last position — OS interrupt shouldn't deselect the item
             _dropZone?.RemoveFromClassList(CSS_DropActive);
         }
