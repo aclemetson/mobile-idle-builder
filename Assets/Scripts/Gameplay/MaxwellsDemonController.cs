@@ -272,6 +272,17 @@ namespace MobileIdleBuilder
             _panel?.RegisterCallback<PointerMoveEvent>(OnPanelPointerMove);
             _panel?.RegisterCallback<PointerUpEvent>(OnPanelPointerUp);
             _panel?.RegisterCallback<PointerCancelEvent>(OnPanelPointerCancel);
+
+            // ScrollView registers its scroll-tracking handler in the trickle-down phase,
+            // so it fires before our bubbling row handlers and ignores StopPropagation.
+            // We intercept PointerMove in trickle-down to prevent scroll from firing:
+            //   • In portrait: always suppress touch-drag scroll (scrollbar is the only scroll).
+            //   • In landscape: suppress only while an item drag is active.
+            _inventoryGrid?.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (_isPortrait || (_activePointerId >= 0 && evt.pointerId == _activePointerId))
+                    evt.PreventDefault();
+            }, TrickleDown.TrickleDown);
         }
 
         // ================================================================
@@ -284,6 +295,12 @@ namespace MobileIdleBuilder
             _dividerElement?.EnableInClassList(CSS_DividerPortrait, _isPortrait);
             _inventoryColumnElement?.EnableInClassList(CSS_InvColPortrait, _isPortrait);
             _demonColumnElement?.EnableInClassList(CSS_DmnColPortrait, _isPortrait);
+
+            // In portrait, keep the scrollbar always visible so it's the clear scroll mechanism.
+            if (_inventoryGrid != null)
+                _inventoryGrid.verticalScrollerVisibility = _isPortrait
+                    ? ScrollerVisibility.AlwaysVisible
+                    : ScrollerVisibility.Auto;
         }
 
         // ================================================================
