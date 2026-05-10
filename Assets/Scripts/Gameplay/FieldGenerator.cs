@@ -231,6 +231,8 @@ namespace MobileIdleBuilder
             col.center = new Vector3(0f, 0.5f, 0f);
             col.radius = 0.5f;
 
+            gridRenderer.SetFieldTileColor(x, y, fieldSO.fieldColor);
+
             var effect = go.AddComponent<FieldEffect>();
             effect.Initialize(fieldSO.fieldColor, _fieldParticleMaterial);
         }
