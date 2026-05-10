@@ -31,14 +31,14 @@
 
 .inventory-item {
     color: var(--color-text-primary);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     margin-right: var(--spacing-md);
     -unity-font-style: bold;
 }
 
 .power-label {
     color: var(--color-warning);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     margin-left: var(--spacing-sm);
 }
 
@@ -60,9 +60,9 @@
 }
 
 .settings-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
     background-color: rgba(255,255,255,0.06);
     border-color: var(--color-border);
     border-width: 1px;
@@ -91,16 +91,16 @@
 .drawer-handle-anchor {
     position: absolute;
     left: 0;
-    top: 48px;
+    top: var(--top-bar-height);
     bottom: 0;
-    width: 36px;
+    width: 44px;
     justify-content: center;
     align-items: flex-start;
 }
 
 .drawer-handle {
-    width: 36px;
-    height: 56px;
+    width: 44px;
+    height: 64px;
     background-color: rgba(10, 14, 26, 0.90);
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
@@ -138,15 +138,15 @@
 .left-drawer {
     position: absolute;
     left: 0;
-    top: 48px; /* below top bar */
+    top: var(--top-bar-height); /* below top bar */
     bottom: 0;
-    width: 220px;
+    width: 260px;
     background-color: rgba(10, 14, 26, 0.97);
     border-right-width: 1px;
     border-right-color: var(--color-border);
     flex-direction: column;
     z-index: 50;
-    translate: -220px 0;
+    translate: -260px 0;
     transition-property: translate;
     transition-duration: 0.2s;
     transition-timing-function: ease-out;
@@ -291,9 +291,9 @@
 }
 
 .close-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
     background-color: rgba(255,255,255,0.06);
     border-color: var(--color-border);
     border-width: 1px;
@@ -405,7 +405,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 48px; /* below top bar */
+    top: var(--top-bar-height); /* below top bar */
     bottom: 0;
     /* transparent — lets the world show through, pointer events pass to the grid */
     background-color: rgba(0, 0, 0, 0);

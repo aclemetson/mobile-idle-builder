@@ -414,8 +414,10 @@ namespace MobileIdleBuilder
             var local = _panel.WorldToLocal(panelPos);
             float w = _dragGhost.resolvedStyle.width;
             float h = _dragGhost.resolvedStyle.height;
-            _dragGhost.style.left = local.x - (w > 0 ? w * 0.5f : 40f);
-            _dragGhost.style.top  = local.y - (h > 0 ? h * 0.5f : 16f);
+            // Fall back to 0 when size isn't resolved yet (first drag frame) so the
+            // ghost doesn't jump by a platform-scaled offset on high-DPI Android.
+            _dragGhost.style.left = local.x - (w > 0 ? w * 0.5f : 0f);
+            _dragGhost.style.top  = local.y - (h > 0 ? h * 0.5f : 0f);
         }
 
         private void CancelDrag()

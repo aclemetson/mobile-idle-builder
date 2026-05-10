@@ -20,19 +20,22 @@
     --color-border:         #1e3a5f;   /* Subtle panel borders */
 
     /* ---- Spacing ---- */
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
+    --spacing-xs: 6px;
+    --spacing-sm: 12px;
+    --spacing-md: 20px;
+    --spacing-lg: 32px;
 
     /* ---- Typography ---- */
-    --font-size-sm: 11px;
-    --font-size-md: 14px;
-    --font-size-lg: 18px;
-    --font-size-xl: 24px;
+    --font-size-sm: 13px;
+    --font-size-md: 17px;
+    --font-size-lg: 22px;
+    --font-size-xl: 28px;
+
+    /* ---- Layout ---- */
+    --top-bar-height: 60px;
 
     /* ---- Borders ---- */
-    --border-radius:  4px;
+    --border-radius:  8px;
     /* Note: UI Toolkit does not support box-shadow, so --border-glow cannot be
        applied directly. Use it as a reference value in C# via IStyle or custom
        shader effects when a glow is needed. */

@@ -11,8 +11,15 @@ namespace MobileIdleBuilder
     {
         public static Vector2 GetPointerPosition()
         {
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-                return Touchscreen.current.primaryTouch.position.ReadValue();
+            if (Touchscreen.current != null)
+            {
+                var touch = Touchscreen.current.primaryTouch;
+                // Include wasReleasedThisFrame so callers on the release frame still get the
+                // correct position instead of falling through to Mouse (which may be null on
+                // Android or use a different Y convention).
+                if (touch.press.isPressed || touch.press.wasReleasedThisFrame)
+                    return touch.position.ReadValue();
+            }
             if (Mouse.current != null)
                 return Mouse.current.position.ReadValue();
             return Vector2.zero;
