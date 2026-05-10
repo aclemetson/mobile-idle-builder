@@ -38,7 +38,7 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
-            GameLogger.Info($"[LoadingScreen] Starting async load of '{targetScene}'");
+            GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)
             {
@@ -50,9 +50,8 @@ namespace MobileIdleBuilder
             op.allowSceneActivation = false;
 
             // Phase 1 — scene file loading (op.progress: 0→0.9, displayed: 0%→90%).
-            // Animate toward real progress so the bar moves even when the load is instant.
             float displayed = 0f;
-            const float fillSpeed = 0.6f; // 0→1 normalised/sec
+            const float fillSpeed = 0.6f;
 
             while (op.progress < 0.9f || displayed < 0.9f)
             {
@@ -61,30 +60,41 @@ namespace MobileIdleBuilder
                 UpdateProgress(displayed * 100f);
                 yield return null;
             }
+            GameLogger.Info($"[LoadingScreen] Phase1 complete — op.progress={op.progress:F2}  displayed={displayed:F2}");
 
             // Phase 2 — ECS SubScene entity initialisation (90%→100%).
-            // Keep the loading screen alive across the scene boundary so it overlays
-            // SampleScene while ECSLoadBridge streams and applies the save data.
             DontDestroyOnLoad(gameObject);
             op.allowSceneActivation = true;
             yield return null; // one frame for Awake calls in the incoming scene to run
 
-            if (ECSLoadBridge.Instance != null)
+            bool hasBridge = ECSLoadBridge.Instance != null;
+            GameLogger.Info($"[LoadingScreen] Phase2 — ECSLoadBridge.Instance={(hasBridge ? "found" : "NULL")}");
+
+            if (hasBridge)
             {
-                // Crawl the bar slowly toward 99% while ECS entities load.
+                float logTimer = 0f;
                 while (!ECSLoadBridge.Instance.IsLoaded)
                 {
                     displayed = Mathf.MoveTowards(displayed, 0.99f, Time.deltaTime * 0.05f);
                     UpdateProgress(displayed * 100f);
+                    logTimer += Time.deltaTime;
+                    if (logTimer >= 2f)
+                    {
+                        logTimer = 0f;
+                        GameLogger.Info($"[LoadingScreen] Phase2 still waiting — IsLoaded=false  displayed={displayed:F2}");
+                    }
                     yield return null;
                 }
+                GameLogger.Info("[LoadingScreen] Phase2 complete — ECSLoadBridge.IsLoaded=true");
             }
 
             // Phase 3 — done; snap to 100%, brief hold, reveal destination UI, remove overlay.
+            GameLogger.Info("[LoadingScreen] Phase3 — snapping to 100% and destroying overlay");
             UpdateProgress(100f);
             yield return new WaitForSeconds(0.3f);
             SceneLoader.CompleteTransition();
             Destroy(gameObject);
+            GameLogger.Info("[LoadingScreen] Overlay destroyed — transition complete");
         }
 
         private void UpdateProgress(float pct)
