@@ -1146,6 +1146,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3000000004}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1463284720
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1463284722}
+  - component: {fileID: 1463284721}
+  m_Layer: 0
+  m_Name: RenderingMaterials
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1463284721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1463284720}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae9e2c7625efa1741b946870acaa922d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RenderingMaterials
+  Opaque: {fileID: 2100000, guid: c7f3a291d548be62e1047f93a820d654, type: 2}
+  Transparent: {fileID: 2100000, guid: 61e6223e582109c4aa37afd5e41c5532, type: 2}
+--- !u!4 &1463284722
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1463284720}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1590349487
 GameObject:
   m_ObjectHideFlags: 0
@@ -1233,7 +1279,7 @@ MonoBehaviour:
   width: 20
   height: 20
   cellSize: 1.5
-  tileColor: {r: 0.067, g: 0.094, b: 0.102, a: 1}
+  tileColor: {r: 0.101960786, g: 0.14509805, b: 0.20784314, a: 1}
   occupiedColor: {r: 0, g: 0.565, b: 0.612, a: 1}
   ghostValidColor: {r: 0, g: 0.898, b: 1, a: 0.6}
   ghostInvalidColor: {r: 1, g: 0.09, b: 0.267, a: 0.6}
@@ -1271,7 +1317,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingVisualizer
   gridRenderer: {fileID: 1750057541}
-  _buildingMaterial: {fileID: 2100000, guid: 61e6223e582109c4aa37afd5e41c5532, type: 2}
+  _buildingMaterial: {fileID: 2100000, guid: c7f3a291d548be62e1047f93a820d654, type: 2}
 --- !u!114 &1750057544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1798,6 +1844,7 @@ SceneRoots:
   - {fileID: 827826013}
   - {fileID: 330585546}
   - {fileID: 3000000002}
+  - {fileID: 1463284722}
   - {fileID: 1750057542}
   - {fileID: 2094864786}
   - {fileID: 262970761}

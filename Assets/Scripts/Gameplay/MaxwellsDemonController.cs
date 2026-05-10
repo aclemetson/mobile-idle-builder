@@ -11,8 +11,8 @@ namespace MobileIdleBuilder
     /// Opened by BuildingInspectorController when the player taps a building with EntropySinkTag.
     ///
     /// Layout:
-    ///   Left  — scrollable grid of the player's harvestable particles (drag sources)
-    ///   Right — the Demon drop zone (drag target)
+    ///   Landscape — Left: scrollable inventory (drag sources), Right: Demon drop zone (drag target)
+    ///   Portrait  — Top: inventory, Bottom: Demon drop zone (50/50 vertical split)
     ///
     /// On drop, items are removed from the player's ECS InventorySlot buffer and
     ///   baseSellValue × quantity × GetMultiplier()
@@ -32,6 +32,10 @@ namespace MobileIdleBuilder
 
         // ── Panel elements ────────────────────────────────────────────────
         private VisualElement _panel;
+        private VisualElement _bodyElement;
+        private VisualElement _dividerElement;
+        private VisualElement _inventoryColumnElement;
+        private VisualElement _demonColumnElement;
         private ScrollView    _inventoryGrid;
         private VisualElement _dropZone;
         private Label         _earnPreviewLabel;
@@ -41,7 +45,8 @@ namespace MobileIdleBuilder
         private Label         _dragGhostLabel;
 
         // ── Drag state ────────────────────────────────────────────────────
-        private int    _dragItemId   = -1;
+        private int    _dragItemId    = -1;
+        private string _dragItemName  = "";
         private int    _dragQuantity;
         private float  _dragSellValue;
 
@@ -62,6 +67,10 @@ namespace MobileIdleBuilder
         // ── Per-gesture state ─────────────────────────────────────────────
         private Vector2 _pointerDownPos;
         private bool    _isDragging;
+        private int     _activePointerId = -1;
+
+        // ── Portrait/landscape layout tracking ────────────────────────────
+        private bool _isPortrait;
 
         // ── ECS ───────────────────────────────────────────────────────────
         private EntityManager _em;
@@ -78,6 +87,12 @@ namespace MobileIdleBuilder
         private const string CSS_ItemSelected = "demon-item--selected";
         private const string CSS_DropActive   = "demon-drop-zone--active";
         private const string CSS_Hidden       = "hidden";
+
+        // ── Portrait layout CSS classes ───────────────────────────────────
+        private const string CSS_BodyPortrait    = "demon-panel__body--portrait";
+        private const string CSS_DividerPortrait = "demon-divider--portrait";
+        private const string CSS_InvColPortrait  = "demon-inventory-column--portrait";
+        private const string CSS_DmnColPortrait  = "demon-demon-column--portrait";
 
         // ── Drag threshold (pixels before a touch is treated as a drag) ───
         private const float DragThreshold = 10f;
@@ -120,6 +135,15 @@ namespace MobileIdleBuilder
             _ecsReady = true;
         }
 
+        void Update()
+        {
+            if (!IsOpen) return;
+            bool portrait = Screen.height > Screen.width;
+            if (portrait == _isPortrait) return;
+            _isPortrait = portrait;
+            ApplyOrientationLayout();
+        }
+
         void OnDestroy()
         {
             var world = World.DefaultGameObjectInjectionWorld;
@@ -155,6 +179,8 @@ namespace MobileIdleBuilder
             }
 
             IsOpen = true;
+            _isPortrait = Screen.height > Screen.width;
+            ApplyOrientationLayout();
             _cameraController?.SetPanLocked(true);
             RefreshInventory();
             _panel.RemoveFromClassList(CSS_Hidden);
@@ -215,6 +241,11 @@ namespace MobileIdleBuilder
             _dragGhost        = root.Q("demon-drag-ghost");
             _dragGhostLabel   = root.Q<Label>("demon-drag-ghost__label");
 
+            _bodyElement            = _panel?.Q(className: "demon-panel__body");
+            _dividerElement         = _panel?.Q(className: "demon-divider");
+            _inventoryColumnElement = _panel?.Q(className: "demon-inventory-column");
+            _demonColumnElement     = _panel?.Q(className: "demon-demon-column");
+
             _footerNormal      = root.Q("demon-footer-normal");
             _sellTray          = root.Q("demon-sell-tray");
             _sellItemNameLabel = root.Q<Label>("demon-sell-item-name");
@@ -234,6 +265,25 @@ namespace MobileIdleBuilder
                 _btnSellIncrease.clicked += () => { _sellQty = _sellQty >= _selectedMax ? 1 : _sellQty + 1; UpdateSellTray(); };
             if (_btnSellConfirm != null)
                 _btnSellConfirm.clicked += OnSellConfirm;
+
+            // Panel-level fallback drag handlers: fire when pointer capture routing fails on
+            // mobile (i.e. the row-level handlers never receive the event). Each handler
+            // no-ops if _activePointerId is unset or the pointerId doesn't match.
+            _panel?.RegisterCallback<PointerMoveEvent>(OnPanelPointerMove);
+            _panel?.RegisterCallback<PointerUpEvent>(OnPanelPointerUp);
+            _panel?.RegisterCallback<PointerCancelEvent>(OnPanelPointerCancel);
+        }
+
+        // ================================================================
+        // Portrait/landscape layout
+        // ================================================================
+
+        private void ApplyOrientationLayout()
+        {
+            _bodyElement?.EnableInClassList(CSS_BodyPortrait, _isPortrait);
+            _dividerElement?.EnableInClassList(CSS_DividerPortrait, _isPortrait);
+            _inventoryColumnElement?.EnableInClassList(CSS_InvColPortrait, _isPortrait);
+            _demonColumnElement?.EnableInClassList(CSS_DmnColPortrait, _isPortrait);
         }
 
         // ================================================================
@@ -334,19 +384,23 @@ namespace MobileIdleBuilder
 
             row.RegisterCallback<PointerDownEvent>(evt =>
             {
-                _dragItemId     = capturedItemId;
-                _dragQuantity   = capturedQuantity;
-                _dragSellValue  = capturedSellValue;
-                _pointerDownPos = evt.position;
-                _isDragging     = false;
+                _dragItemId      = capturedItemId;
+                _dragItemName    = capturedName;
+                _dragQuantity    = capturedQuantity;
+                _dragSellValue   = capturedSellValue;
+                _pointerDownPos  = evt.position;
+                _isDragging      = false;
+                _activePointerId = evt.pointerId;
 
                 row.CapturePointer(evt.pointerId);
+                // Prevent the ScrollView from treating this touch as a scroll gesture.
+                evt.PreventDefault();
                 evt.StopPropagation();
             });
 
             row.RegisterCallback<PointerMoveEvent>(evt =>
             {
-                if (!row.HasPointerCapture(evt.pointerId)) return;
+                if (evt.pointerId != _activePointerId) return;
 
                 if (!_isDragging && Vector2.Distance(evt.position, _pointerDownPos) > DragThreshold)
                 {
@@ -363,34 +417,39 @@ namespace MobileIdleBuilder
                 if (_isDragging)
                 {
                     MoveDragGhost(evt.position);
-                    if (_dropZone != null)
-                    {
-                        if (_dropZone.worldBound.Contains(evt.position))
-                            _dropZone.AddToClassList(CSS_DropActive);
-                        else
-                            _dropZone.RemoveFromClassList(CSS_DropActive);
-                    }
+                    _dropZone?.EnableInClassList(CSS_DropActive,
+                        _dropZone.worldBound.Contains(evt.position));
                 }
 
+                // StopPropagation prevents the panel-level fallback from double-processing
+                // when capture routing works correctly.
                 evt.StopPropagation();
             });
 
             row.RegisterCallback<PointerUpEvent>(evt =>
             {
-                if (!row.HasPointerCapture(evt.pointerId)) return;
+                if (evt.pointerId != _activePointerId) return;
+
+                // Snapshot state before CancelDrag clears it.
+                bool wasDragging  = _isDragging;
+                int  savedItemId  = _dragItemId;
+                int  savedQty     = _dragQuantity;
+                _activePointerId  = -1;
+
+                // Reset drag state before ReleasePointer so PointerCaptureOutEvent
+                // sees _isDragging == false and doesn't call CancelDrag a second time.
+                CancelDrag();
                 row.ReleasePointer(evt.pointerId);
 
-                if (_isDragging)
+                if (wasDragging)
                 {
                     bool droppedOnDemon = _dropZone != null &&
                                           _dropZone.worldBound.Contains(evt.position);
-                    if (droppedOnDemon && _dragItemId >= 0)
-                        CommitDeposit(_dragItemId, _dragQuantity);
-                    CancelDrag();
+                    if (droppedOnDemon && savedItemId >= 0)
+                        CommitDeposit(savedItemId, savedQty);
                 }
                 else
                 {
-                    CancelDrag();
                     if (_selectedItemId == capturedItemId)
                         DeselectItem();
                     else
@@ -400,7 +459,98 @@ namespace MobileIdleBuilder
                 evt.StopPropagation();
             });
 
+            row.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (evt.pointerId != _activePointerId) return;
+                _activePointerId = -1;
+                CancelDrag();
+            });
+
+            // Fires when pointer capture is lost unexpectedly (e.g. OS interrupt).
+            row.RegisterCallback<PointerCaptureOutEvent>(_ =>
+            {
+                if (_isDragging)
+                {
+                    _activePointerId = -1;
+                    CancelDrag();
+                }
+            });
+
             return row;
+        }
+
+        // ================================================================
+        // Panel-level fallback drag handlers
+        //
+        // On some Android/iOS builds, UIElements pointer capture routing is
+        // unreliable — move/up events reach the element under the finger
+        // rather than the capturing row. These handlers catch those events
+        // at the panel level so drag + tap still work when that happens.
+        //
+        // They are no-ops when the row-level handlers already handled the
+        // event (row sets _activePointerId = -1 first, then StopPropagation
+        // prevents the panel from seeing it at all).
+        // ================================================================
+
+        private void OnPanelPointerMove(PointerMoveEvent evt)
+        {
+            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
+
+            if (!_isDragging && Vector2.Distance(evt.position, _pointerDownPos) > DragThreshold)
+            {
+                _isDragging = true;
+                if (_dragGhost != null && _dragGhostLabel != null)
+                {
+                    _dragGhostLabel.text = _dragItemName;
+                    _dragGhost.RemoveFromClassList(CSS_Hidden);
+                }
+                // Highlight the source row (capture routing failed, so we query for it).
+                _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(r =>
+                {
+                    if (r.userData is int id && id == _dragItemId)
+                        r.AddToClassList(CSS_ItemDragging);
+                });
+                UpdateEarnPreview();
+            }
+
+            if (_isDragging)
+            {
+                MoveDragGhost(evt.position);
+                _dropZone?.EnableInClassList(CSS_DropActive,
+                    _dropZone.worldBound.Contains(evt.position));
+            }
+        }
+
+        private void OnPanelPointerUp(PointerUpEvent evt)
+        {
+            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
+
+            bool wasDragging = _isDragging;
+            int  savedItemId = _dragItemId;
+            int  savedQty    = _dragQuantity;
+            _activePointerId = -1;
+            CancelDrag();
+
+            if (wasDragging)
+            {
+                if (savedItemId >= 0 && _dropZone != null &&
+                    _dropZone.worldBound.Contains(evt.position))
+                    CommitDeposit(savedItemId, savedQty);
+            }
+            else if (savedItemId >= 0)
+            {
+                if (_selectedItemId == savedItemId)
+                    DeselectItem();
+                else
+                    SelectItem(savedItemId, savedQty);
+            }
+        }
+
+        private void OnPanelPointerCancel(PointerCancelEvent evt)
+        {
+            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
+            _activePointerId = -1;
+            CancelDrag();
         }
 
         // ================================================================
@@ -422,6 +572,8 @@ namespace MobileIdleBuilder
 
         private void CancelDrag()
         {
+            _isDragging   = false;
+            _activePointerId = -1;
             _dragItemId   = -1;
             _dragQuantity = 0;
             _dragGhost?.AddToClassList(CSS_Hidden);

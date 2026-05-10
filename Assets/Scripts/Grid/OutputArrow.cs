@@ -71,6 +71,8 @@ namespace MobileIdleBuilder
             part.transform.localRotation = rot;
 
             var mr = part.GetComponent<MeshRenderer>();
+            if (RenderingMaterials.Instance?.Opaque != null)
+                mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
 
