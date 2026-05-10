@@ -67,7 +67,8 @@ namespace MobileIdleBuilder
         // ── Per-gesture state ─────────────────────────────────────────────
         private Vector2 _pointerDownPos;
         private bool    _isDragging;
-        private int     _activePointerId = -1;
+        private int     _activePointerId    = -1;
+        private Vector2 _lockedScrollOffset;
 
         // ── Portrait/landscape layout tracking ────────────────────────────
         private bool _isPortrait;
@@ -138,6 +139,14 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (!IsOpen) return;
+
+            // Unity's ScrollView ignores PreventDefault and scrolls regardless when its
+            // internal manipulator runs. Forcing the offset back every frame while a row
+            // touch is active is the only reliable way to prevent scroll from consuming
+            // the same gesture as a drag.
+            if (_activePointerId >= 0 && _inventoryGrid != null)
+                _inventoryGrid.scrollOffset = _lockedScrollOffset;
+
             bool portrait = Screen.height > Screen.width;
             if (portrait == _isPortrait) return;
             _isPortrait = portrait;
@@ -401,13 +410,14 @@ namespace MobileIdleBuilder
 
             row.RegisterCallback<PointerDownEvent>(evt =>
             {
-                _dragItemId      = capturedItemId;
-                _dragItemName    = capturedName;
-                _dragQuantity    = capturedQuantity;
-                _dragSellValue   = capturedSellValue;
-                _pointerDownPos  = evt.position;
-                _isDragging      = false;
-                _activePointerId = evt.pointerId;
+                _dragItemId         = capturedItemId;
+                _dragItemName       = capturedName;
+                _dragQuantity       = capturedQuantity;
+                _dragSellValue      = capturedSellValue;
+                _pointerDownPos     = evt.position;
+                _isDragging         = false;
+                _activePointerId    = evt.pointerId;
+                _lockedScrollOffset = _inventoryGrid?.scrollOffset ?? Vector2.zero;
 
                 row.CapturePointer(evt.pointerId);
                 // Prevent the ScrollView from treating this touch as a scroll gesture.
