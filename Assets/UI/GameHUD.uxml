@@ -273,7 +273,6 @@
             </ui:VisualElement>
             <!-- Drag ghost — floats above everything during drag; must not intercept pointer events -->
             <ui:VisualElement name="demon-drag-ghost" class="demon-drag-ghost hidden"
-                              picking-mode="Ignore"
                               style="position: absolute; z-index: 100;">
                 <ui:Label name="demon-drag-ghost__label" text="" class="demon-drag-ghost__label"
                           picking-mode="Ignore" />

@@ -8,22 +8,15 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Controls the Maxwell's Demon deposit panel.
     ///
-    /// Opened by BuildingInspectorController when the player taps a building with EntropySinkTag.
+    /// Interaction model:
+    ///   • Tap an inventory row  → selects the item; a draggable chip appears at the tap point.
+    ///   • Drag the chip         → move it over the Demon drop zone to deposit.
+    ///   • Tap the sell tray     → adjust quantity and confirm for a partial deposit.
+    ///   • Tap elsewhere / close → deselects and hides the chip.
     ///
     /// Layout:
-    ///   Landscape — Left: scrollable inventory (drag sources), Right: Demon drop zone (drag target)
-    ///   Portrait  — Top: inventory, Bottom: Demon drop zone (50/50 vertical split)
-    ///
-    /// On drop, items are removed from the player's ECS InventorySlot buffer and
-    ///   baseSellValue × quantity × GetMultiplier()
-    /// is credited to PlayerProgressData.BaseCurrency.
-    ///
-    /// Multiplier hook: override GetMultiplier(ItemSO) to inject research/prestige bonuses.
-    ///
-    /// Scene setup:
-    ///   • Attach to the same GameObject as HUDController (or any persistent object).
-    ///   • Wire _uiDocument in the Inspector.
-    ///   • BuildingInspectorController calls Open() / Close() directly.
+    ///   Landscape — Left: scrollable inventory, Right: Demon drop zone
+    ///   Portrait  — Top: inventory (scrollbar-only scroll when overflow), Bottom: drop zone
     /// </summary>
     public class MaxwellsDemonController : MonoBehaviour
     {
@@ -44,7 +37,7 @@ namespace MobileIdleBuilder
         private VisualElement _dragGhost;
         private Label         _dragGhostLabel;
 
-        // ── Drag state ────────────────────────────────────────────────────
+        // ── Drag state (set when chip is selected; drives earn preview) ───
         private int    _dragItemId    = -1;
         private string _dragItemName  = "";
         private int    _dragQuantity;
@@ -55,7 +48,7 @@ namespace MobileIdleBuilder
         private int  _selectedMax;
         private int  _sellQty;
 
-        // ── New sell tray elements ────────────────────────────────────────
+        // ── Sell tray elements ────────────────────────────────────────────
         private VisualElement _footerNormal;
         private VisualElement _sellTray;
         private Label         _sellItemNameLabel;
@@ -64,10 +57,9 @@ namespace MobileIdleBuilder
         private Button        _btnSellIncrease;
         private Button        _btnSellConfirm;
 
-        // ── Per-gesture state ─────────────────────────────────────────────
-        private Vector2 _pointerDownPos;
-        private bool    _isDragging;
-        private int     _activePointerId    = -1;
+        // ── Chip drag gesture state ───────────────────────────────────────
+        private bool _isDragging;
+        private int  _activePointerId = -1;
 
         // ── Portrait/landscape layout tracking ────────────────────────────
         private bool _isPortrait;
@@ -84,7 +76,6 @@ namespace MobileIdleBuilder
 
         // ── CSS class constants ───────────────────────────────────────────
         private const string CSS_Item         = "demon-item";
-        private const string CSS_ItemDragging = "demon-item--dragging";
         private const string CSS_ItemSelected = "demon-item--selected";
         private const string CSS_DropActive   = "demon-drop-zone--active";
         private const string CSS_Hidden       = "hidden";
@@ -95,17 +86,15 @@ namespace MobileIdleBuilder
         private const string CSS_InvColPortrait  = "demon-inventory-column--portrait";
         private const string CSS_DmnColPortrait  = "demon-demon-column--portrait";
 
-        // ── Drag threshold (pixels before a touch is treated as a drag) ───
-        private const float DragThreshold = 10f;
+        // ── Tap vs. scroll discrimination ─────────────────────────────────
+        private Vector2      _rowPointerDownPos;
+        private const float  TapThreshold = 10f;
 
         public bool IsOpen { get; private set; }
 
         // ── Tutorial events ───────────────────────────────────────────────
-        /// <summary>Fired when the panel is opened by the player.</summary>
         public event Action OnOpened;
-        /// <summary>Fired when the panel is closed by the player.</summary>
         public event Action OnClosed;
-        /// <summary>Fired after any successful deposit (manual drag or Deposit All).</summary>
         public event Action OnItemsDeposited;
 
         // ================================================================
@@ -118,9 +107,7 @@ namespace MobileIdleBuilder
                 _uiDocument = FindAnyObjectByType<UIDocument>();
             if (_uiDocument == null) return;
 
-
             BindElements(_uiDocument.rootVisualElement);
-
             _cameraController = FindAnyObjectByType<CameraController>();
 
             var world = World.DefaultGameObjectInjectionWorld;
@@ -139,7 +126,6 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (!IsOpen) return;
-
             bool portrait = Screen.height > Screen.width;
             if (portrait == _isPortrait) return;
             _isPortrait = portrait;
@@ -164,7 +150,6 @@ namespace MobileIdleBuilder
         {
             if (_panel == null) return;
 
-            // ECS world may not have been ready at Start() — retry here.
             if (!_ecsReady)
             {
                 var world = World.DefaultGameObjectInjectionWorld;
@@ -194,7 +179,7 @@ namespace MobileIdleBuilder
             if (!IsOpen) return;
             IsOpen = false;
             _cameraController?.SetPanLocked(false);
-            CancelDrag();
+            HideChip();
             DeselectItem();
             _panel?.AddToClassList(CSS_Hidden);
             OnClosed?.Invoke();
@@ -206,22 +191,16 @@ namespace MobileIdleBuilder
 
         private const string CSS_ItemTutorial = "demon-item--tutorial-highlight";
 
-        /// <summary>
-        /// Adds a pulsing highlight border to every inventory row whose item ID matches.
-        /// Call <see cref="ClearTutorialHighlight"/> to remove it when the step is done.
-        /// </summary>
         public void HighlightTutorialItem(int itemId)
         {
             if (_inventoryGrid == null) return;
             _inventoryGrid.Query<VisualElement>(className: CSS_Item).ForEach(row =>
             {
-                // Each row stores its itemId in UserData when built — check it.
                 if (row.userData is int id && id == itemId)
                     row.AddToClassList(CSS_ItemTutorial);
             });
         }
 
-        /// <summary>Removes the tutorial highlight from all inventory rows.</summary>
         public void ClearTutorialHighlight()
         {
             _inventoryGrid?.Query<VisualElement>(className: CSS_ItemTutorial)
@@ -268,37 +247,22 @@ namespace MobileIdleBuilder
             if (_btnSellConfirm != null)
                 _btnSellConfirm.clicked += OnSellConfirm;
 
-            // ── Drag vs. scroll arbitration ───────────────────────────────
-            // ScrollView's ContentDragger runs in the trickle-down phase. When the
-            // user moves past the scroll threshold it calls CapturePointer() on the
-            // contentViewport, stealing capture from our item row. That triggers
-            // PointerCaptureOutEvent on the row → CancelDrag() → ghost disappears.
-            //
-            // Fix: two trickle-down hooks, parent before child in event order.
-            //
-            //  1. Panel TrickleDown PointerMove — fires first; moves the ghost while
-            //     a drag is active so the ghost always follows the finger.
-            //
-            //  2. ScrollView TrickleDown PointerMove — fires second; calls
-            //     StopImmediatePropagation() while a drag is active. This prevents
-            //     contentViewport (and ContentDragger) from ever seeing the event,
-            //     so ContentDragger can never steal capture.
-            //     In portrait with no drag active it also blocks touch-scroll so
-            //     the scrollbar is the only scroll mechanism.
+            // Ghost chip drag handlers. The chip lives in _panel's absolute space,
+            // outside the ScrollView, so ContentDragger can never interfere.
+            if (_dragGhost != null)
+            {
+                _dragGhost.RegisterCallback<PointerDownEvent>(OnChipPointerDown);
+                _dragGhost.RegisterCallback<PointerMoveEvent>(OnChipPointerMove);
+                _dragGhost.RegisterCallback<PointerUpEvent>(OnChipPointerUp);
+                _dragGhost.RegisterCallback<PointerCancelEvent>(OnChipPointerCancel);
+            }
 
-            _panel?.RegisterCallback<PointerMoveEvent>(OnPanelPointerMove, TrickleDown.TrickleDown);
-            _panel?.RegisterCallback<PointerUpEvent>(OnPanelPointerUp);
-            _panel?.RegisterCallback<PointerCancelEvent>(OnPanelPointerCancel);
-
+            // In portrait + overflow: block ContentDragger from scrolling via touch so the
+            // scrollbar is the only scroll mechanism.  No drag-active check needed here —
+            // the chip lives outside the ScrollView, so its events never reach this handler.
             _inventoryGrid?.RegisterCallback<PointerMoveEvent>(evt =>
             {
-                bool dragActive = _activePointerId >= 0 && evt.pointerId == _activePointerId;
-                // Block ContentDragger from seeing PointerMove when:
-                //   • a drag is in progress (prevents capture-stealing in all orientations), OR
-                //   • portrait + content overflows (scrollbar is the only scroll mechanism).
-                // When content fits the view, _inventoryOverflows is false and no blocking
-                // is needed outside of drag — ContentDragger backs off at scroll boundaries.
-                if (dragActive || (_isPortrait && _inventoryOverflows))
+                if (_isPortrait && _inventoryOverflows)
                     evt.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
         }
@@ -314,39 +278,20 @@ namespace MobileIdleBuilder
             _inventoryColumnElement?.EnableInClassList(CSS_InvColPortrait, _isPortrait);
             _demonColumnElement?.EnableInClassList(CSS_DmnColPortrait, _isPortrait);
 
-            // Viewport size changes on rotation, so recheck overflow after the next layout pass.
             _inventoryGrid?.schedule.Execute(UpdateScrollability);
         }
 
-        /// <summary>
-        /// Checks whether inventory content overflows the visible viewport and
-        /// shows/hides the scrollbar accordingly. Call after any change that could
-        /// affect item count or viewport dimensions; always schedule via
-        /// _inventoryGrid.schedule.Execute so layout is settled before reading.
-        /// </summary>
         private void UpdateScrollability()
         {
             if (_inventoryGrid == null) return;
 
             float contentH  = _inventoryGrid.contentContainer.layout.height;
             float viewportH = _inventoryGrid.contentViewport.layout.height;
-            _inventoryOverflows = contentH > viewportH + 1f; // 1 px tolerance for float rounding
+            _inventoryOverflows = contentH > viewportH + 1f;
 
-            if (!_inventoryOverflows)
-            {
-                // Content fits: no scrollbar needed. ContentDragger backs off at the scroll
-                // boundary, so drag gestures work without any extra interception.
-                _inventoryGrid.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-            }
-            else
-            {
-                // Content overflows: show the scrollbar. In portrait the scrollbar is the
-                // only scroll mechanism (touch-drag scroll is blocked by the TrickleDown
-                // handler above). In landscape auto-visibility is fine.
-                _inventoryGrid.verticalScrollerVisibility = _isPortrait
-                    ? ScrollerVisibility.AlwaysVisible
-                    : ScrollerVisibility.Auto;
-            }
+            _inventoryGrid.verticalScrollerVisibility = _inventoryOverflows
+                ? (_isPortrait ? ScrollerVisibility.AlwaysVisible : ScrollerVisibility.Auto)
+                : ScrollerVisibility.Hidden;
         }
 
         // ================================================================
@@ -363,7 +308,6 @@ namespace MobileIdleBuilder
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity, isReadOnly: true);
 
             GameLogger.Develop($"[Demon] Buffer length={buffer.Length}");
-
 
             bool anyItems = false;
             for (int i = 0; i < buffer.Length; i++)
@@ -405,7 +349,6 @@ namespace MobileIdleBuilder
                     _selectedMax = newMax;
                     _sellQty     = Mathf.Min(_sellQty, _selectedMax);
                     UpdateSellTray();
-                    // Re-apply selected highlight on the freshly rebuilt rows
                     _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
                     {
                         bool isSelected = row.userData is int id && id == _selectedItemId;
@@ -418,255 +361,170 @@ namespace MobileIdleBuilder
                 UpdateEarnPreview();
             }
 
-            // Recheck overflow after layout settles — item count may have changed.
             _inventoryGrid.schedule.Execute(UpdateScrollability);
         }
 
+        // ── Row builder ───────────────────────────────────────────────────
+        // Rows are tap-only. Dragging is done exclusively via the ghost chip
+        // that appears at the tap position when SelectItem() is called.
         private VisualElement BuildItemRow(ItemSO item, int quantity)
         {
             var row = new VisualElement();
             row.AddToClassList(CSS_Item);
-            row.userData = item.itemId; // used by HighlightTutorialItem
+            row.userData = item.itemId;
 
-            var nameLabel  = new Label(item.displayName);
-            nameLabel.AddToClassList("demon-item__name");
-
-            var countLabel = new Label($"×{quantity}");
-            countLabel.AddToClassList("demon-item__count");
-
-            long value    = CalcEntropy(item, quantity);
-            var valLabel  = new Label($"+{value}");
-            valLabel.AddToClassList("demon-item__value");
-
+            var nameLabel  = new Label(item.displayName);  nameLabel.AddToClassList("demon-item__name");
+            var countLabel = new Label($"×{quantity}");    countLabel.AddToClassList("demon-item__count");
+            var valLabel   = new Label($"+{CalcEntropy(item, quantity)}"); valLabel.AddToClassList("demon-item__value");
             row.Add(nameLabel);
             row.Add(countLabel);
             row.Add(valLabel);
 
-            // ── Drag-and-drop via pointer capture ──────────────────────
-            int   capturedItemId    = item.itemId;
-            int   capturedQuantity  = quantity;
-            float capturedSellValue = item.baseSellValue;
-            string capturedName    = item.displayName;
+            int   capturedItemId   = item.itemId;
+            int   capturedQuantity = quantity;
 
             row.RegisterCallback<PointerDownEvent>(evt =>
             {
-                _dragItemId         = capturedItemId;
-                _dragItemName       = capturedName;
-                _dragQuantity       = capturedQuantity;
-                _dragSellValue      = capturedSellValue;
-                _pointerDownPos     = evt.position;
-                _isDragging         = false;
-                _activePointerId    = evt.pointerId;
-
-                row.CapturePointer(evt.pointerId);
-                // Prevent the ScrollView from treating this touch as a scroll gesture.
-                evt.PreventDefault();
-                evt.StopPropagation();
-            });
-
-            row.RegisterCallback<PointerMoveEvent>(evt =>
-            {
-                if (evt.pointerId != _activePointerId) return;
-
-                if (!_isDragging && Vector2.Distance(evt.position, _pointerDownPos) > DragThreshold)
-                {
-                    _isDragging = true;
-                    row.AddToClassList(CSS_ItemDragging);
-                    if (_dragGhost != null && _dragGhostLabel != null)
-                    {
-                        _dragGhostLabel.text = capturedName;
-                        _dragGhost.RemoveFromClassList(CSS_Hidden);
-                    }
-                    UpdateEarnPreview();
-                }
-
-                if (_isDragging)
-                {
-                    MoveDragGhost(evt.position);
-                    _dropZone?.EnableInClassList(CSS_DropActive,
-                        _dropZone.worldBound.Contains(evt.position));
-                }
-
-                // StopPropagation prevents the panel-level fallback from double-processing
-                // when capture routing works correctly.
+                _rowPointerDownPos = evt.position;
+                evt.PreventDefault();  // stop ScrollView starting a scroll on this touch
                 evt.StopPropagation();
             });
 
             row.RegisterCallback<PointerUpEvent>(evt =>
             {
-                if (evt.pointerId != _activePointerId) return;
-
-                // Snapshot state before CancelDrag clears it.
-                bool wasDragging  = _isDragging;
-                int  savedItemId  = _dragItemId;
-                int  savedQty     = _dragQuantity;
-                _activePointerId  = -1;
-
-                // Reset drag state before ReleasePointer so PointerCaptureOutEvent
-                // sees _isDragging == false and doesn't call CancelDrag a second time.
-                CancelDrag();
-                row.ReleasePointer(evt.pointerId);
-
-                if (wasDragging)
-                {
-                    bool droppedOnDemon = _dropZone != null &&
-                                          _dropZone.worldBound.Contains(evt.position);
-                    if (droppedOnDemon && savedItemId >= 0)
-                        CommitDeposit(savedItemId, savedQty);
-                }
-                else
+                // Only register as a tap if the finger didn't travel far (not a scroll swipe)
+                if (Vector2.Distance(evt.position, _rowPointerDownPos) <= TapThreshold)
                 {
                     if (_selectedItemId == capturedItemId)
                         DeselectItem();
                     else
-                        SelectItem(capturedItemId, capturedQuantity);
+                        SelectItem(capturedItemId, capturedQuantity, evt.position);
                 }
-
                 evt.StopPropagation();
-            });
-
-            row.RegisterCallback<PointerCancelEvent>(evt =>
-            {
-                if (evt.pointerId != _activePointerId) return;
-                _activePointerId = -1;
-                CancelDrag();
-            });
-
-            // Fires when pointer capture is lost unexpectedly (e.g. OS interrupt).
-            row.RegisterCallback<PointerCaptureOutEvent>(_ =>
-            {
-                if (_isDragging)
-                {
-                    _activePointerId = -1;
-                    CancelDrag();
-                }
             });
 
             return row;
         }
 
         // ================================================================
-        // Panel-level fallback drag handlers
-        //
-        // On some Android/iOS builds, UIElements pointer capture routing is
-        // unreliable — move/up events reach the element under the finger
-        // rather than the capturing row. These handlers catch those events
-        // at the panel level so drag + tap still work when that happens.
-        //
-        // They are no-ops when the row-level handlers already handled the
-        // event (row sets _activePointerId = -1 first, then StopPropagation
-        // prevents the panel from seeing it at all).
+        // Ghost chip — the only draggable element
         // ================================================================
 
-        private void OnPanelPointerMove(PointerMoveEvent evt)
-        {
-            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
-
-            if (!_isDragging && Vector2.Distance(evt.position, _pointerDownPos) > DragThreshold)
-            {
-                _isDragging = true;
-                if (_dragGhost != null && _dragGhostLabel != null)
-                {
-                    _dragGhostLabel.text = _dragItemName;
-                    _dragGhost.RemoveFromClassList(CSS_Hidden);
-                }
-                // Highlight the source row (capture routing failed, so we query for it).
-                _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(r =>
-                {
-                    if (r.userData is int id && id == _dragItemId)
-                        r.AddToClassList(CSS_ItemDragging);
-                });
-                UpdateEarnPreview();
-            }
-
-            if (_isDragging)
-            {
-                MoveDragGhost(evt.position);
-                _dropZone?.EnableInClassList(CSS_DropActive,
-                    _dropZone.worldBound.Contains(evt.position));
-            }
-        }
-
-        private void OnPanelPointerUp(PointerUpEvent evt)
-        {
-            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
-
-            bool wasDragging = _isDragging;
-            int  savedItemId = _dragItemId;
-            int  savedQty    = _dragQuantity;
-            _activePointerId = -1;
-            CancelDrag();
-
-            if (wasDragging)
-            {
-                if (savedItemId >= 0 && _dropZone != null &&
-                    _dropZone.worldBound.Contains(evt.position))
-                    CommitDeposit(savedItemId, savedQty);
-            }
-            else if (savedItemId >= 0)
-            {
-                if (_selectedItemId == savedItemId)
-                    DeselectItem();
-                else
-                    SelectItem(savedItemId, savedQty);
-            }
-        }
-
-        private void OnPanelPointerCancel(PointerCancelEvent evt)
-        {
-            if (_activePointerId < 0 || evt.pointerId != _activePointerId) return;
-            _activePointerId = -1;
-            CancelDrag();
-        }
-
-        // ================================================================
-        // Drag helpers
-        // ================================================================
-
-        private void MoveDragGhost(Vector2 panelPos)
+        private void PositionChip(Vector2 screenPos)
         {
             if (_dragGhost == null || _panel == null) return;
-            // Convert from panel (root) space → demon panel local space
-            var local = _panel.WorldToLocal(panelPos);
+            var local = _panel.WorldToLocal(screenPos);
             float w = _dragGhost.resolvedStyle.width;
             float h = _dragGhost.resolvedStyle.height;
-            // Fall back to 0 when size isn't resolved yet (first drag frame) so the
-            // ghost doesn't jump by a platform-scaled offset on high-DPI Android.
-            _dragGhost.style.left = local.x - (w > 0 ? w * 0.5f : 0f);
-            _dragGhost.style.top  = local.y - (h > 0 ? h * 0.5f : 0f);
+            // Appear above and centred on the tap point so it's not hidden under the finger
+            _dragGhost.style.left = local.x - (w > 0 ? w * 0.5f : 30f);
+            _dragGhost.style.top  = local.y - (h > 0 ? h + 8f   : 36f);
         }
 
-        private void CancelDrag()
+        private void HideChip()
         {
-            _isDragging   = false;
+            _isDragging      = false;
             _activePointerId = -1;
-            _dragItemId   = -1;
-            _dragQuantity = 0;
+            _dragItemId      = -1;
+            _dragQuantity    = 0;
             _dragGhost?.AddToClassList(CSS_Hidden);
             _dropZone?.RemoveFromClassList(CSS_DropActive);
+            UpdateEarnPreview();
+        }
 
-            if (_inventoryGrid != null)
+        private void OnChipPointerDown(PointerDownEvent evt)
+        {
+            if (_selectedItemId < 0) return;
+            _activePointerId = evt.pointerId;
+            _isDragging      = true;
+            _dragGhost?.CapturePointer(evt.pointerId);
+            evt.StopPropagation();
+        }
+
+        private void OnChipPointerMove(PointerMoveEvent evt)
+        {
+            if (evt.pointerId != _activePointerId) return;
+            MoveChip(evt.position);
+            _dropZone?.EnableInClassList(CSS_DropActive, _dropZone.worldBound.Contains(evt.position));
+            evt.StopPropagation();
+        }
+
+        private void OnChipPointerUp(PointerUpEvent evt)
+        {
+            if (evt.pointerId != _activePointerId) return;
+
+            bool droppedOnDemon = _dropZone != null && _dropZone.worldBound.Contains(evt.position);
+            int  savedItemId    = _dragItemId;
+            int  savedQty       = _dragQuantity;
+
+            _activePointerId = -1;
+            _isDragging      = false;
+            _dropZone?.RemoveFromClassList(CSS_DropActive);
+            _dragGhost?.ReleasePointer(evt.pointerId);
+
+            if (droppedOnDemon && savedItemId >= 0)
             {
-                _inventoryGrid.Query<VisualElement>(className: CSS_ItemDragging)
-                    .ForEach(e => e.RemoveFromClassList(CSS_ItemDragging));
+                _dragGhost?.AddToClassList(CSS_Hidden);
+                _dragItemId = -1;
+                CommitDeposit(savedItemId, savedQty);
+                DeselectItem();
+            }
+            else
+            {
+                // Missed the drop zone: leave chip at release position so the user
+                // can grab it again without having to re-tap the inventory row.
+                PositionChip(evt.position);
+                _dragGhost?.RemoveFromClassList(CSS_Hidden);
             }
 
-            UpdateEarnPreview();
+            evt.StopPropagation();
+        }
+
+        private void OnChipPointerCancel(PointerCancelEvent evt)
+        {
+            if (evt.pointerId != _activePointerId) return;
+            _activePointerId = -1;
+            _isDragging      = false;
+            // Keep chip visible at last position — OS interrupt shouldn't deselect the item
+            _dropZone?.RemoveFromClassList(CSS_DropActive);
+        }
+
+        private void MoveChip(Vector2 screenPos)
+        {
+            if (_dragGhost == null || _panel == null) return;
+            var local = _panel.WorldToLocal(screenPos);
+            float w = _dragGhost.resolvedStyle.width;
+            float h = _dragGhost.resolvedStyle.height;
+            _dragGhost.style.left = local.x - (w > 0 ? w * 0.5f : 0f);
+            _dragGhost.style.top  = local.y - (h > 0 ? h * 0.5f : 0f);
         }
 
         // ================================================================
         // Selection / sell tray
         // ================================================================
 
-        private void SelectItem(int itemId, int maxQty)
+        private void SelectItem(int itemId, int maxQty, Vector2 tapPosition)
         {
+            // Reset previous drag state (hides old chip if any)
+            HideChip();
+
             _selectedItemId = itemId;
             _selectedMax    = maxQty;
             _sellQty        = 1;
 
             var itemSO = ItemDatabase.GetStatic(itemId);
+
+            // Populate chip label and position it at the tap point
+            _dragItemId    = itemId;
+            _dragQuantity  = maxQty;
+            _dragSellValue = itemSO?.baseSellValue ?? 0f;
+            _dragItemName  = itemSO?.displayName ?? "";
+            if (_dragGhostLabel != null) _dragGhostLabel.text = _dragItemName;
+            PositionChip(tapPosition);
+            _dragGhost?.RemoveFromClassList(CSS_Hidden);
+
             if (_sellItemNameLabel != null)
-                _sellItemNameLabel.text = itemSO?.displayName ?? "";
+                _sellItemNameLabel.text = _dragItemName;
 
             _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
             {
@@ -677,10 +535,12 @@ namespace MobileIdleBuilder
             UpdateSellTray();
             _footerNormal?.AddToClassList(CSS_Hidden);
             _sellTray?.RemoveFromClassList(CSS_Hidden);
+            UpdateEarnPreview();
         }
 
         private void DeselectItem()
         {
+            HideChip();
             _selectedItemId = -1;
             _inventoryGrid?.Query<VisualElement>(className: CSS_ItemSelected)
                 .ForEach(e => e.RemoveFromClassList(CSS_ItemSelected));
@@ -719,7 +579,6 @@ namespace MobileIdleBuilder
             var itemSO = ItemDatabase.GetStatic(itemId);
             if (itemSO == null) return;
 
-            // -- Remove from player inventory --
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity);
 
@@ -737,19 +596,13 @@ namespace MobileIdleBuilder
 
             if (removed <= 0) return;
 
-            // -- Credit entropy --
             long earned  = CalcEntropy(itemSO, removed);
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency += earned;
             _progressQuery.SetSingleton(progress);
 
-            // -- Feedback --
             InventoryPopupController.Notify("entropy", (int)earned);
-
-            // -- Tutorial hook --
             OnItemsDeposited?.Invoke();
-
-            // -- Refresh panel --
             RefreshInventory();
         }
 
@@ -792,19 +645,12 @@ namespace MobileIdleBuilder
         // Entropy calculation
         // ================================================================
 
-        /// <summary>
-        /// Returns the entropy earned for depositing <paramref name="quantity"/> of
-        /// <paramref name="item"/>. Extend this method to apply research/prestige multipliers.
-        /// </summary>
         private long CalcEntropy(ItemSO item, int quantity)
         {
             float multiplier = GetMultiplier(item);
             return (long)(item.baseSellValue * quantity * multiplier);
         }
 
-        /// <summary>
-        /// Override point for research and prestige entropy multipliers. Base returns 1f.
-        /// </summary>
         protected virtual float GetMultiplier(ItemSO item) => 1f;
 
         // ================================================================
@@ -822,7 +668,6 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // Show total of all harvestable items in inventory
             if (!_ecsReady || _inventoryQuery.IsEmpty) { _earnPreviewLabel.text = ""; return; }
 
             var invEntity = _inventoryQuery.GetSingletonEntity();
