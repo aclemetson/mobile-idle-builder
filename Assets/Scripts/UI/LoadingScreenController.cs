@@ -89,10 +89,17 @@ namespace MobileIdleBuilder
             }
 
             // Phase 3 — done; snap to 100%, brief hold, reveal destination UI, remove overlay.
-            GameLogger.Info("[LoadingScreen] Phase3 — snapping to 100% and destroying overlay");
-            UpdateProgress(100f);
+            GameLogger.Info("[LoadingScreen] Phase3 — snapping to 100%");
+            try { UpdateProgress(100f); }
+            catch (System.Exception ex) { GameLogger.Error($"[LoadingScreen] UpdateProgress(100f) threw: {ex.Message}"); }
+
+            GameLogger.Info("[LoadingScreen] Phase3 — pre-yield");
             yield return new WaitForSeconds(0.3f);
+
+            GameLogger.Info("[LoadingScreen] Phase3 — post-yield, calling CompleteTransition");
             SceneLoader.CompleteTransition();
+
+            GameLogger.Info("[LoadingScreen] Phase3 — post-CompleteTransition, calling Destroy");
             Destroy(gameObject);
             GameLogger.Info("[LoadingScreen] Overlay destroyed — transition complete");
         }
