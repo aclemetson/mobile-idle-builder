@@ -15,6 +15,7 @@ namespace MobileIdleBuilder
     public sealed class UIScaler : MonoBehaviour
     {
         [SerializeField] private float designWidth = 1080f;
+        [SerializeField] private float scaleFactor = 2f;
 
         private void Awake()
         {
@@ -25,10 +26,10 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            float scale = Screen.width / designWidth;
+            float scale = (Screen.width / designWidth) * scaleFactor;
             doc.panelSettings.scale = scale;
 
-            GameLogger.Info($"[UIScaler] {gameObject.name}: Screen={Screen.width}x{Screen.height} dpi={Screen.dpi:F0} designWidth={designWidth} → scale={scale:F3}");
+            GameLogger.Info($"[UIScaler] {gameObject.name}: Screen={Screen.width}x{Screen.height} dpi={Screen.dpi:F0} designWidth={designWidth} scaleFactor={scaleFactor} → scale={scale:F3}");
         }
     }
 }
