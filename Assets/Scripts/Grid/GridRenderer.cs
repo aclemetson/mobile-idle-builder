@@ -26,6 +26,9 @@ namespace MobileIdleBuilder
         [SerializeField] private Color tutorialHighlightColor = new Color(1f,    0.78f,  0.15f, 0.75f); // amber/gold — tutorial focus
         [SerializeField] private Color tutorialHoverColor    = new Color(1f,    0.97f,  0.70f, 1.00f); // bright pale-yellow — hover over tutorial tile
 
+        [Header("Tile Material")]
+        [SerializeField] private Material tileMaterial;   // Must be URP Unlit Transparent — assign in Inspector
+
         [Header("Tile gap (0 = flush, 0.05 = small gap)")]
         [SerializeField] [Range(0f, 0.5f)] private float gap = 0.05f;
 
@@ -72,6 +75,8 @@ namespace MobileIdleBuilder
                     Destroy(tile.GetComponent<MeshCollider>());
 
                     var mr = tile.GetComponent<MeshRenderer>();
+                    if (tileMaterial != null)
+                        mr.sharedMaterial = tileMaterial;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 

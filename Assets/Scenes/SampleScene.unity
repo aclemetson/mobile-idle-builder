@@ -1240,6 +1240,7 @@ MonoBehaviour:
   fieldHoverColor: {r: 0.15, g: 0.85, b: 0.35, a: 0.55}
   tutorialHighlightColor: {r: 1, g: 0.78, b: 0.15, a: 0.75}
   tutorialHoverColor: {r: 1, g: 0.97, b: 0.7, a: 1}
+  tileMaterial: {fileID: 2100000, guid: 61e6223e582109c4aa37afd5e41c5532, type: 2}
   gap: 0.05
 --- !u!4 &1750057542
 Transform:
@@ -1787,6 +1788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UIScaler
   designWidth: 1080
+  scaleFactor: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
