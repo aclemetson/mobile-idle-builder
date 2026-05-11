@@ -1,4 +1,4 @@
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR || UNITY_IOS && !UNITY_EDITOR
 using System;
 using System.Threading.Tasks;
 using Google;

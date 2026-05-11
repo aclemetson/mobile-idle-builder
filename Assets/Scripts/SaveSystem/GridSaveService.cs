@@ -116,6 +116,15 @@ namespace MobileIdleBuilder
                     cells = cells.ToArray()
                 });
             }
+
+            // --- Fields ---
+            save.currentRun.grid.fields.Clear();
+            foreach (var kv in FieldGenerator.GetAllFields())
+                save.currentRun.grid.fields.Add(new FieldSaveData
+                {
+                    fieldId  = kv.Value.id,
+                    position = new[] { kv.Key.x, kv.Key.y }
+                });
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -185,6 +194,11 @@ namespace MobileIdleBuilder
                     conveyorPlacer.PlaceConveyorChain(path);
                 }
             }
+
+            // --- Restore fields ---
+            var fieldGenerator = FindAnyObjectByType<FieldGenerator>();
+            if (fieldGenerator != null && save.currentRun.grid.fields?.Count > 0)
+                fieldGenerator.SpawnFromSave(save.currentRun.grid.fields);
         }
     }
 }
