@@ -9,7 +9,8 @@ namespace MobileIdleBuilder
     /// Controls the Maxwell's Demon deposit panel.
     ///
     /// Interaction model:
-    ///   • Tap an inventory row  → selects the item; a draggable chip appears at the tap point.
+    ///   • Tap an inventory row  → selects the item; sell tray opens (chip stays hidden).
+    ///   • Press + drag a row    → chip appears at the pointer and follows it (drag to deposit all).
     ///   • Drag the chip         → move it over the Demon drop zone to deposit.
     ///   • Tap the sell tray     → adjust quantity and confirm for a partial deposit.
     ///   • Tap elsewhere / close → deselects and hides the chip.
@@ -58,7 +59,10 @@ namespace MobileIdleBuilder
         private Button        _btnSellConfirm;
 
         // ── Chip drag gesture state ───────────────────────────────────────
-        private int  _activePointerId = -1;
+        private int  _activePointerId        = -1;
+        private int  _pendingDragItemId      = -1;
+        private int  _pendingDragPointerId   = -1;
+        private const float DragThreshold    = 15f;
 
         // ── Portrait/landscape layout tracking ────────────────────────────
         private bool _isPortrait;
@@ -256,13 +260,21 @@ namespace MobileIdleBuilder
                 _dragGhost.RegisterCallback<PointerCancelEvent>(OnChipPointerCancel);
             }
 
-            // In portrait + overflow: block ContentDragger from scrolling via touch so the
-            // scrollbar is the only scroll mechanism.  No drag-active check needed here —
-            // the chip lives outside the ScrollView, so its events never reach this handler.
+            // Always block ContentDragger from scrolling via touch — scrollbar is the
+            // only scroll mechanism. Also initiates chip drag when the pointer moves
+            // past DragThreshold.  The chip lives outside the ScrollView so its own
+            // events never reach this handler.
             _inventoryGrid?.RegisterCallback<PointerMoveEvent>(evt =>
             {
-                if (_isPortrait && _inventoryOverflows)
-                    evt.StopImmediatePropagation();
+                if (_pendingDragItemId >= 0 && _activePointerId < 0 &&
+                    evt.pointerId == _pendingDragPointerId &&
+                    Vector2.Distance(evt.position, _rowPointerDownPos) > DragThreshold)
+                {
+                    int qty = GetInventoryQuantity(_pendingDragItemId);
+                    if (qty > 0)
+                        BeginChipDrag(_pendingDragItemId, qty, evt.pointerId, evt.position);
+                }
+                evt.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
 
             // Tap detection lives at the ScrollView level, not on individual rows.
@@ -273,6 +285,11 @@ namespace MobileIdleBuilder
             _inventoryGrid?.RegisterCallback<PointerDownEvent>(evt =>
             {
                 _rowPointerDownPos = evt.position;
+                if (_activePointerId < 0)
+                {
+                    _pendingDragPointerId = evt.pointerId;
+                    _pendingDragItemId    = FindRowAt(evt.position);
+                }
             }, TrickleDown.TrickleDown);
 
             _inventoryGrid?.RegisterCallback<PointerUpEvent>(OnInventoryGridPointerUp);
@@ -284,6 +301,9 @@ namespace MobileIdleBuilder
 
         private void OnInventoryGridPointerUp(PointerUpEvent evt)
         {
+            _pendingDragItemId    = -1;
+            _pendingDragPointerId = -1;
+
             // Reject scroll gestures — only short taps select an item
             if (Vector2.Distance(evt.position, _rowPointerDownPos) > TapThreshold) return;
 
@@ -298,7 +318,7 @@ namespace MobileIdleBuilder
                 else
                 {
                     int qty = GetInventoryQuantity(itemId);
-                    if (qty > 0) SelectItem(itemId, qty, evt.position);
+                    if (qty > 0) SelectItem(itemId, qty);
                 }
             });
         }
@@ -413,7 +433,7 @@ namespace MobileIdleBuilder
 
         // ── Row builder ───────────────────────────────────────────────────
         // Rows are tap-only. Dragging is done exclusively via the ghost chip
-        // that appears at the tap position when SelectItem() is called.
+        // that appears when a drag gesture is detected (BeginChipDrag).
         private VisualElement BuildItemRow(ItemSO item, int quantity)
         {
             var row = new VisualElement();
@@ -519,13 +539,56 @@ namespace MobileIdleBuilder
             _dragGhost.style.top  = local.y - (h > 0 ? h * 0.5f : 0f);
         }
 
+        private int FindRowAt(Vector2 position)
+        {
+            int result = -1;
+            _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+            {
+                if (row.worldBound.Contains(position) && row.userData is int id)
+                    result = id;
+            });
+            return result;
+        }
+
+        private void BeginChipDrag(int itemId, int qty, int pointerId, Vector2 position)
+        {
+            _pendingDragItemId    = -1;
+            _pendingDragPointerId = -1;
+            HideChip();
+
+            _sellTray?.AddToClassList(CSS_Hidden);
+            _footerNormal?.RemoveFromClassList(CSS_Hidden);
+
+            var itemSO = ItemDatabase.GetStatic(itemId);
+            _selectedItemId = itemId;
+            _selectedMax    = qty;
+            _dragItemId     = itemId;
+            _dragQuantity   = qty;
+            _dragSellValue  = itemSO?.baseSellValue ?? 0f;
+            _dragItemName   = itemSO?.displayName ?? "";
+
+            if (_dragGhostLabel != null) _dragGhostLabel.text = _dragItemName;
+            PositionChip(position);
+            _dragGhost?.RemoveFromClassList(CSS_Hidden);
+
+            _activePointerId = pointerId;
+            _dragGhost?.CapturePointer(pointerId);
+
+            _inventoryGrid?.Query<VisualElement>(className: CSS_Item).ForEach(row =>
+            {
+                bool isSelected = row.userData is int id && id == itemId;
+                row.EnableInClassList(CSS_ItemSelected, isSelected);
+            });
+
+            UpdateEarnPreview();
+        }
+
         // ================================================================
         // Selection / sell tray
         // ================================================================
 
-        private void SelectItem(int itemId, int maxQty, Vector2 tapPosition)
+        private void SelectItem(int itemId, int maxQty)
         {
-            // Reset previous drag state (hides old chip if any)
             HideChip();
 
             _selectedItemId = itemId;
@@ -534,14 +597,11 @@ namespace MobileIdleBuilder
 
             var itemSO = ItemDatabase.GetStatic(itemId);
 
-            // Populate chip label and position it at the tap point
             _dragItemId    = itemId;
             _dragQuantity  = maxQty;
             _dragSellValue = itemSO?.baseSellValue ?? 0f;
             _dragItemName  = itemSO?.displayName ?? "";
             if (_dragGhostLabel != null) _dragGhostLabel.text = _dragItemName;
-            PositionChip(tapPosition);
-            _dragGhost?.RemoveFromClassList(CSS_Hidden);
 
             if (_sellItemNameLabel != null)
                 _sellItemNameLabel.text = _dragItemName;
