@@ -31,13 +31,25 @@ namespace MobileIdleBuilder
         IEnumerator Start()
         {
             if (Instance != this) yield break;
+            GameLogger.Info("[ECSLoadBridge] Start — polling for ECS world");
+
+            // Poll for the ECS world — it may not be ready on the first frame on Android.
+            const float kWorldTimeout = 5f;
+            float worldElapsed = 0f;
+            while (World.DefaultGameObjectInjectionWorld == null && worldElapsed < kWorldTimeout)
+            {
+                worldElapsed += Time.deltaTime;
+                yield return null;
+            }
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                GameLogger.Error("[ECSLoadBridge] No ECS world found.");
+                GameLogger.Error($"[ECSLoadBridge] No ECS world after {worldElapsed:F1}s — save load skipped.");
+                IsLoaded = true;
                 yield break;
             }
+            GameLogger.Info($"[ECSLoadBridge] World found after {worldElapsed:F1}s — creating queries");
 
             _em = world.EntityManager;
             _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
@@ -48,27 +60,42 @@ namespace MobileIdleBuilder
             _tutorialQuery = _em.CreateEntityQuery(
                 ComponentType.ReadWrite<TutorialStateData>());
 
+            GameLogger.Info("[ECSLoadBridge] Queries created — polling for entities");
+
             // Poll until SubScene entities are loaded
             const float kTimeout = 10f;
             float elapsed = 0f;
+            float logTimer = 0f;
             while (elapsed < kTimeout)
             {
                 if (!_progressQuery.IsEmpty && !_prestigeQuery.IsEmpty && !_inventoryQuery.IsEmpty)
                     break;
-                elapsed += Time.deltaTime;
+                elapsed  += Time.deltaTime;
+                logTimer += Time.deltaTime;
+                if (logTimer >= 2f)
+                {
+                    logTimer = 0f;
+                    GameLogger.Info($"[ECSLoadBridge] Waiting for entities ({elapsed:F1}s) — " +
+                        $"progress={!_progressQuery.IsEmpty}  prestige={!_prestigeQuery.IsEmpty}  " +
+                        $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}");
+                }
                 yield return null;
             }
 
             if (_progressQuery.IsEmpty || _prestigeQuery.IsEmpty || _inventoryQuery.IsEmpty)
             {
-                GameLogger.Error("[ECSLoadBridge] ECS singletons not found within timeout — save load skipped.");
+                GameLogger.Error($"[ECSLoadBridge] Timeout after {elapsed:F1}s — " +
+                    $"progress={!_progressQuery.IsEmpty}  prestige={!_prestigeQuery.IsEmpty}  " +
+                    $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}");
+                IsLoaded = true;
                 yield break;
             }
 
+            GameLogger.Info($"[ECSLoadBridge] All entities found after {elapsed:F1}s — applying save");
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
             IsLoaded = true;
-            GameLogger.Info("[ECSLoadBridge] Save applied to ECS.");
+            GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
         }
 
         // ── Load path ─────────────────────────────────────────────────────

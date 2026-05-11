@@ -86,6 +86,8 @@ namespace MobileIdleBuilder
             go.transform.localScale = Vector3.one * 0.10f;
 
             var mr = go.GetComponent<MeshRenderer>();
+            if (RenderingMaterials.Instance?.Opaque != null)
+                mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
 

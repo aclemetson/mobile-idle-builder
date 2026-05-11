@@ -93,10 +93,26 @@ namespace MobileIdleBuilder
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
 
+            if (root == null)
+            {
+                GameLogger.Error("[HUDController] rootVisualElement is null in OnEnable — UIDocument not ready yet.");
+                return;
+            }
+
             if (SceneLoader.IsTransitioning)
             {
                 root.style.display = DisplayStyle.None;
-                SceneLoader.OnTransitionComplete += () => root.style.display = DisplayStyle.Flex;
+                // Re-query at callback time; 'root' may be stale if the UIDocument was
+                // recycled between OnEnable and the transition completing.
+                var doc = GetComponent<UIDocument>();
+                SceneLoader.OnTransitionComplete += () =>
+                {
+                    var liveRoot = doc != null ? doc.rootVisualElement : null;
+                    if (liveRoot != null)
+                        liveRoot.style.display = DisplayStyle.Flex;
+                    else
+                        GameLogger.Warning("[HUDController] rootVisualElement null on transition complete — HUD may stay hidden.");
+                };
             }
 
             QueryElements(root);

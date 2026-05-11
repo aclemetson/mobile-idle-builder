@@ -27,9 +27,9 @@
 }
 
 .dialogue-portrait {
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
+    width: 52px;
+    height: 52px;
+    border-radius: 26px;
     background-color: var(--color-surface-raised);
     border-width: 1px;
     border-color: var(--color-primary);
@@ -46,7 +46,7 @@
 /* Main dialogue text */
 .dialogue-text {
     color: var(--color-text-primary);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     flex-grow: 1;
     white-space: normal;
     -unity-text-align: upper-left;
@@ -62,7 +62,7 @@
     border-width: 1px;
     border-radius: var(--border-radius);
     color: var(--color-primary);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     -unity-text-align: middle-center;
     -unity-font-style: bold;
 }

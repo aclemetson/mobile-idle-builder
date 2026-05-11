@@ -15,11 +15,11 @@ namespace MobileIdleBuilder
         private Color          _fieldColor;
         private bool           _locked;
 
-        public void Initialize(Color fieldColor)
+        public void Initialize(Color fieldColor, Material particleMaterialTemplate)
         {
             _fieldColor = fieldColor;
             _particles  = GetComponent<ParticleSystem>();
-            ConfigureParticles(fieldColor);
+            ConfigureParticles(fieldColor, particleMaterialTemplate);
             CreateLight(fieldColor);
         }
 
@@ -58,7 +58,7 @@ namespace MobileIdleBuilder
                 _light.intensity = locked ? 0.2f : 1.5f;
         }
 
-        private void ConfigureParticles(Color baseColor)
+        private void ConfigureParticles(Color baseColor, Material particleMaterialTemplate)
         {
             // ---- Main module ----
             var main = _particles.main;
@@ -116,15 +116,15 @@ namespace MobileIdleBuilder
             rend.renderMode = ParticleSystemRenderMode.Billboard;
             rend.sortingOrder = 1;
 
-            // Assign a URP-compatible particle material so particles don't appear magenta
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+            // Instance from the serialized template so the shader is guaranteed included in builds.
+            var mat = new Material(particleMaterialTemplate);
             mat.SetFloat("_Surface", 1f);           // transparent
             mat.SetFloat("_Blend", 2f);             // additive
             mat.SetFloat("_BlendOp", (float)UnityEngine.Rendering.BlendOp.Add);
             mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_ZWrite", 0f);
-            mat.SetColor("_BaseColor", Color.white);
+            mat.SetColor("_BaseColor", baseColor);
             mat.enableInstancing = true;
             rend.material = mat;
 

@@ -50,9 +50,9 @@ $content = [regex]::Replace(
 
 [System.IO.File]::WriteAllText($settingsPath, $content, [System.Text.UTF8Encoding]::new($false))
 
-$gitResult = & git -C $projectRoot add "ProjectSettings/ProjectSettings.asset" 2>&1
+& git -C $projectRoot add "ProjectSettings/ProjectSettings.asset"
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "[versioning] git add failed: $gitResult"
+    Write-Error "[versioning] git add failed (exit $LASTEXITCODE)"
     exit 1
 }
 

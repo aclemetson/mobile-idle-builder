@@ -26,6 +26,9 @@ namespace MobileIdleBuilder
         [SerializeField] private Color tutorialHighlightColor = new Color(1f,    0.78f,  0.15f, 0.75f); // amber/gold — tutorial focus
         [SerializeField] private Color tutorialHoverColor    = new Color(1f,    0.97f,  0.70f, 1.00f); // bright pale-yellow — hover over tutorial tile
 
+        [Header("Tile Material")]
+        [SerializeField] private Material tileMaterial;   // Must be URP Unlit Transparent — assign in Inspector
+
         [Header("Tile gap (0 = flush, 0.05 = small gap)")]
         [SerializeField] [Range(0f, 0.5f)] private float gap = 0.05f;
 
@@ -38,6 +41,7 @@ namespace MobileIdleBuilder
 
         private GameObject[,]        _tiles;
         private Vector2Int           _ghostCell              = new(-1, -1);
+        private readonly Dictionary<Vector2Int, Color> _fieldTileColors = new();
         private readonly HashSet<Vector2Int> _tutorialHighlightCells = new();
         private readonly List<Vector2Int> _ghostCells             = new();
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
@@ -72,6 +76,8 @@ namespace MobileIdleBuilder
                     Destroy(tile.GetComponent<MeshCollider>());
 
                     var mr = tile.GetComponent<MeshRenderer>();
+                    if (tileMaterial != null)
+                        mr.sharedMaterial = tileMaterial;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 
@@ -253,6 +259,19 @@ namespace MobileIdleBuilder
             _fieldHoverCell = new(-1, -1);
         }
 
+        // ---- Field tile colour ----
+
+        /// <summary>
+        /// Paints a cell permanently with the field's identity colour.
+        /// This sits below tutorial and ghost layers in RestoreCell priority.
+        /// </summary>
+        public void SetFieldTileColor(int x, int y, Color color)
+        {
+            if (!IsInBounds(x, y)) return;
+            _fieldTileColors[new Vector2Int(x, y)] = color;
+            RestoreCell(x, y);
+        }
+
         // ---- Tutorial highlight ----
 
         /// <summary>
@@ -288,14 +307,16 @@ namespace MobileIdleBuilder
             var tile = _tiles[x, y];
             if (tile == null) return;   // already destroyed (e.g. during scene shutdown)
 
+            var key = new Vector2Int(x, y);
             Color color;
-            if (_tutorialHighlightCells.Contains(new Vector2Int(x, y)))
+            if (_tutorialHighlightCells.Contains(key))
                 color = tutorialHighlightColor;
+            else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y))
+                color = occupiedColor;
+            else if (_fieldTileColors.TryGetValue(key, out var fieldColor))
+                color = fieldColor;
             else
-            {
-                bool occupied = GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y);
-                color = occupied ? occupiedColor : tileColor;
-            }
+                color = tileColor;
             SetColor(tile.GetComponent<MeshRenderer>(), color);
         }
 
