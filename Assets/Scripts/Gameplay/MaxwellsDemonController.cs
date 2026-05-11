@@ -512,10 +512,7 @@ namespace MobileIdleBuilder
             }
             else
             {
-                // Missed the drop zone: leave chip at release position so the user
-                // can grab it again without having to re-tap the inventory row.
-                PositionChip(evt.position);
-                _dragGhost?.RemoveFromClassList(CSS_Hidden);
+                DeselectItem();
             }
 
             evt.StopPropagation();
@@ -525,8 +522,8 @@ namespace MobileIdleBuilder
         {
             if (evt.pointerId != _activePointerId) return;
             _activePointerId = -1;
-            // Keep chip visible at last position — OS interrupt shouldn't deselect the item
             _dropZone?.RemoveFromClassList(CSS_DropActive);
+            DeselectItem();
         }
 
         private void MoveChip(Vector2 screenPos)
