@@ -30,6 +30,8 @@ namespace MobileIdleBuilder
         public static FieldInstance GetFieldInstanceAt(int x, int y) =>
             _instanceMap.TryGetValue(new Vector2Int(x, y), out var fi) ? fi : null;
 
+        internal static IEnumerable<KeyValuePair<Vector2Int, FieldSO>> GetAllFields() => _fieldMap;
+
         [Serializable]
         public struct FieldEntry
         {
@@ -62,17 +64,21 @@ namespace MobileIdleBuilder
         IEnumerator Start()
         {
             _fieldMap.Clear();
+            _instanceMap.Clear();
             if (gridRenderer == null)
             {
                 GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
                 yield break;
             }
 
-            // Wait for baked buildings from the SubScene to appear in the ECS world,
-            // then register their footprints in GridOccupancy before placing any fields.
-            yield return RegisterBakedBuildings();
+            // Returning player with saved field positions: GridSaveService.LoadGrid() will call
+            // SpawnFromSave() after cloud reconciliation — same timing guarantee as buildings.
+            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.grid?.fields?.Count > 0;
+            if (SaveManager.Instance != null && !SaveManager.Instance.IsNewGame && hasFieldSave)
+                yield break;
 
-            // Mark cells too close to Maxwell's Demon as off-limits for field spawning.
+            // New game or migration from a pre-field-save build: randomize positions.
+            yield return RegisterBakedBuildings();
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
@@ -93,6 +99,25 @@ namespace MobileIdleBuilder
                     for (int i = 0; i < entry.count; i++)
                         PlaceSingle(entry.fieldDefinition, ref candidateIndex, candidates);
                 }
+            }
+        }
+
+        /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
+        public void SpawnFromSave(List<FieldSaveData> savedFields)
+        {
+            var fieldLookup = new Dictionary<string, FieldSO>();
+            foreach (var entry in fields)
+                if (entry.fieldDefinition != null)
+                    fieldLookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+
+            foreach (var saved in savedFields)
+            {
+                if (!fieldLookup.TryGetValue(saved.fieldId, out var fieldSO))
+                {
+                    GameLogger.Warning($"[FieldGenerator] Unknown fieldId '{saved.fieldId}' — skipped.");
+                    continue;
+                }
+                OccupyAndSpawn(saved.position[0], saved.position[1], fieldSO);
             }
         }
 

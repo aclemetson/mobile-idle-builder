@@ -47,6 +47,14 @@ namespace MobileIdleBuilder
         public List<GridExpansion> expansions    = new();
         public List<BuildingSaveData> buildings  = new();
         public List<ConveyorSaveData> conveyors  = new();
+        public List<FieldSaveData>   fields      = new();
+    }
+
+    [Serializable]
+    public class FieldSaveData
+    {
+        public string fieldId;  // matches FieldSO.id
+        public int[]  position; // [x, y] grid cell
     }
 
     [Serializable]
