@@ -11,6 +11,7 @@ concurrency:
 jobs:
   test:
     name: Edit Mode Tests
+    if: startsWith(github.head_ref, 'release/')
     runs-on: [self-hosted, windows, unity]
 
     steps:

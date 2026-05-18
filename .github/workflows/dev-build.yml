@@ -1,7 +1,8 @@
 name: Dev Build
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [develop]
 
 # One build at a time on develop — cancel any queued run if a newer push arrives
@@ -13,6 +14,7 @@ jobs:
   # ── Job 1: Build APK on the local Windows machine (zero cloud minutes) ────────
   build:
     name: Android APK Build
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
     runs-on: [self-hosted, windows, unity]
 
     outputs:
