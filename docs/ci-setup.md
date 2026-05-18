@@ -21,29 +21,9 @@ The Android build jobs run on your local machine to avoid consuming GitHub Actio
    ```
    To set permanently: System → Advanced system settings → Environment Variables → add `UNITY_PATH`.
 
-## 2. Unity License Secret (for GameCI PR test runner)
+## 2. PR Tests
 
-GameCI runs Unity tests in Docker on GitHub-hosted Ubuntu runners. It needs a Unity license.
-
-### Get the license file
-
-1. **Request an activation file** — run this workflow once manually:
-   - In your repo: **Actions → Get Activation File** (you'll need to create it once — see GameCI docs)
-   - Or locally: run Unity with `-batchmode -createManualActivationFile` to generate a `.alf`
-
-2. **Activate the license**:
-   - Go to [https://license.unity3d.com/manual](https://license.unity3d.com/manual)
-   - Upload the `.alf` file
-   - Download the `.ulf` license file
-
-3. **Add the secret**:
-   - GitHub repo → Settings → Secrets and variables → Actions → New repository secret
-   - Name: `UNITY_LICENSE`
-   - Value: paste the full XML content of the `.ulf` file
-
-4. Also add:
-   - `UNITY_EMAIL` — your Unity account email
-   - `UNITY_PASSWORD` — your Unity account password
+Edit mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`. No license secrets needed — Unity is already activated on the machine.
 
 ## 3. Android Keystore Secret
 
@@ -102,9 +82,6 @@ Ensure the repo allows Actions to create tags and releases:
 
 | Secret | Source | Used By |
 |--------|--------|---------|
-| `UNITY_LICENSE` | Unity license portal | PR tests (GameCI) |
-| `UNITY_EMAIL` | Unity account | PR tests (GameCI) |
-| `UNITY_PASSWORD` | Unity account | PR tests (GameCI) |
 | `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | Dev + Prod builds |
 | `ANDROID_KEYSTORE_PASS` | keystore password | Dev + Prod builds |
 | `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | Dev + Prod builds |

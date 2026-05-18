@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [develop, main]
 
-# Cancel in-progress runs for the same PR
 concurrency:
   group: pr-tests-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -12,36 +11,16 @@ concurrency:
 jobs:
   test:
     name: Edit Mode Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, windows, unity]
 
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
 
-      # Cache the Unity Library folder — keyed on manifest + project settings so it
-      # rebuilds when packages or platform settings change
-      - uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-test-${{ hashFiles('Packages/manifest.json', 'ProjectSettings/ProjectSettings.asset') }}
-          restore-keys: Library-test-
-
-      # GameCI Unity Test Runner (Docker, Linux)
-      # One-time license setup: see docs/ci-setup.md for UNITY_LICENSE secret instructions
-      - uses: game-ci/unity-test-runner@v4
-        id: tests
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: .
-          unityVersion: 6000.3.6f1
-          testMode: editmode
-          artifactsPath: TestResults
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Edit Mode Test Results
+      - name: Run edit mode tests
+        shell: pwsh
+        run: .\scripts\test-local.ps1
 
       - uses: actions/upload-artifact@v4
         if: always()
