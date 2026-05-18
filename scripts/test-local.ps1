@@ -45,7 +45,7 @@ $timeoutMs = $TimeoutMinutes * 60 * 1000
 $finished  = $proc.WaitForExit($timeoutMs)
 
 if (-not $finished) {
-    Write-Host "[tests] Unity timed out after $TimeoutMinutes minutes — killing process."
+    Write-Host "[tests] Unity timed out after $TimeoutMinutes minutes - killing process."
     $proc.Kill()
     $unityExitCode = -1
 } else {
