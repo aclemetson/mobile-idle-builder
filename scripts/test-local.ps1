@@ -39,7 +39,7 @@ Write-Host "[tests] Running edit mode tests (timeout: $TimeoutMinutes min)..."
 # Use Start-Process so we can reliably wait on Unity.exe, which is a GUI application.
 # The & operator does not block on GUI apps in non-interactive PowerShell sessions.
 $proc = Start-Process -FilePath $UnityPath `
-    -ArgumentList "-batchmode -nographics -quit -projectPath `"$ProjectRoot`" -runTests -testPlatform editmode -testResults `"$resultsFile`" -logFile `"$logFile`"" `
+    -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -runTests -testPlatform editmode -testResults `"$resultsFile`" -logFile `"$logFile`"" `
     -PassThru -NoNewWindow
 $timeoutMs = $TimeoutMinutes * 60 * 1000
 $finished  = $proc.WaitForExit($timeoutMs)
