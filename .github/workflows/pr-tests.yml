@@ -20,7 +20,7 @@ jobs:
 
       - name: Run edit mode tests
         shell: powershell
-        run: .\scripts\test-local.ps1
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1
 
       - uses: actions/upload-artifact@v4
         if: always()
