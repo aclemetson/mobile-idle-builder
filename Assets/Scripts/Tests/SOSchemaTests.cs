@@ -85,11 +85,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FieldType_HasNonePositiveNegativeLepton()
+        public void FieldType_HasNoneQuarkLepton()
         {
             Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "None"));
-            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Positive"));
-            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Negative"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Quark"));
             Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Lepton"));
         }
 

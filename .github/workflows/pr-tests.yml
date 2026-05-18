@@ -1,0 +1,39 @@
+name: PR Tests
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: pr-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Edit Mode Tests
+    if: startsWith(github.head_ref, 'release/')
+    runs-on: [self-hosted, windows, unity]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      - name: Run edit mode tests
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: TestResults
+          retention-days: 14
