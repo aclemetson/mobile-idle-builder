@@ -24,11 +24,19 @@ $resultsFile = Join-Path $ProjectRoot $ResultsPath
 $logFile     = Join-Path $ProjectRoot "TestResults\unity.log"
 
 Write-Host "[tests] Running edit mode tests..."
-& $UnityPath -batchmode -nographics `
+& $UnityPath -batchmode -nographics -quit `
     -projectPath $ProjectRoot `
     -runTests -testPlatform editmode `
     -testResults $resultsFile `
     -logFile $logFile
+$unityExitCode = $LASTEXITCODE
+Write-Host "[tests] Unity exited with code $unityExitCode"
+
+if ($unityExitCode -ne 0 -and (Test-Path $logFile)) {
+    Write-Host "[tests] --- Last 50 lines of unity.log ---"
+    Get-Content $logFile -Tail 50 | ForEach-Object { Write-Host $_ }
+    Write-Host "[tests] --- End of log ---"
+}
 
 if (Test-Path $resultsFile) {
     $xml    = [xml](Get-Content $resultsFile)

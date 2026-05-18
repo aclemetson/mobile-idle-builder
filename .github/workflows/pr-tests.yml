@@ -18,6 +18,14 @@ jobs:
         with:
           lfs: true
 
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
       - name: Run edit mode tests
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1
