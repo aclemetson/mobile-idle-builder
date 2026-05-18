@@ -1,6 +1,7 @@
 param(
     [string]$UnityPath = "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe",
-    [string]$ResultsPath = "TestResults\editmode.xml"
+    [string]$ResultsPath = "TestResults\editmode.xml",
+    [int]$TimeoutMinutes = 30
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,6 +10,16 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path $UnityPath)) {
     Write-Error "Unity not found at: $UnityPath`nOverride with: .\scripts\test-local.ps1 -UnityPath 'C:\path\to\Unity.exe'"
     exit 1
+}
+
+# Kill any orphaned Unity processes from a previous CI run on this project path.
+# Only matches batch-mode Unity instances using this project (not the developer's local editor).
+$orphans = Get-CimInstance Win32_Process -Filter "Name='Unity.exe'" |
+    Where-Object { $_.CommandLine -like "*$ProjectRoot*" }
+if ($orphans) {
+    Write-Host "[tests] Killing $($orphans.Count) orphaned Unity process(es) from a previous run..."
+    $orphans | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Seconds 3
 }
 
 $runningEditors = Get-Process -Name "Unity" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -match "mobile-idle-builder" }
@@ -23,13 +34,23 @@ if (-not (Test-Path $ResultsDir)) { New-Item -ItemType Directory $ResultsDir | O
 $resultsFile = Join-Path $ProjectRoot $ResultsPath
 $logFile     = Join-Path $ProjectRoot "TestResults\unity.log"
 
-Write-Host "[tests] Running edit mode tests..."
-& $UnityPath -batchmode -nographics -quit `
-    -projectPath $ProjectRoot `
-    -runTests -testPlatform editmode `
-    -testResults $resultsFile `
-    -logFile $logFile
-$unityExitCode = $LASTEXITCODE
+Write-Host "[tests] Running edit mode tests (timeout: $TimeoutMinutes min)..."
+
+# Use Start-Process so we can reliably wait on Unity.exe, which is a GUI application.
+# The & operator does not block on GUI apps in non-interactive PowerShell sessions.
+$proc = Start-Process -FilePath $UnityPath `
+    -ArgumentList "-batchmode -nographics -quit -projectPath `"$ProjectRoot`" -runTests -testPlatform editmode -testResults `"$resultsFile`" -logFile `"$logFile`"" `
+    -PassThru -NoNewWindow
+$timeoutMs = $TimeoutMinutes * 60 * 1000
+$finished  = $proc.WaitForExit($timeoutMs)
+
+if (-not $finished) {
+    Write-Host "[tests] Unity timed out after $TimeoutMinutes minutes — killing process."
+    $proc.Kill()
+    $unityExitCode = -1
+} else {
+    $unityExitCode = $proc.ExitCode
+}
 Write-Host "[tests] Unity exited with code $unityExitCode"
 
 if ($unityExitCode -ne 0 -and (Test-Path $logFile)) {
