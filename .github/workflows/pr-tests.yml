@@ -19,7 +19,7 @@ jobs:
           lfs: true
 
       - name: Run edit mode tests
-        shell: pwsh
+        shell: powershell
         run: .\scripts\test-local.ps1
 
       - uses: actions/upload-artifact@v4
