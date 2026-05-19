@@ -89,8 +89,11 @@ GoogleService-Info.plist.meta
 # TestRunner generated files
 InitTestScene*.unity*
 
-# Claude Code local settings — machine-specific
-.claude/settings.local.json
+# Claude Code — all local data (commands, outlines, worktrees, settings)
+.claude/
+
+# Test run output
+/TestResults/
 
 # Unity editor scene dependency cache — auto-generated
 /[Aa]ssets/SceneDependencyCache/
