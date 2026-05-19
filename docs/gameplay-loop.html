@@ -1,0 +1,1431 @@
+<!-- SOURCE: game_data.json + tutorial_steps + dialogue entries — update both here and in the JSON when balancing -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Foundry — Gameplay Loop</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 16px 24px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e6edf3;
+      margin-bottom: 12px;
+    }
+    header h1 span { color: #58a6ff; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; }
+    .tab {
+      padding: 8px 18px;
+      background: none;
+      border: none;
+      border-radius: 6px 6px 0 0;
+      color: #8b949e;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab:hover { color: #c9d1d9; }
+    .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+
+    /* ── Content ── */
+    .tab-content { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+
+    /* ── Economy Callout ── */
+    .callout {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-left: 4px solid #58a6ff;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+    }
+    .callout h3 { font-size: 13px; font-weight: 600; color: #58a6ff; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .callout code { background: #0d1117; padding: 2px 6px; border-radius: 4px; font-family: "Cascadia Code", "Fira Code", monospace; font-size: 13px; color: #79c0ff; }
+    .callout .item-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .callout .item-chip {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 12px;
+    }
+    .callout .item-chip .val { color: #3fb950; font-weight: 600; }
+    .callout .warning { color: #f0883e; font-size: 12px; margin-top: 8px; display: flex; align-items: flex-start; gap: 6px; }
+
+    /* ── Phase Cards ── */
+    .phase {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .phase-header {
+      padding: 12px 18px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .phase-header h2 { font-size: 15px; font-weight: 600; color: #e6edf3; }
+    .phase-meta { font-size: 12px; color: #8b949e; }
+    .phase-entropy { font-size: 12px; font-weight: 600; }
+
+    /* Phase header colors */
+    .phase-1 .phase-header { border-left: 4px solid #1a5c8a; background: #0f1f30; }
+    .phase-2 .phase-header { border-left: 4px solid #4a5568; background: #1a1d21; }
+    .phase-3 .phase-header { border-left: 4px solid #8a4a00; background: #2b1d0e; }
+    .phase-4 .phase-header { border-left: 4px solid #4a5568; background: #1a1d21; }
+    .phase-5 .phase-header { border-left: 4px solid #4a5568; background: #1a1d21; }
+    .phase-6 .phase-header { border-left: 4px solid #1a6e40; background: #0d2018; }
+
+    /* ── Step Table ── */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #0d1117;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #21262d;
+    }
+    tbody tr { border-bottom: 1px solid #21262d; }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 9px 12px; vertical-align: top; }
+
+    /* Step ID */
+    td.step-id { font-family: "Cascadia Code", "Fira Code", monospace; font-size: 11px; color: #8b949e; white-space: nowrap; }
+    td.step-num { font-size: 11px; color: #484f58; text-align: right; padding-right: 6px; width: 28px; }
+
+    /* Row type coloring */
+    tr.row-dialogue td.step-id { color: #58a6ff; }
+    tr.row-dialogue { background: rgba(26,92,138,0.08); }
+    tr.row-gate td.step-id { color: #f0883e; }
+    tr.row-gate { background: rgba(138,74,0,0.12); }
+    tr.row-milestone { background: rgba(26,110,64,0.12); }
+    tr.row-milestone td.step-id { color: #3fb950; }
+
+    /* Tag pills */
+    .tag {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 3px;
+    }
+    .tag-dialogue { background: #1a5c8a33; color: #58a6ff; border: 1px solid #1a5c8a; }
+    .tag-gate     { background: #8a4a0033; color: #f0883e; border: 1px solid #8a4a00; }
+    .tag-silent   { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+    .tag-milestone { background: #1a6e4033; color: #3fb950; border: 1px solid #1a6e40; }
+
+    /* Cost / Reward */
+    .cost { color: #f85149; }
+    .reward { color: #3fb950; }
+    .neutral { color: #c9d1d9; }
+    .time { color: #d2a8ff; font-size: 12px; }
+    .gap-warning { color: #f0883e; font-size: 11px; display: block; margin-top: 4px; }
+
+    /* ── Dialogue Tab ── */
+    .dialogue-phase-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8b949e;
+      margin: 28px 0 8px;
+    }
+    .dialogue-block {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .dialogue-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: #0d1117;
+      border-bottom: 1px solid #21262d;
+    }
+    .dialogue-header .step-ref { font-family: monospace; font-size: 11px; color: #8b949e; }
+    .dialogue-header .dlg-id { font-size: 12px; font-weight: 600; color: #58a6ff; }
+    .dialogue-header .step-label { font-size: 12px; color: #c9d1d9; }
+    .dialogue-lines { padding: 10px 14px; }
+    .dialogue-line {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 0 10px;
+      margin-bottom: 10px;
+    }
+    .dialogue-line:last-child { margin-bottom: 0; }
+    .line-num { font-size: 11px; color: #484f58; padding-top: 1px; text-align: right; font-family: monospace; }
+    .line-body { }
+    .line-speaker { font-size: 11px; font-weight: 600; color: #d2a8ff; margin-bottom: 3px; }
+    .line-text { color: #e6edf3; font-size: 13px; line-height: 1.55; }
+    .line-flags {
+      margin-top: 5px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .flag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+    .flag-pause  { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+    .flag-live   { background: #0d2018; color: #3fb950; border: 1px solid #1a6e40; }
+    .flag-target { background: #21262d; color: #58a6ff; border: 1px solid #1a5c8a; font-family: monospace; }
+    .flag-action { background: #21262d; color: #f0883e; border: 1px solid #8a4a00; font-family: monospace; }
+
+    .unassigned-section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-left: 3px solid #484f58;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-top: 8px;
+    }
+    .unassigned-section h3 { font-size: 12px; color: #8b949e; margin-bottom: 8px; font-weight: 600; }
+    .unassigned-section ul { margin-left: 18px; }
+    .unassigned-section li { font-size: 12px; color: #6e7681; margin-bottom: 4px; }
+    .unassigned-section li code { font-size: 11px; color: #8b949e; font-family: monospace; }
+    .unassigned-section .preview { font-size: 12px; color: #484f58; font-style: italic; margin-left: 8px; }
+
+    /* ── Gaps Tab ── */
+    .gap-badge {
+      display: inline-block;
+      background: #f0883e;
+      color: #0d1117;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+    .gap-badge:empty { display: none; }
+
+    .gaps-table { width: 100%; border-collapse: collapse; }
+    .gaps-table thead th {
+      background: #0d1117;
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #21262d;
+    }
+    .gaps-table tbody tr {
+      border-bottom: 1px solid #21262d;
+      transition: background 0.15s;
+    }
+    .gaps-table tbody tr:last-child { border-bottom: none; }
+    .gaps-table tbody tr.resolved { opacity: 0.45; }
+    .gaps-table tbody tr.resolved .gap-issue { text-decoration: line-through; color: #484f58; }
+    .gaps-table td { padding: 10px 12px; vertical-align: top; }
+
+    .gap-check input[type=checkbox] {
+      width: 16px; height: 16px; cursor: pointer; accent-color: #3fb950;
+    }
+    .cat-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .cat-design   { background: #8a4a0033; color: #f0883e; border: 1px solid #8a4a00; }
+    .cat-dialogue { background: #1a5c8a33; color: #58a6ff; border: 1px solid #1a5c8a; }
+    .cat-viz      { background: #1a6e4033; color: #3fb950; border: 1px solid #1a6e40; }
+
+    .gap-issue { font-size: 13px; color: #e6edf3; }
+    .gap-issue small { display: block; font-size: 11px; color: #8b949e; margin-top: 3px; }
+
+    .editable {
+      min-height: 32px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      color: #c9d1d9;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .editable:empty::before { content: attr(data-placeholder); color: #484f58; font-style: italic; }
+    .editable:focus { border-color: #388bfd; background: #161b22; }
+    .editable:not(:empty):not(:focus) { background: #161b22; border-color: #21262d; }
+
+    .date-cell .editable { width: 110px; font-family: monospace; font-size: 11px; }
+
+    .save-hint { font-size: 11px; color: #484f58; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Quantum Foundry — <span>Gameplay Loop</span></h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="dialogue">Dialogue Flow</button>
+    <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════ OVERVIEW ══ -->
+<div id="overview" class="tab-content active">
+
+  <div class="callout">
+    <h3>Entropy Economy</h3>
+    <p>Entropy = <code>baseSellValue × quantity × multiplier</code> &nbsp;(multiplier = 1.0 base; research/prestige bonuses raise it later)</p>
+    <div class="item-grid">
+      <div class="item-chip">Up Quark &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Down Quark &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Electron &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Proton &nbsp;<span class="val">×3</span></div>
+      <div class="item-chip">Neutron &nbsp;<span class="val">×3</span></div>
+      <div class="item-chip">Hydrogen &nbsp;<span class="val">×5</span></div>
+      <div class="item-chip">Helium-4 &nbsp;<span class="val">×20</span></div>
+      <div class="item-chip">Lithium &nbsp;<span class="val">×35</span></div>
+      <div class="item-chip">Carbon &nbsp;<span class="val">×60</span></div>
+    </div>
+    <p class="warning">⚠ Design gap: guided tutorial earns ~15 entropy before Recombination I gate (cost 100). Steps 10–11 block all collection. Either lower the research cost or add free-farming steps between Phase 2 and Phase 3. Flagged for balance review.</p>
+  </div>
+
+  <!-- ── Phase 1 ── -->
+  <div class="phase phase-1">
+    <div class="phase-header">
+      <h2>① Learning the Loop</h2>
+      <span class="phase-meta">Steps 0–4 &nbsp;·&nbsp; Tutorial teaches: what fields are, what Maxwell's Demon does, what entropy is</span>
+      <span class="phase-entropy reward">Entropy after phase: ~5</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-dialogue">
+          <td class="step-num">0</td>
+          <td class="step-id">intro_dialogue<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Read Architect intro. Describes the Quantum Foundry, particles, the Lepton Field.
+            <br><em style="font-size:11px;color:#8b949e;">↳ intro_architect · 4 lines · game paused</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Context</td>
+          <td class="time">~2 min</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">1</td>
+          <td class="step-id">collect_first_electron<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Tap the Lepton Field to collect electrons. Only lepton field unlocked; quark field + buildings blocked.
+            <br><em style="font-size:11px;color:#8b949e;">↳ first_electron_intro · 1 line · game live</em>
+          </td>
+          <td class="neutral">Taps</td>
+          <td class="reward">5 Electrons</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 5e</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">2</td>
+          <td class="step-id">direct_to_maxwells_demon<br><span class="tag tag-silent">silent</span></td>
+          <td>
+            Camera pans + highlight on Maxwell's Demon. Open it by tapping.
+            <br><em style="font-size:11px;color:#8b949e;">↳ demon_intro · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Opens Demon</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">demon_opened</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">3</td>
+          <td class="step-id">sell_electrons_in_demon<br><span class="tag tag-silent">silent</span></td>
+          <td>Drag electrons to the deposit side. Electron row highlighted amber inside panel.</td>
+          <td class="cost">−5 Electrons</td>
+          <td class="reward">+5 entropy</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory(e) = 0</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">4</td>
+          <td class="step-id">close_demon_panel<br><span class="tag tag-silent">silent</span></td>
+          <td>Close Maxwell's Demon panel.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">—</td>
+          <td class="time">~5 sec</td>
+          <td><code style="font-size:11px;">demon_closed</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Phase 2 ── -->
+  <div class="phase phase-2">
+    <div class="phase-header">
+      <h2>② Quarks</h2>
+      <span class="phase-meta">Steps 5–9 &nbsp;·&nbsp; Tutorial teaches: quark fields, Up vs Down Quarks as crafting ingredients</span>
+      <span class="phase-entropy reward">Entropy after phase: ~15</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-dialogue">
+          <td class="step-num">5</td>
+          <td class="step-id">explain_quark_field<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect introduces the Quark Field and the entropy it just generated.
+            <br><em style="font-size:11px;color:#8b949e;">↳ quark_field_explanation · 2 lines · game paused</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Context</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">6</td>
+          <td class="step-id">collect_quarks<br><span class="tag tag-silent">silent</span></td>
+          <td>Tap the Quark Field to collect 5 Up Quarks and 5 Down Quarks. Lepton field + buildings blocked.</td>
+          <td class="neutral">Taps</td>
+          <td class="reward">5× Up Quark<br>5× Down Quark</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 5↑, 5↓</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">7</td>
+          <td class="step-id">direct_to_maxwells_demon_quarks<br><span class="tag tag-silent">silent</span></td>
+          <td>Highlight on Maxwell's Demon. Open it.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">Opens Demon</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">demon_opened</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">8</td>
+          <td class="step-id">sell_quarks_in_demon<br><span class="tag tag-silent">silent</span></td>
+          <td>Drag all quarks to deposit side. Both quark rows highlighted amber.</td>
+          <td class="cost">−5 Up Quark<br>−5 Down Quark</td>
+          <td class="reward">+10 entropy</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory(↑↓) = 0</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">9</td>
+          <td class="step-id">close_demon_panel_quarks<br><span class="tag tag-silent">silent</span></td>
+          <td>Close Maxwell's Demon panel.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">—</td>
+          <td class="time">~5 sec</td>
+          <td><code style="font-size:11px;">demon_closed</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Phase 3 ── -->
+  <div class="phase phase-3">
+    <div class="phase-header">
+      <h2>③ Recombination I</h2>
+      <span class="phase-meta">Steps 10–12 &nbsp;·&nbsp; First research gate · teaches: research panel, strong nuclear force</span>
+      <span class="phase-entropy" style="color:#f0883e">⚠ GATE: 100 entropy (player has ~15)</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="step-num">10</td>
+          <td class="step-id">open_research_drawer<br><span class="tag tag-silent">silent</span></td>
+          <td>
+            Research drawer handle pulses. Open the left-side menu to reveal the Research panel.
+            <br><em style="font-size:11px;color:#f0883e;">⚠ Collection blocked. Player cannot farm more entropy here.</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Reveals Research panel</td>
+          <td class="time">~10 sec</td>
+          <td><code style="font-size:11px;">drawer_opened</code></td>
+        </tr>
+        <tr class="row-gate">
+          <td class="step-num">11</td>
+          <td class="step-id">buy_recombination_i<br><span class="tag tag-gate">🔬 gate</span></td>
+          <td>
+            Research button pulses. Buy Recombination I.
+            <span class="gap-warning">⚠ Balance gap: player has ~15 entropy but this costs 100. Player is blocked from collecting. Consider: lower cost to ≤15, or add free-farming steps before step 10.</span>
+          </td>
+          <td class="cost" style="font-weight:600">−100 entropy</td>
+          <td class="reward">Unlocks: Strong Force Combiner, Proton recipe, Neutron recipe</td>
+          <td class="time">~30 sec<br><em style="color:#f0883e;font-size:11px;">(+farm gap)</em></td>
+          <td><code style="font-size:11px;">recombination_i unlocked</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">12</td>
+          <td class="step-id">recombination_unlocked<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect explains the strong nuclear force, proton structure (2U+1D), and neutron structure (1U+2D).
+            <br><em style="font-size:11px;color:#8b949e;">↳ recombination_unlocked_dialogue · 2 lines · game paused</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Context</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Phase 4 ── -->
+  <div class="phase phase-4">
+    <div class="phase-header">
+      <h2>④ Nucleons</h2>
+      <span class="phase-meta">Steps 13–19 &nbsp;·&nbsp; Tutorial teaches: recipe panel, manual crafting, value ladder (quarks → nucleons)</span>
+      <span class="phase-entropy reward">Entropy gained this phase: +12 &nbsp;(2P×3 + 2N×3)</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="step-num">13</td>
+          <td class="step-id">collect_quarks_for_nucleons<br><span class="tag tag-silent">silent</span></td>
+          <td>Tap Quark Field to collect 8 Up + 8 Down Quarks (enough for 2P + 2N). Hydrogen Synthesis research hidden.</td>
+          <td class="neutral">Taps</td>
+          <td class="reward">8× Up + 8× Down</td>
+          <td class="time">~45 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 8↑, 8↓</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">14</td>
+          <td class="step-id">open_recipe_panel_for_nucleons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Recipe button pulses. Open the recipe panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ open_recipe_panel_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Reveals recipe panel</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">recipe_panel_opened</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">15</td>
+          <td class="step-id">craft_two_protons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Craft 2 Protons. Recipe: 2× Up Quark + 1× Down Quark each. Craft time: 1.0s each.
+            <br><em style="font-size:11px;color:#8b949e;">↳ craft_protons_context · 1 line · game paused</em>
+          </td>
+          <td class="cost">−4× Up Quark<br>−2× Down Quark</td>
+          <td class="reward">2× Proton</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 2P</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">16</td>
+          <td class="step-id">craft_two_neutrons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Craft 2 Neutrons. Recipe: 1× Up Quark + 2× Down Quark each. Craft time: 1.0s each.
+            <br><em style="font-size:11px;color:#8b949e;">↳ craft_neutrons_context · 1 line · game paused</em>
+          </td>
+          <td class="cost">−2× Up Quark<br>−4× Down Quark</td>
+          <td class="reward">2× Neutron</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 2N</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">17</td>
+          <td class="step-id">direct_to_demon_for_nucleons<br><span class="tag tag-silent">silent</span></td>
+          <td>Highlight on Maxwell's Demon. Open it.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">Opens Demon</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">demon_opened</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">18</td>
+          <td class="step-id">sell_protons_and_neutrons<br><span class="tag tag-silent">silent</span></td>
+          <td>Drag Protons and Neutrons to deposit side. Both rows highlighted amber.</td>
+          <td class="cost">−2× Proton<br>−2× Neutron</td>
+          <td class="reward">+12 entropy<br><em style="font-size:11px;">(3× each = 6+6)</em></td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory(P+N) = 0</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">19</td>
+          <td class="step-id">close_demon_after_nucleons<br><span class="tag tag-silent">silent</span></td>
+          <td>Close Maxwell's Demon panel.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">—</td>
+          <td class="time">~5 sec</td>
+          <td><code style="font-size:11px;">demon_closed</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Phase 5 ── -->
+  <div class="phase phase-5">
+    <div class="phase-header">
+      <h2>⑤ Hydrogen Synthesis</h2>
+      <span class="phase-meta">Steps 20–27 &nbsp;·&nbsp; Second research gate · teaches: combining nucleons + electrons, value ladder compounds</span>
+      <span class="phase-entropy" style="color:#f0883e">GATE: 50 entropy &nbsp;·&nbsp; <span class="reward">H earned this phase: +10</span></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-gate">
+          <td class="step-num">20</td>
+          <td class="step-id">buy_hydrogen_synthesis<br><span class="tag tag-gate">🔬 gate</span></td>
+          <td>
+            Research button pulses. Buy Hydrogen Synthesis.
+            <br><em style="font-size:11px;color:#8b949e;">↳ unlock_hydrogen_synthesis · 1 line · game paused · triggers on enter</em>
+          </td>
+          <td class="cost" style="font-weight:600">−50 entropy</td>
+          <td class="reward">Unlocks: Hydrogen recipe (1P + 1e = H, 2.0s, 5 eV power)</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">hydrogen_synthesis unlocked</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">21</td>
+          <td class="step-id">gather_for_hydrogen<br><span class="tag tag-silent">silent</span></td>
+          <td>Collect resources: 4× Up Quark, 2× Down Quark, 2× Electron. Buildings still blocked.</td>
+          <td class="neutral">Taps</td>
+          <td class="reward">4↑ + 2↓ + 2e</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 4↑, 2↓, 2e</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">22</td>
+          <td class="step-id">craft_protons_for_hydrogen<br><span class="tag tag-silent">silent</span></td>
+          <td>Craft 2 Protons (2U+1D each, 1.0s each). Recipe button pulses.</td>
+          <td class="cost">−4× Up Quark<br>−2× Down Quark</td>
+          <td class="reward">2× Proton</td>
+          <td class="time">~20 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 2P</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">23</td>
+          <td class="step-id">craft_hydrogen<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Craft 2 Hydrogen atoms (1P + 1e each, 2.0s each, 5 eV power). Recipe button pulses.
+            <br><em style="font-size:11px;color:#8b949e;">↳ craft_hydrogen_context · 1 line · game paused</em>
+          </td>
+          <td class="cost">−2× Proton<br>−2× Electron</td>
+          <td class="reward">2× Hydrogen</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">inventory ≥ 2H</code></td>
+        </tr>
+        <tr class="row-milestone">
+          <td class="step-num">24</td>
+          <td class="step-id">hydrogen_crafted<br><span class="tag tag-milestone">🎉 milestone</span></td>
+          <td>
+            Architect celebrates. First complete atom built.
+            <br><em style="font-size:11px;color:#8b949e;">↳ hydrogen_crafted_dialogue · 1 line · game paused</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Narrative milestone</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">25</td>
+          <td class="step-id">direct_to_demon_for_hydrogen<br><span class="tag tag-silent">silent</span></td>
+          <td>
+            Camera pans + full highlight on Maxwell's Demon. Open it.
+            <br><em style="font-size:11px;color:#8b949e;">↳ hydrogen_to_demon · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Opens Demon</td>
+          <td class="time">~15 sec</td>
+          <td><code style="font-size:11px;">demon_opened</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">26</td>
+          <td class="step-id">sell_hydrogen_in_demon<br><span class="tag tag-silent">silent</span></td>
+          <td>Deposit 2 Hydrogen atoms. Hydrogen row highlighted amber.</td>
+          <td class="cost">−2× Hydrogen</td>
+          <td class="reward">+10 entropy<br><em style="font-size:11px;">(5× each)</em></td>
+          <td class="time">~20 sec</td>
+          <td><code style="font-size:11px;">inventory(H) = 0</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">27</td>
+          <td class="step-id">close_demon_after_hydrogen<br><span class="tag tag-silent">silent</span></td>
+          <td>Close Maxwell's Demon panel.</td>
+          <td class="neutral">—</td>
+          <td class="neutral">—</td>
+          <td class="time">~5 sec</td>
+          <td><code style="font-size:11px;">demon_closed</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Phase 6 ── -->
+  <div class="phase phase-6">
+    <div class="phase-header">
+      <h2>⑥ Automation &amp; Prestige</h2>
+      <span class="phase-meta">Steps 28–33 &nbsp;·&nbsp; Tutorial teaches: idle loop, factory mindset, prestige cycle</span>
+      <span class="phase-entropy" style="color:#3fb950">Open-ended · player runs until prestige threshold</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th style="width:220px">Step</th>
+          <th>Player Action</th>
+          <th style="width:160px">Cost</th>
+          <th style="width:160px">Reward</th>
+          <th style="width:90px">Time Est.</th>
+          <th style="width:160px">Advances When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-dialogue">
+          <td class="step-num">28</td>
+          <td class="step-id">intro_automation_i<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect explains the Field Collector / Harvester building and the transition from manual to automated play.
+            <br><em style="font-size:11px;color:#8b949e;">↳ intro_automation_i · 3 lines · game paused (×2), then live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Context</td>
+          <td class="time">~90 sec</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">29</td>
+          <td class="step-id">place_first_building<br><span class="tag tag-silent">silent</span></td>
+          <td>Open Build menu. Place a Harvester on a field tile. (Maxwell's Demon is building 1; player must place building 2.)</td>
+          <td class="cost">Harvester cost<br><em style="font-size:11px;">(TBD — building cost?)</em></td>
+          <td class="reward">Automated collection begins</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">building_count ≥ 2</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">30</td>
+          <td class="step-id">automation_started<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect describes the idle loop and introduces the prestige ceiling concept.
+            <br><em style="font-size:11px;color:#8b949e;">↳ automation_context · 2 lines · game paused → live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="neutral">Idle context</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">PrestigeAvailable</code><br><em style="font-size:11px;color:#8b949e;">(open-ended idle)</em></td>
+        </tr>
+        <tr class="row-gate">
+          <td class="step-num">31</td>
+          <td class="step-id">reach_prestige_wall<br><span class="tag tag-gate">🔬 gate</span></td>
+          <td>
+            Prestige becomes available once entropy hits the prestige threshold (10× prestige wall multiplier). Architect explains the reset.
+            <br><em style="font-size:11px;color:#8b949e;">↳ prestige_wall_context · 2 lines · game paused → live</em>
+            <br><em style="font-size:11px;color:#f0883e;">⚠ Prestige wall multiplier = 10× — threshold value TBD (depends on what the base is)</em>
+          </td>
+          <td class="cost">Resets: inventory, buildings, entropy</td>
+          <td class="reward">Prestige currency<br>Research memory discount</td>
+          <td class="time">Minutes–hours<br>of idle play</td>
+          <td><code style="font-size:11px;">prestige_run_count ≥ 1</code></td>
+        </tr>
+        <tr class="row-milestone">
+          <td class="step-num">32</td>
+          <td class="step-id">first_prestige_complete<br><span class="tag tag-milestone">🎉 milestone</span></td>
+          <td>
+            Post-prestige reset. Architect contextualizes: "not starting over — starting ahead."
+            <br><em style="font-size:11px;color:#8b949e;">↳ prestige_complete_context · 2 lines · game paused → live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Narrative milestone</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">Auto</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">33</td>
+          <td class="step-id">spend_prestige_currency<br><span class="tag tag-silent">silent</span></td>
+          <td>Open upgrade shop. Spend prestige currency on permanent upgrades. Tutorial ends after first purchase.</td>
+          <td class="neutral">Prestige currency</td>
+          <td class="reward">Permanent upgrade<br>Tutorial complete</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">prestige_currency_spent</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIALOGUE TAB ══ -->
+<div id="dialogue" class="tab-content">
+
+  <div class="callout">
+    <h3>Dialogue System Notes</h3>
+    <p>All dialogue is spoken by <strong style="color:#d2a8ff">The Architect</strong>. Lines with <span class="flag flag-pause" style="display:inline;">pause_game: true</span> halt production; <span class="flag flag-live" style="display:inline;">pause_game: false</span> lines play while the game runs. Portrait art is not yet assigned (all <code>TODO</code>).</p>
+  </div>
+
+  <!-- Phase 1 dialogues -->
+  <div class="dialogue-phase-label">① Learning the Loop — Steps 0–4</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 0</span>
+      <span class="dlg-id">intro_architect</span>
+      <span class="step-label">intro_dialogue · on_enter · 4 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Welcome. I am The Architect — your guide through the Quantum Foundry. This facility builds matter from scratch, starting with the smallest particles in existence.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Everything solid in the universe — planets, stars, you — began as fundamental particles. Your job is to harvest them, combine them, and build upward.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">3</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">See that glowing blue field? That is a Lepton Field — saturated with free electrons. Every atom you will ever build needs them.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span><span class="flag flag-target">highlight: electron_field</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">4</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Tap it. Pull electrons into your inventory.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span><span class="flag flag-target">highlight: electron_field</span><span class="flag flag-action">action: pulse_field</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 1</span>
+      <span class="dlg-id">first_electron_intro</span>
+      <span class="step-label">collect_first_electron · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The field glows where particles accumulate. Tap it to pull electrons into your inventory.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span><span class="flag flag-target">highlight: electron_field</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 2</span>
+      <span class="dlg-id">demon_intro</span>
+      <span class="step-label">direct_to_maxwells_demon · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Maxwell's Demon extracts entropy from the energy difference between sorted particles. Deposit what you have collected.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span><span class="flag flag-target">highlight: maxwells_demon</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 dialogues -->
+  <div class="dialogue-phase-label">② Quarks — Steps 5–9</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 5</span>
+      <span class="dlg-id">quark_field_explanation</span>
+      <span class="step-label">explain_quark_field · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Good work. Those electrons gave you your first entropy — the currency that powers this facility. But entropy alone cannot build matter.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">That orange field is a Quark Field. It generates Up Quarks and Down Quarks in equal measure every time you mine it — the raw ingredients for every proton and neutron you will ever craft.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span><span class="flag flag-target">highlight: quark_field</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 dialogues -->
+  <div class="dialogue-phase-label">③ Recombination I — Steps 10–12</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 12</span>
+      <span class="dlg-id">recombination_unlocked_dialogue</span>
+      <span class="step-label">recombination_unlocked · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Recombination I is active. The strong nuclear force is now at your disposal — the most powerful fundamental force in nature, and the one that makes atomic structure possible.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">A proton is two Up Quarks and one Down Quark — net charge +1, the core of every hydrogen atom. A neutron is one Up Quark and two Down Quarks — net charge zero, the stabilizing mass inside every nucleus beyond hydrogen.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4 dialogues -->
+  <div class="dialogue-phase-label">④ Nucleons — Steps 13–19</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 14</span>
+      <span class="dlg-id">open_recipe_panel_context</span>
+      <span class="step-label">open_recipe_panel_for_nucleons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The recipe panel holds every synthesis process you have unlocked. Open it and find the proton recipe.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 15</span>
+      <span class="dlg-id">craft_protons_context</span>
+      <span class="step-label">craft_two_protons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Two Up Quarks, one Down Quark, bound by the strong force. The result: a proton. Charge +1. The nucleus of the simplest atom in existence. Craft two.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 16</span>
+      <span class="dlg-id">craft_neutrons_context</span>
+      <span class="step-label">craft_two_neutrons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Now the neutron — one Up Quark, two Down Quarks. Net charge zero, but nearly identical mass to the proton. Inside a nucleus, neutrons neutralize the repulsion between protons. Craft two.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5 dialogues -->
+  <div class="dialogue-phase-label">⑤ Hydrogen Synthesis — Steps 20–27</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 20</span>
+      <span class="dlg-id">unlock_hydrogen_synthesis</span>
+      <span class="step-label">buy_hydrogen_synthesis · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Excellent work. You've synthesized protons and neutrons and converted them to entropy — the fundamental energy of this facility.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 23</span>
+      <span class="dlg-id">craft_hydrogen_context</span>
+      <span class="step-label">craft_hydrogen · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The final step: combine a proton and an electron. The electromagnetic attraction between the positive nucleus and the negative lepton creates a stable atomic orbital. Craft your hydrogen.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 24</span>
+      <span class="dlg-id">hydrogen_crafted_dialogue</span>
+      <span class="step-label">hydrogen_crafted · on_enter · 1 line · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Hydrogen. Atomic number 1. The most abundant element in the observable universe — and you built two of them from quarks and energy alone.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 25</span>
+      <span class="dlg-id">hydrogen_to_demon</span>
+      <span class="step-label">direct_to_demon_for_hydrogen · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Hydrogen atoms carry more bound energy than raw particles. Organized matter always yields more entropy — the Demon knows the difference. Bring it in.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span><span class="flag flag-target">highlight: maxwells_demon</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 6 dialogues -->
+  <div class="dialogue-phase-label">⑥ Automation &amp; Prestige — Steps 28–33</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 28</span>
+      <span class="dlg-id">intro_automation_i</span>
+      <span class="step-label">intro_automation_i · on_enter · 3 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">That entropy unlocks Automation I. A Field Collector — a Harvester placed directly on a quantum field — gathers particles automatically on a continuous cycle. No tapping required.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">This is the transition point. Manual harvesting was a lesson. The Field Collector is how you scale.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">3</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Open the Build menu and place a Harvester on the quark or lepton field. Once it is running, the facility collects without you.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 30</span>
+      <span class="dlg-id">automation_context</span>
+      <span class="step-label">automation_started · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Your factory is running. Buildings produce at their rated output continuously — no manual input required.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">As production scales, entropy accumulates. But there is a ceiling on each run. When your net worth approaches the prestige threshold, you will have extracted most of this run's value — and it will be time to reset.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 31</span>
+      <span class="dlg-id">prestige_wall_context</span>
+      <span class="step-label">reach_prestige_wall · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">You have reached the ceiling. Prestige is not failure — it is the mechanism that converts one-time progress into permanent power.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The reset clears your inventory, buildings, and entropy. What you keep: prestige currency and a research memory discount on nodes you have already unlocked. Initiate it — you will return faster than you left.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 32</span>
+      <span class="dlg-id">prestige_complete_context</span>
+      <span class="step-label">first_prestige_complete · on_enter · 2 lines · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The reset is complete. The facility rebuilds, but you are not starting over — you are starting ahead.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">You carry prestige currency now. Unlike entropy, it does not reset between runs. Spend it on permanent upgrades that will accelerate every future run.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unassigned dialogues -->
+  <div class="dialogue-phase-label" style="margin-top:36px">Authored but Unassigned</div>
+  <p style="font-size:12px;color:#8b949e;margin-bottom:12px;">These dialogues exist in <code style="font-size:11px;font-family:monospace;color:#8b949e;">game_data.json</code> but are not wired to any tutorial step's <code style="font-size:11px;font-family:monospace;color:#8b949e;">on_enter.dialogue_id</code>. Candidates for future enrichment or step coverage.</p>
+
+  <div class="unassigned-section">
+    <h3>Unassigned dialogues</h3>
+    <ul>
+      <li><code>sell_electrons_intro</code> <span class="preview">— "Drag the electrons to the deposit side. The Demon converts particle energy into entropy…"</span></li>
+      <li><code>close_demon_first</code> <span class="preview">— "Good. Those electrons built your first entropy. It is a small number for now."</span></li>
+      <li><code>demon_quarks_intro</code> <span class="preview">— "Quarks carry more energy potential than leptons. The Demon will extract more entropy from them…"</span></li>
+      <li><code>sell_quarks_intro</code> <span class="preview">— "Deposit all of them. Notice how much more entropy quarks generate compared to electrons…"</span></li>
+      <li><code>close_demon_quarks</code> <span class="preview">— "You have enough to begin. Open the menu on the left — the Research panel is there."</span></li>
+      <li><code>research_panel_intro</code> <span class="preview">— "The research tree is your progression map. Each node unlocks new processes, new materials…"</span></li>
+      <li><code>recombination_i_context</code> <span class="preview">— "Recombination I. This unlocks the strong nuclear force… Purchase it."</span></li>
+      <li><code>nucleons_to_demon_context</code> <span class="preview">— "Protons and neutrons carry significantly more energy than raw quarks…"</span></li>
+      <li><code>sell_nucleons_context</code> <span class="preview">— "Deposit both the protons and the neutrons. You have built the first organized matter…"</span></li>
+      <li><code>close_demon_nucleons_context</code> <span class="preview">— "Complexity yields more entropy. That principle will drive every decision as this facility scales."</span></li>
+      <li><code>gather_hydrogen_context</code> <span class="preview">— "Hydrogen synthesis is unlocked. To build a hydrogen atom you need a proton… (2 lines)"</span></li>
+      <li><code>craft_protons_for_h_context</code> <span class="preview">— "Build the protons first. Two Up Quarks, one Down Quark each…"</span></li>
+      <li><code>place_building_context</code> <span class="preview">— "Open the build menu and place a building on an open grid tile…"</span></li>
+      <li><code>spend_prestige_context</code> <span class="preview">— "Open the upgrade shop. Each purchase compounds across every future run. Spend wisely."</span></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ GAPS TAB ══ -->
+<div id="gaps" class="tab-content">
+
+  <p class="save-hint">Edits to Solution and Date are saved in your browser's localStorage and persist across page refreshes. Check the box when a gap is resolved.</p>
+
+  <div class="phase" style="overflow:visible;">
+    <table class="gaps-table">
+      <thead>
+        <tr>
+          <th style="width:36px">Done</th>
+          <th style="width:110px">Category</th>
+          <th>Issue</th>
+          <th style="width:260px">Solution</th>
+          <th style="width:120px">Date</th>
+        </tr>
+      </thead>
+      <tbody id="gaps-body">
+
+        <tr data-gap="gap-1">
+          <td class="gap-check"><input type="checkbox" data-id="gap-1"></td>
+          <td><span class="cat-badge cat-design">Design</span></td>
+          <td class="gap-issue">
+            Recombination I entropy gap
+            <small>Guided steps earn ~15 entropy; gate costs 100. Steps 10–11 block all collection. Player is stuck.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-1-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-1-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-2">
+          <td class="gap-check"><input type="checkbox" data-id="gap-2"></td>
+          <td><span class="cat-badge cat-design">Design</span></td>
+          <td class="gap-issue">
+            Prestige threshold undefined
+            <small>Prestige wall multiplier is 10×, but the base entropy value it scales from is not set. PrestigeAvailable has no concrete number.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-2-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-2-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-3">
+          <td class="gap-check"><input type="checkbox" data-id="gap-3"></td>
+          <td><span class="cat-badge cat-design">Design</span></td>
+          <td class="gap-issue">
+            "Automation I" has no matching research node
+            <small>intro_automation_i dialogue calls it "Automation I" as if it's a research unlock, but the Harvester is available from start with no research required.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-3-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-3-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-4">
+          <td class="gap-check"><input type="checkbox" data-id="gap-4"></td>
+          <td><span class="cat-badge cat-design">Design</span></td>
+          <td class="gap-issue">
+            Harvester placement cost undefined
+            <small>Step 29 lists building cost as TBD. Does placing a Harvester cost entropy? Buildings have upgrade costs in game_data.json but no explicit placement cost field.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-4-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-4-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-5">
+          <td class="gap-check"><input type="checkbox" data-id="gap-5"></td>
+          <td><span class="cat-badge cat-dialogue">Dialogue</span></td>
+          <td class="gap-issue">
+            14 authored dialogues unassigned to tutorial steps
+            <small>Includes: sell_electrons_intro, close_demon_first, research_panel_intro, recombination_i_context, nucleons_to_demon_context, gather_hydrogen_context, and 8 others. All written; none wired.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-5-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-5-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-6">
+          <td class="gap-check"><input type="checkbox" data-id="gap-6"></td>
+          <td><span class="cat-badge cat-viz">Visualization</span></td>
+          <td class="gap-issue">
+            No running entropy total in Overview
+            <small>Each phase shows earn/spend but no cumulative column. A running total would make balance problems immediately visible across phases.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-6-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-6-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-7">
+          <td class="gap-check"><input type="checkbox" data-id="gap-7"></td>
+          <td><span class="cat-badge cat-viz">Visualization</span></td>
+          <td class="gap-issue">
+            Post-tutorial loop not mapped
+            <small>Doc ends at prestige (step 33). Run 2 onward — Atomic Assembly, Isotopes, research memory discounts, prestige upgrades — has no visualization.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-7-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-7-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+        <tr data-gap="gap-8">
+          <td class="gap-check"><input type="checkbox" data-id="gap-8"></td>
+          <td><span class="cat-badge cat-viz">Visualization</span></td>
+          <td class="gap-issue">
+            Skip-condition path not visualized
+            <small>intro_dialogue has a skip: if recombination_i is already unlocked, jump to collect_quarks_for_nucleons. Second-run experience is different but not documented.</small>
+          </td>
+          <td><div class="editable" contenteditable="true" data-id="gap-8-sol" data-placeholder="Proposed solution…"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-8-date" data-placeholder="YYYY-MM-DD"></div></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // ── Tab switching ──
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Gaps: localStorage persistence ──
+  const STORE = 'qf_gaps_v1';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; }
+  }
+  function save(state) {
+    localStorage.setItem(STORE, JSON.stringify(state));
+  }
+
+  function updateBadge() {
+    const open = document.querySelectorAll('#gaps-body tr:not(.resolved)').length;
+    const badge = document.getElementById('gap-badge');
+    badge.textContent = open > 0 ? open : '';
+  }
+
+  function applyState(state) {
+    document.querySelectorAll('#gaps-body tr[data-gap]').forEach(row => {
+      const id = row.dataset.gap;
+      const cb = row.querySelector('input[type=checkbox]');
+      if (state[id + '-done']) { cb.checked = true; row.classList.add('resolved'); }
+      ['sol', 'date'].forEach(field => {
+        const el = row.querySelector(`[data-id="${id}-${field}"]`);
+        if (el && state[id + '-' + field]) el.textContent = state[id + '-' + field];
+      });
+    });
+    updateBadge();
+  }
+
+  const state = load();
+  applyState(state);
+
+  // Checkboxes
+  document.querySelectorAll('#gaps-body input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const row = cb.closest('tr');
+      row.classList.toggle('resolved', cb.checked);
+      state[cb.dataset.id + '-done'] = cb.checked;
+      save(state);
+      updateBadge();
+    });
+  });
+
+  // Editable fields
+  document.querySelectorAll('#gaps-body .editable').forEach(el => {
+    el.addEventListener('input', () => {
+      state[el.dataset.id] = el.textContent.trim();
+      save(state);
+    });
+  });
+</script>
+
+</body>
+</html>
