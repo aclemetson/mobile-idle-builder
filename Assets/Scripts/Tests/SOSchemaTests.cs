@@ -172,6 +172,7 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(type.GetField("atomicAssemblerEVPerMassUnit"), "GameConfigSO missing: atomicAssemblerEVPerMassUnit");
             Assert.IsNotNull(type.GetField("netWorthToPrestigeCurrencyRate"), "GameConfigSO missing: netWorthToPrestigeCurrencyRate");
             Assert.IsNotNull(type.GetField("alphaParticleEVValue"),         "GameConfigSO missing: alphaParticleEVValue");
+            Assert.IsNotNull(type.GetField("startingEntropy"),              "GameConfigSO missing: startingEntropy");
         }
 
         // ── GameConfigSO defaults ─────────────────────────────────────────────
@@ -193,6 +194,41 @@ namespace MobileIdleBuilder.Tests
             Assert.Greater(config.alphaParticleEVValue, 0f);
             Assert.Greater(config.betaParticleEVValue, 0f);
             Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void GameConfigSO_DefaultStartingEntropyIsZero()
+        {
+            var config = ScriptableObject.CreateInstance<GameConfigSO>();
+            Assert.AreEqual(0L, config.startingEntropy,
+                "Default startingEntropy must be 0 (importer writes the real value from game_data.json)");
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void GameConfigSO_StartingEntropyCanBeSet()
+        {
+            var config = ScriptableObject.CreateInstance<GameConfigSO>();
+            config.startingEntropy = 125L;
+            Assert.AreEqual(125L, config.startingEntropy);
+            Object.DestroyImmediate(config);
+        }
+
+        // ── PlayerInventoryAuthoring field contracts ──────────────────────────
+
+        [Test]
+        public void PlayerInventoryAuthoring_HasGameConfigField()
+        {
+            var type = typeof(PlayerInventoryAuthoring);
+            Assert.IsNotNull(type.GetField("gameConfig"), "PlayerInventoryAuthoring missing: gameConfig");
+        }
+
+        [Test]
+        public void PlayerInventoryAuthoring_GameConfigFieldIsGameConfigSOType()
+        {
+            var field = typeof(PlayerInventoryAuthoring).GetField("gameConfig");
+            Assert.AreEqual(typeof(GameConfigSO), field.FieldType,
+                "gameConfig field must be of type GameConfigSO");
         }
     }
 }

@@ -217,6 +217,7 @@ namespace MobileIdleBuilder.Editor
             so.prestigeWallMultiplier          = data.prestige_wall_multiplier;
             so.alphaParticleEVValue            = data.alpha_particle_ev_value;
             so.betaParticleEVValue             = data.beta_particle_ev_value;
+            so.startingEntropy                 = data.starting_entropy;
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;

@@ -75,6 +75,7 @@
     }
     .callout .item-chip .val { color: #3fb950; font-weight: 600; }
     .callout .warning { color: #f0883e; font-size: 12px; margin-top: 8px; display: flex; align-items: flex-start; gap: 6px; }
+    .resolved-note { color: #3fb950; font-size: 12px; margin-top: 8px; }
 
     /* ── Phase Cards ── */
     .phase {
@@ -322,7 +323,7 @@
       <div class="item-chip">Lithium &nbsp;<span class="val">×35</span></div>
       <div class="item-chip">Carbon &nbsp;<span class="val">×60</span></div>
     </div>
-    <p class="warning">⚠ Design gap: guided tutorial earns ~15 entropy before Recombination I gate (cost 100). Steps 10–11 block all collection. Either lower the research cost or add free-farming steps between Phase 2 and Phase 3. Flagged for balance review.</p>
+    <p class="resolved-note">✅ Resolved (gap-1): player receives 125 starting entropy via <code>game_config.starting_entropy</code> → <code>GameConfigSO.startingEntropy</code> → <code>PlayerInventoryAuthoring</code>. Tutorial earns +15 more (140 total). Recombination I (−100) + Phase 4 +12 + Hydrogen Synthesis (−50) = ~2 entropy remaining when Hydrogen crafting unlocks.</p>
   </div>
 
   <!-- ── Phase 1 ── -->
@@ -512,11 +513,11 @@
           <td class="step-id">buy_recombination_i<br><span class="tag tag-gate">🔬 gate</span></td>
           <td>
             Research button pulses. Buy Recombination I.
-            <span class="gap-warning">⚠ Balance gap: player has ~15 entropy but this costs 100. Player is blocked from collecting. Consider: lower cost to ≤15, or add free-farming steps before step 10.</span>
+            <span class="resolved-note">✅ Resolved: player starts with 125 entropy; tutorial earns +15 more (140 total) before this gate.</span>
           </td>
           <td class="cost" style="font-weight:600">−100 entropy</td>
           <td class="reward">Unlocks: Strong Force Combiner, Proton recipe, Neutron recipe</td>
-          <td class="time">~30 sec<br><em style="color:#f0883e;font-size:11px;">(+farm gap)</em></td>
+          <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">recombination_i unlocked</code></td>
         </tr>
         <tr class="row-dialogue">
@@ -1270,15 +1271,15 @@
       </thead>
       <tbody id="gaps-body">
 
-        <tr data-gap="gap-1">
-          <td class="gap-check"><input type="checkbox" data-id="gap-1"></td>
+        <tr data-gap="gap-1" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-1" checked></td>
           <td><span class="cat-badge cat-design">Design</span></td>
           <td class="gap-issue">
             Recombination I entropy gap
             <small>Guided steps earn ~15 entropy; gate costs 100. Steps 10–11 block all collection. Player is stuck.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-1-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-1-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-1-sol" data-placeholder="Proposed solution…">Grant 125 starting entropy via game_config.starting_entropy → GameConfigSO.startingEntropy → PlayerInventoryAuthoring. Tutorial earns +15 more (140 total). After Recombination I (−100) + Phase 4 gains (+12) + Hydrogen Synthesis (−50), ~2 entropy remains when Hydrogen crafting unlocks.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-1-date" data-placeholder="YYYY-MM-DD">2026-05-19</div></td>
         </tr>
 
         <tr data-gap="gap-2">
