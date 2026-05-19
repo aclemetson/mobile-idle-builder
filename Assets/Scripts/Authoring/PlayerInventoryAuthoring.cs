@@ -16,8 +16,11 @@ namespace MobileIdleBuilder
         public StartingItem[] startingItems;
 
         [Header("Starting Entropy")]
-        [Tooltip("How much entropy (BaseCurrency) the player starts with.")]
+        [Tooltip("Drives starting BaseCurrency when gameConfig is set. Fallback when gameConfig is null.")]
         public long startingEntropy = 0;
+
+        [Tooltip("When set, startingEntropy is read from gameConfig.startingEntropy instead.")]
+        public GameConfigSO gameConfig;
 
         public class Baker : Baker<PlayerInventoryAuthoring>
         {
@@ -26,9 +29,13 @@ namespace MobileIdleBuilder
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new PlayerInventoryTag());
 
+                long entropy = authoring.gameConfig != null
+                    ? authoring.gameConfig.startingEntropy
+                    : authoring.startingEntropy;
+
                 AddComponent(entity, new PlayerProgressData
                 {
-                    BaseCurrency = authoring.startingEntropy
+                    BaseCurrency = entropy
                 });
 
                 AddComponent(entity, new PrestigeData

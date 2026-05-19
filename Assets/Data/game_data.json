@@ -21,7 +21,8 @@
     "alpha_particle_ev_value": 20.0,
     "beta_particle_ev_value": 10.0,
     "environment": "Dev",
-    "api_base_url": "TODO"
+    "api_base_url": "TODO",
+    "starting_entropy": 125
   },
 
   "tiers": [

@@ -58,6 +58,7 @@ namespace MobileIdleBuilder.Editor
         public float  beta_particle_ev_value             = 10f;
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
+        public long   starting_entropy                   = 0;
     }
 
     [Serializable]
