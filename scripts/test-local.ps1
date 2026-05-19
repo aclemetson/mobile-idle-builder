@@ -1,8 +1,11 @@
 param(
     [string]$UnityPath = "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe",
-    [string]$ResultsPath = "TestResults\editmode.xml",
+    [string]$TestPlatform = "editmode",
+    [string]$ResultsPath = "",
     [int]$TimeoutMinutes = 30
 )
+
+if (-not $ResultsPath) { $ResultsPath = "TestResults\$TestPlatform.xml" }
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
@@ -32,14 +35,14 @@ $ResultsDir = Join-Path $ProjectRoot (Split-Path $ResultsPath -Parent)
 if (-not (Test-Path $ResultsDir)) { New-Item -ItemType Directory $ResultsDir | Out-Null }
 
 $resultsFile = Join-Path $ProjectRoot $ResultsPath
-$logFile     = Join-Path $ProjectRoot "TestResults\unity.log"
+$logFile     = Join-Path $ProjectRoot "TestResults\unity-$TestPlatform.log"
 
-Write-Host "[tests] Running edit mode tests (timeout: $TimeoutMinutes min)..."
+Write-Host "[tests] Running $TestPlatform tests (timeout: $TimeoutMinutes min)..."
 
 # Use Start-Process so we can reliably wait on Unity.exe, which is a GUI application.
 # The & operator does not block on GUI apps in non-interactive PowerShell sessions.
 $proc = Start-Process -FilePath $UnityPath `
-    -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -runTests -testPlatform editmode -testResults `"$resultsFile`" -logFile `"$logFile`"" `
+    -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -runTests -testPlatform $TestPlatform -testResults `"$resultsFile`" -logFile `"$logFile`"" `
     -PassThru -NoNewWindow
 $timeoutMs = $TimeoutMinutes * 60 * 1000
 $finished  = $proc.WaitForExit($timeoutMs)
