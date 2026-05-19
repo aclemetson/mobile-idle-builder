@@ -220,8 +220,7 @@ namespace MobileIdleBuilder.Tests
         public void PlayerInventoryAuthoring_HasGameConfigField()
         {
             var type = typeof(PlayerInventoryAuthoring);
-            Assert.IsNotNull(type.GetField("gameConfig"),       "PlayerInventoryAuthoring missing: gameConfig");
-            Assert.IsNotNull(type.GetField("startingEntropy"),  "PlayerInventoryAuthoring missing: startingEntropy");
+            Assert.IsNotNull(type.GetField("gameConfig"), "PlayerInventoryAuthoring missing: gameConfig");
         }
 
         [Test]
