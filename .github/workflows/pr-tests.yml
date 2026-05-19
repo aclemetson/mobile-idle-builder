@@ -31,6 +31,10 @@ jobs:
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1
 
+      - name: Run play mode tests
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1 -TestPlatform playmode
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
