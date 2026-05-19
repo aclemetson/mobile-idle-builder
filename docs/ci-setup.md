@@ -2,6 +2,19 @@
 
 One-time setup steps to activate the GitHub Actions pipeline.
 
+## Release Branch → Develop: Automatic Version Bump
+
+When a `release/*` branch is merged into `develop`, the **Dev Build** workflow automatically:
+
+1. Increments the **minor** version and resets the **patch** to `0`  
+   (e.g. `0.1.43` → `0.2.0`)
+2. Resets `AndroidBundleVersionCode` to `1`
+3. Commits the change back to `develop` as `github-actions[bot]`
+4. Builds the APK using the new version
+
+The bump commit carries `[skip ci]` so it does not re-trigger workflows.  
+Unity picks up the change automatically the next time the project is opened because `ProjectSettings/ProjectSettings.asset` is committed.
+
 ## 1. Self-Hosted Runner (Windows build machine)
 
 The Android build jobs run on your local machine to avoid consuming GitHub Actions cloud minutes.

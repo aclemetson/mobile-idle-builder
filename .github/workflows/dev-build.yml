@@ -10,11 +10,51 @@ concurrency:
   group: dev-build
   cancel-in-progress: true
 
+permissions:
+  contents: write   # needed to commit the version bump back to develop
+
 jobs:
+  # ── Job 0: Bump minor version on release→develop merge ───────────────────────
+  bump-version:
+    name: Bump Minor Version
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+
+    outputs:
+      new-version: ${{ steps.bump.outputs.new-version }}
+      sha: ${{ steps.push.outputs.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump minor, reset patch
+        id: bump
+        run: |
+          CURRENT=$(grep -oP 'bundleVersion: \K[0-9]+\.[0-9]+\.[0-9]+' ProjectSettings/ProjectSettings.asset)
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+          NEW_VER="$major.$((minor + 1)).0"
+          echo "Bumping $CURRENT -> $NEW_VER"
+          sed -i "s/bundleVersion: $CURRENT/bundleVersion: $NEW_VER/" ProjectSettings/ProjectSettings.asset
+          sed -i "s/AndroidBundleVersionCode: [0-9]\+/AndroidBundleVersionCode: 1/" ProjectSettings/ProjectSettings.asset
+          echo "new-version=$NEW_VER" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        id: push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ProjectSettings/ProjectSettings.asset
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new-version }} [skip ci]"
+          git push origin ${{ github.base_ref }}
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   # ── Job 1: Build APK on the local Windows machine (zero cloud minutes) ────────
   build:
     name: Android APK Build
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    needs: [bump-version]
     runs-on: [self-hosted, windows, unity]
 
     outputs:
@@ -24,6 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.bump-version.outputs.sha }}
           lfs: true
 
       - name: Read version
