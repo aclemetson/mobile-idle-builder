@@ -21,7 +21,8 @@
     "alpha_particle_ev_value": 20.0,
     "beta_particle_ev_value": 10.0,
     "environment": "Dev",
-    "api_base_url": "TODO"
+    "api_base_url": "TODO",
+    "starting_entropy": 250
   },
 
   "tiers": [
@@ -1134,7 +1135,7 @@
       "placement_rule": "MustBeOnField",
       "compatible_adjacent_categories": [],
       "compatible_fields": ["Quark", "Lepton"],
-      "entropy_cost": 0,
+      "entropy_cost": 100,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 500, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
@@ -1178,7 +1179,7 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 0,
+      "entropy_cost": 200,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 18.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 300, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 30.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1200, "cost_prestige_currency": 0 },
@@ -1221,7 +1222,7 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 0,
+      "entropy_cost": 150,
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 100.0, "influence_radius_tiles": 4.0, "cost_base_currency": 400, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 200.0, "influence_radius_tiles": 5.0, "cost_base_currency": 1600, "cost_prestige_currency": 0 },
@@ -1323,7 +1324,7 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 0,
+      "entropy_cost": 800,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 4000, "cost_prestige_currency": 0 },
@@ -1367,7 +1368,7 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 0,
+      "entropy_cost": 1500,
       "upgrade_levels": [
         { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000, "cost_prestige_currency": 0 },
@@ -1411,7 +1412,7 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 0,
+      "entropy_cost": 2500,
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.0, "power_cost_ev": 50.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 3000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 80.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
