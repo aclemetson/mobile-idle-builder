@@ -2178,6 +2178,297 @@
           "action": ""
         }
       ]
+    },
+
+    { "_comment": "--- POST-TUTORIAL DIALOGUES (Phases ⑧–⑪) ---" },
+
+    {
+      "id": "post_tutorial_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Your factory runs on its own. Hydrogen flows from quark to atom to entropy — that is the foundation. Everything that follows builds on this loop.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The Research panel shows your next frontier. Atomic Assembly opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_atomic_assembly_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Atomic Assembly. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "atomic_assembly_unlocked_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Atomic Assembly is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for twenty entropy: four times hydrogen, for roughly four times the inputs.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Lithium, Carbon, Oxygen, Silicon, and Iron are also available in the recipe panel. Each one is more complex and more valuable. Start with Helium-4 and scale up from there.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "first_element_crafted_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Helium-4. The second element. Formed in the first three minutes after the Big Bang through primordial nucleosynthesis — you have just replicated one of the universe's oldest reactions.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Notice the sell value: twenty entropy per atom. The complexity premium scales with atomic mass. Heavier elements cost more to build, but they are proportionally more valuable to sell.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_heavy_elements_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Heavy Elements research unlocks Uranium — 92 protons, 146 neutrons, 92 electrons. Atomic mass 238. Craft time: nearly four minutes. Power cost: 1,190 electron volts. Sell value: 1,000 entropy.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Your current generators likely cannot sustain 1,190 eV. A fully upgraded Basic Generator outputs 400 eV. You will need multiple before attempting Uranium synthesis.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "heavy_elements_unlocked_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Heavy Elements research acquired. Uranium synthesis is now available in the Atom Generator. Check your power grid before you begin — the draw is 1,190 eV per cycle.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "uranium_crafted_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Uranium. 1,000 entropy for a single atom. This is the endpoint of stellar fusion — stars cannot forge anything heavier than iron without consuming more energy than they produce. What you just built required conditions found only in supernovae.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "It is also radioactive. Its isotopes — particularly Uranium-235 — are where things become truly interesting. That requires Isotope Engineering.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_isotopes_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "An element's identity is its proton count. Its isotope is its neutron count. Change the neutrons and you change the nuclear behavior — mass, stability, decay mode — without changing the element itself.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The Isotopic Manipulator adds or removes neutrons from a base element. It runs at half the speed of the Atom Generator — neutron adjustment is precise work. Deuterium, Tritium, and Carbon-14 all unlock here.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "isotopes_unlocked_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Isotope Engineering is active. The Isotopic Manipulator is now available to place. It needs a power connection and inputs from your existing nucleon and element pipelines.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "place_manipulator_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Route neutrons from your Strong Force Combiner to the Manipulator's neutron input. For Deuterium and Tritium, route Hydrogen to the element input. For Carbon-14, route Carbon. Each isotope uses a different base element.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "isotope_crafted_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Deuterium. Chemically identical to Hydrogen — but with an extra neutron in the nucleus. Stable isotopes like Deuterium can be stored indefinitely. Radioactive ones will not hold still.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Radioactive isotopes emit particles as they decay — Alpha or Beta depending on the isotope. With the right containment, those particles feed back into your power grid. The next research branch handles this.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_radioactive_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Uranium-235 is the fissile isotope. Enrichment removes three neutrons from Uranium-238, shifting it from nearly stable to critically unstable. The process releases an alpha particle — a helium-4 nucleus ejected from the atom.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Before producing radioactive isotopes, you need a Radioactive Containment structure. It houses the Manipulator, absorbs decay events, and converts emitted particles into usable energy. Place it first.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "radioactive_unlocked_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Radioactive Isotopes research complete. The Radioactive Containment building is now available. Place it before operating the Manipulator for fissile materials — without it, decay products are uncontrolled.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "place_containment_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The Containment structure occupies a 2×2 footprint and draws 30 eV. Place an Isotopic Manipulator inside it to handle radioactive synthesis. Alpha and Beta particles from decay are collected automatically and returned to your power grid.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "uranium_235_crafted_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Uranium-235. Enriched nuclear fuel — 3,000 entropy per atom. The alpha particle released during enrichment is recovered by your Containment building automatically: 20 eV returned to the grid per particle.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "At scale, the decay particles emitted by your radioactive pipeline contribute meaningfully to your power budget. Alpha carries 20 eV. Beta carries 10. Let the decay work for you.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "particles_loop_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Alpha and Beta particles — secondary energy currency, harvested from nuclear instability. What is a hazard in any other context is a resource here. Your Containment building converts decay into power.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "You have built matter from nothing — quarks to nucleons, nucleons to atoms, atoms to isotopes, isotopes to fissile fuel. This is the current frontier of the Quantum Foundry. The next tier of synthesis is ahead. Keep building.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
     }
   ],
 
@@ -2732,6 +3023,190 @@
       "hint": "Your factory is producing hydrogen automatically.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
+    },
+
+    { "_comment": "--- PHASE ⑦: PRESTIGE RAMP-UP (steps TBD — insert between hydrogen_loop_complete and buy_atomic_assembly) ---" },
+
+    { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
+    {
+      "id": "post_tutorial_intro",
+      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Atomic Assembly.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "post_tutorial_intro" }
+    },
+
+    { "_comment": "--- ⑧a: Atomic Assembly unlock (insert motivation/pacing steps before this if needed) ---" },
+    {
+      "id": "buy_atomic_assembly",
+      "hint": "Purchase Atomic Assembly in the Research panel to unlock heavier elements.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
+      "on_enter": {
+        "dialogue_id": "intro_atomic_assembly_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "atomic_assembly_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
+    },
+
+    { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
+    {
+      "id": "craft_first_helium",
+      "hint": "Craft Helium-4 in your Atom Generator — 2 protons, 2 neutrons, 2 electrons.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 7, "quantity": 1 }]
+      },
+      "on_enter": { "pulse_button_id": "btn-recipes" }
+    },
+    {
+      "id": "first_element_context",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "first_element_crafted_context" }
+    },
+
+    { "_comment": "--- PHASE ⑨: HEAVY ELEMENTS (insert element-ladder milestones before this gate if desired) ---" },
+    {
+      "id": "buy_heavy_elements",
+      "hint": "Save 3,000 entropy and purchase Heavy Elements to unlock Uranium synthesis.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "heavy_elements" },
+      "on_enter": {
+        "dialogue_id": "intro_heavy_elements_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "heavy_elements_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "heavy_elements_unlocked_context" }
+    },
+
+    { "_comment": "--- ⑨a: Uranium synthesis (insert generator upgrade prompts before this if needed) ---" },
+    {
+      "id": "craft_first_uranium",
+      "hint": "Craft Uranium in the Atom Generator. Costs 1,190 eV — upgrade generators first if needed.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 13, "quantity": 1 }]
+      },
+      "on_enter": { "pulse_button_id": "btn-recipes" }
+    },
+    {
+      "id": "uranium_crafted",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "uranium_crafted_context" }
+    },
+
+    { "_comment": "--- PHASE ⑩: ISOTOPE ENGINEERING (insert between heavy elements and isotopes if desired) ---" },
+    {
+      "id": "buy_isotope_engineering",
+      "hint": "Save 1,500 entropy and purchase Isotope Engineering to unlock the Isotopic Manipulator.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "isotopes" },
+      "on_enter": {
+        "dialogue_id": "intro_isotopes_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "isotopes_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "isotopes_unlocked_context" }
+    },
+
+    { "_comment": "--- ⑩a: Manipulator placement (insert conveyor-routing steps after this) ---" },
+    {
+      "id": "place_isotopic_manipulator",
+      "hint": "Place an Isotopic Manipulator and connect it to power, neutrons, and base elements.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "isotopic_manipulator", "min_count": 1 },
+      "on_enter": {
+        "dialogue_id": "place_manipulator_context",
+        "pulse_button_id": "btn-build"
+      }
+    },
+
+    { "_comment": "--- ⑩b: First isotope — Deuterium (insert Tritium and C-14 steps after this) ---" },
+    {
+      "id": "craft_first_isotope",
+      "hint": "Craft Deuterium in the Isotopic Manipulator — 1 Hydrogen + 1 Neutron.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 14, "quantity": 1 }]
+      },
+      "on_enter": { "pulse_button_id": "btn-recipes" }
+    },
+    {
+      "id": "isotope_crafted",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "isotope_crafted_context" }
+    },
+
+    { "_comment": "--- PHASE ⑪: RADIOACTIVE ISOTOPES (requires both isotopes + heavy_elements) ---" },
+    {
+      "id": "buy_radioactive_isotopes",
+      "hint": "Save 5,000 entropy and purchase Radioactive Isotopes — requires Isotope Engineering and Heavy Elements.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "radioactive_isotopes" },
+      "on_enter": {
+        "dialogue_id": "intro_radioactive_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "radioactive_isotopes_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "radioactive_unlocked_context" }
+    },
+
+    { "_comment": "--- ⑪a: Containment placement (insert Manipulator-inside-Containment routing steps after this) ---" },
+    {
+      "id": "place_radioactive_containment",
+      "hint": "Place a Radioactive Containment structure — 2×2 footprint, draws 30 eV — to safely house the Isotopic Manipulator.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "radioactive_containment", "min_count": 1 },
+      "on_enter": {
+        "dialogue_id": "place_containment_context",
+        "pulse_button_id": "btn-build"
+      }
+    },
+
+    { "_comment": "--- ⑪b: Uranium-235 enrichment (insert conveyor and pipeline steps before this) ---" },
+    {
+      "id": "craft_uranium_235",
+      "hint": "Craft Uranium-235 in the Containment building's Isotopic Manipulator — removes 3 neutrons from Uranium, emitting an Alpha particle.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 17, "quantity": 1 }]
+      },
+      "on_enter": { "pulse_button_id": "btn-recipes" }
+    },
+    {
+      "id": "uranium_235_crafted",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "uranium_235_crafted_context" }
+    },
+
+    { "_comment": "--- ⑪c: Particle collection (insert Beta particle step after this) ---" },
+    {
+      "id": "collect_alpha_particle",
+      "hint": "Collect the Alpha particle emitted from your Containment building.",
+      "advance_condition": {
+        "type": "InventoryMin",
+        "items": [{ "item_id": 18, "quantity": 1 }]
+      }
+    },
+    {
+      "id": "particles_loop_complete",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "particles_loop_context" }
     }
   ]
 }
