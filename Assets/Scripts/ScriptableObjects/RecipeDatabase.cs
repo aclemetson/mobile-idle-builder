@@ -43,6 +43,7 @@ namespace MobileIdleBuilder
         public List<RecipeJson> recipes;
     }
 
+    [DefaultExecutionOrder(-80)]
     public class RecipeDatabase : SingletonMonoBehaviour<RecipeDatabase>
     {
         protected override bool PersistAcrossScenes => true;
