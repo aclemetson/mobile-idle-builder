@@ -10,26 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
-  m_Name: intro_automation_i
+  m_Name: nucleon_loop_context
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "You have enough entropy to unlock Automation I \u2014 your first engineering
-      breakthrough. It enables the Harvester: a field collector that gathers particles
-      on a continuous cycle, no tapping required."
+    text: Protons and neutrons selling automatically alongside electrons. Your factory
+      has two income streams now. Every quark from every field finds a buyer.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: This is the transition point. Manual harvesting was a lesson. The Harvester
-      is how you scale.
-    portrait: {fileID: 0}
-    pauseGame: 1
-    highlightTarget: 
-    action: 
-  - speakerName: The Architect
-    text: Open the Research panel and purchase Automation I.
+    text: "The Atom Generator is available \u2014 you researched it when you unlocked
+      Hydrogen Synthesis. Save up 200 entropy and place it."
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

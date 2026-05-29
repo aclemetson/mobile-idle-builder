@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: atomic_assembler
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: atomic_assembler
-  displayName: Atomic Assembler
-  description: Combines protons, neutrons, and electrons into complete atoms. Power
-    cost scales with the element's atomic mass.
+  displayName: Atom Generator
+  description: Assembles nucleons and electrons into atoms. Starts with hydrogen;
+    research Atomic Assembly to unlock heavier elements. Power cost scales with atomic
+    mass.
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 4
@@ -51,7 +52,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
-  entropyCost: 0
+  entropyCost: 200
   upgradeLevels:
   - level: 2
     outputRate: 2
@@ -76,7 +77,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

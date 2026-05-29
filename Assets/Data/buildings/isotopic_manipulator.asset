@@ -46,7 +46,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
-  entropyCost: 0
+  entropyCost: 1500
   upgradeLevels:
   - level: 2
     outputRate: 1
