@@ -1142,7 +1142,7 @@
       <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
       <tbody>
         <tr class="row-gate"><td class="step-num">—</td><td class="step-id">Unlock Heavy Elements<br><span class="tag tag-gate">🔬 gate</span></td><td>Buy Heavy Elements research (branch of Atomic Assembly). Unlocks Uranium recipe in the Assembler.</td><td class="cost" style="font-weight:600">−3000e</td><td class="reward">Uranium recipe (92P + 146N + 92e) · 1000e sell value</td><td class="time">~30 min idle</td><td><code style="font-size:11px;">heavy_elements unlocked</code></td></tr>
-        <tr><td class="step-num">—</td><td class="step-id">Scale power infrastructure</td><td>Uranium requires 92 × 5 = 460 EV per craft. Add more Basic Generators or upgrade existing ones to meet demand.</td><td class="cost">Generators + entropy</td><td class="reward">Uranium production → prestige wall at 5000e easily reachable</td><td class="time">~5 min</td><td><code style="font-size:11px;">atomic_assembly unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Scale power infrastructure</td><td>Uranium requires 238 × 5 = 1,190 eV per craft. A fully upgraded Basic Generator outputs 400 eV — multiple generators needed. Add or upgrade generators before attempting synthesis.</td><td class="cost">Generators + entropy</td><td class="reward">Uranium production → prestige wall at 5000e easily reachable</td><td class="time">~5 min</td><td><code style="font-size:11px;">heavy_elements unlocked</code></td></tr>
       </tbody>
     </table>
   </div>
@@ -2065,6 +2065,386 @@
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
           <div class="line-text">Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 8 dialogues -->
+  <div class="dialogue-phase-label">⑧ Atomic Assembly — Post-Tutorial</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">post_tutorial_intro</span>
+      <span class="dlg-id">post_tutorial_intro</span>
+      <span class="step-label">on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Your factory runs on its own. Hydrogen flows from quark to atom to entropy — that is the foundation. Everything that follows builds on this loop.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Research panel shows your next frontier. Atomic Assembly opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">buy_atomic_assembly</span>
+      <span class="dlg-id">intro_atomic_assembly_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Atomic Assembly. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">atomic_assembly_unlocked</span>
+      <span class="dlg-id">atomic_assembly_unlocked_context</span>
+      <span class="step-label">on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Atomic Assembly is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for twenty entropy: four times hydrogen, for roughly four times the inputs.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Lithium, Carbon, Oxygen, Silicon, and Iron are also available in the recipe panel. Each one is more complex and more valuable. Start with Helium-4 and scale up from there.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">first_element_context</span>
+      <span class="dlg-id">first_element_crafted_context</span>
+      <span class="step-label">on_enter · 2 lines · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Helium-4. The second element. Formed in the first three minutes after the Big Bang through primordial nucleosynthesis — you have just replicated one of the universe's oldest reactions.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Notice the sell value: twenty entropy per atom. The complexity premium scales with atomic mass. Heavier elements cost more to build, but they are proportionally more valuable to sell.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 9 dialogues -->
+  <div class="dialogue-phase-label">⑨ Heavy Elements &amp; Uranium</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">buy_heavy_elements</span>
+      <span class="dlg-id">intro_heavy_elements_context</span>
+      <span class="step-label">on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Heavy Elements research unlocks Uranium — 92 protons, 146 neutrons, 92 electrons. Atomic mass 238. Craft time: nearly four minutes. Power cost: 1,190 electron volts. Sell value: 1,000 entropy.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Your current generators likely cannot sustain 1,190 eV. A fully upgraded Basic Generator outputs 400 eV. You will need multiple before attempting Uranium synthesis.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">heavy_elements_unlocked</span>
+      <span class="dlg-id">heavy_elements_unlocked_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Heavy Elements research acquired. Uranium synthesis is now available in the Atom Generator. Check your power grid before you begin — the draw is 1,190 eV per cycle.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">uranium_crafted</span>
+      <span class="dlg-id">uranium_crafted_context</span>
+      <span class="step-label">on_enter · 2 lines · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Uranium. 1,000 entropy for a single atom. This is the endpoint of stellar fusion — stars cannot forge anything heavier than iron without consuming more energy than they produce. What you just built required conditions found only in supernovae.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">It is also radioactive. Its isotopes — particularly Uranium-235 — are where things become truly interesting. That requires Isotope Engineering.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 10 dialogues -->
+  <div class="dialogue-phase-label">⑩ Isotope Engineering</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">buy_isotope_engineering</span>
+      <span class="dlg-id">intro_isotopes_context</span>
+      <span class="step-label">on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">An element's identity is its proton count. Its isotope is its neutron count. Change the neutrons and you change the nuclear behavior — mass, stability, decay mode — without changing the element itself.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Isotopic Manipulator adds or removes neutrons from a base element. It runs at half the speed of the Atom Generator — neutron adjustment is precise work. Deuterium, Tritium, and Carbon-14 all unlock here.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">isotopes_unlocked</span>
+      <span class="dlg-id">isotopes_unlocked_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Isotope Engineering is active. The Isotopic Manipulator is now available to place. It needs a power connection and inputs from your existing nucleon and element pipelines.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">place_isotopic_manipulator</span>
+      <span class="dlg-id">place_manipulator_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Route neutrons from your Strong Force Combiner to the Manipulator's neutron input. For Deuterium and Tritium, route Hydrogen to the element input. For Carbon-14, route Carbon. Each isotope uses a different base element.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">isotope_crafted</span>
+      <span class="dlg-id">isotope_crafted_context</span>
+      <span class="step-label">on_enter · 2 lines · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Deuterium. Chemically identical to Hydrogen — but with an extra neutron in the nucleus. Stable isotopes like Deuterium can be stored indefinitely. Radioactive ones will not hold still.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Radioactive isotopes emit particles as they decay — Alpha or Beta depending on the isotope. With the right containment, those particles feed back into your power grid. The next research branch handles this.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 11 dialogues -->
+  <div class="dialogue-phase-label">⑪ Radioactive Decay</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">buy_radioactive_isotopes</span>
+      <span class="dlg-id">intro_radioactive_context</span>
+      <span class="step-label">on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Uranium-235 is the fissile isotope. Enrichment removes three neutrons from Uranium-238, shifting it from nearly stable to critically unstable. The process releases an alpha particle — a helium-4 nucleus ejected from the atom.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Before producing radioactive isotopes, you need a Radioactive Containment structure. It houses the Manipulator, absorbs decay events, and converts emitted particles into usable energy. Place it first.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">radioactive_isotopes_unlocked</span>
+      <span class="dlg-id">radioactive_unlocked_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Radioactive Isotopes research complete. The Radioactive Containment building is now available. Place it before operating the Manipulator for fissile materials — without it, decay products are uncontrolled.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">place_radioactive_containment</span>
+      <span class="dlg-id">place_containment_context</span>
+      <span class="step-label">on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Containment structure occupies a 2×2 footprint and draws 30 eV. Place an Isotopic Manipulator inside it to handle radioactive synthesis. Alpha and Beta particles from decay are collected automatically and returned to your power grid.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">uranium_235_crafted</span>
+      <span class="dlg-id">uranium_235_crafted_context</span>
+      <span class="step-label">on_enter · 2 lines · 🎉 milestone</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Uranium-235. Enriched nuclear fuel — 3,000 entropy per atom. The alpha particle released during enrichment is recovered by your Containment building automatically: 20 eV returned to the grid per particle.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">At scale, the decay particles emitted by your radioactive pipeline contribute meaningfully to your power budget. Alpha carries 20 eV. Beta carries 10. Let the decay work for you.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">particles_loop_complete</span>
+      <span class="dlg-id">particles_loop_context</span>
+      <span class="step-label">on_enter · 2 lines · 🎉 end of current content</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Alpha and Beta particles — secondary energy currency, harvested from nuclear instability. What is a hazard in any other context is a resource here. Your Containment building converts decay into power.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">You have built matter from nothing — quarks to nucleons, nucleons to atoms, atoms to isotopes, isotopes to fissile fuel. This is the current frontier of the Quantum Foundry. The next tier of synthesis is ahead. Keep building.</div>
           <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
