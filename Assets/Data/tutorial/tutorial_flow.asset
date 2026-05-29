@@ -115,7 +115,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: ded3a2eb1968dc94194557463d29eefd, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -138,7 +138,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 222254cc69e3e134f8d70771ab777f5b, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -219,7 +219,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 590c01a4be3e11045854bc6ca5b6c434, type: 2}
       highlightTarget: maxwells_demon
       highlightMode: 1
       blockCollection: 1
@@ -254,7 +254,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 99a19d45a11cdfa4f8ab8d26eef33556, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -277,7 +277,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 394d8c01a47720a4cb74d33af6dfb63c, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -300,7 +300,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 7fe6d39c992447840bfdcc5cccfd0979, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -339,7 +339,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: e1b55df33845ca549bb8c13a921efc47, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -518,7 +518,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 0a0e1f5b0b80dba48b0db2c6c0afd2ad, type: 2}
       highlightTarget: maxwells_demon
       highlightMode: 2
       blockCollection: 1
@@ -558,7 +558,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: ccb94d126d6922144a5570cd33e62fe4, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -582,7 +582,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 7f389ddb390897d47bb1dfe84e78c853, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -653,7 +653,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 15ccdb3025040554895756ea1907247a, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
@@ -682,7 +682,7 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 2702c6b2c8bc461449e7913f64f13706, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
@@ -846,6 +846,41 @@ MonoBehaviour:
       buildingInteractionGate: 1
       lockedMessages: []
     lockedResearchIds: []
+  - id: buy_automation_i
+    hintText: Purchase Automation I in the Research panel to unlock the Harvester.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: automation_i
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: ee2bc6f993a0ffd4c8f7af54b8e9a361, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 1
+      collectionFilter: 0
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 1
+      lockedMessages:
+      - triggerId: electron_field
+        message: Purchase Automation I first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: quark_field
+        message: Purchase Automation I first.
+        icon: "\u26A0"
+        modifier: warning
+      - triggerId: building
+        message: Purchase Automation I first.
+        icon: "\u26A0"
+        modifier: warning
+    lockedResearchIds: []
   - id: place_first_building
     hintText: Place a Harvester on the quark or lepton field to begin automatic collection.
     advanceCondition:
@@ -859,23 +894,46 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 72d35512ec798ca4e9e9970d3e19e483, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
       collectionFilter: 0
-      pulseButtonId: btn-recipes
+      pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
-  - id: automation_started
-    hintText: Your factory is running. Watch it produce particles on its own.
+  - id: place_conveyor
+    hintText: Connect the Harvester to Maxwell's Demon with a conveyor belt.
     advanceCondition:
-      type: 7
+      type: 3
       anyOf: 0
       items: []
-      uiEventId: 
+      uiEventId: conveyor_placed
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: bc8cb6d67f89ada48add3528f94d6466, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-conveyors
+      demonHighlightItemIds: 
+      buildingInteractionGate: 2
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: automation_started
+    hintText: Your factory is running. Watch it produce particles automatically.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
       researchId: 
       minCount: 0
     skipCondition:
@@ -892,10 +950,33 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
-  - id: reach_prestige_wall
-    hintText: You have reached the prestige threshold. Time to reset and grow stronger.
+  - id: intro_sfc
+    hintText: Save up entropy to place the Strong Force Combiner.
     advanceCondition:
-      type: 6
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 12db07a2dd7fc084d86cd4ccb8412fb2, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: place_sfc
+    hintText: Open the Build menu and place a Strong Force Combiner on the grid.
+    advanceCondition:
+      type: 5
       anyOf: 0
       items: []
       uiEventId: 
@@ -905,30 +986,53 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 11400000, guid: 2923cfd2960435349a7d700f7bd85976, type: 2}
+      dialogue: {fileID: 11400000, guid: e4a40939b3f9df4438fd568bc1a239b1, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
       collectionFilter: 0
-      pulseButtonId: 
+      pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
-  - id: first_prestige_complete
-    hintText: 
+  - id: place_generator
+    hintText: Place a Basic Generator near the Strong Force Combiner.
     advanceCondition:
-      type: 0
+      type: 5
       anyOf: 0
       items: []
       uiEventId: 
       researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: ea9f70166d59cdb41a727a3d7011a8f0, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: link_generator
+    hintText: Select the Strong Force Combiner and drag a power link to the Generator.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: power_link_established
+      researchId: 
       minCount: 0
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 11400000, guid: 7218974e81ec4e54ba423dacd78095a1, type: 2}
+      dialogue: {fileID: 11400000, guid: d15886738612d6e448d37625fb8b8023, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
@@ -938,20 +1042,230 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
-  - id: spend_prestige_currency
-    hintText: Open the upgrade shop and spend your prestige currency.
+  - id: place_quark_harvester
+    hintText: Place a second Harvester on the quark field to supply the Combiner.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: a4d074a0ff7fd374282d2b5741853fac, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: route_quarks_to_sfc
+    hintText: Connect the quark Harvester output to the Strong Force Combiner input.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: prestige_currency_spent
+      uiEventId: conveyor_placed
       researchId: 
       minCount: 0
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
+      dialogue: {fileID: 11400000, guid: 43acd5ec9b716a74db92600c1a747b49, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-conveyors
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: configure_sfc_recipes
+    hintText: Open the Combiner's recipe panel and enable both the Proton and Neutron
+      recipes.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: combiner_both_recipes_enabled
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 00246e8b6db529d48a62471c68281190, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: route_nucleons_to_demon
+    hintText: Connect both Combiner output ports (proton and neutron) to Maxwell's
+      Demon.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: sfc_outputs_connected
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 00cb0a4d452fb4e44a3c1077983150ec, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-conveyors
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: nucleon_loop_complete
+    hintText: Your nucleon pipeline is running automatically.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 2378317feac166848b3168a0f19e37cf, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: intro_atom_gen
+    hintText: Save up entropy to place the Atom Generator.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: c4981c60da6f18c479a7a87ed34193b3, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: place_atom_generator
+    hintText: Open the Build menu and place an Atom Generator.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 3de8bb1fc3fea6f4bba01d9e117d3e6a, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: connect_atom_gen_inputs
+    hintText: Re-route the proton conveyor and electron Harvester to the Atom Generator's
+      inputs.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: atom_gen_inputs_connected
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 6a46ea15b127353428e3b4c9a8bb4253, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-conveyors
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: route_hydrogen_to_demon
+    hintText: Connect the Atom Generator's output to Maxwell's Demon.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: atom_gen_output_connected
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 28ebb593c3bdb404c90017c274c7c017, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-conveyors
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: hydrogen_loop_complete
+    hintText: Your factory is producing hydrogen automatically.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: d9491ee0112a898469c0c5d8eeaa347b, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0

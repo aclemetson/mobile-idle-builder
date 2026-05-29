@@ -10,26 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
-  m_Name: intro_automation_i
+  m_Name: hydrogen_loop_context
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "You have enough entropy to unlock Automation I \u2014 your first engineering
-      breakthrough. It enables the Harvester: a field collector that gathers particles
-      on a continuous cycle, no tapping required."
+    text: "Hydrogen. One proton, one electron \u2014 the simplest atom in existence,
+      and the most abundant in the universe. Your factory is making it continuously,
+      without your input."
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: This is the transition point. Manual harvesting was a lesson. The Harvester
-      is how you scale.
-    portrait: {fileID: 0}
-    pauseGame: 1
-    highlightTarget: 
-    action: 
-  - speakerName: The Architect
-    text: Open the Research panel and purchase Automation I.
+    text: "Every element above hydrogen is built the same way \u2014 more protons,
+      more neutrons, more complexity. When you have enough entropy, research Atomic
+      Assembly. The periodic table opens from there."
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

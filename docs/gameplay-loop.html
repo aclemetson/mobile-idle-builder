@@ -972,7 +972,7 @@
           <td class="time">~1 min</td>
           <td><code style="font-size:11px;">dialogue_complete</code></td>
         </tr>
-        <!-- Steps 42-46: Hydrogen Automation -->
+        <!-- Steps 42-47: Hydrogen Automation -->
         <tr style="background:#0d1117;">
           <td colspan="7" style="padding:6px 12px;font-size:11px;font-weight:600;color:#58a6ff;letter-spacing:0.06em;text-transform:uppercase;border-top:1px solid #21262d;">⑥ cont. — Hydrogen Automation</td>
         </tr>
@@ -1002,18 +1002,30 @@
         </tr>
         <tr class="row-dialogue">
           <td class="step-num">44</td>
+          <td class="step-id">delete_reroute_conveyors<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect teaches conveyor deletion before asking the player to reroute. Tap any conveyor to select it — a trash icon appears on the belt. Tap it to remove. Player must delete the proton conveyor (SFC → Demon) and the electron conveyor (Harvester → Demon) to free those ports for the Atom Generator.
+            <br><em style="font-size:11px;color:#8b949e;">↳ delete_conveyor_context · 2 lines · game live · first line teaches mechanic, second prompts action</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Teaches conveyor deletion · proton + electron ports freed</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">conveyors_deleted (proton+electron to Demon removed)</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">45</td>
           <td class="step-id">connect_atom_gen_inputs<br><span class="tag tag-dialogue">💬 dialogue</span></td>
           <td>
-            Architect explains rerouting: proton conveyor from Demon → Atom Generator; electron Harvester output → Atom Generator. Neutron output stays at Demon.
+            Architect explains rerouting: proton conveyor from SFC → Atom Generator; electron Harvester output → Atom Generator. Neutron output stays at Demon.
             <br><em style="font-size:11px;color:#8b949e;">↳ connect_atom_gen_context · 1 line · game live</em>
           </td>
           <td class="neutral">—</td>
-          <td class="reward">Both input ports connected · teaches rerouting</td>
+          <td class="reward">Both input ports connected · rerouting complete</td>
           <td class="time">~1 min</td>
           <td><code style="font-size:11px;">atom_gen_inputs_connected</code></td>
         </tr>
         <tr>
-          <td class="step-num">45</td>
+          <td class="step-num">46</td>
           <td class="step-id">route_hydrogen_to_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
           <td>
             Connect Atom Generator hydrogen output → Maxwell's Demon. Hydrogen sells for 5e (proton 3e + electron 1e raw = 4e — assembly adds 1e per cycle).
@@ -1025,7 +1037,7 @@
           <td><code style="font-size:11px;">atom_gen_output_connected</code></td>
         </tr>
         <tr class="row-milestone">
-          <td class="step-num">46</td>
+          <td class="step-num">47</td>
           <td class="step-id">hydrogen_loop_complete<br><span class="tag tag-milestone">🎉 milestone</span></td>
           <td>
             Architect names the first atom, teases the full periodic table. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>

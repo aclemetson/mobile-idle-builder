@@ -37,8 +37,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5c01084f0c6a99a4d82ae683ba1c3ce0, type: 2}
   - {fileID: 11400000, guid: 19cdd73aafa3f1444b12fc175d583eb8, type: 2}
   - {fileID: 11400000, guid: 32f9d6720a129a843920a5bc954ab542, type: 2}
-  unlocksBuildings:
-  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
+  unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}

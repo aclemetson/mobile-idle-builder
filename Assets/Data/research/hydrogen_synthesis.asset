@@ -26,10 +26,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 990c172c58c320d4b9570223e9ad447a, type: 2}
-  unlocksBuildings: []
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.25
   codexEntry: 'The simplest atom: one proton orbited by one electron. Hydrogen is
