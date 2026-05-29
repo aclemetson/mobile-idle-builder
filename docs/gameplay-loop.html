@@ -2593,59 +2593,59 @@
           <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-8-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-9">
-          <td class="gap-check"><input type="checkbox" data-id="gap-9"></td>
+        <tr data-gap="gap-9" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-9" checked></td>
           <td><span class="cat-badge cat-eng">Engineering</span></td>
           <td class="gap-issue">
             <code>GridOccupancy</code> has no test coverage
             <small>Spatial gatekeeper for all building and conveyor placement; used by BuildingPlacer, ConveyorPlacer, and DeconstructController. Errors here are silent — a tile can appear free while already occupied.</small>
           </td>
           <td><div class="editable" contenteditable="true" data-id="gap-9-sol" data-placeholder="Proposed solution…">Add Edit Mode tests in Assets/Scripts/Tests/GridOccupancyTests.cs covering: MarkOccupied/IsOccupied round-trip, multi-cell footprint reservation, overlapping placement rejection, and release/clear.</div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-9-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-9-date" data-placeholder="YYYY-MM-DD">2026-05-29</div></td>
         </tr>
 
-        <tr data-gap="gap-10">
-          <td class="gap-check"><input type="checkbox" data-id="gap-10"></td>
+        <tr data-gap="gap-10" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-10" checked></td>
           <td><span class="cat-badge cat-eng">Engineering</span></td>
           <td class="gap-issue">
             <code>PortUtils</code> has no test coverage
             <small>Pure static utility used by ConveyorSystem and placement controllers for port direction math and offset calculations. Port direction errors are silent — conveyors connect to the wrong face without any runtime warning.</small>
           </td>
           <td><div class="editable" contenteditable="true" data-id="gap-10-sol" data-placeholder="Proposed solution…">Add Edit Mode tests in Assets/Scripts/Tests/PortUtilsTests.cs covering all static methods: direction lookups, port offset calculations, and boundary/edge-tile cases.</div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-10-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-10-date" data-placeholder="YYYY-MM-DD">2026-05-29</div></td>
         </tr>
 
-        <tr data-gap="gap-11">
-          <td class="gap-check"><input type="checkbox" data-id="gap-11"></td>
+        <tr data-gap="gap-11" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-11" checked></td>
           <td><span class="cat-badge cat-eng">Engineering</span></td>
           <td class="gap-issue">
             <code>PowerGridSystem</code> has no test coverage
             <small>The only ECS system without tests — CollectorSystem, EntropySinkSystem, and ProductionSystem are all covered. Power-state errors (building incorrectly marked unpowered) are among the hardest to reproduce in play.</small>
           </td>
           <td><div class="editable" contenteditable="true" data-id="gap-11-sol" data-placeholder="Proposed solution…">Add Edit Mode tests in Assets/Scripts/Tests/PowerGridSystemTests.cs following EntropySinkSystemTests pattern — spawn entities with PowerNodeData, tick the system, assert correct powered/unpowered state transitions.</div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-11-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-11-date" data-placeholder="YYYY-MM-DD">2026-05-29</div></td>
         </tr>
 
-        <tr data-gap="gap-12">
-          <td class="gap-check"><input type="checkbox" data-id="gap-12"></td>
+        <tr data-gap="gap-12" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-12" checked></td>
           <td><span class="cat-badge cat-eng">Engineering</span></td>
           <td class="gap-issue">
             <code>RecipeKnowledgeService</code> has no interface — tight singleton coupling
             <small>HUDController and ResearchService call the singleton directly. Neither can be unit-tested with a mock knowledge store. Extracting an interface is a prerequisite for isolated testing of both consumers.</small>
           </td>
           <td><div class="editable" contenteditable="true" data-id="gap-12-sol" data-placeholder="Proposed solution…">Extract IRecipeKnowledgeService with IsKnown(string) and MarkKnown(string). Update HUDController and ResearchService to depend on the interface. RecipeKnowledgeService remains the production singleton; tests inject a stub.</div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-12-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-12-date" data-placeholder="YYYY-MM-DD">2026-05-29</div></td>
         </tr>
 
-        <tr data-gap="gap-13">
-          <td class="gap-check"><input type="checkbox" data-id="gap-13"></td>
+        <tr data-gap="gap-13" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-13" checked></td>
           <td><span class="cat-badge cat-eng">Engineering</span></td>
           <td class="gap-issue">
             <code>RecipeDatabase</code> has no execution-order guarantee relative to <code>RecipeKnowledgeService</code>
             <small>RecipeKnowledgeService.Start() calls RecipeDatabase.Instance with no DefaultExecutionOrder set on RecipeDatabase. If ordering ever shifts, SyncWithRecipeDatabase silently skips and new recipes are never added to the cross-prestige save file.</small>
           </td>
           <td><div class="editable" contenteditable="true" data-id="gap-13-sol" data-placeholder="Proposed solution…">Add [DefaultExecutionOrder(-80)] to RecipeDatabase so it always initializes before RecipeKnowledgeService (-70). Makes the dependency explicit in code rather than relying on scene insertion order.</div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-13-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-13-date" data-placeholder="YYYY-MM-DD">2026-05-29</div></td>
         </tr>
 
       </tbody>
