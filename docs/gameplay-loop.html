@@ -323,7 +323,24 @@
       <div class="item-chip">Lithium &nbsp;<span class="val">×35</span></div>
       <div class="item-chip">Carbon &nbsp;<span class="val">×60</span></div>
     </div>
-    <p class="resolved-note">✅ Resolved (gap-1): player receives 250 starting entropy via <code>game_config.starting_entropy</code> → <code>GameConfigSO.startingEntropy</code> → <code>PlayerInventoryAuthoring</code>. Tutorial earns +37 more (287 total). Recombination I (−100) + Phase 4 +12 + Hydrogen Synthesis (−50) + H-sell +10 = <strong>137 entropy remaining at Phase ⑥</strong> — enough for Harvester (−100).</p>
+    <p class="resolved-note">✅ Resolved (gap-1 + gap-2): Player starts with 250e. Tutorial earns +37 manual sells (287 total). Gates: Recombination I (−100) → Phase 4 +12 → Hydrogen Synthesis (−50) → H-sell +10 → Automation I (−25) → Harvester (−100) = 12e at step 32. Tutorial continues: idle income funds SFC pipeline (−200 SFC, −150 Generator, −100 2nd Harvester). Exits tutorial with nucleon automation running. Prestige base = 500e, wall = 5000e net worth (<code>game_config.prestige_base_value</code>).</p>
+    <div class="item-grid" style="margin-top:12px;">
+      <div class="item-chip">Start <span class="val">250</span></div>
+      <div class="item-chip">+sell e/q <span class="val">+15</span></div>
+      <div class="item-chip">Recomb I <span class="val cost">−100</span></div>
+      <div class="item-chip">+sell P/N <span class="val">+12</span></div>
+      <div class="item-chip">H Synth <span class="val cost">−50</span></div>
+      <div class="item-chip">+sell H <span class="val">+10</span></div>
+      <div class="item-chip">Auto I <span class="val cost">−25</span></div>
+      <div class="item-chip">Harvester <span class="val cost">−100</span></div>
+      <div class="item-chip">→ 12e idle</div>
+      <div class="item-chip">SFC <span class="val cost">−200</span></div>
+      <div class="item-chip">Generator <span class="val cost">−150</span></div>
+      <div class="item-chip">2nd Harv. <span class="val cost">−100</span></div>
+      <div class="item-chip">→ idle</div>
+      <div class="item-chip">Atom Gen <span class="val cost">−200</span></div>
+      <div class="item-chip"><strong>End: <span class="val">~12e+</span></strong> H running</div>
+    </div>
   </div>
 
   <!-- ── Phase 1 ── -->
@@ -370,9 +387,9 @@
           <td class="time">~15 sec</td>
           <td><code style="font-size:11px;">inventory ≥ 5e</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">2</td>
-          <td class="step-id">direct_to_maxwells_demon<br><span class="tag tag-silent">silent</span></td>
+          <td class="step-id">direct_to_maxwells_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
           <td>
             Camera pans + highlight on Maxwell's Demon. Open it by tapping.
             <br><em style="font-size:11px;color:#8b949e;">↳ demon_intro · 1 line · game live</em>
@@ -382,19 +399,23 @@
           <td class="time">~15 sec</td>
           <td><code style="font-size:11px;">demon_opened</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">3</td>
-          <td class="step-id">sell_electrons_in_demon<br><span class="tag tag-silent">silent</span></td>
-          <td>Drag electrons to the deposit side. Electron row highlighted amber inside panel.</td>
+          <td class="step-id">sell_electrons_in_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Drag electrons to the deposit side. Electron row highlighted amber inside panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ sell_electrons_intro · 1 line · game live</em>
+          </td>
           <td class="cost">−5 Electrons</td>
           <td class="reward">+5 entropy</td>
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory(e) = 0</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">4</td>
-          <td class="step-id">close_demon_panel<br><span class="tag tag-silent">silent</span></td>
-          <td>Close Maxwell's Demon panel.</td>
+          <td class="step-id">close_demon_panel<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Close Maxwell's Demon panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ close_demon_first · 1 line · game live</em>
+          </td>
           <td class="neutral">—</td>
           <td class="neutral">—</td>
           <td class="time">~5 sec</td>
@@ -445,28 +466,34 @@
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory ≥ 5↑, 5↓</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">7</td>
-          <td class="step-id">direct_to_maxwells_demon_quarks<br><span class="tag tag-silent">silent</span></td>
-          <td>Highlight on Maxwell's Demon. Open it.</td>
+          <td class="step-id">direct_to_maxwells_demon_quarks<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Highlight on Maxwell's Demon. Open it.
+            <br><em style="font-size:11px;color:#8b949e;">↳ demon_quarks_intro · 1 line · game live</em>
+          </td>
           <td class="neutral">—</td>
           <td class="neutral">Opens Demon</td>
           <td class="time">~15 sec</td>
           <td><code style="font-size:11px;">demon_opened</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">8</td>
-          <td class="step-id">sell_quarks_in_demon<br><span class="tag tag-silent">silent</span></td>
-          <td>Drag all quarks to deposit side. Both quark rows highlighted amber.</td>
+          <td class="step-id">sell_quarks_in_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Drag all quarks to deposit side. Both quark rows highlighted amber.
+            <br><em style="font-size:11px;color:#8b949e;">↳ sell_quarks_intro · 1 line · game live</em>
+          </td>
           <td class="cost">−5 Up Quark<br>−5 Down Quark</td>
           <td class="reward">+10 entropy</td>
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory(↑↓) = 0</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">9</td>
-          <td class="step-id">close_demon_panel_quarks<br><span class="tag tag-silent">silent</span></td>
-          <td>Close Maxwell's Demon panel.</td>
+          <td class="step-id">close_demon_panel_quarks<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Close Maxwell's Demon panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ close_demon_quarks · 1 line · game live</em>
+          </td>
           <td class="neutral">—</td>
           <td class="neutral">—</td>
           <td class="time">~5 sec</td>
@@ -496,11 +523,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">10</td>
-          <td class="step-id">open_research_drawer<br><span class="tag tag-silent">silent</span></td>
+          <td class="step-id">open_research_drawer<br><span class="tag tag-dialogue">💬 hint</span></td>
           <td>
             Research drawer handle pulses. Open the left-side menu to reveal the Research panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ research_panel_intro · 1 line · game paused</em>
             <br><em style="font-size:11px;color:#f0883e;">⚠ Collection blocked. Player cannot farm more entropy here.</em>
           </td>
           <td class="neutral">—</td>
@@ -513,6 +541,7 @@
           <td class="step-id">buy_recombination_i<br><span class="tag tag-gate">🔬 gate</span></td>
           <td>
             Research button pulses. Buy Recombination I.
+            <br><em style="font-size:11px;color:#8b949e;">↳ recombination_i_context · 1 line · game paused</em>
             <span class="resolved-note">✅ Resolved: player starts with 250 entropy; tutorial earns +15 more (265 total) before this gate.</span>
           </td>
           <td class="cost" style="font-weight:600">−100 entropy</td>
@@ -601,28 +630,34 @@
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory ≥ 2N</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">17</td>
-          <td class="step-id">direct_to_demon_for_nucleons<br><span class="tag tag-silent">silent</span></td>
-          <td>Highlight on Maxwell's Demon. Open it.</td>
+          <td class="step-id">direct_to_demon_for_nucleons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Highlight on Maxwell's Demon. Open it.
+            <br><em style="font-size:11px;color:#8b949e;">↳ nucleons_to_demon_context · 1 line · game paused</em>
+          </td>
           <td class="neutral">—</td>
           <td class="neutral">Opens Demon</td>
           <td class="time">~15 sec</td>
           <td><code style="font-size:11px;">demon_opened</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">18</td>
-          <td class="step-id">sell_protons_and_neutrons<br><span class="tag tag-silent">silent</span></td>
-          <td>Drag Protons and Neutrons to deposit side. Both rows highlighted amber.</td>
+          <td class="step-id">sell_protons_and_neutrons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Drag Protons and Neutrons to deposit side. Both rows highlighted amber.
+            <br><em style="font-size:11px;color:#8b949e;">↳ sell_nucleons_context · 1 line · game live</em>
+          </td>
           <td class="cost">−2× Proton<br>−2× Neutron</td>
           <td class="reward">+12 entropy<br><em style="font-size:11px;">(3× each = 6+6)</em></td>
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory(P+N) = 0</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">19</td>
-          <td class="step-id">close_demon_after_nucleons<br><span class="tag tag-silent">silent</span></td>
-          <td>Close Maxwell's Demon panel.</td>
+          <td class="step-id">close_demon_after_nucleons<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Close Maxwell's Demon panel.
+            <br><em style="font-size:11px;color:#8b949e;">↳ close_demon_nucleons_context · 1 line · game live</em>
+          </td>
           <td class="neutral">—</td>
           <td class="neutral">—</td>
           <td class="time">~5 sec</td>
@@ -664,19 +699,23 @@
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">hydrogen_synthesis unlocked</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">21</td>
-          <td class="step-id">gather_for_hydrogen<br><span class="tag tag-silent">silent</span></td>
-          <td>Collect resources: 4× Up Quark, 2× Down Quark, 2× Electron. Buildings still blocked.</td>
+          <td class="step-id">gather_for_hydrogen<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Collect resources: 4× Up Quark, 2× Down Quark, 2× Electron. Buildings still blocked.
+            <br><em style="font-size:11px;color:#8b949e;">↳ gather_hydrogen_context · 2 lines · game paused → live</em>
+          </td>
           <td class="neutral">Taps</td>
           <td class="reward">4↑ + 2↓ + 2e</td>
           <td class="time">~30 sec</td>
           <td><code style="font-size:11px;">inventory ≥ 4↑, 2↓, 2e</code></td>
         </tr>
-        <tr>
+        <tr class="row-dialogue">
           <td class="step-num">22</td>
-          <td class="step-id">craft_protons_for_hydrogen<br><span class="tag tag-silent">silent</span></td>
-          <td>Craft 2 Protons (2U+1D each, 1.0s each). Recipe button pulses.</td>
+          <td class="step-id">craft_protons_for_hydrogen<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>Craft 2 Protons (2U+1D each, 1.0s each). Recipe button pulses.
+            <br><em style="font-size:11px;color:#8b949e;">↳ craft_protons_for_h_context · 1 line · game live</em>
+          </td>
           <td class="cost">−4× Up Quark<br>−2× Down Quark</td>
           <td class="reward">2× Proton</td>
           <td class="time">~20 sec</td>
@@ -743,9 +782,9 @@
   <!-- ── Phase 6 ── -->
   <div class="phase phase-6">
     <div class="phase-header">
-      <h2>⑥ Automation &amp; Prestige</h2>
-      <span class="phase-meta">Steps 28–33 &nbsp;·&nbsp; Tutorial teaches: idle loop, factory mindset, prestige cycle</span>
-      <span class="phase-entropy" style="color:#3fb950">Open-ended · player runs until prestige threshold</span>
+      <h2>⑥ Automation</h2>
+      <span class="phase-meta">Steps 28–46 &nbsp;·&nbsp; Tutorial teaches: Automation I research, Harvester placement, conveyor routing, power system, SFC dual-recipe, nucleon pipeline, Atom Generator, hydrogen assembly · <strong style="color:#3fb950">Tutorial ends at step 46</strong></span>
+      <span class="phase-entropy" style="color:#3fb950">Entropy after tutorial: ~12e+ (lepton Harvester + SFC nucleons + Atom Generator hydrogen · ~4e/sec)</span>
     </div>
     <table>
       <thead>
@@ -764,7 +803,7 @@
           <td class="step-num">28</td>
           <td class="step-id">intro_automation_i<br><span class="tag tag-dialogue">💬 dialogue</span></td>
           <td>
-            Architect explains the Field Collector / Harvester building and the transition from manual to automated play.
+            Architect explains what Automation I unlocks and the Harvester concept.
             <br><em style="font-size:11px;color:#8b949e;">↳ intro_automation_i · 3 lines · game paused (×2), then live</em>
           </td>
           <td class="neutral">—</td>
@@ -772,61 +811,315 @@
           <td class="time">~90 sec</td>
           <td><code style="font-size:11px;">dialogue_complete</code></td>
         </tr>
-        <tr>
+        <tr class="row-gate">
           <td class="step-num">29</td>
-          <td class="step-id">place_first_building<br><span class="tag tag-silent">silent</span></td>
-          <td>Open Build menu. Place a Harvester on a field tile. (Maxwell's Demon is building 1; player must place building 2.)</td>
+          <td class="step-id">buy_automation_i<br><span class="tag tag-gate">🔬 gate</span></td>
+          <td>
+            Research button pulses. Buy Automation I.
+            <br><em style="font-size:11px;color:#8b949e;">↳ buy_automation_i_context · 1 line · game live</em>
+            <br><span class="resolved-note">✅ Resolved (gap-3): Automation I is now a real research node. Cost: 25e. Discount on prestige: 50%.</span>
+          </td>
+          <td class="cost" style="font-weight:600">−25 entropy</td>
+          <td class="reward">Unlocks: Harvester building</td>
+          <td class="time">~20 sec</td>
+          <td><code style="font-size:11px;">automation_i unlocked</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">30</td>
+          <td class="step-id">place_first_building<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Build button pulses. Open Build menu. Place a Harvester on a field tile.
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_building_context · 1 line · game live</em>
+          </td>
           <td class="cost">−100 entropy<br><em style="font-size:11px;">(Harvester · entropy_cost)</em></td>
           <td class="reward">Automated collection begins</td>
           <td class="time">~1 min</td>
           <td><code style="font-size:11px;">building_count ≥ 2</code></td>
         </tr>
+        <tr>
+          <td class="step-num">31</td>
+          <td class="step-id">place_conveyor<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Conveyor button pulses. Connect Harvester output → Maxwell's Demon input with a conveyor.
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_conveyor_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Particles flow automatically to Demon</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">conveyor_placed</code></td>
+        </tr>
         <tr class="row-dialogue">
-          <td class="step-num">30</td>
+          <td class="step-num">32</td>
           <td class="step-id">automation_started<br><span class="tag tag-dialogue">💬 dialogue</span></td>
           <td>
-            Architect describes the idle loop and introduces the prestige ceiling concept.
+            Architect acknowledges idle loop running. Teases quark-to-nucleon upgrade as next goal.
             <br><em style="font-size:11px;color:#8b949e;">↳ automation_context · 2 lines · game paused → live</em>
           </td>
           <td class="neutral">—</td>
-          <td class="neutral">Idle context</td>
+          <td class="reward">Idle loop active</td>
           <td class="time">~1 min</td>
-          <td><code style="font-size:11px;">PrestigeAvailable</code><br><em style="font-size:11px;color:#8b949e;">(open-ended idle)</em></td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
         </tr>
-        <tr class="row-gate">
-          <td class="step-num">31</td>
-          <td class="step-id">reach_prestige_wall<br><span class="tag tag-gate">🔬 gate</span></td>
-          <td>
-            Prestige becomes available once entropy hits the prestige threshold (10× prestige wall multiplier). Architect explains the reset.
-            <br><em style="font-size:11px;color:#8b949e;">↳ prestige_wall_context · 2 lines · game paused → live</em>
-            <br><em style="font-size:11px;color:#f0883e;">⚠ Prestige wall multiplier = 10× — threshold value TBD (depends on what the base is)</em>
-          </td>
-          <td class="cost">Resets: inventory, buildings, entropy</td>
-          <td class="reward">Prestige currency<br>Research memory discount</td>
-          <td class="time">Minutes–hours<br>of idle play</td>
-          <td><code style="font-size:11px;">prestige_run_count ≥ 1</code></td>
+        <!-- Steps 33-41: Nucleon Pipeline -->
+        <tr style="background:#0d1117;">
+          <td colspan="7" style="padding:6px 12px;font-size:11px;font-weight:600;color:#58a6ff;letter-spacing:0.06em;text-transform:uppercase;border-top:1px solid #21262d;">⑥ cont. — Nucleon Automation Pipeline</td>
         </tr>
-        <tr class="row-milestone">
-          <td class="step-num">32</td>
-          <td class="step-id">first_prestige_complete<br><span class="tag tag-milestone">🎉 milestone</span></td>
+        <tr class="row-dialogue">
+          <td class="step-num">33</td>
+          <td class="step-id">intro_sfc<br><span class="tag tag-dialogue">💬 dialogue</span></td>
           <td>
-            Post-prestige reset. Architect contextualizes: "not starting over — starting ahead."
-            <br><em style="font-size:11px;color:#8b949e;">↳ prestige_complete_context · 2 lines · game paused → live</em>
+            Silent wait until entropy ≥ 200. Dialogue fires on enter: Architect directs player to place the Strong Force Combiner.
+            <br><em style="font-size:11px;color:#8b949e;">↳ intro_sfc_context · 1 line · game live</em>
           </td>
           <td class="neutral">—</td>
-          <td class="reward">Narrative milestone</td>
-          <td class="time">~1 min</td>
-          <td><code style="font-size:11px;">Auto</code></td>
+          <td class="reward">SFC unlocked (Recomb I already purchased)</td>
+          <td class="time">~3 min idle</td>
+          <td><code style="font-size:11px;">entropy ≥ 200</code></td>
         </tr>
         <tr>
-          <td class="step-num">33</td>
-          <td class="step-id">spend_prestige_currency<br><span class="tag tag-silent">silent</span></td>
-          <td>Open upgrade shop. Spend prestige currency on permanent upgrades. Tutorial ends after first purchase.</td>
-          <td class="neutral">Prestige currency</td>
-          <td class="reward">Permanent upgrade<br>Tutorial complete</td>
-          <td class="time">~1 min</td>
-          <td><code style="font-size:11px;">prestige_currency_spent</code></td>
+          <td class="step-num">34</td>
+          <td class="step-id">place_sfc<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Build menu pulses. Place a Strong Force Combiner. Shows "Unpowered" state immediately.
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_sfc_context · 1 line · game live</em>
+          </td>
+          <td class="cost">−200 entropy</td>
+          <td class="reward">SFC placed · power system introduced</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">sfc_count ≥ 1</code></td>
         </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">35</td>
+          <td class="step-id">place_generator<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Architect introduces power radius. Generator button pulses. Place a Basic Generator within 3 tiles of the SFC.
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_generator_context · 1 line · game live</em>
+          </td>
+          <td class="cost">−150 entropy</td>
+          <td class="reward">Generator placed · power radius visualised</td>
+          <td class="time">~2 min idle + 30 sec</td>
+          <td><code style="font-size:11px;">generator_count ≥ 1</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">36</td>
+          <td class="step-id">link_generator<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Select SFC → drag power link to Generator. SFC powers on.
+            <br><em style="font-size:11px;color:#8b949e;">↳ link_generator_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">SFC online · 10 eV drawn from 50 eV supply</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">power_link_established</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">37</td>
+          <td class="step-id">place_quark_harvester<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Place a second Harvester on the quark field. Produces Up Quarks + Down Quarks at 1:1 ratio.
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_quark_harvester_context · 1 line · game live</em>
+          </td>
+          <td class="cost">−100 entropy</td>
+          <td class="reward">Quark supply running</td>
+          <td class="time">~1 min idle + 30 sec</td>
+          <td><code style="font-size:11px;">harvester_count ≥ 2</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">38</td>
+          <td class="step-id">route_quarks_to_sfc<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Connect quark Harvester output → SFC input port with a conveyor.
+            <br><em style="font-size:11px;color:#8b949e;">↳ route_quarks_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Quarks flowing into SFC</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">conveyor_placed</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">39</td>
+          <td class="step-id">configure_sfc_recipes<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            SFC recipe panel opens. Architect explains dual-recipe: enable both Proton (2U+1D) and Neutron (1U+2D) simultaneously — self-balancing with 1:1 quark input.
+            <br><em style="font-size:11px;color:#8b949e;">↳ configure_sfc_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Both recipes active · balanced quark usage</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">combiner_both_recipes_enabled</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">40</td>
+          <td class="step-id">route_nucleons_to_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Two output ports on SFC (proton + neutron). Connect both to Maxwell's Demon with two conveyors.
+            <br><em style="font-size:11px;color:#8b949e;">↳ route_nucleons_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Protons (3e) + Neutrons (3e) selling automatically</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">sfc_outputs_connected</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">41</td>
+          <td class="step-id">nucleon_loop_complete<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect acknowledges two-stream factory. Directs player toward the Atom Generator.
+            <br><em style="font-size:11px;color:#8b949e;">↳ nucleon_loop_context · 2 lines · game paused → live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Nucleon pipeline confirmed · Atom Generator teased</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+        <!-- Steps 42-46: Hydrogen Automation -->
+        <tr style="background:#0d1117;">
+          <td colspan="7" style="padding:6px 12px;font-size:11px;font-weight:600;color:#58a6ff;letter-spacing:0.06em;text-transform:uppercase;border-top:1px solid #21262d;">⑥ cont. — Hydrogen Automation</td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">42</td>
+          <td class="step-id">intro_atom_gen<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Silent wait until entropy ≥ 200. Dialogue fires on enter: Architect directs player to place the Atom Generator (unlocked via Hydrogen Synthesis research, already purchased at step 26).
+            <br><em style="font-size:11px;color:#8b949e;">↳ intro_atom_gen_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Atom Generator available (research already done)</td>
+          <td class="time">~1–2 min idle</td>
+          <td><code style="font-size:11px;">entropy ≥ 200</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">43</td>
+          <td class="step-id">place_atom_generator<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Build menu pulses. Place the Atom Generator. Uses 5 eV — existing generator handles it alongside the SFC (15 eV total vs 50 eV supply).
+            <br><em style="font-size:11px;color:#8b949e;">↳ place_atom_gen_context · 1 line · game live</em>
+          </td>
+          <td class="cost">−200 entropy</td>
+          <td class="reward">Atom Generator placed</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">atom_gen_count ≥ 1</code></td>
+        </tr>
+        <tr class="row-dialogue">
+          <td class="step-num">44</td>
+          <td class="step-id">connect_atom_gen_inputs<br><span class="tag tag-dialogue">💬 dialogue</span></td>
+          <td>
+            Architect explains rerouting: proton conveyor from Demon → Atom Generator; electron Harvester output → Atom Generator. Neutron output stays at Demon.
+            <br><em style="font-size:11px;color:#8b949e;">↳ connect_atom_gen_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Both input ports connected · teaches rerouting</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">atom_gen_inputs_connected</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">45</td>
+          <td class="step-id">route_hydrogen_to_demon<br><span class="tag tag-dialogue">💬 hint</span></td>
+          <td>
+            Connect Atom Generator hydrogen output → Maxwell's Demon. Hydrogen sells for 5e (proton 3e + electron 1e raw = 4e — assembly adds 1e per cycle).
+            <br><em style="font-size:11px;color:#8b949e;">↳ route_hydrogen_context · 1 line · game live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Hydrogen (5e) selling automatically</td>
+          <td class="time">~30 sec</td>
+          <td><code style="font-size:11px;">atom_gen_output_connected</code></td>
+        </tr>
+        <tr class="row-milestone">
+          <td class="step-num">46</td>
+          <td class="step-id">hydrogen_loop_complete<br><span class="tag tag-milestone">🎉 milestone</span></td>
+          <td>
+            Architect names the first atom, teases the full periodic table. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>
+            <br><em style="font-size:11px;color:#8b949e;">↳ hydrogen_loop_context · 2 lines · game paused → live</em>
+          </td>
+          <td class="neutral">—</td>
+          <td class="reward">Tutorial complete · ~4e/sec · Atomic Assembly research unlocked next</td>
+          <td class="time">~1 min</td>
+          <td><code style="font-size:11px;">dialogue_complete</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Post-Tutorial: Phase 7 ── -->
+  <div style="margin: 32px 0 8px; padding: 8px 0; border-top: 1px solid #30363d;">
+    <h2 style="font-size:15px;color:#8b949e;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Post-Tutorial Progression (Run 2+)</h2>
+    <p style="font-size:12px;color:#6e7681;margin-top:4px;">After first prestige, player returns with research discounts and prestige currency. Prestige base = 500e · wall = 5000e net worth.
+      <span class="resolved-note" style="display:inline;"> ✅ Resolved (gap-2): prestige_base_value = 500 set in game_config.</span>
+    </p>
+  </div>
+
+  <div class="phase" style="border-left:4px solid #3a2c5c;">
+    <div class="phase-header" style="border-left:none;background:#1a1228;">
+      <h2>⑦ Run 2 — Express Ramp-Up</h2>
+      <span class="phase-meta">Re-unlock tree at 25–50% discount · SFC + generator already known from tutorial</span>
+      <span class="phase-entropy" style="color:#d2a8ff">Prestige discounts: Recombination I → 75e · Hydrogen Synthesis → 38e · Automation I → 13e · SFC pipeline ~338e total</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
+      <tbody>
+        <tr><td class="step-num">—</td><td class="step-id">Re-unlock research tree</td><td>Re-buy Recombination I, Hydrogen Synthesis, Automation I at discounted rates. Place Harvester + conveyor immediately.</td><td class="cost">~126e total</td><td class="reward">Back to idle production in ~5 min</td><td class="time">~5 min</td><td><code style="font-size:11px;">prestige discount</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Rebuild SFC pipeline<br><span class="tag" style="background:#1a2b4a33;color:#79c0ff;border:1px solid #1a2b4a">🏭 building</span></td><td>Re-place Strong Force Combiner + Basic Generator + quark Harvester. Player knows the layout from tutorial — much faster rebuild. Both proton + neutron recipes re-enabled.</td><td class="cost">~338e (discounted)</td><td class="reward">Full nucleon pipeline restored in ~5 min</td><td class="time">~5 min</td><td><code style="font-size:11px;">recombination_i unlocked</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="phase" style="border-left:4px solid #3a4a2c;">
+    <div class="phase-header" style="border-left:none;background:#1a2012;">
+      <h2>⑧ Atomic Assembly</h2>
+      <span class="phase-meta">First-time unlock · teaches: power system, multi-input buildings, value ladder compounds</span>
+      <span class="phase-entropy" style="color:#3fb950">GATE: 500e (375e at 20% repeat discount) · Sell values: He-4 ×20, Li ×35, C ×60</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
+      <tbody>
+        <tr class="row-gate"><td class="step-num">—</td><td class="step-id">Unlock Atomic Assembly<br><span class="tag tag-gate">🔬 gate</span></td><td>Buy Atomic Assembly research. Unlocks Atomic Assembler building and recipes for Helium-4 through Carbon.</td><td class="cost" style="font-weight:600">−500e (375e repeat)</td><td class="reward">Atomic Assembler · He-4 · Li · C · O · Si · Fe recipes</td><td class="time">~10 min idle</td><td><code style="font-size:11px;">atomic_assembly unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Build Atomic Assembler<br><span class="tag" style="background:#1a2b4a33;color:#79c0ff;border:1px solid #1a2b4a">🏭 building</span></td><td>Place Atomic Assembler. Requires power (atomic_mass × 5 EV per craft). Wire 3 input conveyors: Protons + Neutrons + Electrons.</td><td class="cost">800e + generator(s)</td><td class="reward">Heavy element production</td><td class="time">~2 min</td><td><code style="font-size:11px;">atomic_assembly unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Produce heavy elements</td><td>Assembler crafts Helium-4 (2P+2N+2e), Lithium, Carbon, Oxygen, Silicon, Iron. Each sells for dramatically more entropy than hydrogen.</td><td class="neutral">Quarks + power</td><td class="reward">Fe = 280e · Prestige wall approaches fast</td><td class="time">Ongoing</td><td><code style="font-size:11px;">automated</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="phase" style="border-left:4px solid #4a3a1c;">
+    <div class="phase-header" style="border-left:none;background:#231a0a;">
+      <h2>⑨ Heavy Elements &amp; Uranium</h2>
+      <span class="phase-meta">Unlock Heavy Elements research · teaches: power scaling, late-game entropy density</span>
+      <span class="phase-entropy" style="color:#f0883e">GATE: 3000e · Uranium = 1000e per unit</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
+      <tbody>
+        <tr class="row-gate"><td class="step-num">—</td><td class="step-id">Unlock Heavy Elements<br><span class="tag tag-gate">🔬 gate</span></td><td>Buy Heavy Elements research (branch of Atomic Assembly). Unlocks Uranium recipe in the Assembler.</td><td class="cost" style="font-weight:600">−3000e</td><td class="reward">Uranium recipe (92P + 146N + 92e) · 1000e sell value</td><td class="time">~30 min idle</td><td><code style="font-size:11px;">heavy_elements unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Scale power infrastructure</td><td>Uranium requires 92 × 5 = 460 EV per craft. Add more Basic Generators or upgrade existing ones to meet demand.</td><td class="cost">Generators + entropy</td><td class="reward">Uranium production → prestige wall at 5000e easily reachable</td><td class="time">~5 min</td><td><code style="font-size:11px;">atomic_assembly unlocked</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="phase" style="border-left:4px solid #2c3a4a;">
+    <div class="phase-header" style="border-left:none;background:#0d1a28;">
+      <h2>⑩ Isotopes</h2>
+      <span class="phase-meta">Unlock Isotope Engineering · teaches: neutron manipulation, isotope multiplier</span>
+      <span class="phase-entropy" style="color:#58a6ff">GATE: 1500e · Isotopes sell at 1.5× base element value</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
+      <tbody>
+        <tr class="row-gate"><td class="step-num">—</td><td class="step-id">Unlock Isotope Engineering<br><span class="tag tag-gate">🔬 gate</span></td><td>Buy Isotope Engineering. Unlocks Isotopic Manipulator building.</td><td class="cost" style="font-weight:600">−1500e</td><td class="reward">Isotopic Manipulator · Deuterium · Tritium · C-14 recipes</td><td class="time">—</td><td><code style="font-size:11px;">isotopes unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Build Isotopic Manipulator<br><span class="tag" style="background:#1a2b4a33;color:#79c0ff;border:1px solid #1a2b4a">🏭 building</span></td><td>Place Manipulator. Input: Base Element + Neutrons. Dynamic power cost (neutrons adjusted × 8 EV). Output: Isotope at 1.5× sell value.</td><td class="cost">1500e</td><td class="reward">Deuterium, Tritium, Carbon-14</td><td class="time">~2 min</td><td><code style="font-size:11px;">isotopes unlocked</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="phase" style="border-left:4px solid #4a2c2c;">
+    <div class="phase-header" style="border-left:none;background:#2a0f0f;">
+      <h2>⑪ Radioactive Decay</h2>
+      <span class="phase-meta">Unlock Radioactive Isotopes · teaches: passive decay collection, alpha/beta particles as secondary income</span>
+      <span class="phase-entropy" style="color:#f85149">GATE: 5000e · Requires both Isotopes + Heavy Elements</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:28px">#</th><th style="width:220px">Step</th><th>Player Action</th><th style="width:160px">Cost</th><th style="width:160px">Reward</th><th style="width:90px">Time Est.</th><th style="width:160px">Unlock Condition</th></tr></thead>
+      <tbody>
+        <tr class="row-gate"><td class="step-num">—</td><td class="step-id">Unlock Radioactive Isotopes<br><span class="tag tag-gate">🔬 gate</span></td><td>Buy Radioactive Isotopes. Requires both Isotope Engineering + Heavy Elements. Unlocks Radioactive Containment building and U-235 recipe.</td><td class="cost" style="font-weight:600">−5000e</td><td class="reward">Radioactive Containment · U-235 · Alpha + Beta particles</td><td class="time">—</td><td><code style="font-size:11px;">radioactive_isotopes unlocked</code></td></tr>
+        <tr><td class="step-num">—</td><td class="step-id">Build Radioactive Containment<br><span class="tag" style="background:#1a2b4a33;color:#79c0ff;border:1px solid #1a2b4a">🏭 building</span></td><td>2×2 footprint. Houses isotope-producing buildings. Passively harvests decay particles: Alpha (20 EV) + Beta (10 EV) per decay event. Requires 30 EV power.</td><td class="cost">2500e</td><td class="reward">Passive alpha/beta particle income stream</td><td class="time">~3 min</td><td><code style="font-size:11px;">radioactive_isotopes unlocked</code></td></tr>
       </tbody>
     </table>
   </div>
@@ -922,6 +1215,42 @@
     </div>
   </div>
 
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 3</span>
+      <span class="dlg-id">sell_electrons_intro</span>
+      <span class="step-label">sell_electrons_in_demon · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Drag the electrons to the deposit side. The Demon converts particle energy into entropy — the base currency of this facility.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 4</span>
+      <span class="dlg-id">close_demon_first</span>
+      <span class="step-label">close_demon_panel · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Good. Those electrons built your first entropy. It is a small number for now.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Phase 2 dialogues -->
   <div class="dialogue-phase-label">② Quarks — Steps 5–9</div>
 
@@ -951,8 +1280,98 @@
     </div>
   </div>
 
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 7</span>
+      <span class="dlg-id">demon_quarks_intro</span>
+      <span class="step-label">direct_to_maxwells_demon_quarks · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Quarks carry more energy potential than leptons. The Demon will extract more entropy from them. Bring them in.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span><span class="flag flag-target">highlight: maxwells_demon</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 8</span>
+      <span class="dlg-id">sell_quarks_intro</span>
+      <span class="step-label">sell_quarks_in_demon · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Deposit all of them. Notice how much more entropy quarks generate compared to electrons. Organized matter will generate more still.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 9</span>
+      <span class="dlg-id">close_demon_quarks</span>
+      <span class="step-label">close_demon_panel_quarks · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">You have enough to begin. Open the menu on the left — the Research panel is there.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Phase 3 dialogues -->
   <div class="dialogue-phase-label">③ Recombination I — Steps 10–12</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 10</span>
+      <span class="dlg-id">research_panel_intro</span>
+      <span class="step-label">open_research_drawer · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The research tree is your progression map. Each node unlocks new processes, new materials, new machinery. Nothing in this facility advances without it.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 11</span>
+      <span class="dlg-id">recombination_i_context</span>
+      <span class="step-label">buy_recombination_i · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Recombination I. This unlocks the strong nuclear force — the force that binds quarks into nucleons. Purchase it.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="dialogue-block">
     <div class="dialogue-header">
@@ -1037,6 +1456,60 @@
     </div>
   </div>
 
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 17</span>
+      <span class="dlg-id">nucleons_to_demon_context</span>
+      <span class="step-label">direct_to_demon_for_nucleons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Protons and neutrons carry significantly more energy than raw quarks. The Demon values organized matter — each layer of complexity compounds your entropy yield. Bring them in.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span><span class="flag flag-target">highlight: maxwells_demon</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 18</span>
+      <span class="dlg-id">sell_nucleons_context</span>
+      <span class="step-label">sell_protons_and_neutrons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Deposit both the protons and the neutrons. You have built the first organized matter this facility has produced.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 19</span>
+      <span class="dlg-id">close_demon_nucleons_context</span>
+      <span class="step-label">close_demon_after_nucleons · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Complexity yields more entropy. That principle will drive every decision as this facility scales.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Phase 5 dialogues -->
   <div class="dialogue-phase-label">⑤ Hydrogen Synthesis — Steps 20–27</div>
 
@@ -1053,6 +1526,50 @@
           <div class="line-speaker">The Architect</div>
           <div class="line-text">Excellent work. You've synthesized protons and neutrons and converted them to entropy — the fundamental energy of this facility.</div>
           <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 21</span>
+      <span class="dlg-id">gather_hydrogen_context</span>
+      <span class="step-label">gather_for_hydrogen · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Hydrogen synthesis is unlocked. To build a hydrogen atom you need a proton — which you now know how to build — and one electron from the Lepton Field.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Gather your materials: 4 Up Quarks and 2 Down Quarks to build two protons, plus 2 electrons to complete the atoms.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 22</span>
+      <span class="dlg-id">craft_protons_for_h_context</span>
+      <span class="step-label">craft_protons_for_hydrogen · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Build the protons first. Two Up Quarks, one Down Quark each. Two protons means two hydrogen atoms.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
     </div>
@@ -1113,7 +1630,7 @@
   </div>
 
   <!-- Phase 6 dialogues -->
-  <div class="dialogue-phase-label">⑥ Automation &amp; Prestige — Steps 28–33</div>
+  <div class="dialogue-phase-label">⑥ Automation — Steps 28–32</div>
 
   <div class="dialogue-block">
     <div class="dialogue-header">
@@ -1126,7 +1643,7 @@
         <span class="line-num">1</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">That entropy unlocks Automation I. A Field Collector — a Harvester placed directly on a quantum field — gathers particles automatically on a continuous cycle. No tapping required.</div>
+          <div class="line-text">You have enough entropy to unlock Automation I — your first engineering breakthrough. It enables the Harvester: a field collector that gathers particles on a continuous cycle, no tapping required.</div>
           <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
         </div>
       </div>
@@ -1134,7 +1651,7 @@
         <span class="line-num">2</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">This is the transition point. Manual harvesting was a lesson. The Field Collector is how you scale.</div>
+          <div class="line-text">This is the transition point. Manual harvesting was a lesson. The Harvester is how you scale.</div>
           <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
         </div>
       </div>
@@ -1142,7 +1659,25 @@
         <span class="line-num">3</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">Open the Build menu and place a Harvester on the quark or lepton field. Once it is running, the facility collects without you.</div>
+          <div class="line-text">Open the Research panel and purchase Automation I.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 29</span>
+      <span class="dlg-id">buy_automation_i_context</span>
+      <span class="step-label">buy_automation_i · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Automation I. Purchase it — then you can place your first Harvester.</div>
           <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
@@ -1152,6 +1687,42 @@
   <div class="dialogue-block">
     <div class="dialogue-header">
       <span class="step-ref">Step 30</span>
+      <span class="dlg-id">place_building_context</span>
+      <span class="step-label">place_first_building · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Open the build menu and place a building on an open grid tile. It will begin production immediately.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 31</span>
+      <span class="dlg-id">place_conveyor_context</span>
+      <span class="step-label">place_conveyor · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Connect the two — drag a conveyor from the Harvester's output port to the Demon's input.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 32</span>
       <span class="dlg-id">automation_context</span>
       <span class="step-label">automation_started · on_enter · 2 lines</span>
     </div>
@@ -1168,7 +1739,27 @@
         <span class="line-num">2</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">As production scales, entropy accumulates. But there is a ceiling on each run. When your net worth approaches the prestige threshold, you will have extracted most of this run's value — and it will be time to reset.</div>
+          <div class="line-text">Electrons are selling. But your quark fields are wasting potential — every raw quark that reaches the Demon is worth 1 entropy. Combine them into protons and neutrons first. They sell for 3.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-phase-label">Phase ⑥ cont. — Nucleon Pipeline (Steps 33–41)</div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 33</span>
+      <span class="dlg-id">intro_sfc_context</span>
+      <span class="step-label">intro_sfc · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Your electron pipeline is running. You already have Recombination I — the Strong Force Combiner is available to place. Keep accumulating entropy and we will put those quarks to work.</div>
           <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
@@ -1177,24 +1768,16 @@
 
   <div class="dialogue-block">
     <div class="dialogue-header">
-      <span class="step-ref">Step 31</span>
-      <span class="dlg-id">prestige_wall_context</span>
-      <span class="step-label">reach_prestige_wall · on_enter · 2 lines</span>
+      <span class="step-ref">Step 34</span>
+      <span class="dlg-id">place_sfc_context</span>
+      <span class="step-label">place_sfc · on_enter · 1 line</span>
     </div>
     <div class="dialogue-lines">
       <div class="dialogue-line">
         <span class="line-num">1</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">You have reached the ceiling. Prestige is not failure — it is the mechanism that converts one-time progress into permanent power.</div>
-          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
-        </div>
-      </div>
-      <div class="dialogue-line">
-        <span class="line-num">2</span>
-        <div class="line-body">
-          <div class="line-speaker">The Architect</div>
-          <div class="line-text">The reset clears your inventory, buildings, and entropy. What you keep: prestige currency and a research memory discount on nodes you have already unlocked. Initiate it — you will return faster than you left.</div>
+          <div class="line-text">Place the Strong Force Combiner anywhere on the grid. It will show as unpowered until you connect a generator — we will handle that next.</div>
           <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
@@ -1203,16 +1786,124 @@
 
   <div class="dialogue-block">
     <div class="dialogue-header">
-      <span class="step-ref">Step 32</span>
-      <span class="dlg-id">prestige_complete_context</span>
-      <span class="step-label">first_prestige_complete · on_enter · 2 lines · 🎉 milestone</span>
+      <span class="step-ref">Step 35</span>
+      <span class="dlg-id">place_generator_context</span>
+      <span class="step-label">place_generator · on_enter · 1 line</span>
     </div>
     <div class="dialogue-lines">
       <div class="dialogue-line">
         <span class="line-num">1</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">The reset is complete. The facility rebuilds, but you are not starting over — you are starting ahead.</div>
+          <div class="line-text">The Generator produces electron volts — a local power field. Any powered building within its radius draws from it automatically. Place one near the Combiner.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 36</span>
+      <span class="dlg-id">link_generator_context</span>
+      <span class="step-label">link_generator · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Select the Combiner, then drag a power link to the Generator. The Combiner draws 10 eV — well within the Generator's 50 eV output. It will come online immediately.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 37</span>
+      <span class="dlg-id">place_quark_harvester_context</span>
+      <span class="step-label">place_quark_harvester · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Combiner is powered but has nothing to process. Place a second Harvester on the quark field — it produces Up Quarks and Down Quarks in equal measure.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 38</span>
+      <span class="dlg-id">route_quarks_context</span>
+      <span class="step-label">route_quarks_to_sfc · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Connect the quark Harvester's output port to the Combiner's input port with a conveyor. Quarks will flow in continuously.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 39</span>
+      <span class="dlg-id">configure_sfc_context</span>
+      <span class="step-label">configure_sfc_recipes · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">The Combiner can run both recipes at once. Enable Proton — 2 Up, 1 Down — and Neutron — 1 Up, 2 Down — simultaneously. With equal quark input, they balance each other naturally. No surplus accumulates.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 40</span>
+      <span class="dlg-id">route_nucleons_context</span>
+      <span class="step-label">route_nucleons_to_demon · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Two output ports — one for protons, one for neutrons. Connect both to Maxwell's Demon. They sell for 3 entropy each.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 41</span>
+      <span class="dlg-id">nucleon_loop_context</span>
+      <span class="step-label">nucleon_loop_complete · on_enter · 2 lines</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Protons and neutrons selling automatically alongside electrons. Your factory has two income streams now. Every quark from every field finds a buyer.</div>
           <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
         </div>
       </div>
@@ -1220,34 +1911,143 @@
         <span class="line-num">2</span>
         <div class="line-body">
           <div class="line-speaker">The Architect</div>
-          <div class="line-text">You carry prestige currency now. Unlike entropy, it does not reset between runs. Spend it on permanent upgrades that will accelerate every future run.</div>
+          <div class="line-text">The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 200 entropy and place it.</div>
           <div class="line-flags"><span class="flag flag-live">game live</span></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Unassigned dialogues -->
-  <div class="dialogue-phase-label" style="margin-top:36px">Authored but Unassigned</div>
-  <p style="font-size:12px;color:#8b949e;margin-bottom:12px;">These dialogues exist in <code style="font-size:11px;font-family:monospace;color:#8b949e;">game_data.json</code> but are not wired to any tutorial step's <code style="font-size:11px;font-family:monospace;color:#8b949e;">on_enter.dialogue_id</code>. Candidates for future enrichment or step coverage.</p>
+  <div class="dialogue-phase-label">Phase ⑥ cont. — Hydrogen Automation (Steps 42–46)</div>
 
-  <div class="unassigned-section">
-    <h3>Unassigned dialogues</h3>
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 42</span>
+      <span class="dlg-id">intro_atom_gen_context</span>
+      <span class="step-label">intro_atom_gen · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Nucleons are selling. But a proton and an electron together can become something more. The Atom Generator takes one of each and produces hydrogen — your first complete atom. It is ready to place.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 43</span>
+      <span class="dlg-id">place_atom_gen_context</span>
+      <span class="step-label">place_atom_generator · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Place the Atom Generator on the grid. It draws 5 eV of power — well within your generator's current output. No new infrastructure needed.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 44</span>
+      <span class="dlg-id">connect_atom_gen_context</span>
+      <span class="step-label">connect_atom_gen_inputs · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Re-route the proton output from the Demon to the Atom Generator's proton input. Do the same for the electron Harvester output. Neutrons continue to sell — they are not needed for hydrogen.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 45</span>
+      <span class="dlg-id">route_hydrogen_context</span>
+      <span class="step-label">route_hydrogen_to_demon · on_enter · 1 line</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Connect the Atom Generator's output to Maxwell's Demon. Hydrogen sells for 5 entropy. A raw proton and electron would have sold for 4 — assembly adds one entropy per cycle, and that margin compounds as you scale.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialogue-block">
+    <div class="dialogue-header">
+      <span class="step-ref">Step 46</span>
+      <span class="dlg-id">hydrogen_loop_context</span>
+      <span class="step-label">hydrogen_loop_complete · on_enter · 2 lines · 🎉 tutorial ends</span>
+    </div>
+    <div class="dialogue-lines">
+      <div class="dialogue-line">
+        <span class="line-num">1</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Hydrogen. One proton, one electron — the simplest atom in existence, and the most abundant in the universe. Your factory is making it continuously, without your input.</div>
+          <div class="line-flags"><span class="flag flag-pause">pause_game</span></div>
+        </div>
+      </div>
+      <div class="dialogue-line">
+        <span class="line-num">2</span>
+        <div class="line-body">
+          <div class="line-speaker">The Architect</div>
+          <div class="line-text">Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.</div>
+          <div class="line-flags"><span class="flag flag-live">game live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="unassigned-section" style="border-left-color:#484f58;margin-top:12px;">
+    <h3>Cut (post-tutorial — prestige is organic discovery)</h3>
     <ul>
-      <li><code>sell_electrons_intro</code> <span class="preview">— "Drag the electrons to the deposit side. The Demon converts particle energy into entropy…"</span></li>
-      <li><code>close_demon_first</code> <span class="preview">— "Good. Those electrons built your first entropy. It is a small number for now."</span></li>
-      <li><code>demon_quarks_intro</code> <span class="preview">— "Quarks carry more energy potential than leptons. The Demon will extract more entropy from them…"</span></li>
-      <li><code>sell_quarks_intro</code> <span class="preview">— "Deposit all of them. Notice how much more entropy quarks generate compared to electrons…"</span></li>
-      <li><code>close_demon_quarks</code> <span class="preview">— "You have enough to begin. Open the menu on the left — the Research panel is there."</span></li>
-      <li><code>research_panel_intro</code> <span class="preview">— "The research tree is your progression map. Each node unlocks new processes, new materials…"</span></li>
-      <li><code>recombination_i_context</code> <span class="preview">— "Recombination I. This unlocks the strong nuclear force… Purchase it."</span></li>
-      <li><code>nucleons_to_demon_context</code> <span class="preview">— "Protons and neutrons carry significantly more energy than raw quarks…"</span></li>
-      <li><code>sell_nucleons_context</code> <span class="preview">— "Deposit both the protons and the neutrons. You have built the first organized matter…"</span></li>
-      <li><code>close_demon_nucleons_context</code> <span class="preview">— "Complexity yields more entropy. That principle will drive every decision as this facility scales."</span></li>
-      <li><code>gather_hydrogen_context</code> <span class="preview">— "Hydrogen synthesis is unlocked. To build a hydrogen atom you need a proton… (2 lines)"</span></li>
-      <li><code>craft_protons_for_h_context</code> <span class="preview">— "Build the protons first. Two Up Quarks, one Down Quark each…"</span></li>
-      <li><code>place_building_context</code> <span class="preview">— "Open the build menu and place a building on an open grid tile…"</span></li>
-      <li><code>spend_prestige_context</code> <span class="preview">— "Open the upgrade shop. Each purchase compounds across every future run. Spend wisely."</span></li>
+      <li><code>prestige_wall_context</code> <span class="preview">— "You have reached the ceiling. Prestige is not failure…"</span></li>
+      <li><code>prestige_complete_context</code> <span class="preview">— "The reset is complete. You are not starting over — you are starting ahead."</span></li>
+      <li><code>spend_prestige_context</code> <span class="preview">— "Open the upgrade shop. Each purchase compounds across every future run."</span></li>
+    </ul>
+  </div>
+
+  <!-- Wired dialogues summary -->
+  <div class="dialogue-phase-label" style="margin-top:36px">Previously Unassigned — Now Wired ✅</div>
+  <p style="font-size:12px;color:#8b949e;margin-bottom:12px;">All 13 authored dialogues are now wired to tutorial step <code style="font-size:11px;font-family:monospace;color:#8b949e;">on_enter.dialogue_id</code> in <code style="font-size:11px;font-family:monospace;color:#8b949e;">game_data.json</code>. <span style="color:#3fb950">✅ Resolves gap-5.</span></p>
+
+  <div class="unassigned-section" style="border-left-color:#1a6e40;">
+    <h3 style="color:#3fb950;">Wired (gap-5 resolved)</h3>
+    <ul>
+      <li><code>sell_electrons_intro</code> → step <code>sell_electrons_in_demon</code></li>
+      <li><code>close_demon_first</code> → step <code>close_demon_panel</code></li>
+      <li><code>demon_quarks_intro</code> → step <code>direct_to_maxwells_demon_quarks</code></li>
+      <li><code>sell_quarks_intro</code> → step <code>sell_quarks_in_demon</code></li>
+      <li><code>close_demon_quarks</code> → step <code>close_demon_panel_quarks</code></li>
+      <li><code>research_panel_intro</code> → step <code>open_research_drawer</code></li>
+      <li><code>recombination_i_context</code> → step <code>buy_recombination_i</code></li>
+      <li><code>nucleons_to_demon_context</code> → step <code>direct_to_demon_for_nucleons</code></li>
+      <li><code>sell_nucleons_context</code> → step <code>sell_protons_and_neutrons</code></li>
+      <li><code>close_demon_nucleons_context</code> → step <code>close_demon_after_nucleons</code></li>
+      <li><code>gather_hydrogen_context</code> → step <code>gather_for_hydrogen</code></li>
+      <li><code>craft_protons_for_h_context</code> → step <code>craft_protons_for_hydrogen</code></li>
+      <li><code>place_building_context</code> → step <code>place_first_building</code></li>
+      <li><code>spend_prestige_context</code> → <strong>Cut</strong> (prestige is post-tutorial organic discovery)</li>
     </ul>
   </div>
 
@@ -1282,26 +2082,26 @@
           <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-1-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-2">
-          <td class="gap-check"><input type="checkbox" data-id="gap-2"></td>
+        <tr data-gap="gap-2" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-2" checked></td>
           <td><span class="cat-badge cat-design">Design</span></td>
           <td class="gap-issue">
             Prestige threshold undefined
             <small>Prestige wall multiplier is 10×, but the base entropy value it scales from is not set. PrestigeAvailable has no concrete number.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-2-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-2-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-2-sol" data-placeholder="Proposed solution…">Set prestige_base_value = 500 in game_config. Prestige wall = 500 × 10 = 5000 entropy net worth. Achievable in ~10–20 min of idle play on Run 1 with a single Harvester and hydrogen chain.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-2-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-3">
-          <td class="gap-check"><input type="checkbox" data-id="gap-3"></td>
+        <tr data-gap="gap-3" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-3" checked></td>
           <td><span class="cat-badge cat-design">Design</span></td>
           <td class="gap-issue">
             "Automation I" has no matching research node
             <small>intro_automation_i dialogue calls it "Automation I" as if it's a research unlock, but the Harvester is available from start with no research required.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-3-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-3-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-3-sol" data-placeholder="Proposed solution…">Added automation_i research node (cost: 25e, branch: Engineering, prerequisites: hydrogen_synthesis, 50% prestige discount). Harvester now requires automation_i — available_from_start set to false. Dialogue updated to match. New tutorial step buy_automation_i added as step 29.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-3-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
         <tr data-gap="gap-4" class="resolved">
@@ -1315,48 +2115,48 @@
           <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-4-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-5">
-          <td class="gap-check"><input type="checkbox" data-id="gap-5"></td>
+        <tr data-gap="gap-5" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-5" checked></td>
           <td><span class="cat-badge cat-dialogue">Dialogue</span></td>
           <td class="gap-issue">
             14 authored dialogues unassigned to tutorial steps
             <small>Includes: sell_electrons_intro, close_demon_first, research_panel_intro, recombination_i_context, nucleons_to_demon_context, gather_hydrogen_context, and 8 others. All written; none wired.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-5-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-5-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-5-sol" data-placeholder="Proposed solution…">Wired 13 dialogues to their matching tutorial step on_enter.dialogue_id in game_data.json. spend_prestige_context cut (prestige is post-tutorial). See Dialogue tab "Wired" section for full mapping.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-5-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-6">
-          <td class="gap-check"><input type="checkbox" data-id="gap-6"></td>
+        <tr data-gap="gap-6" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-6" checked></td>
           <td><span class="cat-badge cat-viz">Visualization</span></td>
           <td class="gap-issue">
             No running entropy total in Overview
             <small>Each phase shows earn/spend but no cumulative column. A running total would make balance problems immediately visible across phases.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-6-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-6-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-6-sol" data-placeholder="Proposed solution…">Added running-total chip row to the Entropy Economy callout showing each gate and the running balance: Start 250 → +15 → −100 → +12 → −50 → +10 → −25 → −100 → End 12e.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-6-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-7">
-          <td class="gap-check"><input type="checkbox" data-id="gap-7"></td>
+        <tr data-gap="gap-7" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-7" checked></td>
           <td><span class="cat-badge cat-viz">Visualization</span></td>
           <td class="gap-issue">
             Post-tutorial loop not mapped
             <small>Doc ends at prestige (step 33). Run 2 onward — Atomic Assembly, Isotopes, research memory discounts, prestige upgrades — has no visualization.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-7-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-7-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-7-sol" data-placeholder="Proposed solution…">Added full phase mapping for Phases ⑦–⑪ in the Overview tab: ⑦ Run 2 Ramp-Up, ⑧ Atomic Assembly, ⑨ Heavy Elements (Uranium), ⑩ Isotopes, ⑪ Radioactive Decay. Each phase shows buildings, research gates, and entropy values.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-7-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
-        <tr data-gap="gap-8">
-          <td class="gap-check"><input type="checkbox" data-id="gap-8"></td>
+        <tr data-gap="gap-8" class="resolved">
+          <td class="gap-check"><input type="checkbox" data-id="gap-8" checked></td>
           <td><span class="cat-badge cat-viz">Visualization</span></td>
           <td class="gap-issue">
             Skip-condition path not visualized
             <small>intro_dialogue has a skip: if recombination_i is already unlocked, jump to collect_quarks_for_nucleons. Second-run experience is different but not documented.</small>
           </td>
-          <td><div class="editable" contenteditable="true" data-id="gap-8-sol" data-placeholder="Proposed solution…"></div></td>
-          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-8-date" data-placeholder="YYYY-MM-DD"></div></td>
+          <td><div class="editable" contenteditable="true" data-id="gap-8-sol" data-placeholder="Proposed solution…">Tutorial ends at step 32 (automation_started) — after first prestige reset all research resets. On Run 2, intro_dialogue skip-condition fires (recombination_i already known from prestige memory) and jumps straight to collect_quarks_for_nucleons, bypassing phases 1–3. This is the intended fast re-run path.</div></td>
+          <td class="date-cell"><div class="editable" contenteditable="true" data-id="gap-8-date" data-placeholder="YYYY-MM-DD">2026-05-28</div></td>
         </tr>
 
       </tbody>
