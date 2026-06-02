@@ -4,15 +4,15 @@
 //
 // ── TABLE OF CONTENTS ──────────────────────────────────────────────────────
 //  1. config            4 economy scalars  (sync with game_data.json game_config)
-//  2. items            19 items            (sync with game_data.json items[].base_sell_value)
-//  3. recipes          14 recipes          (sync with game_data.json recipes)
-//  4. buildings         7 buildings        (sync with game_data.json buildings[].entropy_cost)
-//  5. research          8 nodes            (sync with game_data.json research[].cost_base_currency)
+//  2. items            51 items            (sync with game_data.json items[].base_sell_value)
+//  3. recipes          49 recipes          (sync with game_data.json recipes)
+//  4. buildings        10 buildings        (sync with game_data.json buildings[].entropy_cost)
+//  5. research         20 nodes            (sync with game_data.json research[].cost_base_currency)
 //  6. tutorial_phases   6 phases / 48 steps with doc annotations
-//  7. post_tutorial_phases  5 phases (Runs 2+, phases 7–11)
+//  7. post_tutorial_phases  9 phases (Runs 2+, phases 7–15)
 //  8. dialogues        12 phase groups / ~40 dialogue entries
 //  9. design_gaps      13 tracked issues
-// 10. simple_overview  13 phases for the Simple Overview tab
+// 10. simple_overview  17 phases for the Simple Overview tab
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -25,67 +25,168 @@ config: {
 },
 
 // ─────────────────────────────────────── ITEMS ──
+// Sell values follow a ×2.0 ladder anchored at H=5e. H stays at 5e to preserve tutorial balance.
 items: [
-  { id:'up_quark',           label:'Up Quark',           sym:'u',     cat:'Raw',      tier:1, sell:1,    mult:1.0 },
-  { id:'down_quark',         label:'Down Quark',          sym:'d',     cat:'Raw',      tier:1, sell:1,    mult:1.0 },
-  { id:'electron',           label:'Electron',            sym:'e⁻',    cat:'Raw',      tier:1, sell:1,    mult:1.0 },
-  { id:'proton',             label:'Proton',              sym:'p⁺',    cat:'Nucleon',  tier:1, sell:3,    mult:1.0 },
-  { id:'neutron',            label:'Neutron',             sym:'n⁰',    cat:'Nucleon',  tier:1, sell:3,    mult:1.0 },
-  { id:'hydrogen',           label:'Hydrogen',            sym:'H',     cat:'Element',  tier:2, sell:5,    mult:1.0 },
-  { id:'helium_4',           label:'Helium-4',            sym:'He',    cat:'Element',  tier:2, sell:20,   mult:1.0 },
-  { id:'lithium',            label:'Lithium',             sym:'Li',    cat:'Element',  tier:2, sell:35,   mult:1.0 },
-  { id:'carbon',             label:'Carbon',              sym:'C',     cat:'Element',  tier:2, sell:60,   mult:1.0 },
-  { id:'oxygen',             label:'Oxygen',              sym:'O',     cat:'Element',  tier:2, sell:80,   mult:1.0 },
-  { id:'silicon',            label:'Silicon',             sym:'Si',    cat:'Element',  tier:2, sell:140,  mult:1.0 },
-  { id:'iron',               label:'Iron',                sym:'Fe',    cat:'Element',  tier:2, sell:280,  mult:1.0 },
-  { id:'uranium',            label:'Uranium',             sym:'U',     cat:'Element',  tier:2, sell:1000, mult:1.0 },
-  { id:'deuterium',          label:'Deuterium',           sym:'H-2',   cat:'Isotope',  tier:2, sell:15,   mult:1.5 },
-  { id:'tritium',            label:'Tritium',             sym:'H-3',   cat:'Isotope',  tier:2, sell:25,   mult:1.5 },
-  { id:'carbon_14',          label:'Carbon-14',           sym:'C-14',  cat:'Isotope',  tier:2, sell:100,  mult:1.5 },
-  { id:'uranium_235',        label:'Uranium-235',         sym:'U-235', cat:'Isotope',  tier:2, sell:3000, mult:2.0 },
-  { id:'alpha_particle',     label:'Alpha Particle',      sym:'α',     cat:'Particle', tier:2, sell:50,   mult:1.0 },
-  { id:'beta_particle',      label:'Beta Particle',       sym:'β',     cat:'Particle', tier:2, sell:30,   mult:1.0 },
+  // Tier 1 — Subatomic
+  { id:'up_quark',                 label:'Up Quark',                sym:'u',     cat:'Raw',       tier:1, sell:1,            mult:1.0 },
+  { id:'down_quark',               label:'Down Quark',               sym:'d',     cat:'Raw',       tier:1, sell:1,            mult:1.0 },
+  { id:'electron',                 label:'Electron',                 sym:'e⁻',    cat:'Raw',       tier:1, sell:1,            mult:1.0 },
+  { id:'proton',                   label:'Proton',                   sym:'p⁺',    cat:'Nucleon',   tier:1, sell:3,            mult:1.0 },
+  { id:'neutron',                  label:'Neutron',                  sym:'n⁰',    cat:'Nucleon',   tier:1, sell:3,            mult:1.0 },
+  // Tier 2 — Elements (×2 ladder: H=5, He=10, Li=20 … Pu=2,621,440)
+  { id:'hydrogen',                 label:'Hydrogen',                 sym:'H',     cat:'Element',   tier:2, sell:5,            mult:1.0 },
+  { id:'helium_4',                 label:'Helium-4',                 sym:'He',    cat:'Element',   tier:2, sell:10,           mult:1.0 },
+  { id:'lithium',                  label:'Lithium',                  sym:'Li',    cat:'Element',   tier:2, sell:20,           mult:1.0 },
+  { id:'beryllium',                label:'Beryllium',                sym:'Be',    cat:'Element',   tier:2, sell:40,           mult:1.0 },
+  { id:'boron',                    label:'Boron',                    sym:'B',     cat:'Element',   tier:2, sell:80,           mult:1.0 },
+  { id:'carbon',                   label:'Carbon',                   sym:'C',     cat:'Element',   tier:2, sell:160,          mult:1.0 },
+  { id:'nitrogen',                 label:'Nitrogen',                 sym:'N',     cat:'Element',   tier:2, sell:320,          mult:1.0 },
+  { id:'oxygen',                   label:'Oxygen',                   sym:'O',     cat:'Element',   tier:2, sell:640,          mult:1.0 },
+  { id:'silicon',                  label:'Silicon',                  sym:'Si',    cat:'Element',   tier:2, sell:1280,         mult:1.0 },
+  { id:'aluminum',                 label:'Aluminum',                 sym:'Al',    cat:'Element',   tier:2, sell:2560,         mult:1.0 },
+  { id:'iron',                     label:'Iron',                     sym:'Fe',    cat:'Element',   tier:2, sell:5120,         mult:1.0 },
+  { id:'nickel',                   label:'Nickel',                   sym:'Ni',    cat:'Element',   tier:2, sell:10240,        mult:1.0 },
+  { id:'copper',                   label:'Copper',                   sym:'Cu',    cat:'Element',   tier:2, sell:20480,        mult:1.0 },
+  { id:'zinc',                     label:'Zinc',                     sym:'Zn',    cat:'Element',   tier:2, sell:40960,        mult:1.0 },
+  { id:'silver',                   label:'Silver',                   sym:'Ag',    cat:'Element',   tier:2, sell:81920,        mult:1.0 },
+  { id:'gold',                     label:'Gold',                     sym:'Au',    cat:'Element',   tier:2, sell:163840,       mult:1.0 },
+  { id:'platinum',                 label:'Platinum',                 sym:'Pt',    cat:'Element',   tier:2, sell:327680,       mult:1.0 },
+  { id:'tungsten',                 label:'Tungsten',                 sym:'W',     cat:'Element',   tier:2, sell:655360,       mult:1.0 },
+  { id:'uranium',                  label:'Uranium',                  sym:'U',     cat:'Element',   tier:2, sell:1310720,      mult:1.0 },
+  { id:'plutonium',                label:'Plutonium',                sym:'Pu',    cat:'Element',   tier:2, sell:2621440,      mult:1.0 },
+  // Tier 2 — Isotopes
+  { id:'deuterium',                label:'Deuterium',                sym:'H-2',   cat:'Isotope',   tier:2, sell:8,            mult:1.5 },
+  { id:'tritium',                  label:'Tritium',                  sym:'H-3',   cat:'Isotope',   tier:2, sell:12,           mult:1.5 },
+  { id:'carbon_14',                label:'Carbon-14',                sym:'C-14',  cat:'Isotope',   tier:2, sell:240,          mult:1.5 },
+  { id:'uranium_235',              label:'Uranium-235',              sym:'U-235', cat:'Isotope',   tier:2, sell:2621440,      mult:2.0 },
+  // Tier 2 — Particles
+  { id:'alpha_particle',           label:'Alpha Particle',           sym:'α',     cat:'Particle',  tier:2, sell:50,           mult:1.0 },
+  { id:'beta_particle',            label:'Beta Particle',            sym:'β',     cat:'Particle',  tier:2, sell:30,           mult:1.0 },
+  // Tier 3 — Molecules
+  { id:'liquid_hydrogen',          label:'Liquid Hydrogen',          sym:'LH₂',   cat:'Molecule',  tier:3, sell:300,          mult:1.0 },
+  { id:'water',                    label:'Water',                    sym:'H₂O',   cat:'Molecule',  tier:3, sell:6000,         mult:1.0 },
+  { id:'methane',                  label:'Methane',                  sym:'CH₄',   cat:'Molecule',  tier:3, sell:5000,         mult:1.0 },
+  { id:'ammonia',                  label:'Ammonia',                  sym:'NH₃',   cat:'Molecule',  tier:3, sell:10000,        mult:1.0 },
+  { id:'silica',                   label:'Silica',                   sym:'SiO₂',  cat:'Molecule',  tier:3, sell:50000,        mult:1.0 },
+  { id:'iron_oxide',               label:'Iron Oxide',               sym:'Fe₂O₃', cat:'Molecule',  tier:3, sell:200000,       mult:1.0 },
+  { id:'uranium_hexafluoride',     label:'Uranium Hexafluoride',     sym:'UF₆',   cat:'Molecule',  tier:3, sell:8000000,      mult:1.0 },
+  // Tier 4 — Materials
+  { id:'steel',                    label:'Steel',                    sym:'Fe·C',  cat:'Alloy',     tier:4, sell:1500000,      mult:1.0 },
+  { id:'carbon_fiber',             label:'Carbon Fiber',             sym:'C-F',   cat:'Alloy',     tier:4, sell:6000000,      mult:1.0 },
+  { id:'titanium_alloy',           label:'Titanium Alloy',           sym:'Ti-A',  cat:'Alloy',     tier:4, sell:25000000,     mult:1.0 },
+  { id:'semiconductor_wafer',      label:'Semiconductor Wafer',      sym:'Si-W',  cat:'Alloy',     tier:4, sell:100000000,    mult:1.0 },
+  { id:'aerogel',                  label:'Aerogel',                  sym:'SiO₂-A',cat:'Alloy',     tier:4, sell:400000000,    mult:1.0 },
+  { id:'superconductor',           label:'Superconductor',           sym:'SC',    cat:'Alloy',     tier:4, sell:1600000000,   mult:1.0 },
+  { id:'metamaterial',             label:'Metamaterial',             sym:'MM',    cat:'Alloy',     tier:4, sell:6400000000,   mult:1.0 },
+  // Tier 5 — Components
+  { id:'quantum_processor',        label:'Quantum Processor',        sym:'QP',    cat:'Component', tier:5, sell:50000000000,  mult:1.0 },
+  { id:'plasma_containment_ring',  label:'Plasma Containment Ring',  sym:'PCR',   cat:'Component', tier:5, sell:200000000000, mult:1.0 },
+  { id:'antimatter_cell',          label:'Antimatter Cell',          sym:'AM',    cat:'Component', tier:5, sell:800000000000, mult:1.0 },
+  { id:'dyson_node',               label:'Dyson Node',               sym:'DN',    cat:'Component', tier:5, sell:5e12,         mult:1.0 },
+  { id:'orbital_frame',            label:'Orbital Frame',            sym:'OF',    cat:'Component', tier:5, sell:2e13,         mult:1.0 },
+  { id:'graviton_lens',            label:'Graviton Lens',            sym:'GL',    cat:'Component', tier:5, sell:1e14,         mult:1.0 },
 ],
 
 // ─────────────────────────────────────── RECIPES ──
 recipes: [
-  { id:'proton',      label:'Proton',      building:'SFC',        inputs:'2u + 1d',          time:1,   powerEV:0,    sellId:'proton' },
-  { id:'neutron',     label:'Neutron',     building:'SFC',        inputs:'1u + 2d',          time:1,   powerEV:0,    sellId:'neutron' },
-  { id:'hydrogen',    label:'Hydrogen',    building:'Assembler',  inputs:'1p + 1e',          time:2,   powerEV:5,    sellId:'hydrogen' },
-  { id:'helium_4',    label:'Helium-4',    building:'Assembler',  inputs:'2p + 2n + 2e',     time:4,   powerEV:20,   sellId:'helium_4' },
-  { id:'lithium',     label:'Lithium',     building:'Assembler',  inputs:'3p + 4n + 3e',     time:7,   powerEV:35,   sellId:'lithium' },
-  { id:'carbon',      label:'Carbon',      building:'Assembler',  inputs:'6p + 6n + 6e',     time:12,  powerEV:60,   sellId:'carbon' },
-  { id:'oxygen',      label:'Oxygen',      building:'Assembler',  inputs:'8p + 8n + 8e',     time:16,  powerEV:80,   sellId:'oxygen' },
-  { id:'silicon',     label:'Silicon',     building:'Assembler',  inputs:'14p + 14n + 14e',  time:28,  powerEV:140,  sellId:'silicon' },
-  { id:'iron',        label:'Iron',        building:'Assembler',  inputs:'26p + 30n + 26e',  time:56,  powerEV:280,  sellId:'iron' },
-  { id:'uranium',     label:'Uranium',     building:'Assembler',  inputs:'92p + 146n + 92e', time:238, powerEV:1190, sellId:'uranium' },
-  { id:'deuterium',   label:'Deuterium',   building:'Manipulator',inputs:'H + 1n',           time:8,   powerEV:8,    sellId:'deuterium' },
-  { id:'tritium',     label:'Tritium',     building:'Manipulator',inputs:'H + 2n',           time:16,  powerEV:16,   sellId:'tritium' },
-  { id:'carbon_14',   label:'Carbon-14',   building:'Manipulator',inputs:'C + 2n',           time:16,  powerEV:16,   sellId:'carbon_14' },
-  { id:'uranium_235', label:'Uranium-235', building:'Manipulator',inputs:'U − 3n → +α',      time:24,  powerEV:24,   sellId:'uranium_235' },
+  // Tier 1 — Nucleons (SFC)
+  { id:'proton',                   label:'Proton',                   building:'SFC',          inputs:'2u + 1d',               time:1,    powerEV:0,        sellId:'proton' },
+  { id:'neutron',                  label:'Neutron',                  building:'SFC',          inputs:'1u + 2d',               time:1,    powerEV:0,        sellId:'neutron' },
+  // Tier 2 — Elements (Assembler — power = atomic_mass × 5 eV)
+  { id:'hydrogen',                 label:'Hydrogen',                 building:'Assembler',    inputs:'1p + 1e',               time:2,    powerEV:5,        sellId:'hydrogen' },
+  { id:'helium_4',                 label:'Helium-4',                 building:'Assembler',    inputs:'2p + 2n + 2e',          time:4,    powerEV:20,       sellId:'helium_4' },
+  { id:'lithium',                  label:'Lithium',                  building:'Assembler',    inputs:'3p + 4n + 3e',          time:7,    powerEV:35,       sellId:'lithium' },
+  { id:'beryllium',                label:'Beryllium',                building:'Assembler',    inputs:'4p + 5n + 4e',          time:9,    powerEV:45,       sellId:'beryllium' },
+  { id:'boron',                    label:'Boron',                    building:'Assembler',    inputs:'5p + 6n + 5e',          time:11,   powerEV:55,       sellId:'boron' },
+  { id:'carbon',                   label:'Carbon',                   building:'Assembler',    inputs:'6p + 6n + 6e',          time:12,   powerEV:60,       sellId:'carbon' },
+  { id:'nitrogen',                 label:'Nitrogen',                 building:'Assembler',    inputs:'7p + 7n + 7e',          time:14,   powerEV:70,       sellId:'nitrogen' },
+  { id:'oxygen',                   label:'Oxygen',                   building:'Assembler',    inputs:'8p + 8n + 8e',          time:16,   powerEV:80,       sellId:'oxygen' },
+  { id:'silicon',                  label:'Silicon',                  building:'Assembler',    inputs:'14p + 14n + 14e',       time:28,   powerEV:140,      sellId:'silicon' },
+  { id:'aluminum',                 label:'Aluminum',                 building:'Assembler',    inputs:'13p + 14n + 13e',       time:27,   powerEV:135,      sellId:'aluminum' },
+  { id:'iron',                     label:'Iron',                     building:'Assembler',    inputs:'26p + 30n + 26e',       time:56,   powerEV:280,      sellId:'iron' },
+  { id:'nickel',                   label:'Nickel',                   building:'Assembler',    inputs:'28p + 30n + 28e',       time:58,   powerEV:290,      sellId:'nickel' },
+  { id:'copper',                   label:'Copper',                   building:'Assembler',    inputs:'29p + 34n + 29e',       time:63,   powerEV:315,      sellId:'copper' },
+  { id:'zinc',                     label:'Zinc',                     building:'Assembler',    inputs:'30p + 35n + 30e',       time:65,   powerEV:325,      sellId:'zinc' },
+  { id:'silver',                   label:'Silver',                   building:'Assembler',    inputs:'47p + 61n + 47e',       time:108,  powerEV:540,      sellId:'silver' },
+  { id:'gold',                     label:'Gold',                     building:'Assembler',    inputs:'79p + 118n + 79e',      time:197,  powerEV:985,      sellId:'gold' },
+  { id:'platinum',                 label:'Platinum',                 building:'Assembler',    inputs:'78p + 117n + 78e',      time:195,  powerEV:975,      sellId:'platinum' },
+  { id:'tungsten',                 label:'Tungsten',                 building:'Assembler',    inputs:'74p + 110n + 74e',      time:184,  powerEV:920,      sellId:'tungsten' },
+  { id:'uranium',                  label:'Uranium',                  building:'Assembler',    inputs:'92p + 146n + 92e',      time:238,  powerEV:1190,     sellId:'uranium' },
+  { id:'plutonium',                label:'Plutonium',                building:'Assembler',    inputs:'94p + 150n + 94e',      time:244,  powerEV:1220,     sellId:'plutonium' },
+  // Tier 2 — Isotopes (Manipulator)
+  { id:'deuterium',                label:'Deuterium',                building:'Manipulator',  inputs:'H + 1n',                time:8,    powerEV:8,        sellId:'deuterium' },
+  { id:'tritium',                  label:'Tritium',                  building:'Manipulator',  inputs:'H + 2n',                time:16,   powerEV:16,       sellId:'tritium' },
+  { id:'carbon_14',                label:'Carbon-14',                building:'Manipulator',  inputs:'C + 2n',                time:16,   powerEV:16,       sellId:'carbon_14' },
+  { id:'uranium_235',              label:'Uranium-235',              building:'Manipulator',  inputs:'U − 3n → +α',           time:24,   powerEV:24,       sellId:'uranium_235' },
+  // Tier 3 — Molecules (Mol. Synth.)
+  { id:'liquid_hydrogen',          label:'Liquid Hydrogen',          building:'Mol. Synth.',  inputs:'10× H',                 time:20,   powerEV:50,       sellId:'liquid_hydrogen' },
+  { id:'water',                    label:'Water',                    building:'Mol. Synth.',  inputs:'4× H + 8× O',           time:60,   powerEV:200,      sellId:'water' },
+  { id:'methane',                  label:'Methane',                  building:'Mol. Synth.',  inputs:'4× H + 6× C',           time:80,   powerEV:350,      sellId:'methane' },
+  { id:'ammonia',                  label:'Ammonia',                  building:'Mol. Synth.',  inputs:'3× H + 7× N',           time:90,   powerEV:450,      sellId:'ammonia' },
+  { id:'silica',                   label:'Silica',                   building:'Mol. Synth.',  inputs:'5× Si + 10× O',         time:150,  powerEV:800,      sellId:'silica' },
+  { id:'iron_oxide',               label:'Iron Oxide',               building:'Mol. Synth.',  inputs:'4× Fe + 6× O',          time:200,  powerEV:1500,     sellId:'iron_oxide' },
+  { id:'uranium_hexafluoride',     label:'UF₆',                     building:'Mol. Synth.',  inputs:'2× U + 8× Si',          time:400,  powerEV:5000,     sellId:'uranium_hexafluoride' },
+  // Tier 4 — Materials (Mat. Forge)
+  { id:'steel',                    label:'Steel',                    building:'Mat. Forge',   inputs:'5× Fe₂O₃ + 2× CH₄',    time:300,  powerEV:8000,     sellId:'steel' },
+  { id:'carbon_fiber',             label:'Carbon Fiber',             building:'Mat. Forge',   inputs:'4× CH₄ + 3× SiO₂',     time:400,  powerEV:15000,    sellId:'carbon_fiber' },
+  { id:'titanium_alloy',           label:'Titanium Alloy',           building:'Mat. Forge',   inputs:'3× SiO₂ + 4× Fe₂O₃',   time:500,  powerEV:25000,    sellId:'titanium_alloy' },
+  { id:'semiconductor_wafer',      label:'Semiconductor Wafer',      building:'Mat. Forge',   inputs:'5× SiO₂ + 2× LH₂',     time:600,  powerEV:50000,    sellId:'semiconductor_wafer' },
+  { id:'aerogel',                  label:'Aerogel',                  building:'Mat. Forge',   inputs:'3× SiO₂ + 2× NH₃',     time:700,  powerEV:80000,    sellId:'aerogel' },
+  { id:'superconductor',           label:'Superconductor',           building:'Mat. Forge',   inputs:'2× Aerogel + 3× UF₆',  time:800,  powerEV:200000,   sellId:'superconductor' },
+  { id:'metamaterial',             label:'Metamaterial',             building:'Mat. Forge',   inputs:'2× SC + 2× Si-W',       time:1000, powerEV:500000,   sellId:'metamaterial' },
+  // Tier 5 — Components (Comp. Fab.)
+  { id:'quantum_processor',        label:'Quantum Processor',        building:'Comp. Fab.',   inputs:'3× Si-W + 2× SC',       time:1200, powerEV:2000000,  sellId:'quantum_processor' },
+  { id:'plasma_containment_ring',  label:'Plasma Containment Ring',  building:'Comp. Fab.',   inputs:'4× MM + 2× Ti-A',       time:1500, powerEV:5000000,  sellId:'plasma_containment_ring' },
+  { id:'antimatter_cell',          label:'Antimatter Cell',          building:'Comp. Fab.',   inputs:'3× MM + 2× Aerogel',    time:2000, powerEV:10000000, sellId:'antimatter_cell' },
+  { id:'dyson_node',               label:'Dyson Node',               building:'Comp. Fab.',   inputs:'2× QP + 2× PCR',        time:3000, powerEV:50000000, sellId:'dyson_node' },
+  { id:'orbital_frame',            label:'Orbital Frame',            building:'Comp. Fab.',   inputs:'3× Ti-A + 2× DN',       time:4000, powerEV:1e8,      sellId:'orbital_frame' },
+  { id:'graviton_lens',            label:'Graviton Lens',            building:'Comp. Fab.',   inputs:'2× OF + 2× AM',         time:5000, powerEV:5e8,      sellId:'graviton_lens' },
 ],
 
 // ─────────────────────────────────────── BUILDINGS ──
 buildings: [
-  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,  draw:'—',      out:'—',     rate:'1/s',   ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}] },
-  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,  draw:'10 eV',  out:'—',     rate:'1/s',   ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}] },
-  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,  draw:'—',      out:'50 eV', rate:'—',     ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}] },
-  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,    draw:'—',      out:'—',     rate:'entropy',ups:[{e:300},{e:1200}] },
-  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:200,  draw:'mass×5', out:'—',     rate:'1/s',   ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}] },
-  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500, draw:'n×8',    out:'—',     rate:'0.5/s', ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}] },
-  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500, draw:'30 eV',  out:'—',     rate:'decay', ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}] },
+  // Tier 1
+  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,       draw:'—',        out:'—',     rate:'1/s',    ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}] },
+  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,       draw:'10 eV',    out:'—',     rate:'1/s',    ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}] },
+  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,       draw:'—',        out:'50 eV', rate:'—',      ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}] },
+  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,         draw:'—',        out:'—',     rate:'entropy', ups:[{e:300},{e:1200}] },
+  // Tier 2
+  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:200,       draw:'mass×5',   out:'—',     rate:'1/s',    ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}] },
+  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500,      draw:'n×8',      out:'—',     rate:'0.5/s',  ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}] },
+  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500,      draw:'30 eV',    out:'—',     rate:'decay',  ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}] },
+  // Tier 3
+  { id:'molecular_synthesizer',   label:'Molecular Synthesizer',   tier:3, cat:'Transient', cost:5000,      draw:'recipe',   out:'—',     rate:'1/s',    ups:[{e:50000,r:'2/s'},{e:200000,r:'4/s'},{e:800000,r:'8/s'}] },
+  // Tier 4
+  { id:'materials_forge',         label:'Materials Forge',         tier:4, cat:'Transient', cost:50000,     draw:'recipe',   out:'—',     rate:'0.5/s',  ups:[{e:1000000,r:'1/s'},{e:5000000,r:'2/s'},{e:25000000,r:'4/s'}] },
+  // Tier 5
+  { id:'component_fabricator',    label:'Component Fabricator',    tier:5, cat:'Transient', cost:5000000,   draw:'recipe',   out:'—',     rate:'0.25/s', ups:[{e:100000000,r:'0.5/s'},{e:1000000000,r:'1/s'}] },
 ],
 
 // ─────────────────────────────────────── RESEARCH ──
 research: [
-  { id:'recombination_i',      label:'Recombination I',      branch:'Nuclear',     cost:100,  discount:0.25, prereqs:'—',                            unlocks:'Proton, Neutron, SFC' },
-  { id:'hydrogen_synthesis',   label:'Hydrogen Synthesis',   branch:'Nuclear',     cost:50,   discount:0.25, prereqs:'Recombination I',               unlocks:'Hydrogen, Atom Generator' },
-  { id:'automation_i',         label:'Automation I',         branch:'Engineering', cost:25,   discount:0.50, prereqs:'Hydrogen Synthesis',            unlocks:'Harvester' },
-  { id:'atomic_assembly',      label:'Atomic Assembly',      branch:'Chemistry',   cost:500,  discount:0.20, prereqs:'Hydrogen Synthesis',            unlocks:'He-4, Li, C, O, Si, Fe' },
-  { id:'nucleon_harvesting',   label:'Nucleon Harvesting',   branch:'Engineering', cost:800,  discount:0.20, prereqs:'Recombination I',               unlocks:'Nucleon Harvester (special)' },
-  { id:'isotopes',             label:'Isotope Engineering',  branch:'Nuclear',     cost:1500, discount:0.15, prereqs:'Atomic Assembly',               unlocks:'Deuterium, Tritium, C-14, Isotopic Manipulator' },
-  { id:'heavy_elements',       label:'Heavy Elements',       branch:'Nuclear',     cost:3000, discount:0.10, prereqs:'Atomic Assembly',               unlocks:'Uranium' },
-  { id:'radioactive_isotopes', label:'Radioactive Isotopes', branch:'Nuclear',     cost:5000, discount:0.10, prereqs:'Isotope Eng. + Heavy Elements', unlocks:'U-235, α/β particles, Radioactive Containment' },
+  // ── Core tree (tutorial + early post-tutorial) ──
+  { id:'recombination_i',        label:'Recombination I',        branch:'Nuclear',     cost:100,       discount:0.25, prereqs:'—',                                  unlocks:'Proton, Neutron, SFC' },
+  { id:'hydrogen_synthesis',     label:'Hydrogen Synthesis',     branch:'Nuclear',     cost:50,        discount:0.25, prereqs:'Recombination I',                     unlocks:'Hydrogen, Atom Generator' },
+  { id:'automation_i',           label:'Automation I',           branch:'Engineering', cost:25,        discount:0.50, prereqs:'Hydrogen Synthesis',                  unlocks:'Harvester' },
+  { id:'nucleon_harvesting',     label:'Nucleon Harvesting',     branch:'Engineering', cost:800,       discount:0.20, prereqs:'Recombination I',                     unlocks:'Nucleon Harvester (special)' },
+  { id:'atomic_assembly',        label:'Atomic Assembly',        branch:'Chemistry',   cost:500,       discount:0.20, prereqs:'Hydrogen Synthesis',                  unlocks:'He-4, Li, C, O, Si, Fe + gates: Light/Mid Elements, Mol. Synthesis' },
+  { id:'isotopes',               label:'Isotope Engineering',    branch:'Nuclear',     cost:1500,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'D, T, C-14, Isotopic Manipulator' },
+  { id:'heavy_elements',         label:'Heavy Elements',         branch:'Nuclear',     cost:3000,      discount:0.10, prereqs:'Atomic Assembly',                     unlocks:'Uranium + gate: Transuranic Synthesis' },
+  { id:'radioactive_isotopes',   label:'Radioactive Isotopes',   branch:'Nuclear',     cost:5000,      discount:0.10, prereqs:'Isotopes + Heavy Elements',           unlocks:'U-235, α/β particles, Radioactive Containment' },
+  // ── Tier 2 element gates ──
+  { id:'light_elements',         label:'Light Elements',         branch:'Chemistry',   cost:1000,      discount:0.20, prereqs:'Atomic Assembly',                     unlocks:'Beryllium, Boron' },
+  { id:'mid_elements',           label:'Mid-Period Elements',    branch:'Chemistry',   cost:2000,      discount:0.20, prereqs:'Atomic Assembly',                     unlocks:'Nitrogen, Aluminum, Nickel' },
+  { id:'transition_metals',      label:'Transition Metals',      branch:'Materials',   cost:8000,      discount:0.15, prereqs:'Mid-Period Elements',                 unlocks:'Copper, Zinc' },
+  { id:'precious_metals',        label:'Precious Metals',        branch:'Materials',   cost:25000,     discount:0.10, prereqs:'Transition Metals',                   unlocks:'Silver, Gold' },
+  { id:'exotic_metals',          label:'Exotic Metals',          branch:'Materials',   cost:80000,     discount:0.10, prereqs:'Precious Metals',                     unlocks:'Platinum, Tungsten' },
+  { id:'transuranic_elements',   label:'Transuranic Synthesis',  branch:'Nuclear',     cost:500000,    discount:0.05, prereqs:'Heavy Elements + Exotic Metals',      unlocks:'Plutonium' },
+  // ── Tier 3–5 processing gates ──
+  { id:'molecular_synthesis',    label:'Molecular Synthesis',    branch:'Chemistry',   cost:3000,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'LH₂, H₂O, CH₄, NH₃, Molecular Synthesizer' },
+  { id:'advanced_molecules',     label:'Advanced Molecules',     branch:'Chemistry',   cost:20000,     discount:0.10, prereqs:'Mol. Synthesis + Mid Elements',       unlocks:'SiO₂, Fe₂O₃, UF₆' },
+  { id:'materials_science',      label:'Materials Science',      branch:'Materials',   cost:150000,    discount:0.10, prereqs:'Adv. Molecules + Transition Metals',  unlocks:'Steel, Carbon Fiber, Ti Alloy, Materials Forge' },
+  { id:'advanced_materials',     label:'Advanced Materials',     branch:'Materials',   cost:800000,    discount:0.05, prereqs:'Materials Science + Precious Metals', unlocks:'Si Wafer, Aerogel, Superconductor, Metamaterial' },
+  { id:'component_engineering',  label:'Component Engineering',  branch:'Engineering', cost:5000000,   discount:0.05, prereqs:'Adv. Materials + Transuranic',        unlocks:'Quantum Proc., Plasma Ring, Antimatter Cell, Comp. Fabricator' },
+  { id:'megastructure_theory',   label:'Megastructure Theory',   branch:'Astrophysics',cost:50000000,  discount:0.05, prereqs:'Component Engineering',               unlocks:'Dyson Node, Orbital Frame, Graviton Lens' },
 ],
 
 // ─────────────────────────────────────── TUTORIAL PHASES ──
@@ -407,7 +508,7 @@ post_tutorial_phases: [
     phase: 8, label: '⑧ Atomic Assembly',
     color: '#3a4a2c', bg: '#1a2012',
     meta: 'First-time unlock · teaches: power system, multi-input buildings, value ladder compounds',
-    entropy_note: { text: 'GATE: 500e (375e at 20% repeat discount) · Sell values: He-4 ×20, Li ×35, C ×60', color: '#3fb950' },
+    entropy_note: { text: 'GATE: 500e (375e at 20% repeat discount) · Sell values: He-4 ×10, Li ×20, C ×160, O ×640, Si ×1,280, Fe ×5,120', color: '#3fb950' },
     col_last: 'Unlock Condition',
     steps: [
       { id:'Unlock Atomic Assembly', tag_type:'gate',
@@ -420,7 +521,7 @@ post_tutorial_phases: [
         time:'~2 min', advance:'atomic_assembly unlocked' },
       { id:'Produce heavy elements',
         action:'Assembler crafts Helium-4 (2P+2N+2e), Lithium, Carbon, Oxygen, Silicon, Iron. Each sells for dramatically more entropy than hydrogen.',
-        cost:{t:'neutral',v:'Quarks + power'}, reward:{t:'reward',v:'Fe = 280e · Prestige wall approaches fast'},
+        cost:{t:'neutral',v:'Quarks + power'}, reward:{t:'reward',v:'Fe = 5,120e · Prestige wall approaches fast'},
         time:'Ongoing', advance:'automated' },
     ]
   },
@@ -428,16 +529,16 @@ post_tutorial_phases: [
     phase: 9, label: '⑨ Heavy Elements & Uranium',
     color: '#4a3a1c', bg: '#231a0a',
     meta: 'Unlock Heavy Elements research · teaches: power scaling, late-game entropy density',
-    entropy_note: { text: 'GATE: 3000e · Uranium = 1000e per unit', color: '#f0883e' },
+    entropy_note: { text: 'GATE: 3000e · Uranium = 1,310,720e per unit', color: '#f0883e' },
     col_last: 'Unlock Condition',
     steps: [
       { id:'Unlock Heavy Elements', tag_type:'gate',
         action:'Buy Heavy Elements research (branch of Atomic Assembly). Unlocks Uranium recipe in the Assembler.',
-        cost:{t:'cost',v:'−3000e',bold:true}, reward:{t:'reward',v:'Uranium recipe (92P + 146N + 92e) · 1000e sell value'},
+        cost:{t:'cost',v:'−3000e',bold:true}, reward:{t:'reward',v:'Uranium recipe (92P + 146N + 92e) · 1,310,720e sell value'},
         time:'~30 min idle', advance:'heavy_elements unlocked' },
       { id:'Scale power infrastructure',
         action:'Uranium requires 238 × 5 = 1,190 eV per craft. A fully upgraded Basic Generator outputs 400 eV — multiple generators needed. Add or upgrade generators before attempting synthesis.',
-        cost:{t:'cost',v:'Generators + entropy'}, reward:{t:'reward',v:'Uranium production → prestige wall at 5000e easily reachable'},
+        cost:{t:'cost',v:'Generators + entropy'}, reward:{t:'reward',v:'Uranium production → prestige wall (5000e) crossed in a single unit'},
         time:'~5 min', advance:'heavy_elements unlocked' },
     ]
   },
@@ -473,6 +574,98 @@ post_tutorial_phases: [
         action:'2×2 footprint. Houses isotope-producing buildings. Passively harvests decay particles: Alpha (20 EV) + Beta (10 EV) per decay event. Requires 30 EV power.',
         cost:{t:'cost',v:'2500e'}, reward:{t:'reward',v:'Passive alpha/beta particle income stream'},
         time:'~3 min', advance:'radioactive_isotopes unlocked' },
+    ]
+  },
+  {
+    phase: 12, label: '⑫ Elements Expansion + Molecular Synthesis',
+    color: '#2c4a5c', bg: '#0d1e2b',
+    meta: 'Unlock the full 20-element periodic ladder and Tier 3 molecules · teaches: Molecular Synthesizer, compound value multiplier',
+    entropy_note: { text: 'Element gates: light_elements 1K → mid 2K → transition 8K → precious 25K → exotic 80K · Mol. Synthesis gate: 3K', color: '#45B7D1' },
+    col_last: 'Unlock Condition',
+    steps: [
+      { id:'Unlock Light/Mid Elements', tag_type:'gate',
+        action:'Buy Light Elements (1000e) and Mid-Period Elements (2000e). Unlocks Be, B, N, Al, Ni in the Atom Generator.',
+        cost:{t:'cost',v:'−3000e total',bold:true}, reward:{t:'reward',v:'Be ×40, B ×80, N ×320, Al ×2560, Ni ×10,240'},
+        time:'~1 prestige run', advance:'light_elements + mid_elements unlocked' },
+      { id:'Unlock Transition/Precious/Exotic Metals', tag_type:'gate',
+        action:'Chain through Transition Metals (8K), Precious Metals (25K), Exotic Metals (80K). Each gate unlocks 2 elements of escalating value.',
+        cost:{t:'cost',v:'−113,000e total',bold:true}, reward:{t:'reward',v:'Cu ×20K, Zn ×41K, Ag ×82K, Au ×164K, Pt ×328K, W ×655K'},
+        time:'~2–3 prestige runs', advance:'exotic_metals unlocked' },
+      { id:'Unlock Molecular Synthesis', tag_type:'gate',
+        action:'Buy Molecular Synthesis (3000e). Unlocks Molecular Synthesizer building and first 4 molecule recipes.',
+        cost:{t:'cost',v:'−3000e',bold:true}, reward:{t:'reward',v:'Molecular Synthesizer · LH₂ · H₂O · CH₄ · NH₃'},
+        time:'~1 prestige run', advance:'molecular_synthesis unlocked' },
+      { id:'Build Molecular Synthesizer', tag_type:'building',
+        action:'Place Molecular Synthesizer. 2 input slots (primary + secondary element). Fixed power cost per recipe. Starts at 1/s output.',
+        cost:{t:'cost',v:'5000e'}, reward:{t:'reward',v:'First Tier 3 production — LH₂ at 300e/unit'},
+        time:'~2 min', advance:'molecular_synthesis unlocked' },
+      { id:'Unlock Advanced Molecules', tag_type:'gate',
+        action:'Buy Advanced Molecules (20K). Requires both Molecular Synthesis + Mid-Period Elements. Unlocks SiO₂, Fe₂O₃, UF₆.',
+        cost:{t:'cost',v:'−20,000e',bold:true}, reward:{t:'reward',v:'Silica ×50K · Iron Oxide ×200K · UF₆ ×8M'},
+        time:'~1 prestige run', advance:'advanced_molecules unlocked' },
+    ]
+  },
+  {
+    phase: 13, label: '⑬ Materials Science',
+    color: '#2c5c3a', bg: '#0d2b15',
+    meta: 'Unlock Tier 4 alloys and advanced materials · teaches: Materials Forge, multi-molecule inputs, very long craft times',
+    entropy_note: { text: 'GATE: 150K (materials_science) · Steel = 1.5M · Carbon Fiber = 6M · Ti Alloy = 25M', color: '#96CEB4' },
+    col_last: 'Unlock Condition',
+    steps: [
+      { id:'Unlock Materials Science', tag_type:'gate',
+        action:'Buy Materials Science (150K). Requires Advanced Molecules + Transition Metals. Unlocks Materials Forge and Steel, Carbon Fiber, Titanium Alloy recipes.',
+        cost:{t:'cost',v:'−150,000e',bold:true}, reward:{t:'reward',v:'Materials Forge · Steel · Carbon Fiber · Ti Alloy'},
+        time:'~3–4 prestige runs', advance:'materials_science unlocked' },
+      { id:'Build Materials Forge', tag_type:'building',
+        action:'Place Materials Forge. 0.5/s base output (slower — materials take time). 2 molecule input slots. Craft times: 300–500s per alloy.',
+        cost:{t:'cost',v:'50,000e'}, reward:{t:'reward',v:'Steel 1.5M/unit · Carbon Fiber 6M/unit'},
+        time:'~3 min', advance:'materials_science unlocked' },
+      { id:'Unlock Advanced Materials', tag_type:'gate',
+        action:'Buy Advanced Materials (800K). Requires Materials Science + Precious Metals. Unlocks Semiconductor Wafer, Aerogel, Superconductor, Metamaterial.',
+        cost:{t:'cost',v:'−800,000e',bold:true}, reward:{t:'reward',v:'Si Wafer 100M · Aerogel 400M · Superconductor 1.6B · Metamaterial 6.4B'},
+        time:'~4–5 prestige runs', advance:'advanced_materials unlocked' },
+      { id:'Produce advanced materials',
+        action:'Chain Molecular Synthesizer → Materials Forge. Metamaterial requires Superconductor + Semiconductor Wafer — multiple forge setups needed for throughput.',
+        cost:{t:'neutral',v:'Molecules + power'}, reward:{t:'reward',v:'Metamaterial 6.4B/unit — prestige wall trivially crossed'},
+        time:'Ongoing', advance:'automated' },
+    ]
+  },
+  {
+    phase: 14, label: '⑭ Component Engineering',
+    color: '#4a3a1c', bg: '#231a0a',
+    meta: 'Unlock Tier 5 megastructure components · teaches: Component Fabricator, deep input chains, endgame entropy density',
+    entropy_note: { text: 'GATE: 5M (component_engineering) + Transuranic · QP = 50B · Plasma Ring = 200B · Antimatter Cell = 800B', color: '#FFEAA7' },
+    col_last: 'Unlock Condition',
+    steps: [
+      { id:'Unlock Transuranic Synthesis', tag_type:'gate',
+        action:'Buy Transuranic Synthesis (500K). Requires Heavy Elements + Exotic Metals. Unlocks Plutonium synthesis — 2,621,440e per atom.',
+        cost:{t:'cost',v:'−500,000e',bold:true}, reward:{t:'reward',v:'Plutonium ×2,621,440e — highest Tier 2 sell value'},
+        time:'~4–5 prestige runs', advance:'transuranic_elements unlocked' },
+      { id:'Unlock Component Engineering', tag_type:'gate',
+        action:'Buy Component Engineering (5M). Requires Advanced Materials + Transuranic Synthesis. Unlocks Component Fabricator and first 3 component recipes.',
+        cost:{t:'cost',v:'−5,000,000e',bold:true}, reward:{t:'reward',v:'Component Fabricator · Quantum Processor · Plasma Ring · Antimatter Cell'},
+        time:'~5–6 prestige runs', advance:'component_engineering unlocked' },
+      { id:'Build Component Fabricator', tag_type:'building',
+        action:'Place Component Fabricator. 0.25/s base output (very slow). Craft times: 1200–2000s per component. Requires enormous power — plan generator scaling.',
+        cost:{t:'cost',v:'5,000,000e'}, reward:{t:'reward',v:'Quantum Processor 50B/unit · Plasma Ring 200B/unit'},
+        time:'~5 min setup', advance:'component_engineering unlocked' },
+    ]
+  },
+  {
+    phase: 15, label: '⑮ Megastructure Theory — Dyson Sphere',
+    color: '#5c4a1c', bg: '#2b1f0a',
+    meta: 'The current endgame — assemble Dyson Nodes, Orbital Frames, Graviton Lenses',
+    entropy_note: { text: 'GATE: 50M (megastructure_theory) · Dyson Node = 5T · Orbital Frame = 20T · Graviton Lens = 100T', color: '#f0883e' },
+    col_last: 'Unlock Condition',
+    steps: [
+      { id:'Unlock Megastructure Theory', tag_type:'gate',
+        action:'Buy Megastructure Theory (50M). Unlocks the three Dyson sphere component recipes in the Component Fabricator.',
+        cost:{t:'cost',v:'−50,000,000e',bold:true}, reward:{t:'reward',v:'Dyson Node 5T · Orbital Frame 20T · Graviton Lens 100T'},
+        time:'~6–8 prestige runs', advance:'megastructure_theory unlocked' },
+      { id:'Produce Dyson components',
+        action:'Dyson Node requires 2× Quantum Processor + 2× Plasma Containment Ring (craft time 3000s). Orbital Frame chains from Dyson Node. Graviton Lens = final combination.',
+        cost:{t:'neutral',v:'Materials + 50M+ eV power'}, reward:{t:'reward',v:'Graviton Lens 100T/unit — current endgame item'},
+        time:'Ongoing', advance:'automated' },
     ]
   },
 ],
@@ -997,6 +1190,35 @@ simple_overview: [
     { name:'Gate: Radioactive Decay (5000e)', type:'gate',     dur:120  },
     { name:'Alpha/Beta Particles',            type:'action',   dur:2400 },
     { name:'Containment (2500e)',             type:'building', dur:600  },
+  ]},
+  { phase:12,   phaseName:'Elements + Molecules', phaseColor:'#45B7D1', isTutorial:false, steps:[
+    { name:'Gate: Light/Mid Elements (3K)',   type:'gate',     dur:120  },
+    { name:'Gate: Transition→Exotic (113K)', type:'gate',     dur:300  },
+    { name:'Gate: Mol. Synthesis (3K)',       type:'gate',     dur:120  },
+    { name:'Molecular Synthesizer (5Ke)',     type:'building', dur:300  },
+    { name:'Gate: Adv. Molecules (20K)',      type:'gate',     dur:300  },
+    { name:'LH₂ → H₂O → CH₄ → UF₆',        type:'action',   dur:1800 },
+  ]},
+  { phase:13,   phaseName:'Materials Science',    phaseColor:'#96CEB4', isTutorial:false, steps:[
+    { name:'Gate: Materials Science (150K)',  type:'gate',     dur:300  },
+    { name:'Materials Forge (50Ke)',          type:'building', dur:300  },
+    { name:'Steel → Carbon Fiber → Ti Alloy',type:'action',   dur:2400 },
+    { name:'Gate: Adv. Materials (800K)',     type:'gate',     dur:300  },
+    { name:'Semiconductor → Aerogel → SC',   type:'action',   dur:3600 },
+    { name:'Metamaterial',                   type:'milestone',dur:600  },
+  ]},
+  { phase:14,   phaseName:'Component Engineering',phaseColor:'#FFEAA7', isTutorial:false, steps:[
+    { name:'Gate: Transuranic (500K)',        type:'gate',     dur:300  },
+    { name:'Gate: Component Eng. (5M)',       type:'gate',     dur:300  },
+    { name:'Component Fabricator (5Me)',      type:'building', dur:300  },
+    { name:'Quantum Proc. + Plasma Ring',     type:'action',   dur:3600 },
+    { name:'Antimatter Cell',                type:'milestone',dur:2400 },
+  ]},
+  { phase:15,   phaseName:'Dyson Sphere',          phaseColor:'#f0883e', isTutorial:false, steps:[
+    { name:'Gate: Megastructure Theory (50M)',type:'gate',     dur:300  },
+    { name:'Dyson Node',                     type:'action',   dur:3600 },
+    { name:'Orbital Frame',                  type:'action',   dur:4800 },
+    { name:'Graviton Lens (endgame)',         type:'milestone',dur:6000 },
   ]},
 ],
 
