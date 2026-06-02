@@ -32,6 +32,10 @@ namespace MobileIdleBuilder
     [DefaultExecutionOrder(-70)]
     public class RecipeKnowledgeService : SingletonMonoBehaviour<RecipeKnowledgeService>, IRecipeKnowledgeService
     {
+        // Allows tests to inject a stub without needing a running MonoBehaviour.
+        internal static IRecipeKnowledgeService OverrideForTests;
+        internal static IRecipeKnowledgeService Current => OverrideForTests ?? Instance;
+
         const string FileName = "recipe_knowledge.json";
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
