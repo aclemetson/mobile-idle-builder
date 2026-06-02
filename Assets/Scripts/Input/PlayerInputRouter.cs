@@ -24,12 +24,14 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private BuildingInspectorController  buildingInspector;
-        [SerializeField] private ManualFieldCollector         fieldCollector;
+        private ManualFieldCollector         fieldCollector;
         [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private UIDocument                   hudDocument;
+        [SerializeField] private Transform                    tapAnchor;
 
         private Vector2 _pressStart;
         private float   _dragAccum;
+        private bool    _pressWasOnUI;
 
         void Awake()
         {
@@ -49,8 +51,9 @@ namespace MobileIdleBuilder
             // Track gesture on press start
             if (InputUtils.WasPointerPressed())
             {
-                _pressStart = InputUtils.GetPointerPosition();
-                _dragAccum  = 0f;
+                _pressStart    = InputUtils.GetPointerPosition();
+                _dragAccum     = 0f;
+                _pressWasOnUI  = IsPointerOverUI(_pressStart);
             }
 
             // Accumulate drag while held
@@ -67,11 +70,14 @@ namespace MobileIdleBuilder
             if (deconstructController != null && deconstructController.IsDeconstructing) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
-            if (IsPointerOverUI(screenPos)) return;
+            // Block the tap if the press started on UI (handles click-through when panels
+            // close on the same frame as the release) or if UI still covers the release pos.
+            if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
             if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
             {
+                fieldCollector?.DeactivateField();
                 AnchorPresence(screenPos);
                 return;
             }
@@ -82,14 +88,14 @@ namespace MobileIdleBuilder
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
                 {
-                    Debug.Log($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
+                    GameLogger.Develop($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
-                    Debug.Log($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
+                    GameLogger.Develop($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
                 }
             }
             else
             {
-                Debug.LogWarning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
+                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
             }
 
             if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))
@@ -105,6 +111,7 @@ namespace MobileIdleBuilder
             }
 
             // Tap on empty ground — clear any building selection and anchor presence
+            fieldCollector?.DeactivateField();
             buildingInspector?.ClearSelection();
             AnchorPresence(screenPos);
         }
@@ -117,11 +124,12 @@ namespace MobileIdleBuilder
         /// </summary>
         private void AnchorPresence(Vector2 screenPos)
         {
-            if (Camera.main == null) { Debug.LogWarning("[InputRouter] AnchorPresence — Camera.main is null"); return; }
+            if (Camera.main == null) { GameLogger.Warning("[InputRouter] AnchorPresence — Camera.main is null"); return; }
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
-            if (Mathf.Abs(ray.direction.y) < 0.0001f) { Debug.LogWarning("[InputRouter] AnchorPresence — degenerate ray"); return; }
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) { GameLogger.Warning("[InputRouter] AnchorPresence — degenerate ray"); return; }
             float   t        = -ray.origin.y / ray.direction.y;
             Vector3 worldPos = ray.origin + ray.direction * t;
+            if (tapAnchor != null) tapAnchor.position = worldPos;
             var ps = PresenceSystem.Instance;
             if (ps != null) ps.SetAnchor(worldPos);
         }

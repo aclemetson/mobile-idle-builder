@@ -15,6 +15,7 @@ namespace MobileIdleBuilder
         void BuildLookup()
         {
             _lookup = new Dictionary<string, AchievementSO>();
+            if (achievements == null) return;
             foreach (var a in achievements)
             {
                 if (a == null || string.IsNullOrEmpty(a.id)) continue;

@@ -15,8 +15,13 @@ namespace MobileIdleBuilder
     [UpdateAfter(typeof(ProductionSystem))]
     public partial struct TutorialSystem : ISystem
     {
+        private int _diagLastCount;
+        private int _diagLastStep;
+
         public void OnCreate(ref SystemState state)
         {
+            _diagLastCount = -1;
+            _diagLastStep  = -1;
             state.RequireForUpdate<TutorialStateData>();
             state.RequireForUpdate<PlayerInventoryTag>();
         }
@@ -27,7 +32,11 @@ namespace MobileIdleBuilder
             if (!tutorial.IsActive) return;
 
             var flow = TutorialFlowSO.Current;
-            if (flow == null || flow.steps == null || flow.steps.Length == 0) return;
+            if (flow == null || flow.steps == null || flow.steps.Length == 0)
+            {
+                GameLogger.Warning("[TutorialSystem] TutorialFlowSO.Current is null or empty — cannot evaluate.");
+                return;
+            }
 
             // Tutorial complete — index ran past the last step
             if (tutorial.CurrentStepIndex >= flow.steps.Length)
@@ -38,6 +47,13 @@ namespace MobileIdleBuilder
             }
 
             var step = flow.steps[tutorial.CurrentStepIndex];
+
+            if (tutorial.CurrentStepIndex != _diagLastStep)
+            {
+                _diagLastStep  = tutorial.CurrentStepIndex;
+                _diagLastCount = -1;
+                GameLogger.Develop($"[TutorialSystem] Now evaluating step {tutorial.CurrentStepIndex}: '{step.id}'  condition={step.advanceCondition?.type}");
+            }
 
             // Check skip condition before the normal advance condition.
             // Lets returning players who already have research jump ahead automatically.
@@ -58,6 +74,19 @@ namespace MobileIdleBuilder
 
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>(true); // read-only
 
+            // Diagnostic: log inventory count changes for InventoryMin steps.
+            if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.InventoryMin
+                && step.advanceCondition.items != null && step.advanceCondition.items.Count > 0)
+            {
+                var req  = step.advanceCondition.items[0];
+                int have = SlotBufferUtils.CountInInventory(inventory, req.itemId);
+                if (have != _diagLastCount)
+                {
+                    _diagLastCount = have;
+                    GameLogger.Develop($"[TutorialSystem] Step '{step.id}' — item {req.itemId}: {have}/{req.quantity}  IsActive={tutorial.IsActive}  FlowSteps={flow.steps.Length}");
+                }
+            }
+
             if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
 
             // Side-effect: mark first run complete when the prestige-run condition triggers
@@ -74,7 +103,7 @@ namespace MobileIdleBuilder
             string nextId = tutorial.IsActive && tutorial.CurrentStepIndex < flow.steps.Length
                 ? flow.steps[tutorial.CurrentStepIndex].id
                 : "(complete)";
-            UnityEngine.Debug.Log($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
+            GameLogger.Debug($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
         }
 
         // ── Condition evaluator ───────────────────────────────────────────────

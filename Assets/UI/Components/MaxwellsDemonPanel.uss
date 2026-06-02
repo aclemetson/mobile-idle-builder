@@ -221,6 +221,103 @@
     background-color: rgba(0, 229, 255, 0.36);
 }
 
+/* ── Footer normal / sell tray shared base ──────────────────────── */
+
+.demon-footer-normal, .demon-sell-tray {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+}
+
+/* ── Sell tray ───────────────────────────────────────────────────── */
+
+.demon-sell-item-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.demon-sell-qty-row {
+    flex-direction: row;
+    align-items: center;
+    margin-right: var(--spacing-sm);
+}
+
+.demon-qty-btn {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: 20px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+}
+
+.demon-qty-btn:hover  { background-color: rgba(0, 229, 255, 0.24); }
+.demon-qty-btn:active { background-color: rgba(0, 229, 255, 0.38); }
+
+.demon-sell-qty {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    min-width: 40px;
+    padding: 0 var(--spacing-xs);
+}
+
+.demon-sell-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.demon-sell-btn:hover  { background-color: rgba(0, 229, 255, 0.30); }
+.demon-sell-btn:active { background-color: rgba(0, 229, 255, 0.44); }
+
+/* ── Selected item row ───────────────────────────────────────────── */
+
+.demon-item--selected {
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: var(--color-primary);
+    border-width: 2px;
+}
+
+/* ── Portrait layout overrides ───────────────────────────────────── */
+
+/* Stack columns vertically instead of side-by-side */
+.demon-panel__body--portrait {
+    flex-direction: column;
+}
+
+/* Flip divider from vertical line to horizontal line */
+.demon-divider--portrait {
+    width: auto;
+    height: 1px;
+    margin: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Remove lateral margins that only make sense in the landscape row layout */
+.demon-inventory-column--portrait {
+    margin-right: 0;
+    margin-bottom: var(--spacing-xs);
+}
+
+.demon-demon-column--portrait {
+    margin-left: 0;
+    margin-top: var(--spacing-xs);
+}
+
 /* ── Drag ghost ──────────────────────────────────────────────────── */
 
 .demon-drag-ghost {

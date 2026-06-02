@@ -43,7 +43,7 @@ MonoBehaviour:
   placementRule: 1
   compatibleAdjacentCategories: 
   compatibleFields: 0100000002000000
-  entropyCost: 0
+  entropyCost: 100
   upgradeLevels:
   - level: 2
     outputRate: 2
@@ -68,10 +68,10 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 1
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 0}
-  availableFromStart: 1
+  requiredResearch: {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}
+  availableFromStart: 0
   tutorialNote: First building the player can place. Goes on the quark or lepton
-    field.
+    field. Unlocked by Automation I research.
   collectsDecayParticles: 0
   decayCollectionRate: 0
   codexEntry: Extracts fundamental particles from quantum fields. Place on a field

@@ -32,11 +32,16 @@ namespace MobileIdleBuilder
             foreach (var item in items)
             {
                 if (item == null) continue;
+                if (string.IsNullOrEmpty(item.id))
+                {
+                    GameLogger.Warning($"[ItemDatabase] '{item.name}' has a null/empty id — skipped. Fix the ItemSO asset.");
+                    continue;
+                }
                 _byId[item.id]         = item;
                 _byItemId[item.itemId] = item;
             }
 
-            Debug.Log($"[ItemDatabase] Registered on '{gameObject.name}' with {_byItemId.Count} items.");
+            GameLogger.Info($"[ItemDatabase] Registered on '{gameObject.name}' with {_byItemId.Count} items.");
         }
 
         public IReadOnlyList<ItemSO> All => _allItems;

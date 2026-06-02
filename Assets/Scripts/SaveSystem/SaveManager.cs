@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.Services.Authentication;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -17,23 +18,48 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
 
+#if UNITY_EDITOR
+        [Header("Debug (Editor only)")]
+        [Tooltip("When checked, wipes unlocked research, recipes, and the current run on each Play so the tutorial restarts from step 1.")]
+        [SerializeField] bool _resetTutorialOnPlay;
+#endif
+
         LocalSaveService _local;
         ICloudSaveService _cloud;
         SaveData _current;
 
-        public SaveData Current => _current;
+        public SaveData Current   => _current;
+        public bool     IsNewGame { get; private set; }
 
         protected override void Awake()
         {
             base.Awake();
             if (Instance != this) return;
 
-            _local   = new LocalSaveService();
-            _current = _local.Load() ?? new SaveData { playerId = GeneratePlayerId() };
+            _local = new LocalSaveService();
+            SaveData loaded = _local.Load();
+            IsNewGame = loaded == null;
+            _current  = loaded ?? new SaveData { playerId = GeneratePlayerId() };
 
-            _cloud = gameConfig != null
-                ? new CloudSaveService(gameConfig.apiBaseUrl)
-                : null;
+            if (IsNewGame)
+                GameLogger.Info("[Save] No save file found — starting fresh.");
+            else
+                GameLogger.Info($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
+                          $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
+
+#if UNITY_EDITOR
+            if (_resetTutorialOnPlay)
+            {
+                _current.unlockedResearch = new();
+                _current.unlockedRecipes  = new();
+                _current.currentRun       = new();
+                _current.tutorial         = new();
+                IsNewGame = true; // treat as fresh install so baked starting items are preserved
+                GameLogger.Debug("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
+            }
+#endif
+
+            _cloud = new UGSCloudSaveService();
         }
 
         IEnumerator Start()
@@ -55,21 +81,37 @@ namespace MobileIdleBuilder
         /// <summary>Reconciles the already-loaded local save with cloud if available.</summary>
         private IEnumerator ReconcileWithCloud()
         {
-            if (_cloud == null || !_cloud.IsAvailable) yield break;
+            if (_cloud == null) yield break;
 
-            var task = _cloud.FetchAsync(_current.playerId);
-            yield return new WaitUntil(() => task.IsCompleted);
+            // Init UGS (anonymous sign-in). IsAvailable is false until this completes.
+            var initTask = _cloud.InitializeAsync();
+            yield return new WaitUntil(() => initTask.IsCompleted);
 
-            if (task.Result != null && IsCloudNewer(task.Result))
+            if (!_cloud.IsAvailable) yield break;
+
+            // Sync local playerId to UGS identity for cross-device consistency.
+            _current.playerId = AuthenticationService.Instance.PlayerId;
+
+            var fetchTask = _cloud.FetchAsync(_current.playerId);
+            yield return new WaitUntil(() => fetchTask.IsCompleted);
+
+            if (fetchTask.Result != null && IsCloudNewer(fetchTask.Result))
             {
                 _local.SaveWithBackup(_current);
-                _current = task.Result;
+                _current = fetchTask.Result;
                 _local.Save(_current);
-                Debug.Log("[SaveManager] Reconciled with cloud (cloud was newer).");
+                GameLogger.Info("[SaveManager] Reconciled with cloud (cloud was newer).");
             }
         }
 
-        public void SaveLocal() => _local.SaveWithBackup(_current);
+        public void SaveLocal()
+        {
+            ECSLoadBridge.Instance?.FlushToSave();
+            GridSaveService.Instance?.FlushToSave();
+            GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
+                      $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventoryKeys?.Count ?? 0}");
+            _local.SaveWithBackup(_current);
+        }
 
         public IEnumerator SaveToCloud()
         {

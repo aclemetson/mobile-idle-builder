@@ -38,6 +38,7 @@ namespace MobileIdleBuilder.Editor
         private const string FieldsDir     = "Assets/Data/fields";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
+        private const string ResourcesDir  = "Assets/Resources";
 
         // ── Entry point ───────────────────────────────────────────────────────
 
@@ -51,8 +52,10 @@ namespace MobileIdleBuilder.Editor
         {
             bool needsImport = false;
 
-            // Check for missing tutorial flow asset
+            // Check for missing tutorial flow asset or research database
             if (AssetDatabase.LoadAssetAtPath<TutorialFlowSO>($"{TutorialDir}/tutorial_flow.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
                 needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
@@ -92,19 +95,19 @@ namespace MobileIdleBuilder.Editor
             var jsonAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(DataPath);
             if (jsonAsset == null)
             {
-                Debug.LogError($"[GameDataImporter] Could not find {DataPath}");
+                GameLogger.Error($"[GameDataImporter] Could not find {DataPath}");
                 return null;
             }
             GameDataJson data;
             try { data = JsonUtility.FromJson<GameDataJson>(jsonAsset.text); }
             catch (Exception e)
             {
-                Debug.LogError($"[GameDataImporter] JSON parse error: {e.Message}");
+                GameLogger.Error($"[GameDataImporter] JSON parse error: {e}");
                 return null;
             }
             if (data == null)
             {
-                Debug.LogError("[GameDataImporter] JSON root object was null.");
+                GameLogger.Error("[GameDataImporter] JSON root object was null.");
                 return null;
             }
             data.Initialize();
@@ -122,6 +125,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(FieldsDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
+            EnsureDirectory(ResourcesDir);
 
             // ── Step 1: GameConfigSO ─────────────────────────────────────────
             GenerateGameConfig(data.game_config);
@@ -182,10 +186,13 @@ namespace MobileIdleBuilder.Editor
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
             GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
 
+            // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
+            GenerateResearchDatabase(data.research, researchLookup);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log(
+            GameLogger.Info(
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
@@ -210,6 +217,7 @@ namespace MobileIdleBuilder.Editor
             so.prestigeWallMultiplier          = data.prestige_wall_multiplier;
             so.alphaParticleEVValue            = data.alpha_particle_ev_value;
             so.betaParticleEVValue             = data.beta_particle_ev_value;
+            so.startingEntropy                 = data.starting_entropy;
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;
@@ -315,7 +323,7 @@ namespace MobileIdleBuilder.Editor
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
             else if (!string.IsNullOrEmpty(data.tier_ref))
-                Debug.LogWarning($"[GameDataImporter] ItemSO '{data.id}': tier_ref '{data.tier_ref}' not found.");
+                GameLogger.Warning($"[GameDataImporter] ItemSO '{data.id}': tier_ref '{data.tier_ref}' not found.");
 
             EditorUtility.SetDirty(so);
             return so;
@@ -578,24 +586,63 @@ namespace MobileIdleBuilder.Editor
                             $"TutorialStep '{s.id}'.on_enter.building_interaction_gate", out var big))
                         def.onEnter.buildingInteractionGate = big;
 
+                    if (s.on_enter.locked_messages is { Count: > 0 })
+                    {
+                        def.onEnter.lockedMessages = new InteractableMessage[s.on_enter.locked_messages.Count];
+                        for (int m = 0; m < s.on_enter.locked_messages.Count; m++)
+                        {
+                            var lm = s.on_enter.locked_messages[m];
+                            def.onEnter.lockedMessages[m] = new InteractableMessage
+                            {
+                                triggerId = lm.trigger_id ?? "",
+                                message   = lm.message    ?? "",
+                                icon      = string.IsNullOrEmpty(lm.icon) ? "⚠" : lm.icon,
+                                modifier  = lm.modifier   ?? "warning"
+                            };
+                        }
+                    }
+                    else
+                    {
+                        def.onEnter.lockedMessages = System.Array.Empty<InteractableMessage>();
+                    }
+
                     if (!string.IsNullOrEmpty(s.on_enter.dialogue_id))
                     {
                         if (dialogueLookup.TryGetValue(s.on_enter.dialogue_id, out var dlg))
                             def.onEnter.dialogue = dlg;
                         else
-                            Debug.LogWarning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
                                              $"dialogue_id '{s.on_enter.dialogue_id}' not found.");
                     }
+
                 }
                 else
                 {
                     def.onEnter = new TutorialOnEnter();
                 }
 
+                def.lockedResearchIds = s.locked_research_ids ?? System.Array.Empty<string>();
+
                 so.steps[i] = def;
             }
 
             EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateResearchDatabase(List<ResearchJson> research,
+            Dictionary<string, ResearchSO> researchLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/ResearchDatabase.asset";
+            var db = LoadOrCreate<ResearchDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<ResearchSO>(research.Count);
+            foreach (var r in research)
+                if (researchLookup.TryGetValue(r.id, out var so))
+                    list.Add(so);
+
+            db.allResearch = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
@@ -614,7 +661,7 @@ namespace MobileIdleBuilder.Editor
             if (IsTodo(path)) return null;
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset == null)
-                Debug.LogWarning($"[GameDataImporter] {context}: could not load {typeof(T).Name} at '{path}'");
+                GameLogger.Warning($"[GameDataImporter] {context}: could not load {typeof(T).Name} at '{path}'");
             return asset;
         }
 
@@ -623,7 +670,7 @@ namespace MobileIdleBuilder.Editor
         {
             if (string.IsNullOrEmpty(id)) return null;
             if (lookup.TryGetValue(id, out var result)) return result;
-            Debug.LogWarning($"[GameDataImporter] {context}: ID '{id}' not found.");
+            GameLogger.Warning($"[GameDataImporter] {context}: ID '{id}' not found.");
             return null;
         }
 
@@ -636,7 +683,7 @@ namespace MobileIdleBuilder.Editor
             {
                 if (string.IsNullOrEmpty(id)) continue;
                 if (lookup.TryGetValue(id, out var item)) list.Add(item);
-                else Debug.LogWarning($"[GameDataImporter] {context}: ID '{id}' not found.");
+                else GameLogger.Warning($"[GameDataImporter] {context}: ID '{id}' not found.");
             }
             return list.ToArray();
         }
@@ -660,7 +707,7 @@ namespace MobileIdleBuilder.Editor
         {
             if (string.IsNullOrEmpty(value)) { result = default; return false; }
             if (Enum.TryParse<TEnum>(value, ignoreCase: true, out result)) return true;
-            Debug.LogWarning($"[GameDataImporter] {context}: could not parse '{value}' as {typeof(TEnum).Name}.");
+            GameLogger.Warning($"[GameDataImporter] {context}: could not parse '{value}' as {typeof(TEnum).Name}.");
             result = default;
             return false;
         }

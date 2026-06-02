@@ -25,7 +25,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ManualCraftService] No default DOTS world found.");
+                GameLogger.Error("[ManualCraftService] No default DOTS world found.");
                 return;
             }
 
@@ -125,7 +125,6 @@ namespace MobileIdleBuilder
                     }
                     if (!outputMatches) continue;
 
-                    // Check inputs
                     var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
                     bool hasInputs = true;
                     for (int i = 0; i < inputsBuf.Length; i++)

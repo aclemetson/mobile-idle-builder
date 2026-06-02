@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
     public class BuildingVisualizer : MonoBehaviour
     {
         [SerializeField] private GridRenderer gridRenderer;
+        [SerializeField] private Material     _buildingMaterial;  // URP Unlit Transparent — assign in Inspector
 
         private EntityQuery                                       _buildingQuery;
         private EntityQuery                                       _footprintQuery;
@@ -125,6 +126,8 @@ namespace MobileIdleBuilder
                     float gap = cs * 0.2f;
                     cube.transform.localScale = new Vector3(cs * fw - gap, 1f, cs * fh - gap);
                     var mr = cube.GetComponent<MeshRenderer>();
+                    if (_buildingMaterial != null)
+                        mr.sharedMaterial = _buildingMaterial;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 

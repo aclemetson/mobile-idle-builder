@@ -103,6 +103,8 @@ namespace MobileIdleBuilder
                     Destroy(sphere.GetComponent<Collider>());
 
                     var mr = sphere.GetComponent<MeshRenderer>();
+                    if (RenderingMaterials.Instance?.Opaque != null)
+                        mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
                     SetMeshColor(mr, ItemColor(item.ItemID));
@@ -364,6 +366,8 @@ namespace MobileIdleBuilder
         private static void SetupRenderer(GameObject go, Color color)
         {
             var mr = go.GetComponent<MeshRenderer>();
+            if (RenderingMaterials.Instance?.Opaque != null)
+                mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
             SetMeshColor(mr, color);

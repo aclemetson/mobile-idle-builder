@@ -1,24 +1,24 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
 namespace MobileIdleBuilder.Dev
 {
     /// <summary>
-    /// Instantiates the dev console prefab at startup. Attach to the same persistent
-    /// GameObject as GameBootstrap (or any scene-level object). Assign the DevConsole
-    /// prefab (UIDocument + DevConsoleController) in the Inspector.
-    /// Entire class is stripped from release builds.
+    /// Instantiates the dev console prefab at startup in Editor and Development builds.
+    /// The serialized field is always compiled so the scene layout is consistent across
+    /// build configurations — avoids the "different serialization layout" deserialization
+    /// error that occurs when the entire class is #if-guarded.
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public sealed class DevConsoleBootstrap : MonoBehaviour
     {
         [SerializeField] private GameObject devConsolePrefab;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void Awake()
         {
             if (devConsolePrefab == null)
             {
-                Debug.LogWarning("[DevConsole] devConsolePrefab not assigned on DevConsoleBootstrap.");
+                GameLogger.Warning("[DevConsole] devConsolePrefab not assigned on DevConsoleBootstrap.");
                 return;
             }
 
@@ -26,6 +26,7 @@ namespace MobileIdleBuilder.Dev
             go.name = "[DevConsole]";
             DontDestroyOnLoad(go);
         }
+#endif
     }
 }
-#endif
+

@@ -19,12 +19,11 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 0
   prerequisites:
-  - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
+  - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   depthInTree: 1
   costBaseCurrency: 500
   costPrestigeCurrency: 0
   unlocksItems:
-  - {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
   - {fileID: 11400000, guid: 9e0c03f047215524aad47b723303b846, type: 2}
   - {fileID: 11400000, guid: 9175e5c02c5515442b3a8cdb8a4b45cf, type: 2}
   - {fileID: 11400000, guid: 74c51589e2cf91841a0aef457979c16c, type: 2}
@@ -32,15 +31,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6419644aa3f969548953ea855ede642c, type: 2}
   - {fileID: 11400000, guid: 4096f1369dd6541428f3443846931679, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 990c172c58c320d4b9570223e9ad447a, type: 2}
   - {fileID: 11400000, guid: b1c7db86db5ca8c48ad6413a15432273, type: 2}
   - {fileID: 11400000, guid: 6eeeec7bd1cf4934da06177d3d4bc52f, type: 2}
   - {fileID: 11400000, guid: 0b604021efe0659479f9ac160bdca66b, type: 2}
   - {fileID: 11400000, guid: 5c01084f0c6a99a4d82ae683ba1c3ce0, type: 2}
   - {fileID: 11400000, guid: 19cdd73aafa3f1444b12fc175d583eb8, type: 2}
   - {fileID: 11400000, guid: 32f9d6720a129a843920a5bc954ab542, type: 2}
-  unlocksBuildings:
-  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
+  unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}

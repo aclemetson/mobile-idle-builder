@@ -31,9 +31,10 @@ namespace MobileIdleBuilder
         [SerializeField] private float stackOffset   = 0.4f;
 
         [Header("Appearance")]
-        [SerializeField] private Color  textColor   = Color.white;
-        [SerializeField] private float  fontSize    = 0.45f;  // world-space TMP font size
-        [SerializeField] private float  spawnHeight = 2.0f;   // units above anchor Y
+        [SerializeField] private Color  textColor    = Color.white;
+        [SerializeField] private Color  warningColor = new Color(1f, 0.65f, 0.1f);
+        [SerializeField] private float  fontSize     = 0.45f;  // world-space TMP font size
+        [SerializeField] private float  spawnHeight  = 2.0f;   // units above anchor Y
 
         private int _activeCount;
 
@@ -59,32 +60,42 @@ namespace MobileIdleBuilder
         public static void Notify(string itemName, int quantity)
         {
             if (Instance == null) return;
-            Instance.StartCoroutine(Instance.ShowPopup(itemName, quantity));
+            Instance.StartCoroutine(Instance.ShowPopup($"+{quantity} {itemName}", Instance.textColor));
+        }
+
+        /// <summary>
+        /// Shows an amber warning message above the player anchor.
+        /// Used to signal a blocked or invalid action without entering the inventory flow.
+        /// </summary>
+        public static void NotifyWarning(string message)
+        {
+            if (Instance == null) return;
+            Instance.StartCoroutine(Instance.ShowPopup(message, Instance.warningColor));
         }
 
         // ----------------------------------------------------------------
         // Internal coroutine
         // ----------------------------------------------------------------
 
-        private IEnumerator ShowPopup(string itemName, int quantity)
+        private IEnumerator ShowPopup(string text, Color color)
         {
             // Build the label
             var go  = new GameObject("InventoryPopup");
             var tmp = go.AddComponent<TextMeshPro>();
 
-            tmp.text      = $"+{quantity} {itemName}";
+            tmp.text      = text;
             tmp.fontSize  = fontSize;
             tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color     = textColor;
+            tmp.color     = color;
 
             // Sort above most world geometry
             var rend = go.GetComponent<MeshRenderer>();
             if (rend != null) rend.sortingOrder = 20;
 
             // Position above anchor, stacked so concurrent popups don't overlap
-            float   yStart  = spawnHeight + _activeCount * stackOffset;
-            Vector3 origin  = anchor.position + Vector3.up * yStart;
-            Vector3 target  = origin + Vector3.up * floatDistance;
+            float   yStart = spawnHeight + _activeCount * stackOffset;
+            Vector3 origin = anchor.position + Vector3.up * yStart;
+            Vector3 target = origin + Vector3.up * floatDistance;
 
             go.transform.position = origin;
             go.transform.rotation = Camera.main != null
@@ -95,7 +106,7 @@ namespace MobileIdleBuilder
 
             // Animate
             float elapsed  = 0f;
-            float fadeFrom = holdFraction;   // normalised time when fade begins
+            float fadeFrom = holdFraction;
 
             while (elapsed < duration)
             {
@@ -104,7 +115,6 @@ namespace MobileIdleBuilder
 
                 go.transform.position = Vector3.Lerp(origin, target, t);
 
-                // Keep facing the camera as it moves (handles camera offset smoothly)
                 if (Camera.main != null)
                     go.transform.rotation = Camera.main.transform.rotation;
 
@@ -112,7 +122,7 @@ namespace MobileIdleBuilder
                     ? 1f
                     : 1f - Mathf.InverseLerp(fadeFrom, 1f, t);
 
-                var c = textColor;
+                var c = color;
                 c.a       = alpha;
                 tmp.color = c;
 

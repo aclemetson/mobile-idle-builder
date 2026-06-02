@@ -1,0 +1,21 @@
+{
+    "name": "MobileIdleBuilder.PlayModeTests",
+    "rootNamespace": "MobileIdleBuilder.PlayModeTests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "MobileIdleBuilder",
+        "Unity.Entities",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

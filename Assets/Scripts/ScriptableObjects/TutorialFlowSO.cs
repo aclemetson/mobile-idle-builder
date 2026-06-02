@@ -45,6 +45,8 @@ namespace MobileIdleBuilder
         public TutorialSkipDef skipCondition;
         /// <summary>Actions applied immediately when this step becomes active.</summary>
         public TutorialOnEnter onEnter;
+        /// <summary>Research IDs whose purchase button is disabled while this step is active. Prevents early purchase before the tutorial is ready.</summary>
+        public string[] lockedResearchIds;
     }
 
     /// <summary>Defines when a tutorial step is considered complete.</summary>
@@ -83,6 +85,20 @@ namespace MobileIdleBuilder
         public string skipToId;
     }
 
+    /// <summary>
+    /// Associates a trigger ID with the toast message shown when that interaction is blocked.
+    /// Stored in TutorialOnEnter.lockedMessages and resolved by ToastService at runtime.
+    /// </summary>
+    [Serializable]
+    public class InteractableMessage
+    {
+        /// <summary>Matches what callers pass to ToastService.Post(triggerId). E.g. "quark_field", "building".</summary>
+        public string triggerId;
+        public string message;
+        public string icon     = "⚠";
+        public string modifier = "warning";
+    }
+
     /// <summary>Actions applied when a tutorial step first becomes active.</summary>
     [Serializable]
     public class TutorialOnEnter
@@ -103,5 +119,7 @@ namespace MobileIdleBuilder
         public int[]                   demonHighlightItemIds;
         /// <summary>Restricts which buildings the player may tap during this step.</summary>
         public BuildingInteractionGate buildingInteractionGate;
+        /// <summary>Messages shown when blocked interactions are attempted. Keyed by triggerId — matched by ToastService.Post(triggerId).</summary>
+        public InteractableMessage[]   lockedMessages;
     }
 }

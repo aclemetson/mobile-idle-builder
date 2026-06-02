@@ -28,12 +28,22 @@ namespace MobileIdleBuilder
         public FieldInstance ActiveField => _activeField;
         private FieldInstance _activeField;
 
+        /// <summary>
+        /// Clears the active field so auto-collection stops.
+        /// Called by PlayerInputRouter whenever a tap lands anywhere other than a field.
+        /// </summary>
+        public void DeactivateField()
+        {
+            _activeField  = null;
+            _collectTimer = 0f;
+        }
+
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                Debug.LogError("[ManualFieldCollector] No default DOTS world found.");
+                GameLogger.Error("[ManualFieldCollector] No default DOTS world found.");
                 return;
             }
 
@@ -96,12 +106,6 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollectAtGridCell(int cx, int cy)
         {
-            if (!IsCollectionAllowed(out var filterType))
-            {
-                Debug.Log("[FieldCollector] Collection blocked by tutorial.");
-                return false;
-            }
-
             var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
             if (tappedInstance == null)
                 return false;
@@ -109,20 +113,29 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
+                GameLogger.Warning($"[FieldCollector] Field at ({cx},{cy}) has no drops.");
+                return false;
+            }
+
+            if (!IsCollectionAllowed(out var filterType))
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
 
             if (filterType != FieldType.None && field.fieldType != filterType)
             {
-                Debug.Log($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
+                GameLogger.Develop($"[FieldCollector] Field type {field.fieldType} filtered (need {filterType}).");
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
             }
 
-            _activeField  = tappedInstance;
-            _collectTimer = 0f;
-            Debug.Log($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
-            CollectOne(field);
+            if (_activeField != tappedInstance)
+            {
+                _activeField  = tappedInstance;
+                _collectTimer = 0f;
+            }
+            GameLogger.Develop($"[FieldCollector] Activated '{field.displayName}', inventoryEmpty={_inventoryQuery.IsEmpty}");
             return true;
         }
 
@@ -132,11 +145,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollect(Vector2 screenPos)
         {
-            // Tutorial gates — block collection or restrict field type based on current step
-            if (!IsCollectionAllowed(out var filterType))
-                return false;
-
-            // Raycast to find which field was tapped.
+            // Raycast first so we know which field was tapped before checking gates.
             var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
             if (!Physics.Raycast(ray, out var hit, 100f, fieldLayerMask))
                 return false;
@@ -148,20 +157,28 @@ namespace MobileIdleBuilder
             var field = tappedInstance.Field;
             if (field == null || field.drops == null || field.drops.Count == 0)
             {
-                Debug.LogWarning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
+                GameLogger.Warning($"[FieldCollector] Field '{tappedInstance.name}' has no drops configured.");
                 return false;
             }
 
-            // Restrict to the field type specified by the current tutorial step (None = no restriction)
-            if (filterType != FieldType.None && field.fieldType != filterType)
+            // Tutorial gates — block or filter, posting a toast so the player gets feedback.
+            if (!IsCollectionAllowed(out var filterType))
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
                 return false;
+            }
 
-            // Switch active field (deactivates the previous one automatically).
-            _activeField  = tappedInstance;
-            _collectTimer = 0f;
+            if (filterType != FieldType.None && field.fieldType != filterType)
+            {
+                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
+                return false;
+            }
 
-            // Collect one item immediately on tap.
-            CollectOne(field);
+            if (_activeField != tappedInstance)
+            {
+                _activeField  = tappedInstance;
+                _collectTimer = 0f;
+            }
             return true;
         }
 
@@ -250,5 +267,13 @@ namespace MobileIdleBuilder
             collectionFilter = enter.collectionFilter;
             return true;
         }
+
+        private static string FieldTypeToTriggerId(FieldType fieldType) =>
+            fieldType switch
+            {
+                FieldType.Quark  => "quark_field",
+                FieldType.Lepton => "electron_field",
+                _                => $"{fieldType.ToString().ToLowerInvariant()}_field"
+            };
     }
 }

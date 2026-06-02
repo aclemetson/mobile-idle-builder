@@ -42,8 +42,11 @@ namespace MobileIdleBuilder
         private Camera   _cam;
         private Vector2  _panPrev;
         private bool     _isPanActive;
+        private bool     _panLocked;
         private float    _dragAccum;
         private Vector3? _panTarget;
+
+        public void SetPanLocked(bool locked) => _panLocked = locked;
 
         // ── Lifecycle ────────────────────────────────────────────────────────
 
@@ -81,6 +84,8 @@ namespace MobileIdleBuilder
 
         private void HandleSwipePan()
         {
+            if (_panLocked) { _isPanActive = false; return; }
+
             // Two-finger gestures are owned by pinch-zoom; skip single-finger pan
             if (ActiveTouchCount() >= 2)
             {

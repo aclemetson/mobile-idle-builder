@@ -24,8 +24,9 @@ namespace MobileIdleBuilder
     public class ConveyorPlacementController : MonoBehaviour
     {
         [Header("Scene references")]
-        [SerializeField] private GridRenderer   gridRenderer;
-        [SerializeField] private ConveyorPlacer conveyorPlacer;
+        [SerializeField] private GridRenderer    gridRenderer;
+        [SerializeField] private ConveyorPlacer  conveyorPlacer;
+        [SerializeField] private CameraController cameraController;
 
         // ----------------------------------------------------------------
         // Public state
@@ -51,11 +52,18 @@ namespace MobileIdleBuilder
         // Public API
         // ----------------------------------------------------------------
 
+        void Awake()
+        {
+            if (cameraController == null)
+                cameraController = FindAnyObjectByType<CameraController>();
+        }
+
         public void BeginConveyorMode()
         {
             if (IsPlacing) return;
             ResetDraw();
             IsPlacing = true;
+            cameraController?.SetPanLocked(true);
             OnPlacingChanged?.Invoke(true);
         }
 
@@ -63,6 +71,7 @@ namespace MobileIdleBuilder
         {
             ResetDraw();
             IsPlacing = false;
+            cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
         }
 

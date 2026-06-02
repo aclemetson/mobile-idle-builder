@@ -24,5 +24,8 @@ namespace MobileIdleBuilder
         [Header("Decay Particles")]
         public float alphaParticleEVValue = 20f;
         public float betaParticleEVValue = 10f;
+
+        [Header("Starting State")]
+        public long startingEntropy;
     }
 }

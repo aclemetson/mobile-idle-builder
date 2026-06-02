@@ -40,7 +40,7 @@ namespace MobileIdleBuilder
 
             if (GridOccupancy.Instance != null && !GridOccupancy.Instance.TryOccupyRect(gridX, gridY, fw, fh))
             {
-                Debug.Log($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
+                GameLogger.Develop($"[BuildingPlacer] Cells ({gridX},{gridY}) + {fw}x{fh} footprint are occupied.");
                 return false;
             }
 
@@ -66,6 +66,12 @@ namespace MobileIdleBuilder
                 UpgradeLevel    = 1,
                 ProductionSpeed = 1f,
                 IsActive        = true
+            });
+
+            _em.AddComponentData(entity, new BuildingTransformData
+            {
+                Rotation = rotation,
+                Flipped  = flipped
             });
 
             _em.SetComponentData(entity, new GridPosition
@@ -143,7 +149,6 @@ namespace MobileIdleBuilder
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
 
-            // Write port layout
             if (hasPorts)
             {
                 var portBuf = _em.GetBuffer<PlacedPortData>(entity);
@@ -160,7 +165,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
+            GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
         }
     }

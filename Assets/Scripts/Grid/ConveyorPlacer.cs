@@ -51,10 +51,8 @@ namespace MobileIdleBuilder
 
             int count = path.Count;
 
-            // Build a cell→entity map from all existing segments
             Dictionary<Vector2Int, Entity> segMap = BuildSegmentMap();
 
-            // Determine which endpoints land on existing segments
             bool startIsExisting = segMap.ContainsKey(path[0]);
             bool endIsExisting   = count > 1 && segMap.ContainsKey(path[count - 1]);
 
@@ -198,7 +196,7 @@ namespace MobileIdleBuilder
             }
 
             int newCount = lastNew - firstNew + 1;
-            Debug.Log($"[ConveyorPlacer] Placed {newCount} segment(s) from {path[firstNew]} to {path[lastNew]}. " +
+            GameLogger.Develop($"[ConveyorPlacer] Placed {newCount} segment(s) from {path[firstNew]} to {path[lastNew]}. " +
                       $"startConnected={startIsExisting} endConnected={endIsExisting}");
 
             conveyorVisualizer?.Refresh();
@@ -248,7 +246,7 @@ namespace MobileIdleBuilder
             conveyorVisualizer?.RefreshBelt(tailCell.x, tailCell.y, tailSeg.EntryDir, tailSeg.ExitDir);
             conveyorVisualizer?.RefreshBelt(headCell.x, headCell.y, headSeg.EntryDir, headSeg.ExitDir);
 
-            Debug.Log($"[ConveyorPlacer] Directly linked existing segments {tailCell} → {headCell}.");
+            GameLogger.Develop($"[ConveyorPlacer] Directly linked existing segments {tailCell} → {headCell}.");
         }
 
         /// <summary>Builds a cell→entity lookup from all existing conveyor segments.</summary>

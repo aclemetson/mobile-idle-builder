@@ -11,7 +11,7 @@ namespace MobileIdleBuilder
     /// </summary>
     public class ResearchService : SingletonMonoBehaviour<ResearchService>
     {
-        [SerializeField] private ResearchSO[] _allResearch;
+        private ResearchSO[] _allResearch;
 
         /// <summary>Fired whenever a research is successfully purchased.</summary>
         public event Action<ResearchSO> OnResearchUnlocked;
@@ -22,6 +22,14 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery _progressQuery;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (Instance != this) return;
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            _allResearch = db != null ? db.allResearch : System.Array.Empty<ResearchSO>();
+        }
 
         void Start()
         {
@@ -51,7 +59,6 @@ namespace MobileIdleBuilder
             if (research == null) return false;
             if (IsUnlocked(research.id)) return false;
 
-            // Check prerequisites
             if (research.prerequisites != null)
             {
                 foreach (var prereq in research.prerequisites)
@@ -61,7 +68,6 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Check entropy
             long currentEntropy = GetCurrentEntropy();
             return currentEntropy >= research.costBaseCurrency;
         }
@@ -99,9 +105,42 @@ namespace MobileIdleBuilder
                 }
             }
 
-            Debug.Log($"[ResearchService] Purchased: {research.displayName}");
+            GameLogger.Info($"[ResearchService] Purchased: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Unlocks research by ID without checking prerequisites or cost.
+        /// Updates the live in-memory set, SaveData, and marks gated recipes as known.
+        /// Safe to call any time after ResearchService.Start() has run.
+        /// </summary>
+        public void ForceUnlock(string researchId)
+        {
+            if (string.IsNullOrEmpty(researchId) || _unlockedIds.Contains(researchId)) return;
+
+            _unlockedIds.Add(researchId);
+
+            var save = SaveManager.Instance?.Current;
+            if (save != null)
+            {
+                save.unlockedResearch ??= new();
+                if (!save.unlockedResearch.Contains(researchId))
+                    save.unlockedResearch.Add(researchId);
+            }
+
+            if (RecipeDatabase.Instance != null)
+                foreach (var r in RecipeDatabase.Instance.Recipes)
+                    if (r.requires_research == researchId)
+                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
+
+            var so = System.Array.Find(_allResearch, r => r.id == researchId);
+            if (so != null)
+                OnResearchUnlocked?.Invoke(so);
+
+            GameLogger.Debug($"[TutorialSkip] Force-unlocked research: {researchId}");
+        }
+#endif
 
         // ── ECS helpers ──────────────────────────────────────────────────────
 

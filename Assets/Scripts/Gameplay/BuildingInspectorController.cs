@@ -117,7 +117,10 @@ namespace MobileIdleBuilder
             }
 
             if (buildingGate == BuildingInteractionGate.BlockAll)
+            {
+                ToastService.Instance?.Post("building");
                 return false;
+            }
 
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
             Entity found = Entity.Null;

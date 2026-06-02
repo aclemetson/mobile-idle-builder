@@ -10,13 +10,76 @@ namespace MobileIdleBuilder.Editor
     {
         private static readonly string[] Scenes = GetScenePaths();
 
-        public static void BuildAndroid()
+        public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
+        public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
+
+        public static void BuildWindows()
         {
+            string version    = PlayerSettings.bundleVersion;
+            string outputDir  = Path.Combine(Directory.GetCurrentDirectory(), "build", "Windows");
+            Directory.CreateDirectory(outputDir);
+            string outputPath = Path.Combine(outputDir, $"{Application.productName}-v{version}.exe");
+
+            var options = new BuildPlayerOptions
+            {
+                scenes           = Scenes,
+                locationPathName = outputPath,
+                target           = BuildTarget.StandaloneWindows64,
+                options          = BuildOptions.None,
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                GameLogger.Error($"Windows build failed: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+            else
+            {
+                GameLogger.Info($"Windows build succeeded: {outputPath}");
+                EditorApplication.Exit(0);
+            }
+        }
+
+        public static void BuildIOS()
+        {
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
+            Directory.CreateDirectory(outputDir);
+
+            // iOS build output is a folder (Xcode project), not a single file.
+            var options = new BuildPlayerOptions
+            {
+                scenes           = Scenes,
+                locationPathName = outputDir,
+                target           = BuildTarget.iOS,
+                options          = BuildOptions.None,
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                GameLogger.Error($"iOS build failed: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+            else
+            {
+                GameLogger.Info($"iOS Xcode project generated: {outputDir}");
+                EditorApplication.Exit(0);
+            }
+        }
+
+        private static void BuildAndroidInternal(bool appBundle)
+        {
+            string version   = PlayerSettings.bundleVersion;
+            string ext       = appBundle ? "aab" : "apk";
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "Android");
             Directory.CreateDirectory(outputDir);
-            string outputPath = Path.Combine(outputDir, $"{Application.productName}.aab");
+            string outputPath = Path.Combine(outputDir, $"{Application.productName}-v{version}.{ext}");
 
             ConfigureAndroidKeystore();
+
+            PlayerSettings.Android.useCustomKeystore = true;
+            EditorUserBuildSettings.buildAppBundle = appBundle;
 
             var options = new BuildPlayerOptions
             {
@@ -26,19 +89,16 @@ namespace MobileIdleBuilder.Editor
                 options = BuildOptions.None,
             };
 
-            PlayerSettings.Android.useCustomKeystore = true;
-            EditorUserBuildSettings.buildAppBundle = true;
-
             BuildReport report = BuildPipeline.BuildPlayer(options);
 
             if (report.summary.result != BuildResult.Succeeded)
             {
-                Debug.LogError($"Android build failed: {report.summary.result}");
+                GameLogger.Error($"Android build failed: {report.summary.result}");
                 EditorApplication.Exit(1);
             }
             else
             {
-                Debug.Log($"Android build succeeded: {outputPath}");
+                GameLogger.Info($"Android build succeeded: {outputPath}");
                 EditorApplication.Exit(0);
             }
         }

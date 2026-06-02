@@ -58,6 +58,7 @@ namespace MobileIdleBuilder.Editor
         public float  beta_particle_ev_value             = 10f;
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
+        public long   starting_entropy                   = 0;
     }
 
     [Serializable]
@@ -295,16 +296,19 @@ namespace MobileIdleBuilder.Editor
     [Serializable]
     internal class TutorialStepJson
     {
-        public string                 id                = "";
-        public string                 hint              = "";
-        public TutorialConditionJson  advance_condition = new();
+        public string                 id                   = "";
+        public string                 hint                 = "";
+        public TutorialConditionJson  advance_condition    = new();
         public TutorialSkipJson       skip_condition;
-        public TutorialOnEnterJson    on_enter          = new();
+        public TutorialOnEnterJson    on_enter             = new();
+        public string[]               locked_research_ids  = new string[0];
 
         public void Initialize()
         {
-            advance_condition ??= new TutorialConditionJson();
-            on_enter          ??= new TutorialOnEnterJson();
+            advance_condition    ??= new TutorialConditionJson();
+            on_enter             ??= new TutorialOnEnterJson();
+            on_enter.locked_messages ??= new List<InteractableMessageJson>();
+            locked_research_ids  ??= new string[0];
         }
     }
 
@@ -335,6 +339,15 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class InteractableMessageJson
+    {
+        public string trigger_id = "";
+        public string message    = "";
+        public string icon       = "⚠";
+        public string modifier   = "warning";
+    }
+
+    [Serializable]
     internal class TutorialOnEnterJson
     {
         public string   dialogue_id              = "";
@@ -348,5 +361,6 @@ namespace MobileIdleBuilder.Editor
         public int[]    demon_highlight_item_ids       = new int[0];
         /// <summary>Must match a BuildingInteractionGate enum value. "None" = no restriction.</summary>
         public string   building_interaction_gate      = "None";
+        public List<InteractableMessageJson> locked_messages = new();
     }
 }

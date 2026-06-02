@@ -34,7 +34,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
   canCraftManually: 1
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

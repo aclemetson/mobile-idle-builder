@@ -1,0 +1,384 @@
+<!-- Data lives in gameplay_loop_data.js — edit there, not here.
+     Logic lives in gameplay-loop.js. Styles live in gameplay-loop.css. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Foundry — Gameplay Loop</title>
+  <link rel="stylesheet" href="gameplay-loop.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="gameplay_loop_data.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Quantum Foundry — <span>Gameplay Loop</span></h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="dialogue">Dialogue Flow</button>
+    <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
+    <button class="tab" data-tab="balance">Balance &amp; Progression</button>
+    <button class="tab" data-tab="simple">Simple Overview</button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════ OVERVIEW ══ -->
+<div id="overview" class="tab-content active">
+
+  <div class="callout">
+    <h3>Entropy Economy</h3>
+    <p>Entropy = <code>baseSellValue × quantity × multiplier</code> &nbsp;(multiplier = 1.0 base; research/prestige bonuses raise it later)</p>
+    <div class="item-grid">
+      <div class="item-chip">Up Quark &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Down Quark &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Electron &nbsp;<span class="val">×1</span></div>
+      <div class="item-chip">Proton &nbsp;<span class="val">×3</span></div>
+      <div class="item-chip">Neutron &nbsp;<span class="val">×3</span></div>
+      <div class="item-chip">Hydrogen &nbsp;<span class="val">×5</span></div>
+      <div class="item-chip">Helium-4 &nbsp;<span class="val">×20</span></div>
+      <div class="item-chip">Lithium &nbsp;<span class="val">×35</span></div>
+      <div class="item-chip">Carbon &nbsp;<span class="val">×60</span></div>
+    </div>
+    <p class="resolved-note">✅ Resolved (gap-1 + gap-2): Player starts with 250e. Tutorial earns +37 manual sells (287 total). Gates: Recombination I (−100) → Phase 4 +12 → Hydrogen Synthesis (−50) → H-sell +10 → Automation I (−25) → Harvester (−100) = 12e at step 32. Tutorial continues: idle income funds SFC pipeline (−200 SFC, −150 Generator, −100 2nd Harvester). Exits tutorial with nucleon automation running. Prestige base = 500e, wall = 5000e net worth (<code>game_config.prestige_base_value</code>).</p>
+    <div class="item-grid" style="margin-top:12px;">
+      <div class="item-chip">Start <span class="val">250</span></div>
+      <div class="item-chip">+sell e/q <span class="val">+15</span></div>
+      <div class="item-chip">Recomb I <span class="val cost">−100</span></div>
+      <div class="item-chip">+sell P/N <span class="val">+12</span></div>
+      <div class="item-chip">H Synth <span class="val cost">−50</span></div>
+      <div class="item-chip">+sell H <span class="val">+10</span></div>
+      <div class="item-chip">Auto I <span class="val cost">−25</span></div>
+      <div class="item-chip">Harvester <span class="val cost">−100</span></div>
+      <div class="item-chip">→ 12e idle</div>
+      <div class="item-chip">SFC <span class="val cost">−200</span></div>
+      <div class="item-chip">Generator <span class="val cost">−150</span></div>
+      <div class="item-chip">2nd Harv. <span class="val cost">−100</span></div>
+      <div class="item-chip">→ idle</div>
+      <div class="item-chip">Atom Gen <span class="val cost">−200</span></div>
+      <div class="item-chip"><strong>End: <span class="val">~12e+</span></strong> H running</div>
+    </div>
+  </div>
+
+  <div id="overview-phases"></div><!-- populated by renderOverviewTab() -->
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ DIALOGUE TAB ══ -->
+<div id="dialogue" class="tab-content">
+
+  <div class="callout">
+    <h3>Dialogue System Notes</h3>
+    <p>All dialogue is spoken by <strong style="color:#d2a8ff">The Architect</strong>. Lines with <span class="flag flag-pause" style="display:inline;">pause_game: true</span> halt production; <span class="flag flag-live" style="display:inline;">pause_game: false</span> lines play while the game runs. Portrait art is not yet assigned (all <code>TODO</code>).</p>
+  </div>
+
+  <div id="dialogue-phases"></div><!-- populated by renderDialogueTab() -->
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ GAPS TAB ══ -->
+<div id="gaps" class="tab-content">
+
+  <p class="save-hint">Edits to Solution and Date are saved in your browser's localStorage and persist across page refreshes. Check the box when a gap is resolved.</p>
+
+  <div class="phase" style="overflow:visible;">
+    <table class="gaps-table">
+      <thead>
+        <tr>
+          <th style="width:36px">Done</th>
+          <th style="width:110px">Category</th>
+          <th>Issue</th>
+          <th style="width:260px">Solution</th>
+          <th style="width:120px">Date</th>
+        </tr>
+      </thead>
+      <tbody id="gaps-body"></tbody><!-- populated by renderGapsTab() -->
+    </table>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ BALANCE TAB ══ -->
+<div id="balance" class="tab-content">
+
+  <!-- Config Callout -->
+  <div class="callout" style="border-left-color:#d2a8ff;">
+    <h3 style="color:#d2a8ff;">Economy Scalars</h3>
+    <p style="font-size:12px;color:#8b949e;margin-bottom:10px;">Edit any value below to update charts and derived columns live. Values persist in localStorage but do not affect game_data.json.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
+      <label class="bal-scalar-label">Assembler eV/mass <input type="number" class="bal-input" id="cfg-ev-mass" value="5" step="0.5" min="1" max="50"></label>
+      <label class="bal-scalar-label">Manipulator eV/neutron <input type="number" class="bal-input" id="cfg-ev-neutron" value="8" step="0.5" min="1" max="50"></label>
+      <label class="bal-scalar-label">Prestige base <input type="number" class="bal-input" id="cfg-prestige-base" value="500" step="50" min="100"></label>
+      <label class="bal-scalar-label">Starting entropy <input type="number" class="bal-input" id="cfg-starting-entropy" value="250" step="25" min="0"></label>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:#8b949e;">
+      Prestige wall = <code id="cfg-prestige-wall">5,000e</code> &nbsp;·&nbsp; Tutorial end surplus ≈ <code>12e</code>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div class="phase" id="bal-items-phase">
+    <div class="phase-header" style="border-left:4px solid #d2a8ff;background:#1a1224;">
+      <h2>Items &amp; Sell Values</h2>
+      <span class="phase-meta">19 items · entropy earned per unit deposited at Maxwell's Demon · edit Base Sell to update charts</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Item</th><th>Symbol</th><th>Category</th><th style="text-align:center;">Tier</th>
+        <th style="text-align:right;">Base Sell (e)</th><th style="text-align:center;">Iso Mult</th>
+        <th style="text-align:right;">Effective</th><th style="text-align:right;">vs Prev</th>
+      </tr></thead>
+      <tbody id="bal-items-body"></tbody><!-- populated by renderItemsTable() -->
+    </table>
+  </div>
+
+  <!-- Recipes Table -->
+  <div class="phase" id="bal-recipes-phase">
+    <div class="phase-header" style="border-left:4px solid #3fb950;background:#0d2018;">
+      <h2>Recipes &amp; Efficiency</h2>
+      <span class="phase-meta">14 craftable recipes · reference: 1.0 e/s = raw quark baseline · eV/e &gt;1.0 means power costs more than item earns</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Recipe</th><th>Building</th><th>Inputs</th>
+        <th style="text-align:right;">Craft (s)</th><th style="text-align:right;">Power (eV)</th>
+        <th style="text-align:right;">Sell (e)</th>
+        <th style="text-align:right;">e/s</th><th style="text-align:right;">eV/e</th>
+      </tr></thead>
+      <tbody id="bal-recipes-body"></tbody><!-- populated by renderRecipesTable() -->
+    </table>
+  </div>
+
+  <!-- Buildings Table -->
+  <div class="phase" id="bal-buildings-phase">
+    <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
+      <h2>Buildings &amp; Upgrade Costs</h2>
+      <span class="phase-meta">7 buildings · L1 = placement cost · L2/L3/L4 = upgrade costs (entropy)</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Building</th><th style="text-align:center;">Tier</th><th>Category</th>
+        <th style="text-align:right;">Placement (e)</th><th style="text-align:right;">Power Draw</th>
+        <th style="text-align:right;">Power Out</th><th>Base Rate</th>
+        <th style="text-align:right;">L2 Cost</th><th style="text-align:right;">L3 Cost</th><th style="text-align:right;">L4 Cost</th>
+      </tr></thead>
+      <tbody id="bal-buildings-body"></tbody><!-- populated by renderBuildingsTable() -->
+    </table>
+  </div>
+
+  <!-- Research Table -->
+  <div class="phase" id="bal-research-phase">
+    <div class="phase-header" style="border-left:4px solid #f0883e;background:#2b1d0e;">
+      <h2>Research Gates</h2>
+      <span class="phase-meta">8 nodes · all reset on prestige · 2nd-run cost = cost × (1 − discount)</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Research</th><th>Branch</th>
+        <th style="text-align:right;">Cost (e)</th><th style="text-align:right;">2nd-run Cost</th>
+        <th>Prerequisites</th><th>Unlocks</th>
+      </tr></thead>
+      <tbody id="bal-research-body"></tbody><!-- populated by renderResearchTable() -->
+    </table>
+  </div>
+
+  <!-- Charts -->
+  <div id="bal-charts">
+    <div class="bal-grid">
+      <div class="chart-card">
+        <h3>Item Value Ladder</h3>
+        <p class="chart-desc">Sell value of every item in unlock order, colored by category. Log scale shows multiplier ratios — a big bar step is a large economy jump. Look for shallow steps (grey to grey = stalling) vs. big leaps (grey→green = tier breakthrough).</p>
+        <canvas id="chartValueLadder"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Research Gate Cost vs Player Surplus</h3>
+        <p class="chart-desc">Orange bars = entropy required to unlock each research node. Green line = estimated player entropy at that point. Green line must stay above every bar — if it dips below, the player is blocked.</p>
+        <canvas id="chartGateCost"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Power Budget by Phase</h3>
+        <p class="chart-desc">Stacked bars show total power draw from all active buildings. The dashed green line is generator capacity. When bars exceed the line the player must upgrade generators first. The Assembler bar in "Post-Heavy Elem." (Uranium = 1,190 eV) is the main power cliff.</p>
+        <canvas id="chartPowerBudget"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Efficiency: e/s per Recipe</h3>
+        <p class="chart-desc">Each dot is a recipe — craft time (X log) vs entropy per second (Y log). Anything above 1.0 e/s beats the raw-quark baseline. Grey = SFC, green = Assembler, blue = Manipulator.</p>
+        <canvas id="chartEfficiency"></canvas>
+      </div>
+    </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <h3>Progression Curve vs Genre Peers (log scale)</h3>
+      <p class="chart-desc">Sell value at each milestone on a log scale. Purple = this game. Orange dashes = generic 2.2× idle. Blue dots = Cell to Singularity ~3.5× tier model. Flat sections reveal where the economy stalls relative to peers.</p>
+      <canvas id="chartProgression" style="max-height:260px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Genre Comparison -->
+  <div class="phase" id="bal-genre-phase">
+    <div class="phase-header" style="border-left:4px solid #8b949e;background:#1a1d21;">
+      <h2>Genre Comparison</h2>
+      <span class="phase-meta">How this game's progression curve and structure compares to similar idle games</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Game</th><th>Progression Model</th><th>Cost Scale</th>
+        <th>Value Scale / Tier</th><th>Notes</th><th>Fit</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;color:#e6edf3;">Cookie Clicker</td>
+          <td style="font-size:12px;">Exponential per upgrade</td>
+          <td class="neutral">1.15× per level</td>
+          <td class="neutral">~1.1×</td>
+          <td style="font-size:11px;color:#8b949e;">Smooth curve, many cheap upgrades, dozens of building types</td>
+          <td><span class="tag tag-dialogue">Partial</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#e6edf3;">Antimatter Dimensions</td>
+          <td style="font-size:12px;">Prestige layers, geometric</td>
+          <td class="neutral">Resets per layer</td>
+          <td class="neutral">10–1000×</td>
+          <td style="font-size:11px;color:#8b949e;">Hard resets drive re-engagement; abstract currency chains</td>
+          <td><span class="tag tag-gate">Structural match</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#e6edf3;">Cell to Singularity</td>
+          <td style="font-size:12px;">Physics tiers, 3–5× per tier</td>
+          <td class="reward">3–5× per tier</td>
+          <td class="reward">3–5×</td>
+          <td style="font-size:11px;color:#8b949e;">Closest thematic analog — physics idle with discrete tier jumps</td>
+          <td><span class="tag tag-milestone">Strong match</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#e6edf3;">Idle (generic)</td>
+          <td style="font-size:12px;font-family:monospace;">base × scale^n</td>
+          <td class="neutral">1.1–1.5× typical</td>
+          <td class="neutral">Varies</td>
+          <td style="font-size:11px;color:#8b949e;">Scale &lt;1.1 = too slow to feel. Scale &gt;1.5 = too steep for casual.</td>
+          <td><span class="tag tag-silent">Reference</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:14px 18px;border-top:1px solid #21262d;background:#161b22;">
+      <p style="font-size:12px;color:#8b949e;line-height:1.6;">
+        <strong style="color:#f0883e;">Balance note:</strong>
+        The element value ladder is driven by atomic mass, which is thematically coherent but economically lumpy.
+        He-4 jumps ×4 over Hydrogen, then Li→C→O slows to ×1.33–1.75×. O→Si and Si→Fe steps (×1.75 and ×2.0) accelerate before the Uranium spike (×3.57).
+        Players may perceive Oxygen and Silicon as poor rewards. Consider <strong>research-unlocked sell multipliers</strong> per phase to smooth the perceived reward curve without changing atomic masses.
+      </p>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="phase" id="bal-legend">
+    <div class="phase-header" style="border-left:4px solid #484f58;background:#161b22;">
+      <h2>Abbreviations &amp; Legend</h2>
+      <span class="phase-meta">All shorthand used in the tables and charts above</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0;border-top:1px solid #21262d;">
+
+      <div style="padding:16px 18px;border-right:1px solid #21262d;border-bottom:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Currency &amp; Metrics</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">e</dt>            <dd style="color:#c9d1d9;">Entropy — base currency earned by depositing items at Maxwell's Demon</dd>
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">eV</dt>           <dd style="color:#c9d1d9;">Electron Volt — power unit generated by the Basic Generator</dd>
+          <dt style="color:#3fb950;font-family:monospace;white-space:nowrap;">e/s</dt>          <dd style="color:#c9d1d9;">Entropy per second — crafting efficiency (higher = better return on time)</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">eV/e</dt>         <dd style="color:#c9d1d9;">Power cost per entropy earned; &gt;1.0 means the recipe costs more power than it earns</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">vs Prev</dt>      <dd style="color:#c9d1d9;">Sell value ratio compared to the item directly above it in the table</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">Iso Mult</dt>     <dd style="color:#c9d1d9;">Isotope sell multiplier field on the item (design note; not yet applied in-engine)</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;border-right:1px solid #21262d;border-bottom:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Buildings</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">SFC</dt>          <dd style="color:#c9d1d9;">Strong Force Combiner — combines quarks into nucleons</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">Assembler</dt>    <dd style="color:#c9d1d9;">Atom Generator (in-game name) — assembles nucleons + electrons into atoms</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">Manipulator</dt>  <dd style="color:#c9d1d9;">Isotopic Manipulator — adds/removes neutrons to produce isotopes</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">Containment</dt>  <dd style="color:#c9d1d9;">Radioactive Containment — houses radioactive buildings, harvests decay particles</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">L1 / L2…</dt>    <dd style="color:#c9d1d9;">Building upgrade levels — L1 = placement cost, L2–L4 = upgrade costs</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">mass×5</dt>       <dd style="color:#c9d1d9;">Assembler power formula: eV = atomic mass × assemblerEvPerMass scalar</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">n×8</dt>          <dd style="color:#c9d1d9;">Manipulator power formula: eV = neutrons adjusted × manipulatorEvPerNeutron scalar</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;border-right:1px solid #21262d;border-bottom:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Recipe Input Notation</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">u / d</dt>        <dd style="color:#c9d1d9;">Up Quark / Down Quark</dd>
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">p / n</dt>        <dd style="color:#c9d1d9;">Proton / Neutron</dd>
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">e (inputs)</dt>  <dd style="color:#c9d1d9;">Electron — context distinguishes from entropy currency</dd>
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">H, He, Li…</dt>  <dd style="color:#c9d1d9;">Element symbols used as recipe inputs in the Manipulator</dd>
+          <dt style="color:#d2a8ff;font-family:monospace;white-space:nowrap;">−3n / →+α</dt>   <dd style="color:#c9d1d9;">Neutrons removed / Alpha Particle byproduct (U-235 enrichment)</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;border-bottom:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Particles &amp; Isotopes</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#f0883e;font-family:monospace;white-space:nowrap;">α</dt>            <dd style="color:#c9d1d9;">Alpha Particle — emitted by heavy radioactive isotopes; 20 eV per particle</dd>
+          <dt style="color:#f0883e;font-family:monospace;white-space:nowrap;">β</dt>            <dd style="color:#c9d1d9;">Beta Particle — emitted by light isotopes (Tritium, C-14); 10 eV per particle</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">H-2 / H-3</dt>   <dd style="color:#c9d1d9;">Deuterium (stable) / Tritium (radioactive, β decay)</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">C-14</dt>         <dd style="color:#c9d1d9;">Carbon-14 — radioactive, β decay</dd>
+          <dt style="color:#79c0ff;font-family:monospace;white-space:nowrap;">U-235</dt>        <dd style="color:#c9d1d9;">Fissile isotope — remove 3n from U-238; releases α during enrichment</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;border-right:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Research Shortforms</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">Recomb. I</dt>    <dd style="color:#c9d1d9;">Recombination I</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">H Synthesis</dt>  <dd style="color:#c9d1d9;">Hydrogen Synthesis</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">Atomic Asm.</dt>  <dd style="color:#c9d1d9;">Atomic Assembly</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">Isotope Eng.</dt> <dd style="color:#c9d1d9;">Isotope Engineering</dd>
+          <dt style="color:#8b949e;font-family:monospace;white-space:nowrap;">Heavy Elem.</dt>  <dd style="color:#c9d1d9;">Heavy Elements</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;border-right:1px solid #21262d;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Chart Colors</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#484f58;border-radius:2px;vertical-align:middle;margin-right:4px;"></span></dt><dd style="color:#c9d1d9;">Raw resources &amp; nucleons / SFC recipes</dd>
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;vertical-align:middle;margin-right:4px;"></span></dt><dd style="color:#c9d1d9;">Standard elements / Assembler recipes</dd>
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#58a6ff;border-radius:2px;vertical-align:middle;margin-right:4px;"></span></dt><dd style="color:#c9d1d9;">Isotopes / Manipulator recipes / C2S reference</dd>
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#f0883e;border-radius:2px;vertical-align:middle;margin-right:4px;"></span></dt><dd style="color:#c9d1d9;">Secondary particles (α, β) / research gate bars</dd>
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#d2a8ff;border-radius:2px;vertical-align:middle;margin-right:4px;"></span></dt><dd style="color:#c9d1d9;">This game's progression curve</dd>
+          <dt><span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;vertical-align:middle;margin-right:4px;"></span> ╌╌</dt><dd style="color:#c9d1d9;">Generator capacity ceiling (dashed)</dd>
+        </dl>
+      </div>
+
+      <div style="padding:16px 18px;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Item Categories</p>
+        <dl style="font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;">
+          <dt style="color:#6e7681;font-family:monospace;white-space:nowrap;">Raw</dt>          <dd style="color:#c9d1d9;">Raw Resource — harvested directly from quantum fields</dd>
+          <dt style="color:#6e7681;font-family:monospace;white-space:nowrap;">Nucleon</dt>      <dd style="color:#c9d1d9;">Crafted from quarks in the SFC — Proton and Neutron</dd>
+          <dt style="color:#3fb950;font-family:monospace;white-space:nowrap;">Element</dt>      <dd style="color:#c9d1d9;">Complete atoms — Hydrogen through Uranium</dd>
+          <dt style="color:#58a6ff;font-family:monospace;white-space:nowrap;">Isotope</dt>      <dd style="color:#c9d1d9;">Variant element with a different neutron count, made in the Manipulator</dd>
+          <dt style="color:#f0883e;font-family:monospace;white-space:nowrap;">Particle</dt>     <dd style="color:#c9d1d9;">Secondary particle emitted during radioactive decay — Alpha and Beta</dd>
+        </dl>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════ SIMPLE OVERVIEW ══ -->
+<div id="simple" class="tab-content">
+  <div class="simple-layout">
+    <div class="simple-timeline" id="simple-timeline"></div><!-- populated by renderSimpleOverview() -->
+    <div class="simple-sidebar">
+      <h3>Totals</h3>
+      <div class="s-row"><span class="s-label">Tutorial</span><span class="s-val" id="s-total-tutorial">—</span></div>
+      <div class="s-row"><span class="s-label">Full run</span><span class="s-val" id="s-total-full">—</span></div>
+      <hr class="s-divider">
+      <div class="s-row"><span class="s-label">Phases</span><span class="s-val" id="s-phase-count">—</span></div>
+      <div class="s-row"><span class="s-label">Steps</span><span class="s-val" id="s-step-count">—</span></div>
+      <span class="s-reset" id="s-reset-btn">Reset to defaults</span>
+    </div>
+  </div>
+</div>
+
+<script src="gameplay-loop.js"></script>
+</body>
+</html>

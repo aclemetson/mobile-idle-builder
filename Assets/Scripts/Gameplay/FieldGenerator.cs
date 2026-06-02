@@ -30,6 +30,8 @@ namespace MobileIdleBuilder
         public static FieldInstance GetFieldInstanceAt(int x, int y) =>
             _instanceMap.TryGetValue(new Vector2Int(x, y), out var fi) ? fi : null;
 
+        internal static IEnumerable<KeyValuePair<Vector2Int, FieldSO>> GetAllFields() => _fieldMap;
+
         [Serializable]
         public struct FieldEntry
         {
@@ -40,6 +42,7 @@ namespace MobileIdleBuilder
         }
 
         [SerializeField] private GridRenderer gridRenderer;
+        [SerializeField] private Material _fieldParticleMaterial;
         [SerializeField] [Min(0)] private int edgeMargin = 2;
         [Tooltip("No field may spawn within this many cells (Chebyshev) of a Maxwell's Demon building.")]
         [SerializeField] [Min(0)] private int demonClearance = 2;
@@ -61,17 +64,21 @@ namespace MobileIdleBuilder
         IEnumerator Start()
         {
             _fieldMap.Clear();
+            _instanceMap.Clear();
             if (gridRenderer == null)
             {
-                Debug.LogError("[FieldGenerator] GridRenderer reference is missing.", this);
+                GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
                 yield break;
             }
 
-            // Wait for baked buildings from the SubScene to appear in the ECS world,
-            // then register their footprints in GridOccupancy before placing any fields.
-            yield return RegisterBakedBuildings();
+            // Returning player with saved field positions: GridSaveService.LoadGrid() will call
+            // SpawnFromSave() after cloud reconciliation — same timing guarantee as buildings.
+            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.grid?.fields?.Count > 0;
+            if (SaveManager.Instance != null && !SaveManager.Instance.IsNewGame && hasFieldSave)
+                yield break;
 
-            // Mark cells too close to Maxwell's Demon as off-limits for field spawning.
+            // New game or migration from a pre-field-save build: randomize positions.
+            yield return RegisterBakedBuildings();
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
@@ -92,6 +99,25 @@ namespace MobileIdleBuilder
                     for (int i = 0; i < entry.count; i++)
                         PlaceSingle(entry.fieldDefinition, ref candidateIndex, candidates);
                 }
+            }
+        }
+
+        /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
+        public void SpawnFromSave(List<FieldSaveData> savedFields)
+        {
+            var fieldLookup = new Dictionary<string, FieldSO>();
+            foreach (var entry in fields)
+                if (entry.fieldDefinition != null)
+                    fieldLookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+
+            foreach (var saved in savedFields)
+            {
+                if (!fieldLookup.TryGetValue(saved.fieldId, out var fieldSO))
+                {
+                    GameLogger.Warning($"[FieldGenerator] Unknown fieldId '{saved.fieldId}' — skipped.");
+                    continue;
+                }
+                OccupyAndSpawn(saved.position[0], saved.position[1], fieldSO);
             }
         }
 
@@ -179,7 +205,7 @@ namespace MobileIdleBuilder
             }
 
             if (!placedSecond)
-                Debug.LogWarning($"[FieldGenerator] Could not place adjacent neighbor for {entry.fieldDefinition.displayName}. Placing fallback at next candidate.");
+                GameLogger.Warning($"[FieldGenerator] Could not place adjacent neighbor for {entry.fieldDefinition.displayName}. Placing fallback at next candidate.");
 
             // Place any remaining count beyond the first pair
             for (int i = 2; i < entry.count; i++)
@@ -203,7 +229,7 @@ namespace MobileIdleBuilder
                 if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) continue;
                 return c;
             }
-            Debug.LogWarning("[FieldGenerator] Ran out of candidate cells for field placement.");
+            GameLogger.Warning("[FieldGenerator] Ran out of candidate cells for field placement.");
             return new Vector2Int(-1, -1);
         }
 
@@ -230,8 +256,10 @@ namespace MobileIdleBuilder
             col.center = new Vector3(0f, 0.5f, 0f);
             col.radius = 0.5f;
 
+            gridRenderer.SetFieldTileColor(x, y, fieldSO.fieldColor);
+
             var effect = go.AddComponent<FieldEffect>();
-            effect.Initialize(fieldSO.fieldColor);
+            effect.Initialize(fieldSO.fieldColor, _fieldParticleMaterial);
         }
 
         // ----------------------------------------------------------------

@@ -29,6 +29,7 @@ namespace MobileIdleBuilder
         private EntityQuery   _prestigeQuery;
         private EntityQuery   _powerQuery;
         private EntityQuery   _inventoryQuery;
+        private EntityQuery   _tutorialQuery;
         private bool          _ecsReady;
 
         // ---- Panels ----
@@ -59,6 +60,11 @@ namespace MobileIdleBuilder
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
 
+        // ---- Tutorial events ----
+        public event System.Action OnDrawerOpened;
+        public event System.Action OnResearchPanelOpened;
+        public event System.Action OnRecipePanelOpened;
+
         // ---- Output selector ----
         private VisualElement _outputSelector;
         private VisualElement _outputSelectorOptions;
@@ -86,6 +92,29 @@ namespace MobileIdleBuilder
         void OnEnable()
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
+
+            if (root == null)
+            {
+                GameLogger.Error("[HUDController] rootVisualElement is null in OnEnable — UIDocument not ready yet.");
+                return;
+            }
+
+            if (SceneLoader.IsTransitioning)
+            {
+                root.style.display = DisplayStyle.None;
+                // Re-query at callback time; 'root' may be stale if the UIDocument was
+                // recycled between OnEnable and the transition completing.
+                var doc = GetComponent<UIDocument>();
+                SceneLoader.OnTransitionComplete += () =>
+                {
+                    var liveRoot = doc != null ? doc.rootVisualElement : null;
+                    if (liveRoot != null)
+                        liveRoot.style.display = DisplayStyle.Flex;
+                    else
+                        GameLogger.Warning("[HUDController] rootVisualElement null on transition complete — HUD may stay hidden.");
+                };
+            }
+
             QueryElements(root);
             _statusBar?.Init(root);
             _inspector?.Init(root, placementController);
@@ -167,6 +196,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
             );
+            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<TutorialStateData>());
             _ecsReady = true;
 
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
@@ -253,18 +283,18 @@ namespace MobileIdleBuilder
             if (_drawerBackdrop != null)
                 _drawerBackdrop.RegisterCallback<ClickEvent>(_ => CloseDrawer());
 
-            // Drawer nav buttons
-            root.Q<Button>("btn-recipes").clicked      += OpenRecipePanel;
-            root.Q<Button>("btn-buildings").clicked    += OpenBuildingsPanel;
-            root.Q<Button>("btn-codex").clicked        += OpenCodexPanel;
+            // Drawer nav buttons — non-research buttons respect the tutorial nav gate
+            root.Q<Button>("btn-recipes").clicked      += () => TryOpenPanel(OpenRecipePanel);
+            root.Q<Button>("btn-buildings").clicked    += () => TryOpenPanel(OpenBuildingsPanel);
+            root.Q<Button>("btn-codex").clicked        += () => TryOpenPanel(OpenCodexPanel);
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
-            root.Q<Button>("btn-upgrades").clicked     += OpenUpgradesPanel;
-            root.Q<Button>("btn-achievements").clicked += OpenAchievementsPanel;
-            root.Q<Button>("btn-pvp").clicked          += OpenPVPPanel;
+            root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
+            root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
+            root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => Debug.Log("[HUD] Settings — coming soon");
+            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -334,6 +364,7 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             BuildRecipeList();
             SetElementVisible(_recipePanel, true);
+            OnRecipePanelOpened?.Invoke();
         }
 
         private void OpenBuildingsPanel()
@@ -355,6 +386,7 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
+            OnResearchPanelOpened?.Invoke();
         }
 
         private void BuildResearchList()
@@ -374,12 +406,28 @@ namespace MobileIdleBuilder
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
+            // Collect research IDs gated by the current tutorial step.
+            System.Collections.Generic.HashSet<string> tutorialLockedResearch = null;
+            var flow = TutorialFlowSO.Current;
+            if (flow != null && _ecsReady && !_tutorialQuery.IsEmpty)
+            {
+                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
+                if (tutState.IsActive && tutState.CurrentStepIndex < flow.steps.Length)
+                {
+                    var ids = flow.steps[tutState.CurrentStepIndex].lockedResearchIds;
+                    if (ids != null && ids.Length > 0)
+                        tutorialLockedResearch = new System.Collections.Generic.HashSet<string>(ids);
+                }
+            }
+
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
 
-                bool unlocked    = researchService.IsUnlocked(research.id);
-                bool canPurchase = !unlocked && researchService.CanPurchase(research);
+                bool unlocked        = researchService.IsUnlocked(research.id);
+                bool tutorialGated   = tutorialLockedResearch != null &&
+                                       tutorialLockedResearch.Contains(research.id);
+                bool canPurchase     = !unlocked && !tutorialGated && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
                 card.AddToClassList("building-card");
@@ -653,10 +701,12 @@ namespace MobileIdleBuilder
 
                 bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
                 bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
+                bool canCraft = !isLocked && (craftService?.CanCraft(recipe) ?? false);
 
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
                 if (isLocked) row.AddToClassList("recipe-row--locked");
+                else if (!canCraft) row.AddToClassList("recipe-row--unavailable");
 
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
@@ -702,12 +752,14 @@ namespace MobileIdleBuilder
             if (recipe.requiresBuilding)
             {
                 if (!craftService.TriggerBuildingCraft(recipe))
-                    Debug.Log($"[HUD] Can't craft {recipe.name} — no eligible building or missing inputs.");
+                    InventoryPopupController.NotifyWarning("No eligible building");
             }
             else
             {
                 if (!craftService.TryCraft(recipe))
-                    Debug.Log($"[HUD] Can't craft {recipe.name} — not enough inputs.");
+                    InventoryPopupController.NotifyWarning("Not enough materials");
+                else
+                    BuildRecipeList();
             }
         }
 
@@ -1025,6 +1077,16 @@ namespace MobileIdleBuilder
         // Helpers
         // ============================================================
 
+        private void TryOpenPanel(System.Action open)
+        {
+            if (ToastService.Instance != null && ToastService.Instance.IsLocked("nav_other"))
+            {
+                ToastService.Instance.Post("nav_other");
+                return;
+            }
+            open();
+        }
+
         private void CloseAllPanels()
         {
             foreach (var panel in _allPanels)
@@ -1045,6 +1107,7 @@ namespace MobileIdleBuilder
             _drawerOpen = true;
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);
+            OnDrawerOpened?.Invoke();
         }
 
         private void CloseDrawer()

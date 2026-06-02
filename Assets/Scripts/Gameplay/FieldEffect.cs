@@ -12,15 +12,53 @@ namespace MobileIdleBuilder
     {
         private ParticleSystem _particles;
         private Light          _light;
+        private Color          _fieldColor;
+        private bool           _locked;
 
-        public void Initialize(Color fieldColor)
+        public void Initialize(Color fieldColor, Material particleMaterialTemplate)
         {
-            _particles = GetComponent<ParticleSystem>();
-            ConfigureParticles(fieldColor);
+            _fieldColor = fieldColor;
+            _particles  = GetComponent<ParticleSystem>();
+            ConfigureParticles(fieldColor, particleMaterialTemplate);
             CreateLight(fieldColor);
         }
 
-        private void ConfigureParticles(Color baseColor)
+        /// <summary>
+        /// Dims particles and light when the field is locked by the tutorial.
+        /// Call with locked=false to restore full visuals when the field becomes available.
+        /// </summary>
+        public void SetLocked(bool locked)
+        {
+            if (_locked == locked) return;
+            _locked = locked;
+
+            if (_particles != null)
+            {
+                var emission = _particles.emission;
+                emission.rateOverTime = locked ? 2f : 15f;
+
+                var main = _particles.main;
+                if (locked)
+                {
+                    var grey = Color.grey * 0.35f;
+                    main.startColor = new ParticleSystem.MinMaxGradient(grey, grey);
+                }
+                else
+                {
+                    var bright  = new Color(_fieldColor.r, _fieldColor.g, _fieldColor.b, 0.9f);
+                    var lighter = new Color(
+                        Mathf.Clamp01(_fieldColor.r + 0.15f),
+                        Mathf.Clamp01(_fieldColor.g + 0.15f),
+                        Mathf.Clamp01(_fieldColor.b + 0.15f), 0.6f);
+                    main.startColor = new ParticleSystem.MinMaxGradient(bright, lighter);
+                }
+            }
+
+            if (_light != null)
+                _light.intensity = locked ? 0.2f : 1.5f;
+        }
+
+        private void ConfigureParticles(Color baseColor, Material particleMaterialTemplate)
         {
             // ---- Main module ----
             var main = _particles.main;
@@ -78,15 +116,15 @@ namespace MobileIdleBuilder
             rend.renderMode = ParticleSystemRenderMode.Billboard;
             rend.sortingOrder = 1;
 
-            // Assign a URP-compatible particle material so particles don't appear magenta
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+            // Instance from the serialized template so the shader is guaranteed included in builds.
+            var mat = new Material(particleMaterialTemplate);
             mat.SetFloat("_Surface", 1f);           // transparent
             mat.SetFloat("_Blend", 2f);             // additive
             mat.SetFloat("_BlendOp", (float)UnityEngine.Rendering.BlendOp.Add);
             mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
             mat.SetFloat("_ZWrite", 0f);
-            mat.SetColor("_BaseColor", Color.white);
+            mat.SetColor("_BaseColor", baseColor);
             mat.enableInstancing = true;
             rend.material = mat;
 

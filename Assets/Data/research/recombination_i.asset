@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: recombination_i
   displayName: Recombination I
-  description: Harness the strong nuclear force to bind quarks into protons and neutrons.
+  description: "Harness the strong nuclear force to bind quarks into protons and
+    neutrons \u2014 and combine them with electrons to form the first atoms."
   icon: {fileID: 0}
   branch: 1
   prerequisites: []
@@ -31,7 +32,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 72444c98b26dbee4f952490a77312ddc, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.25

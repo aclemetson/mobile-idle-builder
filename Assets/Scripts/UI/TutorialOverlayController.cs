@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.IO;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -25,6 +23,7 @@ namespace MobileIdleBuilder
         [SerializeField] private HUDController           hudController;
 
         private int    _lastStepIndex = -1;
+        private bool   _wasActive;
         private Button _pulsingButton;
         private Coroutine _pulseRoutine;
 
@@ -42,6 +41,13 @@ namespace MobileIdleBuilder
 
             if (hudController == null)
                 hudController = FindAnyObjectByType<HUDController>();
+
+            if (hudController != null)
+            {
+                hudController.OnDrawerOpened        += OnDrawerOpenedHandler;
+                hudController.OnResearchPanelOpened += OnResearchPanelOpened;
+                hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
+            }
 
             if (maxwellsDemon == null)
                 maxwellsDemon = FindAnyObjectByType<MaxwellsDemonController>();
@@ -71,6 +77,13 @@ namespace MobileIdleBuilder
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
 
+            if (hudController != null)
+            {
+                hudController.OnDrawerOpened        -= OnDrawerOpenedHandler;
+                hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
+                hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
+            }
+
             if (maxwellsDemon != null)
             {
                 maxwellsDemon.OnOpened         -= OnDemonOpened;
@@ -83,27 +96,58 @@ namespace MobileIdleBuilder
         {
             if (!_queryReady || _tutorialQuery.IsEmpty) return;
 
+            // Don't react until ECSLoadBridge has applied saved progress to ECS.
+            // Without this guard the baked step-0 default fires OnStepChanged before
+            // the saved step index is written, replaying the intro dialogue on every load.
+            var bridge = ECSLoadBridge.Instance;
+            if (bridge != null && !bridge.IsLoaded) return;
+
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
+
+            // Tutorial just ended — unlock all fields and stop watching.
+            if (_wasActive && !state.IsActive)
+            {
+                _wasActive = false;
+                UnlockAllFields();
+                return;
+            }
+
             if (!state.IsActive) return;
+            _wasActive = true;
 
             if (state.CurrentStepIndex == _lastStepIndex) return;
 
+            int prevIdx = _lastStepIndex;
             _lastStepIndex = state.CurrentStepIndex;
-            OnStepChanged(state.CurrentStepIndex);
+            OnStepChanged(state.CurrentStepIndex, prevIdx);
         }
 
         // ── Step entry ────────────────────────────────────────────────────────
 
-        private void OnStepChanged(int stepIndex)
+        private void OnStepChanged(int stepIndex, int prevStepIndex = -1)
         {
             StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
 
+            // Checkpoint: persist the new step immediately rather than waiting for auto-save.
+            SaveManager.Instance?.SaveLocal();
+
             var flow = TutorialFlowSO.Current;
             if (flow == null || stepIndex >= flow.steps.Length) return;
 
             var step = flow.steps[stepIndex];
+
+            // When an inventory goal was just met, flash the next instruction as a popup
+            // so the player knows both that the goal is done and what to do next.
+            if (!string.IsNullOrEmpty(step.hintText)
+                && prevStepIndex >= 0 && prevStepIndex < flow.steps.Length)
+            {
+                var prevCond = flow.steps[prevStepIndex].advanceCondition;
+                if (prevCond?.type == ConditionType.InventoryMin
+                    || prevCond?.type == ConditionType.InventoryZero)
+                    hudController?.ShowNotification("→", step.hintText);
+            }
 
             if (!string.IsNullOrEmpty(step.hintText))
                 hudController?.ShowTutorialHint(step.hintText);
@@ -114,6 +158,8 @@ namespace MobileIdleBuilder
         private void ApplyOnEnterActions(TutorialOnEnter enter)
         {
             if (enter == null) return;
+
+            ApplyFieldLockStates(enter);
 
             // Dialogue
             if (enter.dialogue != null)
@@ -177,7 +223,6 @@ namespace MobileIdleBuilder
 
             _lastStepIndex = state.CurrentStepIndex;
             OnStepChanged(state.CurrentStepIndex);
-            WriteTutorialState(state);
         }
 
         // ── Dialogue event handlers ───────────────────────────────────────────
@@ -200,7 +245,7 @@ namespace MobileIdleBuilder
         private void OnActionTriggered(string action)
         {
             if (string.IsNullOrEmpty(action)) return;
-            Debug.Log($"[TutorialOverlay] Action: {action}");
+            GameLogger.Develop($"[TutorialOverlay] Action: {action}");
         }
 
         // ── Maxwell's Demon event handlers ────────────────────────────────────
@@ -227,6 +272,42 @@ namespace MobileIdleBuilder
         }
 
         private void OnDemonClosed() => TryAdvanceOnUiEvent("demon_closed");
+
+        private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
+        private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
+        private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
+
+        // ── Field lock states ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Dims fields that are not accessible in the given step and restores those that are.
+        /// - blockCollection=true  → all fields locked
+        /// - collectionFilter set  → fields of the filtered type unlocked, all others locked
+        /// - neither               → all fields unlocked
+        /// </summary>
+        private void ApplyFieldLockStates(TutorialOnEnter enter)
+        {
+            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+            foreach (var fi in allFields)
+            {
+                if (fi.Field == null) continue;
+                bool locked;
+                if (enter.blockCollection)
+                    locked = true;
+                else if (enter.collectionFilter != FieldType.None)
+                    locked = fi.Field.fieldType != enter.collectionFilter;
+                else
+                    locked = false;
+                fi.SetLocked(locked);
+            }
+        }
+
+        private void UnlockAllFields()
+        {
+            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
+            foreach (var fi in allFields)
+                fi.SetLocked(false);
+        }
 
         // ── UI helpers ────────────────────────────────────────────────────────
 
@@ -260,40 +341,5 @@ namespace MobileIdleBuilder
             }
         }
 
-        // ── State file ────────────────────────────────────────────────────────
-
-        [Serializable]
-        private class TutorialStateJson
-        {
-            public string currentStepId;
-            public bool   isActive;
-            public bool   firstRunComplete;
-        }
-
-        private static void WriteTutorialState(TutorialStateData s)
-        {
-            var flow = TutorialFlowSO.Current;
-            string stepId = (flow != null && s.CurrentStepIndex < flow.steps.Length)
-                ? flow.steps[s.CurrentStepIndex].id
-                : "";
-
-            var payload = JsonUtility.ToJson(new TutorialStateJson
-            {
-                currentStepId    = stepId,
-                isActive         = s.IsActive,
-                firstRunComplete = s.FirstRunComplete
-            }, prettyPrint: true);
-
-            try
-            {
-                File.WriteAllText(
-                    Path.Combine(Application.persistentDataPath, "tutorial_state.json"),
-                    payload);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[TutorialOverlay] Could not write tutorial_state.json: {e.Message}");
-            }
-        }
     }
 }

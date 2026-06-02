@@ -1,0 +1,9 @@
+<linker>
+  <!-- Preserve Google Sign-In plugin from IL2CPP managed stripping -->
+  <assembly fullname="Google.SignIn" preserve="all"/>
+
+  <!-- Preserve UGS assemblies used via async/reflection paths -->
+  <assembly fullname="Unity.Services.Core" preserve="all"/>
+  <assembly fullname="Unity.Services.Authentication" preserve="all"/>
+  <assembly fullname="Unity.Services.CloudSave" preserve="all"/>
+</linker>

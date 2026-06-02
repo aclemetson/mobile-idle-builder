@@ -65,6 +65,20 @@ namespace MobileIdleBuilder
             buf.Add(new BuildingOutputSlot { ItemID = itemID, Quantity = qty });
         }
 
+        public static int CountInOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf, int itemID)
+        {
+            for (int i = 0; i < buf.Length; i++)
+                if (buf[i].ItemID == itemID) return buf[i].Quantity;
+            return 0;
+        }
+
+        public static int TotalInOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf)
+        {
+            int n = 0;
+            for (int i = 0; i < buf.Length; i++) n += buf[i].Quantity;
+            return n;
+        }
+
         public static void RemoveFromOutputBuffer(DynamicBuffer<BuildingOutputSlot> buf, int itemID, int qty)
         {
             for (int i = 0; i < buf.Length; i++)

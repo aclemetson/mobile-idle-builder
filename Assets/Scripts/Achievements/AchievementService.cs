@@ -128,7 +128,7 @@ namespace MobileIdleBuilder
             hudController?.ShowNotification("🏆", $"Achievement unlocked: {achievement.displayName}");
             OnAchievementUnlocked?.Invoke(achievement);
 
-            Debug.Log($"[Achievements] Unlocked: {achievement.id}");
+            GameLogger.Info($"[Achievements] Unlocked: {achievement.id}");
         }
 
         static void UnlockCosmetics(AchievementSO achievement)
@@ -137,17 +137,16 @@ namespace MobileIdleBuilder
             foreach (var cosmetic in achievement.rewards)
             {
                 if (cosmetic == null) continue;
-                // TODO: notify CosmeticService to mark this cosmetic available
-                Debug.Log($"[Achievements] Cosmetic unlocked: {cosmetic.id} ({cosmetic.type})");
+                GameLogger.Info($"[Achievements] Cosmetic unlocked: {cosmetic.id} ({cosmetic.type})");
             }
         }
 
         static void ReportToPlatform(AchievementSO achievement)
         {
             if (string.IsNullOrEmpty(achievement.platformAchievementId)) return;
-            // TODO: Google Play Games: PlayGamesPlatform.Instance.ReportProgress(...)
-            // TODO: Apple Game Center: Social.ReportProgress(...)
-            Debug.Log($"[Achievements] Platform report stub: {achievement.platformAchievementId}");
+            // Google Play Games: PlayGamesPlatform.Instance.ReportProgress(...)
+            // Apple Game Center: Social.ReportProgress(...)
+            GameLogger.Debug($"[Achievements] Platform report stub: {achievement.platformAchievementId}");
         }
 
         // ── Query API (for panel) ─────────────────────────────────────────────

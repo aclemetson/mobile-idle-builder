@@ -30,8 +30,12 @@ namespace MobileIdleBuilder
     /// as disabled in the recipe list rather than being hidden entirely.
     /// </summary>
     [DefaultExecutionOrder(-70)]
-    public class RecipeKnowledgeService : SingletonMonoBehaviour<RecipeKnowledgeService>
+    public class RecipeKnowledgeService : SingletonMonoBehaviour<RecipeKnowledgeService>, IRecipeKnowledgeService
     {
+        // Allows tests to inject a stub without needing a running MonoBehaviour.
+        internal static IRecipeKnowledgeService OverrideForTests;
+        internal static IRecipeKnowledgeService Current => OverrideForTests ?? Instance;
+
         const string FileName = "recipe_knowledge.json";
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
@@ -104,7 +108,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to read runtime save: {e.Message}");
+                    GameLogger.Warning($"[RecipeKnowledgeService] Failed to read runtime save: {e}");
                 }
             }
 
@@ -122,7 +126,7 @@ namespace MobileIdleBuilder
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[RecipeKnowledgeService] Failed to parse default asset: {e.Message}");
+                    GameLogger.Warning($"[RecipeKnowledgeService] Failed to parse default asset: {e}");
                 }
             }
 
@@ -140,7 +144,7 @@ namespace MobileIdleBuilder
             var db = RecipeDatabase.Instance;
             if (db == null || db.Recipes == null)
             {
-                Debug.LogWarning("[RecipeKnowledgeService] RecipeDatabase not ready — skipping sync.");
+                GameLogger.Warning("[RecipeKnowledgeService] RecipeDatabase not ready — skipping sync.");
                 return;
             }
 
@@ -171,7 +175,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception e)
             {
-                Debug.LogError($"[RecipeKnowledgeService] Failed to save {FileName}: {e.Message}");
+                GameLogger.Error($"[RecipeKnowledgeService] Failed to save {FileName}: {e}");
             }
         }
 
