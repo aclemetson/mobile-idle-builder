@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: The basis of all organic chemistry. Carbon's ability to form four bonds
     makes it the backbone of life. Also exists as graphite, diamond, and graphene.
   codexUnlocked: 0
-  baseSellValue: 60
+  baseSellValue: 160
   isotopeSellMultiplier: 1

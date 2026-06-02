@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: advanced_molecules
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: advanced_molecules
+  displayName: Advanced Molecules
+  description: "Unlock silica, iron oxide, and uranium hexafluoride \u2014 critical
+    industrial and nuclear compounds."
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  depthInTree: 4
+  costBaseCurrency: 20000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: d6b1b2737074d8e419e3ab679d4fbc06, type: 2}
+  - {fileID: 11400000, guid: 87745f1256aceaf4498dd772387bfa5b, type: 2}
+  - {fileID: 11400000, guid: e76a85115e42d194881a29723c72f72e, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b62f5d117e826f84b83598cd2a5ef3f9, type: 2}
+  - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
+  - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "Silica is the basis of glass and semiconductors. Iron oxide rusts
+    and builds \u2014 it is the ore steel begins from. Uranium hexafluoride enables
+    isotope separation by gaseous diffusion."

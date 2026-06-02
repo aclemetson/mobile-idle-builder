@@ -31,6 +31,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "Beyond iron, fusion in stars becomes energy-negative. Only cosmic

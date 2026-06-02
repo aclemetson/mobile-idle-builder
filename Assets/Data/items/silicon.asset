@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: A semiconductor at the heart of modern electronics. Silicon wafers
     are the foundation of processors, solar cells, and transistors.
   codexUnlocked: 0
-  baseSellValue: 140
+  baseSellValue: 1280
   isotopeSellMultiplier: 1

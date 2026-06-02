@@ -35,5 +35,5 @@ MonoBehaviour:
     slowly over billions of years. The primary fuel for nuclear fission reactors.
     Requires advanced assembly techniques."
   codexUnlocked: 0
-  baseSellValue: 1000
+  baseSellValue: 1310720
   isotopeSellMultiplier: 1

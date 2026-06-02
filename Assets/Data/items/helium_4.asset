@@ -35,5 +35,5 @@ MonoBehaviour:
     fusion. A noble gas \u2014 chemically inert. Its nucleus (2 protons + 2 neutrons)
     is identical to an alpha particle."
   codexUnlocked: 0
-  baseSellValue: 20
+  baseSellValue: 10
   isotopeSellMultiplier: 1

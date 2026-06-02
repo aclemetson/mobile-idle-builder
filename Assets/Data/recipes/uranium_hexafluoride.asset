@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: uranium_hexafluoride
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: uranium_hexafluoride
+  displayName: Uranium Hexafluoride
+  recipeId: 36
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: ad80e727d639c6b4caaad7a68bbcaa81, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: 6419644aa3f969548953ea855ede642c, type: 2}
+    quantity: 8
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: e76a85115e42d194881a29723c72f72e, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 400
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 5000
+  validBuildings:
+  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

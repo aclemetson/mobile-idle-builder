@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: semiconductor_wafer
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: semiconductor_wafer
+  displayName: Semiconductor Wafer
+  symbol: Si-W
+  icon: {fileID: 0}
+  itemId: 42
+  tier: 4
+  category: 5
+  tierData: {fileID: 11400000, guid: e794dcdbb82111946a943cbb5703f195, type: 2}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: Ultrapure crystalline silicon sliced to sub-millimetre thickness. The
+    substrate on which every integrated circuit is etched. Grown from molten silica
+    in hydrogen atmosphere.
+  codexUnlocked: 0
+  baseSellValue: 100000000
+  isotopeSellMultiplier: 1

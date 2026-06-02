@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: materials_forge
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: materials_forge
+  displayName: Materials Forge
+  description: Synthesises alloys and advanced materials from molecular precursors.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 9
+  tier: 4
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 0.5
+  supportedRecipes:
+  - {fileID: 11400000, guid: 10c02035ae7c1ec4398fa9d4d0d19537, type: 2}
+  - {fileID: 11400000, guid: eaf3cd13e4f877f4bac45df8e3ad7352, type: 2}
+  - {fileID: 11400000, guid: 4a4f782d9a14f8a49801706630a8ca81, type: 2}
+  - {fileID: 11400000, guid: f3d2af9a771e62d4e99c11cfa1eb8470, type: 2}
+  - {fileID: 11400000, guid: 4928b1063bab4d343b8f81bcd14dd1f7, type: 2}
+  - {fileID: 11400000, guid: bdfedfe0a6559ab429d82dc778e6fdf3, type: 2}
+  - {fileID: 11400000, guid: 2a9cbaca2f12ce249acb2300ace3a5e3, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Primary Molecule
+  - Secondary Molecule
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  ports: []
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 50000
+  upgradeLevels:
+  - level: 2
+    outputRate: 1
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 1000000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 5000000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 25000000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: "Operates at extreme temperatures and pressures to force molecular
+    precursors into stable alloy lattices. Slower than the Molecular Synthesizer
+    by design \u2014 materials science demands patience."

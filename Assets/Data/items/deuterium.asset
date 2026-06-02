@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: A stable isotope of hydrogen with one added neutron. Found naturally
     in heavy water. An essential fuel for nuclear fusion reactions alongside tritium.
   codexUnlocked: 0
-  baseSellValue: 15
+  baseSellValue: 8
   isotopeSellMultiplier: 1.5

@@ -34,5 +34,5 @@ MonoBehaviour:
   codexEntry: The third most abundant element in the universe. Highly reactive and
     essential for combustion and respiration. Makes up 21% of Earth's atmosphere.
   codexUnlocked: 0
-  baseSellValue: 80
+  baseSellValue: 640
   isotopeSellMultiplier: 1

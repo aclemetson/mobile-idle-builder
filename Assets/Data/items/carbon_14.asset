@@ -35,5 +35,5 @@ MonoBehaviour:
     predictable decay rate allows scientists to estimate the age of organic materials
     up to 50,000 years old.
   codexUnlocked: 0
-  baseSellValue: 100
+  baseSellValue: 240
   isotopeSellMultiplier: 1.5

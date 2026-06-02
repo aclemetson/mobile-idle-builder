@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: molecular_synthesis
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: molecular_synthesis
+  displayName: Molecular Synthesis
+  description: "Unlock the Molecular Synthesizer \u2014 combine elements into molecules
+    and pure compounds."
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  depthInTree: 3
+  costBaseCurrency: 3000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 0fdce1b4328862b418ccf67694cfdeca, type: 2}
+  - {fileID: 11400000, guid: d935b64630ccb234b899194a7e18dff9, type: 2}
+  - {fileID: 11400000, guid: b9bb5e8fbfd704149af8329f9235aa06, type: 2}
+  - {fileID: 11400000, guid: 1ad5252c36b2fd1429e729fa464c9024, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
+  - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
+  - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
+  - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.15
+  codexEntry: "Atoms combine into molecules through covalent and ionic bonds. Water,
+    methane, and ammonia are the feedstocks of planetary chemistry \u2014 and industrial
+    civilisation."

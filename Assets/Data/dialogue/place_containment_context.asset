@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: place_containment_context
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "The Containment structure occupies a 2\xD72 footprint and draws 30 eV.
+      Place an Isotopic Manipulator inside it to handle radioactive synthesis. Alpha
+      and Beta particles from decay are collected automatically and returned to your
+      power grid."
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

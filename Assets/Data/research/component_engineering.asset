@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: component_engineering
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: component_engineering
+  displayName: Component Engineering
+  description: "Unlock the Component Fabricator \u2014 assemble quantum processors,
+    plasma rings, and antimatter cells."
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
+  depthInTree: 7
+  costBaseCurrency: 5000000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 82d493736da94b04b9717356bdbef5ac, type: 2}
+  - {fileID: 11400000, guid: ab512087d24223d428a1cd086e30acd1, type: 2}
+  - {fileID: 11400000, guid: 14138ec768e20fc44b39ad948fe93d65, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 8c972c0a88d236b4ea382476b5fddcda, type: 2}
+  - {fileID: 11400000, guid: fb22d8f74a0b23142bbd967a80d916ad, type: 2}
+  - {fileID: 11400000, guid: c606a2e7e0f38e84ab3e7eeccc2c33f1, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 843d72e51b7c3cd45b63328eecb849aa, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.05
+  codexEntry: Quantum processors harness superposition for computation. Plasma containment
+    rings confine stellar material. Antimatter cells store energy at matter-annihilation
+    density.

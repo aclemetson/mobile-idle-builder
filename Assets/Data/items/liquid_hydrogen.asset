@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: liquid_hydrogen
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: liquid_hydrogen
+  displayName: Liquid Hydrogen
+  symbol: "LH\u2082"
+  icon: {fileID: 0}
+  itemId: 32
+  tier: 3
+  category: 4
+  tierData: {fileID: 11400000, guid: 7a6db1aac1e073d47b2c9ce89ee09dac, type: 2}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: "Hydrogen cooled to \u2212253\xB0C, just 20 degrees above absolute
+    zero. The most energy-dense chemical rocket propellant by mass. Used as a feedstock
+    for fuel cells and semiconductor processing."
+  codexUnlocked: 0
+  baseSellValue: 300
+  isotopeSellMultiplier: 1
