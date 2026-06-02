@@ -32,7 +32,7 @@ namespace MobileIdleBuilder.Editor
         private const string SettingsDir   = "Assets/Data/settings";
         private const string TiersDir      = "Assets/Data/tiers";
         private const string ResearchDir   = "Assets/Data/research";
-        private const string ItemsDir      = "Assets/Data/items";
+        private const string ItemsDir      = "Assets/Resources/Items";
         private const string RecipesDir    = "Assets/Data/recipes";
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
