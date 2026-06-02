@@ -18,10 +18,10 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: b9f44a787581c514ab6cf939f5f480f1, type: 2}
+  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
     quantity: 10
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 0fdce1b4328862b418ccf67694cfdeca, type: 2}
+  outputItem: {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 20

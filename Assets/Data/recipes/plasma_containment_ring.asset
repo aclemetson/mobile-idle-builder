@@ -18,12 +18,12 @@ MonoBehaviour:
   tier: 5
   category: 7
   inputs:
-  - item: {fileID: 11400000, guid: 34402df68c836b243afa8e594807ba03, type: 2}
+  - item: {fileID: 11400000, guid: baa79aaa0a014ce4189cb696387a0deb, type: 2}
     quantity: 4
-  - item: {fileID: 11400000, guid: 7e3338eb625aa94458764cb2561b412d, type: 2}
+  - item: {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
     quantity: 2
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: ab512087d24223d428a1cd086e30acd1, type: 2}
+  outputItem: {fileID: 11400000, guid: 39c62c7ea4b8b3e46aa6d4b79f6aa50f, type: 2}
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 1500

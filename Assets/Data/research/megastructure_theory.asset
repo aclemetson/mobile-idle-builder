@@ -24,9 +24,9 @@ MonoBehaviour:
   costBaseCurrency: 50000000
   costPrestigeCurrency: 0
   unlocksItems:
-  - {fileID: 11400000, guid: 173e10bc383fde54daab8ed74c21623c, type: 2}
-  - {fileID: 11400000, guid: 6862f2051a3e1c34a84bbfb751dada45, type: 2}
-  - {fileID: 11400000, guid: bd0878a710940424e8f7fb78a0766d73, type: 2}
+  - {fileID: 11400000, guid: 24bcd30ef7b5e7b44a0d68fb21137ee2, type: 2}
+  - {fileID: 11400000, guid: 322e03abb99e3884492502befead50cc, type: 2}
+  - {fileID: 11400000, guid: f527515f051f9ba49b4323a464712129, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: bb179f5212dd1cc4da28657a681470bc, type: 2}
   - {fileID: 11400000, guid: 5a693a9ed7796e442a66d2637fffaf33, type: 2}
