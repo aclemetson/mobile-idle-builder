@@ -4202,9 +4202,8 @@
       ]
     },
 
-    { "_comment": "--- POST-TUTORIAL DIALOGUES (Phases ⑧–⑪) ---" },
-
     {
+      "_comment": "--- POST-TUTORIAL DIALOGUES (Phases ⑧–⑪) ---",
       "id": "post_tutorial_intro",
       "lines": [
         {
