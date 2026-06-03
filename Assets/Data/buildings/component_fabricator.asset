@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: component_fabricator
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: component_fabricator
+  displayName: Component Fabricator
+  description: Assembles advanced materials into high-precision megastructure components.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 10
+  tier: 5
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 0.25
+  supportedRecipes:
+  - {fileID: 11400000, guid: 8c972c0a88d236b4ea382476b5fddcda, type: 2}
+  - {fileID: 11400000, guid: fb22d8f74a0b23142bbd967a80d916ad, type: 2}
+  - {fileID: 11400000, guid: c606a2e7e0f38e84ab3e7eeccc2c33f1, type: 2}
+  - {fileID: 11400000, guid: bb179f5212dd1cc4da28657a681470bc, type: 2}
+  - {fileID: 11400000, guid: 5a693a9ed7796e442a66d2637fffaf33, type: 2}
+  - {fileID: 11400000, guid: cdb9fcbad19bbe24ca4c2548d342d0ad, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Primary Material
+  - Secondary Material
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  ports: []
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 5000000
+  upgradeLevels:
+  - level: 2
+    outputRate: 0.5
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 100000000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 1
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 1000000000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: The pinnacle of in-Foundry manufacturing. Operates at near-quantum
+    precision, assembling materials into components that will eventually orbit a
+    star. Each cycle takes minutes. Each output lasts millennia.

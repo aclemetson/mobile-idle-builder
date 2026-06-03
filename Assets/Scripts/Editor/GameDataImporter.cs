@@ -32,7 +32,7 @@ namespace MobileIdleBuilder.Editor
         private const string SettingsDir   = "Assets/Data/settings";
         private const string TiersDir      = "Assets/Data/tiers";
         private const string ResearchDir   = "Assets/Data/research";
-        private const string ItemsDir      = "Assets/Data/items";
+        private const string ItemsDir      = "Assets/Resources/Items";
         private const string RecipesDir    = "Assets/Data/recipes";
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
@@ -176,7 +176,10 @@ namespace MobileIdleBuilder.Editor
             // ── Step 9: DialogueSO ───────────────────────────────────────────
             var dialogueLookup = new Dictionary<string, DialogueSO>();
             foreach (var dlg in data.dialogues)
+            {
+                if (string.IsNullOrEmpty(dlg.id)) continue;
                 dialogueLookup[dlg.id] = GenerateDialogue(dlg);
+            }
 
             // ── Step 10: TierSO (pass 2 — cross-refs) ───────────────────────
             foreach (var t in data.tiers)
@@ -519,10 +522,11 @@ namespace MobileIdleBuilder.Editor
             string path = $"{TutorialDir}/tutorial_flow.asset";
             var so = LoadOrCreate<TutorialFlowSO>(path);
 
-            so.steps = new TutorialStepDef[steps.Count];
-            for (int i = 0; i < steps.Count; i++)
+            var realSteps = steps.FindAll(s => !string.IsNullOrEmpty(s.id));
+            so.steps = new TutorialStepDef[realSteps.Count];
+            for (int i = 0; i < realSteps.Count; i++)
             {
-                var s = steps[i];
+                var s = realSteps[i];
                 var def = new TutorialStepDef
                 {
                     id       = s.id,

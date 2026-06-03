@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: mid_elements
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: mid_elements
+  displayName: Mid-Period Elements
+  description: "Unlock nitrogen, aluminum, and nickel \u2014 spanning organic chemistry
+    to industrial metals."
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  depthInTree: 2
+  costBaseCurrency: 2000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
+  - {fileID: 11400000, guid: 31333edf10e38474c90fafe8f7d578e3, type: 2}
+  - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 1a3e3177c0b831141a11f311376338b6, type: 2}
+  - {fileID: 11400000, guid: 686915205fa3e1e4bb3c71a9e8a9b7de, type: 2}
+  - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum
+    is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable
+    batteries.

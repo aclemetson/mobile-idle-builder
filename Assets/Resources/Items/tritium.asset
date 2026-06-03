@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: tritium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: tritium
+  displayName: Tritium
+  symbol: H-3
+  icon: {fileID: 0}
+  itemId: 15
+  tier: 2
+  category: 3
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 1
+  atomicMass: 3
+  charge: 0
+  isRadioactive: 1
+  decayType: 2
+  halfLifeNote: 12.3 years
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: A radioactive isotope of hydrogen with two neutrons. Undergoes beta
+    decay with a 12.3-year half-life. Combined with deuterium in the most efficient
+    known fusion reaction.
+  codexUnlocked: 0
+  baseSellValue: 12
+  isotopeSellMultiplier: 1.5

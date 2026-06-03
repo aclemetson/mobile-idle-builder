@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: light_elements
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: light_elements
+  displayName: Light Elements
+  description: "Unlock synthesis of beryllium and boron \u2014 the lightest solid
+    elements beyond lithium."
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  depthInTree: 2
+  costBaseCurrency: 1000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 7a943f92f16babd4d99dcc1c0b813968, type: 2}
+  - {fileID: 11400000, guid: 7ccf03d0ad1be2d4a9a061bbe7f99d2d, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: be0454f0bf6baca449c8e6291edc1be9, type: 2}
+  - {fileID: 11400000, guid: 07802ddc5ba0150489b8882bd8778805, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: 'The lightest solid elements: beryllium, harder than steel and lighter
+    than aluminium; boron, an exotic metalloid with industrial and nuclear applications.'

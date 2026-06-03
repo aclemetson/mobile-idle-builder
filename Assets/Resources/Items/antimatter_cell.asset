@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: antimatter_cell
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: antimatter_cell
+  displayName: Antimatter Cell
+  symbol: AM
+  icon: {fileID: 0}
+  itemId: 48
+  tier: 5
+  category: 6
+  tierData: {fileID: 11400000, guid: 1fa1a5435d298d5409fab7912680934f, type: 2}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: "A magnetic bottle storing antihydrogen \u2014 matter's mirror. When
+    antimatter meets matter, 100% of both masses convert to energy per E=mc\xB2.
+    The most energy-dense storage known."
+  codexUnlocked: 0
+  baseSellValue: 8e+11
+  isotopeSellMultiplier: 1

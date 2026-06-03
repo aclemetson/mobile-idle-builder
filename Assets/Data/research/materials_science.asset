@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: materials_science
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: materials_science
+  displayName: Materials Science
+  description: "Unlock the Materials Forge \u2014 synthesise steel, carbon fibre,
+    and titanium alloy from molecules."
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  depthInTree: 5
+  costBaseCurrency: 150000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
+  - {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
+  - {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 10c02035ae7c1ec4398fa9d4d0d19537, type: 2}
+  - {fileID: 11400000, guid: eaf3cd13e4f877f4bac45df8e3ad7352, type: 2}
+  - {fileID: 11400000, guid: 4a4f782d9a14f8a49801706630a8ca81, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: Steel defined the industrial age. Carbon fibre enables spacecraft.
+    Titanium alloys survive re-entry. Materials science is the discipline that turns
+    molecules into civilisation.

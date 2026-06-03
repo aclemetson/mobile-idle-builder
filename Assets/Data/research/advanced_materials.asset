@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: advanced_materials
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: advanced_materials
+  displayName: Advanced Materials
+  description: Unlock semiconductor wafers, aerogel, superconductors, and metamaterials.
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 800000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: e1f450e49f29d4345adf780f9cd764d9, type: 2}
+  - {fileID: 11400000, guid: 68bacbabcb8064e4ca18c105b0c9f292, type: 2}
+  - {fileID: 11400000, guid: 4961c6c0e8079244ebf14e548d2f054f, type: 2}
+  - {fileID: 11400000, guid: baa79aaa0a014ce4189cb696387a0deb, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: f3d2af9a771e62d4e99c11cfa1eb8470, type: 2}
+  - {fileID: 11400000, guid: 4928b1063bab4d343b8f81bcd14dd1f7, type: 2}
+  - {fileID: 11400000, guid: bdfedfe0a6559ab429d82dc778e6fdf3, type: 2}
+  - {fileID: 11400000, guid: 2a9cbaca2f12ce249acb2300ace3a5e3, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.05
+  codexEntry: Semiconductor wafers are the substrate of computation. Aerogel is the
+    lightest solid material. Superconductors carry current with zero resistance.
+    Metamaterials bend light and gravity around themselves.

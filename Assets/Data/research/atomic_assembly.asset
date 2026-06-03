@@ -24,12 +24,12 @@ MonoBehaviour:
   costBaseCurrency: 500
   costPrestigeCurrency: 0
   unlocksItems:
-  - {fileID: 11400000, guid: 9e0c03f047215524aad47b723303b846, type: 2}
-  - {fileID: 11400000, guid: 9175e5c02c5515442b3a8cdb8a4b45cf, type: 2}
-  - {fileID: 11400000, guid: 74c51589e2cf91841a0aef457979c16c, type: 2}
-  - {fileID: 11400000, guid: b28aee0cd61586e47a89417f3b61b964, type: 2}
-  - {fileID: 11400000, guid: 6419644aa3f969548953ea855ede642c, type: 2}
-  - {fileID: 11400000, guid: 4096f1369dd6541428f3443846931679, type: 2}
+  - {fileID: 11400000, guid: 06518bba2d1ed46478d8250e3ed0edcb, type: 2}
+  - {fileID: 11400000, guid: 1861494e6440194438a3d3f9af7636d5, type: 2}
+  - {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
+  - {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+  - {fileID: 11400000, guid: e9d4fd82ea10f0747bcd10d5cc822c97, type: 2}
+  - {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: b1c7db86db5ca8c48ad6413a15432273, type: 2}
   - {fileID: 11400000, guid: 6eeeec7bd1cf4934da06177d3d4bc52f, type: 2}
@@ -42,6 +42,9 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
+  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: "Combining protons, neutrons, and electrons into stable atoms. Each

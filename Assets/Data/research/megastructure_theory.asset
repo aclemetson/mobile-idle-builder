@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: megastructure_theory
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: megastructure_theory
+  displayName: Megastructure Theory
+  description: "Unlock Dyson nodes, orbital frames, and graviton lenses \u2014 the
+    components of a Dyson sphere."
+  icon: {fileID: 0}
+  branch: 4
+  prerequisites:
+  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  depthInTree: 8
+  costBaseCurrency: 50000000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 24bcd30ef7b5e7b44a0d68fb21137ee2, type: 2}
+  - {fileID: 11400000, guid: 322e03abb99e3884492502befead50cc, type: 2}
+  - {fileID: 11400000, guid: f527515f051f9ba49b4323a464712129, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: bb179f5212dd1cc4da28657a681470bc, type: 2}
+  - {fileID: 11400000, guid: 5a693a9ed7796e442a66d2637fffaf33, type: 2}
+  - {fileID: 11400000, guid: cdb9fcbad19bbe24ca4c2548d342d0ad, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.05
+  codexEntry: A Dyson sphere captures all energy output of a star. Dyson nodes are
+    the structural anchors. Orbital frames are the load-bearing superstructure. Graviton
+    lenses stabilise the whole assembly against tidal forces.

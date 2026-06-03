@@ -416,6 +416,605 @@
       "equivalent_to": "high_energy_electron",
       "use": ["secondary_currency", "energy_recovery"],
       "codex": "Emitted during beta decay of unstable isotopes like Tritium and Carbon-14. A high-energy electron. Collected by Radioactive Containment buildings and fed back into the power grid."
+    },
+
+    {
+      "_section": "TIER 2 — NEW ELEMENTS (recipe_ids 18–29, via Atomic Assembler)"
+    },
+
+    {
+      "id": "beryllium",
+      "name": "Beryllium",
+      "symbol": "Be",
+      "atomic_number": 4,
+      "atomic_mass": 9,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 4 },
+        { "id": "neutron", "quantity": 5 },
+        { "id": "electron", "quantity": 4 }
+      ],
+      "output": { "id": "beryllium", "quantity": 1 },
+      "base_craft_time": 9.0,
+      "power_cost_ev": 45,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "light_elements",
+      "simplification": null,
+      "codex": "Harder than steel and lighter than aluminium. Used in nuclear reactor reflectors and X-ray windows. The first element beyond the lithium group."
+    },
+    {
+      "id": "boron",
+      "name": "Boron",
+      "symbol": "B",
+      "atomic_number": 5,
+      "atomic_mass": 11,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 5 },
+        { "id": "neutron", "quantity": 6 },
+        { "id": "electron", "quantity": 5 }
+      ],
+      "output": { "id": "boron", "quantity": 1 },
+      "base_craft_time": 11.0,
+      "power_cost_ev": 55,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "light_elements",
+      "simplification": null,
+      "codex": "A metalloid with exceptional neutron-absorption properties. Boron-10 is the active component in nuclear reactor control rods."
+    },
+    {
+      "id": "nitrogen",
+      "name": "Nitrogen",
+      "symbol": "N",
+      "atomic_number": 7,
+      "atomic_mass": 14,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 7 },
+        { "id": "neutron", "quantity": 7 },
+        { "id": "electron", "quantity": 7 }
+      ],
+      "output": { "id": "nitrogen", "quantity": 1 },
+      "base_craft_time": 14.0,
+      "power_cost_ev": 70,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "mid_elements",
+      "simplification": null,
+      "codex": "78% of Earth's atmosphere. The limiting nutrient in agriculture — and the key ingredient in ammonia synthesis via the Haber process."
+    },
+    {
+      "id": "aluminum",
+      "name": "Aluminum",
+      "symbol": "Al",
+      "atomic_number": 13,
+      "atomic_mass": 27,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 13 },
+        { "id": "neutron", "quantity": 14 },
+        { "id": "electron", "quantity": 13 }
+      ],
+      "output": { "id": "aluminum", "quantity": 1 },
+      "base_craft_time": 27.0,
+      "power_cost_ev": 135,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "mid_elements",
+      "simplification": null,
+      "codex": "The most abundant metal in Earth's crust. Lightweight and corrosion-resistant — the backbone of aerospace and modern packaging."
+    },
+    {
+      "id": "nickel",
+      "name": "Nickel",
+      "symbol": "Ni",
+      "atomic_number": 28,
+      "atomic_mass": 58,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 28 },
+        { "id": "neutron", "quantity": 30 },
+        { "id": "electron", "quantity": 28 }
+      ],
+      "output": { "id": "nickel", "quantity": 1 },
+      "base_craft_time": 58.0,
+      "power_cost_ev": 290,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "mid_elements",
+      "simplification": null,
+      "codex": "A transition metal critical in stainless steel, battery cathodes, and jet-engine superalloys. Strong magnetic properties."
+    },
+    {
+      "id": "copper",
+      "name": "Copper",
+      "symbol": "Cu",
+      "atomic_number": 29,
+      "atomic_mass": 63,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 29 },
+        { "id": "neutron", "quantity": 34 },
+        { "id": "electron", "quantity": 29 }
+      ],
+      "output": { "id": "copper", "quantity": 1 },
+      "base_craft_time": 63.0,
+      "power_cost_ev": 315,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "transition_metals",
+      "simplification": null,
+      "codex": "The best electrical conductor among common metals. In this Foundry, copper is synthesised atom by atom — ironic, given it is the cheapest ore in simpler mining games."
+    },
+    {
+      "id": "zinc",
+      "name": "Zinc",
+      "symbol": "Zn",
+      "atomic_number": 30,
+      "atomic_mass": 65,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 30 },
+        { "id": "neutron", "quantity": 35 },
+        { "id": "electron", "quantity": 30 }
+      ],
+      "output": { "id": "zinc", "quantity": 1 },
+      "base_craft_time": 65.0,
+      "power_cost_ev": 325,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "transition_metals",
+      "simplification": null,
+      "codex": "Zinc galvanises steel against corrosion and is half of brass alloy. An essential cofactor in hundreds of human enzymes."
+    },
+    {
+      "id": "silver",
+      "name": "Silver",
+      "symbol": "Ag",
+      "atomic_number": 47,
+      "atomic_mass": 108,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 47 },
+        { "id": "neutron", "quantity": 61 },
+        { "id": "electron", "quantity": 47 }
+      ],
+      "output": { "id": "silver", "quantity": 1 },
+      "base_craft_time": 108.0,
+      "power_cost_ev": 540,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "precious_metals",
+      "simplification": null,
+      "codex": "Highest electrical and thermal conductivity of any element. Used in solar panel contacts, antibacterial coatings, and high-performance circuit connections."
+    },
+    {
+      "id": "gold",
+      "name": "Gold",
+      "symbol": "Au",
+      "atomic_number": 79,
+      "atomic_mass": 197,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 79 },
+        { "id": "neutron", "quantity": 118 },
+        { "id": "electron", "quantity": 79 }
+      ],
+      "output": { "id": "gold", "quantity": 1 },
+      "base_craft_time": 197.0,
+      "power_cost_ev": 985,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "precious_metals",
+      "simplification": null,
+      "codex": "Chemically inert and immune to corrosion. Every connector in space hardware is gold-plated. Its cosmic rarity is a product of neutron star collisions."
+    },
+    {
+      "id": "platinum",
+      "name": "Platinum",
+      "symbol": "Pt",
+      "atomic_number": 78,
+      "atomic_mass": 195,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 78 },
+        { "id": "neutron", "quantity": 117 },
+        { "id": "electron", "quantity": 78 }
+      ],
+      "output": { "id": "platinum", "quantity": 1 },
+      "base_craft_time": 195.0,
+      "power_cost_ev": 975,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "exotic_metals",
+      "simplification": null,
+      "codex": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature."
+    },
+    {
+      "id": "tungsten",
+      "name": "Tungsten",
+      "symbol": "W",
+      "atomic_number": 74,
+      "atomic_mass": 184,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 74 },
+        { "id": "neutron", "quantity": 110 },
+        { "id": "electron", "quantity": 74 }
+      ],
+      "output": { "id": "tungsten", "quantity": 1 },
+      "base_craft_time": 184.0,
+      "power_cost_ev": 920,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "exotic_metals",
+      "simplification": null,
+      "codex": "Highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing fusion reactor components all depend on tungsten."
+    },
+    {
+      "id": "plutonium",
+      "name": "Plutonium",
+      "symbol": "Pu",
+      "atomic_number": 94,
+      "atomic_mass": 244,
+      "tier": 2,
+      "inputs": [
+        { "id": "proton", "quantity": 94 },
+        { "id": "neutron", "quantity": 150 },
+        { "id": "electron", "quantity": 94 }
+      ],
+      "output": { "id": "plutonium", "quantity": 1 },
+      "base_craft_time": 244.0,
+      "power_cost_ev": 1220,
+      "crafted_in": ["atomic_assembler"],
+      "requires_research": "transuranic_elements",
+      "simplification": null,
+      "codex": "Does not occur naturally — only made in reactors and particle accelerators. Pu-239 is the most energy-dense fissile fuel known."
+    },
+
+    {
+      "_section": "TIER 3 — MOLECULAR (via Molecular Synthesizer)"
+    },
+
+    {
+      "id": "liquid_hydrogen",
+      "name": "Liquid Hydrogen",
+      "symbol": "LH₂",
+      "tier": 3,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 10 }
+      ],
+      "output": { "id": "liquid_hydrogen", "quantity": 1 },
+      "base_craft_time": 20.0,
+      "power_cost_ev": 50,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "molecular_synthesis",
+      "simplification": null,
+      "codex": "Hydrogen cooled to −253°C. The most energy-dense chemical rocket propellant by mass and a semiconductor processing feedstock."
+    },
+    {
+      "id": "water",
+      "name": "Water",
+      "symbol": "H₂O",
+      "tier": 3,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 4 },
+        { "id": "oxygen", "quantity": 8 }
+      ],
+      "output": { "id": "water", "quantity": 1 },
+      "base_craft_time": 60.0,
+      "power_cost_ev": 200,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "molecular_synthesis",
+      "simplification": null,
+      "codex": "Two hydrogen, one oxygen — the universal solvent and prerequisite for life. In the Foundry it serves as a chemical intermediate and coolant feedstock."
+    },
+    {
+      "id": "methane",
+      "name": "Methane",
+      "symbol": "CH₄",
+      "tier": 3,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 4 },
+        { "id": "carbon", "quantity": 6 }
+      ],
+      "output": { "id": "methane", "quantity": 1 },
+      "base_craft_time": 80.0,
+      "power_cost_ev": 350,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "molecular_synthesis",
+      "simplification": null,
+      "codex": "The simplest hydrocarbon. A key carbon feedstock for synthesising carbon fibre. Burns with oxygen in SpaceX Raptor engines."
+    },
+    {
+      "id": "ammonia",
+      "name": "Ammonia",
+      "symbol": "NH₃",
+      "tier": 3,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 3 },
+        { "id": "nitrogen", "quantity": 7 }
+      ],
+      "output": { "id": "ammonia", "quantity": 1 },
+      "base_craft_time": 90.0,
+      "power_cost_ev": 450,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "molecular_synthesis",
+      "simplification": null,
+      "codex": "The Haber–Bosch process that synthesises ammonia is arguably the most important industrial reaction in history — it enabled fertilisers that now feed half of humanity."
+    },
+    {
+      "id": "silica",
+      "name": "Silica",
+      "symbol": "SiO₂",
+      "tier": 3,
+      "inputs": [
+        { "id": "silicon", "quantity": 5 },
+        { "id": "oxygen", "quantity": 10 }
+      ],
+      "output": { "id": "silica", "quantity": 1 },
+      "base_craft_time": 150.0,
+      "power_cost_ev": 800,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "advanced_molecules",
+      "simplification": null,
+      "codex": "Silicon dioxide — the primary component of sand, glass, and quartz. Ultrapure silica is the substrate for semiconductor wafer growth."
+    },
+    {
+      "id": "iron_oxide",
+      "name": "Iron Oxide",
+      "symbol": "Fe₂O₃",
+      "tier": 3,
+      "inputs": [
+        { "id": "iron", "quantity": 4 },
+        { "id": "oxygen", "quantity": 6 }
+      ],
+      "output": { "id": "iron_oxide", "quantity": 1 },
+      "base_craft_time": 200.0,
+      "power_cost_ev": 1500,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "advanced_molecules",
+      "simplification": null,
+      "codex": "Iron oxide is the precursor ore for steel production. In the Foundry it is synthesised directly from pure iron and oxygen."
+    },
+    {
+      "id": "uranium_hexafluoride",
+      "name": "Uranium Hexafluoride",
+      "symbol": "UF₆",
+      "tier": 3,
+      "inputs": [
+        { "id": "uranium", "quantity": 2 },
+        { "id": "silicon", "quantity": 8 }
+      ],
+      "output": { "id": "uranium_hexafluoride", "quantity": 1 },
+      "base_craft_time": 400.0,
+      "power_cost_ev": 5000,
+      "crafted_in": ["molecular_synthesizer"],
+      "requires_research": "advanced_molecules",
+      "simplification": null,
+      "codex": "The gaseous compound used in uranium enrichment centrifuges. Its production enables isotope separation and is a prerequisite for superconductor synthesis."
+    },
+
+    {
+      "_section": "TIER 4 — MATERIALS (via Materials Forge)"
+    },
+
+    {
+      "id": "steel",
+      "name": "Steel",
+      "symbol": "Fe·C",
+      "tier": 4,
+      "inputs": [
+        { "id": "iron_oxide", "quantity": 5 },
+        { "id": "methane", "quantity": 2 }
+      ],
+      "output": { "id": "steel", "quantity": 1 },
+      "base_craft_time": 300.0,
+      "power_cost_ev": 8000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "materials_science",
+      "simplification": null,
+      "codex": "Iron alloyed with controlled carbon content. The structural material of the industrial age — bridges, skyscrapers, ships."
+    },
+    {
+      "id": "carbon_fiber",
+      "name": "Carbon Fiber",
+      "symbol": "C-F",
+      "tier": 4,
+      "inputs": [
+        { "id": "methane", "quantity": 4 },
+        { "id": "silica", "quantity": 3 }
+      ],
+      "output": { "id": "carbon_fiber", "quantity": 1 },
+      "base_craft_time": 400.0,
+      "power_cost_ev": 15000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "materials_science",
+      "simplification": null,
+      "codex": "Crystalline carbon in long chains — five times stronger than steel at one quarter the weight. The structural material of spacecraft and megastructures."
+    },
+    {
+      "id": "titanium_alloy",
+      "name": "Titanium Alloy",
+      "symbol": "Ti-A",
+      "tier": 4,
+      "inputs": [
+        { "id": "silica", "quantity": 3 },
+        { "id": "iron_oxide", "quantity": 4 }
+      ],
+      "output": { "id": "titanium_alloy", "quantity": 1 },
+      "base_craft_time": 500.0,
+      "power_cost_ev": 25000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "materials_science",
+      "simplification": null,
+      "codex": "Titanium alloyed with aluminium and vanadium — the aerospace standard. Survives re-entry temperatures and is biocompatible enough for implants."
+    },
+    {
+      "id": "semiconductor_wafer",
+      "name": "Semiconductor Wafer",
+      "symbol": "Si-W",
+      "tier": 4,
+      "inputs": [
+        { "id": "silica", "quantity": 5 },
+        { "id": "liquid_hydrogen", "quantity": 2 }
+      ],
+      "output": { "id": "semiconductor_wafer", "quantity": 1 },
+      "base_craft_time": 600.0,
+      "power_cost_ev": 50000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "advanced_materials",
+      "simplification": null,
+      "codex": "Ultrapure crystalline silicon grown from molten silica in a hydrogen atmosphere. The substrate on which every integrated circuit is etched."
+    },
+    {
+      "id": "aerogel",
+      "name": "Aerogel",
+      "symbol": "SiO₂-A",
+      "tier": 4,
+      "inputs": [
+        { "id": "silica", "quantity": 3 },
+        { "id": "ammonia", "quantity": 2 }
+      ],
+      "output": { "id": "aerogel", "quantity": 1 },
+      "base_craft_time": 700.0,
+      "power_cost_ev": 80000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "advanced_materials",
+      "simplification": null,
+      "codex": "The lightest solid ever synthesised — 99.8% air by volume. An extraordinary thermal insulator used in Mars rover heat shields."
+    },
+    {
+      "id": "superconductor",
+      "name": "Superconductor",
+      "symbol": "SC",
+      "tier": 4,
+      "inputs": [
+        { "id": "aerogel", "quantity": 2 },
+        { "id": "uranium_hexafluoride", "quantity": 3 }
+      ],
+      "output": { "id": "superconductor", "quantity": 1 },
+      "base_craft_time": 800.0,
+      "power_cost_ev": 200000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "advanced_materials",
+      "simplification": null,
+      "codex": "Zero electrical resistance below its critical temperature. Enables MRI machines, maglev trains, and fusion reactor magnetic confinement coils."
+    },
+    {
+      "id": "metamaterial",
+      "name": "Metamaterial",
+      "symbol": "MM",
+      "tier": 4,
+      "inputs": [
+        { "id": "superconductor", "quantity": 2 },
+        { "id": "semiconductor_wafer", "quantity": 2 }
+      ],
+      "output": { "id": "metamaterial", "quantity": 1 },
+      "base_craft_time": 1000.0,
+      "power_cost_ev": 500000,
+      "crafted_in": ["materials_forge"],
+      "requires_research": "advanced_materials",
+      "simplification": null,
+      "codex": "Engineered at the nanoscale to have properties impossible in natural materials — negative refractive index and exotic gravitational interactions."
+    },
+
+    {
+      "_section": "TIER 5 — COMPONENTS (via Component Fabricator)"
+    },
+
+    {
+      "id": "quantum_processor",
+      "name": "Quantum Processor",
+      "symbol": "QP",
+      "tier": 5,
+      "inputs": [
+        { "id": "semiconductor_wafer", "quantity": 3 },
+        { "id": "superconductor", "quantity": 2 }
+      ],
+      "output": { "id": "quantum_processor", "quantity": 1 },
+      "base_craft_time": 1200.0,
+      "power_cost_ev": 2000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "component_engineering",
+      "simplification": null,
+      "codex": "A processor harnessing quantum superposition and entanglement. Factorises problems that classical computers cannot solve in the lifetime of the universe."
+    },
+    {
+      "id": "plasma_containment_ring",
+      "name": "Plasma Containment Ring",
+      "symbol": "PCR",
+      "tier": 5,
+      "inputs": [
+        { "id": "metamaterial", "quantity": 4 },
+        { "id": "titanium_alloy", "quantity": 2 }
+      ],
+      "output": { "id": "plasma_containment_ring", "quantity": 1 },
+      "base_craft_time": 1500.0,
+      "power_cost_ev": 5000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "component_engineering",
+      "simplification": null,
+      "codex": "A toroidal magnetic confinement structure that holds stellar plasma at 150 million degrees. The heart of a fusion power plant or miniature star."
+    },
+    {
+      "id": "antimatter_cell",
+      "name": "Antimatter Cell",
+      "symbol": "AM",
+      "tier": 5,
+      "inputs": [
+        { "id": "metamaterial", "quantity": 3 },
+        { "id": "aerogel", "quantity": 2 }
+      ],
+      "output": { "id": "antimatter_cell", "quantity": 1 },
+      "base_craft_time": 2000.0,
+      "power_cost_ev": 10000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "component_engineering",
+      "simplification": null,
+      "codex": "A magnetic bottle storing antihydrogen. When antimatter meets matter, 100% of both masses convert to energy. The most energy-dense storage known."
+    },
+    {
+      "id": "dyson_node",
+      "name": "Dyson Node",
+      "symbol": "DN",
+      "tier": 5,
+      "inputs": [
+        { "id": "quantum_processor", "quantity": 2 },
+        { "id": "plasma_containment_ring", "quantity": 2 }
+      ],
+      "output": { "id": "dyson_node", "quantity": 1 },
+      "base_craft_time": 3000.0,
+      "power_cost_ev": 50000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "megastructure_theory",
+      "simplification": null,
+      "codex": "The structural anchor point of a Dyson sphere. Each node bears the gravitational tension of thousands of square kilometres of solar-collecting surface."
+    },
+    {
+      "id": "orbital_frame",
+      "name": "Orbital Frame",
+      "symbol": "OF",
+      "tier": 5,
+      "inputs": [
+        { "id": "titanium_alloy", "quantity": 3 },
+        { "id": "dyson_node", "quantity": 2 }
+      ],
+      "output": { "id": "orbital_frame", "quantity": 1 },
+      "base_craft_time": 4000.0,
+      "power_cost_ev": 100000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "megastructure_theory",
+      "simplification": null,
+      "codex": "The load-bearing superstructure of a megastructure. Woven from titanium alloy and carbon fibre into a tensegrity lattice strong enough to encircle a star."
+    },
+    {
+      "id": "graviton_lens",
+      "name": "Graviton Lens",
+      "symbol": "GL",
+      "tier": 5,
+      "inputs": [
+        { "id": "orbital_frame", "quantity": 2 },
+        { "id": "antimatter_cell", "quantity": 2 }
+      ],
+      "output": { "id": "graviton_lens", "quantity": 1 },
+      "base_craft_time": 5000.0,
+      "power_cost_ev": 500000000,
+      "crafted_in": ["component_fabricator"],
+      "requires_research": "megastructure_theory",
+      "simplification": null,
+      "codex": "A metamaterial array that bends spacetime curvature. Compensates for tidal forces across the inner surface of a Dyson sphere."
     }
 
   ],

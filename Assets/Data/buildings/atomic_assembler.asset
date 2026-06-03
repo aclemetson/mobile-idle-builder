@@ -41,6 +41,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 19cdd73aafa3f1444b12fc175d583eb8, type: 2}
   - {fileID: 11400000, guid: 32f9d6720a129a843920a5bc954ab542, type: 2}
   - {fileID: 11400000, guid: f8006bcb629fdff4fbff9f80b1584415, type: 2}
+  - {fileID: 11400000, guid: be0454f0bf6baca449c8e6291edc1be9, type: 2}
+  - {fileID: 11400000, guid: 07802ddc5ba0150489b8882bd8778805, type: 2}
+  - {fileID: 11400000, guid: 1a3e3177c0b831141a11f311376338b6, type: 2}
+  - {fileID: 11400000, guid: 686915205fa3e1e4bb3c71a9e8a9b7de, type: 2}
+  - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
+  - {fileID: 11400000, guid: 84de2773693fc6a41bdaf9adc6f277af, type: 2}
+  - {fileID: 11400000, guid: f6030caaa967ffc4187edb305eeed22b, type: 2}
+  - {fileID: 11400000, guid: 1fb4e4df9a3ad8c4e8e5774038c6a8bc, type: 2}
+  - {fileID: 11400000, guid: 2ad640107ca2d3e4682a015c2f4a5ec3, type: 2}
+  - {fileID: 11400000, guid: 6e60aa6cbdbca1345b59ff49d49fdcf0, type: 2}
+  - {fileID: 11400000, guid: a3b0c7e808c0c304ca35b14ce515dc4e, type: 2}
+  - {fileID: 11400000, guid: 194369f721a00bc49b6fe9c24f2c2838, type: 2}
   inputSlotCount: 3
   inputSlotLabels:
   - Protons

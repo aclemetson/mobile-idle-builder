@@ -19,7 +19,7 @@ MonoBehaviour:
   category: 1
   inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: e112452ca0a7d8642ae89af716f1a1db, type: 2}
+  outputItem: {fileID: 11400000, guid: dd3f9758ae3f5034086cb81c351137c0, type: 2}
   outputQuantity: 1
   byproducts: []
   baseCraftTime: 1

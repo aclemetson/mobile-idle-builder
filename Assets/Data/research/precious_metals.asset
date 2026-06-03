@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: precious_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: precious_metals
+  displayName: Precious Metals
+  description: "Unlock silver and gold \u2014 rare, noble, and indispensable in electronics."
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  depthInTree: 4
+  costBaseCurrency: 25000
+  costPrestigeCurrency: 0
+  unlocksItems:
+  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
+  - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 1fb4e4df9a3ad8c4e8e5774038c6a8bc, type: 2}
+  - {fileID: 11400000, guid: 2ad640107ca2d3e4682a015c2f4a5ec3, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
+  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "Silver has the highest electrical conductivity of any element. Gold
+    resists corrosion absolutely \u2014 every circuit connector in space relies on
+    it."

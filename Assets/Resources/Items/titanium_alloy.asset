@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: titanium_alloy
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: titanium_alloy
+  displayName: Titanium Alloy
+  symbol: Ti-A
+  icon: {fileID: 0}
+  itemId: 41
+  tier: 4
+  category: 5
+  tierData: {fileID: 11400000, guid: e794dcdbb82111946a943cbb5703f195, type: 2}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: "Titanium alloyed with aluminium and vanadium \u2014 the aerospace
+    standard. Survives re-entry temperatures, resists saltwater corrosion, and biocompatible
+    enough for implants."
+  codexUnlocked: 0
+  baseSellValue: 25000000
+  isotopeSellMultiplier: 1

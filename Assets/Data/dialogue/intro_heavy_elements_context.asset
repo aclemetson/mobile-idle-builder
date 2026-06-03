@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: intro_heavy_elements_context
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "Heavy Elements research unlocks Uranium \u2014 92 protons, 146 neutrons,
+      92 electrons. Atomic mass 238. Craft time: nearly four minutes. Power cost:
+      1,190 electron volts. Sell value: 1,000 entropy."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: Your current generators likely cannot sustain 1,190 eV. A fully upgraded
+      Basic Generator outputs 400 eV. You will need multiple before attempting Uranium
+      synthesis.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

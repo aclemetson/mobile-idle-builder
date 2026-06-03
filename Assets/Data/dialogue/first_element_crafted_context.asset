@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: first_element_crafted_context
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "Helium-4. The second element. Formed in the first three minutes after
+      the Big Bang through primordial nucleosynthesis \u2014 you have just replicated
+      one of the universe's oldest reactions."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: 'Notice the sell value: twenty entropy per atom. The complexity premium
+      scales with atomic mass. Heavier elements cost more to build, but they are
+      proportionally more valuable to sell.'
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 
