@@ -53,5 +53,21 @@ namespace MobileIdleBuilder
         // Static accessors — work even after the MonoBehaviour is destroyed.
         public static ItemSO GetStatic(string id)   => _byId.TryGetValue(id, out var v)     ? v : null;
         public static ItemSO GetStatic(int itemId)  => _byItemId.TryGetValue(itemId, out var v) ? v : null;
+
+#if UNITY_EDITOR
+        // Bypasses Resources.LoadAll so play-mode tests can inject fake SOs directly.
+        public static void InjectForTesting(ItemSO[] testItems)
+        {
+            _byId.Clear();
+            _byItemId.Clear();
+            _allItems = testItems;
+            foreach (var item in testItems)
+            {
+                if (item == null || string.IsNullOrEmpty(item.id)) continue;
+                _byId[item.id]         = item;
+                _byItemId[item.itemId] = item;
+            }
+        }
+#endif
     }
 }

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
@@ -37,8 +36,6 @@ namespace MobileIdleBuilder.PlayModeTests
         ItemSO _hydrogenSO; // id="hydrogen", itemId=6
         ItemSO _protonSO;   // id="proton",   itemId=4
 
-        static readonly FieldInfo s_itemsField =
-            typeof(ItemDatabase).GetField("items", BindingFlags.NonPublic | BindingFlags.Instance);
 
         [SetUp]
         public void SetUp()
@@ -88,13 +85,9 @@ namespace MobileIdleBuilder.PlayModeTests
             _saveManagerGO.AddComponent<SaveManager>();
             yield return null;
 
-            // Inject items before Awake fires via the inactive-GO pattern
-            var dbGO = new GameObject("ItemDatabase");
-            dbGO.SetActive(false);
-            var itemDb = dbGO.AddComponent<ItemDatabase>();
-            s_itemsField.SetValue(itemDb, new ItemSO[] { _hydrogenSO, _protonSO });
-            dbGO.SetActive(true); // triggers Awake, builds static lookup
-            _itemDatabaseGO = dbGO;
+            _itemDatabaseGO = new GameObject("ItemDatabase");
+            _itemDatabaseGO.AddComponent<ItemDatabase>(); // Awake loads from Resources
+            ItemDatabase.InjectForTesting(new ItemSO[] { _hydrogenSO, _protonSO }); // override with test SOs
             yield return null;
 
             _serviceGO = new GameObject("ManualCraftService");
