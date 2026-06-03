@@ -56,10 +56,10 @@ namespace MobileIdleBuilder
             SystemAPI.SetSingleton(prestige);
             SystemAPI.SetSingleton(progress);
 
-            // --- Destroy all building entities ---
+            // --- Destroy all building entities (but keep permanent fixtures like Maxwell's Demon) ---
             var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
             foreach (var (_, entity) in
-                SystemAPI.Query<RefRO<BuildingData>>().WithEntityAccess())
+                SystemAPI.Query<RefRO<BuildingData>>().WithNone<EntropySinkTag>().WithEntityAccess())
             {
                 ecb.DestroyEntity(entity);
             }

@@ -305,6 +305,27 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            // ── show progress ─────────────────────────────────────────────────
+            _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    var data = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
+                    return $"NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                });
+
+            // ── set prestige available ────────────────────────────────────────
+            _registry.Register("set prestige available", "Force PrestigeAvailable = true",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    var entity = _progressQuery.GetSingletonEntity();
+                    var data   = _em.GetComponentData<PlayerProgressData>(entity);
+                    data.PrestigeAvailable = true;
+                    _em.SetComponentData(entity, data);
+                    return "PrestigeAvailable = true. Prestige button should now appear.";
+                });
+
             // ── set tier ──────────────────────────────────────────────────────
             _registry.Register("set tier <n>", "Set CurrentTier",
                 args =>
