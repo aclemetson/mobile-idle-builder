@@ -33,7 +33,10 @@ namespace MobileIdleBuilder
                 {
                     BaseCurrency = authoring.config != null
                         ? authoring.config.startingEntropy
-                        : authoring.startingEntropy
+                        : authoring.startingEntropy,
+                    PrestigeWallValue = authoring.config != null
+                        ? authoring.config.prestigeBaseValue * authoring.config.prestigeWallMultiplier
+                        : 0f
                 });
 
                 AddComponent(entity, new PrestigeData

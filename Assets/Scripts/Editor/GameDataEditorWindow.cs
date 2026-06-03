@@ -311,6 +311,7 @@ namespace MobileIdleBuilder.Editor
 
             H("Prestige");
             c.net_worth_to_prestige_currency_rate = FloatField("Net Worth → Prestige Rate", c.net_worth_to_prestige_currency_rate);
+            c.prestige_base_value                 = FloatField("Prestige Base Value",       c.prestige_base_value);
             c.prestige_wall_multiplier            = FloatField("Prestige Wall Multiplier",  c.prestige_wall_multiplier);
 
             H("Environment");

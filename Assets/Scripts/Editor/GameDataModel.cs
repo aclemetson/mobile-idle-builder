@@ -53,6 +53,7 @@ namespace MobileIdleBuilder.Editor
         public float  atomic_assembler_ev_per_mass_unit  = 5f;
         public float  isotopic_manipulator_ev_per_neutron= 8f;
         public float  net_worth_to_prestige_currency_rate= 1f;
+        public float  prestige_base_value                = 5000f;
         public float  prestige_wall_multiplier           = 10f;
         public float  alpha_particle_ev_value            = 20f;
         public float  beta_particle_ev_value             = 10f;

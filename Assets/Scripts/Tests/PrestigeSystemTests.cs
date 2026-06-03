@@ -200,5 +200,89 @@ namespace MobileIdleBuilder.Tests
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
             Assert.AreEqual(1, prestige.RunCount);
         }
+
+        // ── Prestige wall detection ──────────────────────────────────────────
+
+        [Test]
+        public void WhenNetWorthBelowWall_PrestigeNotAvailable()
+        {
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth         = 49999f,
+                PrestigeWallValue = 50000f
+            });
+
+            _world.Update();
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.IsFalse(progress.PrestigeAvailable,
+                "PrestigeAvailable must remain false when NetWorth < PrestigeWallValue");
+        }
+
+        [Test]
+        public void WhenNetWorthAtWall_PrestigeBecomesAvailable()
+        {
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth          = 50000f,
+                PrestigeWallValue = 50000f
+            });
+
+            _world.Update();
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.IsTrue(progress.PrestigeAvailable,
+                "PrestigeAvailable must be true when NetWorth >= PrestigeWallValue");
+        }
+
+        [Test]
+        public void WhenNetWorthAboveWall_PrestigeStaysAvailable()
+        {
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth          = 100000f,
+                PrestigeWallValue = 50000f
+            });
+
+            _world.Update();
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.IsTrue(progress.PrestigeAvailable,
+                "PrestigeAvailable must be true when NetWorth > PrestigeWallValue");
+        }
+
+        [Test]
+        public void WhenAlreadyAvailable_SecondUpdateDoesNotFlip()
+        {
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth          = 50000f,
+                PrestigeWallValue = 50000f,
+                PrestigeAvailable = true   // already triggered
+            });
+
+            _world.Update();
+            _world.Update();
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.IsTrue(progress.PrestigeAvailable,
+                "PrestigeAvailable must remain true once set; a second update must not clear it");
+        }
+
+        [Test]
+        public void WhenWallIsZero_PrestigeNeverAvailable()
+        {
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth          = 999999f,
+                PrestigeWallValue = 0f      // 0 means no wall configured
+            });
+
+            _world.Update();
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.IsFalse(progress.PrestigeAvailable,
+                "PrestigeWallValue == 0 must disable wall detection entirely");
+        }
     }
 }

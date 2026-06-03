@@ -15,6 +15,7 @@ namespace MobileIdleBuilder
 
         [Header("Prestige")]
         public float netWorthToPrestigeCurrencyRate = 1.0f;
+        public float prestigeBaseValue = 5000f;
         public float prestigeWallMultiplier = 10.0f;
 
         [Header("Environment")]

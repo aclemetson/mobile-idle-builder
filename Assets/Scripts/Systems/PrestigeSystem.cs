@@ -24,6 +24,16 @@ namespace MobileIdleBuilder
         public void OnUpdate(ref SystemState state)
         {
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
+
+            // Wall detection — fires before prestige request handling so the same tick can do both
+            if (!progress.PrestigeAvailable
+                && progress.PrestigeWallValue > 0f
+                && progress.NetWorth >= progress.PrestigeWallValue)
+            {
+                progress.PrestigeAvailable = true;
+                SystemAPI.SetSingleton(progress);
+            }
+
             if (!progress.PrestigeRequested) return;
 
             var prestige = SystemAPI.GetSingleton<PrestigeData>();
