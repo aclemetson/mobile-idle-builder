@@ -18,7 +18,7 @@
     "isotopic_manipulator_ev_per_neutron": 8.0,
     "net_worth_to_prestige_currency_rate": 1.0,
     "prestige_wall_multiplier": 10.0,
-    "prestige_base_value": 500,
+    "prestige_base_value": 5000,
     "alpha_particle_ev_value": 20.0,
     "beta_particle_ev_value": 10.0,
     "environment": "Dev",

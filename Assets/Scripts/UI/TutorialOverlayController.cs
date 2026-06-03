@@ -104,11 +104,15 @@ namespace MobileIdleBuilder
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
 
-            // Tutorial just ended — unlock all fields and stop watching.
+            // Tutorial just ended — clean up all tutorial UI and stop watching.
             if (_wasActive && !state.IsActive)
             {
                 _wasActive = false;
                 UnlockAllFields();
+                StopPulseRoutine();
+                tutorialHighlighter?.ClearHighlight();
+                hudController?.HideTutorialHint();
+                dialogueController?.HideDialogue();
                 return;
             }
 

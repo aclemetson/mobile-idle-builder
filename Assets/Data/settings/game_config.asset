@@ -17,6 +17,7 @@ MonoBehaviour:
   atomicAssemblerEVPerMassUnit: 5
   isotopicManipulatorEVPerNeutron: 8
   netWorthToPrestigeCurrencyRate: 1
+  prestigeBaseValue: 5000
   prestigeWallMultiplier: 10
   environment: 0
   apiBaseUrl: 

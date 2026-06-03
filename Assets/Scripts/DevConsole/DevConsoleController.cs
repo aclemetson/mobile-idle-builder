@@ -44,6 +44,7 @@ namespace MobileIdleBuilder.Dev
         private EntityQuery   _progressQuery;
         private EntityQuery   _prestigeQuery;
         private EntityQuery   _inventoryQuery;
+        private EntityQuery   _tutorialQuery;
 
         // ── Commands ──────────────────────────────────────────────────────────
 
@@ -85,6 +86,7 @@ namespace MobileIdleBuilder.Dev
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>());
+            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
         }
 
         void OnDestroy()
@@ -303,6 +305,36 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            // ── show prestige ─────────────────────────────────────────────────
+            _registry.Register("show prestige", "Dump PrestigeData (run count, currency, multipliers)",
+                _ =>
+                {
+                    if (_prestigeQuery.IsEmpty) return "Error: PrestigeData not found.";
+                    var data = _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity());
+                    return $"RunCount={data.RunCount}  Currency={data.PrestigeCurrency}  Speed={data.SpeedMultiplier}  Output={data.OutputMultiplier}";
+                });
+
+            // ── show progress ─────────────────────────────────────────────────
+            _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    var data = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
+                    return $"NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                });
+
+            // ── set prestige available ────────────────────────────────────────
+            _registry.Register("set prestige available", "Force PrestigeAvailable = true",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    var entity = _progressQuery.GetSingletonEntity();
+                    var data   = _em.GetComponentData<PlayerProgressData>(entity);
+                    data.PrestigeAvailable = true;
+                    _em.SetComponentData(entity, data);
+                    return "PrestigeAvailable = true. Prestige button should now appear.";
+                });
+
             // ── set tier ──────────────────────────────────────────────────────
             _registry.Register("set tier <n>", "Set CurrentTier",
                 args =>
@@ -414,6 +446,50 @@ namespace MobileIdleBuilder.Dev
                         return "Error: AchievementService not found.";
                     AchievementService.Instance.ForceCompleteAll();
                     return "All achievements force-completed.";
+                });
+
+            // ── tutorial ─────────────────────────────────────────────────────
+            _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
+                _ =>
+                {
+                    // ECS — mark tutorial finished
+                    if (!_tutorialQuery.IsEmpty)
+                    {
+                        var entity = _tutorialQuery.GetSingletonEntity();
+                        var ts     = _em.GetComponentData<TutorialStateData>(entity);
+                        var flow   = TutorialFlowSO.Current;
+                        ts.CurrentStepIndex = flow?.steps?.Length ?? int.MaxValue;
+                        ts.IsActive         = false;
+                        ts.FirstRunComplete = true;
+                        _em.SetComponentData(entity, ts);
+                    }
+
+                    // Save data — persist so tutorial doesn't restart on reload
+                    if (SaveManager.Instance?.Current != null)
+                    {
+                        SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = true;
+                        SaveManager.Instance.Current.tutorial.isActive             = false;
+                    }
+
+                    // Research — force-unlock every research gate the tutorial would have awarded
+                    var rs = ResearchService.Instance;
+                    var tutFlow = TutorialFlowSO.Current;
+                    int unlocked = 0;
+                    if (rs != null && tutFlow?.steps != null)
+                    {
+                        foreach (var step in tutFlow.steps)
+                        {
+                            var cond = step.advanceCondition;
+                            if (cond?.type == ConditionType.ResearchUnlocked &&
+                                !string.IsNullOrEmpty(cond.researchId))
+                            {
+                                rs.ForceUnlock(cond.researchId);
+                                unlocked++;
+                            }
+                        }
+                    }
+
+                    return $"Tutorial skipped. {unlocked} research node(s) unlocked.";
                 });
 
             // ── save / reload ─────────────────────────────────────────────────

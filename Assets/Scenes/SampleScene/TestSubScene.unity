@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PlayerInventoryAuthoring
   startingItems: []
   startingEntropy: 500
+  config: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
 --- !u!4 &554317953
 Transform:
   m_ObjectHideFlags: 0

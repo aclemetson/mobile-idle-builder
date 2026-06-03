@@ -217,6 +217,7 @@ namespace MobileIdleBuilder.Editor
             so.atomicAssemblerEVPerMassUnit    = data.atomic_assembler_ev_per_mass_unit;
             so.isotopicManipulatorEVPerNeutron = data.isotopic_manipulator_ev_per_neutron;
             so.netWorthToPrestigeCurrencyRate  = data.net_worth_to_prestige_currency_rate;
+            so.prestigeBaseValue               = data.prestige_base_value;
             so.prestigeWallMultiplier          = data.prestige_wall_multiplier;
             so.alphaParticleEVValue            = data.alpha_particle_ev_value;
             so.betaParticleEVValue             = data.beta_particle_ev_value;

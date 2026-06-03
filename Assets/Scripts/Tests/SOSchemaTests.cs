@@ -174,6 +174,24 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(type.GetField("alphaParticleEVValue"),         "GameConfigSO missing: alphaParticleEVValue");
         }
 
+        [Test]
+        public void GameConfigSO_HasPrestigeBaseValueField()
+        {
+            var type = typeof(GameConfigSO);
+            Assert.IsNotNull(type.GetField("prestigeBaseValue"),    "GameConfigSO missing: prestigeBaseValue");
+            Assert.IsNotNull(type.GetField("prestigeWallMultiplier"), "GameConfigSO missing: prestigeWallMultiplier");
+        }
+
+        [Test]
+        public void GameConfigSO_PrestigeWallDefaultIs50000()
+        {
+            var config = ScriptableObject.CreateInstance<GameConfigSO>();
+            float wall = config.prestigeBaseValue * config.prestigeWallMultiplier;
+            Assert.AreEqual(50000f, wall, 0.001f,
+                $"Default prestige wall should be prestigeBaseValue(5000) × prestigeWallMultiplier(10) = 50000, got {wall}");
+            Object.DestroyImmediate(config);
+        }
+
         // ── GameConfigSO defaults ─────────────────────────────────────────────
 
         [Test]

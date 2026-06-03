@@ -24,6 +24,16 @@ namespace MobileIdleBuilder
         public void OnUpdate(ref SystemState state)
         {
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
+
+            // Wall detection — fires before prestige request handling so the same tick can do both
+            if (!progress.PrestigeAvailable
+                && progress.PrestigeWallValue > 0f
+                && progress.NetWorth >= progress.PrestigeWallValue)
+            {
+                progress.PrestigeAvailable = true;
+                SystemAPI.SetSingleton(progress);
+            }
+
             if (!progress.PrestigeRequested) return;
 
             var prestige = SystemAPI.GetSingleton<PrestigeData>();
@@ -46,10 +56,10 @@ namespace MobileIdleBuilder
             SystemAPI.SetSingleton(prestige);
             SystemAPI.SetSingleton(progress);
 
-            // --- Destroy all building entities ---
+            // --- Destroy all building entities (but keep permanent fixtures like Maxwell's Demon) ---
             var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
             foreach (var (_, entity) in
-                SystemAPI.Query<RefRO<BuildingData>>().WithEntityAccess())
+                SystemAPI.Query<RefRO<BuildingData>>().WithNone<EntropySinkTag>().WithEntityAccess())
             {
                 ecb.DestroyEntity(entity);
             }
