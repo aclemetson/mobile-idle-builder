@@ -305,6 +305,15 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            // ── show prestige ─────────────────────────────────────────────────
+            _registry.Register("show prestige", "Dump PrestigeData (run count, currency, multipliers)",
+                _ =>
+                {
+                    if (_prestigeQuery.IsEmpty) return "Error: PrestigeData not found.";
+                    var data = _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity());
+                    return $"RunCount={data.RunCount}  Currency={data.PrestigeCurrency}  Speed={data.SpeedMultiplier}  Output={data.OutputMultiplier}";
+                });
+
             // ── show progress ─────────────────────────────────────────────────
             _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
                 _ =>
