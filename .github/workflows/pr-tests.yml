@@ -11,7 +11,7 @@ concurrency:
 jobs:
   test:
     name: Edit Mode Tests
-    if: startsWith(github.head_ref, 'release/')
+    if: startsWith(github.head_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, windows, unity]
 
     steps:
