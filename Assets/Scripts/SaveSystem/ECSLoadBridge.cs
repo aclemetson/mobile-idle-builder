@@ -140,8 +140,9 @@ namespace MobileIdleBuilder
 
             // Currency
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            progress.BaseCurrency = save.currentRun.baseCurrency;
-            progress.BaseNetWorth = save.currentRun.baseNetWorth;
+            progress.BaseCurrency      = save.currentRun.baseCurrency;
+            progress.TotalEntropySpent = save.currentRun.totalEntropySpent;
+            progress.BaseNetWorth      = save.currentRun.baseNetWorth;
             _progressQuery.SetSingleton(progress);
 
             // Inventory
@@ -173,8 +174,9 @@ namespace MobileIdleBuilder
             if (!_progressQuery.IsEmpty)
             {
                 var pp = _progressQuery.GetSingleton<PlayerProgressData>();
-                save.currentRun.baseCurrency = pp.BaseCurrency;
-                save.currentRun.baseNetWorth = pp.BaseNetWorth;
+                save.currentRun.baseCurrency      = pp.BaseCurrency;
+                save.currentRun.totalEntropySpent = pp.TotalEntropySpent;
+                save.currentRun.baseNetWorth      = pp.BaseNetWorth;
             }
 
             // Prestige

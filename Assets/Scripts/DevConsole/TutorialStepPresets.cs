@@ -73,6 +73,27 @@ namespace MobileIdleBuilder.Dev
             return result;
         }
 
+        /// <summary>
+        /// Returns the cumulative entropy spent reaching stepIndex, derived from
+        /// s_EntropyTable by summing every downward step (each drop = a purchase).
+        /// </summary>
+        public static long GetTotalEntropySpent(TutorialFlowSO flow, int stepIndex)
+        {
+            long current     = 0;
+            long totalSpent  = 0;
+            bool initialized = false;
+            int  count       = flow.steps?.Length ?? 0;
+
+            for (int i = 0; i <= stepIndex && i < count; i++)
+            {
+                if (!s_EntropyTable.TryGetValue(flow.steps[i].id, out long e)) continue;
+                if (!initialized) { current = e; initialized = true; continue; }
+                if (e < current) totalSpent += current - e;
+                current = e;
+            }
+            return totalSpent;
+        }
+
         // ── Net worth lookup ──────────────────────────────────────────────────
         // Expected inventory net worth at each phase entry point.
         // Set as PlayerProgressData.BaseNetWorth so NetWorthSystem adds it to

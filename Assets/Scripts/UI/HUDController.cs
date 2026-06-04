@@ -859,7 +859,9 @@ namespace MobileIdleBuilder
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.BaseCurrency = System.Math.Max(0, progress.BaseCurrency - cost);
+            long actual = System.Math.Min(cost, progress.BaseCurrency);
+            progress.BaseCurrency      -= actual;
+            progress.TotalEntropySpent += actual;
             _em.SetComponentData(entity, progress);
         }
 

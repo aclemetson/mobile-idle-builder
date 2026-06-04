@@ -22,6 +22,7 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _tutorialQuery;
+        private bool          _queriesReady;
         private float         _collectTimer;
 
         /// <summary>The field the player has explicitly activated by tapping. Null when none.</summary>
@@ -55,12 +56,13 @@ namespace MobileIdleBuilder
             _tutorialQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<TutorialStateData>()
             );
+            _queriesReady = true;
         }
 
         void OnDestroy()
         {
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world != null && world.IsCreated)
+            if (_queriesReady && world != null && world.IsCreated)
             {
                 _inventoryQuery.Dispose();
                 _tutorialQuery.Dispose();

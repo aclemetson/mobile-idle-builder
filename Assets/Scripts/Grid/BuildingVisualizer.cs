@@ -19,6 +19,7 @@ namespace MobileIdleBuilder
         private EntityQuery                                       _buildingQuery;
         private EntityQuery                                       _footprintQuery;
         private EntityQuery                                       _portQuery;
+        private bool                                              _buildingQueryReady;
         private bool                                              _footprintQueryReady;
         private bool                                              _portQueryReady;
         private readonly Dictionary<(int, int), (int, int)>      _footprints        = new();
@@ -45,6 +46,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<BuildingData>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
+            _buildingQueryReady = true;
 
             _footprintQuery = world.EntityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<GridPosition>(),
@@ -290,7 +292,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated)
             {
-                _buildingQuery.Dispose();
+                if (_buildingQueryReady)  _buildingQuery.Dispose();
                 if (_footprintQueryReady) _footprintQuery.Dispose();
                 if (_portQueryReady)      _portQuery.Dispose();
             }

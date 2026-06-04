@@ -35,8 +35,14 @@ namespace MobileIdleBuilder.Dev
             tState.CurrentStepIndex = stepIdx;
             SystemAPI.SetSingleton(tState);
 
+            var flow  = TutorialFlowSO.Current;
+            long spent = flow != null
+                ? TutorialStepPresets.GetTotalEntropySpent(flow, stepIdx)
+                : 0L;
+
             var pState = SystemAPI.GetSingleton<PlayerProgressData>();
-            pState.BaseCurrency = entropy;
+            pState.BaseCurrency      = entropy;
+            pState.TotalEntropySpent = spent;
             SystemAPI.SetSingleton(pState);
 
             GameLogger.Debug($"[TutorialSkip] Step → {stepIdx}, Entropy → {entropy}");

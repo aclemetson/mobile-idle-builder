@@ -48,6 +48,7 @@ namespace MobileIdleBuilder
 
             // --- Reset current-run state ---
             progress.BaseCurrency      = 0;
+            progress.TotalEntropySpent = 0;
             progress.NetWorth          = 0f;
             progress.CurrentTier       = 1;
             progress.PrestigeAvailable = false;

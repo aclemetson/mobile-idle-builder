@@ -366,7 +366,7 @@ namespace MobileIdleBuilder.Dev
                             if (rs2.IsUnlocked(r.id)) researchCount++;
                     }
                     string research = researchCount >= 0 ? researchCount.ToString() : "?";
-                    return $"Entropy={data.BaseCurrency}  Tier={data.CurrentTier}  Research={research}  NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                    return $"Entropy={data.BaseCurrency}  Tier={data.CurrentTier}  Research={research}  NetWorth={data.NetWorth:F0}  Base={data.BaseNetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
                 });
 
             // ── set prestige available ────────────────────────────────────────
@@ -575,8 +575,10 @@ namespace MobileIdleBuilder.Dev
                     string canonicalId = flow.steps[idx].id;
 
                     // ── ECS: set tutorial step, entropy, and net worth ────────
-                    long  entropy  = TutorialStepPresets.GetEntropy(flow, idx);
-                    float netWorth = TutorialStepPresets.GetNetWorth(flow, idx);
+                    long  entropy    = TutorialStepPresets.GetEntropy(flow, idx);
+                    float netWorth   = TutorialStepPresets.GetNetWorth(flow, idx);
+                    long  totalSpent = TutorialStepPresets.GetTotalEntropySpent(flow, idx);
+                    float totalEarned = (float)(entropy + totalSpent);
 
                     if (!_tutorialQuery.IsEmpty)
                     {
@@ -590,8 +592,10 @@ namespace MobileIdleBuilder.Dev
                     if (!_progressQuery.IsEmpty)
                     {
                         var pp = _progressQuery.GetSingleton<PlayerProgressData>();
-                        pp.BaseCurrency = entropy;
-                        pp.BaseNetWorth = netWorth;
+                        pp.BaseCurrency      = entropy;
+                        pp.TotalEntropySpent = totalSpent;
+                        pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
+                        pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
                         _progressQuery.SetSingleton(pp);
                     }
 
@@ -616,10 +620,11 @@ namespace MobileIdleBuilder.Dev
                     var save = SaveManager.Instance?.Current;
                     if (save != null)
                     {
-                        save.tutorial.currentStepId  = canonicalId;
-                        save.tutorial.isActive        = true;
-                        save.currentRun.baseCurrency  = entropy;
-                        save.currentRun.baseNetWorth  = netWorth;
+                        save.tutorial.currentStepId           = canonicalId;
+                        save.tutorial.isActive                 = true;
+                        save.currentRun.baseCurrency           = entropy;
+                        save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
                     }
 
                     // ── Grid: apply building/conveyor preset if defined ───────

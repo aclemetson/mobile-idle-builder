@@ -154,7 +154,9 @@ namespace MobileIdleBuilder
         {
             if (_progressQuery.IsEmpty) return;
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            progress.BaseCurrency = Math.Max(0, progress.BaseCurrency - amount);
+            long actual = Math.Min(amount, progress.BaseCurrency);
+            progress.BaseCurrency      -= actual;
+            progress.TotalEntropySpent += actual;
             _progressQuery.SetSingleton(progress);
         }
     }
