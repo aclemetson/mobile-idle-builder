@@ -681,6 +681,8 @@ namespace MobileIdleBuilder
         {
             _recipeList.Clear();
 
+            var inventoryCounts = craftService?.GetInventoryCounts() ?? new Dictionary<int, int>();
+
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
@@ -711,8 +713,7 @@ namespace MobileIdleBuilder
                 var nameLabel = new Label(recipe.name);
                 nameLabel.AddToClassList("recipe-name");
 
-                var inputsLabel = new Label(BuildInputsText(recipe));
-                inputsLabel.AddToClassList("recipe-inputs");
+                var inputsContainer = BuildIngredientsUI(recipe, inventoryCounts);
 
                 if (recipe.requiresBuilding)
                 {
@@ -729,11 +730,11 @@ namespace MobileIdleBuilder
                 }
 
                 info.Add(nameLabel);
-                info.Add(inputsLabel);
+                info.Add(inputsContainer);
 
                 var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
-                craftBtn.SetEnabled(!isLocked);
+                craftBtn.SetEnabled(!isLocked && canCraft);
                 var captured = recipe;
                 if (!isLocked)
                     craftBtn.clicked += () => OnCraftPressed(captured);
@@ -1151,6 +1152,41 @@ namespace MobileIdleBuilder
                 return $"{i.quantity}× {sym}";
             });
             return string.Join("  +  ", parts);
+        }
+
+        internal static VisualElement BuildIngredientsUI(
+            RecipeJson recipe,
+            Dictionary<int, int> inventoryCounts)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("recipe-inputs-row");
+
+            if (recipe.inputs == null || recipe.inputs.Count == 0)
+                return row;
+
+            bool first = true;
+            foreach (var input in recipe.inputs)
+            {
+                if (!first)
+                {
+                    var sep = new Label("+");
+                    sep.AddToClassList("recipe-input-sep");
+                    row.Add(sep);
+                }
+                first = false;
+
+                var item   = ItemDatabase.Instance?.Get(input.id);
+                string sym = item?.symbol ?? item?.displayName ?? input.id;
+
+                int itemId = ItemDatabase.Instance?.GetItemId(input.id) ?? -1;
+                int count  = (itemId >= 0 && inventoryCounts.TryGetValue(itemId, out int c)) ? c : 0;
+
+                var lbl = new Label($"{count}/{input.quantity} {sym}");
+                lbl.AddToClassList(count >= input.quantity ? "recipe-input-met" : "recipe-input-missing");
+                row.Add(lbl);
+            }
+
+            return row;
         }
     }
 }

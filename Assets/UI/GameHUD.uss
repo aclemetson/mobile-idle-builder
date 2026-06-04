@@ -400,6 +400,29 @@
     margin-top: 2px;
 }
 
+.recipe-inputs-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.recipe-input-met {
+    color: var(--color-success);
+    font-size: var(--font-size-sm);
+}
+
+.recipe-input-missing {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+}
+
+.recipe-input-sep {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
 .recipe-row--locked {
     opacity: 0.5;
 }
@@ -428,6 +451,13 @@
 
 .craft-btn:active {
     background-color: rgba(0, 229, 255, 0.36);
+}
+
+.craft-btn:disabled {
+    background-color: rgba(84, 110, 122, 0.10);
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+    opacity: 0.55;
 }
 
 /* ---- Building cards ---- */
