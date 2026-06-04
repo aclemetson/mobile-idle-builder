@@ -171,13 +171,44 @@ namespace MobileIdleBuilder.Dev
         //   4. Copy the "grid.buildings" and "grid.conveyors" arrays into the constants below.
         //   5. Remove the "null" assignment and replace with the array literal.
         //
-        // Building ID reference: 1=Harvester 2=SFC 3=Generator 4=MaxwellsDemon 5=AtomicAssembler 6=IsoManipulator 7=RadioactiveContainment
+        // Building ID reference (confirmed from save data / game_data.json): 1=Harvester 2=SFC 3=BasicGenerator 7=MaxwellsDemon
         // outputDirection: -1=none 0=North 1=East 2=South 3=West
+        // outputDirection: -1=none 0=North 1=East 2=South 3=West
+
+        // ── Field presets ─────────────────────────────────────────────────────
+        // Field positions must match the harvester positions in the building presets above.
+        // fieldId values: "quark_field", "electron_field"
+
+        static readonly FieldSaveData[] k_PlaceConveyor_Fields = new[]
+        {
+            new FieldSaveData { fieldId = "electron_field", position = new[] {  6, 10 } }, // electron harvester
+            new FieldSaveData { fieldId = "quark_field",    position = new[] {  5,  8 } }, // quark harvester
+            new FieldSaveData { fieldId = "quark_field",    position = new[] {  4,  8 } }, // quark harvester
+        };
+
+        static readonly Dictionary<string, FieldSaveData[]> s_FieldTable = new()
+        {
+            { "place_conveyor",     k_PlaceConveyor_Fields },
+            { "automation_started", k_PlaceConveyor_Fields },
+            { "intro_sfc",          k_PlaceConveyor_Fields },
+        };
+
+        public static FieldSaveData[] GetFields(string stepId)
+        {
+            return s_FieldTable.TryGetValue(stepId, out var fields) ? fields : null;
+        }
 
         // ── Step 31: place_conveyor
         // State: Harvester placed on a field, Maxwell's Demon present; player must draw conveyor.
-        static readonly BuildingSaveData[] k_PlaceConveyor_Buildings  = null; // TODO: capture from playthrough
-        static readonly ConveyorSaveData[] k_PlaceConveyor_Conveyors   = null;
+        // Maxwell's Demon (buildingId=7) is intentionally excluded — it is an entropy sink that
+        // ClearGrid preserves in place. Including it here would cause LoadGrid to attempt a duplicate.
+        static readonly BuildingSaveData[] k_PlaceConveyor_Buildings = new[]
+        {
+            new BuildingSaveData { buildingId = 1, recipeId =  3, position = new[] {  6, 10 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (electron)
+            new BuildingSaveData { buildingId = 1, recipeId =  1, position = new[] {  5,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (quark)
+            new BuildingSaveData { buildingId = 1, recipeId =  2, position = new[] {  4,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (quark)
+        };
+        static readonly ConveyorSaveData[] k_PlaceConveyor_Conveyors = new ConveyorSaveData[0];
 
         // ── Step 34: place_sfc
         // State: Harvester + Demon connected via conveyor; player places SFC.

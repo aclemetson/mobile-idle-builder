@@ -113,10 +113,11 @@ namespace MobileIdleBuilder
             }
         }
 
-        public void SaveLocal()
+        public void SaveLocal(bool skipGridFlush = false)
         {
             ECSLoadBridge.Instance?.FlushToSave();
-            GridSaveService.Instance?.FlushToSave();
+            if (!skipGridFlush)
+                GridSaveService.Instance?.FlushToSave();
             GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
                       $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventoryKeys?.Count ?? 0}");
             _local.SaveWithBackup(_current);

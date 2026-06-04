@@ -600,8 +600,9 @@ namespace MobileIdleBuilder.Dev
                     }
 
                     // ── Research: unlock all gates for steps 0..(idx-1) ──────
-                    var rs        = ResearchService.Instance;
-                    int unlocked  = 0;
+                    var rs           = ResearchService.Instance;
+                    int  unlocked    = 0;
+                    long researchCost = 0;
                     if (rs != null)
                     {
                         for (int i = 0; i < idx; i++)
@@ -612,6 +613,9 @@ namespace MobileIdleBuilder.Dev
                             {
                                 rs.ForceUnlock(cond.researchId);
                                 unlocked++;
+                                foreach (var r in rs.AllResearch)
+                                    if (r != null && r.id == cond.researchId)
+                                        { researchCost += r.costBaseCurrency; break; }
                             }
                         }
                     }
@@ -637,10 +641,31 @@ namespace MobileIdleBuilder.Dev
                         save.currentRun.grid.conveyors = conveyors != null
                             ? new List<ConveyorSaveData>(conveyors)
                             : new List<ConveyorSaveData>();
-                        SaveManager.Instance.SaveLocal();
-                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                        var presetFields = TutorialStepPresets.GetFields(canonicalId);
+                        save.currentRun.grid.fields = presetFields != null
+                            ? new List<FieldSaveData>(presetFields)
+                            : new List<FieldSaveData>();
+                        GridSaveService.Instance?.ClearGrid();
+                        GridSaveService.Instance?.LoadGrid(forceApply: true);
+
+                        // Set TotalEntropySpent = actual research costs + actual building costs
+                        // so net worth (BaseCurrency + TotalEntropySpent) correctly reflects
+                        // the full investment at this tutorial checkpoint.
+                        long buildingCost  = GridSaveService.Instance?.ComputeGridBuildingCost() ?? 0;
+                        long totalInvested = researchCost + buildingCost;
+                        if (!_progressQuery.IsEmpty)
+                        {
+                            var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                            pp.BaseCurrency      = entropy;
+                            pp.TotalEntropySpent = totalInvested;
+                            pp.BaseNetWorth      = 0f;
+                            pp.NetWorth          = entropy + totalInvested;
+                            _progressQuery.SetSingleton(pp);
+                        }
+
+                        SaveManager.Instance.SaveLocal(skipGridFlush: true);
                         return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
-                               $"{unlocked} research node(s) unlocked. Reloading scene to apply grid...";
+                               $"{unlocked} research node(s) unlocked. Grid applied.";
                     }
 
                     SaveManager.Instance?.SaveLocal();

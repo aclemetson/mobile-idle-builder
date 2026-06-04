@@ -272,6 +272,12 @@ namespace MobileIdleBuilder
             RestoreCell(x, y);
         }
 
+        public void ClearFieldTileColor(int x, int y)
+        {
+            if (_fieldTileColors.Remove(new Vector2Int(x, y)))
+                RestoreCell(x, y);
+        }
+
         // ---- Tutorial highlight ----
 
         /// <summary>

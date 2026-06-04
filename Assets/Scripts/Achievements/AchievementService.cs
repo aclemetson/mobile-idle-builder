@@ -14,7 +14,7 @@ namespace MobileIdleBuilder
     /// </summary>
     public class AchievementService : SingletonMonoBehaviour<AchievementService>
     {
-        protected override bool PersistAcrossScenes => true;
+        protected override bool PersistAcrossScenes => false;
 
         [SerializeField] AchievementDatabase database;
         [SerializeField] HUDController       hudController;

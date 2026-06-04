@@ -51,7 +51,7 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO  gameConfig;
         [SerializeField] HUDController hudController;
 
-        protected override bool PersistAcrossScenes => true;
+        protected override bool PersistAcrossScenes => false;
 
         /// <summary>Fired when State changes — HUD panel should rebuild.</summary>
         public event Action OnStateChanged;
