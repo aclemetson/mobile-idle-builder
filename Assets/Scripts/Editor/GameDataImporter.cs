@@ -212,16 +212,19 @@ namespace MobileIdleBuilder.Editor
             string path = $"{SettingsDir}/game_config.asset";
             var so = LoadOrCreate<GameConfigSO>(path);
 
-            so.baseCraftTimeMultiplier         = data.base_craft_time_multiplier;
-            so.manualCraftTimeBase             = data.manual_craft_time_base;
-            so.atomicAssemblerEVPerMassUnit    = data.atomic_assembler_ev_per_mass_unit;
-            so.isotopicManipulatorEVPerNeutron = data.isotopic_manipulator_ev_per_neutron;
-            so.netWorthToPrestigeCurrencyRate  = data.net_worth_to_prestige_currency_rate;
-            so.prestigeBaseValue               = data.prestige_base_value;
-            so.prestigeWallMultiplier          = data.prestige_wall_multiplier;
-            so.alphaParticleEVValue            = data.alpha_particle_ev_value;
-            so.betaParticleEVValue             = data.beta_particle_ev_value;
-            so.startingEntropy                 = data.starting_entropy;
+            so.baseCraftTimeMultiplier            = data.base_craft_time_multiplier;
+            so.manualCraftTimeBase                = data.manual_craft_time_base;
+            so.atomicAssemblerEVPerMassUnit       = data.atomic_assembler_ev_per_mass_unit;
+            so.isotopicManipulatorEVPerNeutron    = data.isotopic_manipulator_ev_per_neutron;
+            so.netWorthToPrestigeCurrencyRate     = data.net_worth_to_prestige_currency_rate;
+            so.prestigeBaseValue                  = data.prestige_base_value;
+            so.prestigeWallMultiplier             = data.prestige_wall_multiplier;
+            so.alphaParticleEVValue               = data.alpha_particle_ev_value;
+            so.betaParticleEVValue                = data.beta_particle_ev_value;
+            so.startingEntropy                    = data.starting_entropy;
+            so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
+            so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
+            so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;
@@ -391,8 +394,10 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
-            so.entropyCost         = data.entropy_cost;
-            so.availableFromStart  = data.available_from_start;
+            so.entropyCost                = data.entropy_cost;
+            so.baseMaxOutputItems         = data.base_max_output_items;
+            so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;
+            so.availableFromStart         = data.available_from_start;
             so.tutorialNote        = data.tutorial_note;
             so.collectsDecayParticles = data.collects_decay_particles;
             so.decayCollectionRate = data.decay_collection_rate;
@@ -430,6 +435,22 @@ namespace MobileIdleBuilder.Editor
                         influenceRadiusTiles = ul.influence_radius_tiles,
                         costBaseCurrency     = ul.cost_base_currency,
                         costPrestigeCurrency = ul.cost_prestige_currency
+                    };
+                }
+            }
+
+            if (data.storage_upgrade_levels != null)
+            {
+                so.storageUpgradeLevels = new BuildingStorageUpgradeLevel[data.storage_upgrade_levels.Count];
+                for (int i = 0; i < data.storage_upgrade_levels.Count; i++)
+                {
+                    var sl = data.storage_upgrade_levels[i];
+                    so.storageUpgradeLevels[i] = new BuildingStorageUpgradeLevel
+                    {
+                        level                = sl.level,
+                        maxOutputItems       = sl.max_output_items,
+                        costBaseCurrency     = sl.cost_base_currency,
+                        costPrestigeCurrency = sl.cost_prestige_currency
                     };
                 }
             }

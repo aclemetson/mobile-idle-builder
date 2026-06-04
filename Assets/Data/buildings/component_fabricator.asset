@@ -48,6 +48,8 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields: 
   entropyCost: 5000000
+  baseMaxOutputItems: 10
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 0.5
@@ -62,6 +64,15 @@ MonoBehaviour:
     outputEV: 0
     influenceRadiusTiles: 0
     costBaseCurrency: 1000000000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 75
+    costBaseCurrency: 70000000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 375
+    costBaseCurrency: 700000000
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}

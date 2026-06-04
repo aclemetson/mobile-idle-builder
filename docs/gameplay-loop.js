@@ -358,8 +358,12 @@ function renderRecipesTable() {
 function renderBuildingsTable() {
   const tbody = document.getElementById('bal-buildings-body');
   if (!tbody) return;
+  const fmt = n => n > 0 ? n.toLocaleString() + 'e' : '—';
   tbody.innerHTML = BAL_BUILDINGS.map(b => {
-    const [up2, up3, up4] = [0, 1, 2].map(i => b.ups?.[i] ? b.ups[i].e.toLocaleString() + 'e' : '—');
+    const [sp2, sp3, sp4] = [0, 1, 2].map(i => b.ups?.[i] ? fmt(b.ups[i].e) : '—');
+    const [st2, st3, st4] = [0, 1, 2].map(i => b.sus?.[i] ? fmt(b.sus[i].e) : '—');
+    const outBuf = b.buf?.out > 0 ? b.buf.out : '—';
+    const inBuf  = b.buf?.in  > 0 ? b.buf.in  : '—';
     return `<tr>
       <td style="font-weight:600;color:#e6edf3;">${b.label}</td>
       <td style="text-align:center;">${b.tier}</td>
@@ -368,9 +372,14 @@ function renderBuildingsTable() {
       <td class="power-cost" style="text-align:right;">${b.draw}</td>
       <td class="reward" style="text-align:right;">${b.out}</td>
       <td style="color:#8b949e;font-size:12px;">${b.rate}</td>
-      <td class="time" style="text-align:right;">${up2}</td>
-      <td class="time" style="text-align:right;">${up3}</td>
-      <td class="time" style="text-align:right;">${up4}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${outBuf}</td>
+      <td style="text-align:right;color:#8b949e;font-size:12px;">${inBuf}</td>
+      <td class="time" style="text-align:right;">${sp2}</td>
+      <td class="time" style="text-align:right;">${sp3}</td>
+      <td class="time" style="text-align:right;">${sp4}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st2}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st3}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st4}</td>
     </tr>`;
   }).join('');
 }

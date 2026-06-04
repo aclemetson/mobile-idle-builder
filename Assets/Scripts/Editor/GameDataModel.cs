@@ -60,6 +60,9 @@ namespace MobileIdleBuilder.Editor
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
         public long   starting_entropy                   = 0;
+        public float  building_purchase_multiplier_t1       = 1.5f;
+        public float  building_purchase_multiplier_t2       = 1.4f;
+        public float  building_purchase_multiplier_t3_plus  = 1.3f;
     }
 
     [Serializable]
@@ -187,6 +190,15 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class StorageUpgradeLevelJson
+    {
+        public int level               = 2;
+        public int max_output_items    = 0;
+        public int cost_base_currency  = 0;
+        public int cost_prestige_currency = 0;
+    }
+
+    [Serializable]
     internal class PortJson
     {
         public string port_type   = "Input";
@@ -225,7 +237,10 @@ namespace MobileIdleBuilder.Editor
         public string[]               compatible_adjacent_categories = Array.Empty<string>();
         public string[]               compatible_fields          = Array.Empty<string>();
         public int                    entropy_cost               = 0;
+        public int                    base_max_output_items      = 0;
+        public int                    base_max_input_items_per_slot = 0;
         public List<UpgradeLevelJson> upgrade_levels             = new();
+        public List<StorageUpgradeLevelJson> storage_upgrade_levels = new();
         public bool                   has_special_upgrade        = false;
         public string                 special_upgrade_id         = "";
         public string                 required_research          = "";
@@ -244,6 +259,7 @@ namespace MobileIdleBuilder.Editor
             compatible_adjacent_categories ??= Array.Empty<string>();
             compatible_fields          ??= Array.Empty<string>();
             upgrade_levels             ??= new List<UpgradeLevelJson>();
+            storage_upgrade_levels     ??= new List<StorageUpgradeLevelJson>();
         }
     }
 

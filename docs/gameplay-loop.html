@@ -40,7 +40,7 @@
       <div class="item-chip">Lithium &nbsp;<span class="val">×35</span></div>
       <div class="item-chip">Carbon &nbsp;<span class="val">×60</span></div>
     </div>
-    <p class="resolved-note">✅ Resolved (gap-1 + gap-2): Player starts with 250e. Tutorial earns +37 manual sells (287 total). Gates: Recombination I (−100) → Phase 4 +12 → Hydrogen Synthesis (−50) → H-sell +10 → Automation I (−25) → Harvester (−100) = 12e at step 32. Tutorial continues: idle income funds SFC pipeline (−200 SFC, −150 Generator, −100 2nd Harvester). Exits tutorial with nucleon automation running. Prestige base = 500e, wall = 5000e net worth (<code>game_config.prestige_base_value</code>).</p>
+    <p class="resolved-note">✅ Resolved (gap-1 + gap-2): Player starts with 250e. Tutorial earns +37 manual sells (287 total). Gates: Recombination I (−100) → Phase 4 +12 → Hydrogen Synthesis (−50) → H-sell +10 → Automation I (−25) → Harvester (−100) = 12e at step 32. Tutorial continues: idle income funds SFC pipeline (−200 SFC, −150 Generator, −100 2nd Harvester). Exits tutorial with nucleon automation running. Atom Generator placement cost is 350e (raised from 200e to reflect its position after 550e+ of research). Prestige base = 500e, wall = 5000e net worth (<code>game_config.prestige_base_value</code>).</p>
     <div class="item-grid" style="margin-top:12px;">
       <div class="item-chip">Start <span class="val">250</span></div>
       <div class="item-chip">+sell e/q <span class="val">+15</span></div>
@@ -55,7 +55,7 @@
       <div class="item-chip">Generator <span class="val cost">−150</span></div>
       <div class="item-chip">2nd Harv. <span class="val cost">−100</span></div>
       <div class="item-chip">→ idle</div>
-      <div class="item-chip">Atom Gen <span class="val cost">−200</span></div>
+      <div class="item-chip">Atom Gen <span class="val cost">−350</span></div>
       <div class="item-chip"><strong>End: <span class="val">~12e+</span></strong> H running</div>
     </div>
   </div>
@@ -149,18 +149,49 @@
     </table>
   </div>
 
+  <!-- Building Upgrade System Design Callout -->
+  <div class="callout" style="border-left-color:#58a6ff;">
+    <h3 style="color:#58a6ff;">Building Upgrade System</h3>
+    <p style="font-size:12px;margin-bottom:10px;">Each building has <strong>two independent upgrade tracks</strong>. Both tracks have 3 purchasable levels (L2/L3/L4) and reset on prestige.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:#0f1f30;border:1px solid #21262d;border-radius:6px;padding:12px;">
+        <p style="font-size:11px;font-weight:600;color:#3fb950;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Speed Upgrades</p>
+        <p style="font-size:12px;color:#c9d1d9;line-height:1.5;">Increases production throughput. <br>Pattern: L1=1× → L2=2× → L3=4× → L4=8× (each upgrade doubles speed). Cost multiplier: ~4–5× per level. <br>Affects active and idle play equally.</p>
+      </div>
+      <div style="background:#0f1f30;border:1px solid #21262d;border-radius:6px;padding:12px;">
+        <p style="font-size:11px;font-weight:600;color:#58a6ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Storage Upgrades</p>
+        <p style="font-size:12px;color:#c9d1d9;line-height:1.5;">Increases the output buffer (items held before stalling). Benefits idle/offline play. Cost ≈60% of equivalent speed upgrade. <br>Buffer sizes: base 10–30 → L2 75–300 → L3 375–1500 → L4 2500–4000.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:#0d2018;border:1px solid #21262d;border-radius:6px;padding:12px;">
+        <p style="font-size:11px;font-weight:600;color:#f0883e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Two-Buffer Model (processing buildings)</p>
+        <p style="font-size:12px;color:#c9d1d9;line-height:1.5;"><strong>Input buffer:</strong> 30 items per slot (fixed) — upstream conveyor stops when full.<br><strong>Output buffer:</strong> upgradeable — production stalls when full (no downstream conveyor or backup).</p>
+      </div>
+      <div style="background:#1a1d21;border:1px solid #21262d;border-radius:6px;padding:12px;">
+        <p style="font-size:11px;font-weight:600;color:#d2a8ff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Successive Purchase Scaling</p>
+        <p style="font-size:12px;color:#c9d1d9;line-height:1.5;">Each additional placement of the same building type costs more:<br>
+        Tier 1: ×1.5 per purchase · Tier 2: ×1.4 per purchase · Tier 3+: ×1.3 per purchase.<br>
+        Formula: <code>cost(n) = base × multiplier^(n−1)</code></p>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#8b949e;margin-top:10px;"><strong style="color:#6e7681;">Planned (not yet implemented):</strong> <code>place_extras_in_inventory</code> research — when output buffer is full, items go to inventory instead of stalling. <code>sell_excess_inputs</code> research — auto-sell input overflow for 25% of base value.</p>
+  </div>
+
   <!-- Buildings Table -->
   <div class="phase" id="bal-buildings-phase">
     <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
       <h2>Buildings &amp; Upgrade Costs</h2>
-      <span class="phase-meta">7 buildings · L1 = placement cost · L2/L3/L4 = upgrade costs (entropy)</span>
+      <span class="phase-meta">10 buildings · L1 = placement cost · Speed upgrades: 2×/4×/8× rate · Storage upgrades: increase output buffer · successive purchase: ×1.5/1.4/1.3 per tier</span>
     </div>
     <table>
       <thead><tr>
         <th>Building</th><th style="text-align:center;">Tier</th><th>Category</th>
         <th style="text-align:right;">Placement (e)</th><th style="text-align:right;">Power Draw</th>
         <th style="text-align:right;">Power Out</th><th>Base Rate</th>
-        <th style="text-align:right;">L2 Cost</th><th style="text-align:right;">L3 Cost</th><th style="text-align:right;">L4 Cost</th>
+        <th style="text-align:right;">Out Buf</th><th style="text-align:right;">In Buf/slot</th>
+        <th style="text-align:right;">Speed L2</th><th style="text-align:right;">Speed L3</th><th style="text-align:right;">Speed L4</th>
+        <th style="text-align:right;">Store L2</th><th style="text-align:right;">Store L3</th><th style="text-align:right;">Store L4</th>
       </tr></thead>
       <tbody id="bal-buildings-body"></tbody><!-- populated by renderBuildingsTable() -->
     </table>

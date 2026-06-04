@@ -23,7 +23,12 @@
     "beta_particle_ev_value": 10.0,
     "environment": "Dev",
     "api_base_url": "TODO",
-    "starting_entropy": 250
+    "starting_entropy": 250,
+    "_comment_purchase_scaling": "Each successive placement of the same building type costs more. Formula: base_cost × multiplier^(n-1) where n = number of buildings of that type already placed.",
+    "building_purchase_multiplier_t1": 1.5,
+    "building_purchase_multiplier_t2": 1.4,
+    "building_purchase_multiplier_t3_plus": 1.3,
+    "_reserved_research_ids": ["place_extras_in_inventory", "sell_excess_inputs"]
   },
 
   "tiers": [
@@ -3045,10 +3050,17 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": ["Quark", "Lepton"],
       "entropy_cost": 100,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 0,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 500, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150,  "cost_base_currency": 300,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750,  "cost_base_currency": 1200, "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 5000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": true,
       "special_upgrade_id": "nucleon_harvester",
@@ -3089,10 +3101,17 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 200,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 18.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 300, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 30.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1200, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 50.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150,  "cost_base_currency": 200,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750,  "cost_base_currency": 800,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 3500, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3132,11 +3151,14 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 150,
+      "base_max_output_items": 0,
+      "base_max_input_items_per_slot": 0,
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 100.0, "influence_radius_tiles": 4.0, "cost_base_currency": 400, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 200.0, "influence_radius_tiles": 5.0, "cost_base_currency": 1600, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 400.0, "influence_radius_tiles": 6.0, "cost_base_currency": 6000, "cost_prestige_currency": 0 }
       ],
+      "storage_upgrade_levels": [],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": null,
@@ -3190,10 +3212,19 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 0,
+      "base_max_output_items": 0,
+      "base_max_input_items_per_slot": 0,
+      "_note_demon_input": "Maxwell's Demon is a pure entropy sink — no production output buffer. base_max_input_items_per_slot is 0 because it accepts all incoming items without limit (unlimited deposit queue).",
       "upgrade_levels": [
-        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 300, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1200, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800, "cost_prestige_currency": 0 }
       ],
+      "_note_demon_upgrades": "output_rate here means throughput multiplier — how many items/second the Demon can process from conveyors. L2=2x, L3=4x base throughput.",
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 300,  "cost_base_currency": 150, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 1500, "cost_base_currency": 600, "cost_prestige_currency": 0 }
+      ],
+      "_note_demon_storage": "Storage upgrades increase the Demon's internal pending-deposit queue size (items waiting to be processed for entropy).",
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": null,
@@ -3233,11 +3264,18 @@
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
-      "entropy_cost": 200,
+      "entropy_cost": 350,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 4000, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 16000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150,  "cost_base_currency": 700,   "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750,  "cost_base_currency": 2800,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 11000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3278,10 +3316,17 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 1500,
+      "base_max_output_items": 15,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 32000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 100,  "cost_base_currency": 1500,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 500,  "cost_base_currency": 6000,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 2500, "cost_base_currency": 24000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3322,9 +3367,16 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 2500,
+      "base_max_output_items": 30,
+      "base_max_input_items_per_slot": 30,
+      "_note_containment": "The Containment building collects decay particles from the Manipulator inside it. base_max_output_items is the particle collection buffer.",
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.0, "power_cost_ev": 50.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 3000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 80.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 200,  "cost_base_currency": 2000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 1000, "cost_base_currency": 8000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3367,10 +3419,17 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 5000,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 50000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200000, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150,  "cost_base_currency": 35000,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750,  "cost_base_currency": 140000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 560000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3411,10 +3470,17 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 50000,
+      "base_max_output_items": 15,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000000, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25000000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 100,  "cost_base_currency": 700000,    "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 500,  "cost_base_currency": 3500000,   "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 2500, "cost_base_currency": 17500000,  "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3455,9 +3521,15 @@
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 5000000,
+      "base_max_output_items": 10,
+      "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.5, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 100000000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 75,  "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 375, "cost_base_currency": 700000000,  "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -4120,7 +4192,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 200 entropy and place it.",
+          "text": "The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 350 entropy and place it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -4194,6 +4266,72 @@
         {
           "speaker_name": "The Architect",
           "text": "Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_upgrades_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Before you start saving — your factory is running at base efficiency. Every building here can be upgraded on two separate tracks: Speed and Storage.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Speed upgrades multiply throughput. Level 2 doubles your production rate. Level 4 brings you to eight times the base. Same inputs, same power draw — delivered faster.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Storage upgrades expand the output buffer — how many items a building holds before it stalls. A larger buffer means the factory keeps running longer while you are away.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Tap the Atom Generator. We are upgrading its speed first — it is the bottleneck of your hydrogen line.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "atomic_assembler",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "upgrade_complete_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Two times throughput. The Atom Generator now produces hydrogen at twice the rate for the same input cost. Your entropy income just doubled.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The Storage track works the same way — tap the building again and you will see it below the Speed upgrade. A larger output buffer means the line keeps running while you are offline.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Both tracks reset on prestige. The entropy you invest here comes back as a discount on your next run — every upgrade makes the next cycle faster.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -5046,7 +5184,33 @@
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
     },
 
-    { "_comment": "--- PHASE ⑦: PRESTIGE RAMP-UP (steps TBD — insert between hydrogen_loop_complete and buy_atomic_assembly) ---" },
+    { "_comment": "--- PHASE ⑦: BUILDING UPGRADES ---" },
+    {
+      "id": "intro_building_upgrades",
+      "hint": "Tap the Atom Generator — we will upgrade it now.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": {
+        "dialogue_id": "intro_upgrades_context",
+        "highlight_target": "atomic_assembler",
+        "highlight_mode": "VisualOnly"
+      }
+    },
+    {
+      "id": "upgrade_atom_generator_speed",
+      "hint": "Purchase Speed Upgrade L2 on the Atom Generator (1,000 entropy).",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "atom_generator_speed_upgraded" },
+      "on_enter": {
+        "highlight_target": "atomic_assembler",
+        "highlight_mode": "Full",
+        "building_interaction_gate": "AtomicAssemblerOnly"
+      }
+    },
+    {
+      "id": "upgrade_context",
+      "hint": "Your Atom Generator is now running at 2× speed.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "upgrade_complete_context" }
+    },
 
     { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
     {

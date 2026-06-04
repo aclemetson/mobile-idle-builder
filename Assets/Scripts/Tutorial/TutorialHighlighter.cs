@@ -147,6 +147,9 @@ namespace MobileIdleBuilder
             if (targetId == "maxwells_demon")
                 return FindEntropySinkTarget();
 
+            if (targetId == "atomic_assembler")
+                return FindPlacedBuildingTarget(4);
+
             return null;
         }
 
@@ -193,6 +196,51 @@ namespace MobileIdleBuilder
                 FootprintH   = h,
                 CameraTarget = camTarget
             };
+        }
+
+        /// <summary>
+        /// Returns the highlight target for the first placed building with the given BuildingType integer.
+        /// </summary>
+        private WorldTarget? FindPlacedBuildingTarget(int buildingType)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return null;
+
+            var em = world.EntityManager;
+            using var query = em.CreateEntityQuery(
+                ComponentType.ReadOnly<BuildingData>(),
+                ComponentType.ReadOnly<GridPosition>()
+            );
+
+            if (query.IsEmpty) return null;
+
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var entity = entities[i];
+                var bd = em.GetComponentData<BuildingData>(entity);
+                if (bd.BuildingType != buildingType) continue;
+
+                var pos  = em.GetComponentData<GridPosition>(entity);
+                float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
+                int w = 1, h = 1;
+                if (em.HasComponent<BuildingFootprint>(entity))
+                {
+                    var fp = em.GetComponentData<BuildingFootprint>(entity);
+                    w = fp.Width; h = fp.Height;
+                }
+                var camTarget = new Vector3(
+                    (pos.Cell.x + (w - 1) * 0.5f) * cs, 0f,
+                    (pos.Cell.y + (h - 1) * 0.5f) * cs);
+                return new WorldTarget
+                {
+                    AnchorX    = pos.Cell.x, AnchorZ      = pos.Cell.y,
+                    FootprintW = w,          FootprintH   = h,
+                    CameraTarget = camTarget
+                };
+            }
+
+            return null;
         }
 
         private void ClearVisual()

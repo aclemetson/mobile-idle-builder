@@ -8,11 +8,11 @@
 //  3. recipes          49 recipes          (sync with game_data.json recipes)
 //  4. buildings        10 buildings        (sync with game_data.json buildings[].entropy_cost)
 //  5. research         20 nodes            (sync with game_data.json research[].cost_base_currency)
-//  6. tutorial_phases   6 phases / 48 steps with doc annotations
+//  6. tutorial_phases   6 phases / 50 steps with doc annotations (incl. upgrade tutorial ⑥ cont.)
 //  7. post_tutorial_phases  9 phases (Runs 2+, phases 7–15)
 //  8. dialogues        12 phase groups / ~40 dialogue entries
 //  9. design_gaps      13 tracked issues
-// 10. simple_overview  17 phases for the Simple Overview tab
+// 10. simple_overview  18 phases for the Simple Overview tab
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -144,22 +144,55 @@ recipes: [
 ],
 
 // ─────────────────────────────────────── BUILDINGS ──
+// buf: { out: base output buffer items, in: base input buffer per slot (0 = n/a) }
+// ups: speed upgrades  [{ e: cost, r: new rate }]  (output_rate multiplier; for Demon: throughput multiplier)
+// sus: storage upgrades [{ e: cost, b: new max output buffer }]
 buildings: [
   // Tier 1
-  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,       draw:'—',        out:'—',     rate:'1/s',    ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}] },
-  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,       draw:'10 eV',    out:'—',     rate:'1/s',    ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}] },
-  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,       draw:'—',        out:'50 eV', rate:'—',      ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}] },
-  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,         draw:'—',        out:'—',     rate:'entropy', ups:[{e:300},{e:1200}] },
+  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,     draw:'—',        out:'—',     rate:'1/s',
+    buf:{out:20, in:0},
+    ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}],
+    sus:[{e:300,b:150},{e:1200,b:750},{e:5000,b:4000}] },
+  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,     draw:'10 eV',    out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}],
+    sus:[{e:200,b:150},{e:800,b:750},{e:3500,b:4000}] },
+  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,     draw:'—',        out:'50 eV', rate:'—',
+    buf:{out:0, in:0},
+    ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}],
+    sus:[] },
+  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,       draw:'—',        out:'—',     rate:'entropy',
+    buf:{out:0, in:0},
+    ups:[{e:200,r:'2× throughput'},{e:800,r:'4× throughput'}],
+    sus:[{e:150,b:300},{e:600,b:1500}] },
   // Tier 2
-  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:200,       draw:'mass×5',   out:'—',     rate:'1/s',    ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}] },
-  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500,      draw:'n×8',      out:'—',     rate:'0.5/s',  ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}] },
-  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500,      draw:'30 eV',    out:'—',     rate:'decay',  ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}] },
+  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:350,     draw:'mass×5',   out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}],
+    sus:[{e:700,b:150},{e:2800,b:750},{e:11000,b:4000}] },
+  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500,    draw:'n×8',      out:'—',     rate:'0.5/s',
+    buf:{out:15, in:30},
+    ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}],
+    sus:[{e:1500,b:100},{e:6000,b:500},{e:24000,b:2500}] },
+  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500,    draw:'30 eV',    out:'—',     rate:'decay',
+    buf:{out:30, in:30},
+    ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}],
+    sus:[{e:2000,b:200},{e:8000,b:1000}] },
   // Tier 3
-  { id:'molecular_synthesizer',   label:'Molecular Synthesizer',   tier:3, cat:'Transient', cost:5000,      draw:'recipe',   out:'—',     rate:'1/s',    ups:[{e:50000,r:'2/s'},{e:200000,r:'4/s'},{e:800000,r:'8/s'}] },
+  { id:'molecular_synthesizer',   label:'Molecular Synthesizer',   tier:3, cat:'Transient', cost:5000,    draw:'recipe',   out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:50000,r:'2/s'},{e:200000,r:'4/s'},{e:800000,r:'8/s'}],
+    sus:[{e:35000,b:150},{e:140000,b:750},{e:560000,b:4000}] },
   // Tier 4
-  { id:'materials_forge',         label:'Materials Forge',         tier:4, cat:'Transient', cost:50000,     draw:'recipe',   out:'—',     rate:'0.5/s',  ups:[{e:1000000,r:'1/s'},{e:5000000,r:'2/s'},{e:25000000,r:'4/s'}] },
+  { id:'materials_forge',         label:'Materials Forge',         tier:4, cat:'Transient', cost:50000,   draw:'recipe',   out:'—',     rate:'0.5/s',
+    buf:{out:15, in:30},
+    ups:[{e:1000000,r:'1/s'},{e:5000000,r:'2/s'},{e:25000000,r:'4/s'}],
+    sus:[{e:700000,b:100},{e:3500000,b:500},{e:17500000,b:2500}] },
   // Tier 5
-  { id:'component_fabricator',    label:'Component Fabricator',    tier:5, cat:'Transient', cost:5000000,   draw:'recipe',   out:'—',     rate:'0.25/s', ups:[{e:100000000,r:'0.5/s'},{e:1000000000,r:'1/s'}] },
+  { id:'component_fabricator',    label:'Component Fabricator',    tier:5, cat:'Transient', cost:5000000, draw:'recipe',   out:'—',     rate:'0.25/s',
+    buf:{out:10, in:30},
+    ups:[{e:100000000,r:'0.5/s'},{e:1000000000,r:'1/s'}],
+    sus:[{e:70000000,b:75},{e:700000000,b:375}] },
 ],
 
 // ─────────────────────────────────────── RESEARCH ──
@@ -375,8 +408,8 @@ tutorial_phases: [
   {
     phase: 6, label: '⑥ Automation',
     color: '#1a6e40', bg: '#0d2018',
-    meta: 'Steps 28–46 · Tutorial teaches: Automation I research, Harvester placement, conveyor routing, power system, SFC dual-recipe, nucleon pipeline, Atom Generator, hydrogen assembly · <strong style="color:#3fb950">Tutorial ends at step 46</strong>',
-    entropy_note: { text: 'Entropy after tutorial: ~12e+ (lepton Harvester + SFC nucleons + Atom Generator hydrogen · ~4e/sec)', cls: '', color: '#3fb950' },
+    meta: 'Steps 28–50 · Tutorial teaches: Automation I research, Harvester placement, conveyor routing, power system, SFC dual-recipe, nucleon pipeline, Atom Generator, hydrogen assembly, building upgrades · <strong style="color:#3fb950">Tutorial ends at step 50</strong>',
+    entropy_note: { text: 'Tutorial end state: H loop ~4e/sec · Speed Upgrade L2 purchased on Atom Generator (2× throughput) · ~8e/sec after upgrade', cls: '', color: '#3fb950' },
     steps: [
       { num:28, id:'intro_automation_i',         row_cls:'dialogue', tag_type:'dialogue',
         action:'Architect explains what Automation I unlocks and the Harvester concept.',
@@ -452,14 +485,14 @@ tutorial_phases: [
         time:'~1 min', advance:'dialogue_complete' },
       { type:'subheader', text:'⑥ cont. — Hydrogen Automation' },
       { num:42, id:'intro_atom_gen',             row_cls:'dialogue', tag_type:'dialogue',
-        action:'Silent wait until entropy ≥ 200. Dialogue fires on enter: Architect directs player to place the Atom Generator.',
+        action:'Silent wait until entropy ≥ 350. Dialogue fires on enter: Architect directs player to place the Atom Generator.',
         dlg_ref:'intro_atom_gen_context · 1 line · game live',
         cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Atom Generator available (research already done)'},
-        time:'~1–2 min idle', advance:'entropy ≥ 200' },
+        time:'~2–4 min idle', advance:'entropy ≥ 350' },
       { num:43, id:'place_atom_generator',       row_cls:'',         tag_type:'hint',
         action:'Build menu pulses. Place the Atom Generator. Uses 5 eV — existing generator handles it alongside the SFC (15 eV total vs 50 eV supply).',
         dlg_ref:'place_atom_gen_context · 1 line · game live',
-        cost:{t:'cost',v:'−200 entropy'}, reward:{t:'reward',v:'Atom Generator placed'},
+        cost:{t:'cost',v:'−350 entropy'}, reward:{t:'reward',v:'Atom Generator placed'},
         time:'~30 sec', advance:'atom_gen_count ≥ 1' },
       { num:44, id:'delete_reroute_conveyors',   row_cls:'dialogue', tag_type:'dialogue',
         action:'Architect teaches conveyor deletion before asking the player to reroute. Tap any conveyor to select it — a trash icon appears on the belt. Player must delete the proton conveyor (SFC → Demon) and the electron conveyor (Harvester → Demon) to free those ports.',
@@ -476,11 +509,27 @@ tutorial_phases: [
         dlg_ref:'route_hydrogen_context · 1 line · game live',
         cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Hydrogen (5e) selling automatically'},
         time:'~30 sec', advance:'atom_gen_output_connected' },
-      { num:47, id:'hydrogen_loop_complete',     row_cls:'milestone', tag_type:'milestone',
-        action:'Architect names the first atom, teases the full periodic table. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>',
+      { num:47, id:'hydrogen_loop_complete',     row_cls:'dialogue', tag_type:'dialogue',
+        action:'Architect names the first atom, teases the full periodic table. Upgrade tutorial begins next.',
         dlg_ref:'hydrogen_loop_context · 2 lines · game paused → live',
-        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Tutorial complete · ~4e/sec · Atomic Assembly research unlocked next'},
+        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'H loop confirmed · ~4e/sec · upgrade phase starts'},
         time:'~1 min', advance:'dialogue_complete' },
+      { type:'subheader', text:'⑥ cont. — Building Upgrades' },
+      { num:48, id:'intro_building_upgrades',    row_cls:'dialogue', tag_type:'dialogue',
+        action:'Architect introduces Speed and Storage upgrade tracks. Atom Generator highlighted (VisualOnly). Ends with prompt to tap the Atom Generator.',
+        dlg_ref:'intro_upgrades_context · 4 lines · game paused → live → live → live (highlight: atomic_assembler)',
+        cost:{t:'neutral',v:'—'}, reward:{t:'neutral',v:'Player understands both upgrade tracks'},
+        time:'~90 sec', advance:'dialogue_complete' },
+      { num:49, id:'upgrade_atom_generator_speed', row_cls:'gate', tag_type:'gate',
+        action:'Camera pans full to Atom Generator. <code>AtomicAssemblerOnly</code> gate: only Atom Generator can be opened. Player taps it and buys Speed Upgrade L2.',
+        note:'Advance fires via TutorialOverlayController.NotifyAtomGeneratorSpeedUpgraded() — call from building upgrade UI when building_type == 4.',
+        cost:{t:'cost',v:'−1,000 entropy',bold:true}, reward:{t:'reward',v:'Atom Generator 2× speed · H income doubles to ~8e/sec'},
+        time:'~2–5 min idle', advance:'atom_generator_speed_upgraded' },
+      { num:50, id:'upgrade_context',            row_cls:'milestone', tag_type:'milestone',
+        action:'Architect confirms 2× throughput. Explains Storage track for offline running. Notes prestige discount on upgrades. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>',
+        dlg_ref:'upgrade_complete_context · 3 lines · game paused → live → live',
+        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Tutorial complete · both upgrade tracks introduced · ~8e/sec'},
+        time:'~90 sec', advance:'dialogue_complete' },
     ]
   },
 ],
@@ -902,7 +951,7 @@ dialogues: [
       { step_ref:'Step 41', dlg_id:'nucleon_loop_context', step_label:'nucleon_loop_complete · on_enter · 2 lines',
         lines:[
           { text:'Protons and neutrons selling automatically alongside electrons. Your factory has two income streams now. Every quark from every field finds a buyer.', flags:['pause_game'] },
-          { text:'The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 200 entropy and place it.', flags:['game live'] },
+          { text:'The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 350 entropy and place it.', flags:['game live'] },
         ]
       },
     ]
@@ -936,10 +985,30 @@ dialogues: [
           { text:"Connect the Atom Generator's output to Maxwell's Demon. Hydrogen sells for 5 entropy. A raw proton and electron would have sold for 4 — assembly adds one entropy per cycle, and that margin compounds as you scale.", flags:['game live'] },
         ]
       },
-      { step_ref:'Step 47', dlg_id:'hydrogen_loop_context', step_label:'hydrogen_loop_complete · on_enter · 2 lines · 🎉 tutorial ends',
+      { step_ref:'Step 47', dlg_id:'hydrogen_loop_context', step_label:'hydrogen_loop_complete · on_enter · 2 lines',
         lines:[
           { text:'Hydrogen. One proton, one electron — the simplest atom in existence, and the most abundant in the universe. Your factory is making it continuously, without your input.', flags:['pause_game'] },
           { text:'Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.', flags:['game live'] },
+        ]
+      },
+    ]
+  },
+  {
+    phaseLabel: '⑥ cont. — Building Upgrades (Steps 48–50)',
+    entries: [
+      { step_ref:'Step 48', dlg_id:'intro_upgrades_context', step_label:'intro_building_upgrades · on_enter · 4 lines · highlight: atomic_assembler',
+        lines:[
+          { text:'Before you start saving — your factory is running at base efficiency. Every building here can be upgraded on two separate tracks: Speed and Storage.', flags:['pause_game'] },
+          { text:'Speed upgrades multiply throughput. Level 2 doubles your production rate. Level 4 brings you to eight times the base. Same inputs, same power draw — delivered faster.', flags:['game live'] },
+          { text:'Storage upgrades expand the output buffer — how many items a building holds before it stalls. A larger buffer means the factory keeps running longer while you are away.', flags:['game live'] },
+          { text:'Tap the Atom Generator. We are upgrading its speed first — it is the bottleneck of your hydrogen line.', flags:['game live','highlight: atomic_assembler'] },
+        ]
+      },
+      { step_ref:'Step 50', dlg_id:'upgrade_complete_context', step_label:'upgrade_context · on_enter · 3 lines · 🎉 tutorial ends',
+        lines:[
+          { text:'Two times throughput. The Atom Generator now produces hydrogen at twice the rate for the same input cost. Your entropy income just doubled.', flags:['pause_game'] },
+          { text:'The Storage track works the same way — tap the building again and you will see it below the Speed upgrade. A larger output buffer means the line keeps running while you are offline.', flags:['game live'] },
+          { text:'Both tracks reset on prestige. The entropy you invest here comes back as a discount on your next run — every upgrade makes the next cycle faster.', flags:['game live'] },
         ]
       },
     ]
@@ -1163,9 +1232,14 @@ simple_overview: [
     { name:'Pipeline Running',      type:'milestone',dur:240 },
   ]},
   { phase:'6C', phaseName:'Hydrogen Automation',  phaseColor:'#1a6e40', isTutorial:true,  steps:[
-    { name:'Atom Generator (200e)', type:'building', dur:180 },
+    { name:'Atom Generator (350e)', type:'building', dur:180 },
     { name:'Reroute Conveyors',     type:'action',   dur:120 },
-    { name:'Tutorial Complete',     type:'milestone',dur:120 },
+    { name:'H Loop Running',        type:'milestone',dur:120 },
+  ]},
+  { phase:'6D', phaseName:'Building Upgrades',    phaseColor:'#1a6e40', isTutorial:true,  steps:[
+    { name:'Learn Speed + Storage Tracks', type:'dialogue', dur:90  },
+    { name:'Speed Upgrade L2 (1,000e)',    type:'gate',     dur:300 },
+    { name:'Tutorial Complete',            type:'milestone',dur:90  },
   ]},
   { phase:7,    phaseName:'Run 2 Ramp-Up',        phaseColor:'#6e3a8a', isTutorial:false, steps:[
     { name:'Prestige Reset',        type:'gate',     dur:300 },

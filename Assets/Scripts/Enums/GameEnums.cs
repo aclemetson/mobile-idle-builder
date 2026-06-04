@@ -174,8 +174,9 @@ namespace MobileIdleBuilder
     /// <summary>Restricts which buildings the player may tap during a tutorial step.</summary>
     public enum BuildingInteractionGate
     {
-        None,           // No restriction — all buildings are tappable (default)
-        BlockAll,       // Block all building taps (e.g. while collecting resources)
-        EntropySinkOnly // Only Maxwell's Demon may be opened (e.g. while directed to sell)
+        None,                // No restriction — all buildings are tappable (default)
+        BlockAll,            // Block all building taps (e.g. while collecting resources)
+        EntropySinkOnly,     // Only Maxwell's Demon may be opened (e.g. while directed to sell)
+        AtomicAssemblerOnly  // Only the Atom Generator (atomic_assembler) may be opened
     }
 }

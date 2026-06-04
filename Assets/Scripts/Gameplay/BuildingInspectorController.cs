@@ -152,6 +152,13 @@ namespace MobileIdleBuilder
                 !_em.HasComponent<EntropySinkTag>(found))
                 return false;
 
+            // AtomicAssemblerOnly: only the Atom Generator (building type 4) may be opened
+            if (buildingGate == BuildingInteractionGate.AtomicAssemblerOnly)
+            {
+                var bd = _em.GetComponentData<BuildingData>(found);
+                if (bd.BuildingType != 4) return false;
+            }
+
             // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
             // ARCH has no physical form, so there is no proximity requirement — open immediately.
             if (_em.HasComponent<EntropySinkTag>(found))

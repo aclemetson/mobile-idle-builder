@@ -22,7 +22,7 @@ MonoBehaviour:
     action: 
   - speakerName: The Architect
     text: "The Atom Generator is available \u2014 you researched it when you unlocked
-      Hydrogen Synthesis. Save up 200 entropy and place it."
+      Hydrogen Synthesis. Save up 350 entropy and place it."
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

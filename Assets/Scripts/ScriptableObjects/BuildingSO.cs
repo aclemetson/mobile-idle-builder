@@ -7,12 +7,21 @@ namespace MobileIdleBuilder
     public struct BuildingUpgradeLevel
     {
         public int level;
-        public float outputRate;
+        public float outputRate;             // production rate multiplier; for Maxwell's Demon: throughput multiplier
         public float powerCostEV;
         public float outputEV;               // for generators
         public float influenceRadiusTiles;   // for generators
         public int costBaseCurrency;
         public int costPrestigeCurrency;     // 0 if not required
+    }
+
+    [Serializable]
+    public struct BuildingStorageUpgradeLevel
+    {
+        public int level;
+        public int maxOutputItems;           // max items in output buffer at this upgrade level
+        public int costBaseCurrency;
+        public int costPrestigeCurrency;
     }
 
     [CreateAssetMenu(fileName = "New Building", menuName = "MobileIdleBuilder/Building")]
@@ -62,8 +71,13 @@ namespace MobileIdleBuilder
         [Header("Economy")]
         public int entropyCost;             // entropy spent to place this building
 
+        [Header("Buffers")]
+        public int baseMaxOutputItems;      // max items in output buffer before production stalls (0 = no limit)
+        public int baseMaxInputItemsPerSlot;// max items per input slot before upstream conveyor stops (0 = no limit)
+
         [Header("Upgrades")]
         public BuildingUpgradeLevel[] upgradeLevels;
+        public BuildingStorageUpgradeLevel[] storageUpgradeLevels; // increases maxOutputItems
 
         [Header("Special Upgrade")]
         public bool hasSpecialUpgrade;

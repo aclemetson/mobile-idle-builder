@@ -1275,6 +1275,75 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+  - id: intro_building_upgrades
+    hintText: "Tap the Atom Generator \u2014 we will upgrade it now."
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: e3e62733b7f06bc4187f90c710833864, type: 2}
+      highlightTarget: atomic_assembler
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: upgrade_atom_generator_speed
+    hintText: Purchase Speed Upgrade L2 on the Atom Generator (1,000 entropy).
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: atom_generator_speed_upgraded
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: atomic_assembler
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 3
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: upgrade_context
+    hintText: "Your Atom Generator is now running at 2\xD7 speed."
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
   - id: post_tutorial_intro
     hintText: Your hydrogen loop is running. Save up 500 entropy to research Atomic
       Assembly.

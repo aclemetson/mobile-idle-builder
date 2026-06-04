@@ -28,5 +28,13 @@ namespace MobileIdleBuilder
 
         [Header("Starting State")]
         public long startingEntropy;
+
+        [Header("Building Purchase Scaling")]
+        [Tooltip("Each additional placement of the same Tier 1 building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT1 = 1.5f;
+        [Tooltip("Each additional placement of the same Tier 2 building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT2 = 1.4f;
+        [Tooltip("Each additional placement of the same Tier 3+ building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT3Plus = 1.3f;
     }
 }

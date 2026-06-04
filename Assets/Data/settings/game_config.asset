@@ -24,3 +24,6 @@ MonoBehaviour:
   alphaParticleEVValue: 20
   betaParticleEVValue: 10
   startingEntropy: 250
+  buildingPurchaseMultiplierT1: 1.5
+  buildingPurchaseMultiplierT2: 1.4
+  buildingPurchaseMultiplierT3Plus: 1.3

@@ -511,6 +511,65 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, GetStepIndex());
         }
 
+        // ── Building upgrade tutorial (steps 48–50) ──────────────────────────
+
+        [Test]
+        public void UpgradeTutorial_AllThreeSteps_HoldUntilUiEvents()
+        {
+            // Mirrors the real steps 48–50: all three are UiEvent gates — none auto-advance.
+            MakeFlow(
+                UiEventStep("intro_building_upgrades",     "dialogue_complete"),
+                UiEventStep("upgrade_atom_generator_speed","atom_generator_speed_upgraded"),
+                UiEventStep("upgrade_context",             "dialogue_complete")
+            );
+            SetStepIndex(0);
+
+            _world.Update();
+            Assert.AreEqual(0, GetStepIndex(), "intro_building_upgrades must not advance from ECS");
+
+            SetStepIndex(1);
+            _world.Update();
+            Assert.AreEqual(1, GetStepIndex(), "upgrade_atom_generator_speed must not advance from ECS");
+
+            SetStepIndex(2);
+            _world.Update();
+            Assert.AreEqual(2, GetStepIndex(), "upgrade_context must not advance from ECS");
+        }
+
+        [Test]
+        public void UpgradeAtomGenerator_WaitsForSpecificEventId()
+        {
+            // The step uses "atom_generator_speed_upgraded", NOT the generic "dialogue_complete".
+            // Verifies the event ID is wired to the right string — a wrong ID would keep the
+            // tutorial stuck even after the upgrade UI calls the generic event.
+            var upgradeStep = UiEventStep("upgrade_atom_generator_speed", "atom_generator_speed_upgraded");
+            Assert.AreEqual("atom_generator_speed_upgraded",
+                upgradeStep.advanceCondition.uiEventId,
+                "upgrade_atom_generator_speed step must use 'atom_generator_speed_upgraded' event id");
+        }
+
+        [Test]
+        public void UpgradeTutorial_SequenceDoesNotSkipUpgradeGate()
+        {
+            // Even if an earlier step's inventory/auto condition is met, the upgrade gate
+            // (UiEvent) must not be bypassed by the ECS system.
+            MakeFlow(
+                InventoryMinStep("hydrogen_loop_complete", itemId: 6, qty: 1),
+                UiEventStep("intro_building_upgrades",     "dialogue_complete"),
+                UiEventStep("upgrade_atom_generator_speed","atom_generator_speed_upgraded"),
+                UiEventStep("upgrade_context",             "dialogue_complete"),
+                InventoryMinStep("post_tutorial",          itemId: 6, qty: 1)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 6, qty: 5); // hydrogen present — step 0 should advance
+
+            _world.Update();
+            Assert.AreEqual(1, GetStepIndex(), "Step 0 (InventoryMin) should advance");
+
+            _world.Update();
+            Assert.AreEqual(1, GetStepIndex(), "Step 1 (UiEvent: dialogue_complete) must not advance from ECS");
+        }
+
         // ── Completion ────────────────────────────────────────────────────────
 
         [Test]
