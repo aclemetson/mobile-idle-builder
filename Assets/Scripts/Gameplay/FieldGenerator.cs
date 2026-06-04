@@ -82,6 +82,10 @@ namespace MobileIdleBuilder
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
+#if UNITY_EDITOR
+            if (GameBootstrap.TestModeEnabled)
+                UnityEngine.Random.InitState(GameBootstrap.TestModeFieldSeed);
+#endif
             Shuffle(candidates);
 
             int candidateIndex = 0;

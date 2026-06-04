@@ -51,7 +51,23 @@ namespace MobileIdleBuilder.Dev
 
         private DevCommandRegistry _registry;
 
+        // ── Singleton ─────────────────────────────────────────────────────────
+
+        private static DevConsoleController s_Instance;
+
         // ── Unity lifecycle ───────────────────────────────────────────────────
+
+        void Awake()
+        {
+            if (s_Instance != null && s_Instance != this)
+            {
+                Destroy(gameObject);   // destroy the whole GO so the UIDocument goes with it
+                return;
+            }
+            s_Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
 
         void OnEnable()
         {
@@ -92,8 +108,28 @@ namespace MobileIdleBuilder.Dev
 
         void OnDestroy()
         {
+            if (s_Instance == this)
+            {
+                s_Instance = null;
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+            }
             if (Accelerometer.current != null)
                 InputSystem.DisableDevice(Accelerometer.current);
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Re-acquire ECS queries — the world is recreated on each scene reload.
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) return;
+
+            _em             = world.EntityManager;
+            _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
+            _inventoryQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInventoryTag>(),
+                ComponentType.ReadWrite<InventorySlot>());
+            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
         }
 
         void Update()
@@ -316,12 +352,21 @@ namespace MobileIdleBuilder.Dev
                 });
 
             // ── show progress ─────────────────────────────────────────────────
-            _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
+            _registry.Register("show progress", "Dump PlayerProgressData (entropy, tier, research, NetWorth, prestige)",
                 _ =>
                 {
                     if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
                     var data = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-                    return $"NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                    int researchCount = -1;
+                    var rs2 = ResearchService.Instance;
+                    if (rs2?.AllResearch != null)
+                    {
+                        researchCount = 0;
+                        foreach (var r in rs2.AllResearch)
+                            if (rs2.IsUnlocked(r.id)) researchCount++;
+                    }
+                    string research = researchCount >= 0 ? researchCount.ToString() : "?";
+                    return $"Entropy={data.BaseCurrency}  Tier={data.CurrentTier}  Research={research}  NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
                 });
 
             // ── set prestige available ────────────────────────────────────────
@@ -529,8 +574,9 @@ namespace MobileIdleBuilder.Dev
 
                     string canonicalId = flow.steps[idx].id;
 
-                    // ── ECS: set tutorial step and entropy ────────────────────
-                    long entropy = TutorialStepPresets.GetEntropy(flow, idx);
+                    // ── ECS: set tutorial step, entropy, and net worth ────────
+                    long  entropy  = TutorialStepPresets.GetEntropy(flow, idx);
+                    float netWorth = TutorialStepPresets.GetNetWorth(flow, idx);
 
                     if (!_tutorialQuery.IsEmpty)
                     {
@@ -545,6 +591,7 @@ namespace MobileIdleBuilder.Dev
                     {
                         var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                         pp.BaseCurrency = entropy;
+                        pp.BaseNetWorth = netWorth;
                         _progressQuery.SetSingleton(pp);
                     }
 
@@ -569,9 +616,10 @@ namespace MobileIdleBuilder.Dev
                     var save = SaveManager.Instance?.Current;
                     if (save != null)
                     {
-                        save.tutorial.currentStepId = canonicalId;
-                        save.tutorial.isActive      = true;
-                        save.currentRun.baseCurrency = entropy;
+                        save.tutorial.currentStepId  = canonicalId;
+                        save.tutorial.isActive        = true;
+                        save.currentRun.baseCurrency  = entropy;
+                        save.currentRun.baseNetWorth  = netWorth;
                     }
 
                     // ── Grid: apply building/conveyor preset if defined ───────

@@ -73,6 +73,73 @@ namespace MobileIdleBuilder.Dev
             return result;
         }
 
+        // ── Net worth lookup ──────────────────────────────────────────────────
+        // Expected inventory net worth at each phase entry point.
+        // Set as PlayerProgressData.BaseNetWorth so NetWorthSystem adds it to
+        // the live inventory sum — gives meaningful show-progress output after a skip.
+        // Calibrated against the economy docs; update after captured playthroughs.
+
+        static readonly Dictionary<string, float> s_NetWorthTable = new()
+        {
+            { "intro_dialogue",                   0f },
+            { "place_conveyor",                 100f },   // automation just started
+            { "automation_started",             200f },
+            { "intro_sfc",                      300f },
+            { "place_sfc",                      500f },
+            { "place_generator",                700f },
+            { "link_generator",               1_000f },
+            { "place_quark_harvester",        1_500f },
+            { "route_quarks_to_sfc",          2_000f },
+            { "configure_sfc_recipes",        2_500f },
+            { "route_nucleons_to_demon",      3_000f },
+            { "nucleon_loop_complete",        4_000f },
+            { "intro_atom_gen",               5_000f },
+            { "place_atom_generator",         6_000f },
+            { "connect_atom_gen_inputs",      7_000f },
+            { "route_hydrogen_to_demon",      8_000f },
+            { "hydrogen_loop_complete",      10_000f },
+            { "intro_building_upgrades",     12_000f },
+            { "upgrade_atom_generator_speed",15_000f },
+            { "upgrade_context",             18_000f },
+            { "post_tutorial_intro",         20_000f },
+            { "buy_atomic_assembly",         22_000f },
+            { "atomic_assembly_unlocked",    24_000f },
+            { "craft_first_helium",          26_000f },
+            { "first_element_context",       28_000f },
+            { "buy_heavy_elements",          30_000f },
+            { "heavy_elements_unlocked",     32_000f },
+            { "craft_first_uranium",         35_000f },
+            { "uranium_crafted",             38_000f },
+            { "buy_isotope_engineering",     40_000f },
+            { "isotopes_unlocked",           42_000f },
+            { "place_isotopic_manipulator",  44_000f },
+            { "craft_first_isotope",         45_000f },
+            { "isotope_crafted",             46_000f },
+            { "buy_radioactive_isotopes",    47_000f },
+            { "radioactive_isotopes_unlocked",48_000f },
+            { "place_radioactive_containment",49_000f },
+            { "craft_uranium_235",           50_000f },
+            { "uranium_235_crafted",         51_000f },
+            { "collect_alpha_particle",      52_000f },
+            { "particles_loop_complete",     55_000f },
+        };
+
+        /// <summary>
+        /// Returns the BaseNetWorth floor to set when skipping to stepIndex.
+        /// Walks backward from stepIndex to find the nearest entry, falls back to 0.
+        /// </summary>
+        public static float GetNetWorth(TutorialFlowSO flow, int stepIndex)
+        {
+            float result = 0f;
+            int count = flow.steps?.Length ?? 0;
+            for (int i = 0; i <= stepIndex && i < count; i++)
+            {
+                if (s_NetWorthTable.TryGetValue(flow.steps[i].id, out float nw))
+                    result = nw;
+            }
+            return result;
+        }
+
         // ── Grid presets ──────────────────────────────────────────────────────
         // Building and conveyor presets for each grid checkpoint.
         //

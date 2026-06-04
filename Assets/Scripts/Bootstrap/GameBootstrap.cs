@@ -12,5 +12,17 @@ namespace MobileIdleBuilder
         protected override bool PersistAcrossScenes => true;
 
         [SerializeField] public GameConfigSO gameConfig;
+
+#if UNITY_EDITOR
+        [Header("Testing (Editor only)")]
+        [Tooltip("Enables deterministic testing mode: fields are placed using a fixed seed and background saves (auto/pause/quit) are suppressed. Explicit SaveLocal() calls still work.")]
+        [SerializeField] bool _testModeEnabled = false;
+
+        [Tooltip("Seed passed to UnityEngine.Random.InitState before field placement shuffle. Change to get a different but repeatable layout.")]
+        [SerializeField] int _testModeFieldSeed = 42;
+
+        public static bool TestModeEnabled  => Instance != null && Instance._testModeEnabled;
+        public static int  TestModeFieldSeed => Instance != null ? Instance._testModeFieldSeed : 42;
+#endif
     }
 }

@@ -406,84 +406,81 @@ namespace MobileIdleBuilder
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
-            // Collect research IDs gated by the current tutorial step.
-            System.Collections.Generic.HashSet<string> tutorialLockedResearch = null;
-            var flow = TutorialFlowSO.Current;
-            if (flow != null && _ecsReady && !_tutorialQuery.IsEmpty)
-            {
-                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
-                if (tutState.IsActive && tutState.CurrentStepIndex < flow.steps.Length)
-                {
-                    var ids = flow.steps[tutState.CurrentStepIndex].lockedResearchIds;
-                    if (ids != null && ids.Length > 0)
-                        tutorialLockedResearch = new System.Collections.Generic.HashSet<string>(ids);
-                }
-            }
+            bool tutorialActive = false;
+            if (_ecsReady && !_tutorialQuery.IsEmpty)
+                tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
 
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
 
-                bool unlocked        = researchService.IsUnlocked(research.id);
-                bool tutorialGated   = tutorialLockedResearch != null &&
-                                       tutorialLockedResearch.Contains(research.id);
-                bool canPurchase     = !unlocked && !tutorialGated && researchService.CanPurchase(research);
+                bool unlocked   = researchService.IsUnlocked(research.id);
+                bool prereqsMet = research.prerequisites == null || research.prerequisites.Length == 0 ||
+                                  System.Array.TrueForAll(research.prerequisites,
+                                      p => p == null || researchService.IsUnlocked(p.id));
+
+                // During the tutorial, only show research that is already unlocked
+                // or whose prerequisites are all satisfied (the immediate frontier).
+                if (tutorialActive && !unlocked && !prereqsMet) continue;
+
+                bool canPurchase = !unlocked && prereqsMet && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
-                card.AddToClassList("building-card");
+                card.AddToClassList("research-card");
                 if (unlocked) card.AddToClassList("research-card--unlocked");
 
-                // Name row
+                // Name
                 var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
-                nameLabel.AddToClassList("building-card-name");
+                nameLabel.AddToClassList("research-card-name");
                 card.Add(nameLabel);
 
-                // Description
+                // Description (wrapping)
                 if (!string.IsNullOrEmpty(research.description))
                 {
                     var descLabel = new Label(research.description);
-                    descLabel.AddToClassList("building-card-recipe");
+                    descLabel.AddToClassList("research-card-desc");
                     card.Add(descLabel);
                 }
 
                 if (!unlocked)
                 {
-                    // Cost
-                    bool affordable = currentEntropy >= research.costBaseCurrency;
-                    var costLabel = new Label($"◈ {research.costBaseCurrency:N0}");
-                    costLabel.AddToClassList("building-card-recipe");
-                    if (!affordable)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
-                    card.Add(costLabel);
+                    var footer = new VisualElement();
+                    footer.AddToClassList("research-card-footer");
 
-                    // Prerequisites (if locked)
-                    if (research.prerequisites != null && research.prerequisites.Length > 0)
+                    if (!prereqsMet)
                     {
-                        bool prereqsMet = canPurchase || unlocked;
-                        if (!prereqsMet)
+                        // Show what's blocking this research
+                        var prereqNames = string.Join(", ",
+                            System.Array.ConvertAll(research.prerequisites,
+                                p => p != null ? p.displayName : "?"));
+                        var prereqLabel = new Label($"Requires: {prereqNames}");
+                        prereqLabel.AddToClassList("research-card-prereq");
+                        footer.Add(prereqLabel);
+                    }
+                    else
+                    {
+                        // Cost badge
+                        bool affordable = currentEntropy >= research.costBaseCurrency;
+                        var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
+                        costLabel.AddToClassList("research-card-cost");
+                        if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
+                        footer.Add(costLabel);
+
+                        // Purchase button
+                        var purchaseBtn = new Button { text = "Unlock" };
+                        purchaseBtn.AddToClassList("craft-btn");
+                        purchaseBtn.SetEnabled(canPurchase);
+
+                        var captured = research;
+                        purchaseBtn.clicked += () =>
                         {
-                            var prereqNames = string.Join(", ",
-                                System.Array.ConvertAll(research.prerequisites,
-                                    p => p != null ? p.displayName : "?"));
-                            var prereqLabel = new Label($"Requires: {prereqNames}");
-                            prereqLabel.AddToClassList("building-card-recipe");
-                            prereqLabel.style.color = new UnityEngine.Color(0.6f, 0.6f, 0.6f);
-                            card.Add(prereqLabel);
-                        }
+                            researchService.Purchase(captured);
+                            BuildResearchList();
+                        };
+                        footer.Add(purchaseBtn);
                     }
 
-                    // Purchase button
-                    var purchaseBtn = new Button { text = "Research" };
-                    purchaseBtn.AddToClassList("craft-btn");
-                    purchaseBtn.SetEnabled(canPurchase);
-
-                    var captured = research;
-                    purchaseBtn.clicked += () =>
-                    {
-                        researchService.Purchase(captured);
-                        BuildResearchList(); // refresh after purchase
-                    };
-                    card.Add(purchaseBtn);
+                    card.Add(footer);
                 }
 
                 _researchList.Add(card);

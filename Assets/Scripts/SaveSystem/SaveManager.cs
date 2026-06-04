@@ -71,10 +71,19 @@ namespace MobileIdleBuilder
 
         void OnApplicationPause(bool paused)
         {
+#if UNITY_EDITOR
+            if (GameBootstrap.TestModeEnabled) return;
+#endif
             if (paused) SaveLocal();
         }
 
-        void OnApplicationQuit() => SaveLocal();
+        void OnApplicationQuit()
+        {
+#if UNITY_EDITOR
+            if (GameBootstrap.TestModeEnabled) return;
+#endif
+            SaveLocal();
+        }
 
         // ── Public API ────────────────────────────────────────────────────────
 
@@ -129,6 +138,9 @@ namespace MobileIdleBuilder
             while (true)
             {
                 yield return new WaitForSeconds(autoSaveIntervalSeconds);
+#if UNITY_EDITOR
+                if (GameBootstrap.TestModeEnabled) continue;
+#endif
                 yield return SaveToCloud();
             }
         }

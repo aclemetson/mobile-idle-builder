@@ -240,9 +240,65 @@
     -unity-font-style: bold;
 }
 
+/* ---- Research cards ---- */
+.research-card {
+    flex-direction: column;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-surface-raised);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.research-card:hover {
+    border-color: rgba(0, 229, 255, 0.4);
+}
+
+.research-card-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.research-card-desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-bottom: var(--spacing-xs);
+}
+
+.research-card-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.research-card-cost {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.research-card-cost--unaffordable {
+    color: var(--color-danger);
+}
+
+.research-card-prereq {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    -unity-font-style: italic;
+    flex-grow: 1;
+}
+
 /* Unlocked research card */
 .research-card--unlocked {
     opacity: 0.55;
+    border-color: var(--color-success);
 }
 
 /* ---- Slide-up panel ---- */

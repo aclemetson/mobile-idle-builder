@@ -297,6 +297,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UIScaler
   designWidth: 1080
+  scaleFactor: 2
 --- !u!1 &1121101505
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,6 +342,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GameBootstrap
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
+  _testModeEnabled: 1
+  _testModeFieldSeed: 42
 --- !u!114 &1121101508
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -355,7 +358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
   autoSaveIntervalSeconds: 10
-  _resetTutorialOnPlay: 0
+  _resetTutorialOnPlay: 1
 --- !u!4 &1121101509
 Transform:
   m_ObjectHideFlags: 0
