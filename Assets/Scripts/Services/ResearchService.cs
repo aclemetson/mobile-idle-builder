@@ -109,7 +109,7 @@ namespace MobileIdleBuilder
             OnResearchUnlocked?.Invoke(research);
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         /// <summary>
         /// Unlocks research by ID without checking prerequisites or cost.
         /// Updates the live in-memory set, SaveData, and marks gated recipes as known.

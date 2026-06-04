@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections.Generic;
+using System.Text;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -490,6 +491,113 @@ namespace MobileIdleBuilder.Dev
                     }
 
                     return $"Tutorial skipped. {unlocked} research node(s) unlocked.";
+                });
+
+            _registry.Register("tutorial list", "List all tutorial step IDs with their indices",
+                _ =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    var sb = new StringBuilder($"Tutorial steps ({flow.steps.Length} total):\n");
+                    for (int i = 0; i < flow.steps.Length; i++)
+                        sb.AppendLine($"  [{i,2}]  {flow.steps[i].id}");
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("tutorial skip <id>", "Skip to a tutorial step by ID (use 'tutorial list' to find IDs)",
+                args =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    // Find step index — args[0] is already lowercased by registry
+                    int idx = -1;
+                    string targetId = args[0];
+                    for (int i = 0; i < flow.steps.Length; i++)
+                    {
+                        if (flow.steps[i].id.ToLowerInvariant() == targetId)
+                        {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    if (idx < 0)
+                        return $"Unknown step '{targetId}'. Type 'tutorial list' to see all IDs.";
+
+                    string canonicalId = flow.steps[idx].id;
+
+                    // ── ECS: set tutorial step and entropy ────────────────────
+                    long entropy = TutorialStepPresets.GetEntropy(flow, idx);
+
+                    if (!_tutorialQuery.IsEmpty)
+                    {
+                        var entity = _tutorialQuery.GetSingletonEntity();
+                        var ts     = _em.GetComponentData<TutorialStateData>(entity);
+                        ts.CurrentStepIndex = idx;
+                        ts.IsActive         = true;
+                        _em.SetComponentData(entity, ts);
+                    }
+
+                    if (!_progressQuery.IsEmpty)
+                    {
+                        var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                        pp.BaseCurrency = entropy;
+                        _progressQuery.SetSingleton(pp);
+                    }
+
+                    // ── Research: unlock all gates for steps 0..(idx-1) ──────
+                    var rs        = ResearchService.Instance;
+                    int unlocked  = 0;
+                    if (rs != null)
+                    {
+                        for (int i = 0; i < idx; i++)
+                        {
+                            var cond = flow.steps[i].advanceCondition;
+                            if (cond?.type == ConditionType.ResearchUnlocked &&
+                                !string.IsNullOrEmpty(cond.researchId))
+                            {
+                                rs.ForceUnlock(cond.researchId);
+                                unlocked++;
+                            }
+                        }
+                    }
+
+                    // ── SaveData: persist tutorial and currency state ─────────
+                    var save = SaveManager.Instance?.Current;
+                    if (save != null)
+                    {
+                        save.tutorial.currentStepId = canonicalId;
+                        save.tutorial.isActive      = true;
+                        save.currentRun.baseCurrency = entropy;
+                    }
+
+                    // ── Grid: apply building/conveyor preset if defined ───────
+                    var buildings = TutorialStepPresets.GetBuildings(canonicalId);
+                    var conveyors = TutorialStepPresets.GetConveyors(canonicalId);
+
+                    if (buildings != null && save != null)
+                    {
+                        save.currentRun.grid.buildings = new List<BuildingSaveData>(buildings);
+                        save.currentRun.grid.conveyors = conveyors != null
+                            ? new List<ConveyorSaveData>(conveyors)
+                            : new List<ConveyorSaveData>();
+                        SaveManager.Instance.SaveLocal();
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                        return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                               $"{unlocked} research node(s) unlocked. Reloading scene to apply grid...";
+                    }
+
+                    SaveManager.Instance?.SaveLocal();
+
+                    string gridNote = idx >= 31
+                        ? " (grid preset not yet captured — place buildings manually if needed)"
+                        : string.Empty;
+
+                    return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                           $"{unlocked} research node(s) unlocked.{gridNote}";
                 });
 
             // ── save / reload ─────────────────────────────────────────────────
