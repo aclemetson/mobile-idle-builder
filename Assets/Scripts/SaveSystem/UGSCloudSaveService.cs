@@ -54,6 +54,25 @@ namespace MobileIdleBuilder
 
                 if (!AuthenticationService.Instance.IsSignedIn)
                 {
+                    // Restore a cached UGS session first — avoids Google Sign-In on every cold start.
+                    // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when
+                    // a session token is present, per UGS Auth docs.
+                    if (AuthenticationService.Instance.SessionTokenExists)
+                    {
+                        try
+                        {
+                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                            GameLogger.Info("[UGSCloudSave] Restored cached UGS session.");
+                        }
+                        catch (Exception sessionEx)
+                        {
+                            GameLogger.Info($"[UGSCloudSave] Cached session restore failed ({sessionEx.Message}); proceeding to Google Sign-In.");
+                        }
+                    }
+                }
+
+                if (!AuthenticationService.Instance.IsSignedIn)
+                {
 #if UNITY_EDITOR
                     if (EditorAuthProvider != null)
                         await EditorAuthProvider();
