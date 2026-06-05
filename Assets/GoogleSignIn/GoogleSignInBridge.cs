@@ -27,17 +27,31 @@ public static class GoogleSignInBridge
     static async Task<string> GetIdTokenAsync()
     {
         GoogleSignInUser user;
+        bool usedInteractiveSignIn;
 
-        try
+        if (AuthSessionPolicy.RequiresInteractiveSignIn())
         {
-            // Silent on repeat launches — no UI shown if session is cached
-            user = await Wrap(GoogleSignIn.DefaultInstance.SignInSilently());
-        }
-        catch
-        {
-            // First launch or expired session — shows Google account picker
+            // Policy requires full account picker (inactivity ≥30d or full-auth ≥90d)
             user = await Wrap(GoogleSignIn.DefaultInstance.SignIn());
+            usedInteractiveSignIn = true;
         }
+        else
+        {
+            usedInteractiveSignIn = false;
+            try
+            {
+                user = await Wrap(GoogleSignIn.DefaultInstance.SignInSilently());
+            }
+            catch
+            {
+                // Cached session dropped — fall back to account picker
+                user = await Wrap(GoogleSignIn.DefaultInstance.SignIn());
+                usedInteractiveSignIn = true;
+            }
+        }
+
+        if (usedInteractiveSignIn)
+            AuthSessionPolicy.RecordFullAuth();
 
         if (string.IsNullOrEmpty(user.IdToken))
             throw new Exception("[GoogleSignIn] IdToken is null — verify RequestIdToken = true in configuration.");

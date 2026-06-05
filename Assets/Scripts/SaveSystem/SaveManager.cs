@@ -59,6 +59,7 @@ namespace MobileIdleBuilder
             }
 #endif
 
+            AuthSessionPolicy.RecordAppOpen();
             _cloud = new UGSCloudSaveService();
         }
 
