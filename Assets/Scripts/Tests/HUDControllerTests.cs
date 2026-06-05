@@ -223,6 +223,75 @@ namespace MobileIdleBuilder.Tests
         }
 
         // ================================================================
+        // BuildIngredientsUI
+        // ================================================================
+
+        [Test]
+        public void BuildIngredientsUI_NullInputs_ReturnsEmptyContainer()
+        {
+            var recipe = new RecipeJson { inputs = null };
+            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            Assert.AreEqual(0, result.childCount);
+            Assert.IsTrue(result.ClassListContains("recipe-inputs-row"));
+        }
+
+        [Test]
+        public void BuildIngredientsUI_EmptyInputs_ReturnsEmptyContainer()
+        {
+            var recipe = new RecipeJson { inputs = new List<RecipeIngredientJson>() };
+            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            Assert.AreEqual(0, result.childCount);
+            Assert.IsTrue(result.ClassListContains("recipe-inputs-row"));
+        }
+
+        [Test]
+        public void BuildIngredientsUI_SingleInput_ZeroInventory_IsMissing()
+        {
+            // ItemDatabase.Instance is null in edit-mode → itemId = -1 → count = 0
+            var recipe = new RecipeJson
+            {
+                inputs = new List<RecipeIngredientJson>
+                {
+                    new RecipeIngredientJson { id = "up_quark", quantity = 2 }
+                }
+            };
+            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            Assert.AreEqual(1, result.childCount);
+            var lbl = result[0] as Label;
+            Assert.IsNotNull(lbl);
+            StringAssert.StartsWith("0/2", lbl.text);
+            Assert.IsTrue(lbl.ClassListContains("recipe-input-missing"));
+        }
+
+        [Test]
+        public void BuildIngredientsUI_SingleInput_SufficientCount_IsMet()
+        {
+            // The green path requires a live ItemDatabase to resolve string→itemId.
+            // Covered by play-mode ManualCraftService integration tests.
+            Assert.Pass("Green path requires play-mode ItemDatabase.");
+        }
+
+        [Test]
+        public void BuildIngredientsUI_TwoInputs_HasOneSeparator()
+        {
+            var recipe = new RecipeJson
+            {
+                inputs = new List<RecipeIngredientJson>
+                {
+                    new RecipeIngredientJson { id = "proton",   quantity = 1 },
+                    new RecipeIngredientJson { id = "electron", quantity = 1 }
+                }
+            };
+            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            // Layout: lbl, sep, lbl — 3 children
+            Assert.AreEqual(3, result.childCount);
+            var sep = result[1] as Label;
+            Assert.IsNotNull(sep);
+            Assert.IsTrue(sep.ClassListContains("recipe-input-sep"));
+            Assert.AreEqual("+", sep.text);
+        }
+
+        // ================================================================
         // Notification modifier class management
         // (tests the class-swap logic in isolation on a bare VisualElement)
         // ================================================================

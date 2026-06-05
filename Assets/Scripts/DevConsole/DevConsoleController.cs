@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections.Generic;
+using System.Text;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -50,7 +51,23 @@ namespace MobileIdleBuilder.Dev
 
         private DevCommandRegistry _registry;
 
+        // ── Singleton ─────────────────────────────────────────────────────────
+
+        private static DevConsoleController s_Instance;
+
         // ── Unity lifecycle ───────────────────────────────────────────────────
+
+        void Awake()
+        {
+            if (s_Instance != null && s_Instance != this)
+            {
+                Destroy(gameObject);   // destroy the whole GO so the UIDocument goes with it
+                return;
+            }
+            s_Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
 
         void OnEnable()
         {
@@ -91,8 +108,28 @@ namespace MobileIdleBuilder.Dev
 
         void OnDestroy()
         {
+            if (s_Instance == this)
+            {
+                s_Instance = null;
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+            }
             if (Accelerometer.current != null)
                 InputSystem.DisableDevice(Accelerometer.current);
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Re-acquire ECS queries — the world is recreated on each scene reload.
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) return;
+
+            _em             = world.EntityManager;
+            _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
+            _inventoryQuery = _em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInventoryTag>(),
+                ComponentType.ReadWrite<InventorySlot>());
+            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
         }
 
         void Update()
@@ -315,12 +352,21 @@ namespace MobileIdleBuilder.Dev
                 });
 
             // ── show progress ─────────────────────────────────────────────────
-            _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
+            _registry.Register("show progress", "Dump PlayerProgressData (entropy, tier, research, NetWorth, prestige)",
                 _ =>
                 {
                     if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
                     var data = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-                    return $"NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                    int researchCount = -1;
+                    var rs2 = ResearchService.Instance;
+                    if (rs2?.AllResearch != null)
+                    {
+                        researchCount = 0;
+                        foreach (var r in rs2.AllResearch)
+                            if (rs2.IsUnlocked(r.id)) researchCount++;
+                    }
+                    string research = researchCount >= 0 ? researchCount.ToString() : "?";
+                    return $"Entropy={data.BaseCurrency}  Tier={data.CurrentTier}  Research={research}  NetWorth={data.NetWorth:F0}  Base={data.BaseNetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
                 });
 
             // ── set prestige available ────────────────────────────────────────
@@ -492,6 +538,146 @@ namespace MobileIdleBuilder.Dev
                     return $"Tutorial skipped. {unlocked} research node(s) unlocked.";
                 });
 
+            _registry.Register("tutorial list", "List all tutorial step IDs with their indices",
+                _ =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    var sb = new StringBuilder($"Tutorial steps ({flow.steps.Length} total):\n");
+                    for (int i = 0; i < flow.steps.Length; i++)
+                        sb.AppendLine($"  [{i,2}]  {flow.steps[i].id}");
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("tutorial skip <id>", "Skip to a tutorial step by ID (use 'tutorial list' to find IDs)",
+                args =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    // Find step index — args[0] is already lowercased by registry
+                    int idx = -1;
+                    string targetId = args[0];
+                    for (int i = 0; i < flow.steps.Length; i++)
+                    {
+                        if (flow.steps[i].id.ToLowerInvariant() == targetId)
+                        {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    if (idx < 0)
+                        return $"Unknown step '{targetId}'. Type 'tutorial list' to see all IDs.";
+
+                    string canonicalId = flow.steps[idx].id;
+
+                    // ── ECS: set tutorial step, entropy, and net worth ────────
+                    long  entropy    = TutorialStepPresets.GetEntropy(flow, idx);
+                    float netWorth   = TutorialStepPresets.GetNetWorth(flow, idx);
+                    long  totalSpent = TutorialStepPresets.GetTotalEntropySpent(flow, idx);
+                    float totalEarned = (float)(entropy + totalSpent);
+
+                    if (!_tutorialQuery.IsEmpty)
+                    {
+                        var entity = _tutorialQuery.GetSingletonEntity();
+                        var ts     = _em.GetComponentData<TutorialStateData>(entity);
+                        ts.CurrentStepIndex = idx;
+                        ts.IsActive         = true;
+                        _em.SetComponentData(entity, ts);
+                    }
+
+                    if (!_progressQuery.IsEmpty)
+                    {
+                        var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                        pp.BaseCurrency      = entropy;
+                        pp.TotalEntropySpent = totalSpent;
+                        pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
+                        pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
+                        _progressQuery.SetSingleton(pp);
+                    }
+
+                    // ── Research: unlock all gates for steps 0..(idx-1) ──────
+                    var rs           = ResearchService.Instance;
+                    int  unlocked    = 0;
+                    long researchCost = 0;
+                    if (rs != null)
+                    {
+                        for (int i = 0; i < idx; i++)
+                        {
+                            var cond = flow.steps[i].advanceCondition;
+                            if (cond?.type == ConditionType.ResearchUnlocked &&
+                                !string.IsNullOrEmpty(cond.researchId))
+                            {
+                                rs.ForceUnlock(cond.researchId);
+                                unlocked++;
+                                foreach (var r in rs.AllResearch)
+                                    if (r != null && r.id == cond.researchId)
+                                        { researchCost += r.costBaseCurrency; break; }
+                            }
+                        }
+                    }
+
+                    // ── SaveData: persist tutorial and currency state ─────────
+                    var save = SaveManager.Instance?.Current;
+                    if (save != null)
+                    {
+                        save.tutorial.currentStepId           = canonicalId;
+                        save.tutorial.isActive                 = true;
+                        save.currentRun.baseCurrency           = entropy;
+                        save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
+                    }
+
+                    // ── Grid: apply building/conveyor preset if defined ───────
+                    var buildings = TutorialStepPresets.GetBuildings(canonicalId);
+                    var conveyors = TutorialStepPresets.GetConveyors(canonicalId);
+
+                    if (buildings != null && save != null)
+                    {
+                        save.currentRun.grid.buildings = new List<BuildingSaveData>(buildings);
+                        save.currentRun.grid.conveyors = conveyors != null
+                            ? new List<ConveyorSaveData>(conveyors)
+                            : new List<ConveyorSaveData>();
+                        var presetFields = TutorialStepPresets.GetFields(canonicalId);
+                        save.currentRun.grid.fields = presetFields != null
+                            ? new List<FieldSaveData>(presetFields)
+                            : new List<FieldSaveData>();
+                        GridSaveService.Instance?.ClearGrid();
+                        GridSaveService.Instance?.LoadGrid(forceApply: true);
+
+                        // Set TotalEntropySpent = actual research costs + actual building costs
+                        // so net worth (BaseCurrency + TotalEntropySpent) correctly reflects
+                        // the full investment at this tutorial checkpoint.
+                        long buildingCost  = GridSaveService.Instance?.ComputeGridBuildingCost() ?? 0;
+                        long totalInvested = researchCost + buildingCost;
+                        if (!_progressQuery.IsEmpty)
+                        {
+                            var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                            pp.BaseCurrency      = entropy;
+                            pp.TotalEntropySpent = totalInvested;
+                            pp.BaseNetWorth      = 0f;
+                            pp.NetWorth          = entropy + totalInvested;
+                            _progressQuery.SetSingleton(pp);
+                        }
+
+                        SaveManager.Instance.SaveLocal(skipGridFlush: true);
+                        return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                               $"{unlocked} research node(s) unlocked. Grid applied.";
+                    }
+
+                    SaveManager.Instance?.SaveLocal();
+
+                    string gridNote = idx >= 31
+                        ? " (grid preset not yet captured — place buildings manually if needed)"
+                        : string.Empty;
+
+                    return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                           $"{unlocked} research node(s) unlocked.{gridNote}";
+                });
+
             // ── save / reload ─────────────────────────────────────────────────
             _registry.Register("save", "Force local save",
                 _ =>
@@ -506,6 +692,22 @@ namespace MobileIdleBuilder.Dev
                     new LocalSaveService().Delete();
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Save cleared. Reloading...";
+                });
+
+            _registry.Register("clear cloud save", "Delete cloud + local save and restart from tutorial (debug only)",
+                _ =>
+                {
+                    var sm = SaveManager.Instance;
+                    if (sm == null) return "Error: SaveManager not ready.";
+                    StartCoroutine(sm.DeleteCloudSave(success =>
+                    {
+                        if (!success)
+                            AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
+                        new LocalSaveService().Delete();
+                        sm.ResetToFreshSave();
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    }));
+                    return "Deleting cloud + local save. Reloading...";
                 });
 
             _registry.Register("reload", "Reload the active scene",

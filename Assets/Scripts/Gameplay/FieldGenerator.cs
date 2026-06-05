@@ -61,6 +61,19 @@ namespace MobileIdleBuilder
 
         void OnDestroy() { _fieldMap.Clear(); _instanceMap.Clear(); } // clean up between Play sessions in the editor
 
+        /// <summary>Destroys all active fields and resets their grid tile colours. Called by tutorial skip.</summary>
+        public void ClearAllFields()
+        {
+            foreach (var kv in _instanceMap)
+            {
+                if (kv.Value != null)
+                    Destroy(kv.Value.gameObject);
+                gridRenderer?.ClearFieldTileColor(kv.Key.x, kv.Key.y);
+            }
+            _fieldMap.Clear();
+            _instanceMap.Clear();
+        }
+
         IEnumerator Start()
         {
             _fieldMap.Clear();
@@ -82,6 +95,10 @@ namespace MobileIdleBuilder
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
+#if UNITY_EDITOR
+            if (GameBootstrap.TestModeEnabled)
+                UnityEngine.Random.InitState(GameBootstrap.TestModeFieldSeed);
+#endif
             Shuffle(candidates);
 
             int candidateIndex = 0;

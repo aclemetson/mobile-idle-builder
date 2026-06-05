@@ -109,7 +109,7 @@ namespace MobileIdleBuilder
             OnResearchUnlocked?.Invoke(research);
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         /// <summary>
         /// Unlocks research by ID without checking prerequisites or cost.
         /// Updates the live in-memory set, SaveData, and marks gated recipes as known.
@@ -142,6 +142,18 @@ namespace MobileIdleBuilder
         }
 #endif
 
+        // ── Prestige reset ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Clears all unlocked research for the new run. Called by PrestigeSaveWatcher.
+        /// The caller is responsible for clearing save.unlockedResearch before saving.
+        /// </summary>
+        public void ResetAll()
+        {
+            _unlockedIds.Clear();
+            GameLogger.Info("[ResearchService] Research reset for prestige.");
+        }
+
         // ── ECS helpers ──────────────────────────────────────────────────────
 
         private long GetCurrentEntropy()
@@ -154,7 +166,9 @@ namespace MobileIdleBuilder
         {
             if (_progressQuery.IsEmpty) return;
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            progress.BaseCurrency = Math.Max(0, progress.BaseCurrency - amount);
+            long actual = Math.Min(amount, progress.BaseCurrency);
+            progress.BaseCurrency      -= actual;
+            progress.TotalEntropySpent += actual;
             _progressQuery.SetSingleton(progress);
         }
     }

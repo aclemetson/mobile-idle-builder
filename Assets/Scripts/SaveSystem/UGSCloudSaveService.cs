@@ -111,6 +111,23 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>Deletes the cloud save key for the signed-in player.</summary>
+        public async Task DeleteAsync()
+        {
+            if (!IsAvailable) return;
+
+            try
+            {
+                await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.DeleteAsync(k_SaveKey);
+                GameLogger.Info("[UGSCloudSave] Cloud save deleted.");
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Warning($"[UGSCloudSave] DeleteAsync failed: {ex.Message}");
+                throw;
+            }
+        }
+
         /// <summary>Pushes SaveData to UGS under key "save_v1".</summary>
         public async Task PushAsync(SaveData data)
         {

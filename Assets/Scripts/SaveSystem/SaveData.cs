@@ -31,7 +31,9 @@ namespace MobileIdleBuilder
     [Serializable]
     public class CurrentRunData
     {
-        public long baseCurrency;
+        public long  baseCurrency;
+        public long  totalEntropySpent;
+        public float baseNetWorth;
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();

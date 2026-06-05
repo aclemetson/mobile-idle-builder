@@ -23,17 +23,21 @@ namespace MobileIdleBuilder
 
         private EntityManager _em;
         private EntityQuery   _segmentQuery;
+        private bool          _queryReady;
 
         void Start()
         {
-            _em           = World.DefaultGameObjectInjectionWorld.EntityManager;
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) return;
+            _em           = world.EntityManager;
             _segmentQuery = _em.CreateEntityQuery(typeof(ConveyorSegmentData));
+            _queryReady   = true;
         }
 
         void OnDestroy()
         {
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world != null && world.IsCreated)
+            if (_queryReady && world != null && world.IsCreated)
                 _segmentQuery.Dispose();
         }
 

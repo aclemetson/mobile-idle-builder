@@ -37,18 +37,32 @@ namespace MobileIdleBuilder
             if (current == _lastRunCount) return;
             _lastRunCount = current;
 
-            // Prestige just completed — wipe run state and permanently retire the tutorial
+            // Prestige just completed — wipe run state and permanently retire the tutorial.
             var save = SaveManager.Instance?.Current;
             if (save != null)
             {
+                // Flush first so prestige totals (RunCount, PrestigeCurrency, multipliers)
+                // are written to save before we zero the current-run fields.
+                ECSLoadBridge.Instance?.FlushToSave();
+
+                // Explicitly zero the current run regardless of ECS timing — this prevents
+                // any stale pre-prestige values from being written if ECS flushed early.
                 save.currentRun = new CurrentRunData();
-                save.currentRun.grid = new GridSaveData();
+
+                // Research fully resets on prestige (player re-unlocks each run).
+                save.unlockedResearch = new();
+
                 save.tutorial.hasCompletedFirstRun = true;
                 save.tutorial.isActive             = false;
             }
 
-            ECSLoadBridge.Instance?.FlushToSave();  // writes updated prestige totals
-            SaveManager.Instance?.SaveLocal();
+            // Reset the in-memory research set so IsUnlocked() returns false immediately.
+            ResearchService.Instance?.ResetAll();
+
+            // skipECSFlush=true: we just explicitly zeroed currentRun above;
+            // a second FlushToSave would overwrite with potentially stale ECS values.
+            // Grid flush is still allowed — buildings are already destroyed by PrestigeSystem.
+            SaveManager.Instance?.SaveLocal(skipECSFlush: true);
 
             GameLogger.Info($"[PrestigeSaveWatcher] Run {current} saved after prestige.");
         }

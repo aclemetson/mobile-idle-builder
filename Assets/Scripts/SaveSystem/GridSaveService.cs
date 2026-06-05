@@ -44,6 +44,82 @@ namespace MobileIdleBuilder
             _ecsReady = true;
         }
 
+        // ── Clear path ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Destroys all building and conveyor ECS entities, releases grid occupancy,
+        /// and removes their visuals. Called by tutorial skip before applying a preset in-place.
+        /// </summary>
+        public void ClearGrid()
+        {
+            if (!_ecsReady) return;
+
+            var buildingVisualizer = FindAnyObjectByType<BuildingVisualizer>();
+            var conveyorVisualizer  = FindAnyObjectByType<ConveyorVisualizer>();
+
+            var buildingEntities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            foreach (var e in buildingEntities)
+            {
+                var gp = _em.GetComponentData<GridPosition>(e);
+                int fw = 1, fh = 1;
+                if (_em.HasComponent<BuildingFootprint>(e))
+                {
+                    var fp = _em.GetComponentData<BuildingFootprint>(e);
+                    fw = fp.Width;
+                    fh = fp.Height;
+                }
+
+                // Preserve entropy sinks (Maxwell's Demon) — they're baked/auto-placed and
+                // cannot be recreated through the normal LoadGrid path.
+                if (_em.HasComponent<EntropySinkTag>(e))
+                {
+                    GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
+                    continue;
+                }
+
+                GridOccupancy.Instance?.ReleaseRect(gp.Cell.x, gp.Cell.y, fw, fh);
+                buildingVisualizer?.RemoveBuilding(gp.Cell.x, gp.Cell.y);
+                _em.DestroyEntity(e);
+            }
+            buildingEntities.Dispose();
+
+            var convEntities = _conveyorQuery.ToEntityArray(Allocator.Temp);
+            foreach (var e in convEntities)
+            {
+                var seg = _em.GetComponentData<ConveyorSegmentData>(e);
+                GridOccupancy.Instance?.UnregisterConveyor(seg.Cell.x, seg.Cell.y);
+                conveyorVisualizer?.RemoveBelt(seg.Cell.x, seg.Cell.y);
+                _em.DestroyEntity(e);
+            }
+            convEntities.Dispose();
+
+            FindAnyObjectByType<FieldGenerator>()?.ClearAllFields();
+        }
+
+        /// <summary>
+        /// Returns the total entropyCost of all buildings currently in the grid save data,
+        /// using the building catalogue from placementController. Used by tutorial skip to
+        /// mirror the BaseCurrency→TotalEntropySpent transfer that OnBuildingPlaced would do.
+        /// </summary>
+        public long ComputeGridBuildingCost()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save?.currentRun?.grid?.buildings == null) return 0;
+            if (placementController?.availableBuildings == null) return 0;
+
+            var lookup = new Dictionary<int, int>();
+            foreach (var entry in placementController.availableBuildings)
+                if (entry.building != null)
+                    lookup[entry.building.buildingId] = entry.building.entropyCost;
+
+            long total = 0;
+            foreach (var bsd in save.currentRun.grid.buildings)
+                if (lookup.TryGetValue(bsd.buildingId, out int cost))
+                    total += cost;
+
+            return total;
+        }
+
         // ── Save path ─────────────────────────────────────────────────────
 
         /// <summary>Called by SaveManager.SaveLocal() before writing to disk.</summary>
@@ -130,11 +206,12 @@ namespace MobileIdleBuilder
         // ── Load path ─────────────────────────────────────────────────────
 
         /// <summary>Called by ECSLoadBridge after ECS entities are confirmed present.</summary>
-        public void LoadGrid()
+        /// <param name="forceApply">If true, bypasses the IsNewGame guard (used by tutorial skip on a fresh session).</param>
+        public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
             if (save?.currentRun?.grid == null) return;
-            if (SaveManager.Instance.IsNewGame) return;
+            if (!forceApply && SaveManager.Instance.IsNewGame) return;
 
             bool hasBuildings = save.currentRun.grid.buildings?.Count > 0;
             bool hasConveyors = save.currentRun.grid.conveyors?.Count > 0;
