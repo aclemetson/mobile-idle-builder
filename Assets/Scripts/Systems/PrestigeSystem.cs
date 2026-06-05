@@ -8,7 +8,7 @@ namespace MobileIdleBuilder
     ///   1. Detects when the player requests a prestige.
     ///   2. Calculates prestige currency from net worth (via GameConfig rate).
     ///   3. Resets current-run state: inventory, buildings.
-    ///   4. Preserves: PrestigeData, recipe knowledge (tracked externally in save file).
+    ///   4. Resets: research unlocks (per-run). Preserves: PrestigeData, recipe knowledge.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct PrestigeSystem : ISystem
@@ -50,6 +50,7 @@ namespace MobileIdleBuilder
             progress.BaseCurrency      = 0;
             progress.TotalEntropySpent = 0;
             progress.NetWorth          = 0f;
+            progress.BaseNetWorth      = 0f;
             progress.CurrentTier       = 1;
             progress.PrestigeAvailable = false;
             progress.PrestigeRequested = false;
@@ -71,6 +72,11 @@ namespace MobileIdleBuilder
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
+
+            // --- Reset managed services (system is not Burst-compiled, so this is safe) ---
+            ResearchService.Instance?.ResetAll();
+            if (SaveManager.Instance?.Current != null)
+                SaveManager.Instance.Current.unlockedResearch = new System.Collections.Generic.List<string>();
 
             GameLogger.Info(
                 $"[PrestigeSystem] Run {prestige.RunCount} complete. " +

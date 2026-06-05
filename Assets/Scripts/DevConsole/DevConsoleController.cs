@@ -694,6 +694,22 @@ namespace MobileIdleBuilder.Dev
                     return "Save cleared. Reloading...";
                 });
 
+            _registry.Register("clear cloud save", "Delete cloud + local save and restart from tutorial (debug only)",
+                _ =>
+                {
+                    var sm = SaveManager.Instance;
+                    if (sm == null) return "Error: SaveManager not ready.";
+                    StartCoroutine(sm.DeleteCloudSave(success =>
+                    {
+                        if (!success)
+                            AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
+                        new LocalSaveService().Delete();
+                        sm.ResetToFreshSave();
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    }));
+                    return "Deleting cloud + local save. Reloading...";
+                });
+
             _registry.Register("reload", "Reload the active scene",
                 _ =>
                 {

@@ -142,6 +142,18 @@ namespace MobileIdleBuilder
         }
 #endif
 
+        // ── Prestige reset ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Clears all unlocked research for the new run. Called by PrestigeSaveWatcher.
+        /// The caller is responsible for clearing save.unlockedResearch before saving.
+        /// </summary>
+        public void ResetAll()
+        {
+            _unlockedIds.Clear();
+            GameLogger.Info("[ResearchService] Research reset for prestige.");
+        }
+
         // ── ECS helpers ──────────────────────────────────────────────────────
 
         private long GetCurrentEntropy()

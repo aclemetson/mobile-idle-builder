@@ -113,9 +113,10 @@ namespace MobileIdleBuilder
             }
         }
 
-        public void SaveLocal(bool skipGridFlush = false)
+        public void SaveLocal(bool skipGridFlush = false, bool skipECSFlush = false)
         {
-            ECSLoadBridge.Instance?.FlushToSave();
+            if (!skipECSFlush)
+                ECSLoadBridge.Instance?.FlushToSave();
             if (!skipGridFlush)
                 GridSaveService.Instance?.FlushToSave();
             GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
@@ -130,6 +131,26 @@ namespace MobileIdleBuilder
             SaveLocal();
             var task = _cloud.PushAsync(_current);
             yield return new WaitUntil(() => task.IsCompleted);
+        }
+
+        /// <summary>Deletes the cloud save key. onDone receives true on success, false if unavailable or faulted.</summary>
+        public IEnumerator DeleteCloudSave(Action<bool> onDone = null)
+        {
+            if (_cloud == null || !_cloud.IsAvailable)
+            {
+                onDone?.Invoke(false);
+                yield break;
+            }
+            var task = _cloud.DeleteAsync();
+            yield return new WaitUntil(() => task.IsCompleted);
+            onDone?.Invoke(!task.IsFaulted);
+        }
+
+        /// <summary>Resets in-memory save state to a blank new game. Call before scene reload when wiping saves.</summary>
+        public void ResetToFreshSave()
+        {
+            _current  = new SaveData { playerId = GeneratePlayerId() };
+            IsNewGame = true;
         }
 
         // ── Internal ──────────────────────────────────────────────────────────
