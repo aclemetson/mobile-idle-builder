@@ -1,14 +1,12 @@
-using System.Collections;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
-    /// PlayMode tests for AchievementService (progress tracking, threshold completion,
+    /// EditMode tests for AchievementService (progress tracking, threshold completion,
     /// save flush).
     ///
     /// AchievementService has a serialized AchievementDatabase field that can't be set via
@@ -54,42 +52,39 @@ namespace MobileIdleBuilder.PlayModeTests
             s_buildLookup.Invoke(_testDb, null);
         }
 
-        // [UnityTearDown] (not [TearDown]) is required for IEnumerator return type.
-        // The yield lets OnDestroy fire so SingletonMonoBehaviour.Instance is null before the next SetUp.
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
-            if (_achievementGO != null) { Object.Destroy(_achievementGO); _achievementGO = null; }
-            if (_saveManagerGO != null) { Object.Destroy(_saveManagerGO); _saveManagerGO = null; }
-            yield return null;
+            if (_achievementGO != null) { Object.DestroyImmediate(_achievementGO); _achievementGO = null; }
+            if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
             if (File.Exists(_savePath)) File.Delete(_savePath);
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
-            if (_craftAchievement != null) { Object.Destroy(_craftAchievement); _craftAchievement = null; }
-            if (_testDb           != null) { Object.Destroy(_testDb);           _testDb           = null; }
+            if (_craftAchievement != null) { Object.DestroyImmediate(_craftAchievement); _craftAchievement = null; }
+            if (_testDb           != null) { Object.DestroyImmediate(_testDb);           _testDb           = null; }
         }
 
         // Spawns SaveManager then AchievementService with the injected test database.
-        // Database must be set before yield so it is available when Start() → LoadFromSave() runs.
-        IEnumerator SpawnServices()
+        // Database is set before RunStart so it is available when Start() → LoadFromSave() runs.
+        void SpawnServices()
         {
             _saveManagerGO = new GameObject("SaveManager");
-            _saveManagerGO.AddComponent<SaveManager>();
-            yield return null;
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
 
             _achievementGO = new GameObject("AchievementService");
             var svc = _achievementGO.AddComponent<AchievementService>();
+            RunAwake(svc);
             s_dbField.SetValue(svc, _testDb);
-            yield return null;
+            RunStart(svc);
         }
 
         // ── Progress tracking ─────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator NotifyCraft_BelowThreshold_TracksProgress()
+        [Test]
+        public void NotifyCraft_BelowThreshold_TracksProgress()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 3);
 
@@ -97,10 +92,10 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.IsFalse(AchievementService.Instance.IsCompleted("test_craft_5"));
         }
 
-        [UnityTest]
-        public IEnumerator NotifyCraft_AccumulatesAcrossMultipleCalls()
+        [Test]
+        public void NotifyCraft_AccumulatesAcrossMultipleCalls()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 2);
             AchievementService.Instance.NotifyCraft("hydrogen", 2);
@@ -108,10 +103,10 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual(4, AchievementService.Instance.GetProgress("test_craft_5"));
         }
 
-        [UnityTest]
-        public IEnumerator NotifyCraft_WrongItemId_DoesNotCount()
+        [Test]
+        public void NotifyCraft_WrongItemId_DoesNotCount()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("proton", 10);
 
@@ -121,20 +116,20 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Completion ────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator NotifyCraft_AtThreshold_CompletesAchievement()
+        [Test]
+        public void NotifyCraft_AtThreshold_CompletesAchievement()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 5);
 
             Assert.IsTrue(AchievementService.Instance.IsCompleted("test_craft_5"));
         }
 
-        [UnityTest]
-        public IEnumerator NotifyCraft_AtThreshold_FiresOnAchievementUnlocked()
+        [Test]
+        public void NotifyCraft_AtThreshold_FiresOnAchievementUnlocked()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementSO received = null;
             AchievementService.Instance.OnAchievementUnlocked += a => received = a;
@@ -144,10 +139,10 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual("test_craft_5", received.id);
         }
 
-        [UnityTest]
-        public IEnumerator CompletedAchievement_CountsAsOne()
+        [Test]
+        public void CompletedAchievement_CountsAsOne()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 5);
 
@@ -156,10 +151,10 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Save flush ────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator ProgressFlushed_ToSaveData_AfterNotify()
+        [Test]
+        public void ProgressFlushed_ToSaveData_AfterNotify()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 3);
 
@@ -169,16 +164,35 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual(3, entry.count);
         }
 
-        [UnityTest]
-        public IEnumerator CompletedAchievement_FlushedToSaveAchievements()
+        [Test]
+        public void CompletedAchievement_FlushedToSaveAchievements()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             AchievementService.Instance.NotifyCraft("hydrogen", 5);
 
             Assert.IsTrue(
                 SaveManager.Instance.Current.achievements.Contains("test_craft_5"),
                 "Completed achievement id should appear in SaveData.achievements");
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void RunStart(MonoBehaviour mb) =>
+            mb.GetType()
+              .GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+              ?.Invoke(mb, null);
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
         }
     }
 }

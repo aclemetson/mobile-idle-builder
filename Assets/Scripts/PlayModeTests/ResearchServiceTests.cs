@@ -1,15 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
-    /// PlayMode tests for ResearchService (unlock state, purchase affordability, event firing).
+    /// EditMode tests for ResearchService (unlock state, purchase affordability, event firing).
     ///
     /// ResearchService.Awake() loads ResearchDatabaseSO from Resources — returns null in tests,
     /// so _allResearch becomes Array.Empty. We pass ResearchSO instances directly to
@@ -17,6 +16,7 @@ namespace MobileIdleBuilder.PlayModeTests
     ///
     /// Depends on SaveManager (Purchase → SaveManager.Instance.SaveLocal) and on
     /// World.DefaultGameObjectInjectionWorld being set before the service's Start() fires.
+    /// Start() is invoked explicitly via reflection since EditMode does not call it automatically.
     /// </summary>
     [TestFixture]
     public class ResearchServiceTests
@@ -61,12 +61,11 @@ namespace MobileIdleBuilder.PlayModeTests
             _resB.prerequisites    = new[] { _resA };
         }
 
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
-            if (_serviceGO    != null) { Object.Destroy(_serviceGO);    _serviceGO    = null; }
-            if (_saveManagerGO != null) { Object.Destroy(_saveManagerGO); _saveManagerGO = null; }
-            yield return null;
+            if (_serviceGO    != null) { Object.DestroyImmediate(_serviceGO);    _serviceGO    = null; }
+            if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
             if (_testWorld.IsCreated) _testWorld.Dispose();
             World.DefaultGameObjectInjectionWorld = null;
@@ -74,63 +73,63 @@ namespace MobileIdleBuilder.PlayModeTests
             if (File.Exists(_savePath)) File.Delete(_savePath);
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
-            if (_resA != null) { Object.Destroy(_resA); _resA = null; }
-            if (_resB != null) { Object.Destroy(_resB); _resB = null; }
+            if (_resA != null) { Object.DestroyImmediate(_resA); _resA = null; }
+            if (_resB != null) { Object.DestroyImmediate(_resB); _resB = null; }
         }
 
-        IEnumerator SpawnServices()
+        void SpawnServices()
         {
             _saveManagerGO = new GameObject("SaveManager");
-            _saveManagerGO.AddComponent<SaveManager>();
-            yield return null;
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
 
             _serviceGO = new GameObject("ResearchService");
-            _serviceGO.AddComponent<ResearchService>();
-            yield return null;
+            var svc = _serviceGO.AddComponent<ResearchService>();
+            RunAwake(svc);
+            RunStart(svc); // Start() → ECS setup + load unlockedIds from SaveManager
         }
 
         // ── IsUnlocked ───────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator IsUnlocked_FalseByDefault()
+        [Test]
+        public void IsUnlocked_FalseByDefault()
         {
-            yield return SpawnServices();
+            SpawnServices();
             Assert.IsFalse(ResearchService.Instance.IsUnlocked("test_res_a"),
                 "No research is unlocked by default");
         }
 
         // ── CanPurchase ──────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator CanPurchase_FalseWhenAlreadyUnlocked()
+        [Test]
+        public void CanPurchase_FalseWhenAlreadyUnlocked()
         {
             _saveManagerGO = new GameObject("SaveManager");
-            _saveManagerGO.AddComponent<SaveManager>();
-            yield return null;
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
 
             // Inject the id into save data before ResearchService.Start() reads it
             SaveManager.Instance.Current.unlockedResearch.Add("test_res_a");
 
             _serviceGO = new GameObject("ResearchService");
-            _serviceGO.AddComponent<ResearchService>();
-            yield return null;
+            var svc = _serviceGO.AddComponent<ResearchService>();
+            RunAwake(svc);
+            RunStart(svc);
 
             Assert.IsFalse(ResearchService.Instance.CanPurchase(_resA),
                 "Already-unlocked research must not be purchasable");
         }
 
-        [UnityTest]
-        public IEnumerator CanPurchase_FalseWhenPrerequisiteNotMet()
+        [Test]
+        public void CanPurchase_FalseWhenPrerequisiteNotMet()
         {
-            yield return SpawnServices();
+            SpawnServices();
             Assert.IsFalse(ResearchService.Instance.CanPurchase(_resB),
                 "Research with an unmet prerequisite must not be purchasable");
         }
 
-        [UnityTest]
-        public IEnumerator CanPurchase_TrueWhenPrerequisitesMet_AndEnoughCurrency()
+        [Test]
+        public void CanPurchase_TrueWhenPrerequisitesMet_AndEnoughCurrency()
         {
-            yield return SpawnServices();
+            SpawnServices();
             // resA: no prerequisites, player BaseCurrency=1000, cost=100
             Assert.IsTrue(ResearchService.Instance.CanPurchase(_resA),
                 "Research with met prerequisites and sufficient entropy must be purchasable");
@@ -138,19 +137,19 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Purchase ─────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator Purchase_AddsToIsUnlocked()
+        [Test]
+        public void Purchase_AddsToIsUnlocked()
         {
-            yield return SpawnServices();
+            SpawnServices();
             ResearchService.Instance.Purchase(_resA);
             Assert.IsTrue(ResearchService.Instance.IsUnlocked(_resA.id),
                 "Research must be marked unlocked after Purchase");
         }
 
-        [UnityTest]
-        public IEnumerator Purchase_FiresOnResearchUnlocked()
+        [Test]
+        public void Purchase_FiresOnResearchUnlocked()
         {
-            yield return SpawnServices();
+            SpawnServices();
 
             ResearchSO fired = null;
             ResearchService.Instance.OnResearchUnlocked += r => fired = r;
@@ -159,15 +158,34 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual(_resA, fired, "OnResearchUnlocked must fire with the purchased ResearchSO");
         }
 
-        [UnityTest]
-        public IEnumerator Purchase_DeductsCostFromBaseCurrency()
+        [Test]
+        public void Purchase_DeductsCostFromBaseCurrency()
         {
-            yield return SpawnServices();
+            SpawnServices();
             ResearchService.Instance.Purchase(_resA); // costBaseCurrency=100
 
             var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
             Assert.AreEqual(900L, progress.BaseCurrency,
                 "Purchase must deduct costBaseCurrency from PlayerProgressData.BaseCurrency");
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void RunStart(MonoBehaviour mb) =>
+            mb.GetType()
+              .GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+              ?.Invoke(mb, null);
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
         }
     }
 }
