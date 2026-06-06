@@ -27,10 +27,21 @@ namespace MobileIdleBuilder
             PersistentUpgradeService upgrades,
             string fromTimestamp = null)
         {
-            if (save == null || config == null) return null;
+            if (save == null || config == null)
+            {
+                GameLogger.Info($"[Idle] CalculateAndApply skipped — save={save != null} config={config != null}");
+                return null;
+            }
+
+            int chainCount = save.idleSnapshot?.chains?.Count ?? -1;
+            GameLogger.Info($"[Idle] CalculateAndApply — chains={chainCount} lastSaved={save.lastSaved} applied={save.idleCollectionApplied} fromTimestamp={fromTimestamp}");
 
             // No chains saved — nothing to simulate
-            if (save.idleSnapshot?.chains == null || save.idleSnapshot.chains.Count == 0) return null;
+            if (save.idleSnapshot?.chains == null || save.idleSnapshot.chains.Count == 0)
+            {
+                GameLogger.Info("[Idle] Skipped — no chains in snapshot");
+                return null;
+            }
 
             // fromTimestamp overrides save.lastSaved so background-resume and cold-boot
             // paths both funnel through the same guard/calculation logic.
@@ -38,16 +49,32 @@ namespace MobileIdleBuilder
 
             // Already applied for this departure timestamp — guard against double-apply
             if (!string.IsNullOrEmpty(save.idleCollectionApplied) &&
-                save.idleCollectionApplied == effectiveTimestamp) return null;
+                save.idleCollectionApplied == effectiveTimestamp)
+            {
+                GameLogger.Info($"[Idle] Skipped — already applied for timestamp {effectiveTimestamp}");
+                return null;
+            }
 
             // Brand-new game / no timestamp recorded yet
-            if (string.IsNullOrEmpty(effectiveTimestamp)) return null;
+            if (string.IsNullOrEmpty(effectiveTimestamp))
+            {
+                GameLogger.Info("[Idle] Skipped — no effective timestamp");
+                return null;
+            }
 
             if (!DateTime.TryParse(effectiveTimestamp, null, DateTimeStyles.RoundtripKind, out var saveTime))
+            {
+                GameLogger.Info($"[Idle] Skipped — could not parse timestamp '{effectiveTimestamp}'");
                 return null;
+            }
 
             float elapsedSeconds = (float)(DateTime.UtcNow - saveTime.ToUniversalTime()).TotalSeconds;
-            if (elapsedSeconds < 30f) return null;
+            GameLogger.Info($"[Idle] Elapsed={elapsedSeconds:F0}s effectiveTimestamp={effectiveTimestamp}");
+            if (elapsedSeconds < 30f)
+            {
+                GameLogger.Info($"[Idle] Skipped — elapsed {elapsedSeconds:F0}s < 30s minimum");
+                return null;
+            }
 
             float effectiveCap  = GetEffectiveIdleCap(config, upgrades);
             float cappedSeconds = Math.Min(elapsedSeconds, effectiveCap);
@@ -86,6 +113,7 @@ namespace MobileIdleBuilder
             // background-resume paths stamp the same key they checked above.
             save.idleCollectionApplied = effectiveTimestamp;
 
+            GameLogger.Info($"[Idle] Result — entropy={result.EntropyEarned} itemTypes={result.ItemsEarned.Count} elapsed={result.ElapsedSeconds:F0}s capped={result.CappedSeconds:F0}s");
             return result;
         }
 

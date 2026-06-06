@@ -91,9 +91,14 @@ namespace MobileIdleBuilder
         // Works identically on Android and iOS — no platform directives needed.
         void OnReturnFromBackground()
         {
-            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded) return;
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
+            {
+                GameLogger.Info($"[Idle] OnReturnFromBackground — ECS not ready (Instance={ECSLoadBridge.Instance != null} IsLoaded={ECSLoadBridge.Instance?.IsLoaded})");
+                return;
+            }
 
             string backgroundedAt = PlayerPrefs.GetString(BackgroundTimestampKey, string.Empty);
+            GameLogger.Info($"[Idle] OnReturnFromBackground — backgroundedAt={backgroundedAt} lastSaved={_current?.lastSaved}");
             if (!string.IsNullOrEmpty(backgroundedAt))
                 PlayerPrefs.DeleteKey(BackgroundTimestampKey);
 

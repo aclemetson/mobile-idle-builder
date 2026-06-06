@@ -340,6 +340,9 @@ namespace MobileIdleBuilder
                 getItemSellValue,
                 speedMult,
                 DateTime.UtcNow.ToString("O"));
+
+            int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
+            GameLogger.Info($"[Idle] RebuildIdleSnapshot — buildings={save.currentRun.grid.buildings?.Count ?? 0} conveyors={save.currentRun.grid.conveyors?.Count ?? 0} chains={builtChains}");
         }
     }
 }
