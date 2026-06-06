@@ -39,7 +39,7 @@ namespace MobileIdleBuilder
     /// </summary>
     public class PersistentUpgradeService : SingletonMonoBehaviour<PersistentUpgradeService>
     {
-        protected override bool PersistAcrossScenes => true;
+        protected override bool PersistAcrossScenes => false;
 
         public event Action OnUpgradePurchased;
 
