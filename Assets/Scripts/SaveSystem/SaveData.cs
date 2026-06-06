@@ -19,6 +19,8 @@ namespace MobileIdleBuilder
         public float prestigeOutputMultiplier = 1f;
         public float prestigeCostReduction    = 0f;
         public List<string> permanentUpgrades = new();
+        public IdleCollectionSnapshot idleSnapshot = new();
+        public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
         public List<string> codex                           = new();
@@ -27,6 +29,22 @@ namespace MobileIdleBuilder
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();
+    }
+
+    [Serializable]
+    public class IdleCollectionSnapshot
+    {
+        public List<IdleChainEntry> chains      = new();
+        public string snapshotTimestampUtc;
+    }
+
+    [Serializable]
+    public class IdleChainEntry
+    {
+        public int   itemId;
+        public float itemsPerSecond;
+        public bool  endsAtEntropySink;
+        public float baseSellValue;
     }
 
     [Serializable]

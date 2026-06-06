@@ -18,12 +18,6 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
 
-#if UNITY_EDITOR
-        [Header("Debug (Editor only)")]
-        [Tooltip("When checked, wipes unlocked research, recipes, and the current run on each Play so the tutorial restarts from step 1.")]
-        [SerializeField] bool _resetTutorialOnPlay;
-#endif
-
         LocalSaveService _local;
         ICloudSaveService _cloud;
         SaveData _current;
@@ -46,18 +40,6 @@ namespace MobileIdleBuilder
             else
                 GameLogger.Info($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
                           $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
-
-#if UNITY_EDITOR
-            if (_resetTutorialOnPlay)
-            {
-                _current.unlockedResearch = new();
-                _current.unlockedRecipes  = new();
-                _current.currentRun       = new();
-                _current.tutorial         = new();
-                IsNewGame = true; // treat as fresh install so baked starting items are preserved
-                GameLogger.Debug("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
-            }
-#endif
 
             AuthSessionPolicy.RecordAppOpen();
             _cloud = new UGSCloudSaveService();

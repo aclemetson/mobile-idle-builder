@@ -18,6 +18,8 @@ namespace MobileIdleBuilder
 
         public bool IsLoaded { get; private set; }
 
+        IdleCollectionResult _pendingIdleResult;
+
         EntityManager _em;
         EntityQuery   _progressQuery;
         EntityQuery   _prestigeQuery;
@@ -118,6 +120,12 @@ namespace MobileIdleBuilder
             GridSaveService.Instance?.LoadGrid();
             IsLoaded = true;
             GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
+
+            if (_pendingIdleResult != null)
+            {
+                FindAnyObjectByType<HUDController>()?.ShowIdleReturn(_pendingIdleResult);
+                _pendingIdleResult = null;
+            }
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -160,6 +168,14 @@ namespace MobileIdleBuilder
                 }
                 _tutorialQuery.SetSingleton(ts);
             }
+
+            // Calculate and merge idle earnings before restoring ECS buffers
+            var idleResult = OfflineCollectionService.CalculateAndApply(
+                save,
+                GameBootstrap.Instance?.gameConfig,
+                PersistentUpgradeService.Instance);
+            if (idleResult != null)
+                _pendingIdleResult = idleResult;
 
             // On fresh install, skip currency + inventory so SubScene baked defaults stand
             if (SaveManager.Instance.IsNewGame) return;

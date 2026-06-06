@@ -132,7 +132,10 @@ namespace MobileIdleBuilder
                 _isDragging = false;
 
                 if (_pathValid && _currentPath.Count >= 1)
+                {
                     conveyorPlacer.PlaceConveyorChain(_currentPath);
+                    SaveManager.Instance?.SaveLocal();
+                }
 
                 ResetDraw();
             }

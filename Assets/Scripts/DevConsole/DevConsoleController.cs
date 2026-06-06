@@ -689,6 +689,7 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("clear save", "Delete local save file and reload scene",
                 _ =>
                 {
+                    GridSaveService.Instance?.ClearGrid();
                     new LocalSaveService().Delete();
                     SaveManager.Instance?.ResetToFreshSave();
                     PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
@@ -705,6 +706,7 @@ namespace MobileIdleBuilder.Dev
                     {
                         if (!success)
                             AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
+                        GridSaveService.Instance?.ClearGrid();
                         new LocalSaveService().Delete();
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
