@@ -52,12 +52,15 @@ namespace MobileIdleBuilder
                 var initOptions = new InitializationOptions().SetOption("com.unity.services.core.environment-name", _env);
                 await UnityServices.InitializeAsync(initOptions);
 
+                bool sessionExists = AuthenticationService.Instance.SessionTokenExists;
+                GameLogger.Info($"[UGSCloudSave] SessionTokenExists={sessionExists}");
+
                 if (!AuthenticationService.Instance.IsSignedIn)
                 {
                     // Restore a cached UGS session first — avoids Google Sign-In on every cold start.
                     // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when
                     // a session token is present, per UGS Auth docs.
-                    if (AuthenticationService.Instance.SessionTokenExists)
+                    if (sessionExists)
                     {
                         try
                         {
@@ -81,7 +84,18 @@ namespace MobileIdleBuilder
                     if (GoogleAuthProvider != null)
                     {
                         string idToken = await GoogleAuthProvider();
-                        await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                        try
+                        {
+                            await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                        }
+                        catch (Exception googleEx)
+                        {
+                            // UGS Google provider may not be configured in the dashboard yet.
+                            // Fall back to anonymous so the session token gets stored on device —
+                            // this guarantees silent restore on the next cold start.
+                            GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); falling back to anonymous session.");
+                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                        }
                     }
                     else
                     {
