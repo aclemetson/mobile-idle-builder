@@ -1,13 +1,12 @@
-using System.Collections;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
-    /// PlayMode tests for SettingsService (MonoBehaviour lifecycle, mutation persistence).
+    /// EditMode tests for SettingsService (MonoBehaviour lifecycle, mutation persistence).
     ///
     /// Backs up and restores settings.json around each test so developer preferences
     /// are never overwritten.
@@ -27,16 +26,13 @@ namespace MobileIdleBuilder.PlayModeTests
             if (File.Exists(_settingsPath)) File.Delete(_settingsPath);
         }
 
-        // [UnityTearDown] (not [TearDown]) is required for IEnumerator return type.
-        // The yield lets OnDestroy fire so SingletonMonoBehaviour.Instance is null before the next SetUp.
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
             if (_go != null)
             {
-                Object.Destroy(_go);
+                Object.DestroyImmediate(_go);
                 _go = null;
-                yield return null;
             }
 
             if (File.Exists(_settingsPath)) File.Delete(_settingsPath);
@@ -45,12 +41,11 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Defaults ─────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator DefaultSettings_UsedOnFirstRun()
+        [Test]
+        public void DefaultSettings_UsedOnFirstRun()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             var s = SettingsService.Instance.Current;
             Assert.AreEqual(1f,   s.masterVolume,         "Default masterVolume should be 1");
@@ -62,93 +57,94 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Persistence ───────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator SetMasterVolume_PersistsAcrossRecreation()
+        [Test]
+        public void SetMasterVolume_PersistsAcrossRecreation()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             SettingsService.Instance.SetMasterVolume(0.4f);
-            Object.Destroy(_go);
+            Object.DestroyImmediate(_go);
             _go = null;
-            yield return null;
 
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             Assert.AreEqual(0.4f, SettingsService.Instance.Current.masterVolume, 0.001f);
         }
 
-        [UnityTest]
-        public IEnumerator SetSFXVolume_PersistsAcrossRecreation()
+        [Test]
+        public void SetSFXVolume_PersistsAcrossRecreation()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             SettingsService.Instance.SetSFXVolume(0.25f);
-            Object.Destroy(_go);
+            Object.DestroyImmediate(_go);
             _go = null;
-            yield return null;
 
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             Assert.AreEqual(0.25f, SettingsService.Instance.Current.sfxVolume, 0.001f);
         }
 
-        [UnityTest]
-        public IEnumerator SetGraphicsQuality_PersistsAcrossRecreation()
+        [Test]
+        public void SetGraphicsQuality_PersistsAcrossRecreation()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             SettingsService.Instance.SetGraphicsQuality(0);
-            Object.Destroy(_go);
+            Object.DestroyImmediate(_go);
             _go = null;
-            yield return null;
 
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             Assert.AreEqual(0, SettingsService.Instance.Current.graphicsQuality);
         }
 
-        [UnityTest]
-        public IEnumerator SetNotifications_PersistsAcrossRecreation()
+        [Test]
+        public void SetNotifications_PersistsAcrossRecreation()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             SettingsService.Instance.SetNotifications(false);
-            Object.Destroy(_go);
+            Object.DestroyImmediate(_go);
             _go = null;
-            yield return null;
 
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             Assert.IsFalse(SettingsService.Instance.Current.notificationsEnabled);
         }
 
         // ── Immediate effect ─────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator SetMasterVolume_UpdatesCurrentImmediately()
+        [Test]
+        public void SetMasterVolume_UpdatesCurrentImmediately()
         {
             _go = new GameObject("SettingsService");
-            _go.AddComponent<SettingsService>();
-            yield return null;
+            { var svc = _go.AddComponent<SettingsService>(); RunAwake(svc); }
 
             SettingsService.Instance.SetMasterVolume(0.6f);
             Assert.AreEqual(0.6f, SettingsService.Instance.Current.masterVolume, 0.001f);
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
         }
     }
 }

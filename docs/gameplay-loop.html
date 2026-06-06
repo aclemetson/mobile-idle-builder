@@ -60,6 +60,18 @@
     </div>
   </div>
 
+  <div class="callout">
+    <h3>Session Authentication</h3>
+    <p>Google Sign-In uses a <strong>silent-first</strong> strategy backed by two device-local timestamps
+       (<code>PlayerPrefs</code> — not cloud-synced):</p>
+    <ul>
+      <li><strong>Last app open</strong> — recorded every launch; triggers interactive sign-in if ≥ 30 days have passed (inactivity rule).</li>
+      <li><strong>Last full auth</strong> — recorded only after the user completes the Google account picker; triggers interactive sign-in again once ≥ 90 days have passed (mandatory re-verification).</li>
+    </ul>
+    <p>Under normal use (daily or weekly play) neither threshold is reached and the account picker is never shown after the first login.
+       Implemented in <code>AuthSessionPolicy</code> + <code>GoogleSignInBridge</code>.</p>
+  </div>
+
   <div id="overview-phases"></div><!-- populated by renderOverviewTab() -->
 
 </div>

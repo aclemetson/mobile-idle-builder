@@ -20,11 +20,14 @@ namespace MobileIdleBuilder
             if (Instance != null && Instance != this)
             {
                 GameLogger.Error($"[{typeof(T).Name}] DUPLICATE detected — destroying on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
-                Destroy(this);
+                if (Application.isPlaying)
+                    Destroy(this);
+                else
+                    DestroyImmediate(this);
                 return;
             }
             Instance = this as T;
-            if (PersistAcrossScenes)
+            if (PersistAcrossScenes && Application.isPlaying)
                 DontDestroyOnLoad(gameObject);
         }
 

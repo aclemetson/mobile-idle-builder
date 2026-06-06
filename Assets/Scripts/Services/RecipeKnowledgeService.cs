@@ -40,7 +40,7 @@ namespace MobileIdleBuilder
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
 
-        private RecipeKnowledgeSave _data;
+        private RecipeKnowledgeSave _data = new();
         private string _filePath;
 
         // ── Lifecycle ────────────────────────────────────────────────────────
