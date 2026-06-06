@@ -55,19 +55,44 @@ namespace MobileIdleBuilder
 
             foreach (var chain in conveyors)
             {
-                if (chain?.cells == null || chain.cells.Length < 4) continue;
+                if (chain?.cells == null || chain.cells.Length < 2) continue;
 
                 // Head = where items enter the belt; tail = where items exit
                 int hx = chain.cells[0], hy = chain.cells[1];
-                int nx = chain.cells[2], ny = chain.cells[3];
+                int flowDx, flowDy;
+                BuildingSaveData srcBuilding;
 
-                int flowDx = nx - hx;
-                int flowDy = ny - hy;
+                if (chain.cells.Length >= 4)
+                {
+                    // Multi-segment: direction is defined by the first two cells
+                    int nx = chain.cells[2], ny = chain.cells[3];
+                    flowDx = nx - hx;
+                    flowDy = ny - hy;
 
-                // Building that feeds the head is one step upstream
-                var upstreamCell = new Vector2Int(hx - flowDx, hy - flowDy);
-                if (!cellToBuilding.TryGetValue(upstreamCell, out var srcBuilding)) continue;
-                if (!isCollector(srcBuilding.buildingId)) continue;
+                    // Building that feeds the head is one step upstream
+                    var upstreamCell = new Vector2Int(hx - flowDx, hy - flowDy);
+                    if (!cellToBuilding.TryGetValue(upstreamCell, out srcBuilding)) continue;
+                    if (!isCollector(srcBuilding.buildingId)) continue;
+                }
+                else
+                {
+                    // Single-segment conveyor: scan all four adjacent cells for a collector.
+                    // Flow direction is deduced from where the collector sits.
+                    srcBuilding = null; flowDx = 0; flowDy = 0;
+                    int[] dirs = { -1, 0, 1, 0, 0, -1, 0, 1 };
+                    for (int d = 0; d < 4 && srcBuilding == null; d++)
+                    {
+                        int ddx = dirs[d * 2], ddy = dirs[d * 2 + 1];
+                        if (cellToBuilding.TryGetValue(new Vector2Int(hx + ddx, hy + ddy), out var cand)
+                            && isCollector(cand.buildingId))
+                        {
+                            srcBuilding = cand;
+                            // Flow goes away from the collector toward (and past) the belt
+                            flowDx = -ddx; flowDy = -ddy;
+                        }
+                    }
+                    if (srcBuilding == null) continue;
+                }
 
                 // Building that receives from the tail is one step downstream
                 int tx = chain.cells[chain.cells.Length - 2];
