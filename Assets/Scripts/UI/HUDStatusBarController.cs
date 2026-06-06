@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
     {
         private VisualElement _drawerInventory;
         private Label         _entropyLabel;
+        private Label         _prestigeTopbarLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
 
@@ -33,13 +34,15 @@ namespace MobileIdleBuilder
         private float _lastPowerCurrent       = -1f;
         private float _lastPowerMax           = -1f;
         private bool  _lastPrestigeAvailable  = false;
+        private long  _lastHeldPC             = long.MinValue;
 
         public void Init(VisualElement root)
         {
-            _drawerInventory = root.Q("drawer-inventory");
-            _entropyLabel    = root.Q<Label>("entropy-label");
-            _powerLabel      = root.Q<Label>("power-label");
-            _btnPrestige     = root.Q<Button>("btn-prestige");
+            _drawerInventory     = root.Q("drawer-inventory");
+            _entropyLabel        = root.Q<Label>("entropy-label");
+            _prestigeTopbarLabel = root.Q<Label>("prestige-topbar-label");
+            _powerLabel          = root.Q<Label>("power-label");
+            _btnPrestige         = root.Q<Button>("btn-prestige");
         }
 
         public void SetECSContext(EntityManager em, EntityQuery inventoryQuery,
@@ -60,6 +63,7 @@ namespace MobileIdleBuilder
             {
                 RefreshEntropyLabel();
                 RefreshPrestigeButton();
+                RefreshPrestigeTopbarLabel();
             }
             if (!_powerQuery.IsEmpty) RefreshPowerLabel();
         }
@@ -148,6 +152,17 @@ namespace MobileIdleBuilder
             _btnPrestige.style.display = progress.PrestigeAvailable
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;
+        }
+
+        private void RefreshPrestigeTopbarLabel()
+        {
+            if (_prestigeTopbarLabel == null) return;
+            var entity   = _progressQuery.GetSingletonEntity();
+            var prestige = _em.GetComponentData<PrestigeData>(entity);
+            long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
+            if (held == _lastHeldPC) return;
+            _lastHeldPC                  = held;
+            _prestigeTopbarLabel.text    = $"✦ {held:N0}";
         }
     }
 }

@@ -19,6 +19,7 @@
     <button class="tab" data-tab="dialogue">Dialogue Flow</button>
     <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
+    <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
   </nav>
 </header>
@@ -401,6 +402,99 @@
         </dl>
       </div>
 
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ PRESTIGE SHOP ══ -->
+<div id="prestige" class="tab-content">
+
+  <!-- §1 Currency Formula -->
+  <div class="callout" style="border-left-color:#d2a8ff;">
+    <h3 style="color:#d2a8ff;">Prestige Currency Formula</h3>
+    <p style="font-size:12px;color:#8b949e;margin-bottom:10px;">
+      <code>PC earned = floor( max(0, &thinsp;log₁₀(netWorth ÷ prestigeBase) × scale) )</code><br>
+      Each order of magnitude above <em>prestigeBase</em> awards exactly <em>scale</em> more PC.
+      Edit the inputs to see how different values change pacing.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin-bottom:12px;">
+      <label class="bal-scalar-label">Prestige Base
+        <input type="number" class="bal-input" id="pc-base" value="5000" step="500" min="100" max="50000">
+      </label>
+      <label class="bal-scalar-label">Scale (✦ per order of magnitude)
+        <input type="number" class="bal-input" id="pc-scale" value="50" step="5" min="5" max="500">
+      </label>
+      <label class="bal-scalar-label">Wall multiplier (wall = base × mult)
+        <input type="number" class="bal-input" id="pc-wall-mult" value="10" step="1" min="2" max="100">
+      </label>
+    </div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:12px;">
+      Prestige wall = <code id="pc-wall-display">50,000 e</code> &nbsp;·&nbsp;
+      First prestige earns <code id="pc-first-earn">50 ✦</code>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+      <table style="font-size:12px;">
+        <thead><tr>
+          <th style="text-align:left;padding:4px 8px;">Net Worth (e)</th>
+          <th style="text-align:right;padding:4px 8px;">PC Earned (✦)</th>
+          <th style="text-align:right;padding:4px 8px;">+vs prev</th>
+        </tr></thead>
+        <tbody id="pc-earnings-body"></tbody>
+      </table>
+      <div><canvas id="pc-chart" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- §2 Permanent Upgrades Table -->
+  <div class="phase" id="prestige-upgrades-phase">
+    <div class="phase-header" style="border-left:4px solid #d2a8ff;background:#1a1224;">
+      <h2>Permanent Upgrades</h2>
+      <span class="phase-meta">10 upgrades · purchased with prestige currency (✦) · persist between prestiges</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:28px;">#</th>
+        <th>Name</th>
+        <th style="width:52px;text-align:center;">Tier</th>
+        <th>Effect per Level</th>
+        <th style="width:60px;text-align:center;">Max Lv</th>
+        <th>Level Costs (✦)</th>
+        <th style="width:72px;text-align:right;">Total ✦</th>
+        <th>Prerequisites</th>
+      </tr></thead>
+      <tbody id="prestige-upgrades-body"></tbody>
+    </table>
+  </div>
+
+  <!-- §3 Upgrade Tree -->
+  <div class="callout" style="border-left-color:#58a6ff;">
+    <h3 style="color:#58a6ff;">Upgrade Dependency Tree</h3>
+    <pre style="font-family:monospace;font-size:12px;color:#c9d1d9;line-height:1.7;margin:0;overflow-x:auto;">Entropy Headstart ─────────────────────────────────► Entropy Echo      (needs L3+)
+Memory Resonance  ──► Efficient Layouts (needs L1)  ► Turnkey Builder   (needs L2+)
+                  └──────────────────────────────────► Research Overdrive (needs L3+)
+Assembly Line     ──► Quantum Yield     (needs L1)  ► Decay Mastery     (needs L2+)
+Expanded Vault    (standalone — no prerequisites)</pre>
+  </div>
+
+  <!-- §4 Run Simulator -->
+  <div class="callout" style="border-left-color:#3fb950;">
+    <h3 style="color:#3fb950;">Prestige Run Simulator</h3>
+    <p style="font-size:12px;color:#8b949e;margin-bottom:10px;">
+      Drag the slider to a total PC amount to see which upgrades are unlocked,
+      partial, or still locked — and the combined effect on your runs.
+    </p>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+      <label style="flex:1;font-size:12px;color:#8b949e;">
+        Total accumulated PC (✦)
+        <input type="range" id="sim-pc" min="0" max="30000" value="0" step="10"
+               style="width:100%;margin-top:4px;accent-color:#d2a8ff;">
+      </label>
+      <span id="sim-pc-display" style="font-size:18px;color:#d2a8ff;min-width:72px;text-align:right;">0 ✦</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+      <div id="sim-upgrade-status" style="font-size:12px;"></div>
+      <div id="sim-effect-summary" style="font-size:12px;color:#c9d1d9;"></div>
     </div>
   </div>
 

@@ -219,6 +219,7 @@ namespace MobileIdleBuilder.Editor
             so.netWorthToPrestigeCurrencyRate     = data.net_worth_to_prestige_currency_rate;
             so.prestigeBaseValue                  = data.prestige_base_value;
             so.prestigeWallMultiplier             = data.prestige_wall_multiplier;
+            so.prestigeCurrencyScale              = data.prestige_currency_scale;
             so.alphaParticleEVValue               = data.alpha_particle_ev_value;
             so.betaParticleEVValue                = data.beta_particle_ev_value;
             so.startingEntropy                    = data.starting_entropy;

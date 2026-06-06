@@ -75,6 +75,10 @@ document.querySelectorAll('.tab').forEach(btn => {
       window._balChartsInit = true;
       if (typeof Chart !== 'undefined') updateBalCharts();
     }
+    if (btn.dataset.tab === 'prestige' && !window._prestigeInit) {
+      window._prestigeInit = true;
+      renderPrestigeTab();
+    }
     if (btn.dataset.tab === 'simple' && !window._simpleInit) {
       window._simpleInit = true;
       renderSimpleOverview();
@@ -767,6 +771,249 @@ document.getElementById('s-reset-btn')?.addEventListener('click', () => {
   if (!confirm('Reset to default steps? Custom phases and steps will be lost.')) return;
   localStorage.removeItem(SIMPLE_STORE);
   renderSimpleOverview();
+});
+
+// ─── SECTION 8b: PRESTIGE SHOP TAB ──────────────────────────────────────
+
+const PC_DATA = (D.prestige || {});
+let   _pcChart = null;
+
+// ── Formula helpers ──
+
+function pcEarned(netWorth, base, scale) {
+  if (base <= 0 || netWorth <= 0) return 0;
+  return Math.max(0, Math.floor(Math.log10(netWorth / base) * scale));
+}
+
+// ── §1 — Formula section ──
+
+function updatePrestigeFormula() {
+  const base  = parseFloat(document.getElementById('pc-base')?.value)  || 5000;
+  const scale = parseFloat(document.getElementById('pc-scale')?.value) || 50;
+  const mult  = parseFloat(document.getElementById('pc-wall-mult')?.value) || 10;
+  const wall  = base * mult;
+
+  const wallEl = document.getElementById('pc-wall-display');
+  const firstEl = document.getElementById('pc-first-earn');
+  if (wallEl)  wallEl.textContent  = wall.toLocaleString() + ' e';
+  if (firstEl) firstEl.textContent = pcEarned(wall, base, scale) + ' ✦';
+
+  // Earnings table
+  const netWorthPoints = [
+    wall,
+    wall * 2,
+    wall * 10,
+    wall * 100,
+    wall * 1000,
+    wall * 10000,
+    wall * 100000,
+    wall * 1000000,
+  ];
+
+  const tbody = document.getElementById('pc-earnings-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+    let prev = 0;
+    netWorthPoints.forEach(nw => {
+      const earned = pcEarned(nw, base, scale);
+      const delta  = earned - prev;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding:3px 8px;color:#c9d1d9;">${formatNW(nw)}</td>
+        <td style="padding:3px 8px;text-align:right;color:#d2a8ff;">${earned} ✦</td>
+        <td style="padding:3px 8px;text-align:right;color:#58a6ff;">+${delta}</td>`;
+      tbody.appendChild(tr);
+      prev = earned;
+    });
+  }
+
+  // Chart
+  updatePrestigeChart(netWorthPoints, base, scale);
+
+  // Keep simulator max in sync
+  const simInput = document.getElementById('sim-pc');
+  if (simInput) {
+    const maxPc = pcEarned(netWorthPoints[netWorthPoints.length - 1], base, scale);
+    simInput.max = Math.max(maxPc, 30000);
+  }
+}
+
+function formatNW(n) {
+  if (n >= 1e12) return (n / 1e12).toPrecision(3) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toPrecision(3)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toPrecision(3)  + 'M';
+  if (n >= 1e3)  return (n / 1e3).toPrecision(3)  + 'K';
+  return n.toLocaleString();
+}
+
+function updatePrestigeChart(netWorthPoints, base, scale) {
+  const canvas = document.getElementById('pc-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (_pcChart) { _pcChart.destroy(); _pcChart = null; }
+
+  const labels = netWorthPoints.map(formatNW);
+  const values = netWorthPoints.map(nw => pcEarned(nw, base, scale));
+
+  _pcChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'PC Earned (✦)',
+        data: values,
+        backgroundColor: 'rgba(210,168,255,0.55)',
+        borderColor:     '#d2a8ff',
+        borderWidth:     1,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.raw} ✦` } },
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+      },
+    },
+  });
+}
+
+// ── §2 — Upgrades table ──
+
+function renderPrestigeUpgradesTable() {
+  const tbody = document.getElementById('prestige-upgrades-body');
+  if (!tbody || !PC_DATA.upgrades) return;
+
+  const TIER_COLOR = { 1: '#3fb950', 2: '#58a6ff', 3: '#f0883e' };
+
+  tbody.innerHTML = '';
+  PC_DATA.upgrades.forEach((up, i) => {
+    const total    = up.costs.reduce((a, b) => a + b, 0);
+    const prereqStr = up.prereqs.length === 0 ? '—' :
+      up.prereqs.map(p => {
+        const pd = PC_DATA.upgrades.find(u => u.id === p.id);
+        return `${pd ? pd.name : p.id} L${p.minLevel}`;
+      }).join(', ');
+
+    const tierColor = TIER_COLOR[up.tier] || '#8b949e';
+    const costStr   = up.costs.join(' · ');
+    const effectStr = `+${up.effectPerLevel} ${up.unit} / lv`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="step-num">${i + 1}</td>
+      <td style="font-weight:600;color:#e6edf3;">${up.name}</td>
+      <td style="text-align:center;"><span style="color:${tierColor};font-size:11px;font-weight:700;">T${up.tier}</span></td>
+      <td style="font-size:12px;color:#8b949e;">${effectStr}</td>
+      <td style="text-align:center;">${up.maxLevel}</td>
+      <td style="font-size:11px;color:#d2a8ff;font-family:monospace;">${costStr}</td>
+      <td style="text-align:right;color:#d2a8ff;font-weight:600;">${total.toLocaleString()}</td>
+      <td style="font-size:11px;color:#8b949e;">${prereqStr}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── §4 — Simulator ──
+
+function updatePrestigeSimulator(totalPC) {
+  const statusEl  = document.getElementById('sim-upgrade-status');
+  const effectEl  = document.getElementById('sim-effect-summary');
+  if (!statusEl || !effectEl || !PC_DATA.upgrades) return;
+
+  // Greedily purchase upgrades in order (respecting prereqs) with the given budget
+  const levels = {};
+  const getBought = id => levels[id] || 0;
+
+  // Iterate until no more purchases are possible with remaining budget
+  let remaining = totalPC;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const up of PC_DATA.upgrades) {
+      const cur = getBought(up.id);
+      if (cur >= up.maxLevel) continue;
+      // Check prereqs
+      const prereqsMet = up.prereqs.every(p => getBought(p.id) >= p.minLevel);
+      if (!prereqsMet) continue;
+      const cost = up.costs[cur];
+      if (remaining >= cost) {
+        remaining -= cost;
+        levels[up.id] = cur + 1;
+        changed = true;
+      }
+    }
+  }
+
+  // Render status
+  const TIER_COLOR = { 1: '#3fb950', 2: '#58a6ff', 3: '#f0883e' };
+  let statusHtml = '';
+  for (const up of PC_DATA.upgrades) {
+    const cur = getBought(up.id);
+    if (cur === 0) continue;
+    const isMax = cur >= up.maxLevel;
+    const color = isMax ? '#3fb950' : '#d2a8ff';
+    const badge = isMax ? '★ MAX' : `Lv ${cur}/${up.maxLevel}`;
+    statusHtml += `<div style="margin-bottom:3px;color:${color};">${up.name} — ${badge}</div>`;
+  }
+  const lockedCount = PC_DATA.upgrades.filter(up => getBought(up.id) === 0).length;
+  if (lockedCount > 0) {
+    statusHtml += `<div style="color:#484f58;margin-top:4px;">${lockedCount} upgrade${lockedCount > 1 ? 's' : ''} locked</div>`;
+  }
+  statusEl.innerHTML = statusHtml || '<span style="color:#484f58;">No upgrades yet</span>';
+
+  // Render effect summary
+  const effectMap = {};
+  for (const up of PC_DATA.upgrades) {
+    const cur = getBought(up.id);
+    if (cur === 0) continue;
+    const total = up.effectPerLevel * cur;
+    effectMap[up.effectType] = (effectMap[up.effectType] || 0) + total;
+  }
+
+  const EFFECT_LABEL = {
+    StartingEntropyBonus:     (v) => `+${v} e starting entropy`,
+    GlobalResearchDiscount:   (v) => `−${v}% all research costs`,
+    CraftSpeedMultiplier:     (v) => `+${v}% craft speed`,
+    VaultCapacity:            (v) => `+${v} inventory slots`,
+    OutputQuantityMultiplier: (v) => `+${v}% output quantity`,
+    BuildingCostReduction:    (v) => `−${v}% building costs`,
+    DecayCollectionRate:      (v) => `+${v}% decay collection`,
+    BuildingStartPrePlaced:   (v) => `+${v} pre-placed Harvester${v > 1 ? 's' : ''}`,
+    ResearchSpeed:            (v) => `+${v}% research speed`,
+    PrestigeGainMultiplier:   (v) => `+${v}% prestige currency earned`,
+  };
+
+  let effectHtml = '<strong style="color:#3fb950;display:block;margin-bottom:6px;">Combined Effects</strong>';
+  let hasEffect = false;
+  for (const [type, val] of Object.entries(effectMap)) {
+    if (!val) continue;
+    hasEffect = true;
+    const label = EFFECT_LABEL[type] ? EFFECT_LABEL[type](val) : `${type}: +${val}`;
+    effectHtml += `<div style="margin-bottom:3px;">✓ ${label}</div>`;
+  }
+  if (!hasEffect) effectHtml += '<span style="color:#484f58;">No active effects</span>';
+  effectEl.innerHTML = effectHtml;
+}
+
+function renderPrestigeTab() {
+  updatePrestigeFormula();
+  renderPrestigeUpgradesTable();
+  updatePrestigeSimulator(0);
+}
+
+// ── Prestige tab event wiring ──
+
+['pc-base', 'pc-scale', 'pc-wall-mult'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', updatePrestigeFormula);
+});
+
+document.getElementById('sim-pc')?.addEventListener('input', e => {
+  const v = parseInt(e.target.value) || 0;
+  const el = document.getElementById('sim-pc-display');
+  if (el) el.textContent = v.toLocaleString() + ' ✦';
+  updatePrestigeSimulator(v);
 });
 
 // ─── SECTION 9: INIT ─────────────────────────────────────────────────────

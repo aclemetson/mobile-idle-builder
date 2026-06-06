@@ -107,7 +107,10 @@ namespace MobileIdleBuilder
         BuildingStartPrePlaced,
         OutputQuantityMultiplier,
         BuildingCostReduction,
-        PrestigeMemoryDiscount
+        PrestigeMemoryDiscount,
+        StartingEntropyBonus,     // flat entropy added to BaseCurrency at run start
+        GlobalResearchDiscount,   // additive % off all research costs
+        PrestigeGainMultiplier,   // % bonus to PC earned per prestige
     }
 
     public enum AchievementTrigger

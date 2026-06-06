@@ -13,6 +13,7 @@
 //  8. dialogues        12 phase groups / ~40 dialogue entries
 //  9. design_gaps      13 tracked issues
 // 10. simple_overview  18 phases for the Simple Overview tab
+// 11. prestige         formula params + 10 permanent upgrades
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -1295,5 +1296,100 @@ simple_overview: [
     { name:'Graviton Lens (endgame)',         type:'milestone',dur:6000 },
   ]},
 ],
+
+// ─────────────────────────────────── PRESTIGE SHOP ──
+// Formula: PC = floor(max(0, log10(netWorth / formulaBase) × formulaScale))
+// Sync formulaBase / formulaScale / wallMultiplier with game_data.json game_config
+prestige: {
+  formulaBase:      5000,
+  formulaScale:     50,
+  wallMultiplier:   10,
+
+  upgrades: [
+    // ── Tier 1: no prerequisites ──────────────────────────────────────────
+    {
+      id: 'entropy_headstart', name: 'Entropy Headstart', tier: 1,
+      effectType: 'StartingEntropyBonus', effectPerLevel: 250, unit: 'e',
+      maxLevel: 5, baseCost: 5, costScaling: 2.0,
+      costs: [5, 10, 20, 40, 80],
+      prereqs: [],
+      description: 'Start each run with +250 extra entropy per level.',
+    },
+    {
+      id: 'memory_resonance', name: 'Memory Resonance', tier: 1,
+      effectType: 'GlobalResearchDiscount', effectPerLevel: 5, unit: '%',
+      maxLevel: 5, baseCost: 10, costScaling: 2.0,
+      costs: [10, 20, 40, 80, 160],
+      prereqs: [],
+      description: 'All research costs 5% less per level on every run.',
+    },
+    {
+      id: 'assembly_line', name: 'Assembly Line', tier: 1,
+      effectType: 'CraftSpeedMultiplier', effectPerLevel: 10, unit: '%',
+      maxLevel: 5, baseCost: 15, costScaling: 2.0,
+      costs: [15, 30, 60, 120, 240],
+      prereqs: [],
+      description: 'All buildings craft 10% faster per level.',
+    },
+    {
+      id: 'expanded_vault', name: 'Expanded Vault', tier: 1,
+      effectType: 'VaultCapacity', effectPerLevel: 20, unit: 'slots',
+      maxLevel: 5, baseCost: 25, costScaling: 1.5,
+      costs: [25, 38, 56, 84, 126],
+      prereqs: [],
+      description: 'Increase inventory capacity by +20 slots per level.',
+    },
+    // ── Tier 2: require 1 Tier-1 level ──────────────────────────────────
+    {
+      id: 'quantum_yield', name: 'Quantum Yield', tier: 2,
+      effectType: 'OutputQuantityMultiplier', effectPerLevel: 10, unit: '%',
+      maxLevel: 5, baseCost: 40, costScaling: 2.0,
+      costs: [40, 80, 160, 320, 640],
+      prereqs: [{ id: 'assembly_line', minLevel: 1 }],
+      description: 'All recipes produce +10% more output per level.',
+    },
+    {
+      id: 'efficient_layouts', name: 'Efficient Layouts', tier: 2,
+      effectType: 'BuildingCostReduction', effectPerLevel: 5, unit: '%',
+      maxLevel: 6, baseCost: 35, costScaling: 2.0,
+      costs: [35, 70, 140, 280, 560, 1120],
+      prereqs: [{ id: 'memory_resonance', minLevel: 1 }],
+      description: 'Building placement costs 5% less per level (max −30%).',
+    },
+    // ── Tier 3: require deeper investment ───────────────────────────────
+    {
+      id: 'decay_mastery', name: 'Decay Mastery', tier: 3,
+      effectType: 'DecayCollectionRate', effectPerLevel: 25, unit: '%',
+      maxLevel: 4, baseCost: 100, costScaling: 2.5,
+      costs: [100, 250, 625, 1562],
+      prereqs: [{ id: 'quantum_yield', minLevel: 2 }],
+      description: 'Decay particle collection rate +25% per level.',
+    },
+    {
+      id: 'turnkey_builder', name: 'Turnkey Builder', tier: 3,
+      effectType: 'BuildingStartPrePlaced', effectPerLevel: 1, unit: 'harvester',
+      maxLevel: 3, baseCost: 150, costScaling: 5.0,
+      costs: [150, 750, 3750],
+      prereqs: [{ id: 'efficient_layouts', minLevel: 2 }],
+      description: 'Start each run with +1 pre-placed Harvester per level.',
+    },
+    {
+      id: 'research_overdrive', name: 'Research Overdrive', tier: 3,
+      effectType: 'ResearchSpeed', effectPerLevel: 15, unit: '%',
+      maxLevel: 4, baseCost: 120, costScaling: 3.0,
+      costs: [120, 360, 1080, 3240],
+      prereqs: [{ id: 'memory_resonance', minLevel: 3 }],
+      description: 'Research completes 15% faster per level.',
+    },
+    {
+      id: 'entropy_echo', name: 'Entropy Echo', tier: 3,
+      effectType: 'PrestigeGainMultiplier', effectPerLevel: 5, unit: '%',
+      maxLevel: 4, baseCost: 200, costScaling: 3.0,
+      costs: [200, 600, 1800, 5400],
+      prereqs: [{ id: 'entropy_headstart', minLevel: 3 }, { id: 'memory_resonance', minLevel: 3 }],
+      description: 'Earn +5% more prestige currency per run per level.',
+    },
+  ],
+},
 
 }; // end LOOP_DATA

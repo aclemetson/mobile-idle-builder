@@ -17,6 +17,8 @@ namespace MobileIdleBuilder
         public float netWorthToPrestigeCurrencyRate = 1.0f;
         public float prestigeBaseValue = 5000f;
         public float prestigeWallMultiplier = 10.0f;
+        [Tooltip("Multiplier in: PC = floor(log10(netWorth / prestigeBaseValue) × scale)")]
+        public float prestigeCurrencyScale = 50f;
 
         [Header("Environment")]
         public BuildEnvironment environment;

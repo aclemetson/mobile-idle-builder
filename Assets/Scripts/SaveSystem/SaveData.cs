@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         public string lastSaved;           // ISO 8601
         public int   prestigeCount;
         public long  prestigeCurrency;
+        public long  prestigeCurrencySpent;
         public float prestigeSpeedMultiplier  = 1f;
         public float prestigeOutputMultiplier = 1f;
         public float prestigeCostReduction    = 0f;

@@ -22,6 +22,7 @@ namespace MobileIdleBuilder
         private HUDStatusBarController              _statusBar;
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
+        private PrestigeShopSubController           _prestigeShop;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -84,9 +85,10 @@ namespace MobileIdleBuilder
             if (deconstructController == null)
                 deconstructController = FindAnyObjectByType<DeconstructController>();
 
-            _statusBar = GetComponent<HUDStatusBarController>();
-            _inspector = GetComponent<HUDBuildingInspectorSubController>();
-            _banner    = GetComponent<HUDBannerController>();
+            _statusBar    = GetComponent<HUDStatusBarController>();
+            _inspector    = GetComponent<HUDBuildingInspectorSubController>();
+            _banner       = GetComponent<HUDBannerController>();
+            _prestigeShop = GetComponent<PrestigeShopSubController>();
         }
 
         void OnEnable()
@@ -119,6 +121,7 @@ namespace MobileIdleBuilder
             _statusBar?.Init(root);
             _inspector?.Init(root, placementController);
             _banner?.Init(root);
+            _prestigeShop?.Init(root, this);
             BindButtons(root);
 
             CloseAllPanels();
@@ -201,6 +204,7 @@ namespace MobileIdleBuilder
 
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
+            _prestigeShop?.SetECSContext(_em);
         }
 
         void Update()
@@ -505,7 +509,7 @@ namespace MobileIdleBuilder
         private void OpenUpgradesPanel()
         {
             CloseAllPanels();
-            // Content is populated when SpecialUpgradeSO data is wired in
+            _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
         }
 
@@ -823,7 +827,11 @@ namespace MobileIdleBuilder
                     : "No recipe");
                 recipeLabel.AddToClassList("building-card-recipe");
 
-                int cost = entry.building?.entropyCost ?? 0;
+                int rawCost = entry.building?.entropyCost ?? 0;
+                float reduction = !_prestigeQuery.IsEmpty
+                    ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                    : 0f;
+                int cost = rawCost > 0 ? (int)(rawCost * (1f - reduction)) : 0;
                 bool canAfford = currentEntropy >= cost;
 
                 if (cost > 0)
@@ -855,8 +863,13 @@ namespace MobileIdleBuilder
 
         private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
         {
-            int cost = entry.building?.entropyCost ?? 0;
-            if (cost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+            int rawCost = entry.building?.entropyCost ?? 0;
+            if (rawCost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+
+            float reduction = !_prestigeQuery.IsEmpty
+                ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                : 0f;
+            int cost = (int)(rawCost * (1f - reduction));
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
@@ -1131,9 +1144,19 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Calculates how much prestige currency a prestige would award.
-        /// Must stay in sync with the rate constant in <see cref="PrestigeSystem"/>.
+        /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth) => (long)(netWorth * 1f);
+        internal static long CalculatePrestigePreview(float netWorth)
+        {
+            var cfg    = GameBootstrap.Instance?.gameConfig;
+            float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
+            float pscale = cfg != null ? cfg.prestigeCurrencyScale : 50f;
+            if (pbase <= 0f || netWorth <= 0f) return 0L;
+            long earned = (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(netWorth / pbase) * pscale));
+            float gainBonus = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.PrestigeGainMultiplier) ?? 0f;
+            if (gainBonus > 0f) earned = (long)(earned * (1f + gainBonus));
+            return earned;
+        }
 
         internal static void SetElementVisible(VisualElement el, bool visible)
         {

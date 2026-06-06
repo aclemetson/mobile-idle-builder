@@ -55,6 +55,7 @@ namespace MobileIdleBuilder.Editor
         public float  net_worth_to_prestige_currency_rate= 1f;
         public float  prestige_base_value                = 5000f;
         public float  prestige_wall_multiplier           = 10f;
+        public float  prestige_currency_scale            = 50f;
         public float  alpha_particle_ev_value            = 20f;
         public float  beta_particle_ev_value             = 10f;
         public string environment                        = "Dev";

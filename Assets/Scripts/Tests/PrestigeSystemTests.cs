@@ -64,19 +64,21 @@ namespace MobileIdleBuilder.Tests
         // ── Currency calculation ─────────────────────────────────────────────
 
         [Test]
-        public void WhenRequested_AwardsCurrencyEqualToNetWorth()
+        public void WhenRequested_AwardsCurrencyViaLogFormula()
         {
+            // Formula: floor(max(0, log10(netWorth / pbase) * pscale))
+            // GameBootstrap is null in tests → defaults: pbase=5000, pscale=50
+            // At netWorth = 50000 (= wall = 5000 × 10): log10(10) × 50 = 50
             _em.SetComponentData(_playerEntity, new PlayerProgressData
             {
-                NetWorth = 5000f,
+                NetWorth = 50000f,
                 PrestigeRequested = true
             });
 
             _world.Update();
 
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
-            // Default rate = 1.0 → earned = (long)(5000 * 1.0) = 5000
-            Assert.AreEqual(5000L, prestige.PrestigeCurrency);
+            Assert.AreEqual(50L, prestige.PrestigeCurrency);
         }
 
         [Test]
@@ -98,17 +100,18 @@ namespace MobileIdleBuilder.Tests
         public void WhenRequested_CurrencyAccumulatesAcrossRuns()
         {
             // Simulate a second prestige on top of already-held currency
+            // At netWorth = 50000: log10(10) × 50 = 50 → total = 3000 + 50 = 3050
             _em.SetComponentData(_playerEntity, new PrestigeData { PrestigeCurrency = 3000L });
             _em.SetComponentData(_playerEntity, new PlayerProgressData
             {
-                NetWorth = 2000f,
+                NetWorth = 50000f,
                 PrestigeRequested = true
             });
 
             _world.Update();
 
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
-            Assert.AreEqual(5000L, prestige.PrestigeCurrency, "Currency should accumulate: 3000 + 2000 = 5000");
+            Assert.AreEqual(3050L, prestige.PrestigeCurrency, "Currency should accumulate: 3000 + 50 = 3050");
         }
 
         // ── Run count ────────────────────────────────────────────────────────
@@ -143,7 +146,7 @@ namespace MobileIdleBuilder.Tests
 
             var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
             Assert.AreEqual(0f,    progress.NetWorth,          "NetWorth should reset to 0");
-            Assert.AreEqual(0L,    progress.BaseCurrency,       "BaseCurrency should reset to 0");
+            Assert.AreEqual(0L,    progress.BaseCurrency,       "BaseCurrency resets to cfgEntropy (0 in tests — no GameBootstrap)");
             Assert.AreEqual(1,     progress.CurrentTier,        "CurrentTier should reset to 1");
             Assert.IsFalse(progress.PrestigeAvailable,          "PrestigeAvailable should reset to false");
             Assert.IsFalse(progress.PrestigeRequested,          "PrestigeRequested should clear after processing");

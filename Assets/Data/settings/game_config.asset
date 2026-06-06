@@ -19,6 +19,7 @@ MonoBehaviour:
   netWorthToPrestigeCurrencyRate: 1
   prestigeBaseValue: 5000
   prestigeWallMultiplier: 10
+  prestigeCurrencyScale: 50
   environment: 0
   apiBaseUrl: 
   alphaParticleEVValue: 20

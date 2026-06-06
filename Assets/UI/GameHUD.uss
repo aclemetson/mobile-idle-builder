@@ -42,6 +42,12 @@
     margin-left: var(--spacing-sm);
 }
 
+.prestige-topbar-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+}
+
 /* ---- Top bar buttons ---- */
 .prestige-btn {
     padding: var(--spacing-xs) var(--spacing-sm);
@@ -523,6 +529,92 @@
     border-radius: var(--border-radius);
     color: var(--color-danger);
     font-size: var(--font-size-sm);
+}
+
+/* ---- Prestige Shop balance bar ---- */
+.prestige-shop-balance {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: rgba(210, 168, 255, 0.08);
+    border-bottom-width: 1px;
+    border-color: rgba(210, 168, 255, 0.2);
+}
+
+.prestige-shop-currency-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+/* ---- Prestige shop upgrade rows ---- */
+.upgrade-row {
+    flex-direction: column;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: 2px;
+    background-color: var(--color-bg-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+}
+
+.upgrade-row:hover {
+    border-color: rgba(210, 168, 255, 0.4);
+}
+
+.upgrade-row--locked {
+    opacity: 0.45;
+}
+
+.upgrade-row--maxed {
+    border-color: var(--color-success);
+    opacity: 0.6;
+}
+
+.upgrade-row-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.upgrade-row-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+.upgrade-row-level {
+    color: #d2a8ff;
+    font-size: var(--font-size-sm);
+}
+
+.upgrade-row-desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-bottom: 6px;
+}
+
+.upgrade-row-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.upgrade-row-cost {
+    color: #d2a8ff;
+    font-size: var(--font-size-sm);
+}
+
+.upgrade-row-cost--unaffordable {
+    color: var(--color-danger);
+}
+
+.upgrade-row-prereq {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-style: italic;
 }
 
 .rotate-output-btn {

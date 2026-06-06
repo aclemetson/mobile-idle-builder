@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MobileIdleBuilder
 {
@@ -28,10 +29,31 @@ namespace MobileIdleBuilder
             base.Awake();
         }
 
+        void OnEnable()  => SceneManager.sceneLoaded += OnSceneLoaded;
+        void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        // When another singleton's DontDestroyOnLoad drags this component into a new scene,
+        // re-run initialization so ApplyLoadedSave() fires against the fresh ECS SubScene.
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (Instance != this) return;
+            if (scene.name == SceneLoader.LoadingSceneName) return;
+            if (!IsLoaded) return; // still initializing from Start()
+
+            IsLoaded = false;
+            StopAllCoroutines();
+            StartCoroutine(InitializeAsync());
+        }
+
         IEnumerator Start()
         {
+            yield return StartCoroutine(InitializeAsync());
+        }
+
+        IEnumerator InitializeAsync()
+        {
             if (Instance != this) yield break;
-            GameLogger.Info("[ECSLoadBridge] Start — polling for ECS world");
+            GameLogger.Info("[ECSLoadBridge] Initializing — polling for ECS world");
 
             // Poll for the ECS world — it may not be ready on the first frame on Android.
             const float kWorldTimeout = 5f;
@@ -105,13 +127,17 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
+            // Restore purchased permanent upgrades first — effects depend on this
+            PersistentUpgradeService.Instance?.LoadFromSave(save.permanentUpgrades);
+
             // Prestige multipliers — always safe to apply (defaults match SaveData defaults)
             var prestige = _prestigeQuery.GetSingleton<PrestigeData>();
-            prestige.RunCount            = save.prestigeCount;
-            prestige.PrestigeCurrency    = save.prestigeCurrency;
-            prestige.SpeedMultiplier     = save.prestigeSpeedMultiplier;
-            prestige.OutputMultiplier    = save.prestigeOutputMultiplier;
-            prestige.CostReduction       = save.prestigeCostReduction;
+            prestige.RunCount              = save.prestigeCount;
+            prestige.PrestigeCurrency      = save.prestigeCurrency;
+            prestige.PrestigeCurrencySpent = save.prestigeCurrencySpent;
+            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier;
+            prestige.OutputMultiplier      = save.prestigeOutputMultiplier;
+            prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
 
             // Tutorial — always restore so baked defaults never clobber saved progress
@@ -185,6 +211,7 @@ namespace MobileIdleBuilder
                 var p = _prestigeQuery.GetSingleton<PrestigeData>();
                 save.prestigeCount              = p.RunCount;
                 save.prestigeCurrency           = p.PrestigeCurrency;
+                save.prestigeCurrencySpent      = p.PrestigeCurrencySpent;
                 save.prestigeSpeedMultiplier    = p.SpeedMultiplier;
                 save.prestigeOutputMultiplier   = p.OutputMultiplier;
                 save.prestigeCostReduction      = p.CostReduction;

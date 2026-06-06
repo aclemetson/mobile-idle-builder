@@ -1,4 +1,3 @@
-using Unity.Burst;
 using Unity.Entities;
 
 namespace MobileIdleBuilder
@@ -39,15 +38,26 @@ namespace MobileIdleBuilder
             var prestige = SystemAPI.GetSingleton<PrestigeData>();
 
             // --- Calculate prestige currency earned ---
-            // In a full implementation, netWorthToPrestigeCurrencyRate comes from GameConfigSO
-            // loaded via a managed system. For now we use a constant.
-            const float rate = 1.0f;
-            long earned = (long)(progress.NetWorth * rate);
+            // Formula: floor(max(0, log10(netWorth / prestigeBase) × prestigeScale))
+            var cfg    = GameBootstrap.Instance?.gameConfig;
+            float pbase  = cfg != null ? cfg.prestigeBaseValue       : 5000f;
+            float pscale = cfg != null ? cfg.prestigeCurrencyScale   : 50f;
+            long earned = pbase > 0f
+                ? (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(progress.NetWorth / pbase) * pscale))
+                : 0L;
+
+            // Apply PrestigeGainMultiplier from permanent upgrades
+            float gainBonus = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.PrestigeGainMultiplier) ?? 0f;
+            if (gainBonus > 0f)
+                earned = (long)(earned * (1f + gainBonus));
+
             prestige.PrestigeCurrency += earned;
             prestige.RunCount += 1;
 
             // --- Reset current-run state ---
-            progress.BaseCurrency      = 0;
+            long cfgEntropy   = cfg != null ? cfg.startingEntropy : 0;
+            long bonusEntropy = (long)(PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.StartingEntropyBonus) ?? 0f);
+            progress.BaseCurrency      = cfgEntropy + bonusEntropy;
             progress.TotalEntropySpent = 0;
             progress.NetWorth          = 0f;
             progress.BaseNetWorth      = 0f;
@@ -75,8 +85,18 @@ namespace MobileIdleBuilder
 
             // --- Reset managed services (system is not Burst-compiled, so this is safe) ---
             ResearchService.Instance?.ResetAll();
-            if (SaveManager.Instance?.Current != null)
-                SaveManager.Instance.Current.unlockedResearch = new System.Collections.Generic.List<string>();
+
+            var save = SaveManager.Instance?.Current;
+            if (save != null)
+            {
+                save.unlockedResearch              = new System.Collections.Generic.List<string>();
+                save.tutorial.hasCompletedFirstRun = true;
+                save.tutorial.isActive             = false;
+            }
+
+            // Flush ECS state → SaveData and write to disk.
+            // ECS singletons are already updated above so FlushToSave captures correct post-prestige values.
+            SaveManager.Instance?.SaveLocal();
 
             GameLogger.Info(
                 $"[PrestigeSystem] Run {prestige.RunCount} complete. " +

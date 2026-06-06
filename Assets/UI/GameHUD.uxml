@@ -17,10 +17,11 @@
 
         <!-- ═══ TOP BAR ═══ -->
         <ui:VisualElement name="top-bar" class="top-bar">
-            <ui:Button name="btn-prestige"   text="⬆ Prestige" class="prestige-btn" />
-            <ui:Label name="entropy-label" text="◈ 0" class="power-label" />
-            <ui:Label name="power-label" text="⚡ 0 eV" class="power-label" />
-            <ui:Button name="btn-settings"   text="⚙"           class="settings-btn" />
+            <ui:Button name="btn-prestige"          text="⬆ Prestige" class="prestige-btn" />
+            <ui:Label  name="entropy-label"         text="◈ 0"       class="power-label" />
+            <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
+            <ui:Label  name="power-label"           text="⚡ 0 eV"   class="power-label" />
+            <ui:Button name="btn-settings"          text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
@@ -57,7 +58,7 @@
                 <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
-                <ui:Button name="btn-upgrades"     text="Upgrades"     class="drawer-nav-btn" />
+                <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
             </ui:ScrollView>
@@ -108,11 +109,14 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ UPGRADES PANEL ═══ -->
+        <!-- ═══ UPGRADES / PRESTIGE SHOP PANEL ═══ -->
         <ui:VisualElement name="upgrades-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Upgrades" class="panel-title" />
+                <ui:Label text="Prestige Shop" class="panel-title" />
                 <ui:Button name="btn-close-upgrades" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="prestige-shop-balance" class="prestige-shop-balance">
+                <ui:Label name="prestige-shop-currency" text="✦ 0" class="prestige-shop-currency-label" />
             </ui:VisualElement>
             <ui:ScrollView name="upgrades-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"

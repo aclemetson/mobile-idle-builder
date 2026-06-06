@@ -690,6 +690,8 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     new LocalSaveService().Delete();
+                    SaveManager.Instance?.ResetToFreshSave();
+                    PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Save cleared. Reloading...";
                 });
@@ -705,6 +707,7 @@ namespace MobileIdleBuilder.Dev
                             AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
                         new LocalSaveService().Delete();
                         sm.ResetToFreshSave();
+                        PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     }));
                     return "Deleting cloud + local save. Reloading...";
