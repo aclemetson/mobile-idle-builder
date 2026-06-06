@@ -53,7 +53,7 @@ namespace MobileIdleBuilder
                 var srcBuilding = FindAdjacent(hx, hy, cellToBuilding, isCollector);
                 if (srcBuilding == null)
                 {
-                    GameLogger.Info($"[IdleGraph] Chain skipped — no collector adjacent to head=({hx},{hy}) cellsLen={chain.cells.Length}");
+                    GameLogger.Debug($"[IdleGraph] Chain skipped — no collector adjacent to head=({hx},{hy}) cellsLen={chain.cells.Length}");
                     continue;
                 }
 
@@ -64,18 +64,18 @@ namespace MobileIdleBuilder
                 int itemId = getOutputItemId(srcBuilding.buildingId, srcBuilding.recipeId);
                 if (itemId < 0)
                 {
-                    GameLogger.Info($"[IdleGraph] Chain skipped — itemId=-1 for buildingId={srcBuilding.buildingId} recipeId={srcBuilding.recipeId}");
+                    GameLogger.Debug($"[IdleGraph] Chain skipped — itemId=-1 for buildingId={srcBuilding.buildingId} recipeId={srcBuilding.recipeId}");
                     continue;
                 }
 
                 float rate = getOutputRate(srcBuilding.buildingId) * effectiveItemsPerSecondMultiplier;
                 if (rate <= 0f)
                 {
-                    GameLogger.Info($"[IdleGraph] Chain skipped — rate={rate} for buildingId={srcBuilding.buildingId}");
+                    GameLogger.Debug($"[IdleGraph] Chain skipped — rate={rate} for buildingId={srcBuilding.buildingId}");
                     continue;
                 }
 
-                GameLogger.Info($"[IdleGraph] Chain added — src=b{srcBuilding.buildingId} itemId={itemId} rate={rate} sink={endsAtSink} head=({hx},{hy}) tail=({tx},{ty})");
+                GameLogger.Debug($"[IdleGraph] Chain added — src=b{srcBuilding.buildingId} itemId={itemId} rate={rate} sink={endsAtSink} head=({hx},{hy}) tail=({tx},{ty})");
 
                 snapshot.chains.Add(new IdleChainEntry
                 {

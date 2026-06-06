@@ -93,12 +93,12 @@ namespace MobileIdleBuilder
         {
             if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
             {
-                GameLogger.Info($"[Idle] OnReturnFromBackground — ECS not ready (Instance={ECSLoadBridge.Instance != null} IsLoaded={ECSLoadBridge.Instance?.IsLoaded})");
+                GameLogger.Debug($"[Idle] OnReturnFromBackground — ECS not ready (Instance={ECSLoadBridge.Instance != null} IsLoaded={ECSLoadBridge.Instance?.IsLoaded})");
                 return;
             }
 
             string backgroundedAt = PlayerPrefs.GetString(BackgroundTimestampKey, string.Empty);
-            GameLogger.Info($"[Idle] OnReturnFromBackground — backgroundedAt={backgroundedAt} lastSaved={_current?.lastSaved}");
+            GameLogger.Debug($"[Idle] OnReturnFromBackground — backgroundedAt={backgroundedAt} lastSaved={_current?.lastSaved}");
             if (!string.IsNullOrEmpty(backgroundedAt))
                 PlayerPrefs.DeleteKey(BackgroundTimestampKey);
 
