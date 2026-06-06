@@ -83,17 +83,29 @@ namespace MobileIdleBuilder
 #endif
                     if (GoogleAuthProvider != null)
                     {
-                        string idToken = await GoogleAuthProvider();
                         try
                         {
-                            await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                            string idToken = await GoogleAuthProvider();
+                            try
+                            {
+                                await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                            }
+                            catch (Exception googleEx)
+                            {
+                                // UGS Google provider may not be configured in the dashboard yet.
+                                // Fall back to anonymous so the session token gets stored on device —
+                                // this guarantees silent restore on the next cold start.
+                                GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); falling back to anonymous session.");
+                                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                            }
                         }
-                        catch (Exception googleEx)
+                        catch (Exception silentEx)
                         {
-                            // UGS Google provider may not be configured in the dashboard yet.
-                            // Fall back to anonymous so the session token gets stored on device —
-                            // this guarantees silent restore on the next cold start.
-                            GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); falling back to anonymous session.");
+                            // Google silent sign-in is unavailable (no cached credential, Play Services
+                            // issue, etc.) and policy did not permit an interactive prompt.  Sign in
+                            // anonymously so the session token is stored and future launches are silent.
+                            // The 30/90-day policy will trigger a full interactive re-auth when due.
+                            GameLogger.Info($"[UGSCloudSave] Google silent sign-in unavailable ({silentEx.Message}); using anonymous session.");
                             await AuthenticationService.Instance.SignInAnonymouslyAsync();
                         }
                     }
