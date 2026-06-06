@@ -147,29 +147,31 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void CalculatePrestigePreview_WholeNetWorth_ReturnsEqualLong()
+        public void CalculatePrestigePreview_TenxPrestigeBase_ReturnsFifty()
         {
-            Assert.AreEqual(5000L, HUDController.CalculatePrestigePreview(5000f));
+            // pbase=5000 (default), pscale=50 (default): log10(50000/5000)*50 = log10(10)*50 = 50
+            Assert.AreEqual(50L, HUDController.CalculatePrestigePreview(50000f));
         }
 
         [Test]
         public void CalculatePrestigePreview_FractionalNetWorth_TruncatesToLong()
         {
-            // (long)(999.9f * 1f) == 999
-            Assert.AreEqual(999L, HUDController.CalculatePrestigePreview(999.9f));
+            // log10(44721/5000)*50 ≈ 47.576 → floor = 47
+            Assert.AreEqual(47L, HUDController.CalculatePrestigePreview(44721f));
         }
 
         [Test]
         public void CalculatePrestigePreview_MatchesPrestigeSystemRate()
         {
-            // PrestigeSystem uses: long earned = (long)(progress.NetWorth * rate) where rate = 1.0f
-            // This test is the contract that keeps HUD display in sync with system behaviour.
-            // If PrestigeSystem changes its rate, this test will fail and force a HUD update too.
-            float netWorth = 12345f;
-            const float systemRate = 1.0f;
-            long systemEarned = (long)(netWorth * systemRate);
+            // PrestigeSystem formula: floor(max(0, log10(netWorth / pbase) * pscale))
+            // pbase=5000 (default), pscale=50 (default). GameBootstrap.Instance is null in tests.
+            // This is the contract that keeps HUD display in sync with system behaviour.
+            const float netWorth = 12345f;
+            const float pbase    = 5000f;
+            const float pscale   = 50f;
+            long expected = (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(netWorth / pbase) * pscale));
 
-            Assert.AreEqual(systemEarned, HUDController.CalculatePrestigePreview(netWorth),
+            Assert.AreEqual(expected, HUDController.CalculatePrestigePreview(netWorth),
                 "HUD preview must match what PrestigeSystem will actually award");
         }
 
