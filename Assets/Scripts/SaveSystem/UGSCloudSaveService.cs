@@ -52,6 +52,28 @@ namespace MobileIdleBuilder
                 var initOptions = new InitializationOptions().SetOption("com.unity.services.core.environment-name", _env);
                 await UnityServices.InitializeAsync(initOptions);
 
+                bool sessionExists = AuthenticationService.Instance.SessionTokenExists;
+                GameLogger.Info($"[UGSCloudSave] SessionTokenExists={sessionExists}");
+
+                if (!AuthenticationService.Instance.IsSignedIn)
+                {
+                    // Restore a cached UGS session first — avoids Google Sign-In on every cold start.
+                    // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when
+                    // a session token is present, per UGS Auth docs.
+                    if (sessionExists)
+                    {
+                        try
+                        {
+                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                            GameLogger.Info("[UGSCloudSave] Restored cached UGS session.");
+                        }
+                        catch (Exception sessionEx)
+                        {
+                            GameLogger.Info($"[UGSCloudSave] Cached session restore failed ({sessionEx.Message}); proceeding to Google Sign-In.");
+                        }
+                    }
+                }
+
                 if (!AuthenticationService.Instance.IsSignedIn)
                 {
 #if UNITY_EDITOR
@@ -61,8 +83,31 @@ namespace MobileIdleBuilder
 #endif
                     if (GoogleAuthProvider != null)
                     {
-                        string idToken = await GoogleAuthProvider();
-                        await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                        try
+                        {
+                            string idToken = await GoogleAuthProvider();
+                            try
+                            {
+                                await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
+                            }
+                            catch (Exception googleEx)
+                            {
+                                // UGS Google provider may not be configured in the dashboard yet.
+                                // Fall back to anonymous so the session token gets stored on device —
+                                // this guarantees silent restore on the next cold start.
+                                GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); falling back to anonymous session.");
+                                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                            }
+                        }
+                        catch (Exception silentEx)
+                        {
+                            // Google silent sign-in is unavailable (no cached credential, Play Services
+                            // issue, etc.) and policy did not permit an interactive prompt.  Sign in
+                            // anonymously so the session token is stored and future launches are silent.
+                            // The 30/90-day policy will trigger a full interactive re-auth when due.
+                            GameLogger.Info($"[UGSCloudSave] Google silent sign-in unavailable ({silentEx.Message}); using anonymous session.");
+                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                        }
                     }
                     else
                     {
