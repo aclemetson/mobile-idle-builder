@@ -8,32 +8,42 @@ namespace MobileIdleBuilder
     /// Call CalculateAndApply() once per session open, before ECS loads.
     ///
     /// Idempotent: the idleCollectionApplied field guards against double-application
-    /// (e.g. when cloud reconciliation swaps in a newer save and triggers a second load).
+    /// (e.g. when cloud reconciliation swaps in a newer save and triggers a second load,
+    /// or when the background→foreground path and the cold-boot path both fire).
     /// </summary>
     public static class OfflineCollectionService
     {
         /// <summary>
         /// Computes offline earnings from save.idleSnapshot, merges them into save.currentRun,
         /// and returns a result for display. Returns null if there is nothing to show.
+        ///
+        /// <paramref name="fromTimestamp"/> lets the caller supply the exact "left at" UTC
+        /// timestamp (e.g. from PlayerPrefs) instead of relying on save.lastSaved.
+        /// Falls back to save.lastSaved when null.
         /// </summary>
         public static IdleCollectionResult CalculateAndApply(
             SaveData save,
             GameConfigSO config,
-            PersistentUpgradeService upgrades)
+            PersistentUpgradeService upgrades,
+            string fromTimestamp = null)
         {
             if (save == null || config == null) return null;
 
             // No chains saved — nothing to simulate
             if (save.idleSnapshot?.chains == null || save.idleSnapshot.chains.Count == 0) return null;
 
-            // Already applied for this save timestamp — guard against double-apply
+            // fromTimestamp overrides save.lastSaved so background-resume and cold-boot
+            // paths both funnel through the same guard/calculation logic.
+            string effectiveTimestamp = fromTimestamp ?? save.lastSaved;
+
+            // Already applied for this departure timestamp — guard against double-apply
             if (!string.IsNullOrEmpty(save.idleCollectionApplied) &&
-                save.idleCollectionApplied == save.lastSaved) return null;
+                save.idleCollectionApplied == effectiveTimestamp) return null;
 
-            // Brand-new game — no prior session to earn from
-            if (string.IsNullOrEmpty(save.lastSaved)) return null;
+            // Brand-new game / no timestamp recorded yet
+            if (string.IsNullOrEmpty(effectiveTimestamp)) return null;
 
-            if (!DateTime.TryParse(save.lastSaved, null, DateTimeStyles.RoundtripKind, out var saveTime))
+            if (!DateTime.TryParse(effectiveTimestamp, null, DateTimeStyles.RoundtripKind, out var saveTime))
                 return null;
 
             float elapsedSeconds = (float)(DateTime.UtcNow - saveTime.ToUniversalTime()).TotalSeconds;
@@ -71,9 +81,10 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Stamp the save's own lastSaved so the same snapshot is never re-applied.
-            // A newer save (different lastSaved) will pass the guard and run fresh.
-            save.idleCollectionApplied = save.lastSaved;
+            // Stamp the departure timestamp so this exact session cannot be re-applied.
+            // Uses effectiveTimestamp (not save.lastSaved) so both the cold-boot and
+            // background-resume paths stamp the same key they checked above.
+            save.idleCollectionApplied = effectiveTimestamp;
 
             return result;
         }

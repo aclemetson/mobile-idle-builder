@@ -14,6 +14,11 @@ namespace MobileIdleBuilder
     {
         protected override bool PersistAcrossScenes => true;
 
+        // PlayerPrefs key written on every background event so that a foreground
+        // resume can calculate idle earnings even when the save file's lastSaved
+        // field hasn't been flushed yet (e.g. early-termination by the OS).
+        const string BackgroundTimestampKey = "idle_backgrounded_utc";
+
         [Header("Config")]
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
@@ -57,7 +62,19 @@ namespace MobileIdleBuilder
 #if UNITY_EDITOR
             if (GameBootstrap.TestModeEnabled) return;
 #endif
-            if (paused) SaveLocal();
+            if (paused)
+            {
+                // Write departure time to PlayerPrefs immediately — this is the most
+                // reliable record because PlayerPrefs.Save() is OS-managed and
+                // survives even if the process is killed before the JSON file flushes.
+                PlayerPrefs.SetString(BackgroundTimestampKey, DateTime.UtcNow.ToString("o"));
+                PlayerPrefs.Save();
+                SaveLocal();
+            }
+            else
+            {
+                OnReturnFromBackground();
+            }
         }
 
         void OnApplicationQuit()
@@ -66,6 +83,32 @@ namespace MobileIdleBuilder
             if (GameBootstrap.TestModeEnabled) return;
 #endif
             SaveLocal();
+        }
+
+        // Called when the app returns from background (OnApplicationPause(false)).
+        // Recalculates idle earnings using the PlayerPrefs departure timestamp so
+        // that background→foreground cycles show the modal, not just cold boots.
+        // Works identically on Android and iOS — no platform directives needed.
+        void OnReturnFromBackground()
+        {
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded) return;
+
+            string backgroundedAt = PlayerPrefs.GetString(BackgroundTimestampKey, string.Empty);
+            if (!string.IsNullOrEmpty(backgroundedAt))
+                PlayerPrefs.DeleteKey(BackgroundTimestampKey);
+
+            var result = OfflineCollectionService.CalculateAndApply(
+                _current,
+                gameConfig,
+                PersistentUpgradeService.Instance,
+                string.IsNullOrEmpty(backgroundedAt) ? null : backgroundedAt);
+
+            if (result == null) return;
+
+            // Persist earned resources and the updated idleCollectionApplied stamp.
+            // Skip ECS/grid flushes — only currentRun (currency, inventory) changed.
+            SaveLocal(skipECSFlush: true, skipGridFlush: true);
+            FindAnyObjectByType<HUDController>()?.ShowIdleReturn(result);
         }
 
         // ── Public API ────────────────────────────────────────────────────────
