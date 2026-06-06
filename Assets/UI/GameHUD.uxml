@@ -58,7 +58,7 @@
                 <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
-                <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn" />
+                <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
             </ui:ScrollView>
@@ -301,6 +301,24 @@
 
         <!-- ═══ TOOLTIP POPUP (singleton, positioned in C#) ═══ -->
         <ui:Instance template="TooltipPopup" name="tooltip-instance" />
+
+        <!-- ═══ IDLE RETURN MODAL (shown once per session after offline time) ═══ -->
+        <ui:VisualElement name="idle-return-modal" class="idle-return-modal hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 100;">
+            <ui:VisualElement name="idle-return-backdrop" class="idle-return-backdrop" />
+            <ui:VisualElement name="idle-return-card" class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="idle-return-title" text="Welcome Back!" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="idle-return-time" text="" class="idle-return-time-label" />
+                <ui:Label name="idle-return-max"  text="" class="idle-return-max-label" />
+                <ui:ScrollView name="idle-return-item-list" class="recipe-list"
+                               vertical-scroller-visibility="Auto"
+                               horizontal-scroller-visibility="Hidden" />
+                <ui:Label name="idle-return-entropy" text="" class="recipe-inputs" />
+                <ui:Button name="btn-idle-return-claim" text="Claim" class="craft-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
 
     </ui:VisualElement>
 </ui:UXML>

@@ -21,6 +21,7 @@
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
     <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
+    <button class="tab" data-tab="idle">Idle Collection</button>
   </nav>
 </header>
 
@@ -514,6 +515,83 @@ Expanded Vault    (standalone — no prerequisites)</pre>
       <span class="s-reset" id="s-reset-btn">Reset to defaults</span>
     </div>
   </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ IDLE COLLECTION ══ -->
+<div id="idle" class="tab-content">
+
+  <div class="callout">
+    <h3>Idle Collection</h3>
+    <p>When the player closes the app, harvesters keep running in the background — up to a capped window.
+       Only <strong>direct collector chains</strong> are simulated: Harvester → Conveyor → (Inventory or Maxwell's Demon).
+       Recipe-based synthesisers mid-chain are paused; the UI discloses this.</p>
+  </div>
+
+  <div class="card">
+    <h3>How Chains Are Detected</h3>
+    <p>On every auto-save, pause, and quit the game analyses the saved grid to build a chain snapshot:</p>
+    <ol>
+      <li>Walk each saved conveyor chain (head→tail).</li>
+      <li>The building one step <em>upstream</em> of the chain head must be a collector (Placement Rule = Must Be On Field).</li>
+      <li>The building one step <em>downstream</em> of the chain tail is checked:
+        <ul>
+          <li>If it is an Entropy Sink (Maxwell's Demon) → chain produces entropy on return.</li>
+          <li>Otherwise → items go into player inventory.</li>
+        </ul>
+      </li>
+    </ol>
+    <p>The snapshot is rebuilt whenever buildings or conveyors are placed or removed.</p>
+  </div>
+
+  <div class="card">
+    <h3>Defaults &amp; Formula</h3>
+    <table>
+      <tr><th>Parameter</th><th>Value</th><th>Source</th></tr>
+      <tr><td>Base idle cap</td><td>2 hours</td><td><code>GameConfigSO.idleBaseMaxSeconds = 7200</code></td></tr>
+      <tr><td>Absolute max cap</td><td>12 hours</td><td><code>GameConfigSO.idleAbsoluteMaxSeconds = 43200</code></td></tr>
+      <tr><td>Base collection rate</td><td>20%</td><td><code>GameConfigSO.idleBaseCollectionRate = 0.20</code></td></tr>
+    </table>
+    <p><strong>Earnings per chain</strong> = <code>floor( itemsPerSecond × cappedSeconds × collectionRate )</code></p>
+    <p>Entropy-sink chains: <code>entropy = items × baseSellValue</code></p>
+  </div>
+
+  <div class="card">
+    <h3>Prestige Upgrades</h3>
+    <table>
+      <tr><th>Upgrade</th><th>ID</th><th>Effect</th><th>Levels</th><th>Prereq</th><th>Total Cost</th></tr>
+      <tr>
+        <td><strong>Dormant Resonance</strong></td>
+        <td><code>idle_time_cap</code></td>
+        <td>+30 min idle cap per level</td>
+        <td>20 (max 12 h)</td>
+        <td>Entropy Headstart ≥ 1</td>
+        <td>~3,133 PC</td>
+      </tr>
+      <tr>
+        <td><strong>Idle Efficiency</strong></td>
+        <td><code>idle_collection_rate</code></td>
+        <td>+5% collection rate per level</td>
+        <td>10 (max 100%)</td>
+        <td>Dormant Resonance ≥ 1</td>
+        <td>~9,073 PC</td>
+      </tr>
+    </table>
+    <p>Effective cap: <code>min(idleAbsoluteMaxSeconds, idleBaseMaxSeconds + GetEffect(IdleTimeCap))</code></p>
+    <p>Effective rate: <code>min(1.0, idleBaseCollectionRate + GetEffect(IdleCollectionRate))</code></p>
+  </div>
+
+  <div class="card">
+    <h3>Welcome Back Modal</h3>
+    <p>Shown once per session immediately after the save loads (after IsLoaded = true in ECSLoadBridge).
+       Dismissed by tapping <strong>Claim</strong>. Not shown if no chains were active or earnings were zero.</p>
+    <ul>
+      <li>Time-away line: <em>"Away 3h 24m · collected 2h 0m (cap reached)"</em> when capped, or <em>"Away 45m"</em> when under cap.</li>
+      <li>Item list: one row per item type with quantity.</li>
+      <li>Entropy line: <em>"◈ +1,250 entropy"</em> if any entropy was earned from entropy-sink chains.</li>
+    </ul>
+    <p>Idempotent: the <code>idleCollectionApplied</code> field in SaveData prevents double-application if cloud reconciliation swaps in a newer save mid-session.</p>
+  </div>
+
 </div>
 
 <script src="gameplay-loop.js"></script>

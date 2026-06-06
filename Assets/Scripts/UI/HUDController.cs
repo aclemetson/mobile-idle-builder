@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
+        private IdleReturnSubController             _idleReturn;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -89,6 +90,7 @@ namespace MobileIdleBuilder
             _inspector    = GetComponent<HUDBuildingInspectorSubController>();
             _banner       = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
+            _idleReturn   = GetComponent<IdleReturnSubController>();
         }
 
         void OnEnable()
@@ -122,6 +124,7 @@ namespace MobileIdleBuilder
             _inspector?.Init(root, placementController);
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
+            _idleReturn?.Init(root);
             BindButtons(root);
 
             CloseAllPanels();
@@ -838,8 +841,9 @@ namespace MobileIdleBuilder
                 {
                     var costLabel = new Label($"◈ {cost:N0}");
                     costLabel.AddToClassList("building-card-recipe");
-                    if (!canAfford)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    costLabel.AddToClassList(canAfford
+                        ? "building-card-recipe--affordable"
+                        : "building-card-recipe--unaffordable");
                     card.Add(costLabel);
                 }
 
@@ -1071,6 +1075,9 @@ namespace MobileIdleBuilder
             _inspector?.ShowBuildingInspector(entity, buildingName);
 
         public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
+
+        // Idle-return modal pass-through (delegated to IdleReturnSubController)
+        public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
 
         private void PositionTooltip(VisualElement anchor)
         {

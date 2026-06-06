@@ -218,6 +218,7 @@ namespace MobileIdleBuilder
                 gridRenderer?.ClearDeconstructHover();
                 _hoveredCell = new(-1, -1);
                 bldgEntities.Dispose();
+                SaveManager.Instance?.SaveLocal();
                 GameLogger.Develop($"[Deconstruct] Removed building at ({fx},{fy}).");
                 return;
             }
@@ -256,6 +257,7 @@ namespace MobileIdleBuilder
                 gridRenderer?.ClearDeconstructHover();
                 _hoveredCell = new(-1, -1);
                 convEntities.Dispose();
+                SaveManager.Instance?.SaveLocal();
                 GameLogger.Develop($"[Deconstruct] Removed conveyor segment at ({x},{y}).");
                 return;
             }

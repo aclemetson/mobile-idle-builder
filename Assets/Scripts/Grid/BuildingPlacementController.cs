@@ -303,12 +303,14 @@ namespace MobileIdleBuilder
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
                 OnBuildingPlaced?.Invoke(_pending);
+                SaveManager.Instance?.SaveLocal();
             }
 
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             IsPlacing          = false;
             _awaitingSelection = false;
+            cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
         }
 

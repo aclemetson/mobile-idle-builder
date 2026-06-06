@@ -31,6 +31,14 @@ namespace MobileIdleBuilder
         [Header("Starting State")]
         public long startingEntropy;
 
+        [Header("Idle Collection")]
+        [Tooltip("Base maximum idle time in seconds before idle collection stops (2 hours).")]
+        public float idleBaseMaxSeconds = 7200f;
+        [Tooltip("Hard cap on idle time regardless of upgrades (12 hours).")]
+        public float idleAbsoluteMaxSeconds = 43200f;
+        [Tooltip("Fraction of active-play output collected while idle before upgrades (0..1).")]
+        public float idleBaseCollectionRate = 0.20f;
+
         [Header("Building Purchase Scaling")]
         [Tooltip("Each additional placement of the same Tier 1 building costs base × multiplier^(n-1)")]
         public float buildingPurchaseMultiplierT1 = 1.5f;

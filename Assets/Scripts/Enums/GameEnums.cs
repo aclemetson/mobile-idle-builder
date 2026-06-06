@@ -111,6 +111,8 @@ namespace MobileIdleBuilder
         StartingEntropyBonus,     // flat entropy added to BaseCurrency at run start
         GlobalResearchDiscount,   // additive % off all research costs
         PrestigeGainMultiplier,   // % bonus to PC earned per prestige
+        IdleTimeCap,              // additive seconds per level (+1800 = 30 min)
+        IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
     }
 
     public enum AchievementTrigger

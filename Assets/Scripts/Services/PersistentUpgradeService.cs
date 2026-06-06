@@ -115,6 +115,22 @@ namespace MobileIdleBuilder
                 UpgradeEffectType.PrestigeGainMultiplier, 0.05f, 4,
                 new[]{ 200, 600, 1800, 5400 },
                 new[]{ ("entropy_headstart", 3), ("memory_resonance", 3) }),
+
+            // ── Idle collection ───────────────────────────────────────────────
+            new UpgradeDef(
+                "idle_time_cap", "Dormant Resonance",
+                "Idle harvesters keep running for +30 min longer per level (base 2 h, max 12 h).",
+                UpgradeEffectType.IdleTimeCap, 1800f, 20,
+                new[]{ 35, 40, 46, 53, 61, 70, 81, 93, 107, 123,
+                       142, 163, 188, 216, 249, 286, 329, 379, 436, 502 },
+                new[]{ ("entropy_headstart", 1) }),
+
+            new UpgradeDef(
+                "idle_collection_rate", "Idle Efficiency",
+                "Idle harvesters collect +5% more output per level (base 50%, max 100%).",
+                UpgradeEffectType.IdleCollectionRate, 0.05f, 10,
+                new[]{ 80, 120, 180, 270, 405, 608, 912, 1368, 2052, 3078 },
+                new[]{ ("idle_time_cap", 1) }),
         };
 
         // ── State ─────────────────────────────────────────────────────────────

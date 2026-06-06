@@ -110,8 +110,10 @@ namespace MobileIdleBuilder
         public void SetTileHighlight(int x, int y, bool highlighted)
         {
             if (!IsInBounds(x, y)) return;
-            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(),
-                     highlighted ? occupiedColor : tileColor);
+            if (highlighted)
+                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), occupiedColor);
+            else
+                RestoreCell(x, y);
         }
 
         /// <summary>Shows a single-cell ghost. Convenience overload for 1x1 buildings.</summary>

@@ -201,6 +201,8 @@ namespace MobileIdleBuilder
                     fieldId  = kv.Value.id,
                     position = new[] { kv.Key.x, kv.Key.y }
                 });
+
+            RebuildIdleSnapshot(save);
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -276,6 +278,71 @@ namespace MobileIdleBuilder
             var fieldGenerator = FindAnyObjectByType<FieldGenerator>();
             if (fieldGenerator != null && save.currentRun.grid.fields?.Count > 0)
                 fieldGenerator.SpawnFromSave(save.currentRun.grid.fields);
+
+            RebuildIdleSnapshot(save);
+        }
+
+        // ── Idle snapshot ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Rebuilds the idle chain snapshot from the current grid save data.
+        /// Called at the end of FlushToSave() and LoadGrid() to keep it current.
+        /// </summary>
+        private void RebuildIdleSnapshot(SaveData save)
+        {
+            if (save?.currentRun?.grid == null) return;
+            if (placementController?.availableBuildings == null) return;
+
+            // Build lookup: buildingId → BuildingSO and defaultRecipe
+            var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
+            foreach (var entry in placementController.availableBuildings)
+                if (entry.building != null)
+                    buildingLookup[entry.building.buildingId] = entry;
+
+            bool isCollector(int id) =>
+                buildingLookup.TryGetValue(id, out var e) &&
+                e.building.placementRule == PlacementRule.MustBeOnField;
+
+            bool isEntropySink(int id) =>
+                buildingLookup.TryGetValue(id, out var e) && e.building.isEntropySink;
+
+            UnityEngine.Vector2Int getFootprint(int id) =>
+                buildingLookup.TryGetValue(id, out var e)
+                    ? e.building.footprint
+                    : UnityEngine.Vector2Int.one;
+
+            int getOutputItemId(int buildingId, int recipeId)
+            {
+                if (!buildingLookup.TryGetValue(buildingId, out var entry)) return -1;
+                RecipeSO recipe = null;
+                if (recipeId >= 0 && entry.building.supportedRecipes != null)
+                    recipe = Array.Find(entry.building.supportedRecipes,
+                                        r => r != null && r.recipeId == recipeId);
+                recipe ??= entry.defaultRecipe;
+                return recipe?.outputItem?.itemId ?? -1;
+            }
+
+            float getOutputRate(int id) =>
+                buildingLookup.TryGetValue(id, out var e) ? e.building.baseOutputRate : 0f;
+
+            float getItemSellValue(int itemId) =>
+                ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
+
+            float speedMult = save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f;
+
+            save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
+                save.currentRun.grid,
+                isCollector,
+                isEntropySink,
+                getFootprint,
+                getOutputItemId,
+                getOutputRate,
+                getItemSellValue,
+                speedMult,
+                DateTime.UtcNow.ToString("O"));
+
+            int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
+            GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={save.currentRun.grid.buildings?.Count ?? 0} conveyors={save.currentRun.grid.conveyors?.Count ?? 0} chains={builtChains}");
         }
     }
 }
