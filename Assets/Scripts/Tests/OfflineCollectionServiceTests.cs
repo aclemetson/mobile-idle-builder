@@ -135,11 +135,11 @@ namespace MobileIdleBuilder.Tests
         {
             var chain = new IdleChainEntry
                 { itemId = 1, itemsPerSecond = 10f, endsAtEntropySink = false, baseSellValue = 1f };
-            var save  = MakeSave(OneChain(chain), secondsAgo: 10f);
+            var save  = MakeSave(OneChain(chain), secondsAgo: 60f);
             var result = OfflineCollectionService.CalculateAndApply(save, _cfg, null);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(50, result.ItemsEarned[1], "10 items/s × 10 s × 50% = 50");
+            Assert.AreEqual(300, result.ItemsEarned[1], "10 items/s × 60 s × 50% = 300");
         }
 
         [Test]
