@@ -53,9 +53,18 @@ namespace MobileIdleBuilder
             // Build a map: every cell covered by a building → that building
             var cellToBuilding = BuildCellMap(buildings, getFootprint);
 
+            var mapLog = new System.Text.StringBuilder();
+            foreach (var kv in cellToBuilding)
+                mapLog.Append($"({kv.Key.x},{kv.Key.y})=b{kv.Value.buildingId} ");
+            GameLogger.Info($"[IdleGraph] cellMap={mapLog} conveyors={conveyors.Count}");
+
             foreach (var chain in conveyors)
             {
-                if (chain?.cells == null || chain.cells.Length < 2) continue;
+                if (chain?.cells == null || chain.cells.Length < 2)
+                {
+                    GameLogger.Info($"[IdleGraph] Chain skipped — null or cells.Length={chain?.cells?.Length ?? -1}");
+                    continue;
+                }
 
                 // Head = where items enter the belt; tail = where items exit
                 int hx = chain.cells[0], hy = chain.cells[1];
@@ -71,8 +80,16 @@ namespace MobileIdleBuilder
 
                     // Building that feeds the head is one step upstream
                     var upstreamCell = new Vector2Int(hx - flowDx, hy - flowDy);
-                    if (!cellToBuilding.TryGetValue(upstreamCell, out srcBuilding)) continue;
-                    if (!isCollector(srcBuilding.buildingId)) continue;
+                    if (!cellToBuilding.TryGetValue(upstreamCell, out srcBuilding))
+                    {
+                        GameLogger.Info($"[IdleGraph] Chain skipped — no building at upstreamCell=({upstreamCell.x},{upstreamCell.y}) head=({hx},{hy}) flow=({flowDx},{flowDy}) cellsLen={chain.cells.Length}");
+                        continue;
+                    }
+                    if (!isCollector(srcBuilding.buildingId))
+                    {
+                        GameLogger.Info($"[IdleGraph] Chain skipped — buildingId={srcBuilding.buildingId} at upstream is not a collector");
+                        continue;
+                    }
                 }
                 else
                 {
@@ -91,7 +108,22 @@ namespace MobileIdleBuilder
                             flowDx = -ddx; flowDy = -ddy;
                         }
                     }
-                    if (srcBuilding == null) continue;
+                    if (srcBuilding == null)
+                    {
+                        // Log all adjacent buildings for diagnosis
+                        int[] d2 = { -1, 0, 1, 0, 0, -1, 0, 1 };
+                        var adj = new System.Text.StringBuilder();
+                        for (int d = 0; d < 4; d++)
+                        {
+                            var cell = new Vector2Int(hx + d2[d*2], hy + d2[d*2+1]);
+                            adj.Append($"({cell.x},{cell.y})=");
+                            adj.Append(cellToBuilding.TryGetValue(cell, out var b) ? b.buildingId.ToString() : "none");
+                            adj.Append(" ");
+                        }
+                        GameLogger.Info($"[IdleGraph] Single-seg chain skipped — head=({hx},{hy}) adjacent: {adj}");
+                        continue;
+                    }
+                    GameLogger.Info($"[IdleGraph] Single-seg chain — head=({hx},{hy}) collector={srcBuilding.buildingId} flow=({flowDx},{flowDy})");
                 }
 
                 // Building that receives from the tail is one step downstream
@@ -117,10 +149,18 @@ namespace MobileIdleBuilder
                 bool endsAtSink = dstBuilding != null && isEntropySink(dstBuilding.buildingId);
 
                 int itemId = getOutputItemId(srcBuilding.buildingId, srcBuilding.recipeId);
-                if (itemId < 0) continue;
+                if (itemId < 0)
+                {
+                    GameLogger.Info($"[IdleGraph] Chain skipped — itemId=-1 for buildingId={srcBuilding.buildingId} recipeId={srcBuilding.recipeId}");
+                    continue;
+                }
 
                 float rate = getOutputRate(srcBuilding.buildingId) * effectiveItemsPerSecondMultiplier;
-                if (rate <= 0f) continue;
+                if (rate <= 0f)
+                {
+                    GameLogger.Info($"[IdleGraph] Chain skipped — rate={rate} for buildingId={srcBuilding.buildingId} mult={effectiveItemsPerSecondMultiplier}");
+                    continue;
+                }
 
                 snapshot.chains.Add(new IdleChainEntry
                 {
