@@ -109,9 +109,15 @@ namespace MobileIdleBuilder
             return PurchaseProcessingResult.Complete;
         }
 
+        public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
+        {
+            GameLogger.Warning($"[IAP] Purchase failed: {product?.definition.id} — {failureReason}");
+            OnPurchaseComplete?.Invoke(product?.definition.id ?? "", false);
+        }
+
         public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
         {
-            GameLogger.Warning($"[IAP] Purchase failed: {product?.definition.id} — {failureDescription.reason}");
+            GameLogger.Warning($"[IAP] Purchase failed: {product?.definition.id} — {failureDescription.reason} ({failureDescription.message})");
             OnPurchaseComplete?.Invoke(product?.definition.id ?? "", false);
         }
 

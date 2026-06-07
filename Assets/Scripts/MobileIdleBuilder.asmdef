@@ -12,7 +12,8 @@
         "Unity.TextMeshPro",
         "Unity.Services.Core",
         "Unity.Services.Authentication",
-        "Unity.Services.CloudSave"
+        "Unity.Services.CloudSave",
+        "Unity.Purchasing"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -21,6 +22,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
     "noEngineReferences": false
 }

@@ -248,10 +248,16 @@ namespace MobileIdleBuilder
                 int captured = i;
                 var tier     = PremiumShopCalculator.CrystalPackTiers[i];
 
+                string price =
+#if UNITY_PURCHASING
+                    IAPService.Instance?.GetLocalizedPrice(tier.ProductId) ??
+#endif
+                    tier.DisplayPrice;
+
                 var card = MakeIAPTierCard(
                     tier.Name,
                     $"+{tier.CrystalAmount:N0}◆ crystals",
-                    tier.DisplayPrice,
+                    price,
                     () => OnIAPBuyPressed(tier.ProductId));
 
                 _tierList.Add(card);
