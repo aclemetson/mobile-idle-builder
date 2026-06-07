@@ -7,6 +7,9 @@
 
 @import url("tokens.uss");
 
+/* Utility — usable in any UXML that imports components.uss */
+.hidden { display: none; }
+
 /* ================================================================
    TierBadge
    ================================================================ */
@@ -139,6 +142,7 @@
    ================================================================ */
 
 .notification-banner {
+    display: none;
     position: absolute;
     left: var(--spacing-md);
     right: var(--spacing-md);
@@ -150,7 +154,15 @@
     border-radius: var(--border-radius);
     border-width: 1px;
     border-color: var(--color-success);
-    /* shown/hidden via .hidden class toggled in C# */
+    translate: 0px -120px;
+    transition-property: translate;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
+}
+
+.notification-banner--shown {
+    display: flex;
+    translate: 0px 0px;
 }
 
 .notification-banner__icon {

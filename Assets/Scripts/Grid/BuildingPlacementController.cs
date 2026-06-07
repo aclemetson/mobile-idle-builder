@@ -303,6 +303,7 @@ namespace MobileIdleBuilder
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
                 OnBuildingPlaced?.Invoke(_pending);
+                AchievementService.Instance?.NotifyBuildingPlaced(_pending.building?.id ?? _pending.building?.name ?? "");
                 SaveManager.Instance?.SaveLocal();
             }
 

@@ -17,6 +17,7 @@ namespace MobileIdleBuilder
         private VisualElement _drawerInventory;
         private Label         _entropyLabel;
         private Label         _prestigeTopbarLabel;
+        private Label         _crystalLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
 
@@ -35,12 +36,14 @@ namespace MobileIdleBuilder
         private float _lastPowerMax           = -1f;
         private bool  _lastPrestigeAvailable  = false;
         private long  _lastHeldPC             = long.MinValue;
+        private long  _lastCrystals           = long.MinValue;
 
         public void Init(VisualElement root)
         {
             _drawerInventory     = root.Q("drawer-inventory");
             _entropyLabel        = root.Q<Label>("entropy-label");
             _prestigeTopbarLabel = root.Q<Label>("prestige-topbar-label");
+            _crystalLabel        = root.Q<Label>("crystal-label");
             _powerLabel          = root.Q<Label>("power-label");
             _btnPrestige         = root.Q<Button>("btn-prestige");
         }
@@ -66,6 +69,7 @@ namespace MobileIdleBuilder
                 RefreshPrestigeTopbarLabel();
             }
             if (!_powerQuery.IsEmpty) RefreshPowerLabel();
+            RefreshCrystalLabel();
         }
 
         private void RefreshInventoryBar()
@@ -163,6 +167,15 @@ namespace MobileIdleBuilder
             if (held == _lastHeldPC) return;
             _lastHeldPC                  = held;
             _prestigeTopbarLabel.text    = $"✦ {held:N0}";
+        }
+
+        private void RefreshCrystalLabel()
+        {
+            if (_crystalLabel == null) return;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0L;
+            if (crystals == _lastCrystals) return;
+            _lastCrystals     = crystals;
+            _crystalLabel.text = $"◆ {crystals:N0}";
         }
     }
 }

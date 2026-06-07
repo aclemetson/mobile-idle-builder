@@ -111,7 +111,10 @@ namespace MobileIdleBuilder
                 UnlockAllFields();
                 StopPulseRoutine();
                 tutorialHighlighter?.ClearHighlight();
-                hudController?.HideTutorialHint();
+                // Don't clear the hint when ended by prestige — HUDController shows the
+                // achievements unlock hint on the same frame and we must not stomp it.
+                if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                    hudController?.HideTutorialHint();
                 dialogueController?.HideDialogue();
                 return;
             }

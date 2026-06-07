@@ -213,6 +213,7 @@ namespace MobileIdleBuilder
             RefreshState();
             OnStateChanged?.Invoke();
 
+            AchievementService.Instance?.NotifyPVPWin();
             hudController?.ShowNotification("⚔", "Competition run ended! Score is being calculated.", "warning");
 
             if (Application.internetReachability != NetworkReachability.NotReachable &&

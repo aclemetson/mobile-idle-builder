@@ -678,6 +678,17 @@ namespace MobileIdleBuilder.Dev
                            $"{unlocked} research node(s) unlocked.{gridNote}";
                 });
 
+            // ── testing helpers ───────────────────────────────────────────────
+            _registry.Register("reset firstrun", "Reset hasCompletedFirstRun=false so the prestige unlock notification can re-trigger",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    save.tutorial.hasCompletedFirstRun = false;
+                    SaveManager.Instance.SaveLocal();
+                    return "hasCompletedFirstRun reset to false and saved. Run 'reload', then 'tutorial skip <id>' + 'set prestige available' + prestige to re-test.";
+                });
+
             // ── save / reload ─────────────────────────────────────────────────
             _registry.Register("save", "Force local save",
                 _ =>
@@ -693,6 +704,7 @@ namespace MobileIdleBuilder.Dev
                     new LocalSaveService().Delete();
                     SaveManager.Instance?.ResetToFreshSave();
                     PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                    AchievementService.Instance?.ResetInMemory();
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Save cleared. Reloading...";
                 });
@@ -710,6 +722,7 @@ namespace MobileIdleBuilder.Dev
                         new LocalSaveService().Delete();
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                        AchievementService.Instance?.ResetInMemory();
                         SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     }));
                     return "Deleting cloud + local save. Reloading...";

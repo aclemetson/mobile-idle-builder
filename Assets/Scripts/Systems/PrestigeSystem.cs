@@ -83,8 +83,22 @@ namespace MobileIdleBuilder
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
 
-            // --- Reset managed services (system is not Burst-compiled, so this is safe) ---
+            // --- Notify achievements (system is not Burst-compiled, so managed calls are safe) ---
+            AchievementService.Instance?.NotifyPrestigeCurrencyEarned(earned);
+            AchievementService.Instance?.NotifyPrestige();
+
+            // --- Reset managed services ---
             ResearchService.Instance?.ResetAll();
+
+            // Update ECS TutorialStateData so FlushToSave() reads the correct value.
+            // Without this, SaveLocal() would overwrite hasCompletedFirstRun back to false.
+            if (SystemAPI.HasSingleton<TutorialStateData>())
+            {
+                var ts = SystemAPI.GetSingleton<TutorialStateData>();
+                ts.FirstRunComplete = true;
+                ts.IsActive         = false;
+                SystemAPI.SetSingleton(ts);
+            }
 
             var save = SaveManager.Instance?.Current;
             if (save != null)
@@ -92,6 +106,7 @@ namespace MobileIdleBuilder
                 save.unlockedResearch              = new System.Collections.Generic.List<string>();
                 save.tutorial.hasCompletedFirstRun = true;
                 save.tutorial.isActive             = false;
+                GameLogger.Info("[PrestigeSystem] hasCompletedFirstRun set → true in SaveData");
             }
 
             // Flush ECS state → SaveData and write to disk.

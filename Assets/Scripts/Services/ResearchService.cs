@@ -107,6 +107,9 @@ namespace MobileIdleBuilder
 
             GameLogger.Info($"[ResearchService] Purchased: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
+
+            AchievementService.Instance?.NotifyResearchCompleted(research.id);
+            AchievementService.Instance?.NotifyEntropySpent(research.costBaseCurrency);
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

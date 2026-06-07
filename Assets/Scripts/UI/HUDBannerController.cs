@@ -57,7 +57,12 @@ namespace MobileIdleBuilder
             if (modifier != null)
                 _notificationBanner.AddToClassList($"notification-banner--{modifier}");
 
-            HUDController.SetElementVisible(_notificationBanner, true);
+            // Make the element visible (overrides CSS display:none) so the translate
+            // transition has something to animate. --shown is added one frame later so
+            // the display change settles before the CSS transition fires.
+            _notificationBanner.style.display = UnityEngine.UIElements.DisplayStyle.Flex;
+            _notificationBanner.schedule.Execute(
+                () => _notificationBanner?.AddToClassList("notification-banner--shown"));
 
             if (_hideNotificationCoroutine != null)
                 StopCoroutine(_hideNotificationCoroutine);
@@ -67,7 +72,15 @@ namespace MobileIdleBuilder
         private IEnumerator HideNotificationAfterDelay()
         {
             yield return new WaitForSeconds(notificationDuration);
-            HUDController.SetElementVisible(_notificationBanner, false);
+            if (_notificationBanner == null) yield break;
+
+            // Slide back up; CSS transition (300ms) handles the animation.
+            _notificationBanner.RemoveFromClassList("notification-banner--shown");
+
+            // After the transition completes, restore display:none so the element is
+            // truly hidden and can't receive stray pointer events.
+            yield return new WaitForSeconds(0.35f);
+            _notificationBanner.style.display = UnityEngine.UIElements.DisplayStyle.None;
         }
 
         // ── Field proximity banner ───────────────────────────────────────────
