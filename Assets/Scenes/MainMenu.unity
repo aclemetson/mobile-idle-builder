@@ -211,6 +211,7 @@ GameObject:
   - component: {fileID: 384025007}
   - component: {fileID: 384025010}
   - component: {fileID: 384025011}
+  - component: {fileID: 384025012}
   m_Layer: 0
   m_Name: MainMenuUI
   m_TagString: Untagged
@@ -298,6 +299,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.UIScaler
   designWidth: 1080
   scaleFactor: 2
+--- !u!114 &384025012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384025006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd51f3cc59dfb174dbc352c830db7b5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MainMenuAchievementsController
+  database: {fileID: 11400000, guid: 0eb5d0f0b65695042b3da0e634b99b60, type: 2}
+  notificationDuration: 3
 --- !u!1 &1121101505
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,7 +373,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
   autoSaveIntervalSeconds: 10
-  _resetTutorialOnPlay: 0
 --- !u!4 &1121101509
 Transform:
   m_ObjectHideFlags: 0

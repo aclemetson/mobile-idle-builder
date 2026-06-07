@@ -12,14 +12,16 @@
     <Style src="tokens.uss" />
     <Style src="components.uss" />
     <Style src="GameHUD.uss" />
+    <Style src="AchievementsMenu.uss" />
 
     <ui:VisualElement name="root" class="root" picking-mode="Ignore">
 
         <!-- ═══ TOP BAR ═══ -->
         <ui:VisualElement name="top-bar" class="top-bar">
             <ui:Button name="btn-prestige"          text="⬆ Prestige" class="prestige-btn" />
-            <ui:Label  name="entropy-label"         text="◈ 0"       class="power-label" />
+            <ui:Label  name="entropy-label"         text="◈ 0"       class="entropy-label" />
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
+            <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
             <ui:Label  name="power-label"           text="⚡ 0 eV"   class="power-label" />
             <ui:Button name="btn-settings"          text="⚙"         class="settings-btn" />
         </ui:VisualElement>
@@ -60,6 +62,7 @@
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
+                <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
@@ -129,9 +132,18 @@
                 <ui:Label name="achievements-title" text="Achievements (0)" class="panel-title" />
                 <ui:Button name="btn-close-achievements" text="✕" class="close-btn" />
             </ui:VisualElement>
+            <!-- Category tabs -->
+            <ui:VisualElement name="achievements-tabs" class="achievements-tabs">
+                <ui:Button name="ach-tab-daily"       text="Daily"       class="achievements-tab achievements-tab--active" />
+                <ui:Button name="ach-tab-weekly"      text="Weekly"      class="achievements-tab" />
+                <ui:Button name="ach-tab-monthly"     text="Monthly"     class="achievements-tab" />
+                <ui:Button name="ach-tab-progression" text="Progress"    class="achievements-tab" />
+            </ui:VisualElement>
+            <ui:Label name="ach-reset-label" text="" class="achievements-reset-label" />
             <ui:ScrollView name="achievements-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+            <ui:Button name="ach-claim-all-btn" text="Claim All" class="achievements-claim-all-btn hidden" />
         </ui:VisualElement>
 
         <!-- ═══ PRESTIGE PANEL ═══ -->

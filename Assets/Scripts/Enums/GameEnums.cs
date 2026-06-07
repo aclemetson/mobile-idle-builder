@@ -123,7 +123,22 @@ namespace MobileIdleBuilder
         ReachTier,
         Prestige,
         WinPVP,
-        UnlockCodex
+        UnlockCodex,
+        Login,                        // fires once per game session start
+        SpendEntropy,                 // delta = entropy amount spent (additive)
+        TotalPrestigeCurrencyEarned   // delta = PC earned this prestige (additive across runs)
+    }
+
+    /// <summary>
+    /// Determines reset cadence. Progression achievements are permanent milestones;
+    /// Daily/Weekly/Monthly re-lock and reset at the start of each new period.
+    /// </summary>
+    public enum AchievementCategory
+    {
+        Progression,
+        Daily,
+        Weekly,
+        Monthly
     }
 
     public enum CosmeticType

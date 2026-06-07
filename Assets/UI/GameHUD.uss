@@ -48,6 +48,19 @@
     margin-left: var(--spacing-sm);
 }
 
+.entropy-label {
+    color: var(--color-currency-entropy);
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+    -unity-font-style: bold;
+}
+
+.crystal-label {
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+}
+
 /* ---- Top bar buttons ---- */
 .prestige-btn {
     padding: var(--spacing-xs) var(--spacing-sm);
@@ -239,6 +252,22 @@
 
 .drawer-nav-btn:active {
     background-color: rgba(0, 229, 255, 0.15);
+}
+
+.drawer-nav-btn:disabled {
+    opacity: 0.35;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+/* Hint shown beneath a locked drawer button */
+.drawer-locked-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: italic;
+    padding: 0 var(--spacing-md);
+    margin-top: -4px;
+    margin-bottom: var(--spacing-xs);
 }
 
 /* Tutorial highlight — works on drawer-nav-btn via class addition */

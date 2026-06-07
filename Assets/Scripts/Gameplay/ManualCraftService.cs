@@ -79,6 +79,7 @@ namespace MobileIdleBuilder
             if (outputId >= 0)
                 SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
 
+            AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
             return true;
         }
 

@@ -258,7 +258,9 @@ namespace MobileIdleBuilder
                 var ts   = _tutorialQuery.GetSingleton<TutorialStateData>();
                 var flow = TutorialFlowSO.Current;
                 save.tutorial.isActive            = ts.IsActive;
-                save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete;
+                // Never downgrade: PrestigeSystem sets hasCompletedFirstRun on SaveData before
+                // ECS TutorialStateData is updated, so preserve any true already on the save.
+                save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete || save.tutorial.hasCompletedFirstRun;
                 save.tutorial.currentStepId = (flow?.steps != null && ts.CurrentStepIndex < flow.steps.Length)
                     ? flow.steps[ts.CurrentStepIndex].id
                     : save.tutorial.currentStepId;

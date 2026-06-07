@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3b8c12d4e5f6a7b8c9d0e1f2a3b4c5d, type: 3}
+  m_Name: weekly_research_5
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.AchievementSO
+  id: weekly_research_5
+  displayName: Dedicated Scholar
+  description: Complete 5 research projects this week.
+  icon: {fileID: 0}
+  isHidden: 0
+  category: 2
+  triggerType: 2
+  triggerTargetId: 
+  triggerQuantity: 5
+  rewards: []
+  paidCurrencyReward: 30
+  prestigeCurrencyReward: 0
+  platformAchievementId: 

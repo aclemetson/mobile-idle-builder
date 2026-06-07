@@ -22,6 +22,7 @@
     <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
     <button class="tab" data-tab="idle">Idle Collection</button>
+    <button class="tab" data-tab="achievements">Achievements</button>
   </nav>
 </header>
 
@@ -594,6 +595,153 @@ Expanded Vault    (standalone — no prerequisites)</pre>
   </div>
 
 </div>
+
+<script src="gameplay-loop.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════ ACHIEVEMENTS ══ -->
+<div id="achievements" class="tab-content">
+
+  <div class="callout">
+    <h3>Crystals (◆) — Paid Currency</h3>
+    <p>Crystals are a persistent premium currency separate from Entropy (◈) and Prestige Currency (✦).
+       They are earned <em>only</em> through achievements — never sold directly in this version.</p>
+    <ul>
+      <li><strong>Storage:</strong> <code>SaveData.paidCurrency</code> (never reset on prestige)</li>
+      <li><strong>Display:</strong> top-bar HUD label (◆ N) alongside entropy and prestige currency</li>
+      <li><strong>Future use:</strong> speed-up items, cosmetics, and store purchases (store not yet implemented)</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <h3>Category System &amp; Reset Schedule</h3>
+    <table>
+      <thead><tr><th>Category</th><th>Reset</th><th>On Reset</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Progression</strong></td><td>Never</td><td>Permanent milestones; completed once and never re-lock</td></tr>
+        <tr><td><strong>Daily</strong></td><td>00:00 UTC each day</td><td>Progress and completions wipe; player can earn rewards again tomorrow</td></tr>
+        <tr><td><strong>Weekly</strong></td><td>Monday 00:00 UTC</td><td>Same as daily but on a 7-day window</td></tr>
+        <tr><td><strong>Monthly</strong></td><td>1st of each month 00:00 UTC</td><td>Same but on a calendar-month window</td></tr>
+      </tbody>
+    </table>
+    <p>Reset dates are stored in <code>SaveData.dailyResetUtc</code> / <code>weeklyResetUtc</code> / <code>monthlyResetUtc</code>
+       (ISO 8601). Checked in <code>AchievementService.CheckPeriodResets()</code> on every game-session start.</p>
+  </div>
+
+  <div class="callout">
+    <h3>Claim Flow</h3>
+    <ol>
+      <li>Player triggers a Notify event → <code>AchievementService.Evaluate()</code> detects threshold met</li>
+      <li>Achievement moves to <code>unclaimedAchievements</code> list in SaveData</li>
+      <li><code>OnAchievementUnlocked</code> fires → toast notification slides in from the top (300 ms ease-out)</li>
+      <li>Player opens Achievements panel (HUD in-game or Achievements overlay on main menu)</li>
+      <li>Row shows <strong>Claim</strong> button; clicking it grants ◆ and/or ✦ and removes from unclaimed</li>
+      <li><strong>Claim All</strong> button claims every pending reward in the active tab at once</li>
+    </ol>
+    <p>If all non-bonus achievements in a time-based category are completed, the bonus achievement
+       (<em>Day Well Spent</em>, <em>Perfect Week</em>, <em>Month of Science</em>) auto-completes and also enters unclaimed.</p>
+  </div>
+
+  <div class="callout">
+    <h3>Daily Achievements</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Trigger</th><th>Goal</th><th>◆ Reward</th></tr></thead>
+      <tbody>
+        <tr><td>daily_login</td><td>Daily Devotion</td><td>Login</td><td>1 session</td><td>3</td></tr>
+        <tr><td>daily_craft_50</td><td>Assembly Rush</td><td>CraftItem (any)</td><td>50</td><td>5</td></tr>
+        <tr><td>daily_entropy_spent_500</td><td>Energy Hungry</td><td>SpendEntropy</td><td>500 e</td><td>5</td></tr>
+        <tr><td>daily_research_1</td><td>Curious Mind</td><td>CompleteResearch</td><td>1</td><td>10</td></tr>
+        <tr><td>daily_prestige</td><td>Quick Cycle</td><td>Prestige</td><td>1</td><td>15</td></tr>
+        <tr><td><strong>daily_complete</strong></td><td><em>Day Well Spent</em></td><td>All-daily bonus</td><td>All 5 above</td><td><strong>+25</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h3>Weekly Achievements</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Trigger</th><th>Goal</th><th>◆ Reward</th></tr></thead>
+      <tbody>
+        <tr><td>weekly_craft_500</td><td>Mass Production</td><td>CraftItem (any)</td><td>500</td><td>25</td></tr>
+        <tr><td>weekly_prestige_5</td><td>Run the Loop</td><td>Prestige</td><td>5</td><td>50</td></tr>
+        <tr><td>weekly_research_5</td><td>Dedicated Scholar</td><td>CompleteResearch</td><td>5</td><td>30</td></tr>
+        <tr><td>weekly_pvp_win</td><td>Competitive Spirit</td><td>WinPVP</td><td>1</td><td>40</td></tr>
+        <tr><td><strong>weekly_complete</strong></td><td><em>Perfect Week</em></td><td>All-weekly bonus</td><td>All 4 above</td><td><strong>+50</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h3>Monthly Achievements</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Trigger</th><th>Goal</th><th>◆ Reward</th></tr></thead>
+      <tbody>
+        <tr><td>monthly_craft_5000</td><td>Quantum Manufacturer</td><td>CraftItem (any)</td><td>5,000</td><td>100</td></tr>
+        <tr><td>monthly_prestige_20</td><td>Serial Collapser</td><td>Prestige</td><td>20</td><td>200</td></tr>
+        <tr><td>monthly_pvp_3</td><td>Arena Regular</td><td>WinPVP</td><td>3</td><td>150</td></tr>
+        <tr><td>monthly_entropy_10000</td><td>Entropy Baron</td><td>SpendEntropy</td><td>10,000 e</td><td>100</td></tr>
+        <tr><td><strong>monthly_complete</strong></td><td><em>Month of Science</em></td><td>All-monthly bonus</td><td>All 4 above</td><td><strong>+100</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h3>Progression Achievements</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Trigger</th><th>Goal</th><th>◆</th><th>Hidden</th></tr></thead>
+      <tbody>
+        <tr><td>prog_first_craft</td><td>First Fusion</td><td>CraftItem</td><td>1</td><td>5</td><td></td></tr>
+        <tr><td>prog_craft_1000</td><td>Industrialist</td><td>CraftItem</td><td>1,000</td><td>10</td><td></td></tr>
+        <tr><td>prog_craft_10000</td><td>Mass Manufacturer</td><td>CraftItem</td><td>10,000</td><td>25</td><td></td></tr>
+        <tr><td>prog_craft_100000</td><td>Quantum Factory</td><td>CraftItem</td><td>100,000</td><td>50</td><td>✓</td></tr>
+        <tr><td>prog_first_building</td><td>Foundation Layer</td><td>PlaceBuilding</td><td>1</td><td>5</td><td></td></tr>
+        <tr><td>prog_buildings_10</td><td>Expanding Operations</td><td>PlaceBuilding</td><td>10</td><td>10</td><td></td></tr>
+        <tr><td>prog_buildings_50</td><td>Industrial Complex</td><td>PlaceBuilding</td><td>50</td><td>25</td><td>✓</td></tr>
+        <tr><td>prog_first_research</td><td>Curiosity Piqued</td><td>CompleteResearch</td><td>1</td><td>10</td><td></td></tr>
+        <tr><td>prog_research_10</td><td>Knowledge Seeker</td><td>CompleteResearch</td><td>10</td><td>25</td><td></td></tr>
+        <tr><td>prog_tier_2</td><td>Atomic Era</td><td>ReachTier</td><td>2</td><td>10</td><td></td></tr>
+        <tr><td>prog_tier_3</td><td>Molecular Age</td><td>ReachTier</td><td>3</td><td>20</td><td></td></tr>
+        <tr><td>prog_tier_4</td><td>Materials Science</td><td>ReachTier</td><td>4</td><td>35</td><td></td></tr>
+        <tr><td>prog_tier_5</td><td>Component Mastery</td><td>ReachTier</td><td>5</td><td>50</td><td></td></tr>
+        <tr><td>prog_first_prestige</td><td>Collapse Protocol</td><td>Prestige</td><td>1</td><td>20</td><td></td></tr>
+        <tr><td>prog_prestige_5</td><td>Cycle Veteran</td><td>Prestige</td><td>5</td><td>35</td><td></td></tr>
+        <tr><td>prog_prestige_25</td><td>Quantum Looper</td><td>Prestige</td><td>25</td><td>75</td><td>✓</td></tr>
+        <tr><td>prog_prestige_100</td><td>Eternal Collapser</td><td>Prestige</td><td>100</td><td>200</td><td>✓</td></tr>
+        <tr><td>prog_first_pvp_win</td><td>Arena Debut</td><td>WinPVP</td><td>1</td><td>25</td><td></td></tr>
+        <tr><td>prog_pvp_wins_10</td><td>Leaderboard Climber</td><td>WinPVP</td><td>10</td><td>75</td><td>✓</td></tr>
+        <tr><td>prog_codex_10</td><td>Field Notes</td><td>UnlockCodex</td><td>10</td><td>10</td><td></td></tr>
+        <tr><td>prog_codex_50</td><td>Complete Codex</td><td>UnlockCodex</td><td>50</td><td>150</td><td>✓</td></tr>
+        <tr><td>prog_prestige_currency_1000</td><td>Prestige Hoarder</td><td>TotalPrestigeCurrencyEarned</td><td>1,000</td><td>50</td><td>✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h3>New Trigger Types</h3>
+    <ul>
+      <li><code>Login</code> — fires once per game session start (called by <code>AchievementService.NotifyLogin()</code> from SaveManager)</li>
+      <li><code>SpendEntropy</code> — delta = amount spent per transaction (call <code>NotifyEntropySpent(amount)</code> from entropy spend sites)</li>
+      <li><code>TotalPrestigeCurrencyEarned</code> — delta = PC earned per prestige (call <code>NotifyPrestigeCurrencyEarned(amount)</code> from PrestigeSystem)</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <h3>Hook-Up Checklist (connect Notify* calls in gameplay code)</h3>
+    <ul>
+      <li><code>NotifyLogin()</code> → call from <code>SaveManager.Start()</code> or <code>GameBootstrap</code> once per session</li>
+      <li><code>NotifyCraft(itemId, qty)</code> → already called from <code>ManualCraftService</code>; ensure <code>ProductionSystem</code> also calls it per automated output</li>
+      <li><code>NotifyBuildingPlaced(type)</code> → call from <code>BuildingPlacementController.OnBuildingPlaced</code></li>
+      <li><code>NotifyResearchCompleted(id)</code> → call from <code>ResearchService.Purchase()</code></li>
+      <li><code>NotifyPrestige()</code> → call from <code>PrestigeSystem</code> after reset completes</li>
+      <li><code>NotifyEntropySpent(amount)</code> → call from <code>ResearchService.Purchase()</code> and building placement cost deduction</li>
+      <li><code>NotifyPrestigeCurrencyEarned(amount)</code> → call from <code>PrestigeSystem</code> when PC is calculated</li>
+      <li><code>NotifyTierReached(tier)</code> → call when <code>PlayerProgressData.CurrentTier</code> increments</li>
+      <li><code>NotifyPVPWin()</code> → call from <code>PVPService</code> on match completion</li>
+      <li><code>NotifyCodexUnlocked(total)</code> → call when a new codex entry is discovered</li>
+    </ul>
+  </div>
+
+</div>
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
 
 <script src="gameplay-loop.js"></script>
 </body>

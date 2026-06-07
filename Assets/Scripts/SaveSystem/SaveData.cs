@@ -24,8 +24,13 @@ namespace MobileIdleBuilder
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
         public List<string> codex                           = new();
+        public long  paidCurrency;                          // Crystals (◆) — earned via achievements
         public List<string> achievements                    = new();
         public List<AchievementProgressEntry> achievementProgress = new();
+        public List<string> unclaimedAchievements           = new(); // completed but reward not yet claimed
+        public string dailyResetUtc;   // ISO 8601 — when current daily period expires
+        public string weeklyResetUtc;  // ISO 8601 — when current weekly period expires (Mon 00:00 UTC)
+        public string monthlyResetUtc; // ISO 8601 — when current monthly period expires (1st of month)
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();

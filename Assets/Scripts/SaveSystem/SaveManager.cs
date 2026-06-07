@@ -17,7 +17,11 @@ namespace MobileIdleBuilder
         // PlayerPrefs key written on every background event so that a foreground
         // resume can calculate idle earnings even when the save file's lastSaved
         // field hasn't been flushed yet (e.g. early-termination by the OS).
-        const string BackgroundTimestampKey = "idle_backgrounded_utc";
+        public const string BackgroundTimestampKey = "idle_backgrounded_utc";
+
+        // Set by the editor tool (MobileIdleBuilder → Clear Save) to wipe the cloud
+        // save on next play-mode boot, after UGS has initialized.
+        public const string k_WipePending = "dev_wipe_cloud_on_boot";
 
         [Header("Config")]
         [SerializeField] GameConfigSO gameConfig;
@@ -126,6 +130,24 @@ namespace MobileIdleBuilder
             // Init UGS (anonymous sign-in). IsAvailable is false until this completes.
             var initTask = _cloud.InitializeAsync();
             yield return new WaitUntil(() => initTask.IsCompleted);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Honor a pending wipe request from the editor tool (MobileIdleBuilder → Clear Save).
+            // Skip the cloud fetch and delete the cloud key instead; _current is already a
+            // fresh SaveData because the local file was deleted before entering play mode.
+            if (PlayerPrefs.GetInt(k_WipePending, 0) == 1)
+            {
+                PlayerPrefs.DeleteKey(k_WipePending);
+                PlayerPrefs.Save();
+                if (_cloud.IsAvailable)
+                {
+                    var wipeTask = _cloud.DeleteAsync();
+                    yield return new WaitUntil(() => wipeTask.IsCompleted);
+                    GameLogger.Info("[SaveManager] Cloud save wiped by dev tool.");
+                }
+                yield break;
+            }
+#endif
 
             if (!_cloud.IsAvailable) yield break;
 

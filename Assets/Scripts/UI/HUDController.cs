@@ -76,6 +76,19 @@ namespace MobileIdleBuilder
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
 
+        // ---- Achievements category tabs ----
+        private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
+        private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
+        private Label  _achResetLabel;
+        private Button _achClaimAllBtn;
+
+        // ---- Achievements gate ----
+        private Button    _btnAchievements;
+        private Label     _achievementsLockedHint;
+        private bool      _achievementsUnlocked;
+        private Coroutine _achievementsHintPulse;
+        private Button    _achievementsHintPulseTarget;
+
 
         // ============================================================
         // Unity lifecycle
@@ -126,12 +139,15 @@ namespace MobileIdleBuilder
             _prestigeShop?.Init(root, this);
             _idleReturn?.Init(root);
             BindButtons(root);
+            ApplyAchievementsGate();
+            _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
-            SetElementVisible(root.Q("notification-banner"),   false);
+            // notification-banner starts hidden via CSS translate (no .hidden class needed)
             SetElementVisible(root.Q("tutorial-hint-banner"),  false);
             SetElementVisible(root.Q("field-proximity-banner"), false);
             SetElementVisible(_outputSelector, false);
@@ -214,6 +230,21 @@ namespace MobileIdleBuilder
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+
+            // One-shot: detect first prestige in the same session and re-apply the gate
+            if (!_achievementsUnlocked)
+            {
+                bool firstRunNow = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+                if (firstRunNow)
+                {
+                    GameLogger.Info($"[HUD] Achievements gate flipped — showing unlock hint. _banner={_banner != null}");
+                    _achievementsUnlocked = true;
+                    ApplyAchievementsGate();
+                    achievementService?.InitPostPrestige();
+                    ShowTutorialHint("🏆 Achievements unlocked! Open the drawer and tap Achievements to get started.");
+                    StartAchievementsHintPulse();
+                }
+            }
         }
 
         // ============================================================
@@ -251,6 +282,18 @@ namespace MobileIdleBuilder
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievementsList    = root.Q<ScrollView>("achievements-list");
             _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
+
+            // Achievements category tabs
+            _achTabDaily       = root.Q<Button>("ach-tab-daily");
+            _achTabWeekly      = root.Q<Button>("ach-tab-weekly");
+            _achTabMonthly     = root.Q<Button>("ach-tab-monthly");
+            _achTabProgression = root.Q<Button>("ach-tab-progression");
+            _achResetLabel     = root.Q<Label>("ach-reset-label");
+            _achClaimAllBtn    = root.Q<Button>("ach-claim-all-btn");
+
+            // Achievements gate
+            _btnAchievements        = root.Q<Button>("btn-achievements");
+            _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
 
             _pvpStateLabel     = root.Q<Label>("pvp-state-label");
             _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
@@ -297,6 +340,17 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
+
+            // Achievement category tabs
+            if (_achTabDaily       != null) _achTabDaily.clicked       += () => SwitchAchCategory(AchievementCategory.Daily);
+            if (_achTabWeekly      != null) _achTabWeekly.clicked      += () => SwitchAchCategory(AchievementCategory.Weekly);
+            if (_achTabMonthly     != null) _achTabMonthly.clicked     += () => SwitchAchCategory(AchievementCategory.Monthly);
+            if (_achTabProgression != null) _achTabProgression.clicked += () => SwitchAchCategory(AchievementCategory.Progression);
+            if (_achClaimAllBtn    != null) _achClaimAllBtn.clicked    += () =>
+            {
+                achievementService?.ClaimAllRewards();
+                BuildAchievementsList();
+            };
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
 
             // Top bar
@@ -516,16 +570,65 @@ namespace MobileIdleBuilder
             SetElementVisible(_upgradesPanel, true);
         }
 
+        private void ApplyAchievementsGate()
+        {
+            bool unlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            if (_btnAchievements != null)
+                _btnAchievements.SetEnabled(unlocked);
+            SetElementVisible(_achievementsLockedHint, !unlocked);
+        }
+
         private void OpenAchievementsPanel()
         {
+            DismissAchievementsHint();
             CloseAllPanels();
+            _achActiveCategory = AchievementCategory.Daily;
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
         }
 
+        private void StartAchievementsHintPulse() =>
+            SwapAchievementsHintPulse("btn-drawer-handle");
+
+        private void SwapAchievementsHintPulse(string buttonId)
+        {
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+            var root = GetComponent<UIDocument>()?.rootVisualElement;
+            var btn  = root?.Q<Button>(buttonId);
+            if (btn == null) return;
+            _achievementsHintPulseTarget = btn;
+            _achievementsHintPulse       = StartCoroutine(PulseAchievementsHint(btn));
+        }
+
+        private void DismissAchievementsHint()
+        {
+            HideTutorialHint();
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+        }
+
+        private IEnumerator PulseAchievementsHint(Button btn)
+        {
+            while (true)
+            {
+                btn.AddToClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+                btn.RemoveFromClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+            }
+        }
+
+        private void SwitchAchCategory(AchievementCategory category)
+        {
+            _achActiveCategory = category;
+            BuildAchievementsList();
+        }
+
         private void OnAchievementUnlocked(AchievementSO _)
         {
-            // Refresh the title counter whenever a new achievement completes
             if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
                 BuildAchievementsList();
         }
@@ -892,10 +995,22 @@ namespace MobileIdleBuilder
             if (_achievementsList == null) return;
             _achievementsList.Clear();
 
+            // Update category tab highlights
+            UpdateAchievementTabHighlights();
+
+            // Update reset countdown
+            if (_achResetLabel != null)
+            {
+                _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                    ? ""
+                    : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
+            }
+
             var all = achievementService?.GetAll();
             if (all == null || all.Count == 0)
             {
                 _achievementsList.Add(new Label("No achievements defined."));
+                if (_achievementsTitle != null) _achievementsTitle.text = "Achievements (0 / 0)";
                 return;
             }
 
@@ -905,53 +1020,116 @@ namespace MobileIdleBuilder
 
             foreach (var achievement in all)
             {
-                bool isDone   = achievementService.IsCompleted(achievement.id);
-                bool isHidden = achievement.isHidden && !isDone;
+                if (achievement == null || achievement.category != _achActiveCategory) continue;
+
+                bool isDone      = achievementService.IsCompleted(achievement.id);
+                bool isClaimable = achievementService.IsClaimable(achievement.id);
+                bool isHidden    = achievement.isHidden && !isDone;
 
                 var row = new VisualElement();
-                row.AddToClassList("achievement-row");
-                if (isDone) row.AddToClassList("achievement-row--completed");
+                row.AddToClassList("ach-card");
+                if (isDone && !isClaimable) row.AddToClassList("ach-card--completed");
+                else if (isClaimable)       row.AddToClassList("ach-card--claimable");
 
-                // Check / lock indicator
+                var innerRow = new VisualElement();
+                innerRow.AddToClassList("ach-card-row");
+
                 var checkLabel = new Label(isDone ? "✓" : "○");
-                checkLabel.AddToClassList("achievement-row__check");
+                checkLabel.AddToClassList("ach-card-check");
+                if (isDone) checkLabel.AddToClassList("ach-card-check--done");
 
-                // Body
                 var body = new VisualElement();
-                body.AddToClassList("achievement-row__body");
+                body.AddToClassList("ach-card-body");
 
                 var nameLabel = new Label(isHidden ? "???" : achievement.displayName);
-                nameLabel.AddToClassList("achievement-row__name");
+                nameLabel.AddToClassList("ach-card-name");
 
                 var descLabel = new Label(isHidden ? "Complete a hidden objective to reveal." : achievement.description);
-                descLabel.AddToClassList("achievement-row__description");
+                descLabel.AddToClassList("ach-card-desc");
 
                 body.Add(nameLabel);
                 body.Add(descLabel);
 
-                // Progress (only for quantity > 1 and not hidden)
-                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                // Currency reward hint
+                if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
                 {
-                    int progress = achievementService.GetProgress(achievement.id);
-                    var progLabel = new Label($"{progress} / {achievement.triggerQuantity}");
-                    progLabel.AddToClassList("achievement-row__progress");
-                    body.Add(progLabel);
-                }
-
-                // Rewards (only if not hidden)
-                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
-                {
-                    var rewardNames = string.Join(", ", System.Array.ConvertAll(
-                        achievement.rewards, r => r != null ? r.displayName : "?"));
-                    var rewardLabel = new Label($"Reward: {rewardNames}");
-                    rewardLabel.AddToClassList("achievement-row__rewards");
+                    var parts = new System.Collections.Generic.List<string>();
+                    if (achievement.paidCurrencyReward    > 0) parts.Add($"◆ {achievement.paidCurrencyReward}");
+                    if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
+                    var rewardLabel = new Label(string.Join("  ", parts));
+                    rewardLabel.AddToClassList("ach-card-reward");
                     body.Add(rewardLabel);
                 }
 
-                row.Add(checkLabel);
-                row.Add(body);
+                // Cosmetic rewards (legacy)
+                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
+                {
+                    var cosmeticNames = string.Join(", ", System.Array.ConvertAll(
+                        achievement.rewards, r => r != null ? r.displayName : "?"));
+                    var cosmeticLabel = new Label($"Unlocks: {cosmeticNames}");
+                    cosmeticLabel.AddToClassList("ach-card-desc");
+                    body.Add(cosmeticLabel);
+                }
+
+                innerRow.Add(checkLabel);
+                innerRow.Add(body);
+
+                // Claim button
+                if (isClaimable)
+                {
+                    var claimBtn = new Button { text = "Claim" };
+                    claimBtn.AddToClassList("ach-claim-btn");
+                    string capturedId = achievement.id;
+                    claimBtn.clicked += () =>
+                    {
+                        achievementService?.ClaimReward(capturedId);
+                        BuildAchievementsList();
+                    };
+                    innerRow.Add(claimBtn);
+                }
+
+                row.Add(innerRow);
+
+                // Progress bar (in-progress achievements with quantity > 1)
+                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                {
+                    int progress = achievementService.GetProgress(achievement.id);
+                    float ratio  = Mathf.Clamp01((float)progress / achievement.triggerQuantity);
+
+                    var barWrap = new VisualElement();
+                    barWrap.AddToClassList("ach-progress-bar");
+                    var fill = new VisualElement();
+                    fill.AddToClassList("ach-progress-fill");
+                    fill.style.width = new StyleLength(new Length(ratio * 100f, LengthUnit.Percent));
+                    barWrap.Add(fill);
+                    row.Add(barWrap);
+
+                    var progLabel = new Label($"{progress:N0} / {achievement.triggerQuantity:N0}");
+                    progLabel.AddToClassList("ach-card-desc");
+                    row.Add(progLabel);
+                }
+
                 _achievementsList.Add(row);
             }
+
+            // Claim All button visibility
+            bool anyClaimable = achievementService?.ClaimableCount > 0;
+            SetElementVisible(_achClaimAllBtn, anyClaimable);
+        }
+
+        private void UpdateAchievementTabHighlights()
+        {
+            AchievementTabActive(_achTabDaily,       _achActiveCategory == AchievementCategory.Daily);
+            AchievementTabActive(_achTabWeekly,      _achActiveCategory == AchievementCategory.Weekly);
+            AchievementTabActive(_achTabMonthly,     _achActiveCategory == AchievementCategory.Monthly);
+            AchievementTabActive(_achTabProgression, _achActiveCategory == AchievementCategory.Progression);
+        }
+
+        private static void AchievementTabActive(Button tab, bool active)
+        {
+            if (tab == null) return;
+            if (active) tab.AddToClassList("achievements-tab--active");
+            else        tab.RemoveFromClassList("achievements-tab--active");
         }
 
         // ============================================================
@@ -1131,6 +1309,9 @@ namespace MobileIdleBuilder
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);
             OnDrawerOpened?.Invoke();
+            // Hint active: btn-achievements is now visible — pulse it instead of the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-achievements");
         }
 
         private void CloseDrawer()
@@ -1139,6 +1320,9 @@ namespace MobileIdleBuilder
             _drawerOpen = false;
             _drawerPanel.RemoveFromClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, false);
+            // Hint still active but drawer hidden: swap back to pulsing the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-drawer-handle");
         }
 
         private void CancelActiveModes()

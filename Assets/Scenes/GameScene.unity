@@ -358,7 +358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b18c6ce5242fbf7459b527d2d2058b1a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.AchievementService
-  database: {fileID: 0}
+  database: {fileID: 11400000, guid: 0eb5d0f0b65695042b3da0e634b99b60, type: 2}
   hudController: {fileID: 1347028482}
 --- !u!114 &262970767
 MonoBehaviour:
