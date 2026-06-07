@@ -98,6 +98,26 @@
     color: var(--color-primary);
 }
 
+.go-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background-color: rgba(255,255,255,0.06);
+    border-color: var(--color-border);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin-right: var(--spacing-xs);
+}
+
+.go-back-btn:hover {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
 /* ---- Grid area (passthrough — touch events fall through to world) ---- */
 .grid-area {
     flex-grow: 1;

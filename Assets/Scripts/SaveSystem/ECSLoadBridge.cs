@@ -143,7 +143,9 @@ namespace MobileIdleBuilder
             prestige.RunCount              = save.prestigeCount;
             prestige.PrestigeCurrency      = save.prestigeCurrency;
             prestige.PrestigeCurrencySpent = save.prestigeCurrencySpent;
-            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier;
+            // Apply speed boost on top of the prestige base (2× when active, 1× otherwise)
+            float speedBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier * speedBoost;
             prestige.OutputMultiplier      = save.prestigeOutputMultiplier;
             prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
@@ -219,6 +221,7 @@ namespace MobileIdleBuilder
                 save.currentRun.baseCurrency      = pp.BaseCurrency;
                 save.currentRun.totalEntropySpent = pp.TotalEntropySpent;
                 save.currentRun.baseNetWorth      = pp.BaseNetWorth;
+                save.lastKnownNetWorth            = pp.NetWorth;
             }
 
             // Prestige
@@ -228,7 +231,9 @@ namespace MobileIdleBuilder
                 save.prestigeCount              = p.RunCount;
                 save.prestigeCurrency           = p.PrestigeCurrency;
                 save.prestigeCurrencySpent      = p.PrestigeCurrencySpent;
-                save.prestigeSpeedMultiplier    = p.SpeedMultiplier;
+                // Strip the shop boost before saving so base × boost isn't accumulated on each save
+                float activeBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+                save.prestigeSpeedMultiplier    = activeBoost > 1f ? p.SpeedMultiplier / activeBoost : p.SpeedMultiplier;
                 save.prestigeOutputMultiplier   = p.OutputMultiplier;
                 save.prestigeCostReduction      = p.CostReduction;
             }
@@ -266,6 +271,26 @@ namespace MobileIdleBuilder
                     : save.tutorial.currentStepId;
                 GameLogger.Debug($"[Save] Flush tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  active={ts.IsActive}");
             }
+        }
+
+        // ── Shop ECS write-through ────────────────────────────────────────────
+
+        /// <summary>Adds entropy directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
+        public void AddEntropy(long amount)
+        {
+            if (!IsLoaded || _progressQuery.IsEmpty) return;
+            var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+            pp.BaseCurrency += amount;
+            _progressQuery.SetSingleton(pp);
+        }
+
+        /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
+        public void AddPrestigeCurrency(long amount)
+        {
+            if (!IsLoaded || _prestigeQuery.IsEmpty) return;
+            var p = _prestigeQuery.GetSingleton<PrestigeData>();
+            p.PrestigeCurrency += amount;
+            _prestigeQuery.SetSingleton(p);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

@@ -212,6 +212,8 @@ GameObject:
   - component: {fileID: 384025010}
   - component: {fileID: 384025011}
   - component: {fileID: 384025012}
+  - component: {fileID: 384025014}
+  - component: {fileID: 384025013}
   m_Layer: 0
   m_Name: MainMenuUI
   m_TagString: Untagged
@@ -313,6 +315,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MainMenuAchievementsController
   database: {fileID: 11400000, guid: 0eb5d0f0b65695042b3da0e634b99b60, type: 2}
   notificationDuration: 3
+--- !u!114 &384025013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384025006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 726e9678961a966489f03455f17774c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PremiumShopService
+--- !u!114 &384025014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384025006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56d93d06f9c0b7e47b212088190747ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MainMenuShopController
 --- !u!1 &1121101505
 GameObject:
   m_ObjectHideFlags: 0

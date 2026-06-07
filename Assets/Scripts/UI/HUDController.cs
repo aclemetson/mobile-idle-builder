@@ -356,6 +356,8 @@ namespace MobileIdleBuilder
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
             root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
+            var btnBack = root.Q<Button>("btn-go-back-main-menu");
+            if (btnBack != null) btnBack.clicked += OnGoBackMainMenu;
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -768,6 +770,12 @@ namespace MobileIdleBuilder
                 $"You will receive: {preview} ✦   (current: {held} ✦)";
 
             SetElementVisible(_prestigePanel, true);
+        }
+
+        private void OnGoBackMainMenu()
+        {
+            SaveManager.Instance?.SaveLocal();
+            SceneLoader.GoTo("MainMenu");
         }
 
         private void OnPrestigeConfirmed()

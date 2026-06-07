@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
         private Button _btnAchievements;
         private Button _btnSettings;
         private Button _btnCredits;
+        private Button _btnShop;
 
         private Label _titleLabel;
         private Label _subtitleLabel;
@@ -34,16 +35,19 @@ namespace MobileIdleBuilder
         private VisualElement _menuBg;
 
         private MainMenuAchievementsController _achievementsController;
+        private MainMenuShopController         _shopController;
 
         private void OnEnable()
         {
             _achievementsController = GetComponent<MainMenuAchievementsController>();
+            _shopController         = GetComponent<MainMenuShopController>();
             var root = GetComponent<UIDocument>().rootVisualElement;
             QueryElements(root);
             ApplyBranding();
             BindButtons();
             ApplyAchievementsGate();
             _achievementsController?.Initialize(root);
+            _shopController?.Initialize(root);
         }
 
         // Re-apply gate in Start — guaranteed to run after all Awake() calls (including
@@ -58,7 +62,9 @@ namespace MobileIdleBuilder
             if (_btnAchievements != null) _btnAchievements.clicked -= OnAchievementsPressed;
             if (_btnSettings     != null) _btnSettings.clicked     -= OnSettingsPressed;
             if (_btnCredits      != null) _btnCredits.clicked      -= OnCreditsPressed;
+            if (_btnShop         != null) _btnShop.clicked         -= OnShopPressed;
             _achievementsController?.Cleanup();
+            _shopController?.Cleanup();
         }
 
         private void QueryElements(VisualElement root)
@@ -74,6 +80,7 @@ namespace MobileIdleBuilder
             _btnAchievements = root.Q<Button>("btn-achievements");
             _btnSettings     = root.Q<Button>("btn-settings");
             _btnCredits      = root.Q<Button>("btn-credits");
+            _btnShop         = root.Q<Button>("btn-shop");
         }
 
         private void ApplyAchievementsGate()
@@ -108,6 +115,7 @@ namespace MobileIdleBuilder
             if (_btnAchievements != null) _btnAchievements.clicked += OnAchievementsPressed;
             _btnSettings.clicked    += OnSettingsPressed;
             _btnCredits.clicked     += OnCreditsPressed;
+            if (_btnShop != null) _btnShop.clicked += OnShopPressed;
         }
 
         private void OnPlayPressed()         => SceneLoader.GoTo("GameScene");
@@ -115,5 +123,6 @@ namespace MobileIdleBuilder
         private void OnAchievementsPressed() => _achievementsController?.Open();
         private void OnSettingsPressed()     => GameLogger.Debug("[MainMenu] Settings — coming soon");
         private void OnCreditsPressed()      => GameLogger.Debug("[MainMenu] Credits — coming soon");
+        private void OnShopPressed()         => _shopController?.Open();
     }
 }

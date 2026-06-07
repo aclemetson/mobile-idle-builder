@@ -23,6 +23,7 @@
     <button class="tab" data-tab="simple">Simple Overview</button>
     <button class="tab" data-tab="idle">Idle Collection</button>
     <button class="tab" data-tab="achievements">Achievements</button>
+    <button class="tab" data-tab="premiumshop">Premium Shop</button>
   </nav>
 </header>
 
@@ -608,7 +609,7 @@ Expanded Vault    (standalone — no prerequisites)</pre>
     <ul>
       <li><strong>Storage:</strong> <code>SaveData.paidCurrency</code> (never reset on prestige)</li>
       <li><strong>Display:</strong> top-bar HUD label (◆ N) alongside entropy and prestige currency</li>
-      <li><strong>Future use:</strong> speed-up items, cosmetics, and store purchases (store not yet implemented)</li>
+      <li><strong>Spending:</strong> speed-up boosts, entropy injections, prestige currency packs — all in the Premium Shop (main menu)</li>
     </ul>
   </div>
 
@@ -738,6 +739,105 @@ Expanded Vault    (standalone — no prerequisites)</pre>
       <li><code>NotifyPVPWin()</code> → call from <code>PVPService</code> on match completion</li>
       <li><code>NotifyCodexUnlocked(total)</code> → call when a new codex entry is discovered</li>
     </ul>
+  </div>
+
+</div>
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════════ PREMIUM SHOP ══ -->
+<div id="premiumshop" class="tab-content">
+
+  <div class="callout">
+    <h3>Premium Shop — Entry &amp; Currency</h3>
+    <p>Accessible from the <strong>Main Menu</strong> via the <code>◆ SHOP</code> button.
+       To reach it from an active run, use the <strong>⬅ Go Back</strong> button in the game HUD top bar
+       (this saves the run first). The shop is <em>not</em> embedded in the game scene.</p>
+    <ul>
+      <li><strong>Crystal balance:</strong> <code>SaveData.paidCurrency</code> — earned from achievements, bought via IAP</li>
+      <li><strong>Speed Boost state:</strong> <code>SaveData.speedBoostExpiryUtc</code> (ISO 8601 UTC expiry)</li>
+      <li><strong>Net Worth snapshot:</strong> <code>SaveData.lastKnownNetWorth</code> — written by ECSLoadBridge.FlushToSave() on each save; used by Entropy tab pricing</li>
+    </ul>
+  </div>
+
+  <div class="phase" id="speedups-phase">
+    <div class="phase-header" style="border-left:4px solid #00e676;background:#0d2a1a;">
+      <h2>⚡ Speed Ups</h2>
+      <p>Temporary 2× boost to offline/idle production. Purchases are consumable — time stacks additively (buying while active extends the expiry).</p>
+    </div>
+    <table>
+      <thead><tr><th>Tier</th><th>Name</th><th>Duration</th><th>Multiplier</th><th>Cost (◆)</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Quick Burst</td><td>30 min</td><td>2×</td><td>50</td></tr>
+        <tr><td>1</td><td>Production Surge</td><td>2 hr</td><td>2×</td><td>175</td></tr>
+        <tr><td>2</td><td>Overclocked</td><td>8 hr</td><td>2×</td><td>600</td></tr>
+        <tr><td>3</td><td>Hyperdrive</td><td>24 hr</td><td>2×</td><td>1,500</td></tr>
+      </tbody>
+    </table>
+    <p><small>Implementation: <code>SaveData.speedBoostExpiryUtc</code> stores the UTC end time.
+    <code>ECSLoadBridge.ApplyLoadedSave()</code> applies <code>PrestigeData.SpeedMultiplier × boost</code> on session load.
+    <code>FlushToSave()</code> strips the boost before writing to prevent stacking across saves.
+    <code>GridSaveService</code> also factors the boost into the idle snapshot speedMult.</small></p>
+  </div>
+
+  <div class="phase" id="entropy-phase">
+    <div class="phase-header" style="border-left:4px solid #00bcd4;background:#0d1f2a;">
+      <h2>◈ Entropy Injections</h2>
+      <p>Adds entropy directly to the current run. Amount is scaled from <code>lastKnownNetWorth</code> — the net worth at last save. Floors apply for new players.</p>
+    </div>
+    <table>
+      <thead><tr><th>Tier</th><th>Name</th><th>% of Net Worth</th><th>Minimum Floor</th><th>Cost (◆)</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Trickle</td><td>5%</td><td>500◈</td><td>80</td></tr>
+        <tr><td>1</td><td>Infusion</td><td>15%</td><td>1,500◈</td><td>220</td></tr>
+        <tr><td>2</td><td>Cascade</td><td>40%</td><td>4,000◈</td><td>500</td></tr>
+        <tr><td>3</td><td>Flood</td><td>100%</td><td>10,000◈</td><td>1,100</td></tr>
+      </tbody>
+    </table>
+    <p><small>Net worth snapshot: written each save via <code>ECSLoadBridge.FlushToSave() → save.lastKnownNetWorth = pp.NetWorth</code>.
+    Shop reads this field directly — no ECS required at main menu.
+    If ECS is live (game scene entry), <code>ECSLoadBridge.AddEntropy()</code> writes through to <code>PlayerProgressData.BaseCurrency</code>.</small></p>
+  </div>
+
+  <div class="phase" id="prestige-currency-shop-phase">
+    <div class="phase-header" style="border-left:4px solid #ce93d8;background:#1a0d2a;">
+      <h2>✦ Prestige Currency Packs</h2>
+      <p>Adds ✦ directly to the permanent prestige currency balance. Useful when grinding for a specific upgrade.</p>
+    </div>
+    <table>
+      <thead><tr><th>Tier</th><th>Name</th><th>✦ Amount</th><th>Cost (◆)</th><th>Rate (◆/✦)</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Residue</td><td>25</td><td>100</td><td>4.0</td></tr>
+        <tr><td>1</td><td>Fragment</td><td>100</td><td>350</td><td>3.5</td></tr>
+        <tr><td>2</td><td>Cache</td><td>400</td><td>1,200</td><td>3.0</td></tr>
+        <tr><td>3</td><td>Reservoir</td><td>1,500</td><td>4,000</td><td>2.7</td></tr>
+      </tbody>
+    </table>
+    <p><small>Adds to <code>SaveData.prestigeCurrency</code>. If ECS is live, <code>ECSLoadBridge.AddPrestigeCurrency()</code> writes through to <code>PrestigeData.PrestigeCurrency</code>.</small></p>
+  </div>
+
+  <div class="phase" id="buy-crystals-phase">
+    <div class="phase-header" style="border-left:4px solid #ffd700;background:#2a2000;">
+      <h2>◆ Buy Crystals (IAP)</h2>
+      <p>Real-money purchases. Unity IAP handles both Google Play and App Store through a unified API — no platform-specific code needed. Products are <code>ProductType.Consumable</code>.</p>
+    </div>
+    <table>
+      <thead><tr><th>Tier</th><th>Name</th><th>◆ Amount</th><th>Product ID</th><th>Display Price</th><th>◆ per $</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Starter Pack</td><td>600</td><td><code>crystals_tier1</code></td><td>$0.99</td><td>606</td></tr>
+        <tr><td>1</td><td>Explorer Pack</td><td>3,200</td><td><code>crystals_tier2</code></td><td>$4.99</td><td>641</td></tr>
+        <tr><td>2</td><td>Founder Pack</td><td>7,500</td><td><code>crystals_tier3</code></td><td>$9.99</td><td>750</td></tr>
+        <tr><td>3</td><td>Quantum Pack</td><td>20,000</td><td><code>crystals_tier4</code></td><td>$19.99</td><td>1,001</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Activation steps:</strong></p>
+    <ol>
+      <li>Add <code>"com.unity.purchasing": "4.12.2"</code> to <code>Packages/manifest.json</code></li>
+      <li>Enable Unity Gaming Services in the Unity dashboard</li>
+      <li>Register the 4 product IDs in Google Play Console (Monetize → Products) and App Store Connect</li>
+      <li>Define <code>UNITY_PURCHASING</code> scripting symbol (or it is auto-defined by the package)</li>
+    </ol>
+    <p><small>Until IAP is live, the Buy tab shows "Coming Soon" labels and disabled buttons.
+    Crystals awarded via <code>PremiumShopService.AwardCrystals(amount)</code> → writes to <code>SaveData.paidCurrency</code> and <code>SaveData.crystalsPurchased</code> (lifetime audit).</small></p>
   </div>
 
 </div>

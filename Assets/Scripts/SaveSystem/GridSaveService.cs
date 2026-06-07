@@ -331,7 +331,8 @@ namespace MobileIdleBuilder
             float getItemSellValue(int itemId) =>
                 ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
 
-            float speedMult = save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f;
+            float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult;
 
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
                 save.currentRun.grid,

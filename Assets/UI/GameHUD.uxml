@@ -23,6 +23,7 @@
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
             <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
             <ui:Label  name="power-label"           text="⚡ 0 eV"   class="power-label" />
+            <ui:Button name="btn-go-back-main-menu" text="⬅"         class="go-back-btn" />
             <ui:Button name="btn-settings"          text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 

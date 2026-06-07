@@ -24,7 +24,10 @@ namespace MobileIdleBuilder
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
         public List<string> codex                           = new();
-        public long  paidCurrency;                          // Crystals (◆) — earned via achievements
+        public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
+        public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
+        public float lastKnownNetWorth;                     // Snapshot written by ECSLoadBridge; used by shop entropy scaling
+        public string speedBoostExpiryUtc;                  // ISO 8601 — null/empty means no active speed boost
         public List<string> achievements                    = new();
         public List<AchievementProgressEntry> achievementProgress = new();
         public List<string> unclaimedAchievements           = new(); // completed but reward not yet claimed

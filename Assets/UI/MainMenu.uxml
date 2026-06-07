@@ -3,6 +3,7 @@
     <Style src="MainMenu.uss" />
     <Style src="components.uss" />
     <Style src="AchievementsMenu.uss" />
+    <Style src="PremiumShop.uss" />
 
     <ui:VisualElement name="main-menu-root" class="main-menu-root">
 
@@ -27,6 +28,7 @@
                 <ui:Button name="btn-leaderboard"  text="LEADERBOARD"  class="menu-btn" />
                 <ui:Button name="btn-achievements" text="ACHIEVEMENTS"  class="menu-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="menu-btn-locked-hint hidden" />
+                <ui:Button name="btn-shop"         text="◆ SHOP"       class="menu-btn" />
                 <ui:Button name="btn-settings"     text="SETTINGS"     class="menu-btn" />
                 <ui:Button name="btn-credits"      text="CREDITS"      class="menu-btn" />
             </ui:VisualElement>
@@ -62,6 +64,29 @@
 
             <!-- Claim All button (shown when any in category are claimable) -->
             <ui:Button name="btn-claim-all" text="Claim All" class="achievements-claim-all-btn hidden" />
+        </ui:VisualElement>
+
+        <!-- Premium Shop full-screen overlay (hidden by default) -->
+        <ui:VisualElement name="shop-overlay" class="shop-overlay hidden">
+            <ui:VisualElement name="shop-overlay-header" class="shop-overlay-header">
+                <ui:Label name="shop-overlay-title"   text="Premium Shop" class="shop-overlay-title" />
+                <ui:Label name="shop-crystal-balance" text="◆ 0"          class="shop-crystal-balance" />
+                <ui:Button name="btn-shop-close" text="✕" class="shop-close-btn" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="shop-tabs" class="shop-tabs">
+                <ui:Button name="shop-tab-speedups"  text="⚡ Speed"    class="shop-tab shop-tab--active" />
+                <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
+                <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
+                <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />
+            </ui:VisualElement>
+
+            <ui:Label name="shop-context-label" text="" class="shop-context-label" />
+
+            <ui:ScrollView name="shop-tier-list"
+                           class="shop-tier-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
         <!-- Notification banner for main-menu toasts (same slide-from-top pattern) -->
