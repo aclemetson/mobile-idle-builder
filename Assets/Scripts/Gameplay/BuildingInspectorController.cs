@@ -98,11 +98,28 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TrySelectBuildingAt(Vector2 screenPos)
         {
-            if (!_ecsReady || gridRenderer == null) return false;
+            if (!_ecsReady || gridRenderer == null)
+            {
+                GameLogger.Develop($"[Inspector] TrySelectBuildingAt early-exit: ecsReady={_ecsReady} gridRenderer={(gridRenderer == null ? "NULL" : "ok")}");
+                return false;
+            }
 
-            Vector2Int cell = WorldToCell(screenPos);
+            // World-position based detection avoids cell-rounding convention mismatches.
+            // Tiles are visually centered at (cell * cellSize), so the footprint of a building
+            // at cell (fx, fy) with size (fw, fh) covers world
+            //   X: [fx*cs - halfCs,  (fx+fw)*cs - halfCs)
+            //   Z: [fy*cs - halfCs,  (fy+fh)*cs - halfCs)
+            if (!ScreenToWorldGround(screenPos, out Vector3 worldPos))
+            {
+                GameLogger.Develop("[Inspector] TrySelectBuildingAt early-exit: ScreenToWorldGround failed (no camera?)");
+                return false;
+            }
+
+            float      cs     = gridRenderer.CellSize;
+            float      halfCs = cs * 0.5f;
+            Vector2Int cell   = WorldToCell(screenPos); // used only for IsInBounds fast-exit
+            GameLogger.Develop($"[Inspector] worldPos=({worldPos.x:F2},{worldPos.z:F2}) cell=({cell.x},{cell.y}) cs={cs} inBounds={gridRenderer.IsInBounds(cell.x, cell.y)}");
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return false;
-            if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y)) return false;
 
             // Tutorial gating: read restriction from current step definition
             var buildingGate = BuildingInteractionGate.None;
@@ -115,6 +132,7 @@ namespace MobileIdleBuilder
                     buildingGate = flow.steps[tutState.CurrentStepIndex].onEnter?.buildingInteractionGate
                                    ?? BuildingInteractionGate.None;
             }
+            GameLogger.Develop($"[Inspector] buildingGate={buildingGate}");
 
             if (buildingGate == BuildingInteractionGate.BlockAll)
             {
@@ -123,6 +141,7 @@ namespace MobileIdleBuilder
             }
 
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            GameLogger.Develop($"[Inspector] Searching {entities.Length} building entities for worldPos=({worldPos.x:F2},{worldPos.z:F2})");
             Entity found = Entity.Null;
 
             for (int i = 0; i < entities.Length; i++)
@@ -137,30 +156,42 @@ namespace MobileIdleBuilder
                     fw = fp.Width; fh = fp.Height;
                 }
 
-                if (cell.x >= fx && cell.x < fx + fw && cell.y >= fy && cell.y < fy + fh)
-                {
-                    found = e;
-                    break;
-                }
+                float xMin = fx * cs - halfCs, xMax = (fx + fw) * cs - halfCs;
+                float zMin = fy * cs - halfCs, zMax = (fy + fh) * cs - halfCs;
+                bool hit = worldPos.x >= xMin && worldPos.x < xMax &&
+                           worldPos.z >= zMin && worldPos.z < zMax;
+                GameLogger.Develop($"[Inspector]   entity[{i}] cell=({fx},{fy}) fw={fw}fh={fh} worldBounds X:[{xMin:F2},{xMax:F2}) Z:[{zMin:F2},{zMax:F2}) hit={hit}");
+
+                if (hit) { found = e; break; }
             }
             entities.Dispose();
 
-            if (found == Entity.Null) return false;
+            if (found == Entity.Null)
+            {
+                GameLogger.Develop("[Inspector] No entity found — returning false");
+                return false;
+            }
 
             // EntropySinkOnly: only Maxwell's Demon may be opened
             if (buildingGate == BuildingInteractionGate.EntropySinkOnly &&
                 !_em.HasComponent<EntropySinkTag>(found))
+            {
+                GameLogger.Develop("[Inspector] Blocked by EntropySinkOnly gate");
                 return false;
+            }
 
             // AtomicAssemblerOnly: only the Atom Generator (building type 4) may be opened
             if (buildingGate == BuildingInteractionGate.AtomicAssemblerOnly)
             {
                 var bd = _em.GetComponentData<BuildingData>(found);
-                if (bd.BuildingType != 4) return false;
+                if (bd.BuildingType != 4)
+                {
+                    GameLogger.Develop($"[Inspector] Blocked by AtomicAssemblerOnly gate (buildingType={bd.BuildingType})");
+                    return false;
+                }
             }
 
             // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
-            // ARCH has no physical form, so there is no proximity requirement — open immediately.
             if (_em.HasComponent<EntropySinkTag>(found))
             {
                 HasSelection = true;
@@ -169,7 +200,7 @@ namespace MobileIdleBuilder
             }
 
             HasSelection = true;
-
+            GameLogger.Develop($"[Inspector] Found entity — calling ShowBuildingInspector. hudController={(hudController == null ? "NULL" : "ok")}");
             hudController?.ShowBuildingInspector(found, GetBuildingDisplayName(found));
             return true;
         }
@@ -204,16 +235,25 @@ namespace MobileIdleBuilder
             return $"Building #{buildingType}";
         }
 
+        private bool ScreenToWorldGround(Vector2 screenPos, out Vector3 worldPos)
+        {
+            worldPos = Vector3.zero;
+            if (Camera.main == null) return false;
+            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0));
+            if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
+            float t = -ray.origin.y / ray.direction.y;
+            worldPos = ray.origin + ray.direction * t;
+            return true;
+        }
+
         private Vector2Int WorldToCell(Vector2 screenPos)
         {
-            if (Camera.main == null) return new(-1, -1);
-            var ray = Camera.main.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0));
-            if (Mathf.Abs(ray.direction.y) < 0.0001f) return new(-1, -1);
-            float t   = -ray.origin.y / ray.direction.y;
-            var world = ray.origin + ray.direction * t;
+            if (!ScreenToWorldGround(screenPos, out Vector3 world)) return new(-1, -1);
+            float cs = gridRenderer.CellSize;
+            // Tiles centered at (x*cs, z*cs) — round-to-nearest maps the full tile visual.
             return new(
-                Mathf.FloorToInt(world.x / gridRenderer.CellSize),
-                Mathf.FloorToInt(world.z / gridRenderer.CellSize)
+                Mathf.FloorToInt(world.x / cs + 0.5f),
+                Mathf.FloorToInt(world.z / cs + 0.5f)
             );
         }
 

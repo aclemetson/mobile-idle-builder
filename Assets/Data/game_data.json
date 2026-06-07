@@ -5064,8 +5064,7 @@
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "place_conveyor_context",
-        "pulse_button_id": "btn-conveyors",
-        "building_interaction_gate": "EntropySinkOnly"
+        "pulse_button_id": "btn-conveyors"
       }
     },
     {

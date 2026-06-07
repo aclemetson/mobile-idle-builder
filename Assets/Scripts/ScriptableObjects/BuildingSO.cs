@@ -98,5 +98,58 @@ namespace MobileIdleBuilder
         [Header("Codex")]
         [TextArea(2, 5)]
         public string codexEntry;
+
+        // ── Upgrade helpers ───────────────────────────────────────────────
+
+        /// <summary>Returns the next speed upgrade entry (level == currentLevel+1), or null if maxed or no upgrades.</summary>
+        public BuildingUpgradeLevel? NextSpeedUpgrade(int currentLevel)
+        {
+            if (upgradeLevels == null) return null;
+            int target = currentLevel + 1;
+            foreach (var u in upgradeLevels)
+                if (u.level == target) return u;
+            return null;
+        }
+
+        /// <summary>Returns the next storage upgrade entry (level == currentLevel+1), or null if maxed or no upgrades.</summary>
+        public BuildingStorageUpgradeLevel? NextStorageUpgrade(int currentLevel)
+        {
+            if (storageUpgradeLevels == null) return null;
+            int target = currentLevel + 1;
+            foreach (var u in storageUpgradeLevels)
+                if (u.level == target) return u;
+            return null;
+        }
+
+        /// <summary>Returns the max speed level (1 + number of speed upgrades defined).</summary>
+        public int MaxSpeedLevel() => 1 + (upgradeLevels?.Length ?? 0);
+
+        /// <summary>Returns the max storage level (1 + number of storage upgrades defined).</summary>
+        public int MaxStorageLevel() => 1 + (storageUpgradeLevels?.Length ?? 0);
+
+        /// <summary>
+        /// Returns the ProductionSpeed multiplier for <paramref name="level"/>.
+        /// Level 1 = baseline (1f). Higher levels look up outputRate from upgradeLevels.
+        /// </summary>
+        public static float ProductionSpeedForLevel(BuildingSO so, int level)
+        {
+            if (so == null || level <= 1 || so.upgradeLevels == null) return 1f;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level) return u.outputRate > 0f ? u.outputRate : 1f;
+            return 1f;
+        }
+
+        /// <summary>
+        /// Returns the output buffer capacity for <paramref name="level"/>.
+        /// Level 1 = so.baseMaxOutputItems (or 20 if unset). Higher levels use storageUpgradeLevels.
+        /// </summary>
+        public static int OutputCapacityForLevel(BuildingSO so, int level)
+        {
+            int baseline = (so != null && so.baseMaxOutputItems > 0) ? so.baseMaxOutputItems : 20;
+            if (so == null || level <= 1 || so.storageUpgradeLevels == null) return baseline;
+            foreach (var u in so.storageUpgradeLevels)
+                if (u.level == level) return u.maxOutputItems > 0 ? u.maxOutputItems : baseline;
+            return baseline;
+        }
     }
 }
