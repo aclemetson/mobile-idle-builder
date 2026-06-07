@@ -108,6 +108,10 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TryCollectAtGridCell(int cx, int cy)
         {
+            // A building on this cell handles its own collection — open the inspector instead.
+            if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy))
+                return false;
+
             var tappedInstance = FieldGenerator.GetFieldInstanceAt(cx, cy);
             if (tappedInstance == null)
                 return false;

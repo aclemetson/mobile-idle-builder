@@ -121,7 +121,7 @@ namespace MobileIdleBuilder
 
             QueryElements(root);
             _statusBar?.Init(root);
-            _inspector?.Init(root, placementController);
+            _inspector?.Init(root, placementController, this);
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
             _idleReturn?.Init(root);
@@ -1071,8 +1071,11 @@ namespace MobileIdleBuilder
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
         // ============================================================
 
-        public void ShowBuildingInspector(Entity entity, string buildingName) =>
+        public void ShowBuildingInspector(Entity entity, string buildingName)
+        {
+            GameLogger.Develop($"[HUD] ShowBuildingInspector called: building='{buildingName}' inspector={((_inspector == null) ? "NULL" : "ok")}");
             _inspector?.ShowBuildingInspector(entity, buildingName);
+        }
 
         public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
 

@@ -924,7 +924,7 @@ MonoBehaviour:
       collectionFilter: 0
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
-      buildingInteractionGate: 2
+      buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
   - id: automation_started

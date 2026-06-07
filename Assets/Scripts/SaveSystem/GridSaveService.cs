@@ -147,6 +147,7 @@ namespace MobileIdleBuilder
                     recipeId        = rpd.RecipeID,
                     position        = new[] { gp.Cell.x, gp.Cell.y },
                     level           = bd.UpgradeLevel,
+                    storageLevel    = bd.StorageUpgradeLevel,
                     rotation        = 0,
                     flipped         = false,
                     outputDirection = -1
@@ -255,7 +256,9 @@ namespace MobileIdleBuilder
                     buildingPlacer.PlaceBuilding(
                         bsd.position[0], bsd.position[1],
                         entry.building, recipe,
-                        outputDir, bsd.rotation, bsd.flipped);
+                        outputDir, bsd.rotation, bsd.flipped,
+                        speedLevel:   Mathf.Max(1, bsd.level),
+                        storageLevel: Mathf.Max(1, bsd.storageLevel));
                 }
             }
 

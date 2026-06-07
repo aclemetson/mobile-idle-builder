@@ -100,6 +100,7 @@ namespace MobileIdleBuilder
         public int   recipeId;        // matches RecipeSO.recipeId; -1 = none
         public int[] position;        // [x, y] anchor cell
         public int   level;
+        public int   storageLevel;
         public int   rotation;        // 0-3 CW
         public bool  flipped;
         public int   outputDirection; // -1 = not a field-collector

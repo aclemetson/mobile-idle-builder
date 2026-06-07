@@ -75,7 +75,8 @@ namespace MobileIdleBuilder
             if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
-            if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
+            bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);
+            if (inspectorHit)
             {
                 fieldCollector?.DeactivateField();
                 AnchorPresence(screenPos);
@@ -183,7 +184,11 @@ namespace MobileIdleBuilder
             if (panel == null) return false;
             Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
                 panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            return panel.Pick(panelPos) != null;
+            // Only block gameplay taps when the player pressed an interactive control.
+            // panel.Pick() returns any VisualElement including transparent containers/labels,
+            // which would falsely block taps on the game world under HUD overlays.
+            var picked = panel.Pick(panelPos);
+            return picked is Button || picked is Toggle || picked is Slider || picked is TextField;
         }
     }
 }
