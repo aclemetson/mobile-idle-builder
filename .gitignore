@@ -85,6 +85,7 @@ GoogleService-Info.plist
 GoogleService-Info.plist.meta
 *.alf
 *.ulf
+*.pem
 
 # TestRunner generated files
 InitTestScene*.unity*
