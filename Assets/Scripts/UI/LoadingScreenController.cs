@@ -38,16 +38,15 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
-            // Wait for end-of-frame before calling LoadSceneAsync. Plain `yield return null`
-            // only waits for the next Update; WaitForEndOfFrame waits until the GPU has
-            // completed the current render pass and presented the frame, guaranteeing the
-            // render thread is idle. On same-scene reloads (GameScene → GameScene) calling
-            // LoadSceneAsync while the GPU is mid-frame deadlocks Vulkan: the loader tries
-            // to stage assets that are still in-flight, and the frame can never complete.
-            // Three frames: frame 1 lets the keyboard-dismiss poll and WINDOW_INSETS events
-            // fire, frames 2-3 ensure the GPU drains any in-flight work from those events.
-            yield return new WaitForEndOfFrame();
-            yield return new WaitForEndOfFrame();
+            // Two-step drain before calling LoadSceneAsync to avoid a Vulkan deadlock on
+            // Android.  When reloading from an active scene the soft keyboard may still be
+            // visible; Android dismisses it *after* LoadScene("LoadingScreen") fires,
+            // emitting WINDOW_INSETS_CHANGED events that trigger a swapchain resize.
+            // WaitForSecondsRealtime gives all OS events time to settle regardless of frame
+            // rate.  The trailing WaitForEndOfFrame then guarantees the GPU has finished
+            // presenting the last rendered frame before LoadSceneAsync touches Vulkan
+            // (WaitForSecondsRealtime resumes at Update time, not end-of-frame).
+            yield return new WaitForSecondsRealtime(0.15f);
             yield return new WaitForEndOfFrame();
 
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
