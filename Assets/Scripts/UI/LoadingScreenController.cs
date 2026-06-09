@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -38,14 +39,40 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
-            // Two-step drain before calling LoadSceneAsync to avoid a Vulkan deadlock on
-            // Android.  When reloading from an active scene the soft keyboard may still be
-            // visible; Android dismisses it *after* LoadScene("LoadingScreen") fires,
-            // emitting WINDOW_INSETS_CHANGED events that trigger a swapchain resize.
-            // WaitForSecondsRealtime gives all OS events time to settle regardless of frame
-            // rate.  The trailing WaitForEndOfFrame then guarantees the GPU has finished
-            // presenting the last rendered frame before LoadSceneAsync touches Vulkan
-            // (WaitForSecondsRealtime resumes at Update time, not end-of-frame).
+            // Pre-Phase0: wait for the previous GameScene's ECS SubScene to fully unload.
+            // SceneManager.LoadScene (synchronous) destroys MonoBehaviours immediately but
+            // DefaultGameObjectInjectionWorld persists — its SubScene entities tear down
+            // asynchronously over several frames.  Calling LoadSceneAsync("GameScene") while
+            // those GPU assets are still being released deadlocks Vulkan on Android.
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world != null && world.IsCreated)
+            {
+                EntityQuery drainQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerProgressData>());
+                bool hadEntities = !drainQuery.IsEmpty;
+                if (hadEntities)
+                {
+                    GameLogger.Info("[LoadingScreen] Pre-Phase0 — waiting for ECS SubScene to unload");
+                    const float kDrainTimeout = 5f;
+                    float drainElapsed = 0f;
+                    while (!drainQuery.IsEmpty && drainElapsed < kDrainTimeout)
+                    {
+                        drainElapsed += Time.deltaTime;
+                        yield return null;
+                    }
+                    if (drainQuery.IsEmpty)
+                        GameLogger.Info($"[LoadingScreen] Pre-Phase0 complete — drained in {drainElapsed:F2}s");
+                    else
+                        GameLogger.Warning($"[LoadingScreen] Pre-Phase0 timeout after {drainElapsed:F1}s — proceeding anyway");
+                }
+                drainQuery.Dispose();
+            }
+
+            // Two-step GPU drain before LoadSceneAsync to avoid a Vulkan deadlock on Android.
+            // WaitForSecondsRealtime lets OS events (keyboard dismiss → WINDOW_INSETS_CHANGED →
+            // swapchain resize) settle; WaitForEndOfFrame guarantees the GPU has finished
+            // presenting the last frame (WaitForSecondsRealtime resumes at Update time, not
+            // end-of-frame).
             yield return new WaitForSecondsRealtime(0.15f);
             yield return new WaitForEndOfFrame();
 
