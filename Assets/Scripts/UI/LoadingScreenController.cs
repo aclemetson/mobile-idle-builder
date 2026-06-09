@@ -38,6 +38,14 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
+            // Drain any deferred Android window events (keyboard dismiss → WINDOW_INSETS_CHANGED
+            // → Vulkan swapchain reset) before touching LoadSceneAsync. Calling LoadSceneAsync
+            // on the same frame as a swapchain reset stalls the async operation indefinitely on
+            // GameActivity + Vulkan. Two frames is enough: frame 1 processes the UI Toolkit
+            // keyboard-close poll and the inset changes, frame 2 lets the swapchain settle.
+            yield return null;
+            yield return null;
+
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)
