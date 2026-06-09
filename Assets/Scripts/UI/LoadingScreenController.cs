@@ -52,12 +52,19 @@ namespace MobileIdleBuilder
             // Phase 1 — scene file loading (op.progress: 0→0.9, displayed: 0%→90%).
             float displayed = 0f;
             const float fillSpeed = 0.6f;
+            float phase1LogTimer = 0f;
 
             while (op.progress < 0.9f || displayed < 0.9f)
             {
                 float target = (op.progress / 0.9f) * 0.9f;
                 displayed = Mathf.MoveTowards(displayed, target, Time.deltaTime * fillSpeed);
                 UpdateProgress(displayed * 100f);
+                phase1LogTimer += Time.deltaTime;
+                if (phase1LogTimer >= 2f)
+                {
+                    phase1LogTimer = 0f;
+                    GameLogger.Info($"[LoadingScreen] Phase1 wait — op.progress={op.progress:F2}  displayed={displayed:F2}");
+                }
                 yield return null;
             }
             GameLogger.Info($"[LoadingScreen] Phase1 complete — op.progress={op.progress:F2}  displayed={displayed:F2}");

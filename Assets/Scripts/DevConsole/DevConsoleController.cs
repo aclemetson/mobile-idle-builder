@@ -77,6 +77,7 @@ namespace MobileIdleBuilder.Dev
 
         private void BindUI()
         {
+            GameLogger.Info("[DevConsole] BindUI — start");
             var root = GetComponent<UIDocument>().rootVisualElement;
 
             _consoleRoot = root.Q("dev-console-root");
@@ -101,6 +102,7 @@ namespace MobileIdleBuilder.Dev
 
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+            GameLogger.Info("[DevConsole] BindUI — done");
         }
 
         private void OnCloseButtonClicked() => SetVisible(false);
@@ -138,8 +140,11 @@ namespace MobileIdleBuilder.Dev
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — scene='{scene.name}'  _isVisible={_isVisible}");
+
             // Re-acquire ECS queries — the world is recreated on each scene reload.
             var world = World.DefaultGameObjectInjectionWorld;
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — world={(world != null ? "found" : "null")}");
             if (world != null)
             {
                 _em             = world.EntityManager;
@@ -158,7 +163,15 @@ namespace MobileIdleBuilder.Dev
             // intermediate loading screen.  Calling SetVisible(false) while LoadingScreen is
             // active dismisses the soft keyboard mid-LoadSceneAsync and deadlocks Vulkan.
             if (scene.name != SceneLoader.LoadingSceneName)
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — destination scene, calling SetVisible(false)");
                 SetVisible(false);
+            }
+            else
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — loading screen, keeping console state _isVisible={_isVisible}");
+            }
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — done for scene='{scene.name}'");
         }
 
         void Update()
@@ -218,6 +231,7 @@ namespace MobileIdleBuilder.Dev
 
         private void SetVisible(bool visible)
         {
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — consoleRoot={((_consoleRoot == null) ? "null" : "ok")}");
             _isVisible = visible;
             if (_consoleRoot == null) return;
 
@@ -233,6 +247,7 @@ namespace MobileIdleBuilder.Dev
             {
                 _consoleRoot.AddToClassList("hidden");
             }
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — done");
         }
 
         // ── Input ─────────────────────────────────────────────────────────────
@@ -743,8 +758,10 @@ namespace MobileIdleBuilder.Dev
                 {
                     var sm = SaveManager.Instance;
                     if (sm == null) return "Error: SaveManager not ready.";
+                    GameLogger.Info("[DevConsole] clear cloud save — starting coroutine");
                     StartCoroutine(sm.DeleteCloudSave(success =>
                     {
+                        GameLogger.Info($"[DevConsole] clear cloud save callback — success={success}  activeScene='{SceneManager.GetActiveScene().name}'");
                         if (!success)
                             AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
                         GridSaveService.Instance?.ClearGrid();
@@ -752,7 +769,9 @@ namespace MobileIdleBuilder.Dev
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         AchievementService.Instance?.ResetInMemory();
+                        GameLogger.Info("[DevConsole] clear cloud save — calling SceneLoader.GoTo");
                         SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                        GameLogger.Info("[DevConsole] clear cloud save — SceneLoader.GoTo returned");
                     }));
                     return "Deleting cloud + local save. Reloading...";
                 });
