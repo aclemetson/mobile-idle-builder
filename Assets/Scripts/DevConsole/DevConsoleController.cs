@@ -154,7 +154,11 @@ namespace MobileIdleBuilder.Dev
             // Re-bind UI — UIDocument rebuilds its visual tree on each scene reload.
             // Without this, _consoleRoot and button handlers point to the old detached tree.
             BindUI();
-            SetVisible(false);
+            // Close the console only when we arrive at the destination scene, not during the
+            // intermediate loading screen.  Calling SetVisible(false) while LoadingScreen is
+            // active dismisses the soft keyboard mid-LoadSceneAsync and deadlocks Vulkan.
+            if (scene.name != SceneLoader.LoadingSceneName)
+                SetVisible(false);
         }
 
         void Update()

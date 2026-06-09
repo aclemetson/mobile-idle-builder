@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -39,43 +38,6 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
-            // Pre-Phase0: wait for the previous GameScene's ECS SubScene to fully unload.
-            // SceneManager.LoadScene (synchronous) destroys MonoBehaviours immediately but
-            // DefaultGameObjectInjectionWorld persists — its SubScene entities tear down
-            // asynchronously over several frames.  Calling LoadSceneAsync("GameScene") while
-            // those GPU assets are still being released deadlocks Vulkan on Android.
-            var world = World.DefaultGameObjectInjectionWorld;
-            if (world != null && world.IsCreated)
-            {
-                EntityQuery drainQuery = world.EntityManager.CreateEntityQuery(
-                    ComponentType.ReadOnly<PlayerProgressData>());
-                bool hadEntities = !drainQuery.IsEmpty;
-                if (hadEntities)
-                {
-                    GameLogger.Info("[LoadingScreen] Pre-Phase0 — waiting for ECS SubScene to unload");
-                    const float kDrainTimeout = 5f;
-                    float drainElapsed = 0f;
-                    while (!drainQuery.IsEmpty && drainElapsed < kDrainTimeout)
-                    {
-                        drainElapsed += Time.deltaTime;
-                        yield return null;
-                    }
-                    if (drainQuery.IsEmpty)
-                        GameLogger.Info($"[LoadingScreen] Pre-Phase0 complete — drained in {drainElapsed:F2}s");
-                    else
-                        GameLogger.Warning($"[LoadingScreen] Pre-Phase0 timeout after {drainElapsed:F1}s — proceeding anyway");
-                }
-                drainQuery.Dispose();
-            }
-
-            // Two-step GPU drain before LoadSceneAsync to avoid a Vulkan deadlock on Android.
-            // WaitForSecondsRealtime lets OS events (keyboard dismiss → WINDOW_INSETS_CHANGED →
-            // swapchain resize) settle; WaitForEndOfFrame guarantees the GPU has finished
-            // presenting the last frame (WaitForSecondsRealtime resumes at Update time, not
-            // end-of-frame).
-            yield return new WaitForSecondsRealtime(0.15f);
-            yield return new WaitForEndOfFrame();
-
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)
@@ -90,19 +52,12 @@ namespace MobileIdleBuilder
             // Phase 1 — scene file loading (op.progress: 0→0.9, displayed: 0%→90%).
             float displayed = 0f;
             const float fillSpeed = 0.6f;
-            float phase1LogTimer = 0f;
 
             while (op.progress < 0.9f || displayed < 0.9f)
             {
                 float target = (op.progress / 0.9f) * 0.9f;
                 displayed = Mathf.MoveTowards(displayed, target, Time.deltaTime * fillSpeed);
                 UpdateProgress(displayed * 100f);
-                phase1LogTimer += Time.deltaTime;
-                if (phase1LogTimer >= 2f)
-                {
-                    phase1LogTimer = 0f;
-                    GameLogger.Info($"[LoadingScreen] Phase1 wait — op.progress={op.progress:F2}  displayed={displayed:F2}");
-                }
                 yield return null;
             }
             GameLogger.Info($"[LoadingScreen] Phase1 complete — op.progress={op.progress:F2}  displayed={displayed:F2}");
