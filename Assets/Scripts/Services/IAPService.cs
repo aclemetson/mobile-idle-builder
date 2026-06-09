@@ -14,7 +14,8 @@ namespace MobileIdleBuilder
     /// Handles Unity IAP initialisation and consumable crystal pack purchases.
     /// Persists across scenes so the store is initialised once per session.
     ///
-    /// Wire-up: add to the same GameObject as PremiumShopService in the MainMenu scene.
+    /// Wire-up: attach to the Managers GameObject in the MainMenu scene (alongside SaveManager/GameBootstrap).
+    /// Do NOT place on the MainMenuUI object — PersistAcrossScenes will DontDestroyOnLoad the UIDocument.
     /// Product IDs must match entries in Google Play Console and App Store Connect.
     /// </summary>
     public class IAPService : SingletonMonoBehaviour<IAPService>, IDetailedStoreListener

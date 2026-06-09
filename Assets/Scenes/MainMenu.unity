@@ -213,7 +213,6 @@ GameObject:
   - component: {fileID: 384025011}
   - component: {fileID: 384025012}
   - component: {fileID: 384025014}
-  - component: {fileID: 384025013}
   m_Layer: 0
   m_Name: MainMenuUI
   m_TagString: Untagged
@@ -321,11 +320,11 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 384025006}
+  m_GameObject: {fileID: 1121101505}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 726e9678961a966489f03455f17774c9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PremiumShopService
 --- !u!114 &384025014
 MonoBehaviour:
@@ -339,6 +338,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56d93d06f9c0b7e47b212088190747ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MainMenuShopController
+--- !u!114 &384025015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1121101505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b439f799d8a281a47ad6e30a6e5983e6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.IAPService
 --- !u!1 &1121101505
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,6 +362,8 @@ GameObject:
   - component: {fileID: 1121101508}
   - component: {fileID: 1121101507}
   - component: {fileID: 1121101506}
+  - component: {fileID: 384025013}
+  - component: {fileID: 384025015}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
