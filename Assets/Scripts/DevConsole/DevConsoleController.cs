@@ -92,7 +92,7 @@ namespace MobileIdleBuilder.Dev
             // Unregister first so repeated BindUI calls don't stack duplicates.
             closeBtn.clicked  -= OnCloseButtonClicked;
             submitBtn.clicked -= SubmitCommand;
-            _inputField.UnregisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
+            _inputField?.UnregisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
             root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
 
             closeBtn.clicked  += OnCloseButtonClicked;
@@ -227,7 +227,6 @@ namespace MobileIdleBuilder.Dev
             }
             else
             {
-                _inputField?.Blur();
                 _consoleRoot.AddToClassList("hidden");
             }
         }
