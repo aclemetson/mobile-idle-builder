@@ -71,20 +71,39 @@ namespace MobileIdleBuilder.Dev
 
         void OnEnable()
         {
+            BindUI();
+            SetVisible(false);
+        }
+
+        private void BindUI()
+        {
             var root = GetComponent<UIDocument>().rootVisualElement;
+
             _consoleRoot = root.Q("dev-console-root");
             _logView     = root.Q<ScrollView>("dev-console-log");
             _inputField  = root.Q<TextField>("dev-console-input");
 
-            root.Q<Button>("btn-close-console").clicked += () => SetVisible(false);
-            root.Q<Button>("btn-submit-console").clicked += SubmitCommand;
+            // Stale label references belong to the old visual tree.
+            _logLabels.Clear();
+
+            var closeBtn  = root.Q<Button>("btn-close-console");
+            var submitBtn = root.Q<Button>("btn-submit-console");
+
+            // Unregister first so repeated BindUI calls don't stack duplicates.
+            closeBtn.clicked  -= OnCloseButtonClicked;
+            submitBtn.clicked -= SubmitCommand;
+            _inputField.UnregisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
+            root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+
+            closeBtn.clicked  += OnCloseButtonClicked;
+            submitBtn.clicked += SubmitCommand;
             _inputField.RegisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
 
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
-
-            SetVisible(false);
         }
+
+        private void OnCloseButtonClicked() => SetVisible(false);
 
         void Start()
         {
@@ -121,15 +140,21 @@ namespace MobileIdleBuilder.Dev
         {
             // Re-acquire ECS queries — the world is recreated on each scene reload.
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null) return;
+            if (world != null)
+            {
+                _em             = world.EntityManager;
+                _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
+                _inventoryQuery = _em.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadWrite<InventorySlot>());
+                _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
+            }
 
-            _em             = world.EntityManager;
-            _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
-            _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
-            _inventoryQuery = _em.CreateEntityQuery(
-                ComponentType.ReadOnly<PlayerInventoryTag>(),
-                ComponentType.ReadWrite<InventorySlot>());
-            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
+            // Re-bind UI — UIDocument rebuilds its visual tree on each scene reload.
+            // Without this, _consoleRoot and button handlers point to the old detached tree.
+            BindUI();
+            SetVisible(_isVisible);
         }
 
         void Update()
