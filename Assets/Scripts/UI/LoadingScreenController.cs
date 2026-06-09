@@ -38,6 +38,12 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
+            // One frame gap before LoadSceneAsync.  If the dev console was open when the
+            // reload was triggered, UI Toolkit's keyboard-poll timer may still be scheduled
+            // for this frame.  Yielding here lets that timer fire (and any resulting
+            // WINDOW_INSETS_CHANGED / swapchain events settle) before we touch Vulkan.
+            yield return null;
+
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)

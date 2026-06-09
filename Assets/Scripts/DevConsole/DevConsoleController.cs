@@ -277,9 +277,19 @@ namespace MobileIdleBuilder.Dev
                 AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
             }
 
-            _refocusFieldNextFrame = true;
-
-            _inputField.Focus();
+            // Don't re-focus if a scene transition is already underway — keeping the input
+            // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
+            // screen where it fires CloseTouchScreenKeyboard() on the same frame as
+            // LoadSceneAsync, triggering a Vulkan swapchain race on Android.
+            if (!SceneLoader.IsTransitioning)
+            {
+                _refocusFieldNextFrame = true;
+                _inputField.Focus();
+            }
+            else
+            {
+                _inputField.Blur();
+            }
         }
 
         // ── Log ───────────────────────────────────────────────────────────────
@@ -769,6 +779,10 @@ namespace MobileIdleBuilder.Dev
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         AchievementService.Instance?.ResetInMemory();
+                        // Blur the input field before transitioning so UI Toolkit's keyboard-poll
+                        // timer is cancelled before LoadSceneAsync runs (async path: field was
+                        // re-focused by SubmitCommand after this coroutine started).
+                        _inputField?.Blur();
                         GameLogger.Info("[DevConsole] clear cloud save — calling SceneLoader.GoTo");
                         SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                         GameLogger.Info("[DevConsole] clear cloud save — SceneLoader.GoTo returned");
