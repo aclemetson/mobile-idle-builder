@@ -154,7 +154,7 @@ namespace MobileIdleBuilder.Dev
             // Re-bind UI — UIDocument rebuilds its visual tree on each scene reload.
             // Without this, _consoleRoot and button handlers point to the old detached tree.
             BindUI();
-            SetVisible(_isVisible);
+            SetVisible(false);
         }
 
         void Update()
@@ -227,6 +227,7 @@ namespace MobileIdleBuilder.Dev
             }
             else
             {
+                _inputField?.Blur();
                 _consoleRoot.AddToClassList("hidden");
             }
         }
