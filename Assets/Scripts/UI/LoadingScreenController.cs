@@ -38,11 +38,15 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
-            // One frame gap before LoadSceneAsync.  If the dev console was open when the
-            // reload was triggered, UI Toolkit's keyboard-poll timer may still be scheduled
-            // for this frame.  Yielding here lets that timer fire (and any resulting
-            // WINDOW_INSETS_CHANGED / swapchain events settle) before we touch Vulkan.
-            yield return null;
+            // Wait for keyboard-dismiss WINDOW_INSETS_CHANGED events to fully settle before
+            // calling LoadSceneAsync.  On Android the keyboard animates out over ~40ms and
+            // emits several waves of WINDOW_INSETS_CHANGED; each wave can trigger a Vulkan
+            // swapchain resize.  If LoadSceneAsync starts while a resize is still in flight
+            // the GPU deadlocks.  0.1s covers the full dismiss cascade; WaitForEndOfFrame
+            // then ensures the GPU has presented its last frame before we touch it again
+            // (WaitForSecondsRealtime resumes at Update time, not end-of-frame).
+            yield return new WaitForSecondsRealtime(0.1f);
+            yield return new WaitForEndOfFrame();
 
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
