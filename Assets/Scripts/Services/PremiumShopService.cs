@@ -4,10 +4,7 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// Owns all premium-shop purchase logic and the active speed-boost state.
-    /// Persists across scenes so it is available in both MainMenu and GameScene.
-    ///
-    /// Wire-up: place on a GameObject in the MainMenu scene alongside SaveManager.
-    /// PersistAcrossScenes = true keeps it alive when transitioning to GameScene.
+    /// Persists across scenes; wire up in SplashScene or GameScene alongside SaveManager.
     /// </summary>
     public class PremiumShopService : SingletonMonoBehaviour<PremiumShopService>
     {
