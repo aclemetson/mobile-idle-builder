@@ -713,7 +713,17 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     var sm = SaveManager.Instance;
-                    if (sm == null) return "Error: SaveManager not ready.";
+                    if (sm == null)
+                    {
+                        // SaveManager not ready yet (running before GameScene initializes).
+                        // Set the wipe-pending flag so ReconcileWithCloud() clears cloud on
+                        // the next boot, and delete the local file now.
+                        PlayerPrefs.SetInt(SaveManager.k_WipePending, 1);
+                        PlayerPrefs.Save();
+                        new LocalSaveService().Delete();
+                        SceneLoader.GoTo("GameScene");
+                        return "SaveManager not ready — local cleared, cloud wipe deferred to next GameScene load.";
+                    }
                     StartCoroutine(sm.DeleteCloudSave(success =>
                     {
                         if (!success)

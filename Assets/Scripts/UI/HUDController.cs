@@ -24,6 +24,8 @@ namespace MobileIdleBuilder
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
         private IdleReturnSubController             _idleReturn;
+        private HUDPremiumShopSubController         _shop;
+        private HUDSettingsSubController            _settings;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -37,7 +39,8 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay;
+                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _shopPanel, _settingsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -104,6 +107,8 @@ namespace MobileIdleBuilder
             _banner       = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
+            _shop         = GetComponent<HUDPremiumShopSubController>();
+            _settings     = GetComponent<HUDSettingsSubController>();
         }
 
         void OnEnable()
@@ -138,6 +143,8 @@ namespace MobileIdleBuilder
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
             _idleReturn?.Init(root);
+            _shop?.Initialize(root);
+            _settings?.Initialize(root);
             BindButtons(root);
             ApplyAchievementsGate();
             _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
@@ -266,12 +273,15 @@ namespace MobileIdleBuilder
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
+            _shopPanel         = root.Q("shop-panel");
+            _settingsPanel     = root.Q("settings-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel
+                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _shopPanel, _settingsPanel
             };
 
             // Panel content
@@ -352,12 +362,11 @@ namespace MobileIdleBuilder
                 BuildAchievementsList();
             };
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
+            root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
-            var btnBack = root.Q<Button>("btn-go-back-main-menu");
-            if (btnBack != null) btnBack.clicked += OnGoBackMainMenu;
+            root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -572,6 +581,18 @@ namespace MobileIdleBuilder
             SetElementVisible(_upgradesPanel, true);
         }
 
+        private void OpenShopPanel()
+        {
+            CloseAllPanels();
+            _shop?.Open();
+        }
+
+        private void OpenSettingsPanel()
+        {
+            CloseAllPanels();
+            _settings?.Open();
+        }
+
         private void ApplyAchievementsGate()
         {
             bool unlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
@@ -770,12 +791,6 @@ namespace MobileIdleBuilder
                 $"You will receive: {preview} ✦   (current: {held} ✦)";
 
             SetElementVisible(_prestigePanel, true);
-        }
-
-        private void OnGoBackMainMenu()
-        {
-            SaveManager.Instance?.SaveLocal();
-            SceneLoader.GoTo("MainMenu");
         }
 
         private void OnPrestigeConfirmed()

@@ -65,6 +65,24 @@
   </div>
 
   <div class="callout">
+    <h3>Scene Flow</h3>
+    <p>The game is a <strong>single gameplay scene</strong>. The main menu has been removed; startup goes directly
+       through a placeholder splash into the game:</p>
+    <ol>
+      <li><strong>SplashScreen</strong> (build index 0) — shows title/logo for 2 s, then calls <code>SceneLoader.GoTo("GameScene")</code>.</li>
+      <li><strong>LoadingScreen</strong> (build index 1) — async asset load + ECS SubScene init (waits for <code>ECSLoadBridge.IsLoaded</code>).</li>
+      <li><strong>GameScene</strong> (build index 2) — the only persistent gameplay scene.</li>
+    </ol>
+    <p>All former main-menu functionality lives in the HUD:</p>
+    <ul>
+      <li><strong>Leaderboard</strong> — Competition panel, <code>btn-pvp</code> in the drawer.</li>
+      <li><strong>Achievements</strong> — Achievements panel, <code>btn-achievements</code> in the drawer.</li>
+      <li><strong>Shop</strong> — Premium Shop panel, <code>btn-shop</code> in the drawer (<code>HUDPremiumShopSubController</code>).</li>
+      <li><strong>Settings</strong> — Settings panel, <code>btn-settings</code> ⚙ in the top bar (<code>HUDSettingsSubController</code>).</li>
+    </ul>
+  </div>
+
+  <div class="callout">
     <h3>Session Authentication</h3>
     <p>Google Sign-In uses a <strong>silent-first</strong> strategy backed by two device-local timestamps
        (<code>PlayerPrefs</code> — not cloud-synced):</p>
@@ -73,7 +91,7 @@
       <li><strong>Last full auth</strong> — recorded only after the user completes the Google account picker; triggers interactive sign-in again once ≥ 90 days have passed (mandatory re-verification).</li>
     </ul>
     <p>Under normal use (daily or weekly play) neither threshold is reached and the account picker is never shown after the first login.
-       Implemented in <code>AuthSessionPolicy</code> + <code>GoogleSignInBridge</code>.</p>
+       Implemented in <code>AuthSessionPolicy</code> + <code>GoogleSignInBridge</code>. Auth fires transparently during GameScene startup — there is no separate login screen.</p>
   </div>
 
   <div id="overview-phases"></div><!-- populated by renderOverviewTab() -->
