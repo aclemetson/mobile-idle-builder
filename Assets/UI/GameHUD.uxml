@@ -13,6 +13,7 @@
     <Style src="components.uss" />
     <Style src="GameHUD.uss" />
     <Style src="AchievementsMenu.uss" />
+    <Style src="PremiumShop.uss" />
 
     <ui:VisualElement name="root" class="root" picking-mode="Ignore">
 
@@ -22,9 +23,8 @@
             <ui:Label  name="entropy-label"         text="◈ 0"       class="entropy-label" />
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
             <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
-            <ui:Label  name="power-label"           text="⚡ 0 eV"   class="power-label" />
-            <ui:Button name="btn-go-back-main-menu" text="⬅"         class="go-back-btn" />
-            <ui:Button name="btn-settings"          text="⚙"         class="settings-btn" />
+            <ui:Label  name="power-label"  text="⚡ 0 eV"   class="power-label" />
+            <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
@@ -65,6 +65,7 @@
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
+                <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -184,6 +185,64 @@
             <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ PREMIUM SHOP PANEL ═══ -->
+        <ui:VisualElement name="shop-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Premium Shop" class="panel-title" />
+                <ui:Label name="shop-crystal-balance" text="◆ 0" class="shop-crystal-balance" />
+                <ui:Button name="btn-close-shop" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="shop-tabs" class="shop-tabs">
+                <ui:Button name="shop-tab-speedups"  text="⚡ Speed"    class="shop-tab shop-tab--active" />
+                <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
+                <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
+                <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />
+            </ui:VisualElement>
+            <ui:Label name="shop-context-label" text="" class="shop-context-label" />
+            <ui:ScrollView name="shop-tier-list" class="shop-tier-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ SETTINGS PANEL ═══ -->
+        <ui:VisualElement name="settings-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Settings" class="panel-title" />
+                <ui:Button name="btn-close-settings" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:Label text="AUDIO" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Master" class="settings-label" />
+                    <ui:Slider name="slider-master-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="SFX" class="settings-label" />
+                    <ui:Slider name="slider-sfx-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Music" class="settings-label" />
+                    <ui:Slider name="slider-music-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:Label text="GRAPHICS" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Quality" class="settings-label" />
+                    <ui:VisualElement class="settings-quality-btns">
+                        <ui:Button name="btn-quality-low"    text="Low"    class="quality-btn" />
+                        <ui:Button name="btn-quality-medium" text="Medium" class="quality-btn" />
+                        <ui:Button name="btn-quality-high"   text="High"   class="quality-btn quality-btn--active" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label text="NOTIFICATIONS" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Push Notifications" class="settings-label" />
+                    <ui:Toggle name="toggle-notifications" value="true" class="settings-toggle" />
+                </ui:VisualElement>
+            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ PLACEMENT OVERLAY ═══ -->

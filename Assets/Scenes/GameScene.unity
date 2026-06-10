@@ -1022,6 +1022,8 @@ GameObject:
   - component: {fileID: 4000000005}
   - component: {fileID: 4000000006}
   - component: {fileID: 4000000007}
+  - component: {fileID: 4000000009}
+  - component: {fileID: 4000000008}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1868,6 +1870,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 837f22dba0703e9449b9792f796eb3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.IdleReturnSubController
+--- !u!114 &4000000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88766d9c188b53d4393e18ee5602a5a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDSettingsSubController
+--- !u!114 &4000000009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ba259ca8defa64490f3d6f967e96f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDPremiumShopSubController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
