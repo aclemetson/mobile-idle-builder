@@ -1,0 +1,58 @@
+/* ================================================================
+   SplashScreen.uss — Placeholder launch splash
+   ================================================================ */
+
+@import url("tokens.uss");
+
+.splash-root {
+    flex-grow: 1;
+    background-color: var(--color-background);
+    align-items: center;
+    justify-content: center;
+}
+
+.splash-content {
+    align-items: center;
+    opacity: 0;   /* faded in by SplashScreenController */
+}
+
+.splash-title {
+    font-size: 52px;
+    color: var(--color-primary);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+}
+
+.splash-subtitle {
+    font-size: 52px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+    margin-top: -8px;
+}
+
+.splash-rule {
+    width: 120px;
+    height: 2px;
+    background-color: var(--color-primary);
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.splash-tagline {
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+    letter-spacing: 2px;
+}
+
+.splash-version {
+    position: absolute;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    opacity: 0;   /* faded in by SplashScreenController */
+}
