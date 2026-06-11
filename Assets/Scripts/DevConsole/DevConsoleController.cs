@@ -20,12 +20,13 @@ namespace MobileIdleBuilder.Dev
     {
         // ── Activation ────────────────────────────────────────────────────────
 
-        private const float ShakeThreshold    = 2.5f;   // g-force above which a peak is counted
-        private const float ShakeWindow       = 1.5f;   // seconds the peaks must fall within
-        private const int   ShakePeaksRequired = 3;     // number of threshold crossings to trigger
+        private const float ShakeThreshold    = 2.5f;
+        private const float ShakeWindow       = 1.5f;
+        private const int   ShakePeaksRequired = 3;
 
-        private readonly Queue<float> _shakePeakTimes = new();
-        private bool _wasAboveShakeThreshold;
+        private readonly ShakePeakDetector _shakeDetector =
+            new ShakePeakDetector(ShakeThreshold, ShakeWindow, ShakePeaksRequired);
+
         private bool _isVisible;
         private bool _clearFieldNextFrame;
         private bool _refocusFieldNextFrame;
@@ -88,8 +89,8 @@ namespace MobileIdleBuilder.Dev
 
         void Start()
         {
-            if (Accelerometer.current != null)
-                InputSystem.EnableDevice(Accelerometer.current);
+            TryEnableAccelerometer();
+            InputSystem.onDeviceChange += OnInputDeviceChange;
 
             _registry = new DevCommandRegistry();
             RegisterCommands();
@@ -108,6 +109,7 @@ namespace MobileIdleBuilder.Dev
 
         void OnDestroy()
         {
+            InputSystem.onDeviceChange -= OnInputDeviceChange;
             if (s_Instance == this)
             {
                 s_Instance = null;
@@ -159,30 +161,30 @@ namespace MobileIdleBuilder.Dev
 
         private void OnRootKeyDown(KeyDownEvent e) { /* reserved for future use */ }
 
+        private static void TryEnableAccelerometer()
+        {
+            if (Accelerometer.current != null)
+                InputSystem.EnableDevice(Accelerometer.current);
+        }
+
+        private static void OnInputDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (device is Accelerometer && change == InputDeviceChange.Added)
+                InputSystem.EnableDevice(device);
+        }
+
         private void DetectShake()
         {
             var accel = Accelerometer.current;
             if (accel == null) return;
 
+            // On Android the device may arrive after Start(); enable it lazily.
+            if (!accel.enabled)
+                InputSystem.EnableDevice(accel);
+
             float magnitude = accel.acceleration.ReadValue().magnitude;
-            bool isAbove = magnitude > ShakeThreshold;
-
-            // Count rising edges (transitions from below to above threshold)
-            if (isAbove && !_wasAboveShakeThreshold)
-            {
-                float now = Time.realtimeSinceStartup;
-                _shakePeakTimes.Enqueue(now);
-                while (_shakePeakTimes.Count > 0 && now - _shakePeakTimes.Peek() > ShakeWindow)
-                    _shakePeakTimes.Dequeue();
-
-                if (_shakePeakTimes.Count >= ShakePeaksRequired)
-                {
-                    _shakePeakTimes.Clear();
-                    SetVisible(!_isVisible);
-                }
-            }
-
-            _wasAboveShakeThreshold = isAbove;
+            if (_shakeDetector.Feed(magnitude, Time.realtimeSinceStartup))
+                SetVisible(!_isVisible);
         }
 
         // ── Visibility ────────────────────────────────────────────────────────
