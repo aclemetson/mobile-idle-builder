@@ -43,6 +43,16 @@ namespace MobileIdleBuilder
             // Roll/refresh today's set now that everything is initialized (survives Start() init races).
             svc?.EnsureToday();
 
+            int poolLen   = svc?.Content?.challengePool?.Length ?? -1;
+            int rewardLen = svc?.Content?.loginRewards?.Length ?? -1;
+            int count     = svc?.TodaysChallengeIds.Count ?? -1;
+            int streak    = svc?.LoginStreakIndex ?? -1;
+            string ids    = svc != null ? string.Join(",", svc.TodaysChallengeIds) : "(no svc)";
+            GameLogger.Info(
+                $"[DailyEvents] Panel refresh — service={(svc != null)} contentPool={poolLen} " +
+                $"loginRewards={rewardLen} streakIndex={streak} todaysChallenges={count} " +
+                $"listElem={(_challengesList != null)} ids=[{ids}]");
+
             RefreshLoginSection(svc);
             RefreshChallenges(svc);
         }
@@ -80,7 +90,9 @@ namespace MobileIdleBuilder
 
             if (svc == null || svc.TodaysChallengeIds.Count == 0)
             {
-                _challengesList.Add(new Label("No challenges available."));
+                var empty = new Label("No challenges available.");
+                empty.AddToClassList("recipe-inputs"); // visible on the dark theme
+                _challengesList.Add(empty);
                 return;
             }
 
