@@ -7,7 +7,7 @@
 ## Single source of truth
 
 `Assets/Data/game_data.json` (~5,400 lines). Top-level keys:
-`_meta`, `game_config`, `tiers`, `research`, `items`, `recipes`, `buildings`, `fields`, `dialogues`, `tutorial_steps`.
+`_meta`, `game_config`, `tiers`, `research`, `items`, `recipes`, `buildings`, `fields`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`.
 
 Separate file: `Assets/Data/achievements.json` → imported by `Assets/Scripts/Editor/AchievementImporter.cs`.
 
@@ -27,7 +27,7 @@ Generation order is a strict dependency chain (documented in the file header): G
 
 JSON is parsed with `JsonUtility` into `GameDataJson` (`Assets/Scripts/Editor/GameDataModel.cs`) — **so new JSON fields require matching C# fields in GameDataModel.cs or they are silently ignored.**
 
-Generated asset locations: `Assets/Data/settings|tiers|research|recipes|buildings|fields|dialogue|tutorial/` and `Assets/Resources/Items/`, `Assets/Resources/ResearchDatabase.asset`.
+Generated asset locations: `Assets/Data/settings|tiers|research|recipes|buildings|fields|dialogue|tutorial/` and `Assets/Resources/Items/`, `Assets/Resources/ResearchDatabase.asset`, `Assets/Resources/DailyContent.asset` (login calendar + challenge pool).
 
 ## HARD RULE
 

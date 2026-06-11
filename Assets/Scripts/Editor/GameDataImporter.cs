@@ -192,6 +192,9 @@ namespace MobileIdleBuilder.Editor
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, researchLookup);
 
+            // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
+            GenerateDailyContent(data.daily_rewards, data.daily_challenges);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -200,7 +203,8 @@ namespace MobileIdleBuilder.Editor
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
                 $"{data.fields.Count} fields, {data.dialogues.Count} dialogues, " +
-                $"{data.tutorial_steps.Count} tutorial steps."
+                $"{data.tutorial_steps.Count} tutorial steps, " +
+                $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
             );
         }
 
@@ -652,6 +656,42 @@ namespace MobileIdleBuilder.Editor
 
                 so.steps[i] = def;
             }
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateDailyContent(List<DailyRewardJson> rewards,
+            List<DailyChallengeJson> challenges)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DailyContent.asset";
+            var so = LoadOrCreate<DailyContentSO>(path);
+
+            var rewardList = new List<DailyRewardEntry>(rewards?.Count ?? 0);
+            if (rewards != null)
+                foreach (var r in rewards)
+                    rewardList.Add(new DailyRewardEntry
+                    {
+                        day              = r.day,
+                        crystals         = r.crystals,
+                        entropy          = r.entropy,
+                        prestigeCurrency = r.prestige_currency
+                    });
+            rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
+            so.loginRewards = rewardList.ToArray();
+
+            var challengeList = new List<DailyChallengeEntry>(challenges?.Count ?? 0);
+            if (challenges != null)
+                foreach (var c in challenges)
+                    challengeList.Add(new DailyChallengeEntry
+                    {
+                        id          = c.id,
+                        description = c.description,
+                        trigger     = c.trigger,
+                        target      = c.target,
+                        crystals    = c.crystals
+                    });
+            so.challengePool = challengeList.ToArray();
 
             EditorUtility.SetDirty(so);
         }

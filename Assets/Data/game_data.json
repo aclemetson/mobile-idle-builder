@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.2.0",
+    "version": "0.3.1",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -4630,6 +4630,48 @@
         }
       ]
     }
+  ],
+
+  "_comment_daily_rewards": "28-day login reward calendar (UTC). Index by loginStreakIndex (0-based); loops after day 28. crystals = paid currency, entropy = base currency, prestige_currency = ascension shards.",
+  "daily_rewards": [
+    { "day": 1,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 2,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 3,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 4,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 5,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 6,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 7,  "crystals": 40,  "entropy": 500,   "prestige_currency": 0 },
+    { "day": 8,  "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 9,  "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 10, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 11, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 12, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 13, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 14, "crystals": 60,  "entropy": 2000,  "prestige_currency": 0 },
+    { "day": 15, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 16, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 17, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 18, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 19, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 20, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 21, "crystals": 80,  "entropy": 10000, "prestige_currency": 0 },
+    { "day": 22, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 23, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 24, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 25, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 26, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 27, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
+    { "day": 28, "crystals": 150, "entropy": 0,     "prestige_currency": 1 }
+  ],
+
+  "_comment_daily_challenges": "Rotating daily challenge pool. 3 drawn deterministically per UTC day (DayOfYear % poolCount). trigger matches an AchievementTrigger enum value. Progress accumulates the same way achievements do; each grants crystals on completion.",
+  "daily_challenges": [
+    { "id": "dc_craft_50",   "description": "Craft 50 items",     "trigger": "CraftItem",        "target": 50,  "crystals": 15 },
+    { "id": "dc_craft_200",  "description": "Craft 200 items",    "trigger": "CraftItem",        "target": 200, "crystals": 15 },
+    { "id": "dc_place_3",    "description": "Place 3 buildings",  "trigger": "PlaceBuilding",    "target": 3,   "crystals": 15 },
+    { "id": "dc_research_1",  "description": "Complete 1 research","trigger": "CompleteResearch", "target": 1,   "crystals": 15 },
+    { "id": "dc_spend_500",  "description": "Spend 500 entropy",  "trigger": "SpendEntropy",     "target": 500, "crystals": 15 },
+    { "id": "dc_login",      "description": "Log in",             "trigger": "Login",            "target": 1,   "crystals": 15 }
   ],
 
   "tutorial_steps": [

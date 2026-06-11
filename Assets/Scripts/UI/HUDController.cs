@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
+        private DailyEventsSubController            _daily;
         private IdleReturnSubController             _idleReturn;
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
@@ -40,7 +41,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel;
+                              _shopPanel, _settingsPanel, _dailyPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -106,6 +107,7 @@ namespace MobileIdleBuilder
             _inspector    = GetComponent<HUDBuildingInspectorSubController>();
             _banner       = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
+            _daily        = GetComponent<DailyEventsSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
@@ -142,6 +144,7 @@ namespace MobileIdleBuilder
             _inspector?.Init(root, placementController, this);
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
+            _daily?.Init(root, this);
             _idleReturn?.Init(root);
             _shop?.Initialize(root);
             _settings?.Initialize(root);
@@ -270,6 +273,7 @@ namespace MobileIdleBuilder
             _codexPanel        = root.Q("codex-panel");
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
+            _dailyPanel        = root.Q("daily-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
@@ -280,7 +284,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
                 _shopPanel, _settingsPanel
             };
 
@@ -349,6 +353,8 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-codex").clicked        += () => TryOpenPanel(OpenCodexPanel);
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
+            var btnDaily = root.Q<Button>("btn-daily");
+            if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
 
             // Achievement category tabs
@@ -374,6 +380,8 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-codex").clicked        += () => SetElementVisible(_codexPanel,        false);
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
+            var btnCloseDaily = root.Q<Button>("btn-close-daily");
+            if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
@@ -579,6 +587,13 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenDailyPanel()
+        {
+            CloseAllPanels();
+            _daily?.Refresh();
+            SetElementVisible(_dailyPanel, true);
         }
 
         private void OpenShopPanel()
