@@ -272,6 +272,7 @@ GameObject:
   - component: {fileID: 262970769}
   - component: {fileID: 262970768}
   - component: {fileID: 262970770}
+  - component: {fileID: 262970771}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -409,6 +410,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0de280e464c7b4545bc9c4c65d46b9e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.PersistentUpgradeService
+--- !u!114 &262970771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4124fbf49885a64d8d6ead7cf8b49c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DailyEventService
+  content: {fileID: 11400000, guid: f48499696a59b0b4998630c090328fcb, type: 2}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1024,6 +1038,7 @@ GameObject:
   - component: {fileID: 4000000007}
   - component: {fileID: 4000000009}
   - component: {fileID: 4000000008}
+  - component: {fileID: 4000000010}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1894,6 +1909,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17ba259ca8defa64490f3d6f967e96f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.HUDPremiumShopSubController
+--- !u!114 &4000000010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d819a9abad6f764dbb253ef1a2f49a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DailyEventsSubController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
