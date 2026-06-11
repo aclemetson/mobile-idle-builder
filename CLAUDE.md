@@ -1,3 +1,9 @@
+## Agent Context Pack
+- Before implementing anything, read `docs/agents/README.md` and `docs/agents/architecture.md`, then ONLY the deep-dive docs the README routing table names for your task type
+- Feature assignments live in `docs/agents/tasks/` — follow the task file's "Required reading" line; do not re-explore the codebase for facts those docs already state
+- For balance numbers use the distilled `docs/agents/economy-balance.md`; open `docs/gameplay_loop_data.js` only for specific value lookups (the gameplay-loop HTML/JS/CSS is human-only reference)
+- If your change makes any `docs/agents/` doc wrong, update that doc in the same PR (see Maintenance in `docs/agents/README.md`)
+
 ## Git Workflow
 - All work merges into `develop` only via a release branch (e.g., `release/0.3`) through a PR — never commit directly to `develop` or `main`
 - After running tests and committing on a feature branch, open a PR targeting the correct release branch (confirm the target before creating)
