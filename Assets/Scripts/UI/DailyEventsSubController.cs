@@ -32,12 +32,16 @@ namespace MobileIdleBuilder
 
             if (_panel == null)
                 GameLogger.Warning("[DailyEvents] daily-panel not found in GameHUD.uxml — panel will not display.");
+            if (_challengesList == null)
+                GameLogger.Warning("[DailyEvents] daily-challenges-list not found in GameHUD.uxml — challenges will not render.");
         }
 
         /// <summary>Rebuilds the panel contents from current DailyEventService state.</summary>
         public void Refresh()
         {
             var svc = DailyEventService.Instance;
+            // Roll/refresh today's set now that everything is initialized (survives Start() init races).
+            svc?.EnsureToday();
 
             RefreshLoginSection(svc);
             RefreshChallenges(svc);

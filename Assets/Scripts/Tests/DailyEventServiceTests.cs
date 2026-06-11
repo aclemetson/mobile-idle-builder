@@ -135,6 +135,37 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(svc.IsChallengeClaimed("craft5"),       "claimed cleared on rollover");
         }
 
+        [Test]
+        public void EnsureToday_PopulatesChallenges_WhenNoneRolled()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+            // Deliberately do NOT call CheckDailyReset (simulates Start() running before SaveManager
+            // was ready). EnsureToday must still populate the set when the panel opens.
+            Assert.AreEqual(0, svc.TodaysChallengeIds.Count);
+
+            svc.EnsureToday();
+
+            Assert.AreEqual(3, svc.TodaysChallengeIds.Count, "EnsureToday must roll a set when none exists");
+        }
+
+        [Test]
+        public void EnsureToday_ReRolls_WhenStoredIdsNotInPool()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+            // Simulate a save written by an older content version: a future reset (so time alone would
+            // NOT trigger a roll) plus an id that no longer exists in the pool.
+            var save = SaveManager.Instance.Current;
+            save.dailyChallengeResetUtc = DateTime.UtcNow.AddDays(5).ToString("o");
+            save.dailyChallengeIds = new System.Collections.Generic.List<string> { "stale_obsolete_id" };
+            svc.ReloadFromSave();
+
+            svc.EnsureToday();
+
+            CollectionAssert.DoesNotContain(svc.TodaysChallengeIds, "stale_obsolete_id",
+                "stale ids absent from the current pool must trigger a re-roll");
+            Assert.AreEqual(3, svc.TodaysChallengeIds.Count);
+        }
+
         // ── Challenge progress + claim ────────────────────────────────────────
 
         [Test]

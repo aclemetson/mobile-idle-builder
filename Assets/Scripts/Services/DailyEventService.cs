@@ -35,10 +35,19 @@ namespace MobileIdleBuilder
 
         public DailyContentSO Content => content;
 
-        void Start()
+        void Start() => EnsureToday();
+
+        /// <summary>
+        /// Ensures content is loaded, in-memory state is current, and today's challenge set is rolled.
+        /// Safe to call repeatedly (e.g. each time the panel opens) — only re-rolls when expired, empty,
+        /// or stale. Call this from the UI rather than relying solely on Start(), so the panel survives
+        /// init-order races where SaveManager was not yet ready when this service's Start() ran.
+        /// </summary>
+        public void EnsureToday()
         {
             EnsureContent();
-            ReloadFromSave();
+            if (_todaysChallengeIds.Count == 0)
+                ReloadFromSave();
             CheckDailyReset(DateTime.UtcNow);
         }
 
@@ -48,6 +57,8 @@ namespace MobileIdleBuilder
                 content = Resources.Load<DailyContentSO>("DailyContent");
             if (content == null)
                 GameLogger.Warning("[DailyEvents] DailyContent asset not found in Resources — daily events disabled.");
+            else if (content.challengePool == null || content.challengePool.Length == 0)
+                GameLogger.Warning("[DailyEvents] DailyContent has no challenge pool — run MobileIdleBuilder > Import Game Data.");
         }
 
         // ── Load / flush ──────────────────────────────────────────────────────
@@ -94,7 +105,10 @@ namespace MobileIdleBuilder
             if (save == null) return;
 
             var nextReset = ParseOrEpoch(save.dailyChallengeResetUtc);
-            bool needsRoll = now >= nextReset || _todaysChallengeIds.Count == 0;
+            // Re-roll when expired, empty, or stale (stored ids no longer exist in the current pool,
+            // e.g. the content asset changed since the set was saved).
+            bool stale     = _todaysChallengeIds.Count > 0 && _todaysChallengeIds.Any(id => GetChallenge(id) == null);
+            bool needsRoll = now >= nextReset || _todaysChallengeIds.Count == 0 || stale;
             if (!needsRoll) return;
 
             RollChallenges(now);
@@ -110,7 +124,11 @@ namespace MobileIdleBuilder
             _claimedChallenges.Clear();
 
             var pool = content?.challengePool;
-            if (pool == null || pool.Length == 0) return;
+            if (pool == null || pool.Length == 0)
+            {
+                GameLogger.Warning("[DailyEvents] RollChallenges: challenge pool is empty — no challenges to draw.");
+                return;
+            }
 
             // Deterministic pick: seed the rotation by UTC day-of-year, take 3 consecutive (wrapping).
             int take   = Mathf.Min(3, pool.Length);
@@ -121,6 +139,9 @@ namespace MobileIdleBuilder
                 if (entry != null && !string.IsNullOrEmpty(entry.id))
                     _todaysChallengeIds.Add(entry.id);
             }
+
+            string ids = string.Join(", ", _todaysChallengeIds);
+            GameLogger.Debug($"[DailyEvents] Rolled {_todaysChallengeIds.Count} challenges for UTC day {now.DayOfYear}: {ids}");
         }
 
         // ── Challenge progress (forwarded from AchievementService.Notify*) ─────
