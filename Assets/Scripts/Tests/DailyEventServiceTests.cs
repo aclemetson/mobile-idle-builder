@@ -166,6 +166,27 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(3, svc.TodaysChallengeIds.Count);
         }
 
+        [Test]
+        public void EnsureToday_RollsIntoMemory_WhenNoSaveAvailable()
+        {
+            // Spawn the service WITHOUT a SaveManager (simulates entering GameScene directly,
+            // bypassing the Splash bootstrap that creates SaveManager). Challenges must still
+            // populate so the panel displays them, even though they cannot be persisted.
+            _content = ThreeChallengePool();
+            _serviceGO = new GameObject("DailyEventService");
+            var svc = _serviceGO.AddComponent<DailyEventService>();
+            RunAwake(svc);
+            s_contentField.SetValue(svc, _content);
+
+            Assume.That(SaveManager.Instance == null || SaveManager.Instance.Current == null,
+                "test precondition: no live save");
+
+            svc.EnsureToday();
+
+            Assert.AreEqual(3, svc.TodaysChallengeIds.Count,
+                "challenges must roll into memory even when no save is present");
+        }
+
         // ── Challenge progress + claim ────────────────────────────────────────
 
         [Test]

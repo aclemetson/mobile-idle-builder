@@ -102,9 +102,13 @@ namespace MobileIdleBuilder
         public void CheckDailyReset(DateTime now)
         {
             var save = SaveManager.Instance?.Current;
-            if (save == null) return;
 
-            var nextReset = ParseOrEpoch(save.dailyChallengeResetUtc);
+            // Without a save (e.g. GameScene entered without the Splash bootstrap that creates
+            // SaveManager) we cannot read or persist the reset timestamp, but we still roll a set
+            // into memory so the panel displays today's challenges. MaxValue means time-expiry alone
+            // never forces a re-roll in that case — we only roll when the set is empty or stale.
+            DateTime nextReset = save != null ? ParseOrEpoch(save.dailyChallengeResetUtc) : DateTime.MaxValue;
+
             // Re-roll when expired, empty, or stale (stored ids no longer exist in the current pool,
             // e.g. the content asset changed since the set was saved).
             bool stale     = _todaysChallengeIds.Count > 0 && _todaysChallengeIds.Any(id => GetChallenge(id) == null);
@@ -112,8 +116,12 @@ namespace MobileIdleBuilder
             if (!needsRoll) return;
 
             RollChallenges(now);
-            save.dailyChallengeResetUtc = NextMidnightUtc(now).ToString("o");
-            FlushToSave();
+
+            if (save != null)
+            {
+                save.dailyChallengeResetUtc = NextMidnightUtc(now).ToString("o");
+                FlushToSave();
+            }
             OnChanged?.Invoke();
         }
 
