@@ -18,6 +18,8 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |
 | `speedBoostExpiryUtc` | ISO 8601; empty = no boost. THE pattern to copy for any timed effect |
 | `dailyResetUtc / weeklyResetUtc / monthlyResetUtc` | achievement period reset timestamps (UTC) |
+| `loginStreakIndex / lastLoginRewardUtc` | daily login calendar position + last-claim date (UTC); survives prestige |
+| `dailyChallengeResetUtc / dailyChallengeIds / dailyChallengeProgress / dailyChallengesClaimed` | rotating daily-challenge set, progress, and claims (UTC reset); survives prestige |
 | `achievements / achievementProgress / unclaimedAchievements` | achievement state |
 | `tutorial` (`TutorialSaveData`) | `currentStepId` (string), `hasCompletedFirstRun` survives prestige |
 | `currentRun` (`CurrentRunData`) | `baseCurrency`, `totalEntropySpent`, `baseNetWorth`, inventory as parallel `inventoryKeys`(string numeric ids)/`inventoryValues`, `grid` (`GridSaveData`), research progress |

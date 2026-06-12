@@ -21,6 +21,8 @@ namespace MobileIdleBuilder.Editor
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
         public List<DialogueJson>        dialogues       = new();
+        public List<DailyRewardJson>     daily_rewards   = new();
+        public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
@@ -34,6 +36,8 @@ namespace MobileIdleBuilder.Editor
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
             dialogues       ??= new List<DialogueJson>();
+            daily_rewards   ??= new List<DailyRewardJson>();
+            daily_challenges??= new List<DailyChallengeJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
 
             foreach (var r in research)       r?.Initialize();
@@ -307,6 +311,27 @@ namespace MobileIdleBuilder.Editor
         public List<DialogueLineJson>  lines = new();
 
         public void Initialize() { lines ??= new List<DialogueLineJson>(); }
+    }
+
+    // ── Daily-event JSON models ───────────────────────────────────────────────
+
+    [Serializable]
+    internal class DailyRewardJson
+    {
+        public int  day               = 0;
+        public int  crystals          = 0;
+        public long entropy           = 0;
+        public int  prestige_currency = 0;
+    }
+
+    [Serializable]
+    internal class DailyChallengeJson
+    {
+        public string id          = "";
+        public string description = "";
+        public string trigger     = "";
+        public int    target      = 1;
+        public int    crystals    = 0;
     }
 
     // ── Tutorial step JSON models ─────────────────────────────────────────────

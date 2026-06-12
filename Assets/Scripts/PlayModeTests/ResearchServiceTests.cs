@@ -27,6 +27,8 @@ namespace MobileIdleBuilder.PlayModeTests
         GameObject _saveManagerGO;
         GameObject _serviceGO;
 
+        TutorialFlowSO _tutorialFlow;
+
         World         _testWorld;
         EntityManager _em;
         Entity        _playerEntity;
@@ -66,6 +68,8 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             if (_serviceGO    != null) { Object.DestroyImmediate(_serviceGO);    _serviceGO    = null; }
             if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
+            // Destroying clears TutorialFlowSO.Current via OnDisable (set in CreateInstance's OnEnable).
+            if (_tutorialFlow != null) { Object.DestroyImmediate(_tutorialFlow); _tutorialFlow = null; }
 
             if (_testWorld.IsCreated) _testWorld.Dispose();
             World.DefaultGameObjectInjectionWorld = null;
@@ -167,6 +171,62 @@ namespace MobileIdleBuilder.PlayModeTests
             var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
             Assert.AreEqual(900L, progress.BaseCurrency,
                 "Purchase must deduct costBaseCurrency from PlayerProgressData.BaseCurrency");
+        }
+
+        // ── Tutorial research-gate integration ───────────────────────────────
+
+        [Test]
+        public void ResearchGatedTutorialStep_AdvancesFromLiveServiceWhenSaveLayerOutOfSync()
+        {
+            // Reproduces the tutorial-stall bug: the research-panel "purchased" checkmark and
+            // the research-gated tutorial step must read the SAME authoritative source — the
+            // live ResearchService unlock set — not the persisted save list, which can be
+            // absent or lagging (e.g. SaveManager not yet present / save not flushed). Here we
+            // purchase, then deliberately clear the save layer's list to simulate that skew:
+            // the gated step must still advance because the service reports the research unlocked.
+            SpawnServices();
+
+            // Tutorial ECS scaffolding on the existing player entity (already has PlayerProgressData).
+            _em.AddComponent<TutorialStateData>(_playerEntity);
+            _em.AddComponent<PlayerInventoryTag>(_playerEntity);
+            _em.AddBuffer<InventorySlot>(_playerEntity);
+            _em.SetComponentData(_playerEntity,
+                new TutorialStateData { CurrentStepIndex = 0, IsActive = true });
+
+            // CreateInstance fires OnEnable → sets TutorialFlowSO.Current.
+            _tutorialFlow = ScriptableObject.CreateInstance<TutorialFlowSO>();
+            _tutorialFlow.steps = new[]
+            {
+                new TutorialStepDef
+                {
+                    id = "buy_research",
+                    advanceCondition = new TutorialConditionDef
+                        { type = ConditionType.ResearchUnlocked, researchId = _resA.id },
+                    onEnter = new TutorialOnEnter()
+                },
+                new TutorialStepDef
+                {
+                    id = "after_research",
+                    advanceCondition = new TutorialConditionDef
+                        { type = ConditionType.UiEvent, uiEventId = "noop" },
+                    onEnter = new TutorialOnEnter()
+                }
+            };
+
+            var simGroup = _testWorld.CreateSystemManaged<SimulationSystemGroup>();
+            simGroup.AddSystemToUpdateList(_testWorld.CreateSystem<TutorialSystem>());
+            simGroup.SortSystems();
+
+            simGroup.Update();
+            Assert.AreEqual(0, _em.GetComponentData<TutorialStateData>(_playerEntity).CurrentStepIndex,
+                "Must stay on the research-gated step until the research is purchased");
+
+            ResearchService.Instance.Purchase(_resA);            // mirrors the HUD Unlock button
+            SaveManager.Instance.Current.unlockedResearch.Clear(); // save layer out of sync with the live service
+
+            simGroup.Update();
+            Assert.AreEqual(1, _em.GetComponentData<TutorialStateData>(_playerEntity).CurrentStepIndex,
+                "Must advance from the live ResearchService unlock state, even if the save list is out of sync");
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

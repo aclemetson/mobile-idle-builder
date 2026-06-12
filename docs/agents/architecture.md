@@ -44,7 +44,8 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `PersistentUpgradeService` | `Assets/Scripts/Services/` | Prestige-shop permanent upgrades. Catalogue is the hardcoded `UpgradeDef[] All` array (`PersistentUpgradeService.cs:48`), NOT data-driven from JSON. |
 | `PremiumShopService` / `PremiumShopCalculator` / `IAPService` | `Assets/Scripts/Services/` | Crystal IAP (4 consumable packs in `IAPService.CrystalAmounts`), speed boosts (`speedBoostExpiryUtc`), entropy/PC purchases. |
 | `RecipeKnowledgeService` | `Assets/Scripts/Services/` | Recipes unlocked across runs (survives prestige). |
-| `AchievementService` | `Assets/Scripts/Achievements/` | `Notify*()` hooks + daily/weekly/monthly UTC period resets (`CheckPeriodResets()`, `AchievementService.cs:103`). |
+| `AchievementService` | `Assets/Scripts/Achievements/` | `Notify*()` hooks + daily/weekly/monthly UTC period resets (`CheckPeriodResets()`, `AchievementService.cs:103`). Forwards 5 of its `Notify*` hooks to `DailyEventService`. |
+| `DailyEventService` | `Assets/Scripts/Services/` | 28-day login reward calendar + 3 rotating daily challenges; UTC reset mirroring `CheckPeriodResets`. Reads `DailyContentSO` (Resources). Grants via `paidCurrency` / `ECSLoadBridge.AddEntropy` / `AddPrestigeCurrency`. State survives prestige. |
 | `OfflineCollectionService` | `Assets/Scripts/IdleCollection/` | Static: computes offline earnings from `SaveData.idleSnapshot`, capped by `GetEffectiveIdleCap()`. |
 | `ToastService`, `SettingsService` | `Assets/Scripts/Services/` | UI toasts; user prefs to `settings.json`. |
 
