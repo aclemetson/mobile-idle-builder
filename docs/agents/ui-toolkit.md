@@ -10,7 +10,7 @@
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 
-`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `daily-panel` (login rewards + daily challenges), `achievements-panel` (:132), `prestige-panel` (:152), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
+`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `daily-panel` (login rewards + daily challenges), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
 
 Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by adding/removing `hidden`.
 
@@ -20,6 +20,7 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - Sub-controllers are **MonoBehaviour components on the SAME GameObject as HUDController**, marked `[RequireComponent(typeof(HUDController))]`, and fetched with `GetComponent<>()` in `HUDController` (`HUDController.cs:106-111`). They are NOT constructed in code and NOT separate scene objects.
   - **Trap:** a new sub-controller class does nothing until the component is added to the HUD GameObject in `GameScene.unity`. `[RequireComponent]` does not retro-add it to an existing scene object — this is a manual Unity Editor step; flag it to the user in your final report.
 - Lifecycle calls made by HUDController on each sub-controller: `Init(VisualElement root, HUDController hud)` (query elements by name, e.g., `root.Q("upgrades-panel")`) then `SetECSContext(EntityManager em)` once ECS is ready, then `Refresh()` when the panel opens. Copy `Assets/Scripts/UI/PrestigeShopSubController.cs` — it is the cleanest reference (panel + currency label + ScrollView list rebuilt in `Refresh()`).
+- `SitesSubController.cs` is a second clean reference (sites-panel): list rebuilt in `Refresh()`, a pure `ClassifyRow(isActive, isUnlocked, canAfford)` helper drives each row's action (Active/Travel/Unlock/Locked), and the Travel handler calls `HUDController.CancelActiveModes()` before `SiteService.SwitchTo` so placement overlays clear before the grid swaps.
 - Drawer nav buttons are wired in HUDController around `HUDController.cs:347-369` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
 - Building rows/list items are built **in C#** (`new VisualElement()` + `AddToClassList`), not via UXML templates, in sub-controllers — follow that style.
 

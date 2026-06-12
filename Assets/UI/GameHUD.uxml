@@ -65,6 +65,7 @@
                 <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
+                <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
                 <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
@@ -177,6 +178,20 @@
                 <ui:Label name="prestige-currency" text="You will receive: —" class="recipe-inputs" />
                 <ui:Button name="btn-confirm-prestige" text="Prestige Now" class="craft-btn" />
             </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ SITES / QUANTUM DOMAINS PANEL ═══ -->
+        <ui:VisualElement name="sites-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Quantum Domains" class="panel-title" />
+                <ui:Button name="btn-close-sites" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="sites-balance" class="prestige-shop-balance">
+                <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
+            </ui:VisualElement>
+            <ui:ScrollView name="sites-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
         <!-- ═══ PVP PANEL ═══ -->

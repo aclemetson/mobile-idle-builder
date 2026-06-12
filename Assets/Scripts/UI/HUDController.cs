@@ -27,6 +27,7 @@ namespace MobileIdleBuilder
         private IdleReturnSubController             _idleReturn;
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
+        private SitesSubController                  _sites;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -41,7 +42,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel;
+                              _shopPanel, _settingsPanel, _dailyPanel, _sitesPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -111,6 +112,7 @@ namespace MobileIdleBuilder
             _idleReturn   = GetComponent<IdleReturnSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
+            _sites        = GetComponent<SitesSubController>();
         }
 
         void OnEnable()
@@ -148,6 +150,7 @@ namespace MobileIdleBuilder
             _idleReturn?.Init(root);
             _shop?.Initialize(root);
             _settings?.Initialize(root);
+            _sites?.Init(root, this);
             BindButtons(root);
             ApplyAchievementsGate();
             _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
@@ -234,6 +237,7 @@ namespace MobileIdleBuilder
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
             _prestigeShop?.SetECSContext(_em);
+            _sites?.SetECSContext(_em);
         }
 
         void Update()
@@ -279,13 +283,14 @@ namespace MobileIdleBuilder
             _prestigePanel     = root.Q("prestige-panel");
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
+            _sitesPanel        = root.Q("sites-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
                 _researchPanel, _upgradesPanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
-                _shopPanel, _settingsPanel
+                _shopPanel, _settingsPanel, _sitesPanel
             };
 
             // Panel content
@@ -367,6 +372,7 @@ namespace MobileIdleBuilder
                 achievementService?.ClaimAllRewards();
                 BuildAchievementsList();
             };
+            root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
@@ -385,6 +391,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
+            root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
 
             // PVP actions (queried after _btnEnterPVP is set in QueryElements)
             if (_btnEnterPVP != null)
@@ -587,6 +594,13 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenSitesPanel()
+        {
+            CloseAllPanels();
+            _sites?.Refresh();
+            SetElementVisible(_sitesPanel, true);
         }
 
         private void OpenDailyPanel()
@@ -1363,7 +1377,12 @@ namespace MobileIdleBuilder
                 SwapAchievementsHintPulse("btn-drawer-handle");
         }
 
-        private void CancelActiveModes()
+        /// <summary>
+        /// Cancels any active building-placement, conveyor, or deconstruct mode (and their
+        /// overlays). Public so sub-controllers (e.g. site travel) can clear placement before
+        /// an action that swaps the grid out from under it.
+        /// </summary>
+        public void CancelActiveModes()
         {
             placementController?.CancelPlacement();
             conveyorController?.CancelConveyorMode();
