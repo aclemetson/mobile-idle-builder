@@ -60,6 +60,8 @@ namespace MobileIdleBuilder.Editor
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
                 needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
+                needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
             if (!needsImport)
@@ -204,6 +206,9 @@ namespace MobileIdleBuilder.Editor
 
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
+
+            // ── Step 12.6: DialogueDatabaseSO ────────────────────────────────
+            GenerateDialogueDatabase(data.dialogues, dialogueLookup);
 
             // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
             GenerateDailyContent(data.daily_rewards, data.daily_challenges);
@@ -563,6 +568,23 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateDialogueDatabase(List<DialogueJson> dialogues,
+            Dictionary<string, DialogueSO> dialogueLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DialogueDatabase.asset";
+            var db = LoadOrCreate<DialogueDatabaseSO>(path);
+
+            var list = new List<DialogueDatabaseSO.Entry>(dialogues?.Count ?? 0);
+            if (dialogues != null)
+                foreach (var d in dialogues)
+                    if (!string.IsNullOrEmpty(d.id) && dialogueLookup.TryGetValue(d.id, out var so))
+                        list.Add(new DialogueDatabaseSO.Entry { id = d.id, dialogue = so });
+
+            db.entries = list.ToArray();
             EditorUtility.SetDirty(db);
         }
 

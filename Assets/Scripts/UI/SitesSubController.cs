@@ -15,11 +15,18 @@ namespace MobileIdleBuilder
         private VisualElement _panel;
         private Label         _entropyLabel;
         private ScrollView    _list;
+        private Button        _navButton;
         private HUDController _hud;
 
         private EntityManager _em;
         private EntityQuery   _progressQuery;
         private bool          _ecsReady;
+
+        private DialogueDatabaseSO _dialogueDb;
+
+        /// <summary>Research gate that triggers the one-shot Quantum Domains introduction.</summary>
+        internal const string DomainsGateResearchId  = "materials_science";
+        private  const string DomainsIntroDialogueId  = "intro_quantum_domains";
 
         // Two-tap unlock confirm: the row whose Unlock button is armed, and the timer that disarms it.
         private int _pendingUnlockIndex = -1;
@@ -41,12 +48,70 @@ namespace MobileIdleBuilder
             return SiteRowAction.Locked;
         }
 
+        /// <summary>
+        /// Pure rule for the one-shot domains intro: fire once, when the gate research is
+        /// unlocked. Testable without ECS/UI.
+        /// </summary>
+        public static bool ShouldShowDomainsIntro(string researchId, bool alreadySeen) =>
+            !alreadySeen && researchId == DomainsGateResearchId;
+
+        // ── One-shot domains introduction ────────────────────────────────────
+
+        /// <summary>
+        /// Routed from <see cref="HUDController"/>.OnResearchUnlocked. When the player unlocks
+        /// the domains gate research for the first time, plays the Quantum Domains intro and
+        /// highlights the Domains nav button.
+        /// </summary>
+        public void NotifyResearchUnlocked(ResearchSO research)
+        {
+            if (research == null) return;
+            bool seen = SaveManager.Instance?.Current?.domainsIntroSeen ?? true;
+            if (!ShouldShowDomainsIntro(research.id, seen)) return;
+            PlayDomainsIntro();
+        }
+
+        private void PlayDomainsIntro()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save != null)
+            {
+                save.domainsIntroSeen = true;
+                SaveManager.Instance.SaveLocal();
+            }
+
+            _dialogueDb ??= Resources.Load<DialogueDatabaseSO>("DialogueDatabase");
+            var dialogue   = _dialogueDb != null ? _dialogueDb.Get(DomainsIntroDialogueId) : null;
+            var controller = FindAnyObjectByType<DialogueController>();
+
+            if (dialogue != null && controller != null)
+                controller.PlayDialogue(dialogue);
+            else
+                _hud?.ShowNotification("◈", "Quantum Domains unlocked — open the menu and tap Domains.");
+
+            // Persisting highlight on the drawer nav button until the player opens the panel.
+            _navButton?.AddToClassList("panel-btn--highlight");
+        }
+
+        /// <summary>Clears the Domains nav-button highlight. Called when the panel is opened.</summary>
+        public void ClearNavHighlight() => _navButton?.RemoveFromClassList("panel-btn--highlight");
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Dev-only: re-arm and replay the intro regardless of the seen flag.</summary>
+        public void ReplayDomainsIntroForTesting()
+        {
+            if (SaveManager.Instance?.Current != null)
+                SaveManager.Instance.Current.domainsIntroSeen = false;
+            PlayDomainsIntro();
+        }
+#endif
+
         public void Init(VisualElement root, HUDController hud)
         {
             _hud          = hud;
             _panel        = root.Q("sites-panel");
             _entropyLabel = root.Q<Label>("sites-entropy");
             _list         = root.Q<ScrollView>("sites-list");
+            _navButton    = root.Q<Button>("btn-sites");
             if (_list == null)
                 GameLogger.Error("[SitesSubController] 'sites-list' not found in GameHUD.uxml.");
         }

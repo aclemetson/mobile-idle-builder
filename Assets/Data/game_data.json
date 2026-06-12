@@ -4340,6 +4340,35 @@
       ]
     },
     {
+      "id": "intro_quantum_domains",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Materials Science opens a new frontier. Until now you have built within a single Quantum Domain — but the foundry can anchor to others.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Each Domain is its own build site, with a separate grid and field distribution. The Quark Sea teems with quark fields; the Lepton Storm runs thick with electrons. Anchoring to one costs entropy, but the unlock never expires — not even through prestige.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Open the menu and tap Domains to survey what is within reach. An inactive Domain keeps producing while you work elsewhere — collected the next time you return to it.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
       "id": "upgrade_complete_context",
       "lines": [
         {

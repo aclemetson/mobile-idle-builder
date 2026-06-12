@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfdd822c003b56140851217a4a93f18b, type: 3}
+  m_Name: DialogueDatabase
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueDatabaseSO
+  entries:
+  - id: intro_architect
+    dialogue: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3cb, type: 2}
+  - id: quark_field_explanation
+    dialogue: {fileID: 11400000, guid: e66c4f8154eb5c743a390caebea6173c, type: 2}
+  - id: unlock_hydrogen_synthesis
+    dialogue: {fileID: 11400000, guid: 418af13f160255247b2400d6b5df1af5, type: 2}
+  - id: first_electron_intro
+    dialogue: {fileID: 11400000, guid: 68073c2f90c417b41b71f4d09c1cf6fe, type: 2}
+  - id: demon_intro
+    dialogue: {fileID: 11400000, guid: 7dc8b0737765fbc4dbb6d15cc617494b, type: 2}
+  - id: sell_electrons_intro
+    dialogue: {fileID: 11400000, guid: ded3a2eb1968dc94194557463d29eefd, type: 2}
+  - id: close_demon_first
+    dialogue: {fileID: 11400000, guid: 222254cc69e3e134f8d70771ab777f5b, type: 2}
+  - id: demon_quarks_intro
+    dialogue: {fileID: 11400000, guid: 590c01a4be3e11045854bc6ca5b6c434, type: 2}
+  - id: sell_quarks_intro
+    dialogue: {fileID: 11400000, guid: 99a19d45a11cdfa4f8ab8d26eef33556, type: 2}
+  - id: close_demon_quarks
+    dialogue: {fileID: 11400000, guid: 394d8c01a47720a4cb74d33af6dfb63c, type: 2}
+  - id: research_panel_intro
+    dialogue: {fileID: 11400000, guid: 7fe6d39c992447840bfdcc5cccfd0979, type: 2}
+  - id: recombination_i_context
+    dialogue: {fileID: 11400000, guid: e1b55df33845ca549bb8c13a921efc47, type: 2}
+  - id: recombination_unlocked_dialogue
+    dialogue: {fileID: 11400000, guid: ae60c9e3c0e19e04d903f7378c04c38f, type: 2}
+  - id: open_recipe_panel_context
+    dialogue: {fileID: 11400000, guid: 6a8e086bcbdf207429ba5033c4ffeed7, type: 2}
+  - id: craft_protons_context
+    dialogue: {fileID: 11400000, guid: 016f733804817714ab9c149f22636765, type: 2}
+  - id: craft_neutrons_context
+    dialogue: {fileID: 11400000, guid: d49e59be07ea89246aae507cf4cd2bfa, type: 2}
+  - id: nucleons_to_demon_context
+    dialogue: {fileID: 11400000, guid: 0a0e1f5b0b80dba48b0db2c6c0afd2ad, type: 2}
+  - id: sell_nucleons_context
+    dialogue: {fileID: 11400000, guid: ccb94d126d6922144a5570cd33e62fe4, type: 2}
+  - id: close_demon_nucleons_context
+    dialogue: {fileID: 11400000, guid: 7f389ddb390897d47bb1dfe84e78c853, type: 2}
+  - id: gather_hydrogen_context
+    dialogue: {fileID: 11400000, guid: 15ccdb3025040554895756ea1907247a, type: 2}
+  - id: craft_protons_for_h_context
+    dialogue: {fileID: 11400000, guid: 2702c6b2c8bc461449e7913f64f13706, type: 2}
+  - id: craft_hydrogen_context
+    dialogue: {fileID: 11400000, guid: 9cb32db6eea8ef140b3571634f636726, type: 2}
+  - id: hydrogen_crafted_dialogue
+    dialogue: {fileID: 11400000, guid: c1f857720c17263428a958ad66e7f481, type: 2}
+  - id: hydrogen_to_demon
+    dialogue: {fileID: 11400000, guid: 52d2bd5e554a3794fb503869c090d2e2, type: 2}
+  - id: intro_automation_i
+    dialogue: {fileID: 11400000, guid: 365b9f576d8a8894ebcaadfa019a9ee6, type: 2}
+  - id: buy_automation_i_context
+    dialogue: {fileID: 11400000, guid: ee2bc6f993a0ffd4c8f7af54b8e9a361, type: 2}
+  - id: place_conveyor_context
+    dialogue: {fileID: 11400000, guid: bc8cb6d67f89ada48add3528f94d6466, type: 2}
+  - id: place_building_context
+    dialogue: {fileID: 11400000, guid: 72d35512ec798ca4e9e9970d3e19e483, type: 2}
+  - id: automation_context
+    dialogue: {fileID: 11400000, guid: 833523198b88c1942a0b9dc324b974d1, type: 2}
+  - id: prestige_wall_context
+    dialogue: {fileID: 11400000, guid: 2923cfd2960435349a7d700f7bd85976, type: 2}
+  - id: prestige_complete_context
+    dialogue: {fileID: 11400000, guid: 7218974e81ec4e54ba423dacd78095a1, type: 2}
+  - id: spend_prestige_context
+    dialogue: {fileID: 11400000, guid: 266ad4298c5fca74d83c38169b56ca79, type: 2}
+  - id: intro_sfc_context
+    dialogue: {fileID: 11400000, guid: 12db07a2dd7fc084d86cd4ccb8412fb2, type: 2}
+  - id: place_sfc_context
+    dialogue: {fileID: 11400000, guid: e4a40939b3f9df4438fd568bc1a239b1, type: 2}
+  - id: place_generator_context
+    dialogue: {fileID: 11400000, guid: ea9f70166d59cdb41a727a3d7011a8f0, type: 2}
+  - id: link_generator_context
+    dialogue: {fileID: 11400000, guid: d15886738612d6e448d37625fb8b8023, type: 2}
+  - id: place_quark_harvester_context
+    dialogue: {fileID: 11400000, guid: a4d074a0ff7fd374282d2b5741853fac, type: 2}
+  - id: route_quarks_context
+    dialogue: {fileID: 11400000, guid: 43acd5ec9b716a74db92600c1a747b49, type: 2}
+  - id: configure_sfc_context
+    dialogue: {fileID: 11400000, guid: 00246e8b6db529d48a62471c68281190, type: 2}
+  - id: route_nucleons_context
+    dialogue: {fileID: 11400000, guid: 00cb0a4d452fb4e44a3c1077983150ec, type: 2}
+  - id: nucleon_loop_context
+    dialogue: {fileID: 11400000, guid: 2378317feac166848b3168a0f19e37cf, type: 2}
+  - id: intro_atom_gen_context
+    dialogue: {fileID: 11400000, guid: c4981c60da6f18c479a7a87ed34193b3, type: 2}
+  - id: place_atom_gen_context
+    dialogue: {fileID: 11400000, guid: 3de8bb1fc3fea6f4bba01d9e117d3e6a, type: 2}
+  - id: connect_atom_gen_context
+    dialogue: {fileID: 11400000, guid: 6a46ea15b127353428e3b4c9a8bb4253, type: 2}
+  - id: route_hydrogen_context
+    dialogue: {fileID: 11400000, guid: 28ebb593c3bdb404c90017c274c7c017, type: 2}
+  - id: hydrogen_loop_context
+    dialogue: {fileID: 11400000, guid: d9491ee0112a898469c0c5d8eeaa347b, type: 2}
+  - id: intro_upgrades_context
+    dialogue: {fileID: 11400000, guid: e3e62733b7f06bc4187f90c710833864, type: 2}
+  - id: intro_quantum_domains
+    dialogue: {fileID: 11400000, guid: d250f565c3f9d474089ec6a354b950d9, type: 2}
+  - id: upgrade_complete_context
+    dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
+  - id: post_tutorial_intro
+    dialogue: {fileID: 11400000, guid: 7b5367a1b577c974da0097b3dd852b32, type: 2}
+  - id: intro_atomic_assembly_context
+    dialogue: {fileID: 11400000, guid: 5f1aae805e109b748a253b7cff0d5ea5, type: 2}
+  - id: atomic_assembly_unlocked_context
+    dialogue: {fileID: 11400000, guid: fb2e3d0eddd76c64ea3a7d4394f066c3, type: 2}
+  - id: first_element_crafted_context
+    dialogue: {fileID: 11400000, guid: 760d62d910acced40b2505f2d88181a4, type: 2}
+  - id: intro_heavy_elements_context
+    dialogue: {fileID: 11400000, guid: 900aa07d95b92804aac1809765344343, type: 2}
+  - id: heavy_elements_unlocked_context
+    dialogue: {fileID: 11400000, guid: 2f4e215fc284ae24b8586b12e645fdbb, type: 2}
+  - id: uranium_crafted_context
+    dialogue: {fileID: 11400000, guid: 6070f72c988bfdf4cbbf64026ce51ed9, type: 2}
+  - id: intro_isotopes_context
+    dialogue: {fileID: 11400000, guid: 6d35297167589f64ea4b9432175ad754, type: 2}
+  - id: isotopes_unlocked_context
+    dialogue: {fileID: 11400000, guid: 721eb2ff2d10d8b4d8e2f245da48ca0e, type: 2}
+  - id: place_manipulator_context
+    dialogue: {fileID: 11400000, guid: 5c4f6e2e370d5fd4397ccc11dacf20bc, type: 2}
+  - id: isotope_crafted_context
+    dialogue: {fileID: 11400000, guid: 26ae493ab17b8e84a80806f435b7a37f, type: 2}
+  - id: intro_radioactive_context
+    dialogue: {fileID: 11400000, guid: ef38038a87f7e9b44b020f791a455337, type: 2}
+  - id: radioactive_unlocked_context
+    dialogue: {fileID: 11400000, guid: 86f9e09f1335cc54caf7e8a1b91ddb3b, type: 2}
+  - id: place_containment_context
+    dialogue: {fileID: 11400000, guid: 765cb97afa86f24459de25a6c941d86f, type: 2}
+  - id: uranium_235_crafted_context
+    dialogue: {fileID: 11400000, guid: 559fca6955da77345bff902cc680eb10, type: 2}
+  - id: particles_loop_context
+    dialogue: {fileID: 11400000, guid: e1f1eda721baabc46a11bbb8c8e08d4f, type: 2}
