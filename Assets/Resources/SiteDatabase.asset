@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 649cd66c4448567489cd37d677e8b370, type: 3}
+  m_Name: SiteDatabase
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteDatabaseSO
+  allSites:
+  - {fileID: 11400000, guid: f085b165eca01ae468f5cb088fe9dec4, type: 2}
+  - {fileID: 11400000, guid: fa666bacd4f8a8d4fa67bf6745c34008, type: 2}
+  - {fileID: 11400000, guid: 94e84561f35ae40489e51d6f53c11a89, type: 2}

@@ -149,6 +149,23 @@ namespace MobileIdleBuilder
             return active;
         }
 
+        /// <summary>
+        /// Ensures <c>run.grids</c> has an entry for <paramref name="siteIndex"/>, padding with
+        /// empty grids as needed, and returns that grid. Used when unlocking/switching to a site
+        /// whose grid has never been created. grids[0] still aliases the legacy 'grid'.
+        /// </summary>
+        internal static GridSaveData EnsureSiteGrid(SaveData save, int siteIndex)
+        {
+            EnsureActiveGrid(save);                 // guarantees grids[0] exists + clamps index
+            var run = save?.currentRun;
+            if (run == null || siteIndex < 0) return null;
+
+            while (run.grids.Count <= siteIndex)
+                run.grids.Add(new GridSaveData());
+
+            return run.grids[siteIndex];
+        }
+
         // ── Save path ─────────────────────────────────────────────────────
 
         /// <summary>Called by SaveManager.SaveLocal() before writing to disk.</summary>
@@ -249,7 +266,10 @@ namespace MobileIdleBuilder
 
             bool hasBuildings = grid.buildings?.Count > 0;
             bool hasConveyors = grid.conveyors?.Count > 0;
-            if (!hasBuildings && !hasConveyors) return;
+            bool hasFields    = grid.fields?.Count > 0;
+            // Fields must restore even with no buildings/conveyors — a build site can hold a
+            // generated field layout that the player has not built on yet.
+            if (!hasBuildings && !hasConveyors && !hasFields) return;
 
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
@@ -377,8 +397,31 @@ namespace MobileIdleBuilder
                 speedMult,
                 DateTime.UtcNow.ToString("O"));
 
+            // Mirror into the per-site snapshot list so inactive sites keep producing offline.
+            // The active site's entry is always kept current here; inactive entries persist from
+            // the last time each site was active (rebuilt on switch-away via SaveLocal → FlushToSave).
+            MirrorActiveSiteSnapshot(save);
+
             int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
             GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={grid.buildings?.Count ?? 0} conveyors={grid.conveyors?.Count ?? 0} chains={builtChains}");
+        }
+
+        /// <summary>
+        /// Copies the freshly built <c>save.idleSnapshot</c> into <c>save.siteSnapshots</c> at the
+        /// active site index, padding the list as needed. Keeps the active site's per-site snapshot
+        /// in sync so OfflineCollectionService can pay out every unlocked site on the next launch.
+        /// </summary>
+        internal static void MirrorActiveSiteSnapshot(SaveData save)
+        {
+            var run = save?.currentRun;
+            if (run == null) return;
+
+            int idx = (run.activeSiteIndex >= 0) ? run.activeSiteIndex : 0;
+            save.siteSnapshots ??= new List<IdleCollectionSnapshot>();
+            while (save.siteSnapshots.Count <= idx)
+                save.siteSnapshots.Add(new IdleCollectionSnapshot());
+
+            save.siteSnapshots[idx] = save.idleSnapshot;
         }
     }
 }

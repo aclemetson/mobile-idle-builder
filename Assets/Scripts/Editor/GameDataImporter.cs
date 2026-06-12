@@ -58,6 +58,8 @@ namespace MobileIdleBuilder.Editor
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
                 needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
+                needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
             if (!needsImport)
@@ -177,8 +179,9 @@ namespace MobileIdleBuilder.Editor
                 fieldLookup[field.id] = GenerateField(field, itemLookup);
 
             // ── Step 8.5: SiteSO (resolves field_overrides → FieldSO) ────────
+            var siteLookup = new Dictionary<string, SiteSO>();
             foreach (var site in data.sites)
-                GenerateSite(site, fieldLookup);
+                siteLookup[site.id] = GenerateSite(site, fieldLookup);
 
             // ── Step 9: DialogueSO ───────────────────────────────────────────
             var dialogueLookup = new Dictionary<string, DialogueSO>();
@@ -198,6 +201,9 @@ namespace MobileIdleBuilder.Editor
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, researchLookup);
+
+            // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
+            GenerateSiteDatabase(data.sites, siteLookup);
 
             // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
             GenerateDailyContent(data.daily_rewards, data.daily_challenges);
@@ -522,7 +528,7 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateSite(SiteJson data, Dictionary<string, FieldSO> fieldLookup)
+        private static SiteSO GenerateSite(SiteJson data, Dictionary<string, FieldSO> fieldLookup)
         {
             string path = $"{SitesDir}/{Sanitize(data.id)}.asset";
             var so = LoadOrCreate<SiteSO>(path);
@@ -541,6 +547,23 @@ namespace MobileIdleBuilder.Editor
                     });
 
             EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateSiteDatabase(List<SiteJson> sites,
+            Dictionary<string, SiteSO> siteLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/SiteDatabase.asset";
+            var db = LoadOrCreate<SiteDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<SiteSO>(sites.Count);
+            foreach (var s in sites)
+                if (siteLookup.TryGetValue(s.id, out var so))
+                    list.Add(so);
+
+            db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         private static DialogueSO GenerateDialogue(DialogueJson data)

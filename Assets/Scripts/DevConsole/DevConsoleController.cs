@@ -496,6 +496,55 @@ namespace MobileIdleBuilder.Dev
                     return "All achievements force-completed.";
                 });
 
+            // ── sites (multi-grids) ──────────────────────────────────────────
+            _registry.Register("site list", "List all build sites (index, id, cost, unlocked, active)",
+                _ =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc?.AllSites == null || svc.AllSites.Count == 0)
+                        return "Error: SiteService not ready or SiteDatabase empty.";
+                    var sb = new StringBuilder($"Sites ({svc.AllSites.Count}):\n");
+                    for (int i = 0; i < svc.AllSites.Count; i++)
+                    {
+                        var s = svc.AllSites[i];
+                        if (s == null) continue;
+                        string flags = (i == svc.ActiveIndex ? "ACTIVE " : "")
+                                     + (svc.IsUnlocked(i) ? "unlocked" : "locked");
+                        sb.AppendLine($"  [{i}] {s.id,-18} {s.unlockCost,12}e  {flags}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("site switch <n>", "Switch the live grid to site index n",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n < 0)
+                        return "Error: <n> must be a non-negative integer.";
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    if (svc.GetSite(n) == null) return $"Error: no site at index {n}. Try 'site list'.";
+                    if (!svc.IsUnlocked(n)) return $"Error: site [{n}] is locked. Unlock it first.";
+                    if (n == svc.ActiveIndex) return $"Already on site [{n}].";
+                    return svc.SwitchTo(n)
+                        ? $"Switched to site [{n}] '{svc.GetSite(n).id}'."
+                        : $"Error: switch to [{n}] failed.";
+                });
+
+            _registry.Register("site unlock <id>", "Unlock a site by id (deducts entropy)",
+                args =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    int idx = svc.IndexOf(args[0]);
+                    var site = svc.GetSite(idx);
+                    if (site == null) return $"Error: unknown site '{args[0]}'. Try 'site list'.";
+                    if (svc.IsUnlocked(idx)) return $"Site '{site.id}' already unlocked.";
+                    if (!svc.CanUnlock(idx)) return $"Error: cannot afford '{site.id}' ({site.unlockCost}e).";
+                    return svc.UnlockSite(site.id)
+                        ? $"Unlocked '{site.id}' for {site.unlockCost}e."
+                        : $"Error: unlock of '{site.id}' failed.";
+                });
+
             // ── tutorial ─────────────────────────────────────────────────────
             _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
                 _ =>

@@ -187,6 +187,68 @@ namespace MobileIdleBuilder.Tests
                 "idleCollectionApplied must equal lastSaved so the same snapshot is not re-applied");
         }
 
+        // ── Multi-site aggregation (siteSnapshots) ────────────────────────────
+
+        [Test]
+        public void SiteSnapshots_AggregatesAcrossAllSites()
+        {
+            // Site 0: 1 item/s entropy sink, sell 2 → 1×100×0.5×2 = 100 entropy
+            // Site 1: 2 items/s entropy sink, sell 1 → 2×100×0.5×1 = 100 entropy
+            var save = MakeSave(null, secondsAgo: 100f);
+            save.siteSnapshots = new List<IdleCollectionSnapshot>
+            {
+                OneChain(new IdleChainEntry { itemId = 1, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 2f }),
+                OneChain(new IdleChainEntry { itemId = 2, itemsPerSecond = 2f, endsAtEntropySink = true, baseSellValue = 1f }),
+            };
+
+            var result = OfflineCollectionService.CalculateAndApply(save, _cfg, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(200L, result.EntropyEarned, "100 from site 0 + 100 from site 1");
+            Assert.AreEqual(200L, save.currentRun.baseCurrency);
+        }
+
+        [Test]
+        public void SiteSnapshots_PopulatedTakesPrecedenceOverIdleSnapshot_NoDoubleCount()
+        {
+            // idleSnapshot mirrors site 0; when siteSnapshots is present it must NOT be added again.
+            var activeChain = OneChain(new IdleChainEntry
+                { itemId = 1, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f });
+            var save = MakeSave(activeChain, secondsAgo: 100f);
+            save.siteSnapshots = new List<IdleCollectionSnapshot> { activeChain }; // same object as idleSnapshot
+
+            var result = OfflineCollectionService.CalculateAndApply(save, _cfg, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(50L, result.EntropyEarned, "1×100×0.5×1 = 50, counted once");
+        }
+
+        [Test]
+        public void SiteSnapshots_EmptyFallsBackToIdleSnapshot()
+        {
+            var save = MakeSave(OneChain(new IdleChainEntry
+                { itemId = 1, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f }),
+                secondsAgo: 100f);
+            save.siteSnapshots = new List<IdleCollectionSnapshot>(); // empty → use idleSnapshot
+
+            var result = OfflineCollectionService.CalculateAndApply(save, _cfg, null);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(50L, result.EntropyEarned);
+        }
+
+        [Test]
+        public void SiteSnapshots_AllEmptyChains_ReturnsNull()
+        {
+            var save = MakeSave(null, secondsAgo: 100f);
+            save.siteSnapshots = new List<IdleCollectionSnapshot>
+            {
+                new IdleCollectionSnapshot { chains = new List<IdleChainEntry>() },
+                new IdleCollectionSnapshot { chains = new List<IdleChainEntry>() },
+            };
+            Assert.IsNull(OfflineCollectionService.CalculateAndApply(save, _cfg, null));
+        }
+
         // ── GetEffectiveIdleCap ───────────────────────────────────────────────
 
         [Test]

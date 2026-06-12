@@ -303,5 +303,12 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(so.fieldOverrides, "fieldOverrides should be initialized, not null");
             Object.DestroyImmediate(so);
         }
+
+        [Test]
+        public void SiteDatabaseSO_HasAllSitesField()
+        {
+            Assert.IsNotNull(typeof(SiteDatabaseSO).GetField("allSites"),
+                "SiteDatabaseSO missing: allSites");
+        }
     }
 }
