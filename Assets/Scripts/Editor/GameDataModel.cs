@@ -20,6 +20,7 @@ namespace MobileIdleBuilder.Editor
         public List<RecipeJson>          recipes         = new();
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
+        public List<SiteJson>            sites           = new();
         public List<DialogueJson>        dialogues       = new();
         public List<DailyRewardJson>     daily_rewards   = new();
         public List<DailyChallengeJson>  daily_challenges= new();
@@ -35,6 +36,7 @@ namespace MobileIdleBuilder.Editor
             recipes         ??= new List<RecipeJson>();
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
+            sites           ??= new List<SiteJson>();
             dialogues       ??= new List<DialogueJson>();
             daily_rewards   ??= new List<DailyRewardJson>();
             daily_challenges??= new List<DailyChallengeJson>();
@@ -44,6 +46,7 @@ namespace MobileIdleBuilder.Editor
             foreach (var rec in recipes)      rec?.Initialize();
             foreach (var b in buildings)      b?.Initialize();
             foreach (var f in fields)         f?.Initialize();
+            foreach (var s in sites)          s?.Initialize();
             foreach (var d in dialogues)      d?.Initialize();
             foreach (var s in tutorial_steps) s?.Initialize();
         }
@@ -288,6 +291,24 @@ namespace MobileIdleBuilder.Editor
         public string             codex_entry   = "";
 
         public void Initialize() { drops ??= new List<FieldDropJson>(); }
+    }
+
+    [Serializable]
+    internal class SiteFieldOverrideJson
+    {
+        public string field              = "";
+        public float  density_multiplier = 1f;
+    }
+
+    [Serializable]
+    internal class SiteJson
+    {
+        public string                        id              = "";
+        public string                        display_name    = "";
+        public long                          unlock_cost     = 0;
+        public List<SiteFieldOverrideJson>   field_overrides = new();
+
+        public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
     }
 
     [Serializable]

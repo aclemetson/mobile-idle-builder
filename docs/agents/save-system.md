@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1, 2026-06-12. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -22,8 +22,8 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `dailyChallengeResetUtc / dailyChallengeIds / dailyChallengeProgress / dailyChallengesClaimed` | rotating daily-challenge set, progress, and claims (UTC reset); survives prestige |
 | `achievements / achievementProgress / unclaimedAchievements` | achievement state |
 | `tutorial` (`TutorialSaveData`) | `currentStepId` (string), `hasCompletedFirstRun` survives prestige |
-| `currentRun` (`CurrentRunData`) | `baseCurrency`, `totalEntropySpent`, `baseNetWorth`, inventory as parallel `inventoryKeys`(string numeric ids)/`inventoryValues`, `grid` (`GridSaveData`), research progress |
-| `currentRun.grid` (`GridSaveData`) | `size`, `expansions`, `buildings[]` (numeric buildingId/recipeId, position, level, rotation), `conveyors[]` (flattened cell list), `fields[]` |
+| `currentRun` (`CurrentRunData`) | `baseCurrency`, `totalEntropySpent`, `baseNetWorth`, inventory as parallel `inventoryKeys`(string numeric ids)/`inventoryValues`, `grids[]` + `activeSiteIndex` (multi-grids), legacy `grid` mirror, research progress. **Read the active grid via `CurrentRunData.ActiveGrid`** |
+| `currentRun.grids[]` (`GridSaveData`) | one per build site; `grids[0]` aliases legacy `grid`. Each: `size`, `expansions`, `buildings[]` (numeric buildingId/recipeId, position, level, rotation), `conveyors[]` (flattened cell list), `fields[]`. Migration: `GridSaveService.EnsureActiveGrid(save)` seeds `grids[0]` from legacy `grid` on first access and keeps them mirrored while site 0 is active. `unlockedSites` (root, survives prestige) holds unlocked site ids |
 
 ## Services
 

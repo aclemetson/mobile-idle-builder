@@ -1,6 +1,6 @@
 # Feature: Multiple Grids / Sites (Idle Space Miner-style planets)
 
-**Status:** pending
+**Status:** Phase 1 in-progress (branch `feature/multi-grids-p1`) — data + save model landed; Phases 2-4 pending
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/ui-toolkit.md`, `docs/agents/economy-balance.md`
 **Scope estimate:** LARGEST of the four specs. 4 phases, **each phase ends with "stop, run full suite, commit, PR"** — do NOT attempt this in one pass. A session should pick up the next incomplete phase.
 **Branch:** one branch per phase: `feature/multi-grids-p1` … `-p4` → PR into the current release branch (confirm with user).

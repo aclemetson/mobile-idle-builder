@@ -36,6 +36,7 @@ namespace MobileIdleBuilder.Editor
         private const string RecipesDir    = "Assets/Data/recipes";
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
+        private const string SitesDir      = "Assets/Data/sites";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
         private const string ResourcesDir  = "Assets/Resources";
@@ -123,6 +124,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(RecipesDir);
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
+            EnsureDirectory(SitesDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
             EnsureDirectory(ResourcesDir);
@@ -170,8 +172,13 @@ namespace MobileIdleBuilder.Editor
                     ResolveResearchCrossRefs(so, r, itemLookup, recipeLookup, buildingLookup, researchLookup);
 
             // ── Step 8: FieldSO ──────────────────────────────────────────────
+            var fieldLookup = new Dictionary<string, FieldSO>();
             foreach (var field in data.fields)
-                GenerateField(field, itemLookup);
+                fieldLookup[field.id] = GenerateField(field, itemLookup);
+
+            // ── Step 8.5: SiteSO (resolves field_overrides → FieldSO) ────────
+            foreach (var site in data.sites)
+                GenerateSite(site, fieldLookup);
 
             // ── Step 9: DialogueSO ───────────────────────────────────────────
             var dialogueLookup = new Dictionary<string, DialogueSO>();
@@ -202,7 +209,7 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.dialogues.Count} dialogues, " +
+                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.dialogues.Count} dialogues, " +
                 $"{data.tutorial_steps.Count} tutorial steps, " +
                 $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
             );
@@ -484,7 +491,7 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
+        private static FieldSO GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
         {
             string path = $"{FieldsDir}/{Sanitize(data.id)}.asset";
             var so = LoadOrCreate<FieldSO>(path);
@@ -510,6 +517,28 @@ namespace MobileIdleBuilder.Editor
                         item   = ResolveRef(drop.item, itemLookup, $"FieldSO '{data.id}' drop '{drop.item}'")
                     });
             }
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateSite(SiteJson data, Dictionary<string, FieldSO> fieldLookup)
+        {
+            string path = $"{SitesDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<SiteSO>(path);
+
+            so.id          = data.id;
+            so.displayName = data.display_name;
+            so.unlockCost  = data.unlock_cost;
+
+            so.fieldOverrides.Clear();
+            if (data.field_overrides != null)
+                foreach (var ov in data.field_overrides)
+                    so.fieldOverrides.Add(new SiteFieldOverride
+                    {
+                        field             = ResolveRef(ov.field, fieldLookup, $"SiteSO '{data.id}' field_override '{ov.field}'"),
+                        densityMultiplier = ov.density_multiplier
+                    });
 
             EditorUtility.SetDirty(so);
         }

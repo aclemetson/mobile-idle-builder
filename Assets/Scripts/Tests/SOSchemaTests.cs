@@ -274,5 +274,34 @@ namespace MobileIdleBuilder.Tests
             Assert.Greater(config.betaParticleEVValue, 0f);
             Object.DestroyImmediate(config);
         }
+
+        // ── SiteSO (multi-grids) ──────────────────────────────────────────────
+
+        [Test]
+        public void SiteSO_HasRequiredFields()
+        {
+            var type = typeof(SiteSO);
+            Assert.IsNotNull(type.GetField("id"),             "SiteSO missing: id");
+            Assert.IsNotNull(type.GetField("displayName"),    "SiteSO missing: displayName");
+            Assert.IsNotNull(type.GetField("unlockCost"),     "SiteSO missing: unlockCost");
+            Assert.IsNotNull(type.GetField("fieldOverrides"), "SiteSO missing: fieldOverrides");
+        }
+
+        [Test]
+        public void SiteFieldOverride_HasRequiredFields()
+        {
+            var type = typeof(SiteFieldOverride);
+            Assert.IsNotNull(type.GetField("field"),             "SiteFieldOverride missing: field");
+            Assert.IsNotNull(type.GetField("densityMultiplier"), "SiteFieldOverride missing: densityMultiplier");
+        }
+
+        [Test]
+        public void SiteSO_DefaultsAreSane()
+        {
+            var so = ScriptableObject.CreateInstance<SiteSO>();
+            Assert.AreEqual(0, so.unlockCost, "Origin-style default unlock cost should be 0");
+            Assert.IsNotNull(so.fieldOverrides, "fieldOverrides should be initialized, not null");
+            Object.DestroyImmediate(so);
+        }
     }
 }
