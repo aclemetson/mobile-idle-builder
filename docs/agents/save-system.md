@@ -37,7 +37,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 
 ## The bridge: `Assets/Scripts/SaveSystem/ECSLoadBridge.cs`
 
-- `InitializeAsync()` polls for the ECS world (5s) then for the `PlayerProgressData` / `PrestigeData` / `PlayerInventoryTag` / `TutorialStateData` entities (10s), then:
+- `InitializeAsync()` polls for the ECS world (5s) then for the `PlayerProgressData` / `PrestigeData` / `PlayerInventoryTag` / `TutorialStateData` entities (10s) — all four are gated so a late tutorial singleton can't leave the baked step-0 default standing — then waits for `SaveManager.CloudReconcileDone` (≤5s) so a cloud-replaced `Current` is applied to ECS rather than a stale local one, then:
   - `ApplyLoadedSave()`: permanent upgrades → `PrestigeData` (speed boost composed in at `ECSLoadBridge.cs:148`) → tutorial state → offline earnings (`OfflineCollectionService.CalculateAndApply`) → currency + inventory (skipped on fresh install so baked defaults stand, `IsNewGame` guard at `ECSLoadBridge.cs:183`).
   - Then `GridSaveService.Instance.LoadGrid()` re-places saved buildings via `BuildingPlacer.PlaceBuilding()` (`GridSaveService.cs:256`).
   - Sets `IsLoaded = true`.

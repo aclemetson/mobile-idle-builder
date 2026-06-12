@@ -92,7 +92,11 @@ namespace MobileIdleBuilder
             float logTimer = 0f;
             while (elapsed < kTimeout)
             {
-                if (!_progressQuery.IsEmpty && !_prestigeQuery.IsEmpty && !_inventoryQuery.IsEmpty)
+                // Tutorial is included here: if its singleton lags even one frame behind the
+                // others, ApplyLoadedSave would skip the tutorial block and the baked step-0
+                // default would survive, replaying the intro on every load.
+                if (!_progressQuery.IsEmpty && !_prestigeQuery.IsEmpty && !_inventoryQuery.IsEmpty
+                    && !_tutorialQuery.IsEmpty)
                     break;
                 elapsed  += Time.deltaTime;
                 logTimer += Time.deltaTime;
@@ -115,7 +119,25 @@ namespace MobileIdleBuilder
                 yield break;
             }
 
-            GameLogger.Info($"[ECSLoadBridge] All entities found after {elapsed:F1}s — applying save");
+            GameLogger.Info($"[ECSLoadBridge] All entities found after {elapsed:F1}s — waiting for cloud reconcile");
+
+            // Wait for SaveManager to finish cloud reconciliation so Current is final
+            // (local or cloud-replaced) before we copy it into ECS. Without this, ECS could be
+            // seeded from the local save while a slower cloud fetch replaces Current afterward,
+            // and the next FlushToSave would write the stale ECS state back over the cloud data.
+            // Bounded so a slow or offline network never blocks the load indefinitely.
+            const float kCloudTimeout = 5f;
+            float cloudElapsed = 0f;
+            var sm = SaveManager.Instance;
+            while (sm != null && !sm.CloudReconcileDone && cloudElapsed < kCloudTimeout)
+            {
+                cloudElapsed += Time.deltaTime;
+                yield return null;
+            }
+            if (sm != null && !sm.CloudReconcileDone)
+                GameLogger.Warning($"[ECSLoadBridge] Cloud reconcile not done after {cloudElapsed:F1}s — applying current save anyway.");
+
+            GameLogger.Info("[ECSLoadBridge] Applying save to ECS");
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
             IsLoaded = true;
@@ -169,6 +191,14 @@ namespace MobileIdleBuilder
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
                 _tutorialQuery.SetSingleton(ts);
+            }
+            else if (!string.IsNullOrEmpty(save.tutorial.currentStepId))
+            {
+                // The readiness gate in InitializeAsync should prevent this; if it still
+                // happens (e.g. entity-load timeout) the baked step-0 default will stand and
+                // the intro replays. Surface it loudly rather than silently regressing.
+                GameLogger.Warning($"[Save] Tutorial entity not present at load — saved step " +
+                          $"'{save.tutorial.currentStepId}' was NOT applied; baked default stands.");
             }
 
             // Calculate and merge idle earnings before restoring ECS buffers
@@ -295,12 +325,23 @@ namespace MobileIdleBuilder
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
-        static int ResolveStepIndex(string stepId)
+        internal static int ResolveStepIndex(string stepId)
         {
+            // Empty id is a legitimate fresh-game value — resolve to step 0 silently.
+            if (string.IsNullOrEmpty(stepId)) return 0;
+
             var flow = TutorialFlowSO.Current;
-            if (flow?.steps == null || string.IsNullOrEmpty(stepId)) return 0;
+            if (flow?.steps == null)
+            {
+                GameLogger.Warning($"[Save] Cannot resolve tutorial step '{stepId}' — " +
+                          $"TutorialFlowSO.Current is null; defaulting to step 0.");
+                return 0;
+            }
             for (int i = 0; i < flow.steps.Length; i++)
                 if (flow.steps[i].id == stepId) return i;
+
+            GameLogger.Warning($"[Save] Saved tutorial step '{stepId}' not found in flow " +
+                      $"({flow.steps.Length} steps) — defaulting to step 0 (id drift?).");
             return 0;
         }
     }
