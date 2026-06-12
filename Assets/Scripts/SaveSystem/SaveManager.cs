@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Unity.Services.Authentication;
+using Unity.Services.Core;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -34,6 +35,11 @@ namespace MobileIdleBuilder
         public SaveData Current   => _current;
         public bool     IsNewGame { get; private set; }
 
+        // True once ReconcileWithCloud() has finished (whether it pulled cloud data, found
+        // none, or cloud was unavailable). ECSLoadBridge waits on this before applying the
+        // save to ECS so a slower cloud fetch can't be clobbered by a stale local-into-ECS load.
+        public bool CloudReconcileDone { get; private set; }
+
         protected override void Awake()
         {
             base.Awake();
@@ -57,8 +63,19 @@ namespace MobileIdleBuilder
         IEnumerator Start()
         {
             // Cloud reconciliation happens asynchronously after local is already ready
-            yield return ReconcileWithCloud();
+            yield return InitialCloudReconcile();
             StartCoroutine(AutoSaveLoop());
+        }
+
+        // Reconcile with cloud, then mark done. CloudReconcileDone is set here (after the
+        // inner coroutine returns) so every early yield-break path inside ReconcileWithCloud()
+        // (no cloud, unavailable, offline, or a successful pull) is covered. ECSLoadBridge
+        // gates ApplyLoadedSave on this flag. Internal so EditMode tests can pump it directly
+        // without the play-mode lifecycle (the test assembly runs in edit mode).
+        internal IEnumerator InitialCloudReconcile()
+        {
+            yield return ReconcileWithCloud();
+            CloudReconcileDone = true;
         }
 
         void OnApplicationPause(bool paused)
@@ -152,7 +169,16 @@ namespace MobileIdleBuilder
             if (!_cloud.IsAvailable) yield break;
 
             // Sync local playerId to UGS identity for cross-device consistency.
-            _current.playerId = AuthenticationService.Instance.PlayerId;
+            // Accessing AuthenticationService.Instance throws if UGS never initialized
+            // (e.g. an injected/test cloud service), so guard and keep the local id on failure.
+            try
+            {
+                _current.playerId = AuthenticationService.Instance.PlayerId;
+            }
+            catch (ServicesInitializationException)
+            {
+                GameLogger.Warning("[SaveManager] Auth not initialized — keeping local playerId.");
+            }
 
             var fetchTask = _cloud.FetchAsync(_current.playerId);
             yield return new WaitUntil(() => fetchTask.IsCompleted);
@@ -205,6 +231,11 @@ namespace MobileIdleBuilder
             _current  = new SaveData { playerId = GeneratePlayerId() };
             IsNewGame = true;
         }
+
+#if UNITY_EDITOR
+        /// <summary>Test seam: replace the cloud service after Awake but before Start runs.</summary>
+        internal void SetCloudServiceForTesting(ICloudSaveService cloud) => _cloud = cloud;
+#endif
 
         // ── Internal ──────────────────────────────────────────────────────────
 
