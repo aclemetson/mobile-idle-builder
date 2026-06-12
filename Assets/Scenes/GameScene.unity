@@ -764,6 +764,8 @@ GameObject:
   - component: {fileID: 827826011}
   - component: {fileID: 827826009}
   - component: {fileID: 827826014}
+  - component: {fileID: 827826016}
+  - component: {fileID: 827826015}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -823,6 +825,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.Dev.DevConsoleBootstrap
   devConsolePrefab: {fileID: 5009747257631337944, guid: f29e5a82338c7b3498e2f6b964af8cf3, type: 3}
+--- !u!114 &827826015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13ac5b8072fb8774b806c1f2fcf9ef71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GameBootstrap
+  gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
+  _testModeEnabled: 1
+  _testModeFieldSeed: 42
+--- !u!114 &827826016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827826008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 813334b4233cb7440bc447d95b1a5831, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SaveManager
+  gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
+  autoSaveIntervalSeconds: 60
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
