@@ -104,6 +104,9 @@ namespace MobileIdleBuilder
             if (save != null)
             {
                 save.unlockedResearch              = new System.Collections.Generic.List<string>();
+                // Multi-grids: clear all sites' grids + snapshots and return to site 0 (unlocks
+                // survive) so the intermediate SaveLocal below never persists stale inactive sites.
+                PrestigeSaveWatcher.ResetSitesForPrestige(save);
                 save.tutorial.hasCompletedFirstRun = true;
                 save.tutorial.isActive             = false;
                 GameLogger.Info("[PrestigeSystem] hasCompletedFirstRun set → true in SaveData");

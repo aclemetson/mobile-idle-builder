@@ -272,6 +272,73 @@ namespace MobileIdleBuilder.Tests
                 "PrestigeAvailable must remain true once set; a second update must not clear it");
         }
 
+        // ── Multi-grids reset (PrestigeSaveWatcher.ResetSitesForPrestige) ────
+
+        [Test]
+        public void ResetSitesForPrestige_ClearsAllGridsAndReturnsToSiteZero()
+        {
+            var save = new SaveData();
+            save.currentRun.grids = new System.Collections.Generic.List<GridSaveData>
+            {
+                GridWithBuilding(1), GridWithBuilding(2), GridWithBuilding(3)
+            };
+            save.currentRun.activeSiteIndex = 2;
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            Assert.AreEqual(0, save.currentRun.grids.Count, "all sites' grids cleared");
+            Assert.AreEqual(0, save.currentRun.activeSiteIndex, "active site returns to origin");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_ClearsActiveAndPerSiteIdleSnapshots()
+        {
+            var save = new SaveData();
+            save.idleSnapshot  = SnapshotWithChain();
+            save.siteSnapshots = new System.Collections.Generic.List<IdleCollectionSnapshot>
+            {
+                SnapshotWithChain(), SnapshotWithChain()
+            };
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            Assert.AreEqual(0, save.idleSnapshot.chains.Count, "active idle snapshot wiped");
+            Assert.AreEqual(0, save.siteSnapshots.Count, "per-site snapshots wiped");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_PreservesSiteUnlocks()
+        {
+            var save = new SaveData();
+            save.unlockedSites = new System.Collections.Generic.List<string>
+                { "site_quark_sea", "site_lepton_storm" };
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            CollectionAssert.AreEqual(new[] { "site_quark_sea", "site_lepton_storm" },
+                save.unlockedSites, "site unlocks must survive prestige");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_NullSave_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() => PrestigeSaveWatcher.ResetSitesForPrestige(null));
+        }
+
+        private static GridSaveData GridWithBuilding(int buildingId)
+        {
+            var g = new GridSaveData();
+            g.buildings.Add(new BuildingSaveData { buildingId = buildingId, position = new[] { 1, 1 } });
+            return g;
+        }
+
+        private static IdleCollectionSnapshot SnapshotWithChain() =>
+            new IdleCollectionSnapshot
+            {
+                chains = new System.Collections.Generic.List<IdleChainEntry>
+                    { new IdleChainEntry { itemId = 1, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f } }
+            };
+
         [Test]
         public void WhenWallIsZero_PrestigeNeverAvailable()
         {
