@@ -154,7 +154,7 @@ namespace MobileIdleBuilder
             {
                 if (entry.fieldDefinition == null) continue;
                 float m = multipliers.TryGetValue(entry.fieldDefinition.id, out var v) ? v : 1f;
-                int scaledCount = Mathf.RoundToInt(entry.count * m);
+                int scaledCount = EffectiveFieldCount(entry.count, m);
                 if (scaledCount <= 0) continue;
 
                 var scaled = entry;
@@ -162,6 +162,14 @@ namespace MobileIdleBuilder
                 yield return scaled;
             }
         }
+
+        /// <summary>
+        /// A site's effective field count = base count × density multiplier, rounded.
+        /// multiplier 0 removes the field (returns 0); 2 doubles it. Pure so the per-site
+        /// field-distribution balance is testable without a live scene.
+        /// </summary>
+        internal static int EffectiveFieldCount(int baseCount, float densityMultiplier) =>
+            Mathf.RoundToInt(baseCount * densityMultiplier);
 
         /// <summary>Places every field entry into the shuffled candidate cells.</summary>
         private void PlaceEntries(IEnumerable<FieldEntry> entries, List<Vector2Int> candidates)
