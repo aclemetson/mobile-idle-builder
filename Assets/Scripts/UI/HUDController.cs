@@ -587,6 +587,9 @@ namespace MobileIdleBuilder
             // Refresh recipe panel — newly learned recipes will appear
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
                 BuildRecipeList();
+
+            // One-shot Quantum Domains introduction when its gate research is unlocked.
+            _sites?.NotifyResearchUnlocked(research);
         }
 
         private void OpenUpgradesPanel()
@@ -599,6 +602,7 @@ namespace MobileIdleBuilder
         private void OpenSitesPanel()
         {
             CloseAllPanels();
+            _sites?.ClearNavHighlight();
             _sites?.Refresh();
             SetElementVisible(_sitesPanel, true);
         }

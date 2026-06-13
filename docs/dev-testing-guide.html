@@ -1229,6 +1229,139 @@
   </div>
 </details>
 
+<!-- ═══════════════════════════════════ PART 14 — QUANTUM DOMAINS (MULTI-GRIDS) -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 14 — Quantum Domains (Multi-Grids)</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p14">0 / 13</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">Requires the <code style="color:inherit;background:none;padding:0;">SiteService</code> component on the Services object and <code style="color:inherit;background:none;padding:0;">SitesSubController</code> on the HUD object (both wired in GameScene). If a <code>site</code> command returns "not ready", the component is missing.</div>
+
+    <p class="sub-heading">14.1 Listing &amp; Unlocking</p>
+    <div class="check-item" id="ci-p14-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Clear the tutorial nav-gate so the Domains panel/commands are usable.</p>
+        <div class="block cmd-block">skip tutorial</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site list</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>3 sites — <code class="inline-code">[0] site_origin … ACTIVE unlocked</code> · <code class="inline-code">[1] site_quark_sea 250,000e locked</code> · <code class="inline-code">[2] site_lepton_storm 10,000,000e locked</code></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">add currency 300000</div>
+        <div class="block cmd-block">site unlock site_quark_sea</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Unlocked 'site_quark_sea' for 250000e.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy dropped by 250,000 · <code class="inline-code">site list</code> shows <strong>[1] unlocked</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">UI path — same unlock through the panel. Open drawer → <strong>Domains</strong> → Quark Sea row → <strong>Unlock</strong> becomes <strong>Confirm?</strong>; tap again to commit.</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>Two-tap confirm spends entropy · row flips to <strong>Unlocked</strong> with a <strong>Travel</strong> button</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.2 Travel &amp; Independent Grids</p>
+    <div class="check-item" id="ci-p14-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 1</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Switched to site [1] 'site_quark_sea'.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Grid empties · field layout regenerates with <strong>denser quark fields and NO electron fields</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Place a Harvester (or any building) on Quark Sea, then travel back to Origin.</p>
+        <div class="block cmd-block">site switch 0</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Origin's original buildings/conveyors/fields are <strong>restored intact</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 1</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>The Quark Sea building placed earlier is <strong>still there</strong> — each site keeps its own grid</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-8">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-8" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Travel while a placement overlay is active — it must cancel first (no stuck overlay over the new grid).</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>Start placing a building, then tap <strong>Travel</strong> in the Domains panel → placement overlay is dismissed before the grid swaps</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.3 Second Domain</p>
+    <div class="check-item" id="ci-p14-9">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-9" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">add currency 11000000</div>
+        <div class="block cmd-block">site unlock site_lepton_storm</div>
+        <div class="block cmd-block">site switch 2</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Lepton Storm: <strong>electron-dense fields, NO quark fields</strong></div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.4 Offline Aggregation Across Sites</p>
+    <div class="check-item" id="ci-p14-10">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-10" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Build a producer→Maxwell's Demon chain on two unlocked sites, then save, wait 30s+, and reload.</p>
+        <div class="block cmd-block">save</div>
+        <div class="block cmd-block">reload</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Idle-return payout reflects <strong>every unlocked site</strong>, not just the active one</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.5 Prestige Preserves Unlocks, Clears Grids</p>
+    <div class="check-item" id="ci-p14-11">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-11" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">With ≥1 extra domain unlocked and built on, force a prestige.</p>
+        <div class="block cmd-block">set prestige available</div>
+        <div class="block cmd-block">force prestige</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>All grids cleared · back on Origin (site 0) · <code class="inline-code">site list</code> shows Quark Sea + Lepton Storm <strong>still unlocked</strong> (unlocks survive prestige) · no phantom offline earnings from the old sites next launch</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.6 Domains Introduction</p>
+    <div class="check-item" id="ci-p14-12">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-12" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">The intro normally fires once when <code class="inline-code">materials_science</code> research is unlocked. Replay it directly:</p>
+        <div class="block cmd-block">domains intro</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Replaying Quantum Domains intro.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Architect dialogue plays · the <strong>Domains</strong> nav button is highlighted · opening the panel clears the highlight</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.7 Error Handling</p>
+    <div class="check-item" id="ci-p14-13">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-13" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 9</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Error: no site at index 9. Try 'site list'.</div>
+        <div class="block cmd-block">site unlock not_a_site</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Error: unknown site 'not_a_site'. Try 'site list'.</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
 <!-- ════════════════════════════════════════════ REFERENCE TABLES -->
 <div class="ref-section">
   <h2>Quick Reference</h2>

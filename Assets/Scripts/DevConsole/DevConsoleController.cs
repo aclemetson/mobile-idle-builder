@@ -530,6 +530,15 @@ namespace MobileIdleBuilder.Dev
                         : $"Error: switch to [{n}] failed.";
                 });
 
+            _registry.Register("domains intro", "Replay the one-shot Quantum Domains intro dialogue",
+                _ =>
+                {
+                    var sites = FindAnyObjectByType<SitesSubController>();
+                    if (sites == null) return "Error: SitesSubController not in scene (wire it on the HUD GameObject).";
+                    sites.ReplayDomainsIntroForTesting();
+                    return "Replaying Quantum Domains intro.";
+                });
+
             _registry.Register("site unlock <id>", "Unlock a site by id (deducts entropy)",
                 args =>
                 {

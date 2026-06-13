@@ -310,5 +310,20 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(typeof(SiteDatabaseSO).GetField("allSites"),
                 "SiteDatabaseSO missing: allSites");
         }
+
+        [Test]
+        public void DialogueDatabaseSO_GetReturnsMappedDialogue()
+        {
+            var dlg = ScriptableObject.CreateInstance<DialogueSO>();
+            var db  = ScriptableObject.CreateInstance<DialogueDatabaseSO>();
+            db.entries = new[] { new DialogueDatabaseSO.Entry { id = "intro_quantum_domains", dialogue = dlg } };
+
+            Assert.AreSame(dlg, db.Get("intro_quantum_domains"), "Get returns the mapped dialogue");
+            Assert.IsNull(db.Get("missing_id"), "unknown id returns null");
+            Assert.IsNull(db.Get(null), "null id returns null");
+
+            Object.DestroyImmediate(db);
+            Object.DestroyImmediate(dlg);
+        }
     }
 }

@@ -162,5 +162,28 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.IsNotNull(save.siteSnapshots, "field initializer gives empty list");
             Assert.AreEqual(0, save.siteSnapshots.Count);
         }
+
+        // ── Per-site field density scaling (FieldGenerator.EffectiveFieldCount) ──
+
+        [Test]
+        public void EffectiveFieldCount_DoubleDensity_DoublesCount()
+        {
+            // Quark Sea: quark_field ×2 → 2 default quark fields become 4.
+            Assert.AreEqual(4, FieldGenerator.EffectiveFieldCount(2, 2.0f));
+        }
+
+        [Test]
+        public void EffectiveFieldCount_ZeroDensity_RemovesField()
+        {
+            // Quark Sea: electron_field ×0 → field absent.
+            Assert.AreEqual(0, FieldGenerator.EffectiveFieldCount(1, 0.0f));
+        }
+
+        [Test]
+        public void EffectiveFieldCount_UnitDensity_KeepsCount()
+        {
+            // Origin / no override → multiplier 1 leaves the default count.
+            Assert.AreEqual(3, FieldGenerator.EffectiveFieldCount(3, 1.0f));
+        }
     }
 }

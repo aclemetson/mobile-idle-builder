@@ -40,5 +40,27 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(SitesSubController.SiteRowAction.Locked,
                 SitesSubController.ClassifyRow(isActive: false, isUnlocked: false, canAfford: false));
         }
+
+        // ── One-shot domains intro gate ──────────────────────────────────────
+
+        [Test]
+        public void ShouldShowDomainsIntro_GateResearch_FirstTime_IsTrue()
+        {
+            Assert.IsTrue(SitesSubController.ShouldShowDomainsIntro(
+                SitesSubController.DomainsGateResearchId, alreadySeen: false));
+        }
+
+        [Test]
+        public void ShouldShowDomainsIntro_GateResearch_AlreadySeen_IsFalse()
+        {
+            Assert.IsFalse(SitesSubController.ShouldShowDomainsIntro(
+                SitesSubController.DomainsGateResearchId, alreadySeen: true));
+        }
+
+        [Test]
+        public void ShouldShowDomainsIntro_OtherResearch_IsFalse()
+        {
+            Assert.IsFalse(SitesSubController.ShouldShowDomainsIntro("automation_i", alreadySeen: false));
+        }
     }
 }
