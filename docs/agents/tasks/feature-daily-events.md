@@ -1,6 +1,6 @@
 # Feature: Daily Login Rewards & Rotating Challenges
 
-**Status:** in-progress (branch `feature/daily-events`)
+**Status:** done (PRs #54-56)
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md` (skim `testing.md` before commit)
 **Scope estimate:** ~6 files created, ~6 modified, 2 test files. Smallest of the four feature specs — do this one first.
 **Branch:** `feature/daily-events` → PR into the current release branch (check with the user; `release/0.3` as of writing).

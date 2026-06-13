@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.1",
+    "version": "0.3.2",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -3568,6 +3568,34 @@
       "field_color": "#4ECDC4",
       "field_icon_path": "TODO",
       "codex_entry": "A region saturated with free leptons. Harvesters placed here collect Electrons continuously. Electrons are essential for completing any atom."
+    }
+  ],
+
+  "_sites_note": "Quantum Domains — additional build sites. field_overrides reference 'fields' ids; density_multiplier scales that field's spawn density on this site (0.0 = absent). site_origin uses the default field set.",
+  "sites": [
+    {
+      "id": "site_origin",
+      "display_name": "Origin Domain",
+      "unlock_cost": 0,
+      "field_overrides": []
+    },
+    {
+      "id": "site_quark_sea",
+      "display_name": "Quark Sea",
+      "unlock_cost": 250000,
+      "field_overrides": [
+        { "field": "quark_field", "density_multiplier": 2.0 },
+        { "field": "electron_field", "density_multiplier": 0.0 }
+      ]
+    },
+    {
+      "id": "site_lepton_storm",
+      "display_name": "Lepton Storm",
+      "unlock_cost": 10000000,
+      "field_overrides": [
+        { "field": "electron_field", "density_multiplier": 2.0 },
+        { "field": "quark_field", "density_multiplier": 0.0 }
+      ]
     }
   ],
 

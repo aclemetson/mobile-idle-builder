@@ -19,6 +19,7 @@ namespace MobileIdleBuilder
         public float prestigeOutputMultiplier = 1f;
         public float prestigeCostReduction    = 0f;
         public List<string> permanentUpgrades = new();
+        public List<string> unlockedSites      = new();   // site ids unlocked; survives prestige. site_origin implicit.
         public IdleCollectionSnapshot idleSnapshot = new();
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
         public List<string> unlockedRecipes   = new();
@@ -71,9 +72,30 @@ namespace MobileIdleBuilder
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();
-        public GridSaveData grid                    = new();
+        public GridSaveData grid                    = new();   // legacy single-grid mirror of grids[0]; kept for backward-compat reads
+        public List<GridSaveData> grids             = new();   // index = site index; grids[0] mirrors 'grid'. Reset on prestige.
+        public int          activeSiteIndex         = 0;       // index into grids of the live site
         public List<string> researchProgressKeys    = new();
         public List<float>  researchProgressValues  = new();
+
+        /// <summary>
+        /// The grid for the currently active site. Falls back to the legacy single 'grid'
+        /// when 'grids' has not yet been populated (pre-multi-grid saves). All grid access
+        /// should go through this property so migration stays centralized.
+        /// (JsonUtility serializes fields only, so this property is not persisted.)
+        /// </summary>
+        public GridSaveData ActiveGrid
+        {
+            get
+            {
+                if (grids != null && grids.Count > 0)
+                {
+                    int idx = (activeSiteIndex >= 0 && activeSiteIndex < grids.Count) ? activeSiteIndex : 0;
+                    return grids[idx];
+                }
+                return grid;
+            }
+        }
     }
 
     [Serializable]
