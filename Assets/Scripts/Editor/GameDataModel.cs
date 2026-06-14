@@ -323,6 +323,8 @@ namespace MobileIdleBuilder.Editor
         public float  bonus_value        = 1f;
         public int    hire_cost_prestige = 0;
         public string portrait_path      = "TODO";
+        public float[] star_bonus_values = null;  // effective bonus per star (index 0 == star 1 == bonus_value)
+        public int[]   star_costs        = null;  // ✦ cost to upgrade to each star (index 0 == 0)
     }
 
     [Serializable]

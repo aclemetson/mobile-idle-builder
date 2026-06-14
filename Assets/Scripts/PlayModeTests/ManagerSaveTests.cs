@@ -6,7 +6,7 @@ namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
     /// Round-trip and legacy-load coverage for the manager SaveData fields
-    /// (hiredManagers + managerAssignments). Mirrors DailyEventSaveTests setup/teardown:
+    /// (hiredManagers + managerAssignments + managerStars). Mirrors DailyEventSaveTests setup/teardown:
     /// backs up and restores the developer's real save file so tests never corrupt it.
     /// </summary>
     public class ManagerSaveTests
@@ -51,6 +51,7 @@ namespace MobileIdleBuilder.PlayModeTests
                 siteIndex = 1,
                 buildingPosKey = 3 * 10000 + 7,
             });
+            data.managerStars.Add(new ManagerStarEntry { managerId = "mgr_tinker", stars = 3 });
 
             svc.Save(data);
             var loaded = svc.Load();
@@ -61,6 +62,31 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual("mgr_tinker", loaded.managerAssignments[0].managerId);
             Assert.AreEqual(1, loaded.managerAssignments[0].siteIndex);
             Assert.AreEqual(3 * 10000 + 7, loaded.managerAssignments[0].buildingPosKey);
+            Assert.AreEqual(1, loaded.managerStars.Count);
+            Assert.AreEqual("mgr_tinker", loaded.managerStars[0].managerId);
+            Assert.AreEqual(3, loaded.managerStars[0].stars);
+        }
+
+        [Test]
+        public void Prestige_KeepsManagerStars_ClearsAssignments()
+        {
+            // Stars survive prestige like the hired roster; only building assignments are cleared
+            // (ManagerService.ResetAssignments clears managerAssignments, never managerStars).
+            var data = new SaveData();
+            data.hiredManagers.Add("mgr_tinker");
+            data.managerStars.Add(new ManagerStarEntry { managerId = "mgr_tinker", stars = 4 });
+            data.managerAssignments.Add(new ManagerAssignmentEntry
+            {
+                managerId = "mgr_tinker", siteIndex = 0, buildingPosKey = 1,
+            });
+
+            // Simulate the prestige reset path: assignments cleared, roster + stars untouched.
+            data.managerAssignments.Clear();
+
+            Assert.AreEqual(1, data.hiredManagers.Count);
+            Assert.AreEqual(1, data.managerStars.Count);
+            Assert.AreEqual(4, data.managerStars[0].stars);
+            Assert.IsEmpty(data.managerAssignments);
         }
 
         [Test]
@@ -78,6 +104,8 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.IsEmpty(loaded.hiredManagers);
             Assert.IsNotNull(loaded.managerAssignments);
             Assert.IsEmpty(loaded.managerAssignments);
+            Assert.IsNotNull(loaded.managerStars);
+            Assert.IsEmpty(loaded.managerStars);
         }
     }
 }

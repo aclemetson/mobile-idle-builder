@@ -22,10 +22,11 @@ Each task file opens with its own Required-reading line and a Status line — up
 
 | Task | Status | Size |
 |---|---|---|
-| `tasks/feature-daily-events.md` — login rewards + daily challenges | pending | S (do first) |
+| `tasks/feature-daily-events.md` — login rewards + daily challenges | done (PRs #54-56) | S |
 | `tasks/feature-managers.md` — hireable building managers | done (PR #63) | M |
-| `tasks/feature-manager-upgrades.md` — manager star tiers (✦) | pending (next) | M |
+| `tasks/feature-manager-upgrades.md` — manager star tiers (✦) | done (PR #65) | M |
 | `tasks/feature-megastructure.md` — Dyson Sphere endgame project | pending | M |
+| `tasks/feature-power-draw.md` — per-building eV draw (makes PowerDiscount live) | pending | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*

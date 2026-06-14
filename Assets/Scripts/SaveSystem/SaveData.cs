@@ -50,6 +50,7 @@ namespace MobileIdleBuilder
         // there (the hired list persists).
         public List<string> hiredManagers                           = new(); // ManagerSO.id list
         public List<ManagerAssignmentEntry> managerAssignments      = new(); // manager -> building binding
+        public List<ManagerStarEntry> managerStars                  = new(); // per-manager star tier (missing -> 1)
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();
@@ -196,6 +197,18 @@ namespace MobileIdleBuilder
         public string managerId;      // ManagerSO.id of the assigned manager
         public int    siteIndex;      // index into currentRun.grids of the building's site
         public int    buildingPosKey; // anchor position encoded as x * 10000 + y
+    }
+
+    /// <summary>
+    /// Per-manager star tier. Stars survive prestige (like the hired roster) and scale the manager's
+    /// effective bonus. A hired manager with no entry here is treated as 1 star (the shipped base
+    /// value), so legacy saves load without migration.
+    /// </summary>
+    [Serializable]
+    public class ManagerStarEntry
+    {
+        public string managerId; // ManagerSO.id
+        public int    stars;     // 1-based star tier (1 = base)
     }
 
     /// <summary>
