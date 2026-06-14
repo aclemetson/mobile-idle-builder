@@ -30,13 +30,13 @@ namespace MobileIdleBuilder
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
 
-            foreach (var (collector, building, recipeOutputSlots, outputSlots, invConfig) in
+            foreach (var (collector, building, recipeOutputSlots, outputSlots, invConfig, entity) in
                 SystemAPI.Query<
                     RefRW<CollectorData>,
                     RefRO<BuildingData>,
                     DynamicBuffer<RecipeOutputSlot>,
                     DynamicBuffer<BuildingOutputSlot>,
-                    RefRO<BuildingInventoryConfig>>())
+                    RefRO<BuildingInventoryConfig>>().WithEntityAccess())
             {
                 if (!building.ValueRO.IsActive) continue;
                 if (recipeOutputSlots.Length == 0) continue;
@@ -52,8 +52,14 @@ namespace MobileIdleBuilder
                 for (int i = 0; i < outputSlots.Length; i++)
                     total += outputSlots[i].Quantity;
 
+                // An OutputQuantity manager (if assigned) multiplies the per-interval deposit;
+                // AppliedOutputMult is 1 for every other case. Mirrors ProductionSystem.
+                float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
+                    ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
+                    : 1f;
+
                 if (total < invConfig.ValueRO.OutputCapacity)
-                    SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, 1);
+                    SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, (int)outMult);
 
                 // Subtract interval rather than resetting to preserve sub-interval remainder
                 collector.ValueRW.Timer -= interval;

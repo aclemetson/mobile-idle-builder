@@ -315,6 +315,10 @@ namespace MobileIdleBuilder
 
             buildingVisualizer?.Refresh();
 
+            // Re-bake manager bonuses onto the freshly re-placed building entities (the entities are
+            // brand new, so any CraftSpeed bonus was lost; OutputQuantity/PowerDiscount components too).
+            ManagerService.Instance?.ReapplyAllAssignments();
+
             // --- Restore conveyors ---
             if (hasConveyors && conveyorPlacer != null)
             {
@@ -386,6 +390,14 @@ namespace MobileIdleBuilder
             float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
             float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult;
 
+            int activeSite = save.currentRun?.activeSiteIndex ?? 0;
+            float getManagerOutputMultiplier(BuildingSaveData bsd)
+            {
+                if (bsd?.position == null || bsd.position.Length < 2) return 1f;
+                int posKey = ManagerService.EncodePos(bsd.position[0], bsd.position[1]);
+                return ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f;
+            }
+
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
                 grid,
                 isCollector,
@@ -395,7 +407,8 @@ namespace MobileIdleBuilder
                 getOutputRate,
                 getItemSellValue,
                 speedMult,
-                DateTime.UtcNow.ToString("O"));
+                DateTime.UtcNow.ToString("O"),
+                getManagerOutputMultiplier);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

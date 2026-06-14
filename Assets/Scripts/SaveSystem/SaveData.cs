@@ -44,6 +44,12 @@ namespace MobileIdleBuilder
         public List<string> dailyChallengeIds                       = new(); // today's 3 challenge ids
         public List<AchievementProgressEntry> dailyChallengeProgress = new(); // per-challenge accumulated progress
         public List<string> dailyChallengesClaimed                  = new(); // challenge ids already claimed today
+        // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
+        // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
+        // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared
+        // there (the hired list persists).
+        public List<string> hiredManagers                           = new(); // ManagerSO.id list
+        public List<ManagerAssignmentEntry> managerAssignments      = new(); // manager -> building binding
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();
@@ -170,6 +176,26 @@ namespace MobileIdleBuilder
     {
         public string id;
         public int count;
+    }
+
+    /// <summary>
+    /// Binds one hired manager to one placed building. Survives prestige only as far as the manager
+    /// (the building is destroyed, so these entries are cleared on prestige).
+    /// <para>
+    /// Buildings have no stable id across save/load (BuildingSaveData is positional), so the building
+    /// is identified by (<see cref="siteIndex"/>, grid anchor position). The anchor is encoded as
+    /// <c>x * 10000 + y</c>. Anchor positions are stable across save/restore because LoadGrid re-places
+    /// buildings at their saved positions. The site index is required because, with multi-grids, two
+    /// sites can hold a building at the same anchor; only the active site has live ECS entities, so a
+    /// manager bonus is (re)applied to a building only when its siteIndex matches the active site.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public class ManagerAssignmentEntry
+    {
+        public string managerId;      // ManagerSO.id of the assigned manager
+        public int    siteIndex;      // index into currentRun.grids of the building's site
+        public int    buildingPosKey; // anchor position encoded as x * 10000 + y
     }
 
     /// <summary>

@@ -31,7 +31,7 @@ namespace MobileIdleBuilder
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
 
-            foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig) in
+            foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
                 SystemAPI.Query<
                     RefRO<BuildingData>,
                     RefRW<RecipeProcessData>,
@@ -39,7 +39,7 @@ namespace MobileIdleBuilder
                     DynamicBuffer<RecipeOutputSlot>,
                     DynamicBuffer<BuildingInputSlot>,
                     DynamicBuffer<BuildingOutputSlot>,
-                    RefRO<BuildingInventoryConfig>>())
+                    RefRO<BuildingInventoryConfig>>().WithEntityAccess())
             {
                 if (!building.ValueRO.IsActive)  continue;
                 if (process.ValueRO.RecipeID < 0) continue;
@@ -104,9 +104,16 @@ namespace MobileIdleBuilder
                             SlotBufferUtils.RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
                     }
 
-                    // Deposit outputs to local output buffer
+                    // Deposit outputs to local output buffer. An OutputQuantity manager (if assigned)
+                    // multiplies the deposited amount; AppliedOutputMult is 1 for every other case.
+                    float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
+                        ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
+                        : 1f;
                     for (int i = 0; i < outputs.Length; i++)
-                        SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, outputs[i].Quantity);
+                    {
+                        int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
+                        SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
+                    }
                 }
 
                 process.ValueRW.Progress   = 0f;

@@ -383,6 +383,31 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void Analyzer_ManagerOutputMultiplier_ScalesSourceCollectorRate()
+        {
+            var grid = MakeGridChain(new Vector2Int(5, 5),
+                                     new[] { new Vector2Int(6,5), new Vector2Int(7,5), new Vector2Int(8,5) },
+                                     sinkCell: null);
+
+            // base rate is 1f (getOutputRate => 1f); a 3x OutputQuantity manager on the source.
+            var snap = IdleGraphAnalyzer.BuildSnapshot(
+                grid,
+                id => id == 1,
+                _ => false,
+                _ => Vector2Int.one,
+                (_, __) => 10,
+                _ => 1f,
+                _ => 5f,
+                1f,
+                DateTime.UtcNow.ToString("O"),
+                _ => 3f);
+
+            Assert.AreEqual(1, snap.chains.Count);
+            Assert.AreEqual(3f, snap.chains[0].itemsPerSecond, 1e-4f,
+                "OutputQuantity manager must scale the source collector's offline rate");
+        }
+
+        [Test]
         public void Analyzer_SetsSnapshotTimestamp()
         {
             string ts = "2026-06-06T12:00:00.000Z";

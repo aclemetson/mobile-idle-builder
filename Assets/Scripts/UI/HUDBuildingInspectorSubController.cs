@@ -177,6 +177,66 @@ namespace MobileIdleBuilder
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
             }
+
+            if (buildingCellX >= 0 && buildingCellY >= 0)
+                AddManagerSection(buildingCellX, buildingCellY);
+        }
+
+        // ── Manager assignment UI ─────────────────────────────────────────────
+
+        private void AddManagerSection(int cellX, int cellY)
+        {
+            var svc = ManagerService.Instance;
+            if (svc == null || svc.ManagerCount == 0) return;
+
+            int siteIndex = SaveManager.Instance?.Current?.currentRun?.activeSiteIndex ?? 0;
+            int posKey    = ManagerService.EncodePos(cellX, cellY);
+
+            AddInspectorRow("—— Manager ——");
+
+            var current = svc.GetManagerAtBuilding(siteIndex, posKey);
+            if (current != null)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("upgrade-row");
+
+                var name = new Label(current.displayName);
+                name.AddToClassList("upgrade-row-name");
+                row.Add(name);
+
+                var unassign = new Button { text = "Unassign" };
+                unassign.AddToClassList("craft-btn");
+                var capturedId = current.id;
+                unassign.clicked += () =>
+                {
+                    svc.Unassign(capturedId);
+                    RefreshInspectorContent();
+                };
+                row.Add(unassign);
+                _inspectorContent?.Add(row);
+            }
+
+            // Offer each hired manager not already on THIS building.
+            bool anyOffer = false;
+            foreach (var mgr in svc.AllManagers)
+            {
+                if (mgr == null || !svc.IsHired(mgr.id)) continue;
+                if (current != null && mgr.id == current.id) continue;
+                anyOffer = true;
+
+                var btn = new Button { text = $"Assign {mgr.displayName}" };
+                btn.AddToClassList("craft-btn");
+                var capturedId = mgr.id;
+                btn.clicked += () =>
+                {
+                    svc.Assign(capturedId, siteIndex, posKey);
+                    RefreshInspectorContent();
+                };
+                _inspectorContent?.Add(btn);
+            }
+
+            if (current == null && !anyOffer)
+                AddInspectorRow("  (hire a manager in the Managers panel)");
         }
 
         // ── Upgrade UI ────────────────────────────────────────────────────────
@@ -302,6 +362,10 @@ namespace MobileIdleBuilder
             bd.UpgradeLevel    = nextLevel;
             bd.ProductionSpeed = BuildingSO.ProductionSpeedForLevel(so, nextLevel);
             _em.SetComponentData(entity, bd);
+
+            // The level-based speed write above wiped any assigned manager's CraftSpeed bonus;
+            // re-bake it relative to the new base so the bonus survives the upgrade.
+            ManagerService.Instance?.ReapplyAfterSpeedReset(entity);
 
             SaveManager.Instance?.SaveLocal();
             _hud?.ShowNotification("⚡", $"Speed upgraded to Lv {nextLevel}!");

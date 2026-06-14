@@ -1,6 +1,6 @@
 # Feature: Managers (Idle Space Miner-style crew)
 
-**Status:** pending
+**Status:** done (PR #63, feature/managers -> release/0.3). Caveats: PowerDiscount stored but inert (no per-building eV draw in PowerGridSystem yet); OutputQuantity wired into CollectorSystem too so idle==live; CraftSpeed affects crafters only (collectors ignore ProductionSpeed). Manual editor step: add ManagersSubController to the HUD GameObject in GameScene.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/ecs-patterns.md` (especially the multiplier gap map), `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md`, `docs/agents/data-pipeline.md`
 **Scope estimate:** ~7 files created, ~8 modified, 3 test files.
 **Branch:** `feature/managers` → PR into the current release branch (confirm with user).
@@ -122,3 +122,5 @@ public List<ManagerAssignmentEntry> managerAssignments = new();     // new [Seri
 ## Out of scope
 
 Manager leveling/XP, rarity/gacha, portraits beyond `TODO` path, manager-specific dialogue, crystal-priced managers, multiple managers per building.
+
+**Follow-up (planned next):** manager **star-tier upgrades** spending prestige currency — see `tasks/feature-manager-upgrades.md`.
