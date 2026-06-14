@@ -80,9 +80,6 @@ namespace MobileIdleBuilder
 
         void OnApplicationPause(bool paused)
         {
-#if UNITY_EDITOR
-            if (GameBootstrap.TestModeEnabled) return;
-#endif
             if (paused)
             {
                 // Write departure time to PlayerPrefs immediately — this is the most
@@ -100,9 +97,6 @@ namespace MobileIdleBuilder
 
         void OnApplicationQuit()
         {
-#if UNITY_EDITOR
-            if (GameBootstrap.TestModeEnabled) return;
-#endif
             SaveLocal();
         }
 
@@ -244,9 +238,6 @@ namespace MobileIdleBuilder
             while (true)
             {
                 yield return new WaitForSeconds(autoSaveIntervalSeconds);
-#if UNITY_EDITOR
-                if (GameBootstrap.TestModeEnabled) continue;
-#endif
                 yield return SaveToCloud();
             }
         }

@@ -761,7 +761,7 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     GridSaveService.Instance?.ClearGrid();
-                    new LocalSaveService().Delete();
+                    SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: false);
                     SaveManager.Instance?.ResetToFreshSave();
                     PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                     AchievementService.Instance?.ResetInMemory();
@@ -776,20 +776,19 @@ namespace MobileIdleBuilder.Dev
                     if (sm == null)
                     {
                         // SaveManager not ready yet (running before GameScene initializes).
-                        // Set the wipe-pending flag so ReconcileWithCloud() clears cloud on
-                        // the next boot, and delete the local file now.
-                        PlayerPrefs.SetInt(SaveManager.k_WipePending, 1);
-                        PlayerPrefs.Save();
-                        new LocalSaveService().Delete();
+                        // Wipe local files/prefs now and defer the cloud delete to next boot.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: true);
                         SceneLoader.GoTo("GameScene");
                         return "SaveManager not ready — local cleared, cloud wipe deferred to next GameScene load.";
                     }
                     StartCoroutine(sm.DeleteCloudSave(success =>
                     {
                         if (!success)
-                            AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
+                            AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
                         GridSaveService.Instance?.ClearGrid();
-                        new LocalSaveService().Delete();
+                        // On an offline/failed cloud delete, schedule the wipe so the cloud key is
+                        // removed on the next boot instead of silently leaving stale cloud data.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: !success);
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         AchievementService.Instance?.ResetInMemory();
