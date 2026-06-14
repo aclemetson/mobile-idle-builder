@@ -122,3 +122,5 @@ public List<ManagerAssignmentEntry> managerAssignments = new();     // new [Seri
 ## Out of scope
 
 Manager leveling/XP, rarity/gacha, portraits beyond `TODO` path, manager-specific dialogue, crystal-priced managers, multiple managers per building.
+
+**Follow-up (planned next):** manager **star-tier upgrades** spending prestige currency — see `tasks/feature-manager-upgrades.md`.
