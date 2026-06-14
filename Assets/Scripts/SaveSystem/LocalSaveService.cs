@@ -48,10 +48,15 @@ namespace MobileIdleBuilder
             Save(data);
         }
 
+        /// <summary>Deletes the save file and its .bak backup so a delete is a full wipe.</summary>
         public void Delete()
         {
             if (Exists())
                 File.Delete(_filePath);
+
+            string backup = _filePath + ".bak";
+            if (File.Exists(backup))
+                File.Delete(backup);
         }
     }
 }

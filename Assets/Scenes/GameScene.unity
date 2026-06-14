@@ -851,8 +851,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.GameBootstrap
   gameConfig: {fileID: 11400000, guid: b2d7bd090f7eb5b498c6c159c7d7a5b0, type: 2}
-  _testModeEnabled: 1
-  _testModeFieldSeed: 42
 --- !u!114 &827826016
 MonoBehaviour:
   m_ObjectHideFlags: 0

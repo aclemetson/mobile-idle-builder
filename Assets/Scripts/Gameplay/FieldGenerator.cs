@@ -96,10 +96,9 @@ namespace MobileIdleBuilder
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
-#if UNITY_EDITOR
-            if (GameBootstrap.TestModeEnabled)
-                UnityEngine.Random.InitState(GameBootstrap.TestModeFieldSeed);
-#endif
+            // Deterministic origin layout: every fresh start produces the same field placement,
+            // matching the always-deterministic per-site path in GenerateForSite (origin = base).
+            UnityEngine.Random.InitState(SiteFieldSeedBase);
             Shuffle(candidates);
 
             PlaceEntries(fields, candidates);
