@@ -117,6 +117,14 @@ namespace MobileIdleBuilder
                         upBtn.clicked += () => OnUpgradePressed(capturedId);
                         footer.Add(upBtn);
                     }
+                    else
+                    {
+                        // Fully starred: show a disabled "Upgrade Max" in the upgrade button's slot.
+                        var maxBtn = new Button { text = "Upgrade Max" };
+                        maxBtn.AddToClassList("craft-btn");
+                        maxBtn.SetEnabled(false);
+                        footer.Add(maxBtn);
+                    }
                 }
 
                 row.Add(footer);
