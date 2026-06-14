@@ -200,7 +200,9 @@ namespace MobileIdleBuilder
                 var row = new VisualElement();
                 row.AddToClassList("upgrade-row");
 
-                var name = new Label(current.displayName);
+                int   stars    = svc.GetStars(current.id);
+                float effValue = svc.EffectiveBonusValue(current.id);
+                var name = new Label($"{current.displayName} {stars}★  ({ManagerBonusText(current.bonusType, effValue)})");
                 name.AddToClassList("upgrade-row-name");
                 row.Add(name);
 
@@ -237,6 +239,18 @@ namespace MobileIdleBuilder
 
             if (current == null && !anyOffer)
                 AddInspectorRow("  (hire a manager in the Managers panel)");
+        }
+
+        /// <summary>Human-readable bonus text for a star-scaled effective value.</summary>
+        private static string ManagerBonusText(ManagerBonusType type, float value)
+        {
+            switch (type)
+            {
+                case ManagerBonusType.CraftSpeed:     return $"{value:0.##}x speed";
+                case ManagerBonusType.OutputQuantity: return $"{value:0.##}x output";
+                case ManagerBonusType.PowerDiscount:  return $"-{(1f - value) * 100f:0}% power";
+                default:                              return "";
+            }
         }
 
         // ── Upgrade UI ────────────────────────────────────────────────────────

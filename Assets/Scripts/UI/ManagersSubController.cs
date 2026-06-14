@@ -48,6 +48,8 @@ namespace MobileIdleBuilder
                 bool hired      = svc.IsHired(mgr.id);
                 bool assigned   = hired && svc.IsAssigned(mgr.id);
                 bool canAfford  = !hired && held >= mgr.hireCostPrestige;
+                int  stars      = hired ? svc.GetStars(mgr.id) : 1;
+                float effValue  = mgr.EffectiveValueAt(stars);
 
                 var row = new VisualElement();
                 row.AddToClassList("upgrade-row");
@@ -59,7 +61,9 @@ namespace MobileIdleBuilder
                 var nameLabel = new Label(mgr.displayName);
                 nameLabel.AddToClassList("upgrade-row-name");
 
-                string status = !hired ? "" : (assigned ? "Assigned" : "Hired");
+                string status = !hired
+                    ? ""
+                    : $"{StarString(stars, mgr.MaxStar)}  {(assigned ? "Assigned" : "Hired")}";
                 var statusLabel = new Label(status);
                 statusLabel.AddToClassList("upgrade-row-level");
 
@@ -67,7 +71,7 @@ namespace MobileIdleBuilder
                 header.Add(statusLabel);
                 row.Add(header);
 
-                var desc = new Label($"{mgr.description}  ({BonusSummary(mgr)})");
+                var desc = new Label($"{mgr.description}  ({BonusSummary(mgr.bonusType, effValue)})");
                 desc.AddToClassList("upgrade-row-desc");
                 row.Add(desc);
 
@@ -95,6 +99,24 @@ namespace MobileIdleBuilder
                         : "Open a building to assign.");
                     hint.AddToClassList("upgrade-row-prereq");
                     footer.Add(hint);
+
+                    if (svc.CanUpgradeStar(mgr.id))
+                    {
+                        int upCost = svc.NextStarCost(mgr.id);
+                        bool canUp = held >= upCost;
+
+                        var costLabel = new Label($"✦ {upCost:N0}");
+                        costLabel.AddToClassList("upgrade-row-cost");
+                        if (!canUp) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+                        footer.Add(costLabel);
+
+                        var upBtn = new Button { text = "Upgrade ★" };
+                        upBtn.AddToClassList("craft-btn");
+                        upBtn.SetEnabled(canUp);
+                        var capturedId = mgr.id;
+                        upBtn.clicked += () => OnUpgradePressed(capturedId);
+                        footer.Add(upBtn);
+                    }
                 }
 
                 row.Add(footer);
@@ -102,13 +124,20 @@ namespace MobileIdleBuilder
             }
         }
 
-        private static string BonusSummary(ManagerSO mgr)
+        /// <summary>Compact star meter, e.g. "★★☆☆☆".</summary>
+        private static string StarString(int stars, int maxStar)
         {
-            switch (mgr.bonusType)
+            stars   = Mathf.Clamp(stars, 1, Mathf.Max(1, maxStar));
+            return new string('★', stars) + new string('☆', Mathf.Max(0, maxStar - stars));
+        }
+
+        private static string BonusSummary(ManagerBonusType type, float value)
+        {
+            switch (type)
             {
-                case ManagerBonusType.CraftSpeed:     return $"{mgr.bonusValue:0.##}x speed";
-                case ManagerBonusType.OutputQuantity: return $"{mgr.bonusValue:0.##}x output";
-                case ManagerBonusType.PowerDiscount:  return $"-{(1f - mgr.bonusValue) * 100f:0}% power";
+                case ManagerBonusType.CraftSpeed:     return $"{value:0.##}x speed";
+                case ManagerBonusType.OutputQuantity: return $"{value:0.##}x output";
+                case ManagerBonusType.PowerDiscount:  return $"-{(1f - value) * 100f:0}% power";
                 default:                              return "";
             }
         }
@@ -121,6 +150,18 @@ namespace MobileIdleBuilder
             {
                 var mgr = svc.Find(managerId);
                 _hud?.ShowNotification("✦", $"Hired {mgr?.displayName ?? managerId}!");
+            }
+            Refresh();
+        }
+
+        private void OnUpgradePressed(string managerId)
+        {
+            var svc = ManagerService.Instance;
+            if (svc == null) return;
+            if (svc.UpgradeStar(managerId))
+            {
+                var mgr = svc.Find(managerId);
+                _hud?.ShowNotification("★", $"{mgr?.displayName ?? managerId} is now {svc.GetStars(managerId)}★!");
             }
             Refresh();
         }

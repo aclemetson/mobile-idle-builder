@@ -17,8 +17,13 @@ namespace MobileIdleBuilder
         /// assignment component to store. CraftSpeed multiplies ProductionSpeed (the pre-bonus
         /// value is captured so it can be restored exactly); OutputQuantity/PowerDiscount are stored
         /// as multipliers and read live by the consuming systems.
+        /// <para><paramref name="effectiveValue"/> is the star-scaled bonus value (see
+        /// <see cref="ManagerService.EffectiveBonusValue"/>); the bonus TYPE comes from
+        /// <paramref name="mgr"/>. Callers must never read <c>mgr.bonusValue</c> directly for an
+        /// effect — route through the effective value so bake, idle, and UI agree.</para>
         /// </summary>
-        public static ManagerAssignmentData Bake(ref BuildingData bd, ManagerSO mgr, int managerIndex)
+        public static ManagerAssignmentData Bake(ref BuildingData bd, ManagerSO mgr, int managerIndex,
+            float effectiveValue)
         {
             var data = new ManagerAssignmentData
             {
@@ -30,9 +35,9 @@ namespace MobileIdleBuilder
 
             switch (mgr.bonusType)
             {
-                case ManagerBonusType.CraftSpeed:     bd.ProductionSpeed *= mgr.bonusValue; break;
-                case ManagerBonusType.OutputQuantity: data.AppliedOutputMult = mgr.bonusValue; break;
-                case ManagerBonusType.PowerDiscount:  data.AppliedPowerMult  = mgr.bonusValue; break;
+                case ManagerBonusType.CraftSpeed:     bd.ProductionSpeed *= effectiveValue; break;
+                case ManagerBonusType.OutputQuantity: data.AppliedOutputMult = effectiveValue; break;
+                case ManagerBonusType.PowerDiscount:  data.AppliedPowerMult  = effectiveValue; break;
             }
             return data;
         }
@@ -66,6 +71,7 @@ namespace MobileIdleBuilder
         private readonly HashSet<string> _hired = new();
         private readonly Dictionary<string, ManagerAssignmentEntry> _assignByManager = new();
         private readonly Dictionary<long, string> _managerByBuilding = new(); // BKey(site,pos) -> managerId
+        private readonly Dictionary<string, int> _stars = new();              // managerId -> star tier (missing = 1)
 
         // ── ECS ───────────────────────────────────────────────────────────────
         private EntityManager _em;
@@ -164,6 +170,69 @@ namespace MobileIdleBuilder
             return true;
         }
 
+        // ── Star tiers ──────────────────────────────────────────────────────────
+
+        /// <summary>The manager's current star tier (1-based). Defaults to 1 for any manager with no
+        /// stored entry, so legacy saves and freshly-hired managers start at 1 star.</summary>
+        public int GetStars(string managerId)
+        {
+            if (!_loaded) LoadFromSave();
+            return _stars.TryGetValue(managerId, out var s) && s > 1 ? s : 1;
+        }
+
+        /// <summary>The star-scaled effective bonus value for a manager — the single accessor that
+        /// bake, idle, and UI all route through so they never disagree.</summary>
+        public float EffectiveBonusValue(string managerId)
+        {
+            var mgr = Find(managerId);
+            return mgr == null ? 1f : mgr.EffectiveValueAt(GetStars(managerId));
+        }
+
+        /// <summary>True when the manager is hired and not already at its max star.</summary>
+        public bool CanUpgradeStar(string managerId)
+        {
+            if (!IsHired(managerId)) return false;
+            var mgr = Find(managerId);
+            return mgr != null && GetStars(managerId) < mgr.MaxStar;
+        }
+
+        /// <summary>✦ cost to reach the next star, or 0 if not upgradeable.</summary>
+        public int NextStarCost(string managerId)
+        {
+            if (!CanUpgradeStar(managerId)) return 0;
+            return Find(managerId).StarCost(GetStars(managerId) + 1);
+        }
+
+        /// <summary>
+        /// Upgrades a hired manager one star, deducting the ✦ cost. If the manager is assigned to a
+        /// live building on the active site, its bonus is re-baked exactly (remove-then-apply, so the
+        /// CraftSpeed multiplier is recomputed from the restored pre-bonus speed — no float drift).
+        /// Returns false when not hired, already maxed, or unaffordable.
+        /// </summary>
+        public bool UpgradeStar(string managerId)
+        {
+            if (!CanUpgradeStar(managerId)) return false;
+            int next = GetStars(managerId) + 1;
+            int cost = Find(managerId).StarCost(next);
+            if (!TryDeductPrestige(cost)) return false;
+
+            _stars[managerId] = next;
+
+            // Re-bake on the live building so the new star takes effect immediately.
+            var entry = GetAssignment(managerId);
+            if (entry != null && entry.siteIndex == ActiveSiteIndex &&
+                TryFindBuilding(entry.buildingPosKey, out var e))
+            {
+                RemoveBonusFrom(e);
+                ApplyBonusTo(e, IndexOf(managerId));
+            }
+
+            FlushToSave();
+            SaveManager.Instance?.SaveLocal();
+            OnChanged?.Invoke();
+            return true;
+        }
+
         // ── Assignment ────────────────────────────────────────────────────────
 
         public bool IsAssigned(string managerId) => _assignByManager.ContainsKey(managerId);
@@ -185,7 +254,7 @@ namespace MobileIdleBuilder
             if (!_loaded) LoadFromSave();
             var mgr = GetManagerAtBuilding(siteIndex, posKey);
             return (mgr != null && mgr.bonusType == ManagerBonusType.OutputQuantity)
-                ? mgr.bonusValue : 1f;
+                ? EffectiveBonusValue(mgr.id) : 1f;
         }
 
         /// <summary>
@@ -259,7 +328,7 @@ namespace MobileIdleBuilder
             if (mgr == null) return;
 
             var bd   = _em.GetComponentData<BuildingData>(building);
-            var data = ManagerBonus.Bake(ref bd, mgr, managerIndex);
+            var data = ManagerBonus.Bake(ref bd, mgr, managerIndex, EffectiveBonusValue(mgr.id));
             _em.SetComponentData(building, bd);
 
             if (_em.HasComponent<ManagerAssignmentData>(building))
@@ -338,6 +407,7 @@ namespace MobileIdleBuilder
             _hired.Clear();
             _assignByManager.Clear();
             _managerByBuilding.Clear();
+            _stars.Clear();
             _loaded = true;
 
             var save = SaveManager.Instance?.Current;
@@ -346,6 +416,13 @@ namespace MobileIdleBuilder
             if (save.hiredManagers != null)
                 foreach (var id in save.hiredManagers)
                     if (!string.IsNullOrEmpty(id)) _hired.Add(id);
+
+            if (save.managerStars != null)
+                foreach (var entry in save.managerStars)
+                {
+                    if (entry == null || string.IsNullOrEmpty(entry.managerId)) continue;
+                    if (entry.stars > 1) _stars[entry.managerId] = entry.stars;
+                }
 
             if (save.managerAssignments != null)
                 foreach (var entry in save.managerAssignments)
@@ -369,6 +446,12 @@ namespace MobileIdleBuilder
             save.managerAssignments ??= new List<ManagerAssignmentEntry>();
             save.managerAssignments.Clear();
             foreach (var entry in _assignByManager.Values) save.managerAssignments.Add(entry);
+
+            save.managerStars ??= new List<ManagerStarEntry>();
+            save.managerStars.Clear();
+            foreach (var kv in _stars)
+                if (kv.Value > 1)
+                    save.managerStars.Add(new ManagerStarEntry { managerId = kv.Key, stars = kv.Value });
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

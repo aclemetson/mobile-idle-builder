@@ -576,6 +576,12 @@ namespace MobileIdleBuilder.Editor
             so.description      = data.description;
             so.bonusValue       = data.bonus_value;
             so.hireCostPrestige = data.hire_cost_prestige;
+            so.starBonusValues  = data.star_bonus_values ?? new[] { data.bonus_value };
+            so.starCosts        = data.star_costs        ?? new[] { 0 };
+
+            if (so.starBonusValues.Length != so.starCosts.Length)
+                Debug.LogWarning($"ManagerSO '{data.id}': star_bonus_values ({so.starBonusValues.Length}) " +
+                                 $"and star_costs ({so.starCosts.Length}) lengths differ; star upgrades may misbehave.");
 
             if (TryParseEnum<ManagerBonusType>(data.bonus_type, $"ManagerSO '{data.id}'.bonusType", out var bt))
                 so.bonusType = bt;

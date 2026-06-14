@@ -68,6 +68,8 @@ If a feature needs a bonus to affect live production, either (a) bake it into `B
 
 **Managers feature note:** per-building manager bonuses use approach (a) for CraftSpeed (bake into `ProductionSpeed`, re-applied via `ManagerService.ReapplyAfterSpeedReset`/`ReapplyAllAssignments`) and a per-building component (`ManagerAssignmentData`) read live for OutputQuantity. OutputQuantity is honoured by BOTH `ProductionSystem` (crafters) and `CollectorSystem` (collectors) so idle == live. PowerDiscount is parked: the component carries `AppliedPowerMult`, but `PowerGridSystem` has no draw model to apply it to yet — wire it when per-building eV consumption lands.
 
+**Star tiers (manager upgrades):** the value baked/read is the *star-scaled* effective value, NOT `ManagerSO.bonusValue`. Every read routes through the single accessor `ManagerService.EffectiveBonusValue(id)` (bake in `ManagerBonus.Bake(..., effectiveValue)`, idle in `GetIdleOutputMultiplierAt`, UI text) so they always agree. Star tables (`starBonusValues[]`/`starCosts[]`, max 5) live in `game_data.json` → `ManagerSO`; stars persist in `SaveData.managerStars` and survive prestige. A star upgrade on an assigned CraftSpeed manager re-bakes exactly (remove-then-apply, no float division) in `ManagerService.UpgradeStar`. PowerDiscount stars remain inert (same gap as above).
+
 ## Testing ECS
 
 EditMode tests create a private `World` + system instance and tick it manually — copy `Assets/Scripts/Tests/ProductionSystemTests.cs` (creates entities, sets `BuildingData{ProductionSpeed}`, asserts `Progress` advanced by `dt × speed` at `:158`) or `PrestigeSystemTests.cs`.

@@ -19,3 +19,10 @@ MonoBehaviour:
   bonusType: 0
   bonusValue: 2
   hireCostPrestige: 300
+  starBonusValues:
+  - 2
+  - 2.2
+  - 2.4
+  - 2.6
+  - 2.8
+  starCosts: 000000005802000084030000b0040000dc050000

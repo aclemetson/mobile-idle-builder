@@ -33,9 +33,36 @@ namespace MobileIdleBuilder
 
         [Header("Bonus")]
         public ManagerBonusType bonusType;
-        public float bonusValue;            // multiplier (CraftSpeed/OutputQuantity) or kept-fraction (PowerDiscount)
+        public float bonusValue;            // star-1 base: multiplier (CraftSpeed/OutputQuantity) or kept-fraction (PowerDiscount)
 
         [Header("Cost")]
-        public int hireCostPrestige;        // prestige currency (✦)
+        public int hireCostPrestige;        // prestige currency (✦) to hire (star 1)
+
+        [Header("Star tiers")]
+        // Index 0 == star 1 (the hired base, == bonusValue). starCosts[0] == 0 (star 1 is the hired
+        // state). Both arrays share a length == MaxStar. Populated by GameDataImporter from
+        // star_bonus_values / star_costs in game_data.json.
+        public float[] starBonusValues;     // effective bonus value at each star tier
+        public int[]   starCosts;           // ✦ cost to UPGRADE TO each star (index 0 unused)
+
+        /// <summary>Highest star this manager can reach (>= 1). Derived from the star table.</summary>
+        public int MaxStar => (starBonusValues != null && starBonusValues.Length > 0)
+            ? starBonusValues.Length : 1;
+
+        /// <summary>Effective bonus value at <paramref name="star"/> (1-based). Falls back to
+        /// <see cref="bonusValue"/> when the table is missing or the star is out of range.</summary>
+        public float EffectiveValueAt(int star)
+        {
+            if (starBonusValues == null || starBonusValues.Length == 0) return bonusValue;
+            int i = Mathf.Clamp(star, 1, starBonusValues.Length) - 1;
+            return starBonusValues[i];
+        }
+
+        /// <summary>✦ cost to upgrade TO <paramref name="star"/> (1-based). 0 for star 1 / out of range.</summary>
+        public int StarCost(int star)
+        {
+            if (starCosts == null || star < 1 || star > starCosts.Length) return 0;
+            return starCosts[star - 1];
+        }
     }
 }

@@ -1,6 +1,10 @@
 # Feature: Manager Upgrades (star tiers)
 
-**Status:** pending (next up after Managers, PR #63)
+**Status:** done (feature/manager-upgrades -> release/0.3). JSON data tables chosen for scaling: each
+ManagerSO carries `starBonusValues[]` + `starCosts[]` (max 5 stars; additive increments; cost =
+hireCost x nextStar). All effective-value reads route through `ManagerService.EffectiveBonusValue(id)`.
+PowerDiscount stars are baked but inert at runtime (same gap as base managers). No new HUD component:
+reuses the shipped `ManagersSubController`.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md`, `docs/agents/ecs-patterns.md` (multiplier gap map), plus the shipped Managers code: `Assets/Scripts/Services/ManagerService.cs`, `Assets/Scripts/ScriptableObjects/ManagerSO.cs`, `Assets/Scripts/UI/ManagersSubController.cs`.
 **Scope estimate:** ~0 files created, ~6 modified, 1-2 test files.
 **Branch:** `feature/manager-upgrades` -> PR into the current release branch (confirm with user).
