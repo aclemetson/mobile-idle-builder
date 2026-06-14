@@ -1,6 +1,6 @@
 # Feature: Manager Upgrades (star tiers)
 
-**Status:** done (feature/manager-upgrades -> release/0.3). JSON data tables chosen for scaling: each
+**Status:** done (PR #65, feature/manager-upgrades -> release/0.3). JSON data tables chosen for scaling: each
 ManagerSO carries `starBonusValues[]` + `starCosts[]` (max 5 stars; additive increments; cost =
 hireCost x nextStar). All effective-value reads route through `ManagerService.EffectiveBonusValue(id)`.
 PowerDiscount stars are baked but inert at runtime (same gap as base managers). No new HUD component:
