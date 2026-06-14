@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.2",
+    "version": "0.3.3",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -3597,6 +3597,42 @@
         { "field": "quark_field", "density_multiplier": 0.0 }
       ]
     }
+  ],
+
+  "_managers_note": "Hireable building managers (Idle Planet Miner-style crew). Each grants ONE passive bonus to ONE assigned building. bonus_type: CraftSpeed (multiplies ProductionSpeed), OutputQuantity (multiplies recipe output, floor), PowerDiscount (reduces eV draw; bonus_value is the multiplier kept, e.g. 0.8 = -20%). hire_cost_prestige is in prestige currency. Hired managers + assignments survive prestige.",
+  "managers": [
+    { "id": "mgr_tinker", "display_name": "Tinker",
+      "description": "Assigned building crafts 25% faster.",
+      "bonus_type": "CraftSpeed", "bonus_value": 1.25,
+      "hire_cost_prestige": 10, "portrait_path": "TODO" },
+    { "id": "mgr_stoker", "display_name": "Stoker",
+      "description": "Assigned building consumes 20% less power.",
+      "bonus_type": "PowerDiscount", "bonus_value": 0.8,
+      "hire_cost_prestige": 10, "portrait_path": "TODO" },
+    { "id": "mgr_packrat", "display_name": "Packrat",
+      "description": "Assigned building produces 2x output.",
+      "bonus_type": "OutputQuantity", "bonus_value": 2.0,
+      "hire_cost_prestige": 25, "portrait_path": "TODO" },
+    { "id": "mgr_overclocker", "display_name": "Overclocker",
+      "description": "Assigned building crafts 50% faster.",
+      "bonus_type": "CraftSpeed", "bonus_value": 1.5,
+      "hire_cost_prestige": 40, "portrait_path": "TODO" },
+    { "id": "mgr_conductor", "display_name": "Conductor",
+      "description": "Assigned building consumes 40% less power.",
+      "bonus_type": "PowerDiscount", "bonus_value": 0.6,
+      "hire_cost_prestige": 60, "portrait_path": "TODO" },
+    { "id": "mgr_duplicator", "display_name": "Duplicator",
+      "description": "Assigned building produces 3x output.",
+      "bonus_type": "OutputQuantity", "bonus_value": 3.0,
+      "hire_cost_prestige": 150, "portrait_path": "TODO" },
+    { "id": "mgr_chronomancer", "display_name": "Chronomancer",
+      "description": "Assigned building crafts 2x faster.",
+      "bonus_type": "CraftSpeed", "bonus_value": 2.0,
+      "hire_cost_prestige": 300, "portrait_path": "TODO" },
+    { "id": "mgr_demiurge", "display_name": "Demiurge",
+      "description": "Assigned building produces 4x output.",
+      "bonus_type": "OutputQuantity", "bonus_value": 4.0,
+      "hire_cost_prestige": 800, "portrait_path": "TODO" }
   ],
 
   "dialogues": [

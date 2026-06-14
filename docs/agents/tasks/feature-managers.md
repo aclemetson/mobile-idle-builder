@@ -1,6 +1,6 @@
 # Feature: Managers (Idle Space Miner-style crew)
 
-**Status:** pending
+**Status:** in-progress (feature/managers) — code complete; PowerDiscount stored but inert (no per-building eV draw in PowerGridSystem yet); OutputQuantity also wired into CollectorSystem so idle==live
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/ecs-patterns.md` (especially the multiplier gap map), `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md`, `docs/agents/data-pipeline.md`
 **Scope estimate:** ~7 files created, ~8 modified, 3 test files.
 **Branch:** `feature/managers` → PR into the current release branch (confirm with user).

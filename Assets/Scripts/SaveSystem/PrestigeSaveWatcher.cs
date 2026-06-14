@@ -64,6 +64,10 @@ namespace MobileIdleBuilder
             // Reset the in-memory research set so IsUnlocked() returns false immediately.
             ResearchService.Instance?.ResetAll();
 
+            // Buildings were destroyed by PrestigeSystem, so clear every manager's building link
+            // (the hired roster survives prestige — managers stay owned, just unassigned).
+            ManagerService.Instance?.ResetAssignments();
+
             // skipECSFlush=true: we just explicitly zeroed currentRun above;
             // a second FlushToSave would overwrite with potentially stale ECS values.
             // Grid flush is still allowed — buildings are already destroyed by PrestigeSystem.

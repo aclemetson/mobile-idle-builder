@@ -37,6 +37,7 @@ namespace MobileIdleBuilder.Editor
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
         private const string SitesDir      = "Assets/Data/sites";
+        private const string ManagersDir   = "Assets/Data/managers";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
         private const string ResourcesDir  = "Assets/Resources";
@@ -59,6 +60,8 @@ namespace MobileIdleBuilder.Editor
             if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
                 needsImport = true;
@@ -129,6 +132,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
             EnsureDirectory(SitesDir);
+            EnsureDirectory(ManagersDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
             EnsureDirectory(ResourcesDir);
@@ -207,6 +211,12 @@ namespace MobileIdleBuilder.Editor
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
 
+            // ── Step 12.55: ManagerSO + ManagerDatabaseSO (no cross-refs) ────
+            var managerLookup = new Dictionary<string, ManagerSO>();
+            foreach (var m in data.managers)
+                managerLookup[m.id] = GenerateManager(m);
+            GenerateManagerDatabase(data.managers, managerLookup);
+
             // ── Step 12.6: DialogueDatabaseSO ────────────────────────────────
             GenerateDialogueDatabase(data.dialogues, dialogueLookup);
 
@@ -220,7 +230,8 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.dialogues.Count} dialogues, " +
+                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.managers.Count} managers, " +
+                $"{data.dialogues.Count} dialogues, " +
                 $"{data.tutorial_steps.Count} tutorial steps, " +
                 $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
             );
@@ -553,6 +564,41 @@ namespace MobileIdleBuilder.Editor
 
             EditorUtility.SetDirty(so);
             return so;
+        }
+
+        private static ManagerSO GenerateManager(ManagerJson data)
+        {
+            string path = $"{ManagersDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<ManagerSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.description      = data.description;
+            so.bonusValue       = data.bonus_value;
+            so.hireCostPrestige = data.hire_cost_prestige;
+
+            if (TryParseEnum<ManagerBonusType>(data.bonus_type, $"ManagerSO '{data.id}'.bonusType", out var bt))
+                so.bonusType = bt;
+            so.portrait = LoadAssetOrWarn<Sprite>(data.portrait_path, $"ManagerSO '{data.id}'.portrait");
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateManagerDatabase(List<ManagerJson> managers,
+            Dictionary<string, ManagerSO> managerLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/ManagerDatabase.asset";
+            var db = LoadOrCreate<ManagerDatabaseSO>(path);
+
+            var list = new List<ManagerSO>(managers.Count);
+            foreach (var m in managers)
+                if (managerLookup.TryGetValue(m.id, out var so))
+                    list.Add(so);
+
+            db.allManagers = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         private static void GenerateSiteDatabase(List<SiteJson> sites,

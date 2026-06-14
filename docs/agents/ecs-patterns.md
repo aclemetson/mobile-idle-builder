@@ -60,8 +60,13 @@ Rules: always check `query.IsEmpty` before `GetSingleton`; never touch ECS befor
 | `PrestigeData.SpeedMultiplier` | **NO — not read by ProductionSystem** | YES (`GridSaveService.cs:335`) | shown only |
 | `PrestigeData.OutputMultiplier` | **NO** | no | shown only |
 | `PrestigeData.CostReduction` | n/a | n/a | YES (`HUDController.cs:961,1000`) |
+| `ManagerAssignmentData.AppliedOutputMult` (per-building manager) | YES — `ProductionSystem.cs` deposit loop AND `CollectorSystem.cs` deposit, gated by `HasComponent` | YES (`GridSaveService.RebuildIdleSnapshot` → `IdleGraphAnalyzer` `getManagerOutputMultiplier`, collector source only) | Managers panel + inspector assign row |
+| Manager `CraftSpeed` (baked into `BuildingData.ProductionSpeed`) | YES for crafters (`ProductionSystem.cs:81`); **NO for collectors** (`CollectorSystem` ignores `ProductionSpeed`, uses `CollectorData.OutputRate`) | not applied (idle tracks collectors only) | inspector |
+| `ManagerAssignmentData.AppliedPowerMult` (PowerDiscount) | **stored but INERT** — `PowerGridSystem` is a clamp-only placeholder with no per-building eV draw to reduce yet | no | Managers panel |
 
 If a feature needs a bonus to affect live production, either (a) bake it into `BuildingData.ProductionSpeed` at every site that sets it (`BuildingPlacer.cs:69`, upgrade at `HUDBuildingInspectorSubController.cs:303`, restore via `GridSaveService.LoadGrid` → `BuildingPlacer.PlaceBuilding`), or (b) make `ProductionSystem` read a singleton multiplier (one site, affects everything). Option (b) is simpler and is the recommended approach — but then also update `GridSaveService.RebuildIdleSnapshot()` so offline earnings stay consistent.
+
+**Managers feature note:** per-building manager bonuses use approach (a) for CraftSpeed (bake into `ProductionSpeed`, re-applied via `ManagerService.ReapplyAfterSpeedReset`/`ReapplyAllAssignments`) and a per-building component (`ManagerAssignmentData`) read live for OutputQuantity. OutputQuantity is honoured by BOTH `ProductionSystem` (crafters) and `CollectorSystem` (collectors) so idle == live. PowerDiscount is parked: the component carries `AppliedPowerMult`, but `PowerGridSystem` has no draw model to apply it to yet — wire it when per-building eV consumption lands.
 
 ## Testing ECS
 

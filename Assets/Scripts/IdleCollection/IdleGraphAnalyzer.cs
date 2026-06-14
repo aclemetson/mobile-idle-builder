@@ -27,7 +27,8 @@ namespace MobileIdleBuilder
             Func<int, float>      getOutputRate,
             Func<int, float>      getItemSellValue,
             float effectiveItemsPerSecondMultiplier,
-            string snapshotTimestamp)
+            string snapshotTimestamp,
+            Func<BuildingSaveData, float> getManagerOutputMultiplier = null)
         {
             var snapshot = new IdleCollectionSnapshot
             {
@@ -68,7 +69,10 @@ namespace MobileIdleBuilder
                     continue;
                 }
 
-                float rate = getOutputRate(srcBuilding.buildingId) * effectiveItemsPerSecondMultiplier;
+                // A manager assigned to the source collector multiplies its offline throughput
+                // (OutputQuantity), matching CollectorSystem's live per-interval deposit. 1 otherwise.
+                float mgrMult = getManagerOutputMultiplier?.Invoke(srcBuilding) ?? 1f;
+                float rate = getOutputRate(srcBuilding.buildingId) * effectiveItemsPerSecondMultiplier * mgrMult;
                 if (rate <= 0f)
                 {
                     GameLogger.Debug($"[IdleGraph] Chain skipped — rate={rate} for buildingId={srcBuilding.buildingId}");

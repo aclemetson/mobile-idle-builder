@@ -21,6 +21,7 @@ namespace MobileIdleBuilder.Editor
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
         public List<SiteJson>            sites           = new();
+        public List<ManagerJson>         managers        = new();
         public List<DialogueJson>        dialogues       = new();
         public List<DailyRewardJson>     daily_rewards   = new();
         public List<DailyChallengeJson>  daily_challenges= new();
@@ -37,6 +38,7 @@ namespace MobileIdleBuilder.Editor
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
             sites           ??= new List<SiteJson>();
+            managers        ??= new List<ManagerJson>();
             dialogues       ??= new List<DialogueJson>();
             daily_rewards   ??= new List<DailyRewardJson>();
             daily_challenges??= new List<DailyChallengeJson>();
@@ -309,6 +311,18 @@ namespace MobileIdleBuilder.Editor
         public List<SiteFieldOverrideJson>   field_overrides = new();
 
         public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
+    }
+
+    [Serializable]
+    internal class ManagerJson
+    {
+        public string id                 = "";
+        public string display_name       = "";
+        public string description        = "";
+        public string bonus_type         = "";   // CraftSpeed | OutputQuantity | PowerDiscount
+        public float  bonus_value        = 1f;
+        public int    hire_cost_prestige = 0;
+        public string portrait_path      = "TODO";
     }
 
     [Serializable]
