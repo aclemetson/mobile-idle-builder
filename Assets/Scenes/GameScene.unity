@@ -274,6 +274,7 @@ GameObject:
   - component: {fileID: 262970770}
   - component: {fileID: 262970771}
   - component: {fileID: 262970772}
+  - component: {fileID: 262970773}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -436,6 +437,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9add0c41a8668e4aa020d3fd89f6ca3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteService
+--- !u!114 &262970773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262970759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52d91607817693441bcb72fe21b58039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManagerService
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1082,6 +1095,7 @@ GameObject:
   - component: {fileID: 4000000008}
   - component: {fileID: 4000000010}
   - component: {fileID: 4000000011}
+  - component: {fileID: 4000000012}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1976,6 +1990,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a9b199892f50a47b66e57142d40dcf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SitesSubController
+--- !u!114 &4000000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdd7e8d34bd78394eaad08628150e252, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManagersSubController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
