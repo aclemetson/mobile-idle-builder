@@ -296,12 +296,18 @@
         <!-- ═══ PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="placement-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="placement-bar" class="placement-bar">
-                <ui:Label name="placement-label" text="Tap an empty tile to place  ·  Esc to cancel"
+                <ui:Label name="placement-label" text="Tap a tile to position  ·  drag to pan  ·  ✓ to place"
                           class="placement-label" />
                 <ui:Button name="btn-rotate-output" text="↻ Rotate" class="rotate-output-btn hidden" />
                 <ui:Button name="btn-flip-building" text="⇄ Flip"   class="rotate-output-btn hidden" />
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ PLACEMENT CONFIRM POPUP (world-anchored above the candidate cell) ═══ -->
+        <ui:VisualElement name="placement-confirm-popup" class="placement-confirm-popup hidden" picking-mode="Ignore">
+            <ui:Button name="btn-cancel-candidate" text="✕" class="placement-confirm-btn placement-confirm-btn--cancel" />
+            <ui:Button name="btn-confirm-place"    text="✓" class="placement-confirm-btn placement-confirm-btn--confirm" />
         </ui:VisualElement>
 
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->

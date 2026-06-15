@@ -47,6 +47,38 @@
     -unity-font-style: bold;
 }
 
+/* Placement confirm popup — world-anchored above the candidate cell (left/top set at runtime). */
+.placement-confirm-popup {
+    position: absolute;
+    flex-direction: row;
+}
+
+.placement-confirm-btn {
+    width: 56px;
+    height: 56px;
+    margin: 4px;
+    border-radius: 28px;
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--color-text-primary);
+    border-width: 2px;
+}
+
+.placement-confirm-btn--confirm {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.placement-confirm-btn--cancel {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.placement-confirm-btn:disabled {
+    opacity: 0.4;
+}
+
 .prestige-topbar-label {
     color: #d2a8ff;
     font-size: var(--font-size-lg);

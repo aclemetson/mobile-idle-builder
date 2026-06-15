@@ -59,8 +59,12 @@ namespace MobileIdleBuilder
         private bool          _drawerOpen;
 
         // ---- Placement controls ----
-        private Button _btnRotateOutput;
-        private Button _btnFlipBuilding;
+        private Button        _btnRotateOutput;
+        private Button        _btnFlipBuilding;
+        private VisualElement _placementConfirmPopup;
+        private VisualElement _placementBar;
+        private Button        _btnConfirmPlace;
+        private Button        _btnCancelCandidate;
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
@@ -161,6 +165,7 @@ namespace MobileIdleBuilder
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_placementConfirmPopup, false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
             // notification-banner starts hidden via CSS translate (no .hidden class needed)
@@ -175,6 +180,8 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
                 placementController.OnBuildingPlaced         += OnBuildingPlaced;
+                placementController.OnCandidateChanged       += OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = IsPointerOverPlacementUI;
             }
 
             if (conveyorController != null)
@@ -200,6 +207,8 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
                 placementController.OnBuildingPlaced         -= OnBuildingPlaced;
+                placementController.OnCandidateChanged       -= OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = null;
             }
 
             if (conveyorController != null)
@@ -247,6 +256,7 @@ namespace MobileIdleBuilder
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+            UpdatePlacementConfirmPopup();
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -329,6 +339,10 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _placementConfirmPopup = root.Q("placement-confirm-popup");
+            _placementBar          = root.Q("placement-bar");
+            _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
+            _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
@@ -423,6 +437,10 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnConfirmPlace != null)
+                _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
+            if (_btnCancelCandidate != null)
+                _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
 
             // Conveyor cancel (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -1208,6 +1226,7 @@ namespace MobileIdleBuilder
         private void OnPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_placementOverlay, isPlacing);
+            if (!isPlacing) SetElementVisible(_placementConfirmPopup, false);
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
@@ -1216,13 +1235,58 @@ namespace MobileIdleBuilder
 
             if (isPlacing && _placementLabel != null)
             {
-                bool isField = placementController?.RequiresOutputDirection ?? false;
-                _placementLabel.text = isField
-                    ? "Tap a field tile to place  ·  R rotate  ·  Esc cancel"
-                    : canRotate
-                        ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
-                        : "Tap an empty tile to place  ·  Esc to cancel";
+                string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
+                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  ✓ to place{rotateHint}";
             }
+        }
+
+        // ============================================================
+        // Placement confirm popup (world-anchored ✓ / ✕ at the candidate cell)
+        // ============================================================
+
+        private void OnCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_placementConfirmPopup, hasCandidate);
+            if (hasCandidate) UpdatePlacementConfirmPopup();
+        }
+
+        private void UpdatePlacementConfirmPopup()
+        {
+            if (_placementConfirmPopup == null || placementController == null) return;
+            if (!placementController.HasCandidate) return;
+
+            var panel = _placementConfirmPopup.panel;
+            var cam   = Camera.main;
+            if (panel == null || cam == null) return;
+
+            Vector2 panelPoint = RuntimePanelUtils.CameraTransformWorldToPanel(
+                panel, placementController.CandidateWorldPosition, cam);
+
+            float w = _placementConfirmPopup.resolvedStyle.width;
+            float h = _placementConfirmPopup.resolvedStyle.height;
+            if (float.IsNaN(w)) w = 0f;
+            if (float.IsNaN(h)) h = 0f;
+
+            // Centre horizontally over the cell and float above it.
+            _placementConfirmPopup.style.left = panelPoint.x - w * 0.5f;
+            _placementConfirmPopup.style.top  = panelPoint.y - h - 24f;
+
+            _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
+        }
+
+        /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
+        /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
+        private bool IsPointerOverPlacementUI(Vector2 screenPos)
+            => ScreenPointInElement(_placementConfirmPopup, screenPos)
+            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
+
+        private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
+        {
+            if (el == null || el.ClassListContains("hidden")) return false;
+            var panel = el.panel;
+            if (panel == null) return false;
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, screenPos);
+            return el.worldBound.Contains(panelPos);
         }
 
         private void OnConveyorPlacingChanged(bool isPlacing)
