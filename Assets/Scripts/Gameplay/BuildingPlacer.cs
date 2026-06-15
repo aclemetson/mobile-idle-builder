@@ -151,6 +151,29 @@ namespace MobileIdleBuilder
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
 
+            // Power: generators emit eV + a coverage radius; consumers carry their draw and a status
+            // slot that PowerGridSystem writes each frame. All values scale with the speed level.
+            if (building != null && building.isPowerSource)
+            {
+                float outputEV = BuildingSO.PowerOutputForLevel(building, speedLevel);
+                _em.AddComponentData(entity, new PowerNodeData
+                {
+                    MaxEV           = outputEV,
+                    CurrentEV       = outputEV,
+                    InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(building, speedLevel),
+                    LinkRadius      = building.linkRadiusTiles,
+                    IsGridLinked    = false
+                });
+            }
+            else if (building != null && building.requiresPower)
+            {
+                _em.AddComponentData(entity, new PowerConsumer
+                {
+                    DrawEV = BuildingSO.PowerDrawForLevel(building, speedLevel)
+                });
+                _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            }
+
             if (hasPorts)
             {
                 var portBuf = _em.GetBuffer<PlacedPortData>(entity);

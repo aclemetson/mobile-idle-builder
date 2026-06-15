@@ -139,6 +139,48 @@ namespace MobileIdleBuilder
             return 1f;
         }
 
+        // ── Power helpers ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Returns the eV draw for a power consumer at <paramref name="level"/>.
+        /// Level 1 = so.basePowerCostEV. Higher levels look up powerCostEV from upgradeLevels,
+        /// falling back to the base when the upgrade entry leaves it at 0.
+        /// </summary>
+        public static float PowerDrawForLevel(BuildingSO so, int level)
+        {
+            if (so == null) return 0f;
+            if (level <= 1 || so.upgradeLevels == null) return so.basePowerCostEV;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level) return u.powerCostEV > 0f ? u.powerCostEV : so.basePowerCostEV;
+            return so.basePowerCostEV;
+        }
+
+        /// <summary>
+        /// Returns the eV output for a power source at <paramref name="level"/>.
+        /// Level 1 = so.baseOutputEV. Higher levels look up outputEV from upgradeLevels.
+        /// </summary>
+        public static float PowerOutputForLevel(BuildingSO so, int level)
+        {
+            if (so == null) return 0f;
+            if (level <= 1 || so.upgradeLevels == null) return so.baseOutputEV;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level) return u.outputEV > 0f ? u.outputEV : so.baseOutputEV;
+            return so.baseOutputEV;
+        }
+
+        /// <summary>
+        /// Returns the influence radius (tiles) for a power source at <paramref name="level"/>.
+        /// Level 1 = so.influenceRadiusTiles. Higher levels look up influenceRadiusTiles from upgradeLevels.
+        /// </summary>
+        public static float InfluenceRadiusForLevel(BuildingSO so, int level)
+        {
+            if (so == null) return 0f;
+            if (level <= 1 || so.upgradeLevels == null) return so.influenceRadiusTiles;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level) return u.influenceRadiusTiles > 0f ? u.influenceRadiusTiles : so.influenceRadiusTiles;
+            return so.influenceRadiusTiles;
+        }
+
         /// <summary>
         /// Returns the output buffer capacity for <paramref name="level"/>.
         /// Level 1 = so.baseMaxOutputItems (or 20 if unset). Higher levels use storageUpgradeLevels.

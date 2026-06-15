@@ -1,5 +1,36 @@
 # Feature: Per-Building Power Draw (make PowerGridSystem real)
 
+**Status:** done (feature/power-draw -> release/0.3).
+
+**Shipped design differs from the original spec below** (user chose a richer model). Built as a
+**proximity-connect + single global eV pool**, NOT a flat aggregate grid:
+- A consumer is *connected* only if its footprint is within some generator's `InfluenceRadius`
+  (Euclidean edge-gap). Disconnected consumers stop (ThrottleRatio 0).
+- Global `Supply` = Σ generator `MaxEV`; global `Draw` = Σ connected consumers' `DrawEV × AppliedPowerMult`
+  (manager PowerDiscount, now live). `Ratio = min(1, Supply/Draw)`; connected consumers craft at `Ratio`
+  (proportional brownout throttle).
+- Components: `PowerNodeData` (generators, reused), new `PowerConsumer`/`PowerStatus`, singleton
+  `PowerGridState`. Baked in `BuildingPlacer` from `BuildingSO` (reused `base_power_cost_ev`/per-level
+  `power_cost_ev`/`base_output_ev`/`influence_radius_tiles` — NO new `EVDraw` field/schema change),
+  re-baked on upgrade + load. `PowerGridSystem` is `[UpdateBefore(ProductionSystem)]`; keeps the legacy clamp.
+- UI: HUD `power-label` shows `draw/supply` + brownout warning (`power-brownout` USS) + unpowered count;
+  `GridRenderer.ShowPowerCoverage` blue coverage tiles on generator placement/selection; `BuildingVisualizer`
+  reddens disconnected consumer cubes; inspector power rows.
+- Tutorial: the drafted `link_generator` step (obsolete manual-link `power_link_established`) was retargeted
+  to `consumer_powered` (fired from `PowerGridState` in `TutorialOverlayController`) and reworded for proximity.
+- **Idle/offline:** intentionally NOT power-gated — `IdleGraphAnalyzer` only simulates collector chains
+  (harvesters, which need no power); recipe/powered buildings aren't simulated offline, so there is no
+  exploit to close. Balance numbers are in `economy-balance.md`. v1 out of scope: per-generator budgets,
+  power lines/routing, recipe-dynamic draw, hard-cutoff distribution.
+
+**Known pre-existing limitation (not introduced here):** `TutorialConditionDef` has no `buildingId` field,
+so `BuildingMin` counts ALL buildings (the `building_id` in JSON steps is dropped) — `place_sfc`/`place_generator`
+gate on total count, not the specific building. Out of scope for this feature.
+
+---
+
+_Original spec (superseded by the shipped proximity model above):_
+
 **Status:** pending
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/ecs-patterns.md` (multiplier gap map + system anatomy), `docs/agents/economy-balance.md` (eV / power economy), `docs/agents/save-system.md` (if any new persisted field). Plus current code: `Assets/Scripts/Systems/PowerGridSystem.cs`, `Assets/Scripts/Components/PowerNodeData.cs`, `Assets/Scripts/Systems/ProductionSystem.cs`.
 **Scope estimate:** M–L. New per-building draw model + system logic + production gating + UI; ~4 files created, ~6 modified, 2 test files.

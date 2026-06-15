@@ -241,5 +241,40 @@ namespace MobileIdleBuilder.Tests
             var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
             Assert.IsFalse(process.IsCrafting, "Full output buffer must pause production");
         }
+
+        // ── Power gating ──────────────────────────────────────────────────────
+
+        [Test]
+        public void WhenDisconnectedFromPower_CraftingDoesNotStart()
+        {
+            _em.AddComponentData(_buildingEntity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick();
+
+            var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            Assert.IsFalse(process.IsCrafting, "Unpowered building must not start crafting");
+            Assert.AreEqual(0f, process.Progress, 0.001f, "Unpowered building must not accumulate progress");
+        }
+
+        [Test]
+        public void WhenBrownout_ProgressAdvancesAtThrottledRate()
+        {
+            _em.AddComponentData(_buildingEntity, new PowerStatus { IsConnected = 1, ThrottleRatio = 0.5f });
+            AddToGlobalInventory(InputItemId, InputQty);
+            _em.SetComponentData(_buildingEntity, new RecipeProcessData
+            {
+                RecipeID   = 1,
+                CraftTime  = CraftTime,
+                IsCrafting = true,
+                Progress   = 0f
+            });
+
+            Tick(deltaTime: 0.5f);
+
+            var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            Assert.AreEqual(0.5f * Speed * 0.5f, process.Progress, 0.001f,
+                "Brownout must scale progress by ThrottleRatio");
+        }
     }
 }

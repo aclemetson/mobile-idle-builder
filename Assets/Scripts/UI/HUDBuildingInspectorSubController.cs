@@ -25,6 +25,13 @@ namespace MobileIdleBuilder
         private bool                       _ecsReady;
         private BuildingPlacementController _placement;
         private HUDController              _hud;
+        private GridRenderer              _gridRenderer;
+
+        private GridRenderer GetGridRenderer()
+        {
+            if (_gridRenderer == null) _gridRenderer = FindAnyObjectByType<GridRenderer>();
+            return _gridRenderer;
+        }
 
         public void Init(VisualElement root, BuildingPlacementController placement, HUDController hud)
         {
@@ -66,6 +73,7 @@ namespace MobileIdleBuilder
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
+            GetGridRenderer()?.ClearPowerCoverage();
         }
 
         private void RefreshInspectorContent()
@@ -75,6 +83,8 @@ namespace MobileIdleBuilder
             if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
 
             _inspectorContent.Clear();
+            // Clear any coverage from a previously-selected generator; re-shown below if this one is a source.
+            GetGridRenderer()?.ClearPowerCoverage();
 
             BuildingData buildingData = default;
             if (_em.HasComponent<BuildingData>(_inspectorEntity))
@@ -174,6 +184,7 @@ namespace MobileIdleBuilder
                     }
                 }
 
+                AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
             }
@@ -250,6 +261,53 @@ namespace MobileIdleBuilder
                 case ManagerBonusType.OutputQuantity: return $"{value:0.##}x output";
                 case ManagerBonusType.PowerDiscount:  return $"-{(1f - value) * 100f:0}% power";
                 default:                              return "";
+            }
+        }
+
+        // ── Power UI ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Shows power info for the selected building. For a generator: output eV + coverage radius,
+        /// and tints the covered tiles. For a consumer: draw eV + connection/brownout status.
+        /// </summary>
+        private void AddPowerSection(BuildingSO so, BuildingData bd, int cellX, int cellY)
+        {
+            int level = bd.UpgradeLevel < 1 ? 1 : bd.UpgradeLevel;
+
+            if (so.isPowerSource)
+            {
+                float outputEV = BuildingSO.PowerOutputForLevel(so, level);
+                float radius   = BuildingSO.InfluenceRadiusForLevel(so, level);
+                AddInspectorRow("—— Power ——");
+                AddInspectorRow($"Output: {outputEV:0.#} eV");
+                AddInspectorRow($"Coverage: {radius:0.#} tiles");
+
+                var gr = GetGridRenderer();
+                if (gr != null && cellX >= 0)
+                {
+                    int fw = 1, fh = 1;
+                    if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
+                    {
+                        var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
+                        fw = f.Width; fh = f.Height;
+                    }
+                    gr.ShowPowerCoverage(cellX, cellY, fw, fh, radius);
+                }
+            }
+            else if (so.requiresPower && _em.HasComponent<PowerStatus>(_inspectorEntity))
+            {
+                var status = _em.GetComponentData<PowerStatus>(_inspectorEntity);
+                float draw = _em.HasComponent<PowerConsumer>(_inspectorEntity)
+                    ? _em.GetComponentData<PowerConsumer>(_inspectorEntity).DrawEV
+                    : 0f;
+                AddInspectorRow("—— Power ——");
+                AddInspectorRow($"Draw: {draw:0.#} eV");
+                string statusText = status.IsConnected == 0
+                    ? "UNPOWERED (no generator in range)"
+                    : (status.ThrottleRatio < 0.999f
+                        ? $"Brownout — {status.ThrottleRatio * 100f:0}% power"
+                        : "Powered");
+                AddInspectorRow($"Status: {statusText}");
             }
         }
 
@@ -376,6 +434,23 @@ namespace MobileIdleBuilder
             bd.UpgradeLevel    = nextLevel;
             bd.ProductionSpeed = BuildingSO.ProductionSpeedForLevel(so, nextLevel);
             _em.SetComponentData(entity, bd);
+
+            // Re-bake power values for the new level (generator output/radius, consumer draw).
+            if (so.isPowerSource && _em.HasComponent<PowerNodeData>(entity))
+            {
+                var node = _em.GetComponentData<PowerNodeData>(entity);
+                float outputEV       = BuildingSO.PowerOutputForLevel(so, nextLevel);
+                node.MaxEV           = outputEV;
+                node.CurrentEV       = outputEV;
+                node.InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(so, nextLevel);
+                _em.SetComponentData(entity, node);
+            }
+            else if (so.requiresPower && _em.HasComponent<PowerConsumer>(entity))
+            {
+                var pc = _em.GetComponentData<PowerConsumer>(entity);
+                pc.DrawEV = BuildingSO.PowerDrawForLevel(so, nextLevel);
+                _em.SetComponentData(entity, pc);
+            }
 
             // The level-based speed write above wiped any assigned manager's CraftSpeed bonus;
             // re-bake it relative to the new base so the bonus survives the upgrade.

@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "MobileIdleBuilder",
         "Unity.Entities",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

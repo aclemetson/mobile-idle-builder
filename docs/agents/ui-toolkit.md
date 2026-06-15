@@ -24,6 +24,12 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - Drawer nav buttons are wired in HUDController around `HUDController.cs:347-369` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
 - Building rows/list items are built **in C#** (`new VisualElement()` + `AddToClassList`), not via UXML templates, in sub-controllers — follow that style.
 
+## Power readout & coverage (proximity power feature)
+
+- **Top-bar power label** (`power-label` in `GameHUD.uxml:26`): `HUDStatusBarController.RefreshPowerLabel` reads the `PowerGridState` singleton and shows `⚡ draw / supply eV`. On a brownout (`Draw > Supply`) or any unpowered consumer it prefixes `⚠`, appends `(N unpowered)`, and toggles the `power-brownout` USS class (`GameHUD.uss`, red via `--color-danger`). The status bar's power query is `PowerGridState` (not `PowerNodeData`).
+- **Coverage tiles**: `GridRenderer.ShowPowerCoverage(x,y,w,h,radius)` / `ClearPowerCoverage()` tint covered cells blue using the same `SetTileHighlight` layer as the placement ghost (cleared automatically by `HideGhost`). Shown while placing a generator (`BuildingPlacementController` ghost update) and while a generator/consumer is selected (`HUDBuildingInspectorSubController.AddPowerSection`, which also adds output/draw/status rows).
+- **Unpowered building tint**: `BuildingVisualizer` runs a throttled pass (~0.4s) reddening disconnected consumer cubes via the existing `PresenceReceiver` colour path (skips the currently-hovered cube).
+
 ## Styling
 
 - `Assets/UI/tokens.uss` — design tokens (colors/spacing/typography vars). `Assets/UI/components.uss` — shared classes. `Assets/UI/GameHUD.uss` — HUD layout. Panel-specific: `AchievementsMenu.uss`, `PremiumShop.uss`.

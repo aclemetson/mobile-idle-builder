@@ -42,6 +42,11 @@
     margin-left: var(--spacing-sm);
 }
 
+.power-label.power-brownout {
+    color: var(--color-danger);
+    -unity-font-style: bold;
+}
+
 .prestige-topbar-label {
     color: #d2a8ff;
     font-size: var(--font-size-lg);
