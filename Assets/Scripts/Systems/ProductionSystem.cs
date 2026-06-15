@@ -31,6 +31,17 @@ namespace MobileIdleBuilder
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
 
+            // Global production multipliers from the megastructure (1 = no bonus when the singleton is absent,
+            // e.g. in tests that never bake it).
+            float globalSpeedMult  = 1f;
+            float globalOutputMult = 1f;
+            if (SystemAPI.HasSingleton<GlobalProductionBonus>())
+            {
+                var gb = SystemAPI.GetSingleton<GlobalProductionBonus>();
+                globalSpeedMult  = gb.SpeedMult;
+                globalOutputMult = gb.OutputMult;
+            }
+
             foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
                 SystemAPI.Query<
                     RefRO<BuildingData>,
@@ -86,7 +97,7 @@ namespace MobileIdleBuilder
                 }
 
                 // ---- Progress (scaled by available power; 0 stalls, <1 is a brownout) ----
-                process.ValueRW.Progress += deltaTime * building.ValueRO.ProductionSpeed * powerRatio;
+                process.ValueRW.Progress += deltaTime * building.ValueRO.ProductionSpeed * powerRatio * globalSpeedMult;
 
                 if (process.ValueRO.Progress < process.ValueRO.CraftTime) continue;
 
@@ -117,6 +128,7 @@ namespace MobileIdleBuilder
                     float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
                         ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                         : 1f;
+                    outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
                     for (int i = 0; i < outputs.Length; i++)
                     {
                         int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1

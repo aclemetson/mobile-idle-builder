@@ -51,6 +51,12 @@ namespace MobileIdleBuilder
         public List<string> hiredManagers                           = new(); // ManagerSO.id list
         public List<ManagerAssignmentEntry> managerAssignments      = new(); // manager -> building binding
         public List<ManagerStarEntry> managerStars                  = new(); // per-manager star tier (missing -> 1)
+        // Megastructure (Dyson Sphere endgame project) — a meta-progression layer ABOVE prestige.
+        // Late-game components take days to craft, so completed stages AND partial contributions both
+        // survive prestige (these fields live here, not in currentRun, and PrestigeSystem never clears them).
+        public int          megastructureStage        = 0;     // completed stage count (0-5)
+        public List<string> megastructureContribKeys   = new(); // item ids (string numeric, like inventoryKeys), toward the CURRENT stage
+        public List<int>    megastructureContribValues = new(); // contributed counts, parallel to megastructureContribKeys
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();

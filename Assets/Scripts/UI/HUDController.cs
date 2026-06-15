@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
         private ManagersSubController               _managers;
+        private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
         private IdleReturnSubController             _idleReturn;
         private HUDPremiumShopSubController         _shop;
@@ -43,7 +44,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel, _sitesPanel, _managersPanel;
+                              _shopPanel, _settingsPanel, _dailyPanel, _sitesPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -96,6 +97,9 @@ namespace MobileIdleBuilder
         private Button    _btnAchievements;
         private Label     _achievementsLockedHint;
         private bool      _achievementsUnlocked;
+
+        // ---- Megastructure gate (nav button hidden until megastructure_theory is researched) ----
+        private Button    _btnMegastructure;
         private Coroutine _achievementsHintPulse;
         private Button    _achievementsHintPulseTarget;
 
@@ -114,6 +118,7 @@ namespace MobileIdleBuilder
             _banner       = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
             _managers     = GetComponent<ManagersSubController>();
+            _megastructure = GetComponent<MegastructureSubController>();
             _daily        = GetComponent<DailyEventsSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
@@ -153,6 +158,7 @@ namespace MobileIdleBuilder
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
             _managers?.Init(root, this);
+            _megastructure?.Init(root, this);
             _daily?.Init(root, this);
             _idleReturn?.Init(root);
             _shop?.Initialize(root);
@@ -160,6 +166,7 @@ namespace MobileIdleBuilder
             _sites?.Init(root, this);
             BindButtons(root);
             ApplyAchievementsGate();
+            ApplyMegastructureGate();
             _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
             GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
@@ -291,6 +298,7 @@ namespace MobileIdleBuilder
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
             _managersPanel     = root.Q("managers-panel");
+            _megastructurePanel = root.Q("megastructure-panel");
             _dailyPanel        = root.Q("daily-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
@@ -303,7 +311,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel
             };
 
@@ -327,6 +335,7 @@ namespace MobileIdleBuilder
             // Achievements gate
             _btnAchievements        = root.Q<Button>("btn-achievements");
             _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
+            _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
             _pvpStateLabel     = root.Q<Label>("pvp-state-label");
             _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
@@ -377,6 +386,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
             root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
+            root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
             var btnDaily = root.Q<Button>("btn-daily");
             if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
@@ -406,6 +416,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
             root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
+            root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
             var btnCloseDaily = root.Q<Button>("btn-close-daily");
             if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
@@ -614,6 +625,9 @@ namespace MobileIdleBuilder
 
             // One-shot Quantum Domains introduction when its gate research is unlocked.
             _sites?.NotifyResearchUnlocked(research);
+
+            // Reveal the megastructure nav button when its gating research lands.
+            ApplyMegastructureGate();
         }
 
         private void OpenUpgradesPanel()
@@ -628,6 +642,21 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _managers?.Refresh();
             SetElementVisible(_managersPanel, true);
+        }
+
+        private void OpenMegastructurePanel()
+        {
+            CloseAllPanels();
+            _megastructure?.Refresh();
+            SetElementVisible(_megastructurePanel, true);
+        }
+
+        /// <summary>Shows the megastructure nav button only once its gating research is unlocked.</summary>
+        private void ApplyMegastructureGate()
+        {
+            if (_btnMegastructure == null) return;
+            bool unlocked = MegastructureService.Instance?.IsUnlocked() ?? false;
+            SetElementVisible(_btnMegastructure, unlocked);
         }
 
         private void OpenSitesPanel()

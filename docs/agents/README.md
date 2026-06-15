@@ -25,7 +25,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-daily-events.md` — login rewards + daily challenges | done (PRs #54-56) | S |
 | `tasks/feature-managers.md` — hireable building managers | done (PR #63) | M |
 | `tasks/feature-manager-upgrades.md` — manager star tiers (✦) | done (PR #65) | M |
-| `tasks/feature-megastructure.md` — Dyson Sphere endgame project | pending | M |
+| `tasks/feature-megastructure.md` — Dyson Sphere endgame project | done (branch `feature/megastructure`) | M |
 | `tasks/feature-power-draw.md` — proximity eV power grid (makes PowerDiscount live) | done (feature/power-draw) | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
 

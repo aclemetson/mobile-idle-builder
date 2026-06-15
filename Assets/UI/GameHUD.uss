@@ -715,6 +715,21 @@
     font-style: italic;
 }
 
+/* ── Megastructure panel ── */
+.megastructure-progress-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    padding-left: var(--spacing-md);
+    padding-top: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+}
+
+.megastructure-item-row {
+    flex-direction: column;
+    margin-top: var(--spacing-sm);
+}
+
 .rotate-output-btn {
     padding: var(--spacing-xs) var(--spacing-sm);
     margin-right: var(--spacing-sm);

@@ -30,6 +30,11 @@ namespace MobileIdleBuilder
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
 
+            // Global output multiplier from the megastructure (1 when the singleton is absent).
+            float globalOutputMult = SystemAPI.HasSingleton<GlobalProductionBonus>()
+                ? SystemAPI.GetSingleton<GlobalProductionBonus>().OutputMult
+                : 1f;
+
             foreach (var (collector, building, recipeOutputSlots, outputSlots, invConfig, entity) in
                 SystemAPI.Query<
                     RefRW<CollectorData>,
@@ -57,6 +62,7 @@ namespace MobileIdleBuilder
                 float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
                     ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                     : 1f;
+                outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
 
                 if (total < invConfig.ValueRO.OutputCapacity)
                     SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, (int)outMult);

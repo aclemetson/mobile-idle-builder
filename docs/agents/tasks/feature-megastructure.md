@@ -1,6 +1,6 @@
 # Feature: Dyson Sphere Megastructure (endgame project)
 
-**Status:** pending
+**Status:** done (branch `feature/megastructure`) — reward wiring uses a `GlobalProductionBonus` ECS singleton (read live by ProductionSystem/CollectorSystem + folded into idle snapshot), not the per-placement baking originally sketched below; megastructure state lives in the persistent SaveData section and survives prestige.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/ecs-patterns.md`, `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md`, `docs/agents/economy-balance.md`
 **Scope estimate:** ~6 files created, ~7 modified, 2 test files.
 **Branch:** `feature/megastructure` → PR into the current release branch (confirm with user).

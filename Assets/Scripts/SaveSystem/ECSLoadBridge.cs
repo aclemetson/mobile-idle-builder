@@ -160,6 +160,14 @@ namespace MobileIdleBuilder
             // Restore purchased permanent upgrades first — effects depend on this
             PersistentUpgradeService.Instance?.LoadFromSave(save.permanentUpgrades);
 
+            // Restore megastructure progress and push its global bonuses into the ECS singleton now that
+            // the player entity exists (the service's own Start may have run before SubScene load).
+            if (MegastructureService.Instance != null)
+            {
+                MegastructureService.Instance.LoadFromSave(save);
+                MegastructureService.Instance.ApplyBonusToECS();
+            }
+
             // Prestige multipliers — always safe to apply (defaults match SaveData defaults)
             var prestige = _prestigeQuery.GetSingleton<PrestigeData>();
             prestige.RunCount              = save.prestigeCount;

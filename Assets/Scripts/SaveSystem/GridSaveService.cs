@@ -388,14 +388,18 @@ namespace MobileIdleBuilder
                 ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
 
             float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
-            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult;
+            // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
+            // output onto each source's output multiplier (alongside the per-building manager bonus).
+            float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
+            float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;
             float getManagerOutputMultiplier(BuildingSaveData bsd)
             {
-                if (bsd?.position == null || bsd.position.Length < 2) return 1f;
+                if (bsd?.position == null || bsd.position.Length < 2) return megaOutputMult;
                 int posKey = ManagerService.EncodePos(bsd.position[0], bsd.position[1]);
-                return ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f;
+                return (ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f) * megaOutputMult;
             }
 
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(

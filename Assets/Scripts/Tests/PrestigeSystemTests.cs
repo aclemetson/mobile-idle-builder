@@ -1,5 +1,7 @@
+using System.Reflection;
 using NUnit.Framework;
 using Unity.Entities;
+using UnityEngine;
 
 namespace MobileIdleBuilder.Tests
 {
@@ -15,6 +17,8 @@ namespace MobileIdleBuilder.Tests
         private World _world;
         private EntityManager _em;
         private Entity _playerEntity;
+        private GameObject _megaServiceGO;
+        private MegastructureSO _megaData;
 
         [SetUp]
         public void Setup()
@@ -38,7 +42,38 @@ namespace MobileIdleBuilder.Tests
         [TearDown]
         public void Teardown()
         {
+            if (_megaServiceGO != null) { Object.DestroyImmediate(_megaServiceGO); _megaServiceGO = null; }
+            if (_megaData      != null) { Object.DestroyImmediate(_megaData);      _megaData      = null; }
             if (_world.IsCreated) _world.Dispose();
+        }
+
+        /// <summary>
+        /// Spawns a MegastructureService whose GetPrestigeGainBonus() reports the given bonus, by injecting
+        /// a stage carrying a PrestigeGainMultiplier reward and marking it complete. No ECS needed — the
+        /// reward query reads only the SO + completed-stage count.
+        /// </summary>
+        private void SpawnMegastructureWithPrestigeBonus(float bonus)
+        {
+            _megaData = ScriptableObject.CreateInstance<MegastructureSO>();
+            _megaData.stages = new[]
+            {
+                new MegastructureStage
+                {
+                    id = "ms_prestige", costItems = new ItemSO[0], costQuantities = new int[0],
+                    rewardType = MegastructureRewardType.PrestigeGainMultiplier, rewardValue = bonus
+                }
+            };
+
+            _megaServiceGO = new GameObject("MegastructureService");
+            var svc = _megaServiceGO.AddComponent<MegastructureService>();
+            // base.Awake() assigns the static Instance; run it without the Resources/ECS Start path.
+            typeof(SingletonMonoBehaviour<MegastructureService>)
+                .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(svc, null);
+            typeof(MegastructureService).GetField("_data", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(svc, _megaData);
+            typeof(MegastructureService).GetField("_completedStages", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(svc, 1);
         }
 
         // ── PrestigeRequested = false ────────────────────────────────────────
@@ -79,6 +114,26 @@ namespace MobileIdleBuilder.Tests
 
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
             Assert.AreEqual(50L, prestige.PrestigeCurrency);
+        }
+
+        [Test]
+        public void WhenRequested_MegastructurePrestigeBonusDoublesEarned()
+        {
+            // Base award at netWorth = 50000 is 50 (see WhenRequested_AwardsCurrencyViaLogFormula).
+            // A PrestigeGainMultiplier reward of 1.0 (Stellar Engine) must double it to 100.
+            SpawnMegastructureWithPrestigeBonus(1.0f);
+
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth = 50000f,
+                PrestigeRequested = true
+            });
+
+            _world.Update();
+
+            var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
+            Assert.AreEqual(100L, prestige.PrestigeCurrency,
+                "Stage-5 megastructure reward must double prestige currency gain (50 → 100)");
         }
 
         [Test]
