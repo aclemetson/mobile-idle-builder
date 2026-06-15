@@ -18,6 +18,15 @@ namespace MobileIdleBuilder
 
         public bool IsLoaded { get; private set; }
 
+        /// <summary>
+        /// True only once <see cref="ApplyLoadedSave"/> has actually copied the on-disk save into ECS.
+        /// Stays false when the load aborts (no ECS world, or the baked SubScene entities never appeared
+        /// within the timeout — common right after a code change forces a SubScene re-bake). Callers MUST
+        /// gate any FlushToSave on this: flushing baked-default ECS state when the save was never applied
+        /// would overwrite the good on-disk save with zeros.
+        /// </summary>
+        public bool SaveApplied { get; private set; }
+
         IdleCollectionResult _pendingIdleResult;
 
         EntityManager _em;
@@ -55,6 +64,7 @@ namespace MobileIdleBuilder
         IEnumerator InitializeAsync()
         {
             if (Instance != this) yield break;
+            SaveApplied = false; // not applied until ApplyLoadedSave runs below
             GameLogger.Info("[ECSLoadBridge] Initializing — polling for ECS world");
 
             // Poll for the ECS world — it may not be ready on the first frame on Android.
@@ -114,7 +124,9 @@ namespace MobileIdleBuilder
             {
                 GameLogger.Error($"[ECSLoadBridge] Timeout after {elapsed:F1}s — " +
                     $"progress={!_progressQuery.IsEmpty}  prestige={!_prestigeQuery.IsEmpty}  " +
-                    $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}");
+                    $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}. " +
+                    "Save NOT applied (SaveApplied stays false) — flushes are suppressed so the on-disk " +
+                    "save is preserved. If this followed a code change, the SubScene likely needs re-baking.");
                 IsLoaded = true;
                 yield break;
             }
@@ -140,6 +152,7 @@ namespace MobileIdleBuilder
             GameLogger.Info("[ECSLoadBridge] Applying save to ECS");
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
+            SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
             IsLoaded = true;
             GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
 
@@ -248,6 +261,14 @@ namespace MobileIdleBuilder
         public void FlushToSave()
         {
             if (!IsLoaded) return;
+            // Never write ECS state back to the save unless the save was actually applied to ECS.
+            // Otherwise a raced/timed-out load (baked defaults) would overwrite the good save with zeros.
+            if (!SaveApplied)
+            {
+                GameLogger.Warning("[ECSLoadBridge] FlushToSave skipped — save was never applied to ECS " +
+                    "(load raced/timed out). On-disk save left intact.");
+                return;
+            }
 
             var save = SaveManager.Instance?.Current;
             if (save == null) return;

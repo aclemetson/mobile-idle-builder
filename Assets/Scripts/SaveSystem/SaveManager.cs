@@ -188,6 +188,18 @@ namespace MobileIdleBuilder
 
         public void SaveLocal(bool skipGridFlush = false, bool skipECSFlush = false)
         {
+            // If the load never applied to ECS (e.g. baked SubScene entities timed out after a recompile),
+            // ECS holds baked defaults. Flushing those would overwrite the good on-disk save with zeros.
+            // Skip both ECS and grid snapshots; _current still holds the save loaded at startup, so writing
+            // it back below is harmless (and the disk file is preserved).
+            if (ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded && !ECSLoadBridge.Instance.SaveApplied)
+            {
+                GameLogger.Warning("[Save] Load did not apply to ECS (entities not ready) — skipping ECS/grid " +
+                    "flush so the on-disk save is not overwritten with defaults.");
+                skipECSFlush  = true;
+                skipGridFlush = true;
+            }
+
             if (!skipECSFlush)
                 ECSLoadBridge.Instance?.FlushToSave();
             if (!skipGridFlush)
