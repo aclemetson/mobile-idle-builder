@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.5",
+    "version": "0.3.6",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -5545,5 +5545,63 @@
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "particles_loop_context" }
     }
-  ]
+  ],
+  "megastructure": {
+    "id": "dyson_sphere",
+    "display_name": "Dyson Sphere",
+    "required_research": "megastructure_theory",
+    "stages": [
+      {
+        "id": "ms_stage_1",
+        "display_name": "Scaffold Ring",
+        "costs": [
+          { "item": "dyson_node", "quantity": 10 }
+        ],
+        "reward_type": "OutputMultiplier",
+        "reward_value": 0.10
+      },
+      {
+        "id": "ms_stage_2",
+        "display_name": "Support Lattice",
+        "costs": [
+          { "item": "dyson_node", "quantity": 25 },
+          { "item": "orbital_frame", "quantity": 5 }
+        ],
+        "reward_type": "SpeedMultiplier",
+        "reward_value": 0.10
+      },
+      {
+        "id": "ms_stage_3",
+        "display_name": "Inner Shell",
+        "costs": [
+          { "item": "dyson_node", "quantity": 50 },
+          { "item": "orbital_frame", "quantity": 20 },
+          { "item": "graviton_lens", "quantity": 2 }
+        ],
+        "reward_type": "OutputMultiplier",
+        "reward_value": 0.25
+      },
+      {
+        "id": "ms_stage_4",
+        "display_name": "Stabilizer Array",
+        "costs": [
+          { "item": "orbital_frame", "quantity": 40 },
+          { "item": "graviton_lens", "quantity": 10 }
+        ],
+        "reward_type": "SpeedMultiplier",
+        "reward_value": 0.25
+      },
+      {
+        "id": "ms_stage_5",
+        "display_name": "Stellar Engine",
+        "costs": [
+          { "item": "dyson_node", "quantity": 100 },
+          { "item": "orbital_frame", "quantity": 80 },
+          { "item": "graviton_lens", "quantity": 30 }
+        ],
+        "reward_type": "PrestigeGainMultiplier",
+        "reward_value": 1.0
+      }
+    ]
+  }
 }

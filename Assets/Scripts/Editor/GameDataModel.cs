@@ -26,6 +26,7 @@ namespace MobileIdleBuilder.Editor
         public List<DailyRewardJson>     daily_rewards   = new();
         public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
+        public MegastructureJson         megastructure   = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
@@ -43,6 +44,8 @@ namespace MobileIdleBuilder.Editor
             daily_rewards   ??= new List<DailyRewardJson>();
             daily_challenges??= new List<DailyChallengeJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
+            megastructure   ??= new MegastructureJson();
+            megastructure.Initialize();
 
             foreach (var r in research)       r?.Initialize();
             foreach (var rec in recipes)      rec?.Initialize();
@@ -369,6 +372,43 @@ namespace MobileIdleBuilder.Editor
         public string trigger     = "";
         public int    target      = 1;
         public int    crystals    = 0;
+    }
+
+    // ── Megastructure JSON models ─────────────────────────────────────────────
+
+    [Serializable]
+    internal class StageCostJson
+    {
+        public string item     = "";
+        public int    quantity = 1;
+    }
+
+    [Serializable]
+    internal class MegastructureStageJson
+    {
+        public string             id           = "";
+        public string             display_name = "";
+        public List<StageCostJson> costs       = new();
+        /// <summary>Must match a MegastructureRewardType enum value: OutputMultiplier | SpeedMultiplier | PrestigeGainMultiplier.</summary>
+        public string             reward_type  = "OutputMultiplier";
+        public float              reward_value = 0f;
+
+        public void Initialize() { costs ??= new List<StageCostJson>(); }
+    }
+
+    [Serializable]
+    internal class MegastructureJson
+    {
+        public string                       id                = "";
+        public string                       display_name      = "";
+        public string                       required_research = "";
+        public List<MegastructureStageJson> stages            = new();
+
+        public void Initialize()
+        {
+            stages ??= new List<MegastructureStageJson>();
+            foreach (var s in stages) s?.Initialize();
+        }
     }
 
     // ── Tutorial step JSON models ─────────────────────────────────────────────

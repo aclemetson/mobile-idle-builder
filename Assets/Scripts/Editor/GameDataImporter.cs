@@ -223,6 +223,9 @@ namespace MobileIdleBuilder.Editor
             // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
             GenerateDailyContent(data.daily_rewards, data.daily_challenges);
 
+            // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
+            GenerateMegastructure(data.megastructure, itemLookup);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -818,6 +821,51 @@ namespace MobileIdleBuilder.Editor
                         crystals    = c.crystals
                     });
             so.challengePool = challengeList.ToArray();
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateMegastructure(MegastructureJson data,
+            Dictionary<string, ItemSO> itemLookup)
+        {
+            if (data == null || string.IsNullOrEmpty(data.id)) return;
+
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/Megastructure.asset";
+            var so = LoadOrCreate<MegastructureSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.requiredResearch = data.required_research;
+
+            var stages = data.stages ?? new List<MegastructureStageJson>();
+            so.stages = new MegastructureStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.costs ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"Megastructure stage '{sd.id}' cost[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+
+                var stage = new MegastructureStage
+                {
+                    id             = sd.id,
+                    displayName    = sd.display_name,
+                    costItems      = items,
+                    costQuantities = qtys,
+                    rewardValue    = sd.reward_value,
+                };
+                if (TryParseEnum<MegastructureRewardType>(sd.reward_type,
+                        $"Megastructure stage '{sd.id}'.rewardType", out var rt))
+                    stage.rewardType = rt;
+
+                so.stages[i] = stage;
+            }
 
             EditorUtility.SetDirty(so);
         }

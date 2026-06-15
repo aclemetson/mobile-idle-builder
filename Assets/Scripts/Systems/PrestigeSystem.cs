@@ -51,6 +51,12 @@ namespace MobileIdleBuilder
             if (gainBonus > 0f)
                 earned = (long)(earned * (1f + gainBonus));
 
+            // Apply the megastructure's prestige-gain reward (e.g. Stellar Engine = ×2). Survives prestige,
+            // so it keeps applying every run once unlocked. Managed call is safe: OnUpdate is not Burst-compiled.
+            float megaGainBonus = MegastructureService.Instance?.GetPrestigeGainBonus() ?? 0f;
+            if (megaGainBonus > 0f)
+                earned = (long)(earned * (1f + megaGainBonus));
+
             prestige.PrestigeCurrency += earned;
             prestige.RunCount += 1;
 
