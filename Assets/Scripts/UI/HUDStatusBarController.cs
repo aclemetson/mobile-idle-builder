@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -32,8 +31,9 @@ namespace MobileIdleBuilder
         // Dirty-flag state
         private int   _lastInventoryHash      = int.MinValue;
         private long  _lastBaseCurrency       = long.MinValue;
-        private float _lastPowerCurrent       = -1f;
-        private float _lastPowerMax           = -1f;
+        private float _lastPowerDraw          = -1f;
+        private float _lastPowerSupply        = -1f;
+        private int   _lastDisconnected       = -1;
         private bool  _lastPrestigeAvailable  = false;
         private long  _lastHeldPC             = long.MinValue;
         private long  _lastCrystals           = long.MinValue;
@@ -131,20 +131,27 @@ namespace MobileIdleBuilder
         private void RefreshPowerLabel()
         {
             if (_powerLabel == null) return;
-            var nodes = _powerQuery.ToComponentDataArray<PowerNodeData>(Allocator.Temp);
-            float current = 0f, max = 0f;
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                current += nodes[i].CurrentEV;
-                max     += nodes[i].MaxEV;
-            }
-            nodes.Dispose();
 
-            if (Mathf.Approximately(current, _lastPowerCurrent) &&
-                Mathf.Approximately(max, _lastPowerMax)) return;
-            _lastPowerCurrent = current;
-            _lastPowerMax     = max;
-            _powerLabel.text  = HUDController.FormatPowerLabel(current, max);
+            // PowerGridState is the singleton written each frame by PowerGridSystem: global eV draw
+            // (connected consumers) vs supply (all generators), plus the unpowered consumer count.
+            var state = _powerQuery.GetSingleton<PowerGridState>();
+
+            if (Mathf.Approximately(state.Draw, _lastPowerDraw) &&
+                Mathf.Approximately(state.Supply, _lastPowerSupply) &&
+                state.DisconnectedCount == _lastDisconnected) return;
+            _lastPowerDraw    = state.Draw;
+            _lastPowerSupply  = state.Supply;
+            _lastDisconnected = state.DisconnectedCount;
+
+            bool brownout = state.Draw > state.Supply + 0.001f;
+            bool warn     = brownout || state.DisconnectedCount > 0;
+
+            string text = HUDController.FormatPowerLabel(state.Draw, state.Supply);
+            if (state.DisconnectedCount > 0) text += $"  ({state.DisconnectedCount} unpowered)";
+            if (warn) text = "⚠ " + text;
+
+            _powerLabel.text = text;
+            _powerLabel.EnableInClassList("power-brownout", warn);
         }
 
         private void RefreshPrestigeButton()

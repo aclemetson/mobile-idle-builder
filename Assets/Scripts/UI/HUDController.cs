@@ -229,7 +229,7 @@ namespace MobileIdleBuilder
             _em             = world.EntityManager;
             _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
             _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
-            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
+            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerGridState>());
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()

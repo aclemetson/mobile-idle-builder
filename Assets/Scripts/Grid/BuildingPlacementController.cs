@@ -225,6 +225,10 @@ namespace MobileIdleBuilder
             {
                 var fp    = GetEffectiveFootprint();
                 bool valid = IsCellValidForPending(cell.x, cell.y);
+                // Preview the power radius for generators so the player can see what they'll cover.
+                if (_pending.building != null && _pending.building.isPowerSource)
+                    gridRenderer.ShowPowerCoverage(cell.x, cell.y, fp.x, fp.y,
+                        BuildingSO.InfluenceRadiusForLevel(_pending.building, 1));
                 gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
                 _lastGhostCell = cell;
 

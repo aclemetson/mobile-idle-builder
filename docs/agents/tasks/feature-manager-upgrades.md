@@ -3,7 +3,8 @@
 **Status:** done (PR #65, feature/manager-upgrades -> release/0.3). JSON data tables chosen for scaling: each
 ManagerSO carries `starBonusValues[]` + `starCosts[]` (max 5 stars; additive increments; cost =
 hireCost x nextStar). All effective-value reads route through `ManagerService.EffectiveBonusValue(id)`.
-PowerDiscount stars are baked but inert at runtime (same gap as base managers). No new HUD component:
+PowerDiscount stars are now LIVE: `PowerGridSystem` reads the star-scaled `AppliedPowerMult` and reduces
+the consumer's eV draw (per-building power-draw feature on `feature/power-draw`). No new HUD component:
 reuses the shipped `ManagersSubController`.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/save-system.md`, `docs/agents/ui-toolkit.md`, `docs/agents/ecs-patterns.md` (multiplier gap map), plus the shipped Managers code: `Assets/Scripts/Services/ManagerService.cs`, `Assets/Scripts/ScriptableObjects/ManagerSO.cs`, `Assets/Scripts/UI/ManagersSubController.cs`.
 **Scope estimate:** ~0 files created, ~6 modified, 1-2 test files.
@@ -78,7 +79,7 @@ The hired roster is currently `List<string> hiredManagers`. Star levels need a p
 
 - Same as Managers: re-bake CraftSpeed on any change to the effective value, or the live building keeps
   the stale speed. Route every value read through one `EffectiveBonusValue(id)` so bake + idle + UI agree.
-- PowerDiscount stars are still inert until `PowerGridSystem` gains a per-building eV draw (see gap map).
+- PowerDiscount stars are now live via the proximity power grid (`feature-power-draw.md`); `PowerGridSystem` reads the star-scaled `AppliedPowerMult`.
 
 ## Out of scope
 

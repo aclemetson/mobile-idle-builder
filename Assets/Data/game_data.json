@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.4",
+    "version": "0.3.5",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -3249,9 +3249,9 @@
       "obsolete_condition": "",
       "requires_power": true,
       "is_power_source": false,
-      "base_power_cost_ev": 0.0,
-      "power_cost_is_dynamic": true,
-      "_note_power": "Power cost = atomic_mass × game_config.atomic_assembler_ev_per_mass_unit",
+      "base_power_cost_ev": 20.0,
+      "power_cost_is_dynamic": false,
+      "_note_power": "v1 power-draw: static per-level eV draw (recipe-dynamic draw deferred). Legacy intent: atomic_mass × game_config.atomic_assembler_ev_per_mass_unit",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
@@ -3269,9 +3269,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 4000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 16000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 30.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 45.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 4000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 70.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 16000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150,  "cost_base_currency": 700,   "cost_prestige_currency": 0 },
@@ -3300,9 +3300,9 @@
       "obsolete_condition": "",
       "requires_power": true,
       "is_power_source": false,
-      "base_power_cost_ev": 0.0,
-      "power_cost_is_dynamic": true,
-      "_note_power": "Power cost = neutrons_adjusted × game_config.isotopic_manipulator_ev_per_neutron",
+      "base_power_cost_ev": 25.0,
+      "power_cost_is_dynamic": false,
+      "_note_power": "v1 power-draw: static per-level eV draw (recipe-dynamic draw deferred). Legacy intent: neutrons_adjusted × game_config.isotopic_manipulator_ev_per_neutron",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
@@ -3320,9 +3320,9 @@
       "base_max_output_items": 15,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 32000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 1.0, "power_cost_ev": 40.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 2.0, "power_cost_ev": 60.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 4.0, "power_cost_ev": 90.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 32000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 100,  "cost_base_currency": 1500,  "cost_prestige_currency": 0 },
@@ -3403,9 +3403,9 @@
       "obsolete_condition": "",
       "requires_power": true,
       "is_power_source": false,
-      "base_power_cost_ev": 0.0,
+      "base_power_cost_ev": 50.0,
       "power_cost_is_dynamic": false,
-      "_note_power": "Power cost defined per recipe via fixed_power_cost_ev",
+      "_note_power": "v1 power-draw: static per-level eV draw (per-recipe draw deferred).",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
@@ -3423,9 +3423,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 50000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 75.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 50000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 115.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 170.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150,  "cost_base_currency": 35000,  "cost_prestige_currency": 0 },
@@ -3454,9 +3454,9 @@
       "obsolete_condition": "",
       "requires_power": true,
       "is_power_source": false,
-      "base_power_cost_ev": 0.0,
+      "base_power_cost_ev": 100.0,
       "power_cost_is_dynamic": false,
-      "_note_power": "Power cost defined per recipe via fixed_power_cost_ev",
+      "_note_power": "v1 power-draw: static per-level eV draw (per-recipe draw deferred).",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
@@ -3474,9 +3474,9 @@
       "base_max_output_items": 15,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25000000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 1.0, "power_cost_ev": 150.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 2.0, "power_cost_ev": 225.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 4.0, "power_cost_ev": 340.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25000000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 100,  "cost_base_currency": 700000,    "cost_prestige_currency": 0 },
@@ -3505,9 +3505,9 @@
       "obsolete_condition": "",
       "requires_power": true,
       "is_power_source": false,
-      "base_power_cost_ev": 0.0,
+      "base_power_cost_ev": 200.0,
       "power_cost_is_dynamic": false,
-      "_note_power": "Power cost defined per recipe via fixed_power_cost_ev",
+      "_note_power": "v1 power-draw: static per-level eV draw (per-recipe draw deferred).",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
@@ -3525,8 +3525,8 @@
       "base_max_output_items": 10,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 0.5, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 100000000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 0.5, "power_cost_ev": 300.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 100000000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 1.0, "power_cost_ev": 450.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 75,  "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
@@ -4200,7 +4200,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Select the Combiner, then drag a power link to the Generator. The Combiner draws 10 eV — well within the Generator's 50 eV output. It will come online immediately.",
+          "text": "No wiring needed — the Combiner is already inside the Generator's power field, so it comes online the moment a generator is in range. It draws 10 eV, well within the Generator's 50 eV output. Watch the power readout up top: if total draw ever exceeds supply, everything slows down.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -5242,7 +5242,7 @@
     },
     {
       "id": "place_generator",
-      "hint": "Place a Basic Generator near the Strong Force Combiner.",
+      "hint": "Place a Basic Generator within range of the Strong Force Combiner to power it.",
       "advance_condition": { "type": "BuildingMin", "building_id": "basic_generator", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_generator_context",
@@ -5251,8 +5251,9 @@
     },
     {
       "id": "link_generator",
-      "hint": "Select the Strong Force Combiner and drag a power link to the Generator.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "power_link_established" },
+      "_comment": "Power is proximity-based: a generator within its influence radius powers the building automatically. No manual linking. Advances when the Combiner becomes powered (consumer_powered fires from PowerGridState).",
+      "hint": "The Combiner powers on automatically while a generator is in range. Keep generators close to the buildings they power.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "consumer_powered" },
       "on_enter": { "dialogue_id": "link_generator_context" }
     },
     {

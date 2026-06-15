@@ -24,7 +24,7 @@ MonoBehaviour:
   obsoleteCondition: 
   requiresPower: 1
   isPowerSource: 0
-  basePowerCostEV: 0
+  basePowerCostEV: 200
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
@@ -53,14 +53,14 @@ MonoBehaviour:
   upgradeLevels:
   - level: 2
     outputRate: 0.5
-    powerCostEV: 0
+    powerCostEV: 300
     outputEV: 0
     influenceRadiusTiles: 0
     costBaseCurrency: 100000000
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 1
-    powerCostEV: 0
+    powerCostEV: 450
     outputEV: 0
     influenceRadiusTiles: 0
     costBaseCurrency: 1000000000

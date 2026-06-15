@@ -19,9 +19,12 @@ namespace MobileIdleBuilder
         private EntityQuery                                       _buildingQuery;
         private EntityQuery                                       _footprintQuery;
         private EntityQuery                                       _portQuery;
+        private EntityQuery                                       _powerStatusQuery;
         private bool                                              _buildingQueryReady;
         private bool                                              _footprintQueryReady;
         private bool                                              _portQueryReady;
+        private bool                                              _powerStatusQueryReady;
+        private float                                             _powerTintTimer;
         private readonly Dictionary<(int, int), (int, int)>      _footprints        = new();
         private readonly HashSet<(int, int)>                      _highlighted       = new();
         private readonly Dictionary<(int, int), GameObject>       _spawnedCubes      = new();
@@ -34,8 +37,9 @@ namespace MobileIdleBuilder
 
         private (int, int) _hoveredCell = (-1, -1);
 
-        private static readonly Color DefaultCubeColor = Color.white;
-        private static readonly Color HoverCubeColor   = new Color(0.35f, 0.9f, 1f);
+        private static readonly Color DefaultCubeColor   = Color.white;
+        private static readonly Color HoverCubeColor     = new Color(0.35f, 0.9f, 1f);
+        private static readonly Color UnpoweredCubeColor = new Color(0.9f,  0.25f, 0.25f); // red — no power in range
 
         void Start()
         {
@@ -59,6 +63,12 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<PlacedPortData>()
             );
             _portQueryReady = true;
+
+            _powerStatusQuery = world.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<GridPosition>(),
+                ComponentType.ReadOnly<PowerStatus>()
+            );
+            _powerStatusQueryReady = true;
 
             StartCoroutine(ScanOnceLoaded());
         }
@@ -191,6 +201,41 @@ namespace MobileIdleBuilder
             entities.Dispose();
         }
 
+        // ----------------------------------------------------------------
+        // Power tint — persistently reddens consumer cubes with no generator in range
+        // ----------------------------------------------------------------
+
+        void Update()
+        {
+            _powerTintTimer += Time.deltaTime;
+            if (_powerTintTimer < 0.4f) return;
+            _powerTintTimer = 0f;
+            RefreshPowerTint();
+        }
+
+        private void RefreshPowerTint()
+        {
+            if (!_powerStatusQueryReady || _powerStatusQuery.IsEmpty) return;
+
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+            var em = world.EntityManager;
+
+            var entities = _powerStatusQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var pos    = em.GetComponentData<GridPosition>(entities[i]);
+                var status = em.GetComponentData<PowerStatus>(entities[i]);
+                var cell   = (pos.Cell.x, pos.Cell.y);
+
+                // Don't fight the hover highlight; it reasserts on the next tick after un-hover.
+                if (cell == _hoveredCell) continue;
+                if (_spawnedCubes.TryGetValue(cell, out var cube) && cube != null)
+                    ApplyCubeColor(cube, status.IsConnected == 0 ? UnpoweredCubeColor : DefaultCubeColor);
+            }
+            entities.Dispose();
+        }
+
         private static Vector3 FacingEdgeOffset(OutputDirection dir, float cellSize)
         {
             float h = cellSize * 0.5f;
@@ -292,9 +337,10 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated)
             {
-                if (_buildingQueryReady)  _buildingQuery.Dispose();
-                if (_footprintQueryReady) _footprintQuery.Dispose();
-                if (_portQueryReady)      _portQuery.Dispose();
+                if (_buildingQueryReady)    _buildingQuery.Dispose();
+                if (_footprintQueryReady)   _footprintQuery.Dispose();
+                if (_portQueryReady)        _portQuery.Dispose();
+                if (_powerStatusQueryReady) _powerStatusQuery.Dispose();
             }
 
             foreach (var go in _spawnedCubes.Values)
