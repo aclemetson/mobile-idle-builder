@@ -62,6 +62,7 @@ namespace MobileIdleBuilder
         private Button        _btnRotateOutput;
         private Button        _btnFlipBuilding;
         private VisualElement _placementConfirmPopup;
+        private VisualElement _placementBar;
         private Button        _btnConfirmPlace;
         private Button        _btnCancelCandidate;
 
@@ -339,6 +340,7 @@ namespace MobileIdleBuilder
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
             _placementConfirmPopup = root.Q("placement-confirm-popup");
+            _placementBar          = root.Q("placement-bar");
             _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
             _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
@@ -1276,7 +1278,7 @@ namespace MobileIdleBuilder
         /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
         private bool IsPointerOverPlacementUI(Vector2 screenPos)
             => ScreenPointInElement(_placementConfirmPopup, screenPos)
-            || ScreenPointInElement(_placementOverlay,      screenPos);
+            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
 
         private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
         {
