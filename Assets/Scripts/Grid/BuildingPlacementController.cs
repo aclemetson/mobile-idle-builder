@@ -46,6 +46,12 @@ namespace MobileIdleBuilder
         private int  _rotation; // 0-3, applied CW
         private bool _flipped;
 
+        /// <summary>Current CW rotation step (0-3) of the pending building. Exposed for tests.</summary>
+        public int CurrentRotation => _rotation;
+
+        /// <summary>Advances a 0-3 CW rotation step by one, wrapping 3 → 0.</summary>
+        public static int NextRotation(int rotation) => (rotation + 1) % 4;
+
         /// <summary>True if the pending building defines its own port layout.</summary>
         public bool HasPortLayout =>
             IsPlacing && _pending.building?.ports != null && _pending.building.ports.Length > 0;
@@ -73,7 +79,7 @@ namespace MobileIdleBuilder
         {
             if (HasPortLayout)
             {
-                _rotation = (_rotation + 1) % 4;
+                _rotation = NextRotation(_rotation);
                 RefreshCandidateGhost();
             }
             else

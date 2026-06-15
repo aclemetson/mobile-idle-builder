@@ -66,6 +66,7 @@ namespace MobileIdleBuilder
         private VisualElement _placementBar;
         private Button        _btnConfirmPlace;
         private Button        _btnCancelCandidate;
+        private Button        _btnRotateCandidate;
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
@@ -352,6 +353,7 @@ namespace MobileIdleBuilder
             _placementBar          = root.Q("placement-bar");
             _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
             _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
+            _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
@@ -452,6 +454,8 @@ namespace MobileIdleBuilder
                 _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
             if (_btnCancelCandidate != null)
                 _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
+            if (_btnRotateCandidate != null)
+                _btnRotateCandidate.clicked += () => placementController?.Rotate();
 
             // Conveyor cancel (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -1276,6 +1280,10 @@ namespace MobileIdleBuilder
         private void OnCandidateChanged(bool hasCandidate)
         {
             SetElementVisible(_placementConfirmPopup, hasCandidate);
+            // Surface the rotate (↻) action on the confirm popup itself for rotatable buildings,
+            // so the player can re-orient in-context next to ✓/✕ instead of reaching for the bottom bar.
+            SetElementVisible(_btnRotateCandidate,
+                hasCandidate && (placementController?.CanRotate ?? false));
             if (hasCandidate) UpdatePlacementConfirmPopup();
         }
 

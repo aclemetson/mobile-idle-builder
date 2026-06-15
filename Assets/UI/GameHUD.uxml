@@ -320,6 +320,7 @@
         <!-- ═══ PLACEMENT CONFIRM POPUP (world-anchored above the candidate cell) ═══ -->
         <ui:VisualElement name="placement-confirm-popup" class="placement-confirm-popup hidden" picking-mode="Ignore">
             <ui:Button name="btn-cancel-candidate" text="✕" class="placement-confirm-btn placement-confirm-btn--cancel" />
+            <ui:Button name="btn-rotate-candidate" text="↻" class="placement-confirm-btn placement-confirm-btn--rotate hidden" />
             <ui:Button name="btn-confirm-place"    text="✓" class="placement-confirm-btn placement-confirm-btn--confirm" />
         </ui:VisualElement>
 

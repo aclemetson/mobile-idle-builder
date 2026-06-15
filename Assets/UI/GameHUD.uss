@@ -75,6 +75,12 @@
     border-color: var(--color-danger);
 }
 
+.placement-confirm-btn--rotate {
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
 .placement-confirm-btn:disabled {
     opacity: 0.4;
 }

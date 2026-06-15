@@ -1201,6 +1201,11 @@ design_gaps: [
     detail:'RecipeKnowledgeService.Start() calls RecipeDatabase.Instance with no DefaultExecutionOrder set on RecipeDatabase. If ordering ever shifts, SyncWithRecipeDatabase silently skips and new recipes are never added to the cross-prestige save file.',
     default_sol:'Add [DefaultExecutionOrder(-80)] to RecipeDatabase so it always initializes before RecipeKnowledgeService (-70). Makes the dependency explicit in code rather than relying on scene insertion order.',
     default_date:'2026-05-29' },
+  { id:'gap-14', cat:'Design', status:'resolved',
+    issue:'No in-context rotate during tap-to-place confirm flow (mobile)',
+    detail:'Placement now uses tap-to-position then a world-anchored ✓/✕ confirm popup above the candidate cell. Rotate (and Flip) lived only on the bottom placement bar, so a mobile player who tapped a cell had to look away from the confirm popup to re-orient a building before accepting.',
+    default_sol:'Added a ↻ Rotate button (btn-rotate-candidate) to the confirm popup between ✕ and ✓, calling the same BuildingPlacementController.Rotate() as the bottom-bar button and the R key. HUDController shows it only when CanRotate is true; the per-frame popup re-anchor + ✓-validity refresh pick up the new footprint after each rotate. Flip stays on the bottom bar. Covered by Assets/Scripts/Tests/BuildingPlacementControllerTests.cs.',
+    default_date:'2026-06-15' },
 ],
 
 // ─────────────────────────────────────── SIMPLE OVERVIEW ──
