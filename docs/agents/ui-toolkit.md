@@ -10,7 +10,7 @@
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 
-`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `daily-panel` (login rewards + daily challenges), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
+`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `daily-panel` (login rewards + daily challenges), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
 
 Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by adding/removing `hidden`.
 
@@ -29,6 +29,16 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - **Top-bar power label** (`power-label` in `GameHUD.uxml:26`): `HUDStatusBarController.RefreshPowerLabel` reads the `PowerGridState` singleton and shows `⚡ draw / supply eV`. On a brownout (`Draw > Supply`) or any unpowered consumer it prefixes `⚠`, appends `(N unpowered)`, and toggles the `power-brownout` USS class (`GameHUD.uss`, red via `--color-danger`). The status bar's power query is `PowerGridState` (not `PowerNodeData`).
 - **Coverage tiles**: `GridRenderer.ShowPowerCoverage(x,y,w,h,radius)` / `ClearPowerCoverage()` tint covered cells blue using the same `SetTileHighlight` layer as the placement ghost (cleared automatically by `HideGhost`). Shown while placing a generator (`BuildingPlacementController` ghost update) and while a generator/consumer is selected (`HUDBuildingInspectorSubController.AddPowerSection`, which also adds output/draw/status rows).
 - **Unpowered building tint**: `BuildingVisualizer` runs a throttled pass (~0.4s) reddening disconnected consumer cubes via the existing `PresenceReceiver` colour path (skips the currently-hovered cube).
+
+## Building placement (tap-to-position + confirm popup)
+
+`BuildingPlacementController` does NOT place on press and does NOT lock the camera. Flow (editor mouse + mobile touch, one code path via `InputUtils`):
+
+1. **Press-drag pans** the map (camera stays unlocked during placement). A tap vs. drag is decided by accumulated pointer movement against `CameraController.TapThreshold` (20px) — a drag never places.
+2. A **stationary tap sets a candidate cell** (`SetCandidate`), locks the ghost there (`_hasCandidate` skips the desktop hover-follow), and raises `OnCandidateChanged(true)`. Tapping another cell repositions; Rotate/Flip re-draw the ghost at the candidate.
+3. A **world-anchored confirm popup** (`placement-confirm-popup` in `GameHUD.uxml`, ✓ `btn-confirm-place` / ✕ `btn-cancel-candidate`) floats above the candidate. `HUDController.UpdatePlacementConfirmPopup` repositions it every frame via `RuntimePanelUtils.CameraTransformWorldToPanel(panel, CandidateWorldPosition, Camera.main)`, disables ✓ when `CandidateValid` is false, and hides it on `OnCandidateChanged(false)` / placement end. ✓ → `ConfirmCandidate()` (runs the field output-selector if needed, else `ConfirmPlacement`); ✕ / Esc → `ClearCandidate()`.
+
+**Gotcha (cost a debug cycle):** `BuildingPlacementController.IsPointerOverPlacementUI` (assigned by `HUDController`) must hit-test the **`placement-bar`** strip and the popup — NOT the `placement-overlay` container, which is full-screen/transparent so the world shows through. Hit-testing the overlay makes *every* tap read as "over UI", so no candidate is ever set and the popup never appears. Use `ScreenPointInElement` (`RuntimePanelUtils.ScreenToPanel` + `worldBound.Contains`).
 
 ## Styling
 
