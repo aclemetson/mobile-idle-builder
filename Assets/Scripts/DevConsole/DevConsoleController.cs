@@ -344,6 +344,27 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            // ── research ──────────────────────────────────────────────────────
+            _registry.Register("unlock research <id>", "Force-unlock a research node by string ID (ignores cost/prereqs)",
+                args =>
+                {
+                    var rs = ResearchService.Instance;
+                    if (rs == null) return "Error: ResearchService not found.";
+
+                    string id    = args[0];
+                    bool   exists = false;
+                    if (rs.AllResearch != null)
+                        foreach (var r in rs.AllResearch)
+                            if (r != null && r.id == id) { exists = true; break; }
+                    if (!exists)
+                        return $"Error: research '{id}' not found. Use lowercase IDs from game_data.json (e.g. megastructure_theory).";
+                    if (rs.IsUnlocked(id))
+                        return $"Research '{id}' already unlocked.";
+
+                    rs.ForceUnlock(id);
+                    return $"Unlocked research '{id}'.";
+                });
+
             // ── show prestige ─────────────────────────────────────────────────
             _registry.Register("show prestige", "Dump PrestigeData (run count, currency, multipliers)",
                 _ =>
