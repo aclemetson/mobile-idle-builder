@@ -81,6 +81,7 @@ namespace MobileIdleBuilder
             {
                 var complete = new Label("The Dyson Sphere is complete. All stage rewards are active.");
                 complete.AddToClassList("recipe-name");
+                complete.style.whiteSpace = WhiteSpace.Normal; // wrap so the full sentence fits the panel
                 _list.Add(complete);
                 return;
             }
