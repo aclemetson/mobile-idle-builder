@@ -171,9 +171,9 @@ namespace MobileIdleBuilder
             if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
             float   t     = -ray.origin.y / ray.direction.y;
             Vector3 world = ray.origin + ray.direction * t;
-            float   cs    = gridRenderer.CellSize;
-            cx = Mathf.FloorToInt(world.x / cs + 0.5f);
-            cy = Mathf.FloorToInt(world.z / cs + 0.5f);
+            var     cell  = GridRenderer.WorldToCell(world, gridRenderer.CellSize);
+            cx = cell.x;
+            cy = cell.y;
             return true;
         }
 

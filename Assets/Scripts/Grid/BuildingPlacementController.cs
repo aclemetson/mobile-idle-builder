@@ -587,9 +587,7 @@ namespace MobileIdleBuilder
             float t     = -ray.origin.y / ray.direction.y;
             var   world = ray.origin + ray.direction * t;
 
-            int x = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
-            int y = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
-            return new(x, y);
+            return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
     }
 }

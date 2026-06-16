@@ -108,6 +108,18 @@ namespace MobileIdleBuilder
 
         public bool IsInBounds(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 
+        /// <summary>
+        /// Maps a world-space ground point to the grid cell whose CENTER is nearest.
+        /// Tiles are rendered centered at (x*cellSize, z*cellSize) (see BuildGrid), so cell
+        /// boundaries fall at (x ± 0.5) * cellSize — this is round-to-nearest, NOT floor.
+        /// Plain FloorToInt(world/cellSize) selects the cell a half-tile down-left of the point,
+        /// which is the classic "touch is a bit off" placement bug. All screen->cell call sites
+        /// must go through this helper so the convention can never diverge again.
+        /// </summary>
+        public static Vector2Int WorldToCell(Vector3 world, float cellSize) =>
+            new(Mathf.FloorToInt(world.x / cellSize + 0.5f),
+                Mathf.FloorToInt(world.z / cellSize + 0.5f));
+
         /// <summary>Marks a cell as permanently occupied (building placed).</summary>
         public void SetTileHighlight(int x, int y, bool highlighted)
         {
