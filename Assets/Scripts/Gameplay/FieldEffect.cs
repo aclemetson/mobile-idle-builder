@@ -116,16 +116,13 @@ namespace MobileIdleBuilder
             rend.renderMode = ParticleSystemRenderMode.Billboard;
             rend.sortingOrder = 1;
 
-            // Instance from the serialized template so the shader is guaranteed included in builds.
+            // Instance from the serialized template so the shader/variant is guaranteed in builds.
+            // Additive-transparent blend state is baked into FieldParticleMaterial.mat, so only the
+            // per-field tint is set here. Do NOT enable GPU instancing: the template ships with
+            // m_EnableInstancingVariants:0, so URP Lit's INSTANCING_ON variant is stripped from
+            // device builds; requesting it on a billboard particle renders magenta on Android.
             var mat = new Material(particleMaterialTemplate);
-            mat.SetFloat("_Surface", 1f);           // transparent
-            mat.SetFloat("_Blend", 2f);             // additive
-            mat.SetFloat("_BlendOp", (float)UnityEngine.Rendering.BlendOp.Add);
-            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
-            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
-            mat.SetFloat("_ZWrite", 0f);
             mat.SetColor("_BaseColor", baseColor);
-            mat.enableInstancing = true;
             rend.material = mat;
 
             _particles.Play();
