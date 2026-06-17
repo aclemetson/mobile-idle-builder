@@ -40,6 +40,21 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 
 **Gotcha (cost a debug cycle):** `BuildingPlacementController.IsPointerOverPlacementUI` (assigned by `HUDController`) must hit-test the **`placement-bar`** strip and the popup — NOT the `placement-overlay` container, which is full-screen/transparent so the world shows through. Hit-testing the overlay makes *every* tap read as "over UI", so no candidate is ever set and the popup never appears. Use `ScreenPointInElement` (`RuntimePanelUtils.ScreenToPanel` + `worldBound.Contains`).
 
+## World-input blocking (taps/pans starting on UI)
+
+`UIInputBlocker` (`Assets/Scripts/UI/UIInputBlocker.cs`) is the single source of truth for "is this screen point over blocking UI". Every world-input consumer routes through it so they all agree:
+
+- `CameraController` — a press whose start point is over UI never begins a pan (`_pressOverUI` gate in `HandleSwipePan`).
+- `PlayerInputRouter` — records `_pressWasOnUI` on press, blocks the tap on release if either the press or the release is over UI.
+- `BuildingPlacementController` — folds `UIInputBlocker.IsPointerOverUI` into `_pressOverUI` (alongside the `IsPointerOverPlacementUI` placement-bar test).
+- `ConveyorPlacementController` / `DeconstructController` — a press over UI is ignored (no start cell / no deconstruct).
+
+How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in `OnEnable` and unregisters in `OnDisable` (see `HUDController`, `DevConsoleController`) — so consumers need NO scene wiring. `IsPointerOverUI` converts the point with `RuntimePanelUtils.ScreenToPanel` (**no Y-flip** — matches `HUDController.ScreenPointInElement`, the proven convention) and walks each registered panel's tree, testing `worldBound.Contains` on every visible blocking surface. A surface is blocking if it is a `Button`/`Toggle`/`Slider`/`TextField` or carries a class in `BlockingClasses` (e.g. `slide-panel`, `left-drawer`, `top-bar`, `dev-console`, plus the `blocks-world-input` marker class). `display:none` subtrees (closed slide-panels) are pruned so a collapsed panel never blocks. **Do not use `IPanel.Pick` here** — it proved unreliable across the separate HUD and dev-console panels, which is why the hit-test mirrors HUDController's `worldBound`-based `ScreenPointInElement`.
+
+**Modal overlays:** `UIInputBlocker.SetModal(owner, active)` registers a full-screen/debug overlay that blocks *all* world input while open, regardless of pointer position — skip per-element hit-testing entirely. The dev console uses this (`DevConsoleController.SetVisible` / `OnDisable`): it shares the HUD's `PanelSettings` (`gamePanelSettings`), so two `UIDocument`s render into one runtime panel, and per-element `worldBound` hit-testing across that shared panel proved unreliable on-device. A debug console doesn't need precise hit-testing — block everything while it's up. Use `SetModal` for any true modal where "block the whole screen" is acceptable; use the class/`worldBound` path for partial HUD chrome (bars, drawers) that must let the world stay live elsewhere.
+
+**When adding a new full-screen or interactive panel:** give its root the `blocks-world-input` class (or a class already in `BlockingClasses`) so taps/pans on it don't leak to the world — or call `SetModal` if it's a true modal. `IsBlockingElement` and the modal short-circuit are covered by `UIInputBlockerTests` (pure, edit-mode).
+
 ## Styling
 
 - `Assets/UI/tokens.uss` — design tokens (colors/spacing/typography vars). `Assets/UI/components.uss` — shared classes. `Assets/UI/GameHUD.uss` — HUD layout. Panel-specific: `AchievementsMenu.uss`, `PremiumShop.uss`.

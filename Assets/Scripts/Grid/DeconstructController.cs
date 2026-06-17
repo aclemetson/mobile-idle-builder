@@ -175,15 +175,7 @@ namespace MobileIdleBuilder
             return (x, y, 1, 1); // conveyor or unknown — 1×1
         }
 
-        private bool IsPointerOverUI(Vector2 screenPos)
-        {
-            if (hudDocument == null) return false;
-            var panel = hudDocument.rootVisualElement?.panel;
-            if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
-                panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            return panel.Pick(panelPos) != null;
-        }
+        private static bool IsPointerOverUI(Vector2 screenPos) => UIInputBlocker.IsPointerOverUI(screenPos);
 
         // ================================================================
         // Private helpers

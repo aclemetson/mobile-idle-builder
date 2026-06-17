@@ -153,6 +153,8 @@ namespace MobileIdleBuilder
                 };
             }
 
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+
             QueryElements(root);
             _statusBar?.Init(root);
             _inspector?.Init(root, placementController, this);
@@ -210,6 +212,8 @@ namespace MobileIdleBuilder
 
         void OnDisable()
         {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+
             if (placementController != null)
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;

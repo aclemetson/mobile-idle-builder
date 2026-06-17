@@ -177,18 +177,8 @@ namespace MobileIdleBuilder
             return true;
         }
 
-        private bool IsPointerOverUI(Vector2 screenPos)
-        {
-            if (hudDocument == null) return false;
-            var panel = hudDocument.rootVisualElement?.panel;
-            if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
-                panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            // Only block gameplay taps when the player pressed an interactive control.
-            // panel.Pick() returns any VisualElement including transparent containers/labels,
-            // which would falsely block taps on the game world under HUD overlays.
-            var picked = panel.Pick(panelPos);
-            return picked is Button || picked is Toggle || picked is Slider || picked is TextField;
-        }
+        // UI hit-testing lives in the shared UIInputBlocker so the camera, this router, and the
+        // placement/conveyor/deconstruct controllers all agree on what counts as "over UI".
+        private static bool IsPointerOverUI(Vector2 screenPos) => UIInputBlocker.IsPointerOverUI(screenPos);
     }
 }
