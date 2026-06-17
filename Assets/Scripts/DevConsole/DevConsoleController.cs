@@ -84,7 +84,16 @@ namespace MobileIdleBuilder.Dev
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
 
+            // Block world input (camera pan + gameplay taps) over the console overlay.
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+
             SetVisible(false);
+        }
+
+        void OnDisable()
+        {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+            UIInputBlocker.SetModal(this, false);
         }
 
         void Start()
@@ -192,6 +201,10 @@ namespace MobileIdleBuilder.Dev
         private void SetVisible(bool visible)
         {
             _isVisible = visible;
+            // The console is a debug overlay sharing the HUD's panel; block ALL world input
+            // (camera pan + gameplay taps) while it is open rather than relying on per-element
+            // hit-testing across the shared panel.
+            UIInputBlocker.SetModal(this, visible);
             if (_consoleRoot == null) return;
 
             if (visible)

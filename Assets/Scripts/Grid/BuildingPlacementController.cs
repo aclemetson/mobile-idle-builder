@@ -272,7 +272,8 @@ namespace MobileIdleBuilder
                 _pointerDown = true;
                 _pointerPrev = InputUtils.GetPointerPosition();
                 _dragAccum   = 0f;
-                _pressOverUI = IsPointerOverPlacementUI?.Invoke(_pointerPrev) ?? false;
+                _pressOverUI = (IsPointerOverPlacementUI?.Invoke(_pointerPrev) ?? false)
+                               || UIInputBlocker.IsPointerOverUI(_pointerPrev);
             }
             if (_pointerDown && InputUtils.IsPointerHeld())
             {

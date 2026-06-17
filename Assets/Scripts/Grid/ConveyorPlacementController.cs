@@ -94,6 +94,12 @@ namespace MobileIdleBuilder
             // ---- Pointer DOWN: fix start point ----
             if (InputUtils.WasPointerPressed())
             {
+                // A press that starts on a menu/panel/button must never start a conveyor drag.
+                if (UIInputBlocker.IsPointerOverUI(InputUtils.GetPointerPosition()))
+                {
+                    gridRenderer.ClearConveyorHoverCell();
+                    return;
+                }
                 gridRenderer.ClearConveyorHoverCell();
                 if (IsFreecell(cell) || IsConveyorCell(cell))
                 {

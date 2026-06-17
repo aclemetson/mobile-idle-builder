@@ -43,6 +43,7 @@ namespace MobileIdleBuilder
         private Vector2  _panPrev;
         private bool     _isPanActive;
         private bool     _panLocked;
+        private bool     _pressOverUI;
         private float    _dragAccum;
         private Vector3? _panTarget;
 
@@ -96,7 +97,9 @@ namespace MobileIdleBuilder
             if (InputUtils.WasPointerPressed())
             {
                 _panPrev     = InputUtils.GetPointerPosition();
-                _isPanActive = true;
+                // A press that starts on a menu/panel/button must never pan the map.
+                _pressOverUI = UIInputBlocker.IsPointerOverUI(_panPrev);
+                _isPanActive = !_pressOverUI;
                 _dragAccum   = 0f;
             }
 
