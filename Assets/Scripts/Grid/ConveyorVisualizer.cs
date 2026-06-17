@@ -107,7 +107,7 @@ namespace MobileIdleBuilder
                         mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
-                    SetMeshColor(mr, ItemColor(item.ItemID));
+                    SetMeshColor(mr, ItemColors.For(item.ItemID));
                     _itemSpheres[e] = sphere;
                 }
 
@@ -393,13 +393,5 @@ namespace MobileIdleBuilder
         }
 
         private static int OppositeDir(int dir) => (dir + 2) % 4;
-
-        /// <summary>Returns a deterministic bright color based on item ID.</summary>
-        private static Color ItemColor(int itemID)
-        {
-            // Use HSV with fixed saturation/value, vary hue by item ID
-            float hue = (itemID * 0.618034f) % 1f; // golden ratio spread
-            return Color.HSVToRGB(hue, 0.9f, 1f);
-        }
     }
 }
