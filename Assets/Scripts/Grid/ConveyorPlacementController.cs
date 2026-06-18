@@ -53,6 +53,8 @@ namespace MobileIdleBuilder
         public event Action<bool> OnModeChanged;
         /// <summary>Raised when a placement candidate appears (true) or is cleared (false).</summary>
         public event Action<bool> OnCandidateChanged;
+        /// <summary>Raised after a run is confirmed and placed (drives the tutorial's conveyor step).</summary>
+        public event Action OnChainPlaced;
 
         // ----------------------------------------------------------------
         // Private state
@@ -136,6 +138,7 @@ namespace MobileIdleBuilder
 
             conveyorPlacer.PlaceConveyorChain(_currentPath);
             SaveManager.Instance?.SaveLocal();
+            OnChainPlaced?.Invoke();
 
             // Auto-chain: the run's end becomes the next start so the player can keep extending.
             Vector2Int newStart = _destCell;

@@ -905,7 +905,8 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: place_conveyor
-    hintText: Connect the Harvester to Maxwell's Demon with a conveyor belt.
+    hintText: Tap a start tile by the Harvester, then the tile in front of Maxwell's
+      Demon, and place the belt.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1068,7 +1069,8 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: route_quarks_to_sfc
-    hintText: Connect the quark Harvester output to the Strong Force Combiner input.
+    hintText: Tap a start tile by the quark Harvester, then the tile in front of
+      the Combiner's input, and place the belt.
     advanceCondition:
       type: 3
       anyOf: 0

@@ -83,6 +83,7 @@ namespace MobileIdleBuilder
         public event System.Action OnDrawerOpened;
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
+        public event System.Action OnConveyorPlaced;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -204,6 +205,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+                conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
             }
 
             if (deconstructController != null)
@@ -237,6 +239,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+                conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
             }
 
             if (deconstructController != null)
@@ -1404,6 +1407,9 @@ namespace MobileIdleBuilder
 
         private bool IsDestroyModeActive() =>
             conveyorController != null && conveyorController.IsDestroyMode;
+
+        /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
+        private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {

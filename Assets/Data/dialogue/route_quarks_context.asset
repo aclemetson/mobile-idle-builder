@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Connect the quark Harvester's output port to the Combiner's input port
-      with a conveyor. Quarks will flow in continuously.
+    text: 'Connect the quark Harvester to the Combiner with a conveyor: tap the tile
+      beside the Harvester''s output, then the tile in front of the Combiner''s input.
+      Quarks will flow in continuously.'
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 
