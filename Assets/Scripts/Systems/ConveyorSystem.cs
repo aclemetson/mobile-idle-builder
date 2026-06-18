@@ -100,11 +100,10 @@ namespace MobileIdleBuilder
                     }
                     else
                     {
-                        // Tail: clear if an accepting building input is adjacent
-                        int2 destCell = AdjacentCell(seg.Cell, seg.ExitDir);
+                        // Tail: clear if an accepting building input is in any adjacent cell that
+                        // sits in front of the input port — regardless of the belt's exit direction.
                         canAdvance = false;
-                        if (buildingMap.TryGetValue(destCell, out Entity destBldg) &&
-                            HasMatchingPort(destBldg, destCell, seg.ExitDir, PortType.Input))
+                        if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity destBldg, out _))
                         {
                             var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(destBldg);
                             var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(destBldg);
@@ -123,7 +122,7 @@ namespace MobileIdleBuilder
             // ----------------------------------------------------------------
             // Pass 3 — Transfer items (deferred, applied after collection)
             // ----------------------------------------------------------------
-            var transfers = new List<(Entity from, Entity toSeg, Entity toBuilding, int itemID, float newProg)>();
+            var transfers = new List<(Entity from, Entity toSeg, Entity toBuilding, int itemID, float newProg, int deliverDir)>();
 
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -139,29 +138,27 @@ namespace MobileIdleBuilder
                     // Move to next segment if it is empty
                     if (!EntityManager.HasComponent<ConveyorItemData>(seg.NextSegment))
                     {
-                        transfers.Add((e, seg.NextSegment, Entity.Null, item.ItemID, item.Progress - 1f));
+                        transfers.Add((e, seg.NextSegment, Entity.Null, item.ItemID, item.Progress - 1f, -1));
                     }
                     // else: back-pressure — item waits
                 }
                 else
                 {
-                    // Tail segment — try to deposit into an adjacent building input port
-                    int2 destCell = AdjacentCell(seg.Cell, seg.ExitDir);
-
-                    if (buildingMap.TryGetValue(destCell, out Entity bldg) &&
-                        HasMatchingPort(bldg, destCell, seg.ExitDir, PortType.Input))
+                    // Tail segment — deposit into a building input whose port faces this cell,
+                    // in whichever adjacent direction it sits (independent of the belt's exit dir).
+                    if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity bldg, out int deliverDir))
                     {
                         var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
                         var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg);
                         if (SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity)
-                            transfers.Add((e, Entity.Null, bldg, item.ItemID, 0f));
+                            transfers.Add((e, Entity.Null, bldg, item.ItemID, 0f, deliverDir));
                         // else: input full — item waits
                     }
-                    // No building or port: item waits at tail
+                    // No adjacent input port: item waits at tail
                 }
             }
 
-            foreach (var (from, toSeg, toBuilding, itemID, newProg) in transfers)
+            foreach (var (from, toSeg, toBuilding, itemID, newProg, deliverDir) in transfers)
             {
                 if (toBuilding != Entity.Null)
                 {
@@ -169,11 +166,12 @@ namespace MobileIdleBuilder
                     SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(toBuilding), itemID, 1);
                     EntityManager.RemoveComponent<ConveyorItemData>(from);
 
-                    // Input particle burst at the building's entry face
+                    // Input particle burst toward the building's entry face (the delivery direction,
+                    // which may differ from the belt's own exit direction).
                     if (BuildingInputFX.Instance != null)
                     {
                         var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
-                        BuildingInputFX.Instance.Trigger(seg.Cell, seg.ExitDir, itemID);
+                        BuildingInputFX.Instance.Trigger(seg.Cell, deliverDir, itemID);
                     }
                 }
                 else if (toSeg != Entity.Null && !EntityManager.HasComponent<ConveyorItemData>(toSeg))
@@ -291,6 +289,32 @@ namespace MobileIdleBuilder
         /// Output ports store the facing they exit toward.
         /// Input ports store the facing of the direction they accept from (same convention).
         /// </summary>
+        /// <summary>
+        /// Scans the four cells around <paramref name="segCell"/> for a building whose Input port
+        /// faces this cell. An input port stores its Facing as the inbound flow direction, so the
+        /// belt cell must sit in front of it — i.e. for neighbour direction <c>dir</c> the port's
+        /// Facing equals <c>dir</c>. Lets a belt feed an input regardless of its own exit direction,
+        /// as long as the tail rests on the cell in front of the input. Returns the first match.
+        /// </summary>
+        private bool TryFindInputBuilding(int2 segCell, NativeHashMap<int2, Entity> buildingMap,
+                                          out Entity building, out int deliverDir)
+        {
+            for (int dir = 0; dir < 4; dir++)
+            {
+                int2 candidate = AdjacentCell(segCell, dir);
+                if (!buildingMap.TryGetValue(candidate, out Entity cand)) continue;
+                if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;
+
+                building   = cand;
+                deliverDir = dir;
+                return true;
+            }
+
+            building   = Entity.Null;
+            deliverDir = -1;
+            return false;
+        }
+
         private bool HasMatchingPort(Entity building, int2 portCell, int dir, PortType required)
         {
             if (!EntityManager.HasBuffer<PlacedPortData>(building)) return false;
