@@ -66,6 +66,7 @@ MonoBehaviour:
     costBaseCurrency: 6000
     costPrestigeCurrency: 0
   storageUpgradeLevels: []
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 0}

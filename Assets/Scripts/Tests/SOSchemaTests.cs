@@ -175,6 +175,8 @@ namespace MobileIdleBuilder.Tests
                 "BuildingSO missing: baseMaxInputItemsPerSlot (fixed input buffer)");
             Assert.IsNotNull(type.GetField("storageUpgradeLevels"),
                 "BuildingSO missing: storageUpgradeLevels (separate storage upgrade track)");
+            Assert.IsNotNull(type.GetField("inputUpgradeLevels"),
+                "BuildingSO missing: inputUpgradeLevels (separate input-capacity upgrade track)");
         }
 
         [Test]
@@ -185,6 +187,16 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(type.GetField("maxOutputItems"),      "BuildingStorageUpgradeLevel missing: maxOutputItems");
             Assert.IsNotNull(type.GetField("costBaseCurrency"),    "BuildingStorageUpgradeLevel missing: costBaseCurrency");
             Assert.IsNotNull(type.GetField("costPrestigeCurrency"),"BuildingStorageUpgradeLevel missing: costPrestigeCurrency");
+        }
+
+        [Test]
+        public void BuildingInputUpgradeLevel_HasRequiredFields()
+        {
+            var type = typeof(BuildingInputUpgradeLevel);
+            Assert.IsNotNull(type.GetField("level"),               "BuildingInputUpgradeLevel missing: level");
+            Assert.IsNotNull(type.GetField("maxInputItems"),       "BuildingInputUpgradeLevel missing: maxInputItems");
+            Assert.IsNotNull(type.GetField("costBaseCurrency"),    "BuildingInputUpgradeLevel missing: costBaseCurrency");
+            Assert.IsNotNull(type.GetField("costPrestigeCurrency"),"BuildingInputUpgradeLevel missing: costPrestigeCurrency");
         }
 
         [Test]

@@ -212,6 +212,15 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class InputUpgradeLevelJson
+    {
+        public int level               = 2;
+        public int max_input_items     = 0;
+        public int cost_base_currency  = 0;
+        public int cost_prestige_currency = 0;
+    }
+
+    [Serializable]
     internal class PortJson
     {
         public string port_type   = "Input";
@@ -254,6 +263,7 @@ namespace MobileIdleBuilder.Editor
         public int                    base_max_input_items_per_slot = 0;
         public List<UpgradeLevelJson> upgrade_levels             = new();
         public List<StorageUpgradeLevelJson> storage_upgrade_levels = new();
+        public List<InputUpgradeLevelJson>   input_upgrade_levels   = new();
         public bool                   has_special_upgrade        = false;
         public string                 special_upgrade_id         = "";
         public string                 required_research          = "";
@@ -273,6 +283,7 @@ namespace MobileIdleBuilder.Editor
             compatible_fields          ??= Array.Empty<string>();
             upgrade_levels             ??= new List<UpgradeLevelJson>();
             storage_upgrade_levels     ??= new List<StorageUpgradeLevelJson>();
+            input_upgrade_levels       ??= new List<InputUpgradeLevelJson>();
         }
     }
 

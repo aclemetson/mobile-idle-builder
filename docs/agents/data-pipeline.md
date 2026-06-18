@@ -64,6 +64,15 @@ Copy the `ResearchSO` handling end-to-end:
 5. Consumption: load via direct SO reference on a MonoBehaviour, or a `Resources/` database asset like `ResearchDatabaseSO`.
 6. EditMode test validating the import (copy `Assets/Scripts/Tests/SOSchemaTests.cs` pattern).
 
+## Buildings: capacity upgrade tracks
+
+`buildings[]` entries carry three parallel per-building upgrade arrays, all mapped by `GameDataImporter` to `BuildingSO` and bought in the inspector:
+- `upgrade_levels` → `upgradeLevels` (speed / power scaling)
+- `storage_upgrade_levels` → `storageUpgradeLevels` (output buffer capacity)
+- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity; `max_input_items` per tier)
+
+The two capacity tracks are research-gated in the UI (`surplus_containment` for output, `feedstock_buffers` for input — see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
+
 ## Pitfalls
 
 - `JsonUtility` does not support dictionaries — use parallel key/value lists or entry classes (see `SaveData.inventoryKeys/inventoryValues` for the established pattern).

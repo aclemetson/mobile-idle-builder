@@ -195,6 +195,7 @@ namespace MobileIdleBuilder
                     position        = new[] { gp.Cell.x, gp.Cell.y },
                     level           = bd.UpgradeLevel,
                     storageLevel    = bd.StorageUpgradeLevel,
+                    inputLevel      = bd.InputUpgradeLevel,
                     rotation        = 0,
                     flipped         = false,
                     outputDirection = -1
@@ -309,7 +310,8 @@ namespace MobileIdleBuilder
                         entry.building, recipe,
                         outputDir, bsd.rotation, bsd.flipped,
                         speedLevel:   Mathf.Max(1, bsd.level),
-                        storageLevel: Mathf.Max(1, bsd.storageLevel));
+                        storageLevel: Mathf.Max(1, bsd.storageLevel),
+                        inputLevel:   Mathf.Max(1, bsd.inputLevel));
                 }
             }
 

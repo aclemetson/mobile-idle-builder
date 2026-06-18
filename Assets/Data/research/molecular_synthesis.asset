@@ -38,6 +38,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  - {fileID: 11400000, guid: 395c3af752d2b7a4cac0c7811dff3a78, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.15
   codexEntry: "Atoms combine into molecules through covalent and ionic bonds. Water,
