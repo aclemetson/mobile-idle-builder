@@ -1378,15 +1378,15 @@ namespace MobileIdleBuilder
         {
             if (_btnConveyorMode != null)
             {
-                _btnConveyorMode.text = isDestroy ? "Mode: Destroy" : "Mode: Create";
+                _btnConveyorMode.text = isDestroy ? "Destroy" : "Create";
                 if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
                 else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
             }
 
             if (_conveyorLabel != null)
                 _conveyorLabel.text = isDestroy
-                    ? "Tap a belt to remove it  ·  drag to pan"
-                    : "Tap a start tile  ·  drag to pan";
+                    ? "Tap a belt to remove"
+                    : "Tap a start, then an end";
 
             // Switching mode always clears any pending candidate.
             if (isDestroy) OnConveyorCandidateChanged(false);
@@ -1399,10 +1399,11 @@ namespace MobileIdleBuilder
             SetElementVisible(_btnConveyorConfirm,         hasCandidate);
             SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
 
+            // The label is a short instruction only — it must not repeat the button names.
             if (_conveyorLabel != null && !IsDestroyModeActive())
                 _conveyorLabel.text = hasCandidate
-                    ? "↻ Bend  ·  ✓ Place  ·  ✕ Clear"
-                    : "Tap a start tile  ·  drag to pan";
+                    ? "Place the belt, or adjust it"
+                    : "Tap a start, then an end";
         }
 
         private bool IsDestroyModeActive() =>

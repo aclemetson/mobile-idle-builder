@@ -327,13 +327,13 @@
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label name="conveyor-label" text="Tap a start tile  ·  drag to pan"
+                <ui:Label name="conveyor-label" text="Tap a start, then an end"
                           class="placement-label" />
-                <ui:Button name="btn-conveyor-rotate" text="↻ Bend" class="rotate-output-btn hidden" />
-                <ui:Button name="btn-conveyor-confirm" text="✓ Place" class="rotate-output-btn conveyor-confirm-btn hidden" />
-                <ui:Button name="btn-conveyor-cancel-candidate" text="✕ Clear" class="rotate-output-btn hidden" />
-                <ui:Button name="btn-conveyor-mode" text="Mode: Create" class="conveyor-mode-btn" />
-                <ui:Button name="btn-cancel-conveyor" text="Finished" class="cancel-placement-btn" />
+                <ui:Button name="btn-conveyor-rotate" text="↻" tooltip="Bend route" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-confirm" text="✓" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden" />
+                <ui:Button name="btn-conveyor-cancel-candidate" text="✕" tooltip="Clear" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
+                <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 
