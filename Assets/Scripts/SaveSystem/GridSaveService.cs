@@ -235,10 +235,11 @@ namespace MobileIdleBuilder
                     cur = seg.NextSegment;
                 }
 
-                grid.conveyors.Add(new ConveyorSaveData
-                {
-                    cells = cells.ToArray()
-                });
+                var csd = new ConveyorSaveData { cells = cells.ToArray() };
+                // A lone segment has no neighbours to derive facing from on reload, so persist its
+                // chosen direction (kv.Value is the chain head = the only segment here).
+                if (cells.Count == 2) csd.singleDir = kv.Value.ExitDir;
+                grid.conveyors.Add(csd);
             }
 
             // --- Fields ---
@@ -324,11 +325,14 @@ namespace MobileIdleBuilder
             {
                 foreach (var csd in grid.conveyors)
                 {
-                    if (csd.cells == null || csd.cells.Length < 4) continue;
+                    if (csd.cells == null || csd.cells.Length < 2) continue;
                     var path = new List<Vector2Int>();
                     for (int i = 0; i + 1 < csd.cells.Length; i += 2)
                         path.Add(new Vector2Int(csd.cells[i], csd.cells[i + 1]));
-                    conveyorPlacer.PlaceConveyorChain(path);
+                    if (path.Count == 1 && csd.singleDir >= 0)
+                        conveyorPlacer.PlaceConveyorChain(path, (OutputDirection)csd.singleDir);
+                    else
+                        conveyorPlacer.PlaceConveyorChain(path);
                 }
             }
 

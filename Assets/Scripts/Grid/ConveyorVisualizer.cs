@@ -29,6 +29,10 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts  = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres   = new();
 
+        // Transient single-cell placement preview (not tracked in _spawnedBelts so it never
+        // collides with the real Refresh map). Lives only while a single candidate is pending.
+        private GameObject _previewBelt;
+
         private static readonly Color BeltBaseColor   = new Color(0.25f, 0.25f, 0.25f);
         private static readonly Color BeltStripeColor = new Color(1f, 0.5f, 0f);
         private static readonly Color EndCapColor     = Color.yellow;
@@ -66,6 +70,29 @@ namespace MobileIdleBuilder
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
+            ClearSinglePreview();
+        }
+
+        // ----------------------------------------------------------------
+        // Single-cell placement preview
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Shows a transient belt-track preview at (x, y) facing <paramref name="dir"/>, so the
+        /// player can see (and rotate) a single conveyor's orientation before confirming it.
+        /// Reuses the real belt visual (full arrow + end cap). Call ClearSinglePreview() to remove.
+        /// </summary>
+        public void ShowSinglePreview(int x, int y, int dir)
+        {
+            ClearSinglePreview();
+            _previewBelt = SpawnBeltTrack(x, y, dir, dir, isTail: true, gridRenderer.CellSize);
+        }
+
+        /// <summary>Removes the single-cell placement preview, if any.</summary>
+        public void ClearSinglePreview()
+        {
+            if (_previewBelt != null) Destroy(_previewBelt);
+            _previewBelt = null;
         }
 
         // ----------------------------------------------------------------
