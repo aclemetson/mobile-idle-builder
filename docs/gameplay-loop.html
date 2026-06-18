@@ -83,6 +83,26 @@
   </div>
 
   <div class="callout">
+    <h3>Conveyor Placement (Mobile)</h3>
+    <p>Conveyors use a deliberate, <strong>tap-based</strong> flow (not press-drag) so a stray touch can never
+       drop an abandoned belt. Opening the Conveyor card enters the mode in <strong>Create</strong>; the camera
+       still pans on drag, and only taps that stay under the pan threshold register.</p>
+    <ol>
+      <li><strong>Tap a start tile</strong> (any free cell or an existing belt) — it marks the run's start.</li>
+      <li><strong>Tap a destination</strong> (another free / belt cell). The best route is drawn as a ghost: a
+          single-turn L when possible, otherwise routed around obstacles with as few turns as possible
+          (<code>ConveyorPathfinder</code>).</li>
+      <li><strong>↻ Bend</strong> flips which way the L turns · <strong>✓ Place</strong> commits the run ·
+          <strong>✕ Clear</strong> drops the pending end (keeping the start).</li>
+      <li>After placing, the run's end becomes the next start, so you can keep extending. <strong>Finished</strong>
+          (formerly "Cancel") exits the mode.</li>
+    </ol>
+    <p>The <strong>Mode: Create / Mode: Destroy</strong> toggle sits next to Finished and always starts on Create.
+       In <strong>Destroy</strong>, tapping a belt removes that single segment (its chain neighbours re-link via
+       <code>ConveyorPlacer.RemoveSegmentAt</code>, shared with the global Deconstruct tool). Toggle back to keep building.</p>
+  </div>
+
+  <div class="callout">
     <h3>Session Authentication</h3>
     <p>Google Sign-In uses a <strong>silent-first</strong> strategy backed by two device-local timestamps
        (<code>PlayerPrefs</code> — not cloud-synced):</p>

@@ -70,6 +70,11 @@ namespace MobileIdleBuilder
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private Label         _conveyorLabel;
+        private Button        _btnConveyorRotate;
+        private Button        _btnConveyorConfirm;
+        private Button        _btnConveyorCancelCandidate;
+        private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
@@ -195,7 +200,11 @@ namespace MobileIdleBuilder
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      += OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
@@ -224,7 +233,11 @@ namespace MobileIdleBuilder
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      -= OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
@@ -366,7 +379,12 @@ namespace MobileIdleBuilder
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
             // Conveyor placement
-            _conveyorOverlay = root.Q("conveyor-overlay");
+            _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorLabel              = root.Q<Label>("conveyor-label");
+            _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
+            _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
+            _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
+            _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
@@ -461,9 +479,19 @@ namespace MobileIdleBuilder
             if (_btnRotateCandidate != null)
                 _btnRotateCandidate.clicked += () => placementController?.Rotate();
 
-            // Conveyor cancel (button inside the conveyor overlay)
+            // Conveyor "Finished" (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
                 conveyorController?.CancelConveyorMode());
+
+            // Conveyor candidate controls + Create/Destroy toggle
+            if (_btnConveyorRotate != null)
+                _btnConveyorRotate.clicked += () => conveyorController?.RotatePath();
+            if (_btnConveyorConfirm != null)
+                _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
+            if (_btnConveyorCancelCandidate != null)
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+            if (_btnConveyorMode != null)
+                _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
             // Deconstruct cancel
             root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -1333,7 +1361,49 @@ namespace MobileIdleBuilder
         private void OnConveyorPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_conveyorOverlay, isPlacing);
+
+            if (isPlacing)
+            {
+                // Mode always re-enters in Create with no pending candidate.
+                OnConveyorModeChanged(false);
+                OnConveyorCandidateChanged(false);
+            }
         }
+
+        /// <summary>Updates the Create/Destroy toggle look and the bar's instructional text.</summary>
+        private void OnConveyorModeChanged(bool isDestroy)
+        {
+            if (_btnConveyorMode != null)
+            {
+                _btnConveyorMode.text = isDestroy ? "Mode: Destroy" : "Mode: Create";
+                if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
+                else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
+            }
+
+            if (_conveyorLabel != null)
+                _conveyorLabel.text = isDestroy
+                    ? "Tap a belt to remove it  ·  drag to pan"
+                    : "Tap a start tile  ·  drag to pan";
+
+            // Switching mode always clears any pending candidate.
+            if (isDestroy) OnConveyorCandidateChanged(false);
+        }
+
+        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
+        private void OnConveyorCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_btnConveyorRotate,          hasCandidate);
+            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
+
+            if (_conveyorLabel != null && !IsDestroyModeActive())
+                _conveyorLabel.text = hasCandidate
+                    ? "↻ Bend  ·  ✓ Place  ·  ✕ Clear"
+                    : "Tap a start tile  ·  drag to pan";
+        }
+
+        private bool IsDestroyModeActive() =>
+            conveyorController != null && conveyorController.IsDestroyMode;
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
