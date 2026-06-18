@@ -35,9 +35,10 @@ namespace MobileIdleBuilder
         public enum Mode { Create, Destroy }
 
         [Header("Scene references")]
-        [SerializeField] private GridRenderer    gridRenderer;
-        [SerializeField] private ConveyorPlacer  conveyorPlacer;
-        [SerializeField] private CameraController cameraController;
+        [SerializeField] private GridRenderer       gridRenderer;
+        [SerializeField] private ConveyorPlacer     conveyorPlacer;
+        [SerializeField] private CameraController    cameraController;
+        [SerializeField] private ConveyorVisualizer conveyorVisualizer;
 
         // ----------------------------------------------------------------
         // Public state / events
@@ -70,6 +71,11 @@ namespace MobileIdleBuilder
         private bool             _pathValid;
         private bool             _elbowHorizontalFirst = true;
 
+        // Single-cell candidate: the player tapped the start cell again to drop one standalone
+        // belt whose facing they rotate before confirming.
+        private bool            _isSingle;
+        private OutputDirection _singleDir = OutputDirection.North;
+
         // Tap-vs-drag tracking (so map panning does not place/destroy)
         private bool    _pressActive;
         private bool    _pressOverUI;
@@ -84,9 +90,10 @@ namespace MobileIdleBuilder
 
         void Awake()
         {
-            if (gridRenderer    == null) gridRenderer    = FindAnyObjectByType<GridRenderer>();
-            if (conveyorPlacer  == null) conveyorPlacer  = FindAnyObjectByType<ConveyorPlacer>();
-            if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
+            if (gridRenderer       == null) gridRenderer       = FindAnyObjectByType<GridRenderer>();
+            if (conveyorPlacer     == null) conveyorPlacer     = FindAnyObjectByType<ConveyorPlacer>();
+            if (cameraController    == null) cameraController    = FindAnyObjectByType<CameraController>();
+            if (conveyorVisualizer == null) conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
         }
 
         // ----------------------------------------------------------------
@@ -123,10 +130,19 @@ namespace MobileIdleBuilder
             OnModeChanged?.Invoke(IsDestroyMode);
         }
 
-        /// <summary>Rotate button — flips which way the single-turn L bends, then recomputes.</summary>
+        /// <summary>
+        /// Rotate button — for a single belt, cycles its facing N→E→S→W; otherwise flips which way
+        /// the single-turn L bends, then recomputes.
+        /// </summary>
         public void RotatePath()
         {
             if (!HasCandidate) return;
+            if (_isSingle)
+            {
+                _singleDir = NextDir(_singleDir);
+                conveyorVisualizer?.ShowSinglePreview(_startCell.x, _startCell.y, (int)_singleDir);
+                return;
+            }
             _elbowHorizontalFirst = !_elbowHorizontalFirst;
             RecomputePath();
         }
@@ -135,6 +151,18 @@ namespace MobileIdleBuilder
         public void ConfirmPath()
         {
             if (!HasCandidate || !_pathValid || _currentPath.Count < 1) return;
+
+            if (_isSingle)
+            {
+                conveyorVisualizer?.ClearSinglePreview();
+                conveyorPlacer.PlaceConveyorChain(_currentPath, _singleDir);
+                SaveManager.Instance?.SaveLocal();
+                OnChainPlaced?.Invoke();
+
+                // A standalone belt resets to a fresh start (no auto-chain).
+                ClearStartAndCandidate();
+                return;
+            }
 
             conveyorPlacer.PlaceConveyorChain(_currentPath);
             SaveManager.Instance?.SaveLocal();
@@ -152,9 +180,11 @@ namespace MobileIdleBuilder
         public void ClearCandidate()
         {
             if (!HasCandidate) return;
+            conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
+            _isSingle    = false;
             HasCandidate = false;
             OnCandidateChanged?.Invoke(false);
             if (_hasStart) MarkStart();
@@ -235,9 +265,20 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // Start already chosen — set or replace the destination.
-            if (cell == _startCell || !IsValidEndpoint(cell)) return;
+            // Start already chosen — tapping the start cell again drops a single standalone belt
+            // (only on a free cell; re-tapping an existing conveyor stays a no-op).
+            if (cell == _startCell)
+            {
+                if (!IsConveyorCell(_startCell)) BeginSingleCandidate();
+                return;
+            }
 
+            if (!IsValidEndpoint(cell)) return;
+
+            // Leaving a pending single candidate for a real run — drop its directional preview.
+            if (_isSingle) conveyorVisualizer?.ClearSinglePreview();
+
+            _isSingle = false;
             _destCell = cell;
             RecomputePath();
             if (_pathValid)
@@ -245,6 +286,26 @@ namespace MobileIdleBuilder
                 HasCandidate = true;
                 OnCandidateChanged?.Invoke(true);
             }
+        }
+
+        /// <summary>
+        /// Forms a single-cell candidate at the start: one standalone belt the player can rotate
+        /// (RotatePath) before confirming. Shows a directional belt preview rather than a tile ghost.
+        /// </summary>
+        private void BeginSingleCandidate()
+        {
+            _isSingle    = true;
+            _singleDir   = OutputDirection.North;
+            _destCell    = _startCell;
+            _currentPath = new List<Vector2Int> { _startCell };
+            _pathValid   = true;
+
+            gridRenderer.ClearConveyorGhost();
+            ClearHover();
+            conveyorVisualizer?.ShowSinglePreview(_startCell.x, _startCell.y, (int)_singleDir);
+
+            HasCandidate = true;
+            OnCandidateChanged?.Invoke(true);
         }
 
         // ----------------------------------------------------------------
@@ -334,6 +395,9 @@ namespace MobileIdleBuilder
         // Validity helpers
         // ----------------------------------------------------------------
 
+        /// <summary>Cycles a single belt's facing N→E→S→W→N. Pure helper (unit-tested).</summary>
+        public static OutputDirection NextDir(OutputDirection d) => (OutputDirection)(((int)d + 1) % 4);
+
         private bool IsValidEndpoint(Vector2Int c) => IsFreecell(c.x, c.y) || IsConveyorCell(c);
 
         private bool IsFreecell(int x, int y)
@@ -352,12 +416,14 @@ namespace MobileIdleBuilder
 
         private void ResetAll()
         {
+            conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             gridRenderer.ClearConveyorHoverCell();
             gridRenderer.ClearDeconstructHover();
             _hasStart    = false;
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
+            _isSingle    = false;
             _pressActive = false;
             _dragAccum   = 0f;
             _hoverCell   = new(-1, -1);
@@ -371,11 +437,13 @@ namespace MobileIdleBuilder
 
         private void ClearStartAndCandidate()
         {
+            conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             ClearHover();
             _hasStart    = false;
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
+            _isSingle    = false;
             _elbowHorizontalFirst = true;
             if (HasCandidate)
             {

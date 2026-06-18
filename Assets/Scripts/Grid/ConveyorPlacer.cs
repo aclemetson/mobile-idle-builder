@@ -49,7 +49,7 @@ namespace MobileIdleBuilder
         /// Places conveyor segment entities for each cell in the path.
         /// Handles connections to existing chain tails (at start) or chain heads (at end).
         /// </summary>
-        public void PlaceConveyorChain(List<Vector2Int> path)
+        public void PlaceConveyorChain(List<Vector2Int> path, OutputDirection? singleDir = null)
         {
             if (path == null || path.Count == 0) return;
 
@@ -98,6 +98,14 @@ namespace MobileIdleBuilder
                 else
                     // Mid-chain or connecting to existing head: aim toward next cell
                     exitDir = TravelDir(path[i], path[i + 1]);
+
+                // Lone new segment with an explicitly chosen facing (single-conveyor placement):
+                // there are no neighbours to derive direction from, so honour the caller's choice.
+                if (count == 1 && !startIsExisting && !endIsExisting && singleDir.HasValue)
+                {
+                    entryDir = singleDir.Value;
+                    exitDir  = singleDir.Value;
+                }
 
                 bool isHead = (i == firstNew) && !startIsExisting;
 
