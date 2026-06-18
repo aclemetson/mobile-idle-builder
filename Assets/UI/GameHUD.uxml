@@ -327,7 +327,7 @@
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label name="conveyor-label" text="Tap a start, then an end"
+                <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
                           class="placement-label" />
                 <ui:Button name="btn-conveyor-rotate" text="↻" tooltip="Bend route" class="conveyor-icon-btn hidden" />
                 <ui:Button name="btn-conveyor-confirm" text="✓" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden" />

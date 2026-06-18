@@ -162,7 +162,8 @@ namespace MobileIdleBuilder
     [Serializable]
     public class ConveyorSaveData
     {
-        public int[] cells; // flattened [x0,y0, x1,y1, ...] ordered head→tail
+        public int[] cells;        // flattened [x0,y0, x1,y1, ...] ordered head→tail
+        public int   singleDir = -1; // facing for a 1-cell chain (OutputDirection); -1 = derive from cells
     }
 
     /// <summary>
