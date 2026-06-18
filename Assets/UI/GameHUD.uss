@@ -623,6 +623,10 @@
     color: var(--color-primary);
     font-size: var(--font-size-sm);
     flex-grow: 1;
+    flex-shrink: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cancel-placement-btn {
@@ -745,6 +749,48 @@
     border-radius: var(--border-radius);
     color: var(--color-primary);
     font-size: var(--font-size-sm);
+}
+
+/* Compact icon-only buttons (Bend / Place / Clear) so the whole bar fits a phone width. */
+.conveyor-icon-btn {
+    width: 40px;
+    padding: var(--spacing-xs) 0;
+    margin-right: var(--spacing-sm);
+    -unity-text-align: middle-center;
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+/* Conveyor "Place" (confirm) variant — green to mirror the building confirm button. */
+.conveyor-confirm-btn {
+    background-color: rgba(0, 230, 118, 0.16);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+/* Conveyor Create/Destroy toggle. Defaults to the Create (cyan) look. */
+.conveyor-mode-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+/* Active Destroy state — danger-red to signal taps will remove track. */
+.conveyor-mode-btn--destroy {
+    background-color: rgba(255, 23, 68, 0.14);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 /* ---- Idle Return Modal ---- */

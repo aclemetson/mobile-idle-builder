@@ -4059,7 +4059,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Connect the two — drag a conveyor from the Harvester's output port to the Demon's input.",
+          "text": "The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Open the conveyor tool, then tap the tile beside the Harvester's output to set the start. Tap the tile in front of the Demon's input and I will route the belt for you. Tap the check to place it, then Finished when you are done.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -4226,7 +4226,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Connect the quark Harvester's output port to the Combiner's input port with a conveyor. Quarks will flow in continuously.",
+          "text": "Connect the quark Harvester to the Combiner with a conveyor: tap the tile beside the Harvester's output, then the tile in front of the Combiner's input. Quarks will flow in continuously.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -5211,7 +5211,7 @@
     },
     {
       "id": "place_conveyor",
-      "hint": "Connect the Harvester to Maxwell's Demon with a conveyor belt.",
+      "hint": "Tap a start tile by the Harvester, then the tile in front of Maxwell's Demon, and place the belt.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "place_conveyor_context",
@@ -5267,7 +5267,7 @@
     },
     {
       "id": "route_quarks_to_sfc",
-      "hint": "Connect the quark Harvester output to the Strong Force Combiner input.",
+      "hint": "Tap a start tile by the quark Harvester, then the tile in front of the Combiner's input, and place the belt.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_quarks_context",

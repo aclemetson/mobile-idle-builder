@@ -49,6 +49,7 @@ namespace MobileIdleBuilder
                 hudController.OnDrawerOpened        += OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened += OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
+                hudController.OnConveyorPlaced      += OnConveyorPlacedHandler;
             }
 
             if (maxwellsDemon == null)
@@ -88,6 +89,7 @@ namespace MobileIdleBuilder
                 hudController.OnDrawerOpened        -= OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
+                hudController.OnConveyorPlaced      -= OnConveyorPlacedHandler;
             }
 
             if (maxwellsDemon != null)
@@ -301,6 +303,7 @@ namespace MobileIdleBuilder
         private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
+        private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
 
         /// <summary>
         /// Called by the building upgrade UI when the player purchases a speed upgrade on the
