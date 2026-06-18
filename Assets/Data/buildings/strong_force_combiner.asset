@@ -44,13 +44,13 @@ MonoBehaviour:
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
+    localFacing: 2
   - portType: 0
-    localCell: {x: 0, y: 0}
+    localCell: {x: 1, y: 0}
     localFacing: 2
   - portType: 1
-    localCell: {x: 1, y: 0}
-    localFacing: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
