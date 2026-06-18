@@ -3098,8 +3098,8 @@
       "is_entropy_sink": false,
       "footprint": [2, 1],
       "ports": [
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "South" },
-        { "port_type": "Input",  "local_cell": [1, 0], "local_facing": "South" },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Input",  "local_cell": [1, 0], "local_facing": "North" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" }
       ],
       "placement_rule": "Anywhere",
