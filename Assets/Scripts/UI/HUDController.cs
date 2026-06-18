@@ -70,6 +70,7 @@ namespace MobileIdleBuilder
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private VisualElement _conveyorBar;
         private Label         _conveyorLabel;
         private Button        _btnConveyorRotate;
         private Button        _btnConveyorConfirm;
@@ -206,6 +207,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
                 conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
             }
 
             if (deconstructController != null)
@@ -240,6 +242,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
                 conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = null;
             }
 
             if (deconstructController != null)
@@ -383,6 +386,7 @@ namespace MobileIdleBuilder
 
             // Conveyor placement
             _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorBar                = root.Q("conveyor-bar");
             _conveyorLabel              = root.Q<Label>("conveyor-label");
             _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
             _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
@@ -1351,6 +1355,11 @@ namespace MobileIdleBuilder
         private bool IsPointerOverPlacementUI(Vector2 screenPos)
             => ScreenPointInElement(_placementConfirmPopup, screenPos)
             || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
+
+        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
+        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
+        private bool IsPointerOverConveyorUI(Vector2 screenPos)
+            => ScreenPointInElement(_conveyorBar, screenPos);  // the bar strip, NOT the full-screen overlay
 
         private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
         {

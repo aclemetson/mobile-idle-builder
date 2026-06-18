@@ -57,6 +57,14 @@ namespace MobileIdleBuilder
         /// <summary>Raised after a run is confirmed and placed (drives the tutorial's conveyor step).</summary>
         public event Action OnChainPlaced;
 
+        /// <summary>
+        /// Direct hit-test for the conveyor toolbar strip, assigned by HUDController
+        /// (ScreenPointInElement on the conveyor-bar). Folded into the press/hover UI check
+        /// alongside UIInputBlocker so taps on the bar never leak to the grid behind it — the
+        /// same belt-and-suspenders the building placement bar uses.
+        /// </summary>
+        public Func<Vector2, bool> IsPointerOverConveyorUI;
+
         // ----------------------------------------------------------------
         // Private state
         // ----------------------------------------------------------------
@@ -220,7 +228,8 @@ namespace MobileIdleBuilder
                 _pressPos    = InputUtils.GetPointerPosition();
                 _dragAccum   = 0f;
                 _pressActive = true;
-                _pressOverUI = UIInputBlocker.IsPointerOverUI(_pressPos);
+                _pressOverUI = UIInputBlocker.IsPointerOverUI(_pressPos)
+                            || (IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false);
             }
 
             if (_pressActive && InputUtils.IsPointerHeld())
@@ -356,7 +365,8 @@ namespace MobileIdleBuilder
             if (HasCandidate) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
-            if (UIInputBlocker.IsPointerOverUI(screenPos)) { ClearHover(); return; }
+            if (UIInputBlocker.IsPointerOverUI(screenPos)
+                || (IsPointerOverConveyorUI?.Invoke(screenPos) ?? false)) { ClearHover(); return; }
 
             Vector2Int cell = WorldToCell(screenPos);
             if (cell == _hoverCell) return;
