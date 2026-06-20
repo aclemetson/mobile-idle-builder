@@ -3096,8 +3096,12 @@
       "input_slot_count": 2,
       "input_slot_labels": ["Up Quarks", "Down Quarks"],
       "is_entropy_sink": false,
-      "footprint": [1, 1],
-      "ports": [],
+      "footprint": [2, 1],
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Input",  "local_cell": [1, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
