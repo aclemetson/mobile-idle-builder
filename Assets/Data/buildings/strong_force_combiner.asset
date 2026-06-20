@@ -92,6 +92,19 @@ MonoBehaviour:
     maxOutputItems: 4000
     costBaseCurrency: 3500
     costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 200
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 800
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 3500
+    costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}

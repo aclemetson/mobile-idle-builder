@@ -492,6 +492,22 @@ namespace MobileIdleBuilder.Editor
                 }
             }
 
+            if (data.input_upgrade_levels != null)
+            {
+                so.inputUpgradeLevels = new BuildingInputUpgradeLevel[data.input_upgrade_levels.Count];
+                for (int i = 0; i < data.input_upgrade_levels.Count; i++)
+                {
+                    var il = data.input_upgrade_levels[i];
+                    so.inputUpgradeLevels[i] = new BuildingInputUpgradeLevel
+                    {
+                        level                = il.level,
+                        maxInputItems        = il.max_input_items,
+                        costBaseCurrency     = il.cost_base_currency,
+                        costPrestigeCurrency = il.cost_prestige_currency
+                    };
+                }
+            }
+
             if (data.ports != null)
             {
                 so.ports = new BuildingPort[data.ports.Count];

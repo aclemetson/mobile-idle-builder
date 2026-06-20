@@ -153,6 +153,7 @@ namespace MobileIdleBuilder
         public int[] position;        // [x, y] anchor cell
         public int   level;
         public int   storageLevel;
+        public int   inputLevel;
         public int   rotation;        // 0-3 CW
         public bool  flipped;
         public int   outputDirection; // -1 = not a field-collector

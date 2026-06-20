@@ -28,7 +28,8 @@ MonoBehaviour:
   unlocksBuildings:
   - {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.5
   codexEntry: Continuous field collection without manual input. A Harvester placed

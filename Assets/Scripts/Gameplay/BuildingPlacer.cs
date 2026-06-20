@@ -25,7 +25,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
-                                  int speedLevel = 1, int storageLevel = 1)
+                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -66,6 +66,7 @@ namespace MobileIdleBuilder
                 BuildingType        = building != null ? building.buildingId : 0,
                 UpgradeLevel        = speedLevel,
                 StorageUpgradeLevel = storageLevel,
+                InputUpgradeLevel   = inputLevel,
                 ProductionSpeed     = BuildingSO.ProductionSpeedForLevel(building, speedLevel),
                 IsActive            = true
             });
@@ -95,7 +96,7 @@ namespace MobileIdleBuilder
             _em.SetComponentData(entity, new BuildingInventoryConfig
             {
                 OutputCapacity = BuildingSO.OutputCapacityForLevel(building, storageLevel),
-                InputCapacity  = 20
+                InputCapacity  = BuildingSO.InputCapacityForLevel(building, inputLevel)
             });
 
             if (recipe != null)

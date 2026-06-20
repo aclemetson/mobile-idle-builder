@@ -13,6 +13,7 @@ namespace MobileIdleBuilder.Tests
         {
             _so = ScriptableObject.CreateInstance<BuildingSO>();
             _so.baseMaxOutputItems = 20;
+            _so.baseMaxInputItemsPerSlot = 30;
             _so.upgradeLevels = new[]
             {
                 new BuildingUpgradeLevel { level = 2, outputRate = 2f, costBaseCurrency = 500 },
@@ -22,6 +23,11 @@ namespace MobileIdleBuilder.Tests
             {
                 new BuildingStorageUpgradeLevel { level = 2, maxOutputItems = 150, costBaseCurrency = 300 },
                 new BuildingStorageUpgradeLevel { level = 3, maxOutputItems = 750, costBaseCurrency = 1200 },
+            };
+            _so.inputUpgradeLevels = new[]
+            {
+                new BuildingInputUpgradeLevel { level = 2, maxInputItems = 120, costBaseCurrency = 200 },
+                new BuildingInputUpgradeLevel { level = 3, maxInputItems = 400, costBaseCurrency = 800 },
             };
         }
 
@@ -112,6 +118,50 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(result.HasValue);
             Assert.AreEqual(2, result.Value.level);
             Assert.AreEqual(150, result.Value.maxOutputItems);
+        }
+
+        // ── InputCapacityForLevel ─────────────────────────────────────────────
+
+        [Test]
+        public void InputCapacityForLevel_Level1_ReturnsBaseMaxInputItemsPerSlot()
+        {
+            Assert.AreEqual(30, BuildingSO.InputCapacityForLevel(_so, 1));
+        }
+
+        [Test]
+        public void InputCapacityForLevel_Level2_ReturnsInputUpgradeValue()
+        {
+            Assert.AreEqual(120, BuildingSO.InputCapacityForLevel(_so, 2));
+        }
+
+        [Test]
+        public void InputCapacityForLevel_NullSO_ReturnsDefault()
+        {
+            Assert.AreEqual(20, BuildingSO.InputCapacityForLevel(null, 2));
+        }
+
+        // ── NextInputUpgrade / MaxInputLevel ──────────────────────────────────
+
+        [Test]
+        public void MaxInputLevel_IsOnePlusEntryCount()
+        {
+            Assert.AreEqual(3, _so.MaxInputLevel());
+        }
+
+        [Test]
+        public void NextInputUpgrade_WhenMaxed_ReturnsNull()
+        {
+            Assert.IsNull(_so.NextInputUpgrade(3));
+        }
+
+        [Test]
+        public void NextInputUpgrade_Level1_ReturnsLevel2Entry()
+        {
+            var result = _so.NextInputUpgrade(1);
+            Assert.IsTrue(result.HasValue);
+            Assert.AreEqual(2, result.Value.level);
+            Assert.AreEqual(120, result.Value.maxInputItems);
+            Assert.AreEqual(200, result.Value.costBaseCurrency);
         }
     }
 }

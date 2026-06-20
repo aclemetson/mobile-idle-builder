@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.6",
+    "version": "0.3.7",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -138,7 +138,7 @@
       "unlocks_recipes": [],
       "unlocks_buildings": ["harvester"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["surplus_containment"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.5,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
@@ -370,7 +370,7 @@
       "unlocks_recipes": ["liquid_hydrogen", "water", "methane", "ammonia"],
       "unlocks_buildings": ["molecular_synthesizer"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["advanced_molecules"],
+      "unlocks_research": ["advanced_molecules", "feedstock_buffers"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.15,
       "codex_entry": "Atoms combine into molecules through covalent and ionic bonds. Water, methane, and ammonia are the feedstocks of planetary chemistry — and industrial civilisation.",
@@ -469,6 +469,45 @@
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.05,
       "codex_entry": "A Dyson sphere captures all energy output of a star. Dyson nodes are the structural anchors. Orbital frames are the load-bearing superstructure. Graviton lenses stabilise the whole assembly against tidal forces.",
+      "icon_path": "TODO"
+    },
+    {
+      "_comment": "--- LOGISTICS NODES: unlock per-building capacity upgrades ---",
+      "id": "surplus_containment",
+      "display_name": "Surplus Containment",
+      "description": "Unlock Output Capacity upgrades on every building, so automated production keeps stockpiling instead of stalling when output buffers fill.",
+      "branch": "Engineering",
+      "prerequisites": ["automation_i"],
+      "depth_in_tree": 3,
+      "cost_base_currency": 2000,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.3,
+      "codex_entry": "Once production runs unattended, the bottleneck shifts from speed to storage. Containment fields let a building hold far more finished output before it must pause — the foundation of idle stockpiling.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "feedstock_buffers",
+      "display_name": "Feedstock Buffers",
+      "description": "Unlock Input Capacity upgrades on every building, so multi-stage chains keep their intake buffers full between conveyor deliveries.",
+      "branch": "Engineering",
+      "prerequisites": ["molecular_synthesis"],
+      "depth_in_tree": 4,
+      "cost_base_currency": 10000,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.3,
+      "codex_entry": "As production chains lengthen, a building can starve waiting on its conveyors. Larger feedstock buffers smooth intake so multi-input recipes run without interruption.",
       "icon_path": "TODO"
     }
   ],
@@ -3118,6 +3157,11 @@
         { "level": 3, "max_output_items": 750,  "cost_base_currency": 800,  "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 4000, "cost_base_currency": 3500, "cost_prestige_currency": 0 }
       ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120,  "cost_base_currency": 200,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400,  "cost_base_currency": 800,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 3500, "cost_prestige_currency": 0 }
+      ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": "recombination_i",
@@ -3282,6 +3326,11 @@
         { "level": 3, "max_output_items": 750,  "cost_base_currency": 2800,  "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 4000, "cost_base_currency": 11000, "cost_prestige_currency": 0 }
       ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120,  "cost_base_currency": 700,   "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400,  "cost_base_currency": 2800,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 11000, "cost_prestige_currency": 0 }
+      ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": "hydrogen_synthesis",
@@ -3332,6 +3381,11 @@
         { "level": 2, "max_output_items": 100,  "cost_base_currency": 1500,  "cost_prestige_currency": 0 },
         { "level": 3, "max_output_items": 500,  "cost_base_currency": 6000,  "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 2500, "cost_base_currency": 24000, "cost_prestige_currency": 0 }
+      ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120,  "cost_base_currency": 1500,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400,  "cost_base_currency": 6000,  "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 24000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
@@ -3436,6 +3490,11 @@
         { "level": 3, "max_output_items": 750,  "cost_base_currency": 140000, "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 4000, "cost_base_currency": 560000, "cost_prestige_currency": 0 }
       ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120,  "cost_base_currency": 35000,  "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400,  "cost_base_currency": 140000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 560000, "cost_prestige_currency": 0 }
+      ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": "molecular_synthesis",
@@ -3487,6 +3546,11 @@
         { "level": 3, "max_output_items": 500,  "cost_base_currency": 3500000,   "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 2500, "cost_base_currency": 17500000,  "cost_prestige_currency": 0 }
       ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120,  "cost_base_currency": 700000,    "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400,  "cost_base_currency": 3500000,   "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 17500000,  "cost_prestige_currency": 0 }
+      ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
       "required_research": "materials_science",
@@ -3535,6 +3599,10 @@
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 75,  "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
         { "level": 3, "max_output_items": 375, "cost_base_currency": 700000000,  "cost_prestige_currency": 0 }
+      ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 700000000,  "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,

@@ -13,6 +13,10 @@ namespace MobileIdleBuilder
     /// </summary>
     public class HUDBuildingInspectorSubController : MonoBehaviour
     {
+        // Research ids that gate the per-building capacity upgrades (must match game_data.json research ids).
+        private const string OutputCapacityResearchId = "surplus_containment";
+        private const string InputCapacityResearchId  = "feedstock_buffers";
+
         private VisualElement _buildingInspectorPanel;
         private ScrollView    _inspectorContent;
         private Label         _inspectorBuildingName;
@@ -187,6 +191,7 @@ namespace MobileIdleBuilder
                 AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
+                AddInputUpgradeSection(_inspectorEntity, buildingSO, buildingData);
             }
 
             if (buildingCellX >= 0 && buildingCellY >= 0)
@@ -367,9 +372,20 @@ namespace MobileIdleBuilder
             _inspectorContent?.Add(row);
         }
 
+        /// <summary>
+        /// Capacity upgrades (input/output) are gated behind dedicated research. Returns true only once
+        /// the unlocking research has been purchased; treats a missing service as "not unlocked".
+        /// </summary>
+        private static bool IsCapacityUpgradeUnlocked(string researchId)
+        {
+            var svc = ResearchService.Instance;
+            return svc != null && svc.IsUnlocked(researchId);
+        }
+
         private void AddStorageUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
         {
             if (so.storageUpgradeLevels == null || so.storageUpgradeLevels.Length == 0) return;
+            if (!IsCapacityUpgradeUnlocked(OutputCapacityResearchId)) return;
 
             int  currentLevel = bd.StorageUpgradeLevel < 1 ? 1 : bd.StorageUpgradeLevel;
             int  maxLevel     = so.MaxStorageLevel();
@@ -483,6 +499,86 @@ namespace MobileIdleBuilder
 
             SaveManager.Instance?.SaveLocal();
             _hud?.ShowNotification("📦", $"Storage upgraded to Lv {nextLevel}!");
+            RefreshInspectorContent();
+        }
+
+        private void AddInputUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
+        {
+            if (so.inputUpgradeLevels == null || so.inputUpgradeLevels.Length == 0) return;
+            if (!IsCapacityUpgradeUnlocked(InputCapacityResearchId)) return;
+
+            int  currentLevel = bd.InputUpgradeLevel < 1 ? 1 : bd.InputUpgradeLevel;
+            int  maxLevel     = so.MaxInputLevel();
+            bool isMaxed      = currentLevel >= maxLevel;
+            var  next         = isMaxed ? (BuildingInputUpgradeLevel?)null : so.NextInputUpgrade(currentLevel);
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            if (isMaxed) row.AddToClassList("upgrade-row--maxed");
+
+            var header = new VisualElement();
+            header.AddToClassList("upgrade-row-header");
+            var nameLabel  = new Label("Input Upgrade");
+            nameLabel.AddToClassList("upgrade-row-name");
+            var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
+            levelLabel.AddToClassList("upgrade-row-level");
+            header.Add(nameLabel);
+            header.Add(levelLabel);
+            row.Add(header);
+
+            if (!isMaxed && next.HasValue)
+            {
+                var desc = new Label($"{next.Value.maxInputItems} item input buffer");
+                desc.AddToClassList("upgrade-row-desc");
+                row.Add(desc);
+
+                long balance   = GetBaseCurrency();
+                bool canAfford = balance >= next.Value.costBaseCurrency;
+
+                var footer = new VisualElement();
+                footer.AddToClassList("upgrade-row-footer");
+
+                var costLabel = new Label($"{next.Value.costBaseCurrency:N0} e");
+                costLabel.AddToClassList("upgrade-row-cost");
+                if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+                footer.Add(costLabel);
+
+                var btn = new Button { text = "Upgrade" };
+                btn.AddToClassList("craft-btn");
+                btn.SetEnabled(canAfford);
+                int capturedNextLevel = currentLevel + 1;
+                var capturedSO        = so;
+                btn.clicked += () => OnInputUpgradeBought(entity, capturedSO, capturedNextLevel);
+                footer.Add(btn);
+
+                row.Add(footer);
+            }
+
+            _inspectorContent?.Add(row);
+        }
+
+        private void OnInputUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
+        {
+            if (!_ecsReady || !_em.Exists(entity)) return;
+            var next = so.NextInputUpgrade(nextLevel - 1);
+            if (!next.HasValue) return;
+
+            int cost = next.Value.costBaseCurrency;
+            if (!TryDeductCurrency(cost)) return;
+
+            var bd = _em.GetComponentData<BuildingData>(entity);
+            bd.InputUpgradeLevel = nextLevel;
+            _em.SetComponentData(entity, bd);
+
+            if (_em.HasComponent<BuildingInventoryConfig>(entity))
+            {
+                var cfg = _em.GetComponentData<BuildingInventoryConfig>(entity);
+                cfg.InputCapacity = BuildingSO.InputCapacityForLevel(so, nextLevel);
+                _em.SetComponentData(entity, cfg);
+            }
+
+            SaveManager.Instance?.SaveLocal();
+            _hud?.ShowNotification("📥", $"Input buffer upgraded to Lv {nextLevel}!");
             RefreshInspectorContent();
         }
 
