@@ -249,12 +249,7 @@ namespace MobileIdleBuilder
         private Vector2Int WorldToCell(Vector2 screenPos)
         {
             if (!ScreenToWorldGround(screenPos, out Vector3 world)) return new(-1, -1);
-            float cs = gridRenderer.CellSize;
-            // Tiles centered at (x*cs, z*cs) — round-to-nearest maps the full tile visual.
-            return new(
-                Mathf.FloorToInt(world.x / cs + 0.5f),
-                Mathf.FloorToInt(world.z / cs + 0.5f)
-            );
+            return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
 
     }

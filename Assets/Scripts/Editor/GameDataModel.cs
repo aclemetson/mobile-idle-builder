@@ -20,8 +20,13 @@ namespace MobileIdleBuilder.Editor
         public List<RecipeJson>          recipes         = new();
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
+        public List<SiteJson>            sites           = new();
+        public List<ManagerJson>         managers        = new();
         public List<DialogueJson>        dialogues       = new();
+        public List<DailyRewardJson>     daily_rewards   = new();
+        public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
+        public MegastructureJson         megastructure   = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
@@ -33,13 +38,20 @@ namespace MobileIdleBuilder.Editor
             recipes         ??= new List<RecipeJson>();
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
+            sites           ??= new List<SiteJson>();
+            managers        ??= new List<ManagerJson>();
             dialogues       ??= new List<DialogueJson>();
+            daily_rewards   ??= new List<DailyRewardJson>();
+            daily_challenges??= new List<DailyChallengeJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
+            megastructure   ??= new MegastructureJson();
+            megastructure.Initialize();
 
             foreach (var r in research)       r?.Initialize();
             foreach (var rec in recipes)      rec?.Initialize();
             foreach (var b in buildings)      b?.Initialize();
             foreach (var f in fields)         f?.Initialize();
+            foreach (var s in sites)          s?.Initialize();
             foreach (var d in dialogues)      d?.Initialize();
             foreach (var s in tutorial_steps) s?.Initialize();
         }
@@ -200,6 +212,15 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class InputUpgradeLevelJson
+    {
+        public int level               = 2;
+        public int max_input_items     = 0;
+        public int cost_base_currency  = 0;
+        public int cost_prestige_currency = 0;
+    }
+
+    [Serializable]
     internal class PortJson
     {
         public string port_type   = "Input";
@@ -242,6 +263,7 @@ namespace MobileIdleBuilder.Editor
         public int                    base_max_input_items_per_slot = 0;
         public List<UpgradeLevelJson> upgrade_levels             = new();
         public List<StorageUpgradeLevelJson> storage_upgrade_levels = new();
+        public List<InputUpgradeLevelJson>   input_upgrade_levels   = new();
         public bool                   has_special_upgrade        = false;
         public string                 special_upgrade_id         = "";
         public string                 required_research          = "";
@@ -261,6 +283,7 @@ namespace MobileIdleBuilder.Editor
             compatible_fields          ??= Array.Empty<string>();
             upgrade_levels             ??= new List<UpgradeLevelJson>();
             storage_upgrade_levels     ??= new List<StorageUpgradeLevelJson>();
+            input_upgrade_levels       ??= new List<InputUpgradeLevelJson>();
         }
     }
 
@@ -287,6 +310,38 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class SiteFieldOverrideJson
+    {
+        public string field              = "";
+        public float  density_multiplier = 1f;
+    }
+
+    [Serializable]
+    internal class SiteJson
+    {
+        public string                        id              = "";
+        public string                        display_name    = "";
+        public long                          unlock_cost     = 0;
+        public List<SiteFieldOverrideJson>   field_overrides = new();
+
+        public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
+    }
+
+    [Serializable]
+    internal class ManagerJson
+    {
+        public string id                 = "";
+        public string display_name       = "";
+        public string description        = "";
+        public string bonus_type         = "";   // CraftSpeed | OutputQuantity | PowerDiscount
+        public float  bonus_value        = 1f;
+        public int    hire_cost_prestige = 0;
+        public string portrait_path      = "TODO";
+        public float[] star_bonus_values = null;  // effective bonus per star (index 0 == star 1 == bonus_value)
+        public int[]   star_costs        = null;  // ✦ cost to upgrade to each star (index 0 == 0)
+    }
+
+    [Serializable]
     internal class DialogueLineJson
     {
         public string speaker_name   = "";
@@ -307,6 +362,64 @@ namespace MobileIdleBuilder.Editor
         public List<DialogueLineJson>  lines = new();
 
         public void Initialize() { lines ??= new List<DialogueLineJson>(); }
+    }
+
+    // ── Daily-event JSON models ───────────────────────────────────────────────
+
+    [Serializable]
+    internal class DailyRewardJson
+    {
+        public int  day               = 0;
+        public int  crystals          = 0;
+        public long entropy           = 0;
+        public int  prestige_currency = 0;
+    }
+
+    [Serializable]
+    internal class DailyChallengeJson
+    {
+        public string id          = "";
+        public string description = "";
+        public string trigger     = "";
+        public int    target      = 1;
+        public int    crystals    = 0;
+    }
+
+    // ── Megastructure JSON models ─────────────────────────────────────────────
+
+    [Serializable]
+    internal class StageCostJson
+    {
+        public string item     = "";
+        public int    quantity = 1;
+    }
+
+    [Serializable]
+    internal class MegastructureStageJson
+    {
+        public string             id           = "";
+        public string             display_name = "";
+        public List<StageCostJson> costs       = new();
+        /// <summary>Must match a MegastructureRewardType enum value: OutputMultiplier | SpeedMultiplier | PrestigeGainMultiplier.</summary>
+        public string             reward_type  = "OutputMultiplier";
+        public float              reward_value = 0f;
+
+        public void Initialize() { costs ??= new List<StageCostJson>(); }
+    }
+
+    [Serializable]
+    internal class MegastructureJson
+    {
+        public string                       id                = "";
+        public string                       display_name      = "";
+        public string                       required_research = "";
+        public List<MegastructureStageJson> stages            = new();
+
+        public void Initialize()
+        {
+            stages ??= new List<MegastructureStageJson>();
+            foreach (var s in stages) s?.Initialize();
+        }
     }
 
     // ── Tutorial step JSON models ─────────────────────────────────────────────

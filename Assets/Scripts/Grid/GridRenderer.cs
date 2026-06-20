@@ -38,6 +38,7 @@ namespace MobileIdleBuilder
 
         private static readonly Color ConveyorGhostColor    = new Color(1f,    0.5f,  0f,    0.7f); // orange
         private static readonly Color ConveyorEndpointColor = new Color(0.25f, 0.88f, 0.35f, 0.9f); // green
+        private static readonly Color PowerCoverageColor    = new Color(0.25f, 0.6f,  1f,    0.45f); // blue — power radius
 
         private GameObject[,]        _tiles;
         private Vector2Int           _ghostCell              = new(-1, -1);
@@ -46,6 +47,7 @@ namespace MobileIdleBuilder
         private readonly List<Vector2Int> _ghostCells             = new();
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
         private readonly List<Vector2Int> _deconstructHoverCells = new();
+        private readonly List<Vector2Int> _powerCoverageCells    = new();
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
         private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
@@ -106,6 +108,18 @@ namespace MobileIdleBuilder
 
         public bool IsInBounds(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 
+        /// <summary>
+        /// Maps a world-space ground point to the grid cell whose CENTER is nearest.
+        /// Tiles are rendered centered at (x*cellSize, z*cellSize) (see BuildGrid), so cell
+        /// boundaries fall at (x ± 0.5) * cellSize — this is round-to-nearest, NOT floor.
+        /// Plain FloorToInt(world/cellSize) selects the cell a half-tile down-left of the point,
+        /// which is the classic "touch is a bit off" placement bug. All screen->cell call sites
+        /// must go through this helper so the convention can never diverge again.
+        /// </summary>
+        public static Vector2Int WorldToCell(Vector3 world, float cellSize) =>
+            new(Mathf.FloorToInt(world.x / cellSize + 0.5f),
+                Mathf.FloorToInt(world.z / cellSize + 0.5f));
+
         /// <summary>Marks a cell as permanently occupied (building placed).</summary>
         public void SetTileHighlight(int x, int y, bool highlighted)
         {
@@ -140,13 +154,14 @@ namespace MobileIdleBuilder
             }
         }
 
-        /// <summary>Clears all ghost tiles, restoring cells to their normal colour.</summary>
+        /// <summary>Clears all ghost tiles (and any power-coverage preview), restoring cells to normal.</summary>
         public void HideGhost()
         {
             foreach (var c in _ghostCells)
                 RestoreCell(c.x, c.y);
             _ghostCells.Clear();
             _ghostCell = new(-1, -1);
+            ClearPowerCoverage();
         }
 
         // ---- Conveyor ghost helpers ----
@@ -259,6 +274,42 @@ namespace MobileIdleBuilder
             if (_fieldHoverCell.x < 0) return;
             RestoreCell(_fieldHoverCell.x, _fieldHoverCell.y);
             _fieldHoverCell = new(-1, -1);
+        }
+
+        // ---- Power coverage ----
+
+        /// <summary>
+        /// Tints every cell within <paramref name="radius"/> tiles (Euclidean edge-to-edge gap) of the
+        /// footprint rect (gridX, gridY, w, h) with the power-coverage colour. Mirrors the connection
+        /// test in PowerGridSystem so the highlighted area equals the powered area. Replaces any
+        /// previous coverage highlight.
+        /// </summary>
+        public void ShowPowerCoverage(int gridX, int gridY, int w, int h, float radius)
+        {
+            ClearPowerCoverage();
+            if (radius <= 0f) return;
+
+            int rad  = Mathf.CeilToInt(radius);
+            int maxX = gridX + w - 1;
+            int maxY = gridY + h - 1;
+            for (int cx = gridX - rad; cx <= maxX + rad; cx++)
+            for (int cy = gridY - rad; cy <= maxY + rad; cy++)
+            {
+                if (!IsInBounds(cx, cy)) continue;
+                int gapX = Mathf.Max(0, Mathf.Max(gridX - cx, cx - maxX));
+                int gapY = Mathf.Max(0, Mathf.Max(gridY - cy, cy - maxY));
+                if (gapX * gapX + gapY * gapY > radius * radius) continue;
+                SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), PowerCoverageColor);
+                _powerCoverageCells.Add(new Vector2Int(cx, cy));
+            }
+        }
+
+        /// <summary>Clears the power-coverage highlight, restoring each cell to its normal colour.</summary>
+        public void ClearPowerCoverage()
+        {
+            foreach (var c in _powerCoverageCells)
+                RestoreCell(c.x, c.y);
+            _powerCoverageCells.Clear();
         }
 
         // ---- Field tile colour ----

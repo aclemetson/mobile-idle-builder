@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer       gridRenderer;
         [SerializeField] private BuildingVisualizer buildingVisualizer;
         [SerializeField] private ConveyorVisualizer conveyorVisualizer;
+        [SerializeField] private ConveyorPlacer     conveyorPlacer;
         [SerializeField] private UIDocument         hudDocument;
 
         public bool IsDeconstructing { get; private set; }
@@ -46,6 +47,7 @@ namespace MobileIdleBuilder
             if (gridRenderer       == null) gridRenderer       = FindAnyObjectByType<GridRenderer>();
             if (buildingVisualizer == null) buildingVisualizer = FindAnyObjectByType<BuildingVisualizer>();
             if (conveyorVisualizer == null) conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
+            if (conveyorPlacer     == null) conveyorPlacer     = FindAnyObjectByType<ConveyorPlacer>();
             if (hudDocument        == null) hudDocument        = FindAnyObjectByType<UIDocument>();
         }
 
@@ -175,15 +177,7 @@ namespace MobileIdleBuilder
             return (x, y, 1, 1); // conveyor or unknown — 1×1
         }
 
-        private bool IsPointerOverUI(Vector2 screenPos)
-        {
-            if (hudDocument == null) return false;
-            var panel = hudDocument.rootVisualElement?.panel;
-            if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
-                panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            return panel.Pick(panelPos) != null;
-        }
+        private static bool IsPointerOverUI(Vector2 screenPos) => UIInputBlocker.IsPointerOverUI(screenPos);
 
         // ================================================================
         // Private helpers
@@ -224,44 +218,14 @@ namespace MobileIdleBuilder
             }
             bldgEntities.Dispose();
 
-            // ---- Conveyor segments ----
-            var convEntities = _conveyorQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < convEntities.Length; i++)
+            // ---- Conveyor segments (shared removal logic) ----
+            if (conveyorPlacer != null && conveyorPlacer.RemoveSegmentAt(x, y))
             {
-                var e   = convEntities[i];
-                var pos = _em.GetComponentData<GridPosition>(e);
-                if (pos.Cell.x != x || pos.Cell.y != y) continue;
-
-                var seg = _em.GetComponentData<ConveyorSegmentData>(e);
-
-                // Unlink from predecessor — it becomes the new tail
-                if (seg.PrevSegment != Entity.Null && _em.Exists(seg.PrevSegment))
-                {
-                    var prev = _em.GetComponentData<ConveyorSegmentData>(seg.PrevSegment);
-                    prev.NextSegment = Entity.Null;
-                    _em.SetComponentData(seg.PrevSegment, prev);
-                }
-
-                // Unlink from successor — it becomes the new chain head
-                if (seg.NextSegment != Entity.Null && _em.Exists(seg.NextSegment))
-                {
-                    var next = _em.GetComponentData<ConveyorSegmentData>(seg.NextSegment);
-                    next.PrevSegment = Entity.Null;
-                    next.IsChainHead = true;
-                    _em.SetComponentData(seg.NextSegment, next);
-                }
-
-                _em.DestroyEntity(e);
-                GridOccupancy.Instance.UnregisterConveyor(x, y);
-                conveyorVisualizer?.RemoveBelt(x, y);
                 gridRenderer?.ClearDeconstructHover();
                 _hoveredCell = new(-1, -1);
-                convEntities.Dispose();
                 SaveManager.Instance?.SaveLocal();
                 GameLogger.Develop($"[Deconstruct] Removed conveyor segment at ({x},{y}).");
-                return;
             }
-            convEntities.Dispose();
         }
 
         private Vector2Int WorldToCell(Vector2 screenPos)
@@ -272,9 +236,7 @@ namespace MobileIdleBuilder
             float t     = -ray.origin.y / ray.direction.y;
             var   world = ray.origin + ray.direction * t;
 
-            int cx = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
-            int cy = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
-            return new(cx, cy);
+            return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
     }
 }

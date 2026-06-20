@@ -13,6 +13,7 @@
     <Style src="components.uss" />
     <Style src="GameHUD.uss" />
     <Style src="AchievementsMenu.uss" />
+    <Style src="PremiumShop.uss" />
 
     <ui:VisualElement name="root" class="root" picking-mode="Ignore">
 
@@ -22,9 +23,8 @@
             <ui:Label  name="entropy-label"         text="◈ 0"       class="entropy-label" />
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
             <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
-            <ui:Label  name="power-label"           text="⚡ 0 eV"   class="power-label" />
-            <ui:Button name="btn-go-back-main-menu" text="⬅"         class="go-back-btn" />
-            <ui:Button name="btn-settings"          text="⚙"         class="settings-btn" />
+            <ui:Label  name="power-label"  text="⚡ 0 eV"   class="power-label" />
+            <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
@@ -62,9 +62,14 @@
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
+                <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
+                <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
+                <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
+                <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
+                <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -127,6 +132,37 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
+        <!-- ═══ MANAGERS PANEL ═══ -->
+        <ui:VisualElement name="managers-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Managers" class="panel-title" />
+                <ui:Button name="btn-close-managers" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="managers-balance" class="prestige-shop-balance">
+                <ui:Label name="managers-currency" text="✦ 0" class="prestige-shop-currency-label" />
+            </ui:VisualElement>
+            <ui:ScrollView name="managers-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ DAILY EVENTS PANEL ═══ -->
+        <ui:VisualElement name="daily-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Daily Rewards" class="panel-title" />
+                <ui:Button name="btn-close-daily" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="daily-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:Label text="Login Reward" class="recipe-name" />
+                <ui:Label name="daily-login-info" text="—" class="recipe-inputs" />
+                <ui:Button name="btn-claim-login" text="Claim" class="craft-btn" />
+                <ui:Label text="Daily Challenges" class="recipe-name" />
+                <ui:VisualElement name="daily-challenges-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
         <!-- ═══ ACHIEVEMENTS PANEL ═══ -->
         <ui:VisualElement name="achievements-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
@@ -160,6 +196,32 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ MEGASTRUCTURE PANEL (Dyson Sphere endgame project) ═══ -->
+        <ui:VisualElement name="megastructure-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label name="megastructure-title" text="Dyson Sphere" class="panel-title" />
+                <ui:Button name="btn-close-megastructure" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:Label name="megastructure-progress" text="Stage 0 / 5" class="megastructure-progress-label" />
+            <ui:ScrollView name="megastructure-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ SITES / QUANTUM DOMAINS PANEL ═══ -->
+        <ui:VisualElement name="sites-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Quantum Domains" class="panel-title" />
+                <ui:Button name="btn-close-sites" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="sites-balance" class="prestige-shop-balance">
+                <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
+            </ui:VisualElement>
+            <ui:ScrollView name="sites-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
         <!-- ═══ PVP PANEL ═══ -->
         <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
@@ -186,10 +248,68 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
+        <!-- ═══ PREMIUM SHOP PANEL ═══ -->
+        <ui:VisualElement name="shop-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Premium Shop" class="panel-title" />
+                <ui:Label name="shop-crystal-balance" text="◆ 0" class="shop-crystal-balance" />
+                <ui:Button name="btn-close-shop" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="shop-tabs" class="shop-tabs">
+                <ui:Button name="shop-tab-speedups"  text="⚡ Speed"    class="shop-tab shop-tab--active" />
+                <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
+                <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
+                <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />
+            </ui:VisualElement>
+            <ui:Label name="shop-context-label" text="" class="shop-context-label" />
+            <ui:ScrollView name="shop-tier-list" class="shop-tier-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ SETTINGS PANEL ═══ -->
+        <ui:VisualElement name="settings-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Settings" class="panel-title" />
+                <ui:Button name="btn-close-settings" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:Label text="AUDIO" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Master" class="settings-label" />
+                    <ui:Slider name="slider-master-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="SFX" class="settings-label" />
+                    <ui:Slider name="slider-sfx-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Music" class="settings-label" />
+                    <ui:Slider name="slider-music-volume" low-value="0" high-value="1" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:Label text="GRAPHICS" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Quality" class="settings-label" />
+                    <ui:VisualElement class="settings-quality-btns">
+                        <ui:Button name="btn-quality-low"    text="Low"    class="quality-btn" />
+                        <ui:Button name="btn-quality-medium" text="Medium" class="quality-btn" />
+                        <ui:Button name="btn-quality-high"   text="High"   class="quality-btn quality-btn--active" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label text="NOTIFICATIONS" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Push Notifications" class="settings-label" />
+                    <ui:Toggle name="toggle-notifications" value="true" class="settings-toggle" />
+                </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+
         <!-- ═══ PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="placement-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="placement-bar" class="placement-bar">
-                <ui:Label name="placement-label" text="Tap an empty tile to place  ·  Esc to cancel"
+                <ui:Label name="placement-label" text="Tap a tile to position  ·  drag to pan  ·  ✓ to place"
                           class="placement-label" />
                 <ui:Button name="btn-rotate-output" text="↻ Rotate" class="rotate-output-btn hidden" />
                 <ui:Button name="btn-flip-building" text="⇄ Flip"   class="rotate-output-btn hidden" />
@@ -197,12 +317,23 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ PLACEMENT CONFIRM POPUP (world-anchored above the candidate cell) ═══ -->
+        <ui:VisualElement name="placement-confirm-popup" class="placement-confirm-popup hidden" picking-mode="Ignore">
+            <ui:Button name="btn-cancel-candidate" text="✕" class="placement-confirm-btn placement-confirm-btn--cancel" />
+            <ui:Button name="btn-rotate-candidate" text="↻" class="placement-confirm-btn placement-confirm-btn--rotate hidden" />
+            <ui:Button name="btn-confirm-place"    text="✓" class="placement-confirm-btn placement-confirm-btn--confirm" />
+        </ui:VisualElement>
+
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
-        <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden">
+        <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden" picking-mode="Ignore">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label text="Press and drag to draw a belt  ·  Esc to cancel"
+                <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
                           class="placement-label" />
-                <ui:Button name="btn-cancel-conveyor" text="Cancel" class="cancel-placement-btn" />
+                <ui:Button name="btn-conveyor-rotate" text="↻" tooltip="Bend route" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-confirm" text="✓" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden" />
+                <ui:Button name="btn-conveyor-cancel-candidate" text="✕" tooltip="Clear" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
+                <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 

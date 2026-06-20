@@ -23,7 +23,13 @@ namespace MobileIdleBuilder
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
+        private ManagersSubController               _managers;
+        private MegastructureSubController          _megastructure;
+        private DailyEventsSubController            _daily;
         private IdleReturnSubController             _idleReturn;
+        private HUDPremiumShopSubController         _shop;
+        private HUDSettingsSubController            _settings;
+        private SitesSubController                  _sites;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -37,7 +43,8 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay;
+                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _shopPanel, _settingsPanel, _dailyPanel, _sitesPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -53,11 +60,22 @@ namespace MobileIdleBuilder
         private bool          _drawerOpen;
 
         // ---- Placement controls ----
-        private Button _btnRotateOutput;
-        private Button _btnFlipBuilding;
+        private Button        _btnRotateOutput;
+        private Button        _btnFlipBuilding;
+        private VisualElement _placementConfirmPopup;
+        private VisualElement _placementBar;
+        private Button        _btnConfirmPlace;
+        private Button        _btnCancelCandidate;
+        private Button        _btnRotateCandidate;
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private VisualElement _conveyorBar;
+        private Label         _conveyorLabel;
+        private Button        _btnConveyorRotate;
+        private Button        _btnConveyorConfirm;
+        private Button        _btnConveyorCancelCandidate;
+        private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
@@ -66,6 +84,7 @@ namespace MobileIdleBuilder
         public event System.Action OnDrawerOpened;
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
+        public event System.Action OnConveyorPlaced;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -86,6 +105,9 @@ namespace MobileIdleBuilder
         private Button    _btnAchievements;
         private Label     _achievementsLockedHint;
         private bool      _achievementsUnlocked;
+
+        // ---- Megastructure gate (nav button hidden until megastructure_theory is researched) ----
+        private Button    _btnMegastructure;
         private Coroutine _achievementsHintPulse;
         private Button    _achievementsHintPulseTarget;
 
@@ -103,7 +125,13 @@ namespace MobileIdleBuilder
             _inspector    = GetComponent<HUDBuildingInspectorSubController>();
             _banner       = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
+            _managers     = GetComponent<ManagersSubController>();
+            _megastructure = GetComponent<MegastructureSubController>();
+            _daily        = GetComponent<DailyEventsSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
+            _shop         = GetComponent<HUDPremiumShopSubController>();
+            _settings     = GetComponent<HUDSettingsSubController>();
+            _sites        = GetComponent<SitesSubController>();
         }
 
         void OnEnable()
@@ -132,19 +160,29 @@ namespace MobileIdleBuilder
                 };
             }
 
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+
             QueryElements(root);
             _statusBar?.Init(root);
             _inspector?.Init(root, placementController, this);
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
+            _managers?.Init(root, this);
+            _megastructure?.Init(root, this);
+            _daily?.Init(root, this);
             _idleReturn?.Init(root);
+            _shop?.Initialize(root);
+            _settings?.Initialize(root);
+            _sites?.Init(root, this);
             BindButtons(root);
             ApplyAchievementsGate();
+            ApplyMegastructureGate();
             _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
             GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_placementConfirmPopup, false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
             // notification-banner starts hidden via CSS translate (no .hidden class needed)
@@ -159,10 +197,18 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
                 placementController.OnBuildingPlaced         += OnBuildingPlaced;
+                placementController.OnCandidateChanged       += OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = IsPointerOverPlacementUI;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      += OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+                conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
@@ -179,15 +225,25 @@ namespace MobileIdleBuilder
 
         void OnDisable()
         {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+
             if (placementController != null)
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
                 placementController.OnBuildingPlaced         -= OnBuildingPlaced;
+                placementController.OnCandidateChanged       -= OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = null;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      -= OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+                conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = null;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
@@ -213,7 +269,7 @@ namespace MobileIdleBuilder
             _em             = world.EntityManager;
             _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
             _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
-            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
+            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerGridState>());
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
@@ -224,12 +280,14 @@ namespace MobileIdleBuilder
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
             _prestigeShop?.SetECSContext(_em);
+            _sites?.SetECSContext(_em);
         }
 
         void Update()
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+            UpdatePlacementConfirmPopup();
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -263,15 +321,22 @@ namespace MobileIdleBuilder
             _codexPanel        = root.Q("codex-panel");
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
+            _managersPanel     = root.Q("managers-panel");
+            _megastructurePanel = root.Q("megastructure-panel");
+            _dailyPanel        = root.Q("daily-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
+            _shopPanel         = root.Q("shop-panel");
+            _settingsPanel     = root.Q("settings-panel");
+            _sitesPanel        = root.Q("sites-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel
+                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _shopPanel, _settingsPanel, _sitesPanel
             };
 
             // Panel content
@@ -294,6 +359,7 @@ namespace MobileIdleBuilder
             // Achievements gate
             _btnAchievements        = root.Q<Button>("btn-achievements");
             _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
+            _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
             _pvpStateLabel     = root.Q<Label>("pvp-state-label");
             _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
@@ -306,6 +372,11 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _placementConfirmPopup = root.Q("placement-confirm-popup");
+            _placementBar          = root.Q("placement-bar");
+            _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
+            _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
+            _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
@@ -314,7 +385,13 @@ namespace MobileIdleBuilder
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
             // Conveyor placement
-            _conveyorOverlay = root.Q("conveyor-overlay");
+            _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorBar                = root.Q("conveyor-bar");
+            _conveyorLabel              = root.Q<Label>("conveyor-label");
+            _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
+            _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
+            _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
+            _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
@@ -339,6 +416,10 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-codex").clicked        += () => TryOpenPanel(OpenCodexPanel);
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
+            root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
+            root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
+            var btnDaily = root.Q<Button>("btn-daily");
+            if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
 
             // Achievement category tabs
@@ -351,13 +432,13 @@ namespace MobileIdleBuilder
                 achievementService?.ClaimAllRewards();
                 BuildAchievementsList();
             };
+            root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
+            root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
-            var btnBack = root.Q<Button>("btn-go-back-main-menu");
-            if (btnBack != null) btnBack.clicked += OnGoBackMainMenu;
+            root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -365,9 +446,14 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-codex").clicked        += () => SetElementVisible(_codexPanel,        false);
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
+            root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
+            root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
+            var btnCloseDaily = root.Q<Button>("btn-close-daily");
+            if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
+            root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
 
             // PVP actions (queried after _btnEnterPVP is set in QueryElements)
             if (_btnEnterPVP != null)
@@ -393,10 +479,26 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnConfirmPlace != null)
+                _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
+            if (_btnCancelCandidate != null)
+                _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
+            if (_btnRotateCandidate != null)
+                _btnRotateCandidate.clicked += () => placementController?.Rotate();
 
-            // Conveyor cancel (button inside the conveyor overlay)
+            // Conveyor "Finished" (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
                 conveyorController?.CancelConveyorMode());
+
+            // Conveyor candidate controls + Create/Destroy toggle
+            if (_btnConveyorRotate != null)
+                _btnConveyorRotate.clicked += () => conveyorController?.RotatePath();
+            if (_btnConveyorConfirm != null)
+                _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
+            if (_btnConveyorCancelCandidate != null)
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+            if (_btnConveyorMode != null)
+                _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
             // Deconstruct cancel
             root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -563,6 +665,12 @@ namespace MobileIdleBuilder
             // Refresh recipe panel — newly learned recipes will appear
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
                 BuildRecipeList();
+
+            // One-shot Quantum Domains introduction when its gate research is unlocked.
+            _sites?.NotifyResearchUnlocked(research);
+
+            // Reveal the megastructure nav button when its gating research lands.
+            ApplyMegastructureGate();
         }
 
         private void OpenUpgradesPanel()
@@ -570,6 +678,55 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenManagersPanel()
+        {
+            CloseAllPanels();
+            _managers?.Refresh();
+            SetElementVisible(_managersPanel, true);
+        }
+
+        private void OpenMegastructurePanel()
+        {
+            CloseAllPanels();
+            _megastructure?.Refresh();
+            SetElementVisible(_megastructurePanel, true);
+        }
+
+        /// <summary>Shows the megastructure nav button only once its gating research is unlocked.</summary>
+        private void ApplyMegastructureGate()
+        {
+            if (_btnMegastructure == null) return;
+            bool unlocked = MegastructureService.Instance?.IsUnlocked() ?? false;
+            SetElementVisible(_btnMegastructure, unlocked);
+        }
+
+        private void OpenSitesPanel()
+        {
+            CloseAllPanels();
+            _sites?.ClearNavHighlight();
+            _sites?.Refresh();
+            SetElementVisible(_sitesPanel, true);
+        }
+
+        private void OpenDailyPanel()
+        {
+            CloseAllPanels();
+            _daily?.Refresh();
+            SetElementVisible(_dailyPanel, true);
+        }
+
+        private void OpenShopPanel()
+        {
+            CloseAllPanels();
+            _shop?.Open();
+        }
+
+        private void OpenSettingsPanel()
+        {
+            CloseAllPanels();
+            _settings?.Open();
         }
 
         private void ApplyAchievementsGate()
@@ -770,12 +927,6 @@ namespace MobileIdleBuilder
                 $"You will receive: {preview} ✦   (current: {held} ✦)";
 
             SetElementVisible(_prestigePanel, true);
-        }
-
-        private void OnGoBackMainMenu()
-        {
-            SaveManager.Instance?.SaveLocal();
-            SceneLoader.GoTo("MainMenu");
         }
 
         private void OnPrestigeConfirmed()
@@ -1147,6 +1298,7 @@ namespace MobileIdleBuilder
         private void OnPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_placementOverlay, isPlacing);
+            if (!isPlacing) SetElementVisible(_placementConfirmPopup, false);
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
@@ -1155,19 +1307,135 @@ namespace MobileIdleBuilder
 
             if (isPlacing && _placementLabel != null)
             {
-                bool isField = placementController?.RequiresOutputDirection ?? false;
-                _placementLabel.text = isField
-                    ? "Tap a field tile to place  ·  R rotate  ·  Esc cancel"
-                    : canRotate
-                        ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
-                        : "Tap an empty tile to place  ·  Esc to cancel";
+                string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
+                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  ✓ to place{rotateHint}";
             }
+        }
+
+        // ============================================================
+        // Placement confirm popup (world-anchored ✓ / ✕ at the candidate cell)
+        // ============================================================
+
+        private void OnCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_placementConfirmPopup, hasCandidate);
+            // Surface the rotate (↻) action on the confirm popup itself for rotatable buildings,
+            // so the player can re-orient in-context next to ✓/✕ instead of reaching for the bottom bar.
+            SetElementVisible(_btnRotateCandidate,
+                hasCandidate && (placementController?.CanRotate ?? false));
+            if (hasCandidate) UpdatePlacementConfirmPopup();
+        }
+
+        private void UpdatePlacementConfirmPopup()
+        {
+            if (_placementConfirmPopup == null || placementController == null) return;
+            if (!placementController.HasCandidate) return;
+
+            var panel = _placementConfirmPopup.panel;
+            var cam   = Camera.main;
+            if (panel == null || cam == null) return;
+
+            Vector2 panelPoint = RuntimePanelUtils.CameraTransformWorldToPanel(
+                panel, placementController.CandidateWorldPosition, cam);
+
+            float w = _placementConfirmPopup.resolvedStyle.width;
+            float h = _placementConfirmPopup.resolvedStyle.height;
+            if (float.IsNaN(w)) w = 0f;
+            if (float.IsNaN(h)) h = 0f;
+
+            // Centre horizontally over the cell and float above it.
+            _placementConfirmPopup.style.left = panelPoint.x - w * 0.5f;
+            _placementConfirmPopup.style.top  = panelPoint.y - h - 24f;
+
+            _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
+        }
+
+        /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
+        /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
+        private bool IsPointerOverPlacementUI(Vector2 screenPos)
+            => ScreenPointInElement(_placementConfirmPopup, screenPos)
+            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
+
+        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
+        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
+        private bool IsPointerOverConveyorUI(Vector2 screenPos)
+        {
+            // Develop-tier dump of the bar geometry vs the converted pointer position.
+            // Gated on VerboseLogging so it only logs during the press, not every hover frame.
+            bool r = ScreenPointInElement(_conveyorBar, screenPos);
+            if (UIInputBlocker.VerboseLogging)
+            {
+                var panel = _conveyorBar?.panel;
+                Vector2 pp = panel != null ? RuntimePanelUtils.ScreenToPanel(panel, screenPos) : Vector2.zero;
+                GameLogger.Develop($"[Conveyor] barCheck bar={(_conveyorBar == null ? "null" : _conveyorBar.name)} hidden={(_conveyorBar?.ClassListContains("hidden"))} panelNull={panel == null} worldBound={_conveyorBar?.worldBound} panelPos={pp} -> {r}");
+            }
+            return r;  // the bar strip, NOT the full-screen overlay
+        }
+
+        private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
+        {
+            if (el == null || el.ClassListContains("hidden")) return false;
+            var panel = el.panel;
+            if (panel == null) return false;
+            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
+            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
+            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
+            // panel and never registers as "over UI", leaking taps to the grid behind it.
+            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
+            return el.worldBound.Contains(panelPos);
         }
 
         private void OnConveyorPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_conveyorOverlay, isPlacing);
+
+            if (isPlacing)
+            {
+                // Mode always re-enters in Create with no pending candidate.
+                OnConveyorModeChanged(false);
+                OnConveyorCandidateChanged(false);
+            }
         }
+
+        /// <summary>Updates the Create/Destroy toggle look and the bar's instructional text.</summary>
+        private void OnConveyorModeChanged(bool isDestroy)
+        {
+            if (_btnConveyorMode != null)
+            {
+                _btnConveyorMode.text = isDestroy ? "Destroy" : "Create";
+                if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
+                else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
+            }
+
+            if (_conveyorLabel != null)
+                _conveyorLabel.text = isDestroy
+                    ? "Tap a belt to remove"
+                    : "Tap a start, then an end";
+
+            // Switching mode always clears any pending candidate.
+            if (isDestroy) OnConveyorCandidateChanged(false);
+        }
+
+        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
+        private void OnConveyorCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_btnConveyorRotate,          hasCandidate);
+            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
+
+            // The label is a short instruction only — it must not repeat the button names.
+            if (_conveyorLabel != null && !IsDestroyModeActive())
+                _conveyorLabel.text = hasCandidate
+                    ? "Place the belt, or adjust it"
+                    : "Tap a start, then an end";
+        }
+
+        private bool IsDestroyModeActive() =>
+            conveyorController != null && conveyorController.IsDestroyMode;
+
+        /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
+        private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
@@ -1333,7 +1601,12 @@ namespace MobileIdleBuilder
                 SwapAchievementsHintPulse("btn-drawer-handle");
         }
 
-        private void CancelActiveModes()
+        /// <summary>
+        /// Cancels any active building-placement, conveyor, or deconstruct mode (and their
+        /// overlays). Public so sub-controllers (e.g. site travel) can clear placement before
+        /// an action that swaps the grid out from under it.
+        /// </summary>
+        public void CancelActiveModes()
         {
             placementController?.CancelPlacement();
             conveyorController?.CancelConveyorMode();

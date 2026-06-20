@@ -16,8 +16,7 @@ namespace MobileIdleBuilder.Editor
     /// </summary>
     public static class SaveWipeEditorTool
     {
-        static string SavePath   => Path.Combine(Application.persistentDataPath, "save.json");
-        static string BackupPath => SavePath + ".bak";
+        static string SavePath => Path.Combine(Application.persistentDataPath, "save.json");
 
         [MenuItem("MobileIdleBuilder/Clear Save (Fresh Start)")]
         static void ClearSave()
@@ -33,20 +32,10 @@ namespace MobileIdleBuilder.Editor
 
             if (!confirm) return;
 
-            // ── Local files ───────────────────────────────────────────────────
+            // Shared wipe: deletes save.json + .bak and the auth/idle PlayerPrefs keys, and
+            // schedules a cloud wipe for the next play-mode boot (UGS isn't reachable in edit mode).
             bool hadLocal = File.Exists(SavePath);
-            if (hadLocal)  File.Delete(SavePath);
-            if (File.Exists(BackupPath)) File.Delete(BackupPath);
-
-            // ── PlayerPrefs ───────────────────────────────────────────────────
-            // Background idle timestamp
-            PlayerPrefs.DeleteKey(SaveManager.BackgroundTimestampKey);
-            // Auth session policy (forces interactive sign-in on next boot)
-            PlayerPrefs.DeleteKey(AuthSessionPolicy.k_LastOpenedKey);
-            PlayerPrefs.DeleteKey(AuthSessionPolicy.k_LastFullAuthKey);
-            // Schedule cloud wipe for next play-mode boot
-            PlayerPrefs.SetInt(SaveManager.k_WipePending, 1);
-            PlayerPrefs.Save();
+            SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: true);
 
             string localStatus = hadLocal ? "deleted" : "not found (already clean)";
             Debug.Log($"[SaveWipe] Local save {localStatus}. Cloud save will be wiped on next Play session.");

@@ -104,7 +104,8 @@ namespace MobileIdleBuilder
         public long ComputeGridBuildingCost()
         {
             var save = SaveManager.Instance?.Current;
-            if (save?.currentRun?.grid?.buildings == null) return 0;
+            var grid = EnsureActiveGrid(save);
+            if (grid?.buildings == null) return 0;
             if (placementController?.availableBuildings == null) return 0;
 
             var lookup = new Dictionary<int, int>();
@@ -113,11 +114,56 @@ namespace MobileIdleBuilder
                     lookup[entry.building.buildingId] = entry.building.entropyCost;
 
             long total = 0;
-            foreach (var bsd in save.currentRun.grid.buildings)
+            foreach (var bsd in grid.buildings)
                 if (lookup.TryGetValue(bsd.buildingId, out int cost))
                     total += cost;
 
             return total;
+        }
+
+        // ── Multi-grid migration ──────────────────────────────────────────
+
+        /// <summary>
+        /// Returns the active site's grid, migrating legacy single-grid saves in place.
+        /// On a pre-multi-grid save, seeds grids[0] with the SAME object as the legacy
+        /// 'grid' so the two alias and stay in sync. Keeps 'grid' mirroring grids[0] while
+        /// the origin site (index 0) is active, so an older build can still read the save.
+        /// All grid access in this service goes through here. Returns null if no run.
+        /// </summary>
+        internal static GridSaveData EnsureActiveGrid(SaveData save)
+        {
+            var run = save?.currentRun;
+            if (run == null) return null;
+
+            run.grids ??= new List<GridSaveData>();
+            if (run.grids.Count == 0)
+                run.grids.Add(run.grid ?? new GridSaveData());
+
+            if (run.activeSiteIndex < 0 || run.activeSiteIndex >= run.grids.Count)
+                run.activeSiteIndex = 0;
+
+            var active = run.grids[run.activeSiteIndex];
+            if (run.activeSiteIndex == 0)
+                run.grid = active;   // legacy mirror
+
+            return active;
+        }
+
+        /// <summary>
+        /// Ensures <c>run.grids</c> has an entry for <paramref name="siteIndex"/>, padding with
+        /// empty grids as needed, and returns that grid. Used when unlocking/switching to a site
+        /// whose grid has never been created. grids[0] still aliases the legacy 'grid'.
+        /// </summary>
+        internal static GridSaveData EnsureSiteGrid(SaveData save, int siteIndex)
+        {
+            EnsureActiveGrid(save);                 // guarantees grids[0] exists + clamps index
+            var run = save?.currentRun;
+            if (run == null || siteIndex < 0) return null;
+
+            while (run.grids.Count <= siteIndex)
+                run.grids.Add(new GridSaveData());
+
+            return run.grids[siteIndex];
         }
 
         // ── Save path ─────────────────────────────────────────────────────
@@ -128,10 +174,11 @@ namespace MobileIdleBuilder
             if (!_ecsReady) return;
 
             var save = SaveManager.Instance?.Current;
-            if (save?.currentRun?.grid == null) return;
+            var grid = EnsureActiveGrid(save);
+            if (grid == null) return;
 
-            save.currentRun.grid.buildings.Clear();
-            save.currentRun.grid.conveyors.Clear();
+            grid.buildings.Clear();
+            grid.conveyors.Clear();
 
             // --- Buildings ---
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
@@ -148,6 +195,7 @@ namespace MobileIdleBuilder
                     position        = new[] { gp.Cell.x, gp.Cell.y },
                     level           = bd.UpgradeLevel,
                     storageLevel    = bd.StorageUpgradeLevel,
+                    inputLevel      = bd.InputUpgradeLevel,
                     rotation        = 0,
                     flipped         = false,
                     outputDirection = -1
@@ -163,7 +211,7 @@ namespace MobileIdleBuilder
                 if (_em.HasComponent<OutputDirectionData>(e))
                     bsd.outputDirection = _em.GetComponentData<OutputDirectionData>(e).Direction;
 
-                save.currentRun.grid.buildings.Add(bsd);
+                grid.buildings.Add(bsd);
             }
             entities.Dispose();
 
@@ -188,16 +236,17 @@ namespace MobileIdleBuilder
                     cur = seg.NextSegment;
                 }
 
-                save.currentRun.grid.conveyors.Add(new ConveyorSaveData
-                {
-                    cells = cells.ToArray()
-                });
+                var csd = new ConveyorSaveData { cells = cells.ToArray() };
+                // A lone segment has no neighbours to derive facing from on reload, so persist its
+                // chosen direction (kv.Value is the chain head = the only segment here).
+                if (cells.Count == 2) csd.singleDir = kv.Value.ExitDir;
+                grid.conveyors.Add(csd);
             }
 
             // --- Fields ---
-            save.currentRun.grid.fields.Clear();
+            grid.fields.Clear();
             foreach (var kv in FieldGenerator.GetAllFields())
-                save.currentRun.grid.fields.Add(new FieldSaveData
+                grid.fields.Add(new FieldSaveData
                 {
                     fieldId  = kv.Value.id,
                     position = new[] { kv.Key.x, kv.Key.y }
@@ -213,12 +262,16 @@ namespace MobileIdleBuilder
         public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
-            if (save?.currentRun?.grid == null) return;
+            var grid = EnsureActiveGrid(save);
+            if (grid == null) return;
             if (!forceApply && SaveManager.Instance.IsNewGame) return;
 
-            bool hasBuildings = save.currentRun.grid.buildings?.Count > 0;
-            bool hasConveyors = save.currentRun.grid.conveyors?.Count > 0;
-            if (!hasBuildings && !hasConveyors) return;
+            bool hasBuildings = grid.buildings?.Count > 0;
+            bool hasConveyors = grid.conveyors?.Count > 0;
+            bool hasFields    = grid.fields?.Count > 0;
+            // Fields must restore even with no buildings/conveyors — a build site can hold a
+            // generated field layout that the player has not built on yet.
+            if (!hasBuildings && !hasConveyors && !hasFields) return;
 
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
@@ -237,7 +290,7 @@ namespace MobileIdleBuilder
             // --- Restore buildings ---
             if (hasBuildings && buildingPlacer != null)
             {
-                foreach (var bsd in save.currentRun.grid.buildings)
+                foreach (var bsd in grid.buildings)
                 {
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
                     {
@@ -258,29 +311,37 @@ namespace MobileIdleBuilder
                         entry.building, recipe,
                         outputDir, bsd.rotation, bsd.flipped,
                         speedLevel:   Mathf.Max(1, bsd.level),
-                        storageLevel: Mathf.Max(1, bsd.storageLevel));
+                        storageLevel: Mathf.Max(1, bsd.storageLevel),
+                        inputLevel:   Mathf.Max(1, bsd.inputLevel));
                 }
             }
 
             buildingVisualizer?.Refresh();
 
+            // Re-bake manager bonuses onto the freshly re-placed building entities (the entities are
+            // brand new, so any CraftSpeed bonus was lost; OutputQuantity/PowerDiscount components too).
+            ManagerService.Instance?.ReapplyAllAssignments();
+
             // --- Restore conveyors ---
             if (hasConveyors && conveyorPlacer != null)
             {
-                foreach (var csd in save.currentRun.grid.conveyors)
+                foreach (var csd in grid.conveyors)
                 {
-                    if (csd.cells == null || csd.cells.Length < 4) continue;
+                    if (csd.cells == null || csd.cells.Length < 2) continue;
                     var path = new List<Vector2Int>();
                     for (int i = 0; i + 1 < csd.cells.Length; i += 2)
                         path.Add(new Vector2Int(csd.cells[i], csd.cells[i + 1]));
-                    conveyorPlacer.PlaceConveyorChain(path);
+                    if (path.Count == 1 && csd.singleDir >= 0)
+                        conveyorPlacer.PlaceConveyorChain(path, (OutputDirection)csd.singleDir);
+                    else
+                        conveyorPlacer.PlaceConveyorChain(path);
                 }
             }
 
             // --- Restore fields ---
             var fieldGenerator = FindAnyObjectByType<FieldGenerator>();
-            if (fieldGenerator != null && save.currentRun.grid.fields?.Count > 0)
-                fieldGenerator.SpawnFromSave(save.currentRun.grid.fields);
+            if (fieldGenerator != null && grid.fields?.Count > 0)
+                fieldGenerator.SpawnFromSave(grid.fields);
 
             RebuildIdleSnapshot(save);
         }
@@ -293,7 +354,8 @@ namespace MobileIdleBuilder
         /// </summary>
         private void RebuildIdleSnapshot(SaveData save)
         {
-            if (save?.currentRun?.grid == null) return;
+            var grid = EnsureActiveGrid(save);
+            if (grid == null) return;
             if (placementController?.availableBuildings == null) return;
 
             // Build lookup: buildingId → BuildingSO and defaultRecipe
@@ -332,10 +394,22 @@ namespace MobileIdleBuilder
                 ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
 
             float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
-            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult;
+            // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
+            // output onto each source's output multiplier (alongside the per-building manager bonus).
+            float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
+            float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
+
+            int activeSite = save.currentRun?.activeSiteIndex ?? 0;
+            float getManagerOutputMultiplier(BuildingSaveData bsd)
+            {
+                if (bsd?.position == null || bsd.position.Length < 2) return megaOutputMult;
+                int posKey = ManagerService.EncodePos(bsd.position[0], bsd.position[1]);
+                return (ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f) * megaOutputMult;
+            }
 
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
-                save.currentRun.grid,
+                grid,
                 isCollector,
                 isEntropySink,
                 getFootprint,
@@ -343,10 +417,34 @@ namespace MobileIdleBuilder
                 getOutputRate,
                 getItemSellValue,
                 speedMult,
-                DateTime.UtcNow.ToString("O"));
+                DateTime.UtcNow.ToString("O"),
+                getManagerOutputMultiplier);
+
+            // Mirror into the per-site snapshot list so inactive sites keep producing offline.
+            // The active site's entry is always kept current here; inactive entries persist from
+            // the last time each site was active (rebuilt on switch-away via SaveLocal → FlushToSave).
+            MirrorActiveSiteSnapshot(save);
 
             int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
-            GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={save.currentRun.grid.buildings?.Count ?? 0} conveyors={save.currentRun.grid.conveyors?.Count ?? 0} chains={builtChains}");
+            GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={grid.buildings?.Count ?? 0} conveyors={grid.conveyors?.Count ?? 0} chains={builtChains}");
+        }
+
+        /// <summary>
+        /// Copies the freshly built <c>save.idleSnapshot</c> into <c>save.siteSnapshots</c> at the
+        /// active site index, padding the list as needed. Keeps the active site's per-site snapshot
+        /// in sync so OfflineCollectionService can pay out every unlocked site on the next launch.
+        /// </summary>
+        internal static void MirrorActiveSiteSnapshot(SaveData save)
+        {
+            var run = save?.currentRun;
+            if (run == null) return;
+
+            int idx = (run.activeSiteIndex >= 0) ? run.activeSiteIndex : 0;
+            save.siteSnapshots ??= new List<IdleCollectionSnapshot>();
+            while (save.siteSnapshots.Count <= idx)
+                save.siteSnapshots.Add(new IdleCollectionSnapshot());
+
+            save.siteSnapshots[idx] = save.idleSnapshot;
         }
     }
 }

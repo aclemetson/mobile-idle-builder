@@ -175,6 +175,8 @@ namespace MobileIdleBuilder.Tests
                 "BuildingSO missing: baseMaxInputItemsPerSlot (fixed input buffer)");
             Assert.IsNotNull(type.GetField("storageUpgradeLevels"),
                 "BuildingSO missing: storageUpgradeLevels (separate storage upgrade track)");
+            Assert.IsNotNull(type.GetField("inputUpgradeLevels"),
+                "BuildingSO missing: inputUpgradeLevels (separate input-capacity upgrade track)");
         }
 
         [Test]
@@ -185,6 +187,16 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(type.GetField("maxOutputItems"),      "BuildingStorageUpgradeLevel missing: maxOutputItems");
             Assert.IsNotNull(type.GetField("costBaseCurrency"),    "BuildingStorageUpgradeLevel missing: costBaseCurrency");
             Assert.IsNotNull(type.GetField("costPrestigeCurrency"),"BuildingStorageUpgradeLevel missing: costPrestigeCurrency");
+        }
+
+        [Test]
+        public void BuildingInputUpgradeLevel_HasRequiredFields()
+        {
+            var type = typeof(BuildingInputUpgradeLevel);
+            Assert.IsNotNull(type.GetField("level"),               "BuildingInputUpgradeLevel missing: level");
+            Assert.IsNotNull(type.GetField("maxInputItems"),       "BuildingInputUpgradeLevel missing: maxInputItems");
+            Assert.IsNotNull(type.GetField("costBaseCurrency"),    "BuildingInputUpgradeLevel missing: costBaseCurrency");
+            Assert.IsNotNull(type.GetField("costPrestigeCurrency"),"BuildingInputUpgradeLevel missing: costPrestigeCurrency");
         }
 
         [Test]
@@ -273,6 +285,57 @@ namespace MobileIdleBuilder.Tests
             Assert.Greater(config.alphaParticleEVValue, 0f);
             Assert.Greater(config.betaParticleEVValue, 0f);
             Object.DestroyImmediate(config);
+        }
+
+        // ── SiteSO (multi-grids) ──────────────────────────────────────────────
+
+        [Test]
+        public void SiteSO_HasRequiredFields()
+        {
+            var type = typeof(SiteSO);
+            Assert.IsNotNull(type.GetField("id"),             "SiteSO missing: id");
+            Assert.IsNotNull(type.GetField("displayName"),    "SiteSO missing: displayName");
+            Assert.IsNotNull(type.GetField("unlockCost"),     "SiteSO missing: unlockCost");
+            Assert.IsNotNull(type.GetField("fieldOverrides"), "SiteSO missing: fieldOverrides");
+        }
+
+        [Test]
+        public void SiteFieldOverride_HasRequiredFields()
+        {
+            var type = typeof(SiteFieldOverride);
+            Assert.IsNotNull(type.GetField("field"),             "SiteFieldOverride missing: field");
+            Assert.IsNotNull(type.GetField("densityMultiplier"), "SiteFieldOverride missing: densityMultiplier");
+        }
+
+        [Test]
+        public void SiteSO_DefaultsAreSane()
+        {
+            var so = ScriptableObject.CreateInstance<SiteSO>();
+            Assert.AreEqual(0, so.unlockCost, "Origin-style default unlock cost should be 0");
+            Assert.IsNotNull(so.fieldOverrides, "fieldOverrides should be initialized, not null");
+            Object.DestroyImmediate(so);
+        }
+
+        [Test]
+        public void SiteDatabaseSO_HasAllSitesField()
+        {
+            Assert.IsNotNull(typeof(SiteDatabaseSO).GetField("allSites"),
+                "SiteDatabaseSO missing: allSites");
+        }
+
+        [Test]
+        public void DialogueDatabaseSO_GetReturnsMappedDialogue()
+        {
+            var dlg = ScriptableObject.CreateInstance<DialogueSO>();
+            var db  = ScriptableObject.CreateInstance<DialogueDatabaseSO>();
+            db.entries = new[] { new DialogueDatabaseSO.Entry { id = "intro_quantum_domains", dialogue = dlg } };
+
+            Assert.AreSame(dlg, db.Get("intro_quantum_domains"), "Get returns the mapped dialogue");
+            Assert.IsNull(db.Get("missing_id"), "unknown id returns null");
+            Assert.IsNull(db.Get(null), "null id returns null");
+
+            Object.DestroyImmediate(db);
+            Object.DestroyImmediate(dlg);
         }
     }
 }

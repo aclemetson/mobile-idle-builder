@@ -20,12 +20,13 @@ namespace MobileIdleBuilder.Dev
     {
         // ── Activation ────────────────────────────────────────────────────────
 
-        private const float ShakeThreshold    = 2.5f;   // g-force above which a peak is counted
-        private const float ShakeWindow       = 1.5f;   // seconds the peaks must fall within
-        private const int   ShakePeaksRequired = 3;     // number of threshold crossings to trigger
+        private const float ShakeThreshold    = 2.5f;
+        private const float ShakeWindow       = 1.5f;
+        private const int   ShakePeaksRequired = 3;
 
-        private readonly Queue<float> _shakePeakTimes = new();
-        private bool _wasAboveShakeThreshold;
+        private readonly ShakePeakDetector _shakeDetector =
+            new ShakePeakDetector(ShakeThreshold, ShakeWindow, ShakePeaksRequired);
+
         private bool _isVisible;
         private bool _clearFieldNextFrame;
         private bool _refocusFieldNextFrame;
@@ -103,14 +104,23 @@ namespace MobileIdleBuilder.Dev
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
             GameLogger.Info("[DevConsole] BindUI — done");
+
+            // Block world input (camera pan + gameplay taps) over the console overlay.
+            UIInputBlocker.Register(GetComponent<UIDocument>());
         }
 
         private void OnCloseButtonClicked() => SetVisible(false);
 
+        void OnDisable()
+        {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+            UIInputBlocker.SetModal(this, false);
+        }
+
         void Start()
         {
-            if (Accelerometer.current != null)
-                InputSystem.EnableDevice(Accelerometer.current);
+            TryEnableAccelerometer();
+            InputSystem.onDeviceChange += OnInputDeviceChange;
 
             _registry = new DevCommandRegistry();
             RegisterCommands();
@@ -129,6 +139,7 @@ namespace MobileIdleBuilder.Dev
 
         void OnDestroy()
         {
+            InputSystem.onDeviceChange -= OnInputDeviceChange;
             if (s_Instance == this)
             {
                 s_Instance = null;
@@ -201,30 +212,30 @@ namespace MobileIdleBuilder.Dev
 
         private void OnRootKeyDown(KeyDownEvent e) { /* reserved for future use */ }
 
+        private static void TryEnableAccelerometer()
+        {
+            if (Accelerometer.current != null)
+                InputSystem.EnableDevice(Accelerometer.current);
+        }
+
+        private static void OnInputDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (device is Accelerometer && change == InputDeviceChange.Added)
+                InputSystem.EnableDevice(device);
+        }
+
         private void DetectShake()
         {
             var accel = Accelerometer.current;
             if (accel == null) return;
 
+            // On Android the device may arrive after Start(); enable it lazily.
+            if (!accel.enabled)
+                InputSystem.EnableDevice(accel);
+
             float magnitude = accel.acceleration.ReadValue().magnitude;
-            bool isAbove = magnitude > ShakeThreshold;
-
-            // Count rising edges (transitions from below to above threshold)
-            if (isAbove && !_wasAboveShakeThreshold)
-            {
-                float now = Time.realtimeSinceStartup;
-                _shakePeakTimes.Enqueue(now);
-                while (_shakePeakTimes.Count > 0 && now - _shakePeakTimes.Peek() > ShakeWindow)
-                    _shakePeakTimes.Dequeue();
-
-                if (_shakePeakTimes.Count >= ShakePeaksRequired)
-                {
-                    _shakePeakTimes.Clear();
-                    SetVisible(!_isVisible);
-                }
-            }
-
-            _wasAboveShakeThreshold = isAbove;
+            if (_shakeDetector.Feed(magnitude, Time.realtimeSinceStartup))
+                SetVisible(!_isVisible);
         }
 
         // ── Visibility ────────────────────────────────────────────────────────
@@ -233,6 +244,10 @@ namespace MobileIdleBuilder.Dev
         {
             GameLogger.Info($"[DevConsole] SetVisible({visible}) — consoleRoot={((_consoleRoot == null) ? "null" : "ok")}");
             _isVisible = visible;
+            // The console is a debug overlay sharing the HUD's panel; block ALL world input
+            // (camera pan + gameplay taps) while it is open rather than relying on per-element
+            // hit-testing across the shared panel.
+            UIInputBlocker.SetModal(this, visible);
             if (_consoleRoot == null) return;
 
             if (visible)
@@ -396,6 +411,27 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            // ── research ──────────────────────────────────────────────────────
+            _registry.Register("unlock research <id>", "Force-unlock a research node by string ID (ignores cost/prereqs)",
+                args =>
+                {
+                    var rs = ResearchService.Instance;
+                    if (rs == null) return "Error: ResearchService not found.";
+
+                    string id    = args[0];
+                    bool   exists = false;
+                    if (rs.AllResearch != null)
+                        foreach (var r in rs.AllResearch)
+                            if (r != null && r.id == id) { exists = true; break; }
+                    if (!exists)
+                        return $"Error: research '{id}' not found. Use lowercase IDs from game_data.json (e.g. megastructure_theory).";
+                    if (rs.IsUnlocked(id))
+                        return $"Research '{id}' already unlocked.";
+
+                    rs.ForceUnlock(id);
+                    return $"Unlocked research '{id}'.";
+                });
+
             // ── show prestige ─────────────────────────────────────────────────
             _registry.Register("show prestige", "Dump PrestigeData (run count, currency, multipliers)",
                 _ =>
@@ -546,6 +582,64 @@ namespace MobileIdleBuilder.Dev
                         return "Error: AchievementService not found.";
                     AchievementService.Instance.ForceCompleteAll();
                     return "All achievements force-completed.";
+                });
+
+            // ── sites (multi-grids) ──────────────────────────────────────────
+            _registry.Register("site list", "List all build sites (index, id, cost, unlocked, active)",
+                _ =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc?.AllSites == null || svc.AllSites.Count == 0)
+                        return "Error: SiteService not ready or SiteDatabase empty.";
+                    var sb = new StringBuilder($"Sites ({svc.AllSites.Count}):\n");
+                    for (int i = 0; i < svc.AllSites.Count; i++)
+                    {
+                        var s = svc.AllSites[i];
+                        if (s == null) continue;
+                        string flags = (i == svc.ActiveIndex ? "ACTIVE " : "")
+                                     + (svc.IsUnlocked(i) ? "unlocked" : "locked");
+                        sb.AppendLine($"  [{i}] {s.id,-18} {s.unlockCost,12}e  {flags}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("site switch <n>", "Switch the live grid to site index n",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n < 0)
+                        return "Error: <n> must be a non-negative integer.";
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    if (svc.GetSite(n) == null) return $"Error: no site at index {n}. Try 'site list'.";
+                    if (!svc.IsUnlocked(n)) return $"Error: site [{n}] is locked. Unlock it first.";
+                    if (n == svc.ActiveIndex) return $"Already on site [{n}].";
+                    return svc.SwitchTo(n)
+                        ? $"Switched to site [{n}] '{svc.GetSite(n).id}'."
+                        : $"Error: switch to [{n}] failed.";
+                });
+
+            _registry.Register("domains intro", "Replay the one-shot Quantum Domains intro dialogue",
+                _ =>
+                {
+                    var sites = FindAnyObjectByType<SitesSubController>();
+                    if (sites == null) return "Error: SitesSubController not in scene (wire it on the HUD GameObject).";
+                    sites.ReplayDomainsIntroForTesting();
+                    return "Replaying Quantum Domains intro.";
+                });
+
+            _registry.Register("site unlock <id>", "Unlock a site by id (deducts entropy)",
+                args =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    int idx = svc.IndexOf(args[0]);
+                    var site = svc.GetSite(idx);
+                    if (site == null) return $"Error: unknown site '{args[0]}'. Try 'site list'.";
+                    if (svc.IsUnlocked(idx)) return $"Site '{site.id}' already unlocked.";
+                    if (!svc.CanUnlock(idx)) return $"Error: cannot afford '{site.id}' ({site.unlockCost}e).";
+                    return svc.UnlockSite(site.id)
+                        ? $"Unlocked '{site.id}' for {site.unlockCost}e."
+                        : $"Error: unlock of '{site.id}' failed.";
                 });
 
             // ── tutorial ─────────────────────────────────────────────────────
@@ -755,7 +849,7 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     GridSaveService.Instance?.ClearGrid();
-                    new LocalSaveService().Delete();
+                    SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: false);
                     SaveManager.Instance?.ResetToFreshSave();
                     PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                     AchievementService.Instance?.ResetInMemory();
@@ -767,15 +861,24 @@ namespace MobileIdleBuilder.Dev
                 _ =>
                 {
                     var sm = SaveManager.Instance;
-                    if (sm == null) return "Error: SaveManager not ready.";
+                    if (sm == null)
+                    {
+                        // SaveManager not ready yet (running before GameScene initializes).
+                        // Wipe local files/prefs now and defer the cloud delete to next boot.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: true);
+                        SceneLoader.GoTo("GameScene");
+                        return "SaveManager not ready — local cleared, cloud wipe deferred to next GameScene load.";
+                    }
                     GameLogger.Info("[DevConsole] clear cloud save — starting coroutine");
                     StartCoroutine(sm.DeleteCloudSave(success =>
                     {
                         GameLogger.Info($"[DevConsole] clear cloud save callback — success={success}  activeScene='{SceneManager.GetActiveScene().name}'");
                         if (!success)
-                            AppendLog("Warning: cloud delete failed (offline?). Clearing local only.", "log-entry--error");
+                            AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
                         GridSaveService.Instance?.ClearGrid();
-                        new LocalSaveService().Delete();
+                        // On an offline/failed cloud delete, schedule the wipe so the cloud key is
+                        // removed on the next boot instead of silently leaving stale cloud data.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: !success);
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         AchievementService.Instance?.ResetInMemory();

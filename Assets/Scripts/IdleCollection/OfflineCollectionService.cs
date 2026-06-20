@@ -33,13 +33,23 @@ namespace MobileIdleBuilder
                 return null;
             }
 
-            int chainCount = save.idleSnapshot?.chains?.Count ?? -1;
-            GameLogger.Debug($"[Idle] CalculateAndApply — chains={chainCount} lastSaved={save.lastSaved} applied={save.idleCollectionApplied} fromTimestamp={fromTimestamp}");
+            // Pay out every unlocked site's snapshot (inactive sites keep producing). The active
+            // site's snapshot lives in both idleSnapshot and siteSnapshots[activeSiteIndex]; when
+            // siteSnapshots is populated we iterate it exclusively to avoid double-counting.
+            // Legacy/single-site saves fall back to the lone idleSnapshot.
+            var snapshots = (save.siteSnapshots != null && save.siteSnapshots.Count > 0)
+                ? save.siteSnapshots
+                : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
-            // No chains saved — nothing to simulate
-            if (save.idleSnapshot?.chains == null || save.idleSnapshot.chains.Count == 0)
+            int chainCount = 0;
+            foreach (var snap in snapshots)
+                chainCount += snap?.chains?.Count ?? 0;
+            GameLogger.Debug($"[Idle] CalculateAndApply — sites={snapshots.Count} chains={chainCount} lastSaved={save.lastSaved} applied={save.idleCollectionApplied} fromTimestamp={fromTimestamp}");
+
+            // No chains saved across any site — nothing to simulate
+            if (chainCount == 0)
             {
-                GameLogger.Debug("[Idle] Skipped — no chains in snapshot");
+                GameLogger.Debug("[Idle] Skipped — no chains in any snapshot");
                 return null;
             }
 
@@ -87,24 +97,28 @@ namespace MobileIdleBuilder
                 MaxSeconds     = effectiveCap,
             };
 
-            foreach (var chain in save.idleSnapshot.chains)
+            foreach (var snap in snapshots)
             {
-                int wholeItems = (int)Math.Floor(chain.itemsPerSecond * cappedSeconds * rate);
-                if (wholeItems <= 0) continue;
+                if (snap?.chains == null) continue;
+                foreach (var chain in snap.chains)
+                {
+                    int wholeItems = (int)Math.Floor(chain.itemsPerSecond * cappedSeconds * rate);
+                    if (wholeItems <= 0) continue;
 
-                if (chain.endsAtEntropySink)
-                {
-                    long entropy = (long)(wholeItems * chain.baseSellValue);
-                    result.EntropyEarned += entropy;
-                    save.currentRun.baseCurrency += entropy;
-                }
-                else
-                {
-                    MergeInventory(save.currentRun, chain.itemId, wholeItems);
-                    if (result.ItemsEarned.TryGetValue(chain.itemId, out int existing))
-                        result.ItemsEarned[chain.itemId] = existing + wholeItems;
+                    if (chain.endsAtEntropySink)
+                    {
+                        long entropy = (long)(wholeItems * chain.baseSellValue);
+                        result.EntropyEarned += entropy;
+                        save.currentRun.baseCurrency += entropy;
+                    }
                     else
-                        result.ItemsEarned[chain.itemId] = wholeItems;
+                    {
+                        MergeInventory(save.currentRun, chain.itemId, wholeItems);
+                        if (result.ItemsEarned.TryGetValue(chain.itemId, out int existing))
+                            result.ItemsEarned[chain.itemId] = existing + wholeItems;
+                        else
+                            result.ItemsEarned[chain.itemId] = wholeItems;
+                    }
                 }
             }
 

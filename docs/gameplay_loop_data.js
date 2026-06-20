@@ -217,7 +217,7 @@ research: [
   // ── Tier 3–5 processing gates ──
   { id:'molecular_synthesis',    label:'Molecular Synthesis',    branch:'Chemistry',   cost:3000,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'LH₂, H₂O, CH₄, NH₃, Molecular Synthesizer' },
   { id:'advanced_molecules',     label:'Advanced Molecules',     branch:'Chemistry',   cost:20000,     discount:0.10, prereqs:'Mol. Synthesis + Mid Elements',       unlocks:'SiO₂, Fe₂O₃, UF₆' },
-  { id:'materials_science',      label:'Materials Science',      branch:'Materials',   cost:150000,    discount:0.10, prereqs:'Adv. Molecules + Transition Metals',  unlocks:'Steel, Carbon Fiber, Ti Alloy, Materials Forge' },
+  { id:'materials_science',      label:'Materials Science',      branch:'Materials',   cost:150000,    discount:0.10, prereqs:'Adv. Molecules + Transition Metals',  unlocks:'Steel, Carbon Fiber, Ti Alloy, Materials Forge + Quantum Domains intro' },
   { id:'advanced_materials',     label:'Advanced Materials',     branch:'Materials',   cost:800000,    discount:0.05, prereqs:'Materials Science + Precious Metals', unlocks:'Si Wafer, Aerogel, Superconductor, Metamaterial' },
   { id:'component_engineering',  label:'Component Engineering',  branch:'Engineering', cost:5000000,   discount:0.05, prereqs:'Adv. Materials + Transuranic',        unlocks:'Quantum Proc., Plasma Ring, Antimatter Cell, Comp. Fabricator' },
   { id:'megastructure_theory',   label:'Megastructure Theory',   branch:'Astrophysics',cost:50000000,  discount:0.05, prereqs:'Component Engineering',               unlocks:'Dyson Node, Orbital Frame, Graviton Lens' },
@@ -666,6 +666,10 @@ post_tutorial_phases: [
         action:'Buy Materials Science (150K). Requires Advanced Molecules + Transition Metals. Unlocks Materials Forge and Steel, Carbon Fiber, Titanium Alloy recipes.',
         cost:{t:'cost',v:'−150,000e',bold:true}, reward:{t:'reward',v:'Materials Forge · Steel · Carbon Fiber · Ti Alloy'},
         time:'~3–4 prestige runs', advance:'materials_science unlocked' },
+      { id:'Quantum Domains unlocked', tag_type:'milestone',
+        action:'Buying Materials Science triggers the one-shot Quantum Domains intro. A second build site — Quark Sea (quark-dense, no electron fields) — can be anchored for 250K entropy. Exactly one site is live; inactive sites keep producing offline. The unlock survives prestige (the grids do not).',
+        cost:{t:'cost',v:'−250,000e (Quark Sea)'}, reward:{t:'reward',v:'2nd build site · per-site grid + field distribution · offline income across sites'},
+        time:'—', advance:'materials_science unlocked' },
       { id:'Build Materials Forge', tag_type:'building',
         action:'Place Materials Forge. 0.5/s base output (slower — materials take time). 2 molecule input slots. Craft times: 300–500s per alloy.',
         cost:{t:'cost',v:'50,000e'}, reward:{t:'reward',v:'Steel 1.5M/unit · Carbon Fiber 6M/unit'},
@@ -699,6 +703,10 @@ post_tutorial_phases: [
         action:'Place Component Fabricator. 0.25/s base output (very slow). Craft times: 1200–2000s per component. Requires enormous power — plan generator scaling.',
         cost:{t:'cost',v:'5,000,000e'}, reward:{t:'reward',v:'Quantum Processor 50B/unit · Plasma Ring 200B/unit'},
         time:'~5 min setup', advance:'component_engineering unlocked' },
+      { id:'Quantum Domains — Lepton Storm', tag_type:'milestone',
+        action:'A third build site — Lepton Storm (electron/lepton-dense, no quark fields) — can be anchored for 10M entropy, sitting just past the Component Engineering gate. Like all domains, the unlock survives prestige.',
+        cost:{t:'cost',v:'−10,000,000e'}, reward:{t:'reward',v:'3rd build site · electron-rich field distribution'},
+        time:'—', advance:'10M entropy held' },
     ]
   },
   {
@@ -1193,6 +1201,11 @@ design_gaps: [
     detail:'RecipeKnowledgeService.Start() calls RecipeDatabase.Instance with no DefaultExecutionOrder set on RecipeDatabase. If ordering ever shifts, SyncWithRecipeDatabase silently skips and new recipes are never added to the cross-prestige save file.',
     default_sol:'Add [DefaultExecutionOrder(-80)] to RecipeDatabase so it always initializes before RecipeKnowledgeService (-70). Makes the dependency explicit in code rather than relying on scene insertion order.',
     default_date:'2026-05-29' },
+  { id:'gap-14', cat:'Design', status:'resolved',
+    issue:'No in-context rotate during tap-to-place confirm flow (mobile)',
+    detail:'Placement now uses tap-to-position then a world-anchored ✓/✕ confirm popup above the candidate cell. Rotate (and Flip) lived only on the bottom placement bar, so a mobile player who tapped a cell had to look away from the confirm popup to re-orient a building before accepting.',
+    default_sol:'Added a ↻ Rotate button (btn-rotate-candidate) to the confirm popup between ✕ and ✓, calling the same BuildingPlacementController.Rotate() as the bottom-bar button and the R key. HUDController shows it only when CanRotate is true; the per-frame popup re-anchor + ✓-validity refresh pick up the new footprint after each rotate. Flip stays on the bottom bar. Covered by Assets/Scripts/Tests/BuildingPlacementControllerTests.cs.',
+    default_date:'2026-06-15' },
 ],
 
 // ─────────────────────────────────────── SIMPLE OVERVIEW ──

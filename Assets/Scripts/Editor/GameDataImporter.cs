@@ -36,6 +36,8 @@ namespace MobileIdleBuilder.Editor
         private const string RecipesDir    = "Assets/Data/recipes";
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
+        private const string SitesDir      = "Assets/Data/sites";
+        private const string ManagersDir   = "Assets/Data/managers";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
         private const string ResourcesDir  = "Assets/Resources";
@@ -56,6 +58,12 @@ namespace MobileIdleBuilder.Editor
             if (AssetDatabase.LoadAssetAtPath<TutorialFlowSO>($"{TutorialDir}/tutorial_flow.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
                 needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
@@ -123,6 +131,8 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(RecipesDir);
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
+            EnsureDirectory(SitesDir);
+            EnsureDirectory(ManagersDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
             EnsureDirectory(ResourcesDir);
@@ -170,8 +180,14 @@ namespace MobileIdleBuilder.Editor
                     ResolveResearchCrossRefs(so, r, itemLookup, recipeLookup, buildingLookup, researchLookup);
 
             // ── Step 8: FieldSO ──────────────────────────────────────────────
+            var fieldLookup = new Dictionary<string, FieldSO>();
             foreach (var field in data.fields)
-                GenerateField(field, itemLookup);
+                fieldLookup[field.id] = GenerateField(field, itemLookup);
+
+            // ── Step 8.5: SiteSO (resolves field_overrides → FieldSO) ────────
+            var siteLookup = new Dictionary<string, SiteSO>();
+            foreach (var site in data.sites)
+                siteLookup[site.id] = GenerateSite(site, fieldLookup);
 
             // ── Step 9: DialogueSO ───────────────────────────────────────────
             var dialogueLookup = new Dictionary<string, DialogueSO>();
@@ -192,6 +208,24 @@ namespace MobileIdleBuilder.Editor
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, researchLookup);
 
+            // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
+            GenerateSiteDatabase(data.sites, siteLookup);
+
+            // ── Step 12.55: ManagerSO + ManagerDatabaseSO (no cross-refs) ────
+            var managerLookup = new Dictionary<string, ManagerSO>();
+            foreach (var m in data.managers)
+                managerLookup[m.id] = GenerateManager(m);
+            GenerateManagerDatabase(data.managers, managerLookup);
+
+            // ── Step 12.6: DialogueDatabaseSO ────────────────────────────────
+            GenerateDialogueDatabase(data.dialogues, dialogueLookup);
+
+            // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
+            GenerateDailyContent(data.daily_rewards, data.daily_challenges);
+
+            // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
+            GenerateMegastructure(data.megastructure, itemLookup);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -199,8 +233,10 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.dialogues.Count} dialogues, " +
-                $"{data.tutorial_steps.Count} tutorial steps."
+                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.managers.Count} managers, " +
+                $"{data.dialogues.Count} dialogues, " +
+                $"{data.tutorial_steps.Count} tutorial steps, " +
+                $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
             );
         }
 
@@ -456,6 +492,22 @@ namespace MobileIdleBuilder.Editor
                 }
             }
 
+            if (data.input_upgrade_levels != null)
+            {
+                so.inputUpgradeLevels = new BuildingInputUpgradeLevel[data.input_upgrade_levels.Count];
+                for (int i = 0; i < data.input_upgrade_levels.Count; i++)
+                {
+                    var il = data.input_upgrade_levels[i];
+                    so.inputUpgradeLevels[i] = new BuildingInputUpgradeLevel
+                    {
+                        level                = il.level,
+                        maxInputItems        = il.max_input_items,
+                        costBaseCurrency     = il.cost_base_currency,
+                        costPrestigeCurrency = il.cost_prestige_currency
+                    };
+                }
+            }
+
             if (data.ports != null)
             {
                 so.ports = new BuildingPort[data.ports.Count];
@@ -480,7 +532,7 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
+        private static FieldSO GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
         {
             string path = $"{FieldsDir}/{Sanitize(data.id)}.asset";
             var so = LoadOrCreate<FieldSO>(path);
@@ -508,6 +560,103 @@ namespace MobileIdleBuilder.Editor
             }
 
             EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static SiteSO GenerateSite(SiteJson data, Dictionary<string, FieldSO> fieldLookup)
+        {
+            string path = $"{SitesDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<SiteSO>(path);
+
+            so.id          = data.id;
+            so.displayName = data.display_name;
+            so.unlockCost  = data.unlock_cost;
+
+            so.fieldOverrides.Clear();
+            if (data.field_overrides != null)
+                foreach (var ov in data.field_overrides)
+                    so.fieldOverrides.Add(new SiteFieldOverride
+                    {
+                        field             = ResolveRef(ov.field, fieldLookup, $"SiteSO '{data.id}' field_override '{ov.field}'"),
+                        densityMultiplier = ov.density_multiplier
+                    });
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static ManagerSO GenerateManager(ManagerJson data)
+        {
+            string path = $"{ManagersDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<ManagerSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.description      = data.description;
+            so.bonusValue       = data.bonus_value;
+            so.hireCostPrestige = data.hire_cost_prestige;
+            so.starBonusValues  = data.star_bonus_values ?? new[] { data.bonus_value };
+            so.starCosts        = data.star_costs        ?? new[] { 0 };
+
+            if (so.starBonusValues.Length != so.starCosts.Length)
+                Debug.LogWarning($"ManagerSO '{data.id}': star_bonus_values ({so.starBonusValues.Length}) " +
+                                 $"and star_costs ({so.starCosts.Length}) lengths differ; star upgrades may misbehave.");
+
+            if (TryParseEnum<ManagerBonusType>(data.bonus_type, $"ManagerSO '{data.id}'.bonusType", out var bt))
+                so.bonusType = bt;
+            so.portrait = LoadAssetOrWarn<Sprite>(data.portrait_path, $"ManagerSO '{data.id}'.portrait");
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateManagerDatabase(List<ManagerJson> managers,
+            Dictionary<string, ManagerSO> managerLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/ManagerDatabase.asset";
+            var db = LoadOrCreate<ManagerDatabaseSO>(path);
+
+            var list = new List<ManagerSO>(managers.Count);
+            foreach (var m in managers)
+                if (managerLookup.TryGetValue(m.id, out var so))
+                    list.Add(so);
+
+            db.allManagers = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateSiteDatabase(List<SiteJson> sites,
+            Dictionary<string, SiteSO> siteLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/SiteDatabase.asset";
+            var db = LoadOrCreate<SiteDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<SiteSO>(sites.Count);
+            foreach (var s in sites)
+                if (siteLookup.TryGetValue(s.id, out var so))
+                    list.Add(so);
+
+            db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateDialogueDatabase(List<DialogueJson> dialogues,
+            Dictionary<string, DialogueSO> dialogueLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DialogueDatabase.asset";
+            var db = LoadOrCreate<DialogueDatabaseSO>(path);
+
+            var list = new List<DialogueDatabaseSO.Entry>(dialogues?.Count ?? 0);
+            if (dialogues != null)
+                foreach (var d in dialogues)
+                    if (!string.IsNullOrEmpty(d.id) && dialogueLookup.TryGetValue(d.id, out var so))
+                        list.Add(new DialogueDatabaseSO.Entry { id = d.id, dialogue = so });
+
+            db.entries = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         private static DialogueSO GenerateDialogue(DialogueJson data)
@@ -651,6 +800,87 @@ namespace MobileIdleBuilder.Editor
                 def.lockedResearchIds = s.locked_research_ids ?? System.Array.Empty<string>();
 
                 so.steps[i] = def;
+            }
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateDailyContent(List<DailyRewardJson> rewards,
+            List<DailyChallengeJson> challenges)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DailyContent.asset";
+            var so = LoadOrCreate<DailyContentSO>(path);
+
+            var rewardList = new List<DailyRewardEntry>(rewards?.Count ?? 0);
+            if (rewards != null)
+                foreach (var r in rewards)
+                    rewardList.Add(new DailyRewardEntry
+                    {
+                        day              = r.day,
+                        crystals         = r.crystals,
+                        entropy          = r.entropy,
+                        prestigeCurrency = r.prestige_currency
+                    });
+            rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
+            so.loginRewards = rewardList.ToArray();
+
+            var challengeList = new List<DailyChallengeEntry>(challenges?.Count ?? 0);
+            if (challenges != null)
+                foreach (var c in challenges)
+                    challengeList.Add(new DailyChallengeEntry
+                    {
+                        id          = c.id,
+                        description = c.description,
+                        trigger     = c.trigger,
+                        target      = c.target,
+                        crystals    = c.crystals
+                    });
+            so.challengePool = challengeList.ToArray();
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateMegastructure(MegastructureJson data,
+            Dictionary<string, ItemSO> itemLookup)
+        {
+            if (data == null || string.IsNullOrEmpty(data.id)) return;
+
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/Megastructure.asset";
+            var so = LoadOrCreate<MegastructureSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.requiredResearch = data.required_research;
+
+            var stages = data.stages ?? new List<MegastructureStageJson>();
+            so.stages = new MegastructureStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.costs ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"Megastructure stage '{sd.id}' cost[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+
+                var stage = new MegastructureStage
+                {
+                    id             = sd.id,
+                    displayName    = sd.display_name,
+                    costItems      = items,
+                    costQuantities = qtys,
+                    rewardValue    = sd.reward_value,
+                };
+                if (TryParseEnum<MegastructureRewardType>(sd.reward_type,
+                        $"Megastructure stage '{sd.id}'.rewardType", out var rt))
+                    stage.rewardType = rt;
+
+                so.stages[i] = stage;
             }
 
             EditorUtility.SetDirty(so);

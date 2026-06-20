@@ -81,6 +81,7 @@ MonoBehaviour:
     maxOutputItems: 4000
     costBaseCurrency: 5000
     costPrestigeCurrency: 0
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 1
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}

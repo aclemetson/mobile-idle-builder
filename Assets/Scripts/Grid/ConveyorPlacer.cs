@@ -49,7 +49,7 @@ namespace MobileIdleBuilder
         /// Places conveyor segment entities for each cell in the path.
         /// Handles connections to existing chain tails (at start) or chain heads (at end).
         /// </summary>
-        public void PlaceConveyorChain(List<Vector2Int> path)
+        public void PlaceConveyorChain(List<Vector2Int> path, OutputDirection? singleDir = null)
         {
             if (path == null || path.Count == 0) return;
 
@@ -98,6 +98,14 @@ namespace MobileIdleBuilder
                 else
                     // Mid-chain or connecting to existing head: aim toward next cell
                     exitDir = TravelDir(path[i], path[i + 1]);
+
+                // Lone new segment with an explicitly chosen facing (single-conveyor placement):
+                // there are no neighbours to derive direction from, so honour the caller's choice.
+                if (count == 1 && !startIsExisting && !endIsExisting && singleDir.HasValue)
+                {
+                    entryDir = singleDir.Value;
+                    exitDir  = singleDir.Value;
+                }
 
                 bool isHead = (i == firstNew) && !startIsExisting;
 
@@ -204,6 +212,57 @@ namespace MobileIdleBuilder
                       $"startConnected={startIsExisting} endConnected={endIsExisting}");
 
             conveyorVisualizer?.Refresh();
+        }
+
+        /// <summary>
+        /// Removes the conveyor segment at (x, y), if one exists, and re-links its chain
+        /// neighbours so the chain stays consistent:
+        ///   - the predecessor becomes a tail (NextSegment = Null),
+        ///   - the successor becomes a chain head (PrevSegment = Null, IsChainHead = true).
+        /// Also clears grid occupancy and the belt visual. Returns true if a segment was removed.
+        ///
+        /// Single source of truth for conveyor removal — shared by DeconstructController and the
+        /// conveyor placement controller's Destroy mode. Callers are responsible for persisting.
+        /// </summary>
+        public bool RemoveSegmentAt(int x, int y)
+        {
+            if (!_queryReady) return false;
+
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var e   = entities[i];
+                var seg = _em.GetComponentData<ConveyorSegmentData>(e);
+                if (seg.Cell.x != x || seg.Cell.y != y) continue;
+
+                // Unlink from predecessor — it becomes the new tail
+                if (seg.PrevSegment != Entity.Null && _em.Exists(seg.PrevSegment))
+                {
+                    var prev = _em.GetComponentData<ConveyorSegmentData>(seg.PrevSegment);
+                    prev.NextSegment = Entity.Null;
+                    _em.SetComponentData(seg.PrevSegment, prev);
+                }
+
+                // Unlink from successor — it becomes the new chain head
+                if (seg.NextSegment != Entity.Null && _em.Exists(seg.NextSegment))
+                {
+                    var next = _em.GetComponentData<ConveyorSegmentData>(seg.NextSegment);
+                    next.PrevSegment = Entity.Null;
+                    next.IsChainHead = true;
+                    _em.SetComponentData(seg.NextSegment, next);
+                }
+
+                _em.DestroyEntity(e);
+                GridOccupancy.Instance?.UnregisterConveyor(x, y);
+                conveyorVisualizer?.RemoveBelt(x, y);
+
+                entities.Dispose();
+                GameLogger.Develop($"[ConveyorPlacer] Removed conveyor segment at ({x},{y}).");
+                return true;
+            }
+
+            entities.Dispose();
+            return false;
         }
 
         // ----------------------------------------------------------------

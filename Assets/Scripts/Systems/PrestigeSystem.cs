@@ -51,6 +51,12 @@ namespace MobileIdleBuilder
             if (gainBonus > 0f)
                 earned = (long)(earned * (1f + gainBonus));
 
+            // Apply the megastructure's prestige-gain reward (e.g. Stellar Engine = ×2). Survives prestige,
+            // so it keeps applying every run once unlocked. Managed call is safe: OnUpdate is not Burst-compiled.
+            float megaGainBonus = MegastructureService.Instance?.GetPrestigeGainBonus() ?? 0f;
+            if (megaGainBonus > 0f)
+                earned = (long)(earned * (1f + megaGainBonus));
+
             prestige.PrestigeCurrency += earned;
             prestige.RunCount += 1;
 
@@ -104,6 +110,9 @@ namespace MobileIdleBuilder
             if (save != null)
             {
                 save.unlockedResearch              = new System.Collections.Generic.List<string>();
+                // Multi-grids: clear all sites' grids + snapshots and return to site 0 (unlocks
+                // survive) so the intermediate SaveLocal below never persists stale inactive sites.
+                PrestigeSaveWatcher.ResetSitesForPrestige(save);
                 save.tutorial.hasCompletedFirstRun = true;
                 save.tutorial.isActive             = false;
                 GameLogger.Info("[PrestigeSystem] hasCompletedFirstRun set → true in SaveData");

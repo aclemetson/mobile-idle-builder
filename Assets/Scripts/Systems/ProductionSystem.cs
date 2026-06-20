@@ -31,7 +31,18 @@ namespace MobileIdleBuilder
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
 
-            foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig) in
+            // Global production multipliers from the megastructure (1 = no bonus when the singleton is absent,
+            // e.g. in tests that never bake it).
+            float globalSpeedMult  = 1f;
+            float globalOutputMult = 1f;
+            if (SystemAPI.HasSingleton<GlobalProductionBonus>())
+            {
+                var gb = SystemAPI.GetSingleton<GlobalProductionBonus>();
+                globalSpeedMult  = gb.SpeedMult;
+                globalOutputMult = gb.OutputMult;
+            }
+
+            foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
                 SystemAPI.Query<
                     RefRO<BuildingData>,
                     RefRW<RecipeProcessData>,
@@ -39,10 +50,18 @@ namespace MobileIdleBuilder
                     DynamicBuffer<RecipeOutputSlot>,
                     DynamicBuffer<BuildingInputSlot>,
                     DynamicBuffer<BuildingOutputSlot>,
-                    RefRO<BuildingInventoryConfig>>())
+                    RefRO<BuildingInventoryConfig>>().WithEntityAccess())
             {
                 if (!building.ValueRO.IsActive)  continue;
                 if (process.ValueRO.RecipeID < 0) continue;
+
+                // ---- Power availability (proximity grid) ----
+                // Power consumers carry PowerStatus, written by PowerGridSystem earlier this frame.
+                // ThrottleRatio is 0 when disconnected (no generator in range), <1 during a brownout,
+                // and 1 when supply meets demand. Buildings without PowerStatus run unthrottled.
+                float powerRatio = SystemAPI.HasComponent<PowerStatus>(entity)
+                    ? SystemAPI.GetComponent<PowerStatus>(entity).ThrottleRatio
+                    : 1f;
 
                 // ---- Input availability check (drives InputsSatisfied flag for UI) ----
                 bool satisfied = true;
@@ -61,7 +80,7 @@ namespace MobileIdleBuilder
                 // Auto-start: begin a new craft cycle whenever inputs are ready.
                 // Guard: collectors have no RecipeInputSlots and are driven by CollectorSystem;
                 // only trigger ProductionSystem auto-start for buildings that consume inputs.
-                if (inputs.Length > 0 && satisfied && !process.ValueRO.IsCrafting)
+                if (inputs.Length > 0 && satisfied && powerRatio > 0f && !process.ValueRO.IsCrafting)
                     process.ValueRW.IsCrafting = true;
 
                 if (!process.ValueRO.IsCrafting) continue;
@@ -77,8 +96,8 @@ namespace MobileIdleBuilder
                     continue;
                 }
 
-                // ---- Progress ----
-                process.ValueRW.Progress += deltaTime * building.ValueRO.ProductionSpeed;
+                // ---- Progress (scaled by available power; 0 stalls, <1 is a brownout) ----
+                process.ValueRW.Progress += deltaTime * building.ValueRO.ProductionSpeed * powerRatio * globalSpeedMult;
 
                 if (process.ValueRO.Progress < process.ValueRO.CraftTime) continue;
 
@@ -104,9 +123,17 @@ namespace MobileIdleBuilder
                             SlotBufferUtils.RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
                     }
 
-                    // Deposit outputs to local output buffer
+                    // Deposit outputs to local output buffer. An OutputQuantity manager (if assigned)
+                    // multiplies the deposited amount; AppliedOutputMult is 1 for every other case.
+                    float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
+                        ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
+                        : 1f;
+                    outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
                     for (int i = 0; i < outputs.Length; i++)
-                        SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, outputs[i].Quantity);
+                    {
+                        int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
+                        SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
+                    }
                 }
 
                 process.ValueRW.Progress   = 0f;

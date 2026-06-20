@@ -472,10 +472,12 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void BuyHydrogenSynthesis_NeverAdvancesFromECS()
+        public void BuyHydrogenSynthesis_DoesNotAdvanceWhenResearchUnavailable()
         {
-            // ResearchUnlocked is driven by SaveManager (MonoBehaviour), not ECS —
-            // TutorialOverlayController calls AdvanceStep when the research is purchased.
+            // ResearchUnlocked reads the live unlock state (ResearchService, falling back to
+            // SaveManager). Neither singleton exists in this bare ECS world, so the research
+            // counts as locked and the step must hold. See ResearchServiceTests for the
+            // positive case where a purchase advances a research-gated step.
             MakeFlow(
                 new TutorialStepDef
                 {

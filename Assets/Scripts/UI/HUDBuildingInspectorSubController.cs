@@ -13,6 +13,10 @@ namespace MobileIdleBuilder
     /// </summary>
     public class HUDBuildingInspectorSubController : MonoBehaviour
     {
+        // Research ids that gate the per-building capacity upgrades (must match game_data.json research ids).
+        private const string OutputCapacityResearchId = "surplus_containment";
+        private const string InputCapacityResearchId  = "feedstock_buffers";
+
         private VisualElement _buildingInspectorPanel;
         private ScrollView    _inspectorContent;
         private Label         _inspectorBuildingName;
@@ -25,6 +29,13 @@ namespace MobileIdleBuilder
         private bool                       _ecsReady;
         private BuildingPlacementController _placement;
         private HUDController              _hud;
+        private GridRenderer              _gridRenderer;
+
+        private GridRenderer GetGridRenderer()
+        {
+            if (_gridRenderer == null) _gridRenderer = FindAnyObjectByType<GridRenderer>();
+            return _gridRenderer;
+        }
 
         public void Init(VisualElement root, BuildingPlacementController placement, HUDController hud)
         {
@@ -66,6 +77,7 @@ namespace MobileIdleBuilder
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
+            GetGridRenderer()?.ClearPowerCoverage();
         }
 
         private void RefreshInspectorContent()
@@ -75,6 +87,8 @@ namespace MobileIdleBuilder
             if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
 
             _inspectorContent.Clear();
+            // Clear any coverage from a previously-selected generator; re-shown below if this one is a source.
+            GetGridRenderer()?.ClearPowerCoverage();
 
             BuildingData buildingData = default;
             if (_em.HasComponent<BuildingData>(_inspectorEntity))
@@ -174,8 +188,131 @@ namespace MobileIdleBuilder
                     }
                 }
 
+                AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
+                AddInputUpgradeSection(_inspectorEntity, buildingSO, buildingData);
+            }
+
+            if (buildingCellX >= 0 && buildingCellY >= 0)
+                AddManagerSection(buildingCellX, buildingCellY);
+        }
+
+        // ── Manager assignment UI ─────────────────────────────────────────────
+
+        private void AddManagerSection(int cellX, int cellY)
+        {
+            var svc = ManagerService.Instance;
+            if (svc == null || svc.ManagerCount == 0) return;
+
+            int siteIndex = SaveManager.Instance?.Current?.currentRun?.activeSiteIndex ?? 0;
+            int posKey    = ManagerService.EncodePos(cellX, cellY);
+
+            AddInspectorRow("—— Manager ——");
+
+            var current = svc.GetManagerAtBuilding(siteIndex, posKey);
+            if (current != null)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("upgrade-row");
+
+                int   stars    = svc.GetStars(current.id);
+                float effValue = svc.EffectiveBonusValue(current.id);
+                var name = new Label($"{current.displayName} {stars}★  ({ManagerBonusText(current.bonusType, effValue)})");
+                name.AddToClassList("upgrade-row-name");
+                row.Add(name);
+
+                var unassign = new Button { text = "Unassign" };
+                unassign.AddToClassList("craft-btn");
+                var capturedId = current.id;
+                unassign.clicked += () =>
+                {
+                    svc.Unassign(capturedId);
+                    RefreshInspectorContent();
+                };
+                row.Add(unassign);
+                _inspectorContent?.Add(row);
+            }
+
+            // Offer each hired manager not already on THIS building.
+            bool anyOffer = false;
+            foreach (var mgr in svc.AllManagers)
+            {
+                if (mgr == null || !svc.IsHired(mgr.id)) continue;
+                if (current != null && mgr.id == current.id) continue;
+                anyOffer = true;
+
+                var btn = new Button { text = $"Assign {mgr.displayName}" };
+                btn.AddToClassList("craft-btn");
+                var capturedId = mgr.id;
+                btn.clicked += () =>
+                {
+                    svc.Assign(capturedId, siteIndex, posKey);
+                    RefreshInspectorContent();
+                };
+                _inspectorContent?.Add(btn);
+            }
+
+            if (current == null && !anyOffer)
+                AddInspectorRow("  (hire a manager in the Managers panel)");
+        }
+
+        /// <summary>Human-readable bonus text for a star-scaled effective value.</summary>
+        private static string ManagerBonusText(ManagerBonusType type, float value)
+        {
+            switch (type)
+            {
+                case ManagerBonusType.CraftSpeed:     return $"{value:0.##}x speed";
+                case ManagerBonusType.OutputQuantity: return $"{value:0.##}x output";
+                case ManagerBonusType.PowerDiscount:  return $"-{(1f - value) * 100f:0}% power";
+                default:                              return "";
+            }
+        }
+
+        // ── Power UI ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Shows power info for the selected building. For a generator: output eV + coverage radius,
+        /// and tints the covered tiles. For a consumer: draw eV + connection/brownout status.
+        /// </summary>
+        private void AddPowerSection(BuildingSO so, BuildingData bd, int cellX, int cellY)
+        {
+            int level = bd.UpgradeLevel < 1 ? 1 : bd.UpgradeLevel;
+
+            if (so.isPowerSource)
+            {
+                float outputEV = BuildingSO.PowerOutputForLevel(so, level);
+                float radius   = BuildingSO.InfluenceRadiusForLevel(so, level);
+                AddInspectorRow("—— Power ——");
+                AddInspectorRow($"Output: {outputEV:0.#} eV");
+                AddInspectorRow($"Coverage: {radius:0.#} tiles");
+
+                var gr = GetGridRenderer();
+                if (gr != null && cellX >= 0)
+                {
+                    int fw = 1, fh = 1;
+                    if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
+                    {
+                        var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
+                        fw = f.Width; fh = f.Height;
+                    }
+                    gr.ShowPowerCoverage(cellX, cellY, fw, fh, radius);
+                }
+            }
+            else if (so.requiresPower && _em.HasComponent<PowerStatus>(_inspectorEntity))
+            {
+                var status = _em.GetComponentData<PowerStatus>(_inspectorEntity);
+                float draw = _em.HasComponent<PowerConsumer>(_inspectorEntity)
+                    ? _em.GetComponentData<PowerConsumer>(_inspectorEntity).DrawEV
+                    : 0f;
+                AddInspectorRow("—— Power ——");
+                AddInspectorRow($"Draw: {draw:0.#} eV");
+                string statusText = status.IsConnected == 0
+                    ? "UNPOWERED (no generator in range)"
+                    : (status.ThrottleRatio < 0.999f
+                        ? $"Brownout — {status.ThrottleRatio * 100f:0}% power"
+                        : "Powered");
+                AddInspectorRow($"Status: {statusText}");
             }
         }
 
@@ -235,9 +372,20 @@ namespace MobileIdleBuilder
             _inspectorContent?.Add(row);
         }
 
+        /// <summary>
+        /// Capacity upgrades (input/output) are gated behind dedicated research. Returns true only once
+        /// the unlocking research has been purchased; treats a missing service as "not unlocked".
+        /// </summary>
+        private static bool IsCapacityUpgradeUnlocked(string researchId)
+        {
+            var svc = ResearchService.Instance;
+            return svc != null && svc.IsUnlocked(researchId);
+        }
+
         private void AddStorageUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
         {
             if (so.storageUpgradeLevels == null || so.storageUpgradeLevels.Length == 0) return;
+            if (!IsCapacityUpgradeUnlocked(OutputCapacityResearchId)) return;
 
             int  currentLevel = bd.StorageUpgradeLevel < 1 ? 1 : bd.StorageUpgradeLevel;
             int  maxLevel     = so.MaxStorageLevel();
@@ -303,6 +451,27 @@ namespace MobileIdleBuilder
             bd.ProductionSpeed = BuildingSO.ProductionSpeedForLevel(so, nextLevel);
             _em.SetComponentData(entity, bd);
 
+            // Re-bake power values for the new level (generator output/radius, consumer draw).
+            if (so.isPowerSource && _em.HasComponent<PowerNodeData>(entity))
+            {
+                var node = _em.GetComponentData<PowerNodeData>(entity);
+                float outputEV       = BuildingSO.PowerOutputForLevel(so, nextLevel);
+                node.MaxEV           = outputEV;
+                node.CurrentEV       = outputEV;
+                node.InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(so, nextLevel);
+                _em.SetComponentData(entity, node);
+            }
+            else if (so.requiresPower && _em.HasComponent<PowerConsumer>(entity))
+            {
+                var pc = _em.GetComponentData<PowerConsumer>(entity);
+                pc.DrawEV = BuildingSO.PowerDrawForLevel(so, nextLevel);
+                _em.SetComponentData(entity, pc);
+            }
+
+            // The level-based speed write above wiped any assigned manager's CraftSpeed bonus;
+            // re-bake it relative to the new base so the bonus survives the upgrade.
+            ManagerService.Instance?.ReapplyAfterSpeedReset(entity);
+
             SaveManager.Instance?.SaveLocal();
             _hud?.ShowNotification("⚡", $"Speed upgraded to Lv {nextLevel}!");
             RefreshInspectorContent();
@@ -330,6 +499,86 @@ namespace MobileIdleBuilder
 
             SaveManager.Instance?.SaveLocal();
             _hud?.ShowNotification("📦", $"Storage upgraded to Lv {nextLevel}!");
+            RefreshInspectorContent();
+        }
+
+        private void AddInputUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
+        {
+            if (so.inputUpgradeLevels == null || so.inputUpgradeLevels.Length == 0) return;
+            if (!IsCapacityUpgradeUnlocked(InputCapacityResearchId)) return;
+
+            int  currentLevel = bd.InputUpgradeLevel < 1 ? 1 : bd.InputUpgradeLevel;
+            int  maxLevel     = so.MaxInputLevel();
+            bool isMaxed      = currentLevel >= maxLevel;
+            var  next         = isMaxed ? (BuildingInputUpgradeLevel?)null : so.NextInputUpgrade(currentLevel);
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            if (isMaxed) row.AddToClassList("upgrade-row--maxed");
+
+            var header = new VisualElement();
+            header.AddToClassList("upgrade-row-header");
+            var nameLabel  = new Label("Input Upgrade");
+            nameLabel.AddToClassList("upgrade-row-name");
+            var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
+            levelLabel.AddToClassList("upgrade-row-level");
+            header.Add(nameLabel);
+            header.Add(levelLabel);
+            row.Add(header);
+
+            if (!isMaxed && next.HasValue)
+            {
+                var desc = new Label($"{next.Value.maxInputItems} item input buffer");
+                desc.AddToClassList("upgrade-row-desc");
+                row.Add(desc);
+
+                long balance   = GetBaseCurrency();
+                bool canAfford = balance >= next.Value.costBaseCurrency;
+
+                var footer = new VisualElement();
+                footer.AddToClassList("upgrade-row-footer");
+
+                var costLabel = new Label($"{next.Value.costBaseCurrency:N0} e");
+                costLabel.AddToClassList("upgrade-row-cost");
+                if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+                footer.Add(costLabel);
+
+                var btn = new Button { text = "Upgrade" };
+                btn.AddToClassList("craft-btn");
+                btn.SetEnabled(canAfford);
+                int capturedNextLevel = currentLevel + 1;
+                var capturedSO        = so;
+                btn.clicked += () => OnInputUpgradeBought(entity, capturedSO, capturedNextLevel);
+                footer.Add(btn);
+
+                row.Add(footer);
+            }
+
+            _inspectorContent?.Add(row);
+        }
+
+        private void OnInputUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
+        {
+            if (!_ecsReady || !_em.Exists(entity)) return;
+            var next = so.NextInputUpgrade(nextLevel - 1);
+            if (!next.HasValue) return;
+
+            int cost = next.Value.costBaseCurrency;
+            if (!TryDeductCurrency(cost)) return;
+
+            var bd = _em.GetComponentData<BuildingData>(entity);
+            bd.InputUpgradeLevel = nextLevel;
+            _em.SetComponentData(entity, bd);
+
+            if (_em.HasComponent<BuildingInventoryConfig>(entity))
+            {
+                var cfg = _em.GetComponentData<BuildingInventoryConfig>(entity);
+                cfg.InputCapacity = BuildingSO.InputCapacityForLevel(so, nextLevel);
+                _em.SetComponentData(entity, cfg);
+            }
+
+            SaveManager.Instance?.SaveLocal();
+            _hud?.ShowNotification("📥", $"Input buffer upgraded to Lv {nextLevel}!");
             RefreshInspectorContent();
         }
 

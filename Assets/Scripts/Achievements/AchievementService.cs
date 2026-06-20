@@ -170,16 +170,25 @@ namespace MobileIdleBuilder
         // ── Public trigger API ────────────────────────────────────────────────
 
         /// <summary>Call when the player crafts an item (manual or automated output).</summary>
-        public void NotifyCraft(string itemId, int quantity = 1) =>
+        public void NotifyCraft(string itemId, int quantity = 1)
+        {
             Evaluate(AchievementTrigger.CraftItem, itemId, delta: quantity);
+            DailyEventService.Instance?.NotifyCraft(itemId, quantity);
+        }
 
         /// <summary>Call when the player places a building.</summary>
-        public void NotifyBuildingPlaced(string buildingType) =>
+        public void NotifyBuildingPlaced(string buildingType)
+        {
             Evaluate(AchievementTrigger.PlaceBuilding, buildingType, delta: 1);
+            DailyEventService.Instance?.NotifyBuildingPlaced(buildingType);
+        }
 
         /// <summary>Call when the player completes a research project.</summary>
-        public void NotifyResearchCompleted(string researchId) =>
+        public void NotifyResearchCompleted(string researchId)
+        {
             Evaluate(AchievementTrigger.CompleteResearch, researchId, delta: 1);
+            DailyEventService.Instance?.NotifyResearchCompleted(researchId);
+        }
 
         /// <summary>Call when the player reaches a new tier (pass the absolute tier number).</summary>
         public void NotifyTierReached(int tier) =>
@@ -198,12 +207,18 @@ namespace MobileIdleBuilder
             Evaluate(AchievementTrigger.UnlockCodex, targetId: "", delta: totalCount, absolute: true);
 
         /// <summary>Call once per game session start (e.g. from SaveManager or GameBootstrap).</summary>
-        public void NotifyLogin() =>
+        public void NotifyLogin()
+        {
             Evaluate(AchievementTrigger.Login, targetId: "", delta: 1);
+            DailyEventService.Instance?.NotifyLogin();
+        }
 
         /// <summary>Call whenever entropy is spent; pass the amount spent this transaction.</summary>
-        public void NotifyEntropySpent(long amount) =>
+        public void NotifyEntropySpent(long amount)
+        {
             Evaluate(AchievementTrigger.SpendEntropy, targetId: "", delta: (int)Mathf.Min(amount, int.MaxValue));
+            DailyEventService.Instance?.NotifyEntropySpent(amount);
+        }
 
         /// <summary>Call when the player earns prestige currency; pass the amount earned this prestige.</summary>
         public void NotifyPrestigeCurrencyEarned(long amount) =>

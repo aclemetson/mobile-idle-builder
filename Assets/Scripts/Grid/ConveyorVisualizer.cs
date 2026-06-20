@@ -29,6 +29,10 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts  = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres   = new();
 
+        // Transient single-cell placement preview (not tracked in _spawnedBelts so it never
+        // collides with the real Refresh map). Lives only while a single candidate is pending.
+        private GameObject _previewBelt;
+
         private static readonly Color BeltBaseColor   = new Color(0.25f, 0.25f, 0.25f);
         private static readonly Color BeltStripeColor = new Color(1f, 0.5f, 0f);
         private static readonly Color EndCapColor     = Color.yellow;
@@ -66,6 +70,29 @@ namespace MobileIdleBuilder
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
+            ClearSinglePreview();
+        }
+
+        // ----------------------------------------------------------------
+        // Single-cell placement preview
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Shows a transient belt-track preview at (x, y) facing <paramref name="dir"/>, so the
+        /// player can see (and rotate) a single conveyor's orientation before confirming it.
+        /// Reuses the real belt visual (full arrow + end cap). Call ClearSinglePreview() to remove.
+        /// </summary>
+        public void ShowSinglePreview(int x, int y, int dir)
+        {
+            ClearSinglePreview();
+            _previewBelt = SpawnBeltTrack(x, y, dir, dir, isTail: true, gridRenderer.CellSize);
+        }
+
+        /// <summary>Removes the single-cell placement preview, if any.</summary>
+        public void ClearSinglePreview()
+        {
+            if (_previewBelt != null) Destroy(_previewBelt);
+            _previewBelt = null;
         }
 
         // ----------------------------------------------------------------
@@ -107,7 +134,7 @@ namespace MobileIdleBuilder
                         mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
-                    SetMeshColor(mr, ItemColor(item.ItemID));
+                    SetMeshColor(mr, ItemColors.For(item.ItemID));
                     _itemSpheres[e] = sphere;
                 }
 
@@ -393,13 +420,5 @@ namespace MobileIdleBuilder
         }
 
         private static int OppositeDir(int dir) => (dir + 2) % 4;
-
-        /// <summary>Returns a deterministic bright color based on item ID.</summary>
-        private static Color ItemColor(int itemID)
-        {
-            // Use HSV with fixed saturation/value, vary hue by item ID
-            float hue = (itemID * 0.618034f) % 1f; // golden ratio spread
-            return Color.HSVToRGB(hue, 0.9f, 1f);
-        }
     }
 }

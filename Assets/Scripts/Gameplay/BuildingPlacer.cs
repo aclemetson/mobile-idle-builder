@@ -25,7 +25,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
-                                  int speedLevel = 1, int storageLevel = 1)
+                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -66,6 +66,7 @@ namespace MobileIdleBuilder
                 BuildingType        = building != null ? building.buildingId : 0,
                 UpgradeLevel        = speedLevel,
                 StorageUpgradeLevel = storageLevel,
+                InputUpgradeLevel   = inputLevel,
                 ProductionSpeed     = BuildingSO.ProductionSpeedForLevel(building, speedLevel),
                 IsActive            = true
             });
@@ -95,7 +96,7 @@ namespace MobileIdleBuilder
             _em.SetComponentData(entity, new BuildingInventoryConfig
             {
                 OutputCapacity = BuildingSO.OutputCapacityForLevel(building, storageLevel),
-                InputCapacity  = 20
+                InputCapacity  = BuildingSO.InputCapacityForLevel(building, inputLevel)
             });
 
             if (recipe != null)
@@ -150,6 +151,29 @@ namespace MobileIdleBuilder
 
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
+
+            // Power: generators emit eV + a coverage radius; consumers carry their draw and a status
+            // slot that PowerGridSystem writes each frame. All values scale with the speed level.
+            if (building != null && building.isPowerSource)
+            {
+                float outputEV = BuildingSO.PowerOutputForLevel(building, speedLevel);
+                _em.AddComponentData(entity, new PowerNodeData
+                {
+                    MaxEV           = outputEV,
+                    CurrentEV       = outputEV,
+                    InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(building, speedLevel),
+                    LinkRadius      = building.linkRadiusTiles,
+                    IsGridLinked    = false
+                });
+            }
+            else if (building != null && building.requiresPower)
+            {
+                _em.AddComponentData(entity, new PowerConsumer
+                {
+                    DrawEV = BuildingSO.PowerDrawForLevel(building, speedLevel)
+                });
+                _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            }
 
             if (hasPorts)
             {

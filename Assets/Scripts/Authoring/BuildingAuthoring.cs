@@ -92,8 +92,8 @@ namespace MobileIdleBuilder
                 AddBuffer<BuildingOutputSlot>(entity);
                 AddComponent(entity, new BuildingInventoryConfig
                 {
-                    OutputCapacity = 20,
-                    InputCapacity  = 20
+                    OutputCapacity = BuildingSO.OutputCapacityForLevel(so, 1),
+                    InputCapacity  = BuildingSO.InputCapacityForLevel(so, 1)
                 });
 
                 // Footprint

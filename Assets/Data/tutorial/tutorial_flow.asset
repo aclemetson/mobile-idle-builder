@@ -905,7 +905,8 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: place_conveyor
-    hintText: Connect the Harvester to Maxwell's Demon with a conveyor belt.
+    hintText: Tap a start tile by the Harvester, then the tile in front of Maxwell's
+      Demon, and place the belt.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -997,7 +998,8 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: place_generator
-    hintText: Place a Basic Generator near the Strong Force Combiner.
+    hintText: Place a Basic Generator within range of the Strong Force Combiner to
+      power it.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -1020,12 +1022,13 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: link_generator
-    hintText: Select the Strong Force Combiner and drag a power link to the Generator.
+    hintText: The Combiner powers on automatically while a generator is in range.
+      Keep generators close to the buildings they power.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: power_link_established
+      uiEventId: consumer_powered
       researchId: 
       minCount: 0
     skipCondition:
@@ -1066,7 +1069,8 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
   - id: route_quarks_to_sfc
-    hintText: Connect the quark Harvester output to the Strong Force Combiner input.
+    hintText: Tap a start tile by the quark Harvester, then the tile in front of
+      the Combiner's input, and place the belt.
     advanceCondition:
       type: 3
       anyOf: 0

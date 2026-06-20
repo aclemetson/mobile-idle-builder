@@ -86,7 +86,8 @@ namespace MobileIdleBuilder
 
             // Returning player with saved field positions: GridSaveService.LoadGrid() will call
             // SpawnFromSave() after cloud reconciliation — same timing guarantee as buildings.
-            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.grid?.fields?.Count > 0;
+            // Use the ACTIVE site's grid so a non-origin active site is handled correctly.
+            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.ActiveGrid?.fields?.Count > 0;
             if (SaveManager.Instance != null && !SaveManager.Instance.IsNewGame && hasFieldSave)
                 yield break;
 
@@ -95,15 +96,85 @@ namespace MobileIdleBuilder
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
-#if UNITY_EDITOR
-            if (GameBootstrap.TestModeEnabled)
-                UnityEngine.Random.InitState(GameBootstrap.TestModeFieldSeed);
-#endif
+            // Deterministic origin layout: every fresh start produces the same field placement,
+            // matching the always-deterministic per-site path in GenerateForSite (origin = base).
+            UnityEngine.Random.InitState(SiteFieldSeedBase);
             Shuffle(candidates);
 
-            int candidateIndex = 0;
+            PlaceEntries(fields, candidates);
+        }
+
+        /// <summary>
+        /// Base offset for the per-site deterministic field seed. Each site regenerates with
+        /// <c>SiteFieldSeedBase + siteIndex</c> so a site's first-visit layout is reproducible.
+        /// </summary>
+        private const int SiteFieldSeedBase = 0x51E0;
+
+        /// <summary>
+        /// Regenerates this grid's fields for a build site, applying the site's per-field
+        /// density overrides (multiplier 0 = field absent, 2 = double count). Called by
+        /// SiteService.SwitchTo() on the first visit to a site (when its grid has no saved
+        /// fields). Buildings/conveyors must already be placed so their cells are excluded.
+        /// Deterministic: same site index always produces the same layout.
+        /// </summary>
+        public void GenerateForSite(SiteSO site, int siteIndex)
+        {
+            if (gridRenderer == null)
+            {
+                GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
+                return;
+            }
+
+            ClearAllFields();
+            BuildDemonExclusionZone();
+
+            var candidates = BuildCandidateList();
+            UnityEngine.Random.InitState(SiteFieldSeedBase + siteIndex);
+            Shuffle(candidates);
+
+            PlaceEntries(EffectiveEntries(site), candidates);
+        }
+
+        /// <summary>
+        /// Applies a site's field_overrides to the default Inspector field list, scaling each
+        /// entry's count by its density multiplier and dropping fields scaled to zero. Fields
+        /// with no override keep their default count. Overrides referencing a field not in the
+        /// default set are ignored (the balance spec only scales existing fields).
+        /// </summary>
+        private IEnumerable<FieldEntry> EffectiveEntries(SiteSO site)
+        {
+            var multipliers = new Dictionary<string, float>();
+            if (site?.fieldOverrides != null)
+                foreach (var ov in site.fieldOverrides)
+                    if (ov.field != null)
+                        multipliers[ov.field.id] = ov.densityMultiplier;
 
             foreach (var entry in fields)
+            {
+                if (entry.fieldDefinition == null) continue;
+                float m = multipliers.TryGetValue(entry.fieldDefinition.id, out var v) ? v : 1f;
+                int scaledCount = EffectiveFieldCount(entry.count, m);
+                if (scaledCount <= 0) continue;
+
+                var scaled = entry;
+                scaled.count = scaledCount;
+                yield return scaled;
+            }
+        }
+
+        /// <summary>
+        /// A site's effective field count = base count × density multiplier, rounded.
+        /// multiplier 0 removes the field (returns 0); 2 doubles it. Pure so the per-site
+        /// field-distribution balance is testable without a live scene.
+        /// </summary>
+        internal static int EffectiveFieldCount(int baseCount, float densityMultiplier) =>
+            Mathf.RoundToInt(baseCount * densityMultiplier);
+
+        /// <summary>Places every field entry into the shuffled candidate cells.</summary>
+        private void PlaceEntries(IEnumerable<FieldEntry> entries, List<Vector2Int> candidates)
+        {
+            int candidateIndex = 0;
+            foreach (var entry in entries)
             {
                 if (entry.fieldDefinition == null) continue;
 
