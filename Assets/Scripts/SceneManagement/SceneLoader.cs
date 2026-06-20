@@ -18,9 +18,12 @@ namespace MobileIdleBuilder
 
         public static void GoTo(string sceneName)
         {
-            _targetScene      = sceneName;
-            IsTransitioning   = true;
+            GameLogger.Info($"[SceneLoader] GoTo('{sceneName}') — IsTransitioning was {IsTransitioning}");
+            _targetScene    = sceneName;
+            IsTransitioning = true;
+            GameLogger.Info($"[SceneLoader] Calling LoadScene('{LoadingSceneName}')");
             SceneManager.LoadScene(LoadingSceneName);
+            GameLogger.Info($"[SceneLoader] LoadScene('{LoadingSceneName}') returned");
         }
 
         internal static void CompleteTransition()

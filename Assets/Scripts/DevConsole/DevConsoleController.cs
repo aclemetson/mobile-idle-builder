@@ -72,23 +72,44 @@ namespace MobileIdleBuilder.Dev
 
         void OnEnable()
         {
+            BindUI();
+            SetVisible(false);
+        }
+
+        private void BindUI()
+        {
+            GameLogger.Info("[DevConsole] BindUI — start");
             var root = GetComponent<UIDocument>().rootVisualElement;
+
             _consoleRoot = root.Q("dev-console-root");
             _logView     = root.Q<ScrollView>("dev-console-log");
             _inputField  = root.Q<TextField>("dev-console-input");
 
-            root.Q<Button>("btn-close-console").clicked += () => SetVisible(false);
-            root.Q<Button>("btn-submit-console").clicked += SubmitCommand;
+            // Stale label references belong to the old visual tree.
+            _logLabels.Clear();
+
+            var closeBtn  = root.Q<Button>("btn-close-console");
+            var submitBtn = root.Q<Button>("btn-submit-console");
+
+            // Unregister first so repeated BindUI calls don't stack duplicates.
+            closeBtn.clicked  -= OnCloseButtonClicked;
+            submitBtn.clicked -= SubmitCommand;
+            _inputField?.UnregisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
+            root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+
+            closeBtn.clicked  += OnCloseButtonClicked;
+            submitBtn.clicked += SubmitCommand;
             _inputField.RegisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
 
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+            GameLogger.Info("[DevConsole] BindUI — done");
 
             // Block world input (camera pan + gameplay taps) over the console overlay.
             UIInputBlocker.Register(GetComponent<UIDocument>());
-
-            SetVisible(false);
         }
+
+        private void OnCloseButtonClicked() => SetVisible(false);
 
         void OnDisable()
         {
@@ -130,17 +151,38 @@ namespace MobileIdleBuilder.Dev
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — scene='{scene.name}'  _isVisible={_isVisible}");
+
             // Re-acquire ECS queries — the world is recreated on each scene reload.
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null) return;
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — world={(world != null ? "found" : "null")}");
+            if (world != null)
+            {
+                _em             = world.EntityManager;
+                _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
+                _inventoryQuery = _em.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadWrite<InventorySlot>());
+                _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
+            }
 
-            _em             = world.EntityManager;
-            _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
-            _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
-            _inventoryQuery = _em.CreateEntityQuery(
-                ComponentType.ReadOnly<PlayerInventoryTag>(),
-                ComponentType.ReadWrite<InventorySlot>());
-            _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
+            // Re-bind UI — UIDocument rebuilds its visual tree on each scene reload.
+            // Without this, _consoleRoot and button handlers point to the old detached tree.
+            BindUI();
+            // Close the console only when we arrive at the destination scene, not during the
+            // intermediate loading screen.  Calling SetVisible(false) while LoadingScreen is
+            // active dismisses the soft keyboard mid-LoadSceneAsync and deadlocks Vulkan.
+            if (scene.name != SceneLoader.LoadingSceneName)
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — destination scene, calling SetVisible(false)");
+                SetVisible(false);
+            }
+            else
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — loading screen, keeping console state _isVisible={_isVisible}");
+            }
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — done for scene='{scene.name}'");
         }
 
         void Update()
@@ -200,6 +242,7 @@ namespace MobileIdleBuilder.Dev
 
         private void SetVisible(bool visible)
         {
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — consoleRoot={((_consoleRoot == null) ? "null" : "ok")}");
             _isVisible = visible;
             // The console is a debug overlay sharing the HUD's panel; block ALL world input
             // (camera pan + gameplay taps) while it is open rather than relying on per-element
@@ -219,6 +262,7 @@ namespace MobileIdleBuilder.Dev
             {
                 _consoleRoot.AddToClassList("hidden");
             }
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — done");
         }
 
         // ── Input ─────────────────────────────────────────────────────────────
@@ -248,9 +292,19 @@ namespace MobileIdleBuilder.Dev
                 AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
             }
 
-            _refocusFieldNextFrame = true;
-
-            _inputField.Focus();
+            // Don't re-focus if a scene transition is already underway — keeping the input
+            // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
+            // screen where it fires CloseTouchScreenKeyboard() on the same frame as
+            // LoadSceneAsync, triggering a Vulkan swapchain race on Android.
+            if (!SceneLoader.IsTransitioning)
+            {
+                _refocusFieldNextFrame = true;
+                _inputField.Focus();
+            }
+            else
+            {
+                _inputField.Blur();
+            }
         }
 
         // ── Log ───────────────────────────────────────────────────────────────
@@ -815,8 +869,10 @@ namespace MobileIdleBuilder.Dev
                         SceneLoader.GoTo("GameScene");
                         return "SaveManager not ready — local cleared, cloud wipe deferred to next GameScene load.";
                     }
+                    GameLogger.Info("[DevConsole] clear cloud save — starting coroutine");
                     StartCoroutine(sm.DeleteCloudSave(success =>
                     {
+                        GameLogger.Info($"[DevConsole] clear cloud save callback — success={success}  activeScene='{SceneManager.GetActiveScene().name}'");
                         if (!success)
                             AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
                         GridSaveService.Instance?.ClearGrid();
@@ -826,7 +882,13 @@ namespace MobileIdleBuilder.Dev
                         sm.ResetToFreshSave();
                         PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
                         AchievementService.Instance?.ResetInMemory();
+                        // Blur the input field before transitioning so UI Toolkit's keyboard-poll
+                        // timer is cancelled before LoadSceneAsync runs (async path: field was
+                        // re-focused by SubmitCommand after this coroutine started).
+                        _inputField?.Blur();
+                        GameLogger.Info("[DevConsole] clear cloud save — calling SceneLoader.GoTo");
                         SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                        GameLogger.Info("[DevConsole] clear cloud save — SceneLoader.GoTo returned");
                     }));
                     return "Deleting cloud + local save. Reloading...";
                 });

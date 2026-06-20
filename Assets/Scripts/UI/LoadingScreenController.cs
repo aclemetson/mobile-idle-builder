@@ -38,6 +38,16 @@ namespace MobileIdleBuilder
 
         private IEnumerator LoadAsync(string targetScene)
         {
+            // Wait for keyboard-dismiss WINDOW_INSETS_CHANGED events to fully settle before
+            // calling LoadSceneAsync.  On Android the keyboard animates out over ~40ms and
+            // emits several waves of WINDOW_INSETS_CHANGED; each wave can trigger a Vulkan
+            // swapchain resize.  If LoadSceneAsync starts while a resize is still in flight
+            // the GPU deadlocks.  0.1s covers the full dismiss cascade; WaitForEndOfFrame
+            // then ensures the GPU has presented its last frame before we touch it again
+            // (WaitForSecondsRealtime resumes at Update time, not end-of-frame).
+            yield return new WaitForSecondsRealtime(0.1f);
+            yield return new WaitForEndOfFrame();
+
             GameLogger.Info($"[LoadingScreen] Phase1 — beginning async load of '{targetScene}'");
             AsyncOperation op = SceneManager.LoadSceneAsync(targetScene);
             if (op == null)
@@ -52,12 +62,19 @@ namespace MobileIdleBuilder
             // Phase 1 — scene file loading (op.progress: 0→0.9, displayed: 0%→90%).
             float displayed = 0f;
             const float fillSpeed = 0.6f;
+            float phase1LogTimer = 0f;
 
             while (op.progress < 0.9f || displayed < 0.9f)
             {
                 float target = (op.progress / 0.9f) * 0.9f;
                 displayed = Mathf.MoveTowards(displayed, target, Time.deltaTime * fillSpeed);
                 UpdateProgress(displayed * 100f);
+                phase1LogTimer += Time.deltaTime;
+                if (phase1LogTimer >= 2f)
+                {
+                    phase1LogTimer = 0f;
+                    GameLogger.Info($"[LoadingScreen] Phase1 wait — op.progress={op.progress:F2}  displayed={displayed:F2}");
+                }
                 yield return null;
             }
             GameLogger.Info($"[LoadingScreen] Phase1 complete — op.progress={op.progress:F2}  displayed={displayed:F2}");

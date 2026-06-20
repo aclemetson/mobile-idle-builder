@@ -42,7 +42,7 @@ namespace MobileIdleBuilder
 
             try
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEV_ENVIRONMENT
                 _env = "development";
 #else
                 _env = "production";
