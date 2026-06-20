@@ -70,6 +70,7 @@ namespace MobileIdleBuilder
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private VisualElement _conveyorBar;
         private Label         _conveyorLabel;
         private Button        _btnConveyorRotate;
         private Button        _btnConveyorConfirm;
@@ -206,6 +207,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
                 conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
             }
 
             if (deconstructController != null)
@@ -240,6 +242,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
                 conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = null;
             }
 
             if (deconstructController != null)
@@ -383,6 +386,7 @@ namespace MobileIdleBuilder
 
             // Conveyor placement
             _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorBar                = root.Q("conveyor-bar");
             _conveyorLabel              = root.Q<Label>("conveyor-label");
             _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
             _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
@@ -1352,12 +1356,33 @@ namespace MobileIdleBuilder
             => ScreenPointInElement(_placementConfirmPopup, screenPos)
             || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
 
+        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
+        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
+        private bool IsPointerOverConveyorUI(Vector2 screenPos)
+        {
+            // Develop-tier dump of the bar geometry vs the converted pointer position.
+            // Gated on VerboseLogging so it only logs during the press, not every hover frame.
+            bool r = ScreenPointInElement(_conveyorBar, screenPos);
+            if (UIInputBlocker.VerboseLogging)
+            {
+                var panel = _conveyorBar?.panel;
+                Vector2 pp = panel != null ? RuntimePanelUtils.ScreenToPanel(panel, screenPos) : Vector2.zero;
+                GameLogger.Develop($"[Conveyor] barCheck bar={(_conveyorBar == null ? "null" : _conveyorBar.name)} hidden={(_conveyorBar?.ClassListContains("hidden"))} panelNull={panel == null} worldBound={_conveyorBar?.worldBound} panelPos={pp} -> {r}");
+            }
+            return r;  // the bar strip, NOT the full-screen overlay
+        }
+
         private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
         {
             if (el == null || el.ClassListContains("hidden")) return false;
             var panel = el.panel;
             if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, screenPos);
+            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
+            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
+            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
+            // panel and never registers as "over UI", leaking taps to the grid behind it.
+            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
             return el.worldBound.Contains(panelPos);
         }
 

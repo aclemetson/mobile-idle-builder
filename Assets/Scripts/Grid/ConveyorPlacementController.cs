@@ -57,6 +57,14 @@ namespace MobileIdleBuilder
         /// <summary>Raised after a run is confirmed and placed (drives the tutorial's conveyor step).</summary>
         public event Action OnChainPlaced;
 
+        /// <summary>
+        /// Direct hit-test for the conveyor toolbar strip, assigned by HUDController
+        /// (ScreenPointInElement on the conveyor-bar). Folded into the press/hover UI check
+        /// alongside UIInputBlocker so taps on the bar never leak to the grid behind it — the
+        /// same belt-and-suspenders the building placement bar uses.
+        /// </summary>
+        public Func<Vector2, bool> IsPointerOverConveyorUI;
+
         // ----------------------------------------------------------------
         // Private state
         // ----------------------------------------------------------------
@@ -220,7 +228,17 @@ namespace MobileIdleBuilder
                 _pressPos    = InputUtils.GetPointerPosition();
                 _dragAccum   = 0f;
                 _pressActive = true;
-                _pressOverUI = UIInputBlocker.IsPointerOverUI(_pressPos);
+
+                // Develop-tier trace of why a press over the conveyor bar is/ isn't treated as UI.
+                // VerboseLogging stays true across BOTH checks so the bar-check + UIBlock detail
+                // log only on the press (not every hover frame).
+                UIInputBlocker.VerboseLogging = true;
+                bool overBlocker  = UIInputBlocker.IsPointerOverUI(_pressPos);
+                bool overConveyor = IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false;
+                UIInputBlocker.VerboseLogging = false;
+                GameLogger.Develop($"[Conveyor] PRESS at {_pressPos} screen={Screen.width}x{Screen.height} mode={_mode} hasStart={_hasStart} hasCandidate={HasCandidate} overBlocker={overBlocker} overConveyor={overConveyor} -> pressOverUI={(overBlocker || overConveyor)}");
+
+                _pressOverUI = overBlocker || overConveyor;
             }
 
             if (_pressActive && InputUtils.IsPointerHeld())
@@ -233,14 +251,17 @@ namespace MobileIdleBuilder
             if (InputUtils.WasPointerReleased())
             {
                 bool wasTap = _pressActive && !_pressOverUI && _dragAccum <= CameraController.TapThreshold;
+                Vector2 relPos = InputUtils.GetPointerPosition();
+                GameLogger.Develop($"[Conveyor] RELEASE at {relPos} pressActive={_pressActive} pressOverUI={_pressOverUI} dragAccum={_dragAccum:F1} -> wasTap={wasTap}");
                 _pressActive = false;
                 if (wasTap)
-                    HandleTap(WorldToCell(InputUtils.GetPointerPosition()));
+                    HandleTap(WorldToCell(relPos));
             }
         }
 
         private void HandleTap(Vector2Int cell)
         {
+            GameLogger.Develop($"[Conveyor] HANDLETAP cell={cell} inBounds={gridRenderer.IsInBounds(cell.x, cell.y)} mode={_mode} hasStart={_hasStart} startCell={_startCell} hasCandidate={HasCandidate}");
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return;
 
             if (_mode == Mode.Destroy)
@@ -356,7 +377,8 @@ namespace MobileIdleBuilder
             if (HasCandidate) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
-            if (UIInputBlocker.IsPointerOverUI(screenPos)) { ClearHover(); return; }
+            if (UIInputBlocker.IsPointerOverUI(screenPos)
+                || (IsPointerOverConveyorUI?.Invoke(screenPos) ?? false)) { ClearHover(); return; }
 
             Vector2Int cell = WorldToCell(screenPos);
             if (cell == _hoverCell) return;

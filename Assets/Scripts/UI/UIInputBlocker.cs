@@ -43,6 +43,10 @@ namespace MobileIdleBuilder
             "dev-console",        // dev console overlay (separate panel)
         };
 
+        // When true, IsPointerOverUI emits per-panel hit-test details at GameLogger.Develop tier.
+        // Callers flip it on around a single check (e.g. a press) so the dump isn't per-frame spam.
+        public static bool VerboseLogging;
+
         private static readonly List<UIDocument> s_documents = new();
         private static readonly HashSet<object>  s_modals    = new();
 
@@ -72,11 +76,11 @@ namespace MobileIdleBuilder
         /// True if the screen point is over a blocking UI surface on any registered panel, or if
         /// any modal overlay is open. Safe to call before any panel exists (returns false).
         ///
-        /// We hit-test with worldBound.Contains rather than IPanel.Pick: Pick proved unreliable
-        /// across runtime panels, so we walk each panel's tree and test the resolved bounds of
-        /// every blocking surface directly — the same approach as HUDController's proven
-        /// ScreenPointInElement. Documents that share a PanelSettings share one runtime panel, so
-        /// we test each panel once via its visualTree (covering every document on it).
+        /// Primary check is IPanel.Pick (UI Toolkit's own hit-test, which honours pickingMode,
+        /// clipping, transforms and z-order) classified through IsBlockingElement; a resolved-bounds
+        /// tree-walk (HitTestBlocking) is kept as a fallback. Documents that share a PanelSettings
+        /// share one runtime panel, so we test each panel once via its visualTree (covering every
+        /// document on it).
         /// </summary>
         public static bool IsPointerOverUI(Vector2 screenPos)
         {
@@ -90,8 +94,33 @@ namespace MobileIdleBuilder
 
                 if (AlreadyTested(panel, i)) continue;
 
-                Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, screenPos);
-                if (HitTestBlocking(panel.visualTree, panelPos))
+                // Input System screen coords are bottom-left origin; panel coords are top-left.
+                // RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y in this project, so we
+                // flip here. Without this, top-of-screen UI maps to the bottom of the panel and
+                // never blocks, leaking taps to the world behind it.
+                Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+                Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
+
+                // UI Toolkit's own hit-test: respects pickingMode, clipping, transforms and
+                // z-order, so it catches taps the manual worldBound walk misses (e.g. the conveyor
+                // toolbar). picking-mode=Ignore chrome (root, grid-area, world-anchored popups,
+                // transparent overlays) returns null/non-blocking here, so the world stays
+                // interactive beneath transparent overlays.
+                var picked = panel.Pick(panelPos);
+                bool blockingPick = picked != null && IsBlockingElement(picked);
+
+                // Fallback: resolved-bounds tree-walk (belt-and-suspenders).
+                bool walkBlocked = HitTestBlocking(panel.visualTree, panelPos);
+
+                if (VerboseLogging)
+                {
+                    string pickDesc = picked == null
+                        ? "null"
+                        : $"{picked.GetType().Name}:'{picked.name}' classes=[{string.Join(",", picked.GetClasses())}] pm={picked.pickingMode}";
+                    GameLogger.Develop($"[UIBlock] doc#{i} '{(doc != null ? doc.gameObject.name : "?")}' screen={screenPos} panelPos={panelPos} picked={pickDesc} blockingPick={blockingPick} walk={walkBlocked}");
+                }
+
+                if (blockingPick || walkBlocked)
                     return true;
             }
             return false;
