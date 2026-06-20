@@ -1359,14 +1359,30 @@ namespace MobileIdleBuilder
         /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
         /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
         private bool IsPointerOverConveyorUI(Vector2 screenPos)
-            => ScreenPointInElement(_conveyorBar, screenPos);  // the bar strip, NOT the full-screen overlay
+        {
+            // Develop-tier dump of the bar geometry vs the converted pointer position.
+            // Gated on VerboseLogging so it only logs during the press, not every hover frame.
+            bool r = ScreenPointInElement(_conveyorBar, screenPos);
+            if (UIInputBlocker.VerboseLogging)
+            {
+                var panel = _conveyorBar?.panel;
+                Vector2 pp = panel != null ? RuntimePanelUtils.ScreenToPanel(panel, screenPos) : Vector2.zero;
+                GameLogger.Develop($"[Conveyor] barCheck bar={(_conveyorBar == null ? "null" : _conveyorBar.name)} hidden={(_conveyorBar?.ClassListContains("hidden"))} panelNull={panel == null} worldBound={_conveyorBar?.worldBound} panelPos={pp} -> {r}");
+            }
+            return r;  // the bar strip, NOT the full-screen overlay
+        }
 
         private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
         {
             if (el == null || el.ClassListContains("hidden")) return false;
             var panel = el.panel;
             if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, screenPos);
+            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
+            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
+            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
+            // panel and never registers as "over UI", leaking taps to the grid behind it.
+            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
             return el.worldBound.Contains(panelPos);
         }
 

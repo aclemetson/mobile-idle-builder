@@ -325,7 +325,7 @@
         </ui:VisualElement>
 
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
-        <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden">
+        <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden" picking-mode="Ignore">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
                 <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
                           class="placement-label" />

@@ -228,8 +228,17 @@ namespace MobileIdleBuilder
                 _pressPos    = InputUtils.GetPointerPosition();
                 _dragAccum   = 0f;
                 _pressActive = true;
-                _pressOverUI = UIInputBlocker.IsPointerOverUI(_pressPos)
-                            || (IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false);
+
+                // Develop-tier trace of why a press over the conveyor bar is/ isn't treated as UI.
+                // VerboseLogging stays true across BOTH checks so the bar-check + UIBlock detail
+                // log only on the press (not every hover frame).
+                UIInputBlocker.VerboseLogging = true;
+                bool overBlocker  = UIInputBlocker.IsPointerOverUI(_pressPos);
+                bool overConveyor = IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false;
+                UIInputBlocker.VerboseLogging = false;
+                GameLogger.Develop($"[Conveyor] PRESS at {_pressPos} screen={Screen.width}x{Screen.height} mode={_mode} hasStart={_hasStart} hasCandidate={HasCandidate} overBlocker={overBlocker} overConveyor={overConveyor} -> pressOverUI={(overBlocker || overConveyor)}");
+
+                _pressOverUI = overBlocker || overConveyor;
             }
 
             if (_pressActive && InputUtils.IsPointerHeld())
@@ -242,14 +251,17 @@ namespace MobileIdleBuilder
             if (InputUtils.WasPointerReleased())
             {
                 bool wasTap = _pressActive && !_pressOverUI && _dragAccum <= CameraController.TapThreshold;
+                Vector2 relPos = InputUtils.GetPointerPosition();
+                GameLogger.Develop($"[Conveyor] RELEASE at {relPos} pressActive={_pressActive} pressOverUI={_pressOverUI} dragAccum={_dragAccum:F1} -> wasTap={wasTap}");
                 _pressActive = false;
                 if (wasTap)
-                    HandleTap(WorldToCell(InputUtils.GetPointerPosition()));
+                    HandleTap(WorldToCell(relPos));
             }
         }
 
         private void HandleTap(Vector2Int cell)
         {
+            GameLogger.Develop($"[Conveyor] HANDLETAP cell={cell} inBounds={gridRenderer.IsInBounds(cell.x, cell.y)} mode={_mode} hasStart={_hasStart} startCell={_startCell} hasCandidate={HasCandidate}");
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return;
 
             if (_mode == Mode.Destroy)
