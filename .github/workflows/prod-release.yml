@@ -57,18 +57,7 @@ jobs:
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
-        run: |
-          $unity = if ($env:UNITY_PATH) { $env:UNITY_PATH } `
-                   else { "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" }
-          & $unity -batchmode -nographics -projectPath . `
-            -buildTarget Android `
-            -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid `
-            -logFile build-android.log
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "--- Last 50 lines of Unity log ---"
-            Get-Content build-android.log -Tail 50
-            exit $LASTEXITCODE
-          }
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1
 
       - name: Remove keystore
         if: always()
