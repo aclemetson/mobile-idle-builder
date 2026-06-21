@@ -8,7 +8,7 @@
       "triggerType":         "Login",
       "triggerTargetId":     "",
       "triggerQuantity":     1,
-      "paidCurrencyReward":  3,
+      "paidCurrencyReward":  2,
       "isHidden":            false
     },
     {
@@ -19,7 +19,7 @@
       "triggerType":         "CraftItem",
       "triggerTargetId":     "",
       "triggerQuantity":     50,
-      "paidCurrencyReward":  5,
+      "paidCurrencyReward":  3,
       "isHidden":            false
     },
     {
@@ -30,7 +30,7 @@
       "triggerType":         "SpendEntropy",
       "triggerTargetId":     "",
       "triggerQuantity":     500,
-      "paidCurrencyReward":  5,
+      "paidCurrencyReward":  3,
       "isHidden":            false
     },
     {
@@ -41,7 +41,7 @@
       "triggerType":         "CompleteResearch",
       "triggerTargetId":     "",
       "triggerQuantity":     1,
-      "paidCurrencyReward":  10,
+      "paidCurrencyReward":  6,
       "isHidden":            false
     },
     {
@@ -52,7 +52,7 @@
       "triggerType":         "Prestige",
       "triggerTargetId":     "",
       "triggerQuantity":     1,
-      "paidCurrencyReward":  15,
+      "paidCurrencyReward":  10,
       "isHidden":            false
     },
     {
@@ -63,7 +63,7 @@
       "triggerType":         "Login",
       "triggerTargetId":     "",
       "triggerQuantity":     99999,
-      "paidCurrencyReward":  25,
+      "paidCurrencyReward":  15,
       "isHidden":            true
     },
     {

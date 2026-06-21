@@ -67,12 +67,22 @@ namespace MobileIdleBuilder
             _controller.InitiatePurchase(productId);
         }
 
-        /// <summary>Returns localised price string or the display price fallback.</summary>
+        /// <summary>
+        /// Returns the store's localised price string, falling back to our hardcoded price.
+        /// In the Editor the Unity IAP fake store reports a placeholder "$0.01" for every product,
+        /// so we always use the fallback there; on a real device the live Google Play / App Store
+        /// price is used (and we still fall back if it is missing/empty).
+        /// </summary>
         public string GetLocalizedPrice(string productId)
         {
+#if UNITY_EDITOR
+            return GetFallbackPrice(productId);
+#else
             if (!IsInitialized) return GetFallbackPrice(productId);
             var product = _controller.products.WithID(productId);
-            return product?.metadata.localizedPriceString ?? GetFallbackPrice(productId);
+            var price   = product?.metadata?.localizedPriceString;
+            return string.IsNullOrEmpty(price) ? GetFallbackPrice(productId) : price;
+#endif
         }
 
         // ── IDetailedStoreListener ────────────────────────────────────────────

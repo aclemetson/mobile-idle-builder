@@ -352,6 +352,20 @@ namespace MobileIdleBuilder
             _prestigeQuery.SetSingleton(p);
         }
 
+        /// <summary>
+        /// Merges items into the live ECS inventory buffer (Time Warp instant collection).
+        /// No-op when ECS is not loaded; callers fall back to writing SaveData in that case.
+        /// </summary>
+        public void AddInventoryItems(System.Collections.Generic.IReadOnlyDictionary<int, int> items)
+        {
+            if (items == null || items.Count == 0) return;
+            if (!IsLoaded || _inventoryQuery.IsEmpty) return;
+            var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            foreach (var kvp in items)
+                if (kvp.Value > 0)
+                    SlotBufferUtils.AddToInventory(ref buffer, kvp.Key, kvp.Value);
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         internal static int ResolveStepIndex(string stepId)

@@ -187,6 +187,41 @@ namespace MobileIdleBuilder.Tests
                 "idleCollectionApplied must equal lastSaved so the same snapshot is not re-applied");
         }
 
+        // ── ComputeForDuration (Time Warp instant collection) ─────────────────
+
+        [Test]
+        public void ComputeForDuration_DoesNotMutateSave()
+        {
+            var save = MakeSave(OneChain(
+                new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 3f }));
+            // 1/s × 7200 s × 0.5 rate × 3 sell = 10800 entropy
+            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(10800L, result.EntropyEarned);
+            Assert.AreEqual(0L, save.currentRun.baseCurrency, "ComputeForDuration must not mutate the save");
+            Assert.IsNull(save.idleCollectionApplied, "ComputeForDuration must not stamp the idempotency guard");
+        }
+
+        [Test]
+        public void ComputeForDuration_IgnoresIdleCap()
+        {
+            var save = MakeSave(OneChain(
+                new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 3f }));
+            // 24 h far exceeds the cfg cap (2 h) but Time Warp pays the full requested duration.
+            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 86400f);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(129600L, result.EntropyEarned, "1/s × 86400 s × 0.5 × 3 — no cap applied");
+        }
+
+        [Test]
+        public void ComputeForDuration_NoProduction_ReturnsNull()
+        {
+            var save = MakeSave(new IdleCollectionSnapshot { chains = new List<IdleChainEntry>() });
+            Assert.IsNull(OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f));
+        }
+
         // ── Multi-site aggregation (siteSnapshots) ────────────────────────────
 
         [Test]
