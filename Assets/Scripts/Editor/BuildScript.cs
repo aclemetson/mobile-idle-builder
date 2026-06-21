@@ -13,6 +13,12 @@ namespace MobileIdleBuilder.Editor
         public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
         public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
 
+        // Development build for the internal testing track: defines DEVELOPMENT_BUILD so the
+        // dev console and dev-only tooling are compiled in. Uses BuildOptions.Development ONLY
+        // (no AllowDebugging) so the manifest stays non-debuggable -- Google Play rejects
+        // android:debuggable="true" AABs at upload.
+        public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, development: true);
+
         public static void BuildWindows()
         {
             string version    = PlayerSettings.bundleVersion;
@@ -68,7 +74,7 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
-        private static void BuildAndroidInternal(bool appBundle)
+        private static void BuildAndroidInternal(bool appBundle, bool development = false)
         {
             string version   = PlayerSettings.bundleVersion;
             string ext       = appBundle ? "aab" : "apk";
@@ -81,12 +87,17 @@ namespace MobileIdleBuilder.Editor
             PlayerSettings.Android.useCustomKeystore = true;
             EditorUserBuildSettings.buildAppBundle = appBundle;
 
+            // Development defines DEVELOPMENT_BUILD (dev console + tooling). Deliberately no
+            // AllowDebugging: it sets android:debuggable="true", which Google Play rejects.
+            var buildOptions = development ? BuildOptions.Development : BuildOptions.None;
+            GameLogger.Info($"Android build options: {buildOptions}");
+
             var options = new BuildPlayerOptions
             {
                 scenes = Scenes,
                 locationPathName = outputPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.None,
+                options = buildOptions,
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
