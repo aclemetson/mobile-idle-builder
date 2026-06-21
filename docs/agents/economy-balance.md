@@ -10,9 +10,16 @@
 |---|---|---|---|
 | **Entropy (e)** — base | Entropy sink consumes items; starting 250/run (`game_config.starting_entropy`) | research, building placement | `PlayerProgressData.BaseCurrency` |
 | **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`) | prestige shop permanent upgrades (catalogue: `PersistentUpgradeService.cs:48`, costs 5→5400✦) | `PrestigeData.PrestigeCurrency` |
-| **Crystals (◆)** — premium | achievements (3–200◆), IAP packs | premium shop: speed boosts, entropy, prestige currency | `SaveData.paidCurrency` |
+| **Crystals (◆)** — premium | achievements (2–200◆), daily challenges/login calendar, IAP packs | premium shop: speed boosts, entropy, prestige currency | `SaveData.paidCurrency` |
 
 IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500◆ ($9.99), 20,000◆ ($19.99) — consumables via Unity IAP / Google Play.
+
+**Crystal value anchor:** $1 ≈ 4 hours of progress at the player's current stage ⇒ **150◆ = 1 "skip-hour"**. Crystals buy *time*, not raw power; the non-time sinks (entropy, prestige currency) grant a **% of the current build** so their dollar value self-scales with progress. Premium-shop sink tiers (`PremiumShopCalculator.cs`):
+- **Speed boost** (2× offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
+- **Entropy** (% of net worth, floored): 10% 300◆ / 25% 650◆ / 50% 1,200◆ / 100% 2,000◆.
+- **Prestige currency** (% of a "prestige-now" yield = `floor(log10(netWorth/pbase)×pscale)`, floored): 50% 500◆ / 100% 900◆ / 250% 1,900◆ / 500% 3,600◆.
+
+**Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 3 daily challenges (15◆ each), daily achievements (2/3/3/6/10 + 15 on full clear), weekly/monthly achievements, one-time progression. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr); daily achievements are kept low to avoid double-paying the daily challenges for the same actions.
 
 ## Core formulas
 

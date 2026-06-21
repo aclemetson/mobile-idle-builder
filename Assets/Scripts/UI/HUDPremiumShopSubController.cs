@@ -208,18 +208,26 @@ namespace MobileIdleBuilder
 
         private void BuildPrestigeCurrencyCards()
         {
-            _contextLabel.text = "Adds directly to your prestige currency balance";
+            float netWorth = SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f;
+            _contextLabel.text = netWorth > 0f
+                ? "Grants a share of what you'd earn prestiging right now"
+                : "Based on this run's net worth (build up a run first)";
+
+            var cfg      = GameBootstrap.Instance?.gameConfig;
+            float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
+            float pscale = cfg != null ? cfg.prestigeCurrencyScale : 50f;
 
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
             for (int i = 0; i < PremiumShopCalculator.PrestigeCurrencyTiers.Length; i++)
             {
                 int captured = i;
                 var tier     = PremiumShopCalculator.PrestigeCurrencyTiers[i];
+                long amount  = PremiumShopCalculator.CalcPrestigeCurrencyAmount(i, netWorth, pbase, pscale);
                 bool canAfford = crystals >= tier.CrystalCost;
 
                 var card = MakeTierCard(
                     tier.Name,
-                    $"+{tier.PrestigeCurrencyAmount:N0}✦ prestige currency",
+                    $"+{amount:N0}✦ prestige currency",
                     $"◆ {tier.CrystalCost:N0}",
                     canAfford,
                     false,

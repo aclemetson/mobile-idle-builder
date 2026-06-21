@@ -11,28 +11,34 @@ namespace MobileIdleBuilder
     {
         // ── Tier Definitions ─────────────────────────────────────────────────
 
+        // Crystal value anchor: $1 ~ 4 hours of progress => 150 crystals = 1 "skip-hour".
+        // A 2x offline boost over duration D ~ D skip-hours of bonus production; priced at
+        // 150 crystals/skip-hr with a bulk discount on the larger tiers.
         public static readonly SpeedUpTier[] SpeedUpTiers =
         {
-            new SpeedUpTier("Quick Burst",      "30 min at 2×",  50,    TimeSpan.FromMinutes(30)),
-            new SpeedUpTier("Production Surge", "2 hr at 2×",    175,   TimeSpan.FromHours(2)),
-            new SpeedUpTier("Overclocked",      "8 hr at 2×",    600,   TimeSpan.FromHours(8)),
-            new SpeedUpTier("Hyperdrive",       "24 hr at 2×",   1500,  TimeSpan.FromHours(24)),
+            new SpeedUpTier("Quick Burst",      "30 min at 2×",  75,    TimeSpan.FromMinutes(30)),
+            new SpeedUpTier("Production Surge", "2 hr at 2×",    270,   TimeSpan.FromHours(2)),
+            new SpeedUpTier("Overclocked",      "8 hr at 2×",    950,   TimeSpan.FromHours(8)),
+            new SpeedUpTier("Hyperdrive",       "24 hr at 2×",   2500,  TimeSpan.FromHours(24)),
         };
 
+        // Self-scaling time-skip: grants a % of the current build's net worth.
         public static readonly EntropyTier[] EntropyTiers =
         {
-            new EntropyTier("Trickle",   "5% of net worth",   80,   0.05f,  500),
-            new EntropyTier("Infusion",  "15% of net worth",  220,  0.15f,  1500),
-            new EntropyTier("Cascade",   "40% of net worth",  500,  0.40f,  4000),
-            new EntropyTier("Flood",     "100% of net worth", 1100, 1.00f,  10000),
+            new EntropyTier("Trickle",   "10% of net worth",  300,   0.10f,  1000),
+            new EntropyTier("Infusion",  "25% of net worth",  650,   0.25f,  2500),
+            new EntropyTier("Cascade",   "50% of net worth",  1200,  0.50f,  5000),
+            new EntropyTier("Flood",     "100% of net worth", 2000,  1.00f,  10000),
         };
 
+        // Self-scaling time-skip: grants a % of what the player would earn prestiging right
+        // now (PrestigeFraction x current prestige yield), floored so early runs still grant a little.
         public static readonly PrestigeCurrencyTier[] PrestigeCurrencyTiers =
         {
-            new PrestigeCurrencyTier("Residue",    100,   25),
-            new PrestigeCurrencyTier("Fragment",   350,   100),
-            new PrestigeCurrencyTier("Cache",      1200,  400),
-            new PrestigeCurrencyTier("Reservoir",  4000,  1500),
+            new PrestigeCurrencyTier("Residue",    500,   0.50f,  5),
+            new PrestigeCurrencyTier("Fragment",   900,   1.00f,  10),
+            new PrestigeCurrencyTier("Cache",      1900,  2.50f,  25),
+            new PrestigeCurrencyTier("Reservoir",  3600,  5.00f,  50),
         };
 
         public static readonly CrystalPackTier[] CrystalPackTiers =
@@ -131,10 +137,31 @@ namespace MobileIdleBuilder
             return PurchaseResult.Success;
         }
 
+        /// <summary>
+        /// Prestige currency a tier grants given the current net worth: a fraction of the
+        /// "prestige-now" yield, floored so early runs still award something. Mirrors the
+        /// prestige formula in PrestigeSystem.cs: floor(max(0, log10(netWorth / pbase) x pscale)).
+        /// </summary>
+        public static long CalcPrestigeCurrencyAmount(int tierIndex, float netWorth, float pbase, float pscale)
+        {
+            if (tierIndex < 0 || tierIndex >= PrestigeCurrencyTiers.Length)
+                throw new ArgumentOutOfRangeException(nameof(tierIndex));
+
+            var tier = PrestigeCurrencyTiers[tierIndex];
+            long yieldNow = pbase > 0f
+                ? (long)Math.Max(0, Math.Floor(Math.Log10(netWorth / pbase) * pscale))
+                : 0L;
+            long fromYield = (long)(yieldNow * tier.PrestigeFraction);
+            return Math.Max(fromYield, tier.MinimumFloor);
+        }
+
         /// <summary>Validates and applies a prestige-currency purchase. Mutates both balances via out params.</summary>
         public static PurchaseResult TryBuyPrestigeCurrency(
             int tierIndex,
             long currentCrystals,
+            float netWorth,
+            float pbase,
+            float pscale,
             out long newCrystals,
             out long pcGranted)
         {
@@ -149,7 +176,7 @@ namespace MobileIdleBuilder
                 return PurchaseResult.InsufficientCrystals;
 
             newCrystals = currentCrystals - tier.CrystalCost;
-            pcGranted   = tier.PrestigeCurrencyAmount;
+            pcGranted   = CalcPrestigeCurrencyAmount(tierIndex, netWorth, pbase, pscale);
             return PurchaseResult.Success;
         }
     }
@@ -194,13 +221,17 @@ namespace MobileIdleBuilder
     {
         public string Name;
         public long   CrystalCost;
-        public long   PrestigeCurrencyAmount;
+        /// <summary>Fraction of a "prestige-now" yield this tier grants (1.0 = one full prestige's worth).</summary>
+        public float  PrestigeFraction;
+        /// <summary>Minimum prestige currency granted, so early runs (tiny yield) still award something.</summary>
+        public long   MinimumFloor;
 
-        public PrestigeCurrencyTier(string name, long cost, long amount)
+        public PrestigeCurrencyTier(string name, long cost, float fraction, long floor)
         {
-            Name                  = name;
-            CrystalCost           = cost;
-            PrestigeCurrencyAmount = amount;
+            Name             = name;
+            CrystalCost      = cost;
+            PrestigeFraction = fraction;
+            MinimumFloor     = floor;
         }
     }
 
