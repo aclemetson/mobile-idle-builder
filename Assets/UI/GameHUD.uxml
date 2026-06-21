@@ -257,6 +257,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="shop-tabs" class="shop-tabs">
                 <ui:Button name="shop-tab-speedups"  text="⚡ Speed"    class="shop-tab shop-tab--active" />
+                <ui:Button name="shop-tab-timewarp"  text="⏩ Warp"     class="shop-tab" />
                 <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
                 <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
                 <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />

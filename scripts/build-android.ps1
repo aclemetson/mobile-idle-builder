@@ -1,6 +1,7 @@
 param(
     [string]$UnityPath = "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe",
-    [int]$TimeoutMinutes = 60
+    [int]$TimeoutMinutes = 60,
+    [string]$ExecuteMethod = "MobileIdleBuilder.Editor.BuildScript.BuildAndroid"
 )
 
 # Builds the signed Android App Bundle headlessly for CI.
@@ -31,14 +32,14 @@ if ($orphans) {
 
 $logFile = Join-Path $ProjectRoot "build-android.log"
 
-Write-Host "[build] Building Android App Bundle (timeout: $TimeoutMinutes min)..."
+Write-Host "[build] Building Android App Bundle via $ExecuteMethod (timeout: $TimeoutMinutes min)..."
 
 # Cold CI checkouts have an empty Library, so -buildTarget Android makes Unity
 # start directly in Android mode instead of switching mid-run. BuildScript calls
 # EditorApplication.Exit() itself, so no -quit is needed.
 $proc = Start-Process -FilePath $UnityPath `
     -WorkingDirectory $ProjectRoot `
-    -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -buildTarget Android -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid -logFile `"$logFile`"" `
+    -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -buildTarget Android -executeMethod $ExecuteMethod -logFile `"$logFile`"" `
     -PassThru -NoNewWindow
 $timeoutMs = $TimeoutMinutes * 60 * 1000
 $finished  = $proc.WaitForExit($timeoutMs)

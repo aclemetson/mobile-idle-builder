@@ -11,28 +11,44 @@ namespace MobileIdleBuilder
     {
         // ── Tier Definitions ─────────────────────────────────────────────────
 
+        // Crystal value anchor: $1 ~ 4 hours of progress => 150 crystals = 1 "skip-hour".
+        // A 2x offline boost over duration D ~ D skip-hours of bonus production; priced at
+        // 150 crystals/skip-hr with a bulk discount on the larger tiers.
         public static readonly SpeedUpTier[] SpeedUpTiers =
         {
-            new SpeedUpTier("Quick Burst",      "30 min at 2×",  50,    TimeSpan.FromMinutes(30)),
-            new SpeedUpTier("Production Surge", "2 hr at 2×",    175,   TimeSpan.FromHours(2)),
-            new SpeedUpTier("Overclocked",      "8 hr at 2×",    600,   TimeSpan.FromHours(8)),
-            new SpeedUpTier("Hyperdrive",       "24 hr at 2×",   1500,  TimeSpan.FromHours(24)),
+            new SpeedUpTier("Quick Burst",      "30 min at 2×",  75,    TimeSpan.FromMinutes(30)),
+            new SpeedUpTier("Production Surge", "2 hr at 2×",    270,   TimeSpan.FromHours(2)),
+            new SpeedUpTier("Overclocked",      "8 hr at 2×",    950,   TimeSpan.FromHours(8)),
+            new SpeedUpTier("Hyperdrive",       "24 hr at 2×",   2500,  TimeSpan.FromHours(24)),
         };
 
+        // Self-scaling time-skip: grants a % of the current build's net worth.
         public static readonly EntropyTier[] EntropyTiers =
         {
-            new EntropyTier("Trickle",   "5% of net worth",   80,   0.05f,  500),
-            new EntropyTier("Infusion",  "15% of net worth",  220,  0.15f,  1500),
-            new EntropyTier("Cascade",   "40% of net worth",  500,  0.40f,  4000),
-            new EntropyTier("Flood",     "100% of net worth", 1100, 1.00f,  10000),
+            new EntropyTier("Trickle",   "10% of net worth",  300,   0.10f,  1000),
+            new EntropyTier("Infusion",  "25% of net worth",  650,   0.25f,  2500),
+            new EntropyTier("Cascade",   "50% of net worth",  1200,  0.50f,  5000),
+            new EntropyTier("Flood",     "100% of net worth", 2000,  1.00f,  10000),
         };
 
+        // Flat grants: prestige currency persists across runs (permanent power, not a time-skip),
+        // so a fixed amount is clearer than a net-worth percentage. Bigger tiers give better value.
         public static readonly PrestigeCurrencyTier[] PrestigeCurrencyTiers =
         {
-            new PrestigeCurrencyTier("Residue",    100,   25),
-            new PrestigeCurrencyTier("Fragment",   350,   100),
-            new PrestigeCurrencyTier("Cache",      1200,  400),
-            new PrestigeCurrencyTier("Reservoir",  4000,  1500),
+            new PrestigeCurrencyTier("Residue",    500,   50),
+            new PrestigeCurrencyTier("Fragment",   900,   150),
+            new PrestigeCurrencyTier("Cache",      1900,  500),
+            new PrestigeCurrencyTier("Reservoir",  3600,  1500),
+        };
+
+        // Instant offline collection ("Time Warp"): banks N hours of offline production at the
+        // current rate, no waiting. Priced ~150◆/skip-hr with a small "instant" premium over the
+        // equivalent speed boost.
+        public static readonly TimeWarpTier[] TimeWarpTiers =
+        {
+            new TimeWarpTier("Time Warp I",   "Instantly bank 2 hours of production",   350,  2f),
+            new TimeWarpTier("Time Warp II",  "Instantly bank 8 hours of production",   1300, 8f),
+            new TimeWarpTier("Time Warp III", "Instantly bank 24 hours of production",  3500, 24f),
         };
 
         public static readonly CrystalPackTier[] CrystalPackTiers =
@@ -152,6 +168,32 @@ namespace MobileIdleBuilder
             pcGranted   = tier.PrestigeCurrencyAmount;
             return PurchaseResult.Success;
         }
+
+        /// <summary>
+        /// Validates affordability for a Time Warp tier and deducts the crystal cost. The actual
+        /// production payout is computed by PremiumShopService (it needs live save/ECS state), so
+        /// this only handles the pure crystal side.
+        /// </summary>
+        public static PurchaseResult TryBuyTimeWarp(
+            int tierIndex,
+            long currentCrystals,
+            out long newCrystals,
+            out float hours)
+        {
+            newCrystals = currentCrystals;
+            hours       = 0f;
+
+            if (tierIndex < 0 || tierIndex >= TimeWarpTiers.Length)
+                return PurchaseResult.InvalidTier;
+
+            var tier = TimeWarpTiers[tierIndex];
+            if (currentCrystals < tier.CrystalCost)
+                return PurchaseResult.InsufficientCrystals;
+
+            newCrystals = currentCrystals - tier.CrystalCost;
+            hours       = tier.Hours;
+            return PurchaseResult.Success;
+        }
     }
 
     // ── Tier Data Structures ──────────────────────────────────────────────────
@@ -194,13 +236,31 @@ namespace MobileIdleBuilder
     {
         public string Name;
         public long   CrystalCost;
+        /// <summary>Flat prestige currency (✦) granted by this tier. Persists across prestige runs.</summary>
         public long   PrestigeCurrencyAmount;
 
         public PrestigeCurrencyTier(string name, long cost, long amount)
         {
-            Name                  = name;
-            CrystalCost           = cost;
+            Name                   = name;
+            CrystalCost            = cost;
             PrestigeCurrencyAmount = amount;
+        }
+    }
+
+    public class TimeWarpTier
+    {
+        public string Name;
+        public string Description;
+        public long   CrystalCost;
+        /// <summary>Hours of offline production this tier instantly banks.</summary>
+        public float  Hours;
+
+        public TimeWarpTier(string name, string desc, long cost, float hours)
+        {
+            Name        = name;
+            Description = desc;
+            CrystalCost = cost;
+            Hours       = hours;
         }
     }
 
@@ -225,5 +285,6 @@ namespace MobileIdleBuilder
         Success,
         InsufficientCrystals,
         InvalidTier,
+        NothingToCollect,
     }
 }

@@ -49,6 +49,32 @@ namespace MobileIdleBuilder.Tests
             }
         }
 
+        [Test]
+        public void AllTimeWarpTiers_HavePositiveCostAndHours()
+        {
+            foreach (var t in PremiumShopCalculator.TimeWarpTiers)
+            {
+                Assert.Greater(t.CrystalCost, 0, $"{t.Name} cost");
+                Assert.Greater(t.Hours, 0f, $"{t.Name} hours");
+            }
+        }
+
+        [Test]
+        public void TimeWarpPurchase_WithSufficientCrystals_ReducesBalanceAndReturnsHours()
+        {
+            var result = PremiumShopCalculator.TryBuyTimeWarp(0, 5000, out long newCrystals, out float hours);
+            Assert.AreEqual(PurchaseResult.Success, result);
+            Assert.AreEqual(5000 - PremiumShopCalculator.TimeWarpTiers[0].CrystalCost, newCrystals);
+            Assert.AreEqual(PremiumShopCalculator.TimeWarpTiers[0].Hours, hours);
+        }
+
+        [Test]
+        public void TimeWarpPurchase_WithInsufficientCrystals_ReturnsInsufficientCrystals()
+        {
+            var result = PremiumShopCalculator.TryBuyTimeWarp(2, 10, out _, out _);
+            Assert.AreEqual(PurchaseResult.InsufficientCrystals, result);
+        }
+
         // ── IsBoostActive ─────────────────────────────────────────────────────
 
         [Test]
@@ -169,16 +195,16 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void CalcEntropyAmount_Tier0_Is5PercentOfNetWorth()
+        public void CalcEntropyAmount_Tier0_Is10PercentOfNetWorth()
         {
             long amount = PremiumShopCalculator.CalcEntropyAmount(0, 100000f);
-            Assert.AreEqual(5000L, amount); // 5% of 100000
+            Assert.AreEqual(10000L, amount); // 10% of 100000
         }
 
         [Test]
         public void CalcEntropyAmount_Tier0_RespectsFloor_WhenNetWorthLow()
         {
-            long amount = PremiumShopCalculator.CalcEntropyAmount(0, 100f); // 5% = 5, below floor of 500
+            long amount = PremiumShopCalculator.CalcEntropyAmount(0, 100f); // 10% = 10, below floor of 1000
             Assert.AreEqual(PremiumShopCalculator.EntropyTiers[0].MinimumFloor, amount);
         }
 
@@ -201,9 +227,9 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void PrestigeCurrencyPurchase_AllTiers_CorrectAmounts()
+        public void PrestigeCurrencyPurchase_AllTiers_GrantFlatAmounts()
         {
-            long[] expected = { 25, 100, 400, 1500 };
+            long[] expected = { 50, 150, 500, 1500 };
             for (int i = 0; i < PremiumShopCalculator.PrestigeCurrencyTiers.Length; i++)
             {
                 PremiumShopCalculator.TryBuyPrestigeCurrency(i, 100000,

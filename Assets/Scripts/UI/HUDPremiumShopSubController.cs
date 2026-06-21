@@ -12,7 +12,7 @@ namespace MobileIdleBuilder
     [RequireComponent(typeof(HUDController))]
     public class HUDPremiumShopSubController : MonoBehaviour
     {
-        private enum ShopTab { SpeedUps, Entropy, PrestigeCurrency, Crystals }
+        private enum ShopTab { SpeedUps, TimeWarp, Entropy, PrestigeCurrency, Crystals }
 
         private VisualElement _panel;
         private Label         _crystalBalance;
@@ -20,6 +20,7 @@ namespace MobileIdleBuilder
         private ScrollView    _tierList;
 
         private Button _tabSpeedUps;
+        private Button _tabTimeWarp;
         private Button _tabEntropy;
         private Button _tabPrestige;
         private Button _tabCrystals;
@@ -42,6 +43,7 @@ namespace MobileIdleBuilder
         {
             if (_btnClose    != null) _btnClose.clicked    -= Close;
             if (_tabSpeedUps != null) _tabSpeedUps.clicked -= OnTabSpeedUps;
+            if (_tabTimeWarp != null) _tabTimeWarp.clicked -= OnTabTimeWarp;
             if (_tabEntropy  != null) _tabEntropy.clicked  -= OnTabEntropy;
             if (_tabPrestige != null) _tabPrestige.clicked -= OnTabPrestige;
             if (_tabCrystals != null) _tabCrystals.clicked -= OnTabCrystals;
@@ -72,6 +74,7 @@ namespace MobileIdleBuilder
             _tierList       = root.Q<ScrollView>("shop-tier-list");
             _btnClose       = root.Q<Button>("btn-close-shop");
             _tabSpeedUps    = root.Q<Button>("shop-tab-speedups");
+            _tabTimeWarp    = root.Q<Button>("shop-tab-timewarp");
             _tabEntropy     = root.Q<Button>("shop-tab-entropy");
             _tabPrestige    = root.Q<Button>("shop-tab-prestige");
             _tabCrystals    = root.Q<Button>("shop-tab-crystals");
@@ -81,12 +84,14 @@ namespace MobileIdleBuilder
         {
             if (_btnClose    != null) _btnClose.clicked    += Close;
             if (_tabSpeedUps != null) _tabSpeedUps.clicked += OnTabSpeedUps;
+            if (_tabTimeWarp != null) _tabTimeWarp.clicked += OnTabTimeWarp;
             if (_tabEntropy  != null) _tabEntropy.clicked  += OnTabEntropy;
             if (_tabPrestige != null) _tabPrestige.clicked += OnTabPrestige;
             if (_tabCrystals != null) _tabCrystals.clicked += OnTabCrystals;
         }
 
         private void OnTabSpeedUps()  { _activeTab = ShopTab.SpeedUps;        UpdateTabStyles(); Refresh(); }
+        private void OnTabTimeWarp()  { _activeTab = ShopTab.TimeWarp;         UpdateTabStyles(); Refresh(); }
         private void OnTabEntropy()   { _activeTab = ShopTab.Entropy;          UpdateTabStyles(); Refresh(); }
         private void OnTabPrestige()  { _activeTab = ShopTab.PrestigeCurrency; UpdateTabStyles(); Refresh(); }
         private void OnTabCrystals()  { _activeTab = ShopTab.Crystals;         UpdateTabStyles(); Refresh(); }
@@ -94,6 +99,7 @@ namespace MobileIdleBuilder
         private void UpdateTabStyles()
         {
             SetTabActive(_tabSpeedUps, _activeTab == ShopTab.SpeedUps);
+            SetTabActive(_tabTimeWarp, _activeTab == ShopTab.TimeWarp);
             SetTabActive(_tabEntropy,  _activeTab == ShopTab.Entropy);
             SetTabActive(_tabPrestige, _activeTab == ShopTab.PrestigeCurrency);
             SetTabActive(_tabCrystals, _activeTab == ShopTab.Crystals);
@@ -122,9 +128,40 @@ namespace MobileIdleBuilder
             switch (_activeTab)
             {
                 case ShopTab.SpeedUps:         BuildSpeedUpCards();          break;
+                case ShopTab.TimeWarp:         BuildTimeWarpCards();         break;
                 case ShopTab.Entropy:          BuildEntropyCards();          break;
                 case ShopTab.PrestigeCurrency: BuildPrestigeCurrencyCards(); break;
                 case ShopTab.Crystals:         BuildCrystalPackCards();      break;
+            }
+        }
+
+        // ── Time Warp cards (instant offline collection) ──────────────────────
+
+        private void BuildTimeWarpCards()
+        {
+            _contextLabel.text = "Instantly collect offline production at your current rate";
+
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+            for (int i = 0; i < PremiumShopCalculator.TimeWarpTiers.Length; i++)
+            {
+                int captured = i;
+                var tier      = PremiumShopCalculator.TimeWarpTiers[i];
+                bool canAfford = crystals >= tier.CrystalCost;
+
+                var card = MakeTierCard(
+                    tier.Name,
+                    tier.Description,
+                    $"◆ {tier.CrystalCost:N0}",
+                    canAfford,
+                    false,
+                    null,
+                    () =>
+                    {
+                        var result = PremiumShopService.Instance?.TryBuyTimeWarp(captured) ?? PurchaseResult.InvalidTier;
+                        if (result == PurchaseResult.Success) Refresh();
+                    });
+
+                _tierList.Add(card);
             }
         }
 
