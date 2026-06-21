@@ -42,6 +42,25 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
+| `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
+| `maintenance.message` | string | (generic) | Body text shown on the maintenance screen. |
+| `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |
+
+## Maintenance mode
+
+When `maintenance.enabled` is true the app shows the splash, then a maintenance overlay (message +
+"Estimated back: <local time>" + Retry) **instead of loading GameScene**.
+
+- **Splash gate** (`MaintenanceGate.IsUnderMaintenanceAsync`, called from `SplashScreenController`): runs a
+  time-boxed UGS init + flag fetch before `SceneLoader.GoTo("GameScene")`. Checked for **every** user.
+- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene; if
+  maintenance flips on it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
+  splash, which re-shows the overlay.
+- **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
+- **Account-link-safe:** a brand-new user (no session) gets a throwaway anon session just to read the flag,
+  then `SignOut(clearCredentials: true)` when maintenance is off, so GameScene's Google/anon sign-in is
+  untouched. Env name is shared via `UgsEnvironment.Name`.
+- Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`.
 
 ## Adding a flag
 
