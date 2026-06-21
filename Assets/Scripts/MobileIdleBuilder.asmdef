@@ -13,7 +13,8 @@
         "Unity.Services.Core",
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
-        "Unity.Purchasing"
+        "Unity.Purchasing",
+        "Unity.Services.RemoteConfig"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -27,6 +28,11 @@
             "name": "com.unity.purchasing",
             "expression": "",
             "define": "UNITY_PURCHASING"
+        },
+        {
+            "name": "com.unity.remote-config",
+            "expression": "",
+            "define": "REMOTE_CONFIG"
         }
     ],
     "noEngineReferences": false

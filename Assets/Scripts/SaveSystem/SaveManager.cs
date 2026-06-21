@@ -142,6 +142,15 @@ namespace MobileIdleBuilder
             var initTask = _cloud.InitializeAsync();
             yield return new WaitUntil(() => initTask.IsCompleted);
 
+            // Feature flags share the UGS session established above. Fetch now, before we decide
+            // whether to honor the cloud-save kill-switch below. A failed/offline fetch is a no-op
+            // (cached/default values stay in effect).
+            if (FeatureFlagService.Instance != null)
+            {
+                var flagTask = FeatureFlagService.Instance.FetchAsync();
+                yield return new WaitUntil(() => flagTask.IsCompleted);
+            }
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // Honor a pending wipe request from the editor tool (MobileIdleBuilder → Clear Save).
             // Skip the cloud fetch and delete the cloud key instead; _current is already a
@@ -159,6 +168,14 @@ namespace MobileIdleBuilder
                 yield break;
             }
 #endif
+
+            // Cloud-save kill-switch. Note this gates save-data sync only — UGS itself stayed
+            // initialized above so Remote Config (and the flags) could load.
+            if (!FeatureFlags.CloudSaveEnabled)
+            {
+                GameLogger.Info("[SaveManager] Cloud save disabled by feature flag — running local-only this session.");
+                yield break;
+            }
 
             if (!_cloud.IsAvailable) yield break;
 

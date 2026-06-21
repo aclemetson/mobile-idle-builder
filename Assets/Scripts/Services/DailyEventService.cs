@@ -45,6 +45,10 @@ namespace MobileIdleBuilder
         /// </summary>
         public void EnsureToday()
         {
+            // Remote kill-switch: skip rolling challenges / advancing the calendar when disabled.
+            // The HUD also hides the Daily nav button, so the panel is unreachable in this state.
+            if (!FeatureFlags.DailyEventsEnabled) return;
+
             EnsureContent();
             if (_todaysChallengeIds.Count == 0)
                 ReloadFromSave();
