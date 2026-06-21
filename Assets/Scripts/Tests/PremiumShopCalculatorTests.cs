@@ -30,13 +30,12 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void AllPrestigeTiers_HavePositiveCostFractionAndFloor()
+        public void AllPrestigeTiers_HavePositiveCostAndAmount()
         {
             foreach (var t in PremiumShopCalculator.PrestigeCurrencyTiers)
             {
                 Assert.Greater(t.CrystalCost, 0, $"{t.Name} cost");
-                Assert.Greater(t.PrestigeFraction, 0f, $"{t.Name} fraction");
-                Assert.Greater(t.MinimumFloor, 0, $"{t.Name} floor");
+                Assert.Greater(t.PrestigeCurrencyAmount, 0, $"{t.Name} amount");
             }
         }
 
@@ -218,41 +217,24 @@ namespace MobileIdleBuilder.Tests
 
         // ── TryBuyPrestigeCurrency ────────────────────────────────────────────
 
-        // Default prestige config (matches PrestigeSystem fallbacks): pbase=5000, pscale=50.
-        // At netWorth=50000: log10(50000/5000) x 50 = log10(10) x 50 = 50 prestige currency yield.
-        const float Pbase = 5000f;
-        const float Pscale = 50f;
-
         [Test]
         public void PrestigeCurrencyPurchase_WithSufficientCrystals_ReducesBalance()
         {
-            var result = PremiumShopCalculator.TryBuyPrestigeCurrency(0, 5000, 50000f, Pbase, Pscale,
+            var result = PremiumShopCalculator.TryBuyPrestigeCurrency(0, 5000,
                 out long newCrystals, out _);
             Assert.AreEqual(PurchaseResult.Success, result);
             Assert.AreEqual(5000 - PremiumShopCalculator.PrestigeCurrencyTiers[0].CrystalCost, newCrystals);
         }
 
         [Test]
-        public void PrestigeCurrencyPurchase_AllTiers_ScaleWithPrestigeYield()
+        public void PrestigeCurrencyPurchase_AllTiers_GrantFlatAmounts()
         {
-            // yieldNow = 50; tier fractions 0.5/1.0/2.5/5.0 -> 25/50/125/250.
-            long[] expected = { 25, 50, 125, 250 };
+            long[] expected = { 50, 150, 500, 1500 };
             for (int i = 0; i < PremiumShopCalculator.PrestigeCurrencyTiers.Length; i++)
             {
-                PremiumShopCalculator.TryBuyPrestigeCurrency(i, 100000, 50000f, Pbase, Pscale,
+                PremiumShopCalculator.TryBuyPrestigeCurrency(i, 100000,
                     out _, out long granted);
                 Assert.AreEqual(expected[i], granted, $"Tier {i}");
-            }
-        }
-
-        [Test]
-        public void CalcPrestigeCurrencyAmount_WhenYieldZero_UsesFloor()
-        {
-            // netWorth at/below pbase -> log10 <= 0 -> yield 0 -> floor applies.
-            for (int i = 0; i < PremiumShopCalculator.PrestigeCurrencyTiers.Length; i++)
-            {
-                long amount = PremiumShopCalculator.CalcPrestigeCurrencyAmount(i, Pbase, Pbase, Pscale);
-                Assert.AreEqual(PremiumShopCalculator.PrestigeCurrencyTiers[i].MinimumFloor, amount, $"Tier {i}");
             }
         }
     }

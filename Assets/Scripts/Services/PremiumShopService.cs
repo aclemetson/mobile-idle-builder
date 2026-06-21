@@ -69,16 +69,9 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return PurchaseResult.InvalidTier;
 
-            var cfg    = GameBootstrap.Instance?.gameConfig;
-            float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
-            float pscale = cfg != null ? cfg.prestigeCurrencyScale : 50f;
-
             var result = PremiumShopCalculator.TryBuyPrestigeCurrency(
                 tierIndex,
                 save.paidCurrency,
-                save.lastKnownNetWorth,
-                pbase,
-                pscale,
                 out long newCrystals,
                 out long pcGranted);
 
