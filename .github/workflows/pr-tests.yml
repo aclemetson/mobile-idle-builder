@@ -9,10 +9,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Manual gate before anything runs on the self-hosted runner. Bound to the
+  # protected `self-hosted-approval` environment, so it pauses until a required
+  # reviewer (the repo owner) approves. Skipped for owner-authored PRs, which
+  # keeps the owner's own fast path unchanged. Runs on a GitHub-hosted runner so
+  # the self-hosted machine is never touched while waiting for approval.
+  approval-gate:
+    name: Approve self-hosted run
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.author_association != 'OWNER'
+    runs-on: ubuntu-latest
+    environment: self-hosted-approval
+    steps:
+      - run: echo "Approved by required reviewer to run on the self-hosted runner."
+
   test:
     name: Edit Mode Tests
+    needs: [approval-gate]
     # Same-repo only: never run untrusted fork code on the self-hosted runner.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Run once the gate is approved (success) or skipped for an owner PR;
+    # always() is required so a skipped `needs` job does not skip this job.
+    if: >-
+      always() &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (needs.approval-gate.result == 'success' || needs.approval-gate.result == 'skipped')
     runs-on: [self-hosted, windows, unity]
 
     steps:
