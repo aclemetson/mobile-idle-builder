@@ -75,6 +75,47 @@ The build and test jobs run on your local machine to avoid consuming GitHub Acti
 Edit and play mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`.
 No license secrets needed — Unity is already activated on the machine.
 
+### Self-Hosted Runner Approval Gate
+
+Because the runner executes PR code on a physical machine, `pr-tests.yml` requires an
+explicit approval before the `test` job runs on it. Protections, from outer to inner:
+
+1. **Fork check** — `if: github.event.pull_request.head.repo.full_name == github.repository`
+   on both the gate and the `test` job. Fork PRs never reach the runner.
+2. **`self-hosted-approval` environment** — a protected GitHub Environment whose only
+   protection rule is a required reviewer (the repo owner). The `approval-gate` job is bound
+   to it, so it **pauses in "Waiting"** until the owner clicks **Approve** in the PR / Actions
+   UI. It runs on `ubuntu-latest`, so the self-hosted machine is untouched while waiting.
+3. **Owner bypass** — the gate's `if` includes `author_association != 'OWNER'`, so the owner's
+   own PRs **skip** the gate and run immediately. The `test` job depends on the gate via
+   `needs` + `always() && (result == 'success' || result == 'skipped')`.
+
+Net behavior:
+
+| PR author | Gate | Tests on runner |
+|-----------|------|-----------------|
+| Repo owner | skipped | run immediately |
+| Any other same-repo author | waits for owner approval | run only after **Approve** |
+| Fork | n/a (blocked by fork check) | never |
+
+This applies to **all** PRs that hit the runner (`develop`, `main`, `release/**`) — the gate
+has no branch filter. The `version-guard` job is unaffected; it runs only on `ubuntu-latest`.
+
+**One-time setup** (already done; recreate if the environment is deleted):
+
+```bash
+# Add the owner (user id from `gh api users/<login> --jq .id`) as required reviewer.
+gh api -X PUT repos/<owner>/<repo>/environments/self-hosted-approval \
+  -F "reviewers[][type]=User" -F "reviewers[][id]=<owner-user-id>"
+```
+
+Or in the UI: **Settings → Environments → New environment → `self-hosted-approval` →
+Required reviewers → add yourself**.
+
+**Defense-in-depth (settings only):** set **Settings → Actions → General → Fork pull request
+workflows from outside collaborators** to **"Require approval for all external contributors"**.
+This backstops the fork check above for any future workflow edit that drops it.
+
 ## 3. Android Keystore Secret
 
 The keystore file is gitignored. Encode it to base64 and store it as a secret.
