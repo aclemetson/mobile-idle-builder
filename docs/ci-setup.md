@@ -8,10 +8,14 @@ The pipeline maps each branch to a Google Play track:
 
 | Branch event | Workflow | Track / action |
 |--------------|----------|----------------|
-| PR merged **into** `release/**` | `release-internal.yml` | tests → `.aab` → Google Play **internal** |
+| Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
+| PR merged **into** `release/**` | `release-internal.yml` | `.aab` → Google Play **internal** |
 | `release/**` merged into `develop` | `bump-version.yml` | bump minor version on `develop` |
 | Manual (`workflow_dispatch`) | `prod-release.yml` | `.aab` → Google Play **production** (draft) — *future, parked* |
-| Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
+
+Tests and the version-code guard run **once**, as required checks on the PR (`pr-tests.yml`)
+before the merge is allowed. The merge then triggers `release-internal.yml`, which only
+builds and uploads — it does not re-run tests or the guard.
 
 Builds and tests run on the self-hosted Windows runner (zero cloud minutes). Only the
 lightweight version-code guard and the Play upload run on `ubuntu-latest` (the
@@ -36,17 +40,16 @@ not by the minor-version bump.
 `scripts/check-version-code.py` enforces this. It authenticates with the Google Play
 service account, lists every uploaded bundle's version code (read-only — it opens an edit
 and deletes it, never commits), and fails unless the committed value is greater than both
-the Google Play maximum and the version code on the base release branch tip. It runs:
+the Google Play maximum and the version code on the base release branch tip. It runs as a
+**pre-merge check** on PRs into `release/**` (`pr-tests.yml`) — a red check tells you to bump
+the code before merging.
 
-- as a **pre-merge check** on PRs into `release/**` (`pr-tests.yml`) — gives a red check so
-  you bump the code before merging, and
-- as the **first job** of `release-internal.yml` — a fast backstop so a bad code fails
-  before any Unity build minutes are spent.
-
-If a duplicate code somehow merges, the build fails on the guard — push a one-line
-`AndroidBundleVersionCode` bump to recover. Optionally enable branch-protection
-"Require branches to be up to date before merging" on `release/**` to force stale PRs to
-rebase and re-run the guard (needs GitHub Pro on private repos).
+The Play upload in `release-internal.yml` is the final backstop: if a duplicate code somehow
+reaches it (e.g. two PRs merged back-to-back without the guard re-running), Google Play
+rejects the upload, so a bad code can never silently ship. Recover by pushing a one-line
+`AndroidBundleVersionCode` bump. To close that window entirely, enable branch-protection
+"Require branches to be up to date before merging" on `release/**` so stale PRs must rebase
+and re-run the guard (needs GitHub Pro on private repos).
 
 ## 1. Self-Hosted Runner (Windows build machine)
 
