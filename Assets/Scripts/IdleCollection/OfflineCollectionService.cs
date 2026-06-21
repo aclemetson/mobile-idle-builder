@@ -90,37 +90,12 @@ namespace MobileIdleBuilder
             float cappedSeconds = Math.Min(elapsedSeconds, effectiveCap);
             float rate          = GetEffectiveCollectionRate(config, upgrades);
 
-            var result = new IdleCollectionResult
-            {
-                ElapsedSeconds = elapsedSeconds,
-                CappedSeconds  = cappedSeconds,
-                MaxSeconds     = effectiveCap,
-            };
+            var result = ComputePayout(snapshots, cappedSeconds, rate);
+            result.ElapsedSeconds = elapsedSeconds;
+            result.CappedSeconds  = cappedSeconds;
+            result.MaxSeconds     = effectiveCap;
 
-            foreach (var snap in snapshots)
-            {
-                if (snap?.chains == null) continue;
-                foreach (var chain in snap.chains)
-                {
-                    int wholeItems = (int)Math.Floor(chain.itemsPerSecond * cappedSeconds * rate);
-                    if (wholeItems <= 0) continue;
-
-                    if (chain.endsAtEntropySink)
-                    {
-                        long entropy = (long)(wholeItems * chain.baseSellValue);
-                        result.EntropyEarned += entropy;
-                        save.currentRun.baseCurrency += entropy;
-                    }
-                    else
-                    {
-                        MergeInventory(save.currentRun, chain.itemId, wholeItems);
-                        if (result.ItemsEarned.TryGetValue(chain.itemId, out int existing))
-                            result.ItemsEarned[chain.itemId] = existing + wholeItems;
-                        else
-                            result.ItemsEarned[chain.itemId] = wholeItems;
-                    }
-                }
-            }
+            ApplyResultToSave(save, result);
 
             // Stamp the departure timestamp so this exact session cannot be re-applied.
             // Uses effectiveTimestamp (not save.lastSaved) so both the cold-boot and
@@ -147,6 +122,73 @@ namespace MobileIdleBuilder
         {
             float bonus = upgrades?.GetEffect(UpgradeEffectType.IdleCollectionRate) ?? 0f;
             return Math.Min(1f, config.idleBaseCollectionRate + bonus);
+        }
+
+        /// <summary>
+        /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of offline
+        /// production at the current collection rate would yield, from the latest captured
+        /// snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
+        /// caller applies the returned result (e.g. to the live ECS world). Returns null when
+        /// there is no production to bank.
+        /// </summary>
+        public static IdleCollectionResult ComputeForDuration(
+            SaveData save,
+            GameConfigSO config,
+            PersistentUpgradeService upgrades,
+            float seconds)
+        {
+            if (save == null || config == null || seconds <= 0f) return null;
+
+            var snapshots = (save.siteSnapshots != null && save.siteSnapshots.Count > 0)
+                ? save.siteSnapshots
+                : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
+
+            float rate   = GetEffectiveCollectionRate(config, upgrades);
+            var   result = ComputePayout(snapshots, seconds, rate);
+            result.ElapsedSeconds = seconds;
+            result.CappedSeconds  = seconds;
+            return result.HasAnyOutput ? result : null;
+        }
+
+        /// <summary>
+        /// Pure payout calculation: aggregates entropy + items produced over <paramref name="cappedSeconds"/>
+        /// at <paramref name="rate"/> across every snapshot's chains. Does not mutate any save state.
+        /// </summary>
+        private static IdleCollectionResult ComputePayout(
+            System.Collections.Generic.IEnumerable<IdleCollectionSnapshot> snapshots,
+            float cappedSeconds,
+            float rate)
+        {
+            var result = new IdleCollectionResult();
+            foreach (var snap in snapshots)
+            {
+                if (snap?.chains == null) continue;
+                foreach (var chain in snap.chains)
+                {
+                    int wholeItems = (int)Math.Floor(chain.itemsPerSecond * cappedSeconds * rate);
+                    if (wholeItems <= 0) continue;
+
+                    if (chain.endsAtEntropySink)
+                    {
+                        result.EntropyEarned += (long)(wholeItems * chain.baseSellValue);
+                    }
+                    else
+                    {
+                        result.ItemsEarned.TryGetValue(chain.itemId, out int existing);
+                        result.ItemsEarned[chain.itemId] = existing + wholeItems;
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>Applies a computed payout to SaveData.currentRun (entropy + inventory merge).</summary>
+        public static void ApplyResultToSave(SaveData save, IdleCollectionResult result)
+        {
+            if (save?.currentRun == null || result == null) return;
+            save.currentRun.baseCurrency += result.EntropyEarned;
+            foreach (var kvp in result.ItemsEarned)
+                MergeInventory(save.currentRun, kvp.Key, kvp.Value);
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

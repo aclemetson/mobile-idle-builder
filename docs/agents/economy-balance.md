@@ -18,6 +18,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 - **Speed boost** (2× offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
 - **Entropy** (% of net worth, floored): 10% 300◆ / 25% 650◆ / 50% 1,200◆ / 100% 2,000◆.
 - **Prestige currency** (% of a "prestige-now" yield = `floor(log10(netWorth/pbase)×pscale)`, floored): 50% 500◆ / 100% 900◆ / 250% 1,900◆ / 500% 3,600◆.
+- **Time Warp** (instant offline collection, no wait): 2 h 350◆ / 8 h 1,300◆ / 24 h 3,500◆. Reuses `OfflineCollectionService.ComputeForDuration` (refresh snapshot via `SaveLocal`, pay out at the idle collection rate, apply to live ECS via `ECSLoadBridge.AddEntropy`/`AddInventoryItems`).
 
 **Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 3 daily challenges (15◆ each), daily achievements (2/3/3/6/10 + 15 on full clear), weekly/monthly achievements, one-time progression. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr); daily achievements are kept low to avoid double-paying the daily challenges for the same actions.
 

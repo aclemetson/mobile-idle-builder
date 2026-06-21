@@ -50,6 +50,32 @@ namespace MobileIdleBuilder.Tests
             }
         }
 
+        [Test]
+        public void AllTimeWarpTiers_HavePositiveCostAndHours()
+        {
+            foreach (var t in PremiumShopCalculator.TimeWarpTiers)
+            {
+                Assert.Greater(t.CrystalCost, 0, $"{t.Name} cost");
+                Assert.Greater(t.Hours, 0f, $"{t.Name} hours");
+            }
+        }
+
+        [Test]
+        public void TimeWarpPurchase_WithSufficientCrystals_ReducesBalanceAndReturnsHours()
+        {
+            var result = PremiumShopCalculator.TryBuyTimeWarp(0, 5000, out long newCrystals, out float hours);
+            Assert.AreEqual(PurchaseResult.Success, result);
+            Assert.AreEqual(5000 - PremiumShopCalculator.TimeWarpTiers[0].CrystalCost, newCrystals);
+            Assert.AreEqual(PremiumShopCalculator.TimeWarpTiers[0].Hours, hours);
+        }
+
+        [Test]
+        public void TimeWarpPurchase_WithInsufficientCrystals_ReturnsInsufficientCrystals()
+        {
+            var result = PremiumShopCalculator.TryBuyTimeWarp(2, 10, out _, out _);
+            Assert.AreEqual(PurchaseResult.InsufficientCrystals, result);
+        }
+
         // ── IsBoostActive ─────────────────────────────────────────────────────
 
         [Test]

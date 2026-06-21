@@ -41,6 +41,16 @@ namespace MobileIdleBuilder
             new PrestigeCurrencyTier("Reservoir",  3600,  5.00f,  50),
         };
 
+        // Instant offline collection ("Time Warp"): banks N hours of offline production at the
+        // current rate, no waiting. Priced ~150◆/skip-hr with a small "instant" premium over the
+        // equivalent speed boost.
+        public static readonly TimeWarpTier[] TimeWarpTiers =
+        {
+            new TimeWarpTier("Time Warp I",   "Instantly bank 2 hours of production",   350,  2f),
+            new TimeWarpTier("Time Warp II",  "Instantly bank 8 hours of production",   1300, 8f),
+            new TimeWarpTier("Time Warp III", "Instantly bank 24 hours of production",  3500, 24f),
+        };
+
         public static readonly CrystalPackTier[] CrystalPackTiers =
         {
             new CrystalPackTier("Starter Pack",   "crystals_tier1", 600,   "$0.99"),
@@ -179,6 +189,32 @@ namespace MobileIdleBuilder
             pcGranted   = CalcPrestigeCurrencyAmount(tierIndex, netWorth, pbase, pscale);
             return PurchaseResult.Success;
         }
+
+        /// <summary>
+        /// Validates affordability for a Time Warp tier and deducts the crystal cost. The actual
+        /// production payout is computed by PremiumShopService (it needs live save/ECS state), so
+        /// this only handles the pure crystal side.
+        /// </summary>
+        public static PurchaseResult TryBuyTimeWarp(
+            int tierIndex,
+            long currentCrystals,
+            out long newCrystals,
+            out float hours)
+        {
+            newCrystals = currentCrystals;
+            hours       = 0f;
+
+            if (tierIndex < 0 || tierIndex >= TimeWarpTiers.Length)
+                return PurchaseResult.InvalidTier;
+
+            var tier = TimeWarpTiers[tierIndex];
+            if (currentCrystals < tier.CrystalCost)
+                return PurchaseResult.InsufficientCrystals;
+
+            newCrystals = currentCrystals - tier.CrystalCost;
+            hours       = tier.Hours;
+            return PurchaseResult.Success;
+        }
     }
 
     // ── Tier Data Structures ──────────────────────────────────────────────────
@@ -235,6 +271,23 @@ namespace MobileIdleBuilder
         }
     }
 
+    public class TimeWarpTier
+    {
+        public string Name;
+        public string Description;
+        public long   CrystalCost;
+        /// <summary>Hours of offline production this tier instantly banks.</summary>
+        public float  Hours;
+
+        public TimeWarpTier(string name, string desc, long cost, float hours)
+        {
+            Name        = name;
+            Description = desc;
+            CrystalCost = cost;
+            Hours       = hours;
+        }
+    }
+
     public class CrystalPackTier
     {
         public string Name;
@@ -256,5 +309,6 @@ namespace MobileIdleBuilder
         Success,
         InsufficientCrystals,
         InvalidTier,
+        NothingToCollect,
     }
 }
