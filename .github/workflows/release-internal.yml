@@ -63,6 +63,16 @@ jobs:
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1 -ExecuteMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopment
 
+      - name: Sign AAB
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: |
+          $aab = (Get-ChildItem build\Android\*.aab | Select-Object -First 1).FullName
+          powershell -ExecutionPolicy Bypass -File .\scripts\sign-aab.ps1 -AabPath $aab
+
       - name: Remove keystore
         if: always()
         shell: powershell
