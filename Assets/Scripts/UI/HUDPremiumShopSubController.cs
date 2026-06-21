@@ -34,6 +34,7 @@ namespace MobileIdleBuilder
             Cleanup();
             QueryElements(root);
             BindButtons();
+            SubscribeToPurchases();
             HUDController.SetElementVisible(_panel, false);
         }
 
@@ -44,6 +45,7 @@ namespace MobileIdleBuilder
             if (_tabEntropy  != null) _tabEntropy.clicked  -= OnTabEntropy;
             if (_tabPrestige != null) _tabPrestige.clicked -= OnTabPrestige;
             if (_tabCrystals != null) _tabCrystals.clicked -= OnTabCrystals;
+            UnsubscribeFromPurchases();
         }
 
         private void OnDisable() => Cleanup();
@@ -267,6 +269,35 @@ namespace MobileIdleBuilder
             GameLogger.Debug($"[Shop] IAP not available — product: {productId}");
 #endif
         }
+
+        // ── IAP purchase callbacks ────────────────────────────────────────────
+        // The store completes purchases asynchronously, so the panel must refresh
+        // its crystal balance when the award lands rather than only on open/tab.
+
+        private void SubscribeToPurchases()
+        {
+#if UNITY_PURCHASING
+            if (IAPService.Instance != null)
+                IAPService.Instance.OnPurchaseComplete += OnPurchaseComplete;
+#endif
+        }
+
+        private void UnsubscribeFromPurchases()
+        {
+#if UNITY_PURCHASING
+            if (IAPService.Instance != null)
+                IAPService.Instance.OnPurchaseComplete -= OnPurchaseComplete;
+#endif
+        }
+
+#if UNITY_PURCHASING
+        private void OnPurchaseComplete(string productId, bool success)
+        {
+            if (!success) return;
+            RefreshBalanceLabel();
+            Refresh();
+        }
+#endif
 
         // ── Card factory helpers ──────────────────────────────────────────────
 

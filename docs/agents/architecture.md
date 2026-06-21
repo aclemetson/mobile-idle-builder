@@ -12,7 +12,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
   reconciliation                                       contains ECS SubScene (TestSubScene)
 ```
 
-1. `SplashScene`: persistent singletons awake (`SaveManager`, `SettingsService`, `PremiumShopService`, `IAPService`); UGS auth + cloud save reconciliation; then `SceneLoader.GoTo("GameScene")`.
+1. `SplashScene`: persistent singletons awake (`SaveManager`, `SettingsService`); UGS auth + cloud save reconciliation; then `SceneLoader.GoTo("GameScene")`. `PremiumShopService` and `IAPService` are not scene-placed — they are created at startup by `PremiumServicesBootstrap` (`[RuntimeInitializeOnLoadMethod]`, `Assets/Scripts/Bootstrap/`).
 2. `GameScene`: ECS world spawns; SubScene bakes `Assets/Scripts/Authoring/*` into entities; `ECSLoadBridge` polls for ECS singletons (5s world timeout + 10s entity timeout), then applies `SaveData` → ECS and calls `GridSaveService.Instance.LoadGrid()`. Only after `ECSLoadBridge.IsLoaded == true` is gameplay state valid.
 3. There is no MainMenu scene. All menus (shop, settings, prestige, etc.) are panels inside the single `Assets/UI/GameHUD.uxml`.
 
