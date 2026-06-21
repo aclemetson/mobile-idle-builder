@@ -177,6 +177,7 @@ namespace MobileIdleBuilder
             BindButtons(root);
             ApplyAchievementsGate();
             ApplyMegastructureGate();
+            ApplyFeatureFlagGates(root);
             _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
             GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
@@ -700,6 +701,16 @@ namespace MobileIdleBuilder
             if (_btnMegastructure == null) return;
             bool unlocked = MegastructureService.Instance?.IsUnlocked() ?? false;
             SetElementVisible(_btnMegastructure, unlocked);
+        }
+
+        /// <summary>
+        /// Hides nav buttons for features turned off by remote feature flags. Flags resolve from the
+        /// cache at this point (last session's values); a change takes effect on the next launch.
+        /// </summary>
+        private void ApplyFeatureFlagGates(VisualElement root)
+        {
+            if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
+            if (!FeatureFlags.DailyEventsEnabled) SetElementVisible(root.Q<Button>("btn-daily"), false);
         }
 
         private void OpenSitesPanel()

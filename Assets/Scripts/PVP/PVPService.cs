@@ -166,6 +166,13 @@ namespace MobileIdleBuilder
 
         void RefreshState()
         {
+            // Remote kill-switch: keep PVP fully locked until the backend is enabled for this environment.
+            if (!FeatureFlags.PvpEnabled)
+            {
+                State = PVPState.Locked;
+                return;
+            }
+
             var save = SaveManager.Instance?.Current;
             if (save == null || save.prestigeCount < PvpPrestigeUnlockCount)
             {

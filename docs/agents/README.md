@@ -14,6 +14,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | HUD, panels, UXML/USS, sub-controllers | `ui-toolkit.md` |
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |
 | balance numbers, currencies, costs, formulas | `economy-balance.md` |
+| remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
 | any code change (before committing) | `testing.md` |
 
 ## Feature assignments (`tasks/`)

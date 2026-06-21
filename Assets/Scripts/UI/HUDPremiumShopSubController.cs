@@ -36,6 +36,10 @@ namespace MobileIdleBuilder
             QueryElements(root);
             BindButtons();
             SubscribeToPurchases();
+            // IAP kill-switch: hide the real-money Crystals tab. Other tabs spend crystals the player
+            // already owns, so they stay available. Default tab is SpeedUps, so nothing breaks.
+            if (_tabCrystals != null && !FeatureFlags.IapEnabled)
+                HUDController.SetElementVisible(_tabCrystals, false);
             HUDController.SetElementVisible(_panel, false);
         }
 
@@ -275,6 +279,14 @@ namespace MobileIdleBuilder
 
         private void BuildCrystalPackCards()
         {
+            // Defense-in-depth: the Crystals tab is hidden when IAP is disabled, but guard the
+            // build path too in case it is reached (e.g. flag flipped mid-session).
+            if (!FeatureFlags.IapEnabled)
+            {
+                _contextLabel.text = "Crystal purchases are currently unavailable.";
+                return;
+            }
+
             _contextLabel.text = "Purchase crystals with real money";
 
             for (int i = 0; i < PremiumShopCalculator.CrystalPackTiers.Length; i++)

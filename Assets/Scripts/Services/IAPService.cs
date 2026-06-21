@@ -45,7 +45,17 @@ namespace MobileIdleBuilder
             if (Instance != this) return;
         }
 
-        private void Start() => InitializePurchasing();
+        private void Start()
+        {
+            // Remote kill-switch: skip store initialization so purchases are impossible without a rebuild.
+            // BuyProduct already no-ops while IsInitialized is false.
+            if (!FeatureFlags.IapEnabled)
+            {
+                GameLogger.Info("[IAP] Disabled by feature flag — store not initialized.");
+                return;
+            }
+            InitializePurchasing();
+        }
 
         private void InitializePurchasing()
         {
