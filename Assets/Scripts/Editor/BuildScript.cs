@@ -13,11 +13,11 @@ namespace MobileIdleBuilder.Editor
         public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
         public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
 
-        // Development build for the internal testing track: defines DEVELOPMENT_BUILD so the
-        // dev console and dev-only tooling are compiled in. Uses BuildOptions.Development ONLY
-        // (no AllowDebugging) so the manifest stays non-debuggable -- Google Play rejects
-        // android:debuggable="true" AABs at upload.
-        public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, development: true);
+        // Internal testing build: compiles in the dev console and dev-only tooling by defining
+        // the DEVELOPMENT_BUILD symbol, but produces a normal (non-debuggable) release bundle.
+        // We do NOT use BuildOptions.Development -- in Unity 6 that sets android:debuggable="true"
+        // in the manifest, which Google Play rejects ("APK is marked as debuggable").
+        public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, devTooling: true);
 
         public static void BuildWindows()
         {
@@ -74,7 +74,7 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
-        private static void BuildAndroidInternal(bool appBundle, bool development = false)
+        private static void BuildAndroidInternal(bool appBundle, bool devTooling = false)
         {
             string version   = PlayerSettings.bundleVersion;
             string ext       = appBundle ? "aab" : "apk";
@@ -86,17 +86,21 @@ namespace MobileIdleBuilder.Editor
 
             EditorUserBuildSettings.buildAppBundle = appBundle;
 
-            // Development defines DEVELOPMENT_BUILD (dev console + tooling). Deliberately no
-            // AllowDebugging: it sets android:debuggable="true", which Google Play rejects.
-            var buildOptions = development ? BuildOptions.Development : BuildOptions.None;
-            GameLogger.Info($"Android build options: {buildOptions}");
+            // Define DEVELOPMENT_BUILD for compilation only (dev console + tooling) via
+            // extraScriptingDefines, while keeping options = BuildOptions.None so the bundle is a
+            // normal release build. A real BuildOptions.Development build sets
+            // android:debuggable="true", which Google Play rejects; this gives us the symbol
+            // without the debuggable manifest. Nothing reads Debug.isDebugBuild at runtime.
+            string[] extraDefines = devTooling ? new[] { "DEVELOPMENT_BUILD" } : null;
+            GameLogger.Info($"Android build extra defines: {(extraDefines == null ? "(none)" : string.Join(";", extraDefines))}");
 
             var options = new BuildPlayerOptions
             {
                 scenes = Scenes,
                 locationPathName = outputPath,
                 target = BuildTarget.Android,
-                options = buildOptions,
+                options = BuildOptions.None,
+                extraScriptingDefines = extraDefines,
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
