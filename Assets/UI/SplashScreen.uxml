@@ -11,6 +11,13 @@
             <ui:Label name="splash-tagline"  text="Build. Collapse. Repeat." class="splash-tagline" />
         </ui:VisualElement>
 
+        <ui:VisualElement name="maintenance-panel" class="maintenance-panel hidden">
+            <ui:Label  name="maintenance-title"   text="Under Maintenance" class="maintenance-title" />
+            <ui:Label  name="maintenance-message" text=""                  class="maintenance-message" />
+            <ui:Label  name="maintenance-time"    text=""                  class="maintenance-time" />
+            <ui:Button name="btn-maintenance-retry" text="Retry"           class="maintenance-retry-btn" />
+        </ui:VisualElement>
+
         <ui:Label name="splash-version" text="" class="splash-version" />
 
     </ui:VisualElement>
