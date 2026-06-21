@@ -84,7 +84,6 @@ namespace MobileIdleBuilder.Editor
 
             ConfigureAndroidKeystore();
 
-            PlayerSettings.Android.useCustomKeystore = true;
             EditorUserBuildSettings.buildAppBundle = appBundle;
 
             // Development defines DEVELOPMENT_BUILD (dev console + tooling). Deliberately no
@@ -118,6 +117,10 @@ namespace MobileIdleBuilder.Editor
         {
             string keystorePath = Path.Combine(Directory.GetCurrentDirectory(), "secrets", "user.keystore");
 
+            // useCustomKeystore must be enabled BEFORE the keystore name and passwords are
+            // assigned: Unity ignores the password setters while it is false, which yields an
+            // unsigned AAB that Google Play rejects ("All uploaded bundles must be signed").
+            PlayerSettings.Android.useCustomKeystore = true;
             PlayerSettings.Android.keystoreName = keystorePath;
             PlayerSettings.Android.keystorePass = GetEnvOrArg("ANDROID_KEYSTORE_PASS");
             PlayerSettings.Android.keyaliasName = GetEnvOrArg("ANDROID_KEY_ALIAS");
