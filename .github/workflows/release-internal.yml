@@ -64,7 +64,8 @@ jobs:
         run: |
           $unity = if ($env:UNITY_PATH) { $env:UNITY_PATH } `
                    else { "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" }
-          & $unity -batchmode -nographics -quit -projectPath . `
+          & $unity -batchmode -nographics -projectPath . `
+            -buildTarget Android `
             -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid `
             -logFile build-android.log
           if ($LASTEXITCODE -ne 0) {
