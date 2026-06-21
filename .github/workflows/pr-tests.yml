@@ -2,7 +2,7 @@ name: PR Tests
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, 'release/**']
 
 concurrency:
   group: pr-tests-${{ github.event.pull_request.number }}
@@ -11,7 +11,8 @@ concurrency:
 jobs:
   test:
     name: Edit Mode Tests
-    if: startsWith(github.head_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository
+    # Same-repo only: never run untrusted fork code on the self-hosted runner.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, windows, unity]
 
     steps:
@@ -41,3 +42,28 @@ jobs:
           name: test-results-${{ github.run_number }}
           path: TestResults
           retention-days: 14
+
+  # Pre-merge gate for PRs into a release branch: catch a duplicate / non-increasing
+  # version code while the PR is still open (the build workflow re-checks as a backstop).
+  version-guard:
+    name: Version Code Guard
+    if: startsWith(github.base_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API client
+        run: pip install --quiet google-api-python-client google-auth
+
+      - name: Check version code is new and increasing
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          BASE_REF: ${{ github.base_ref }}
+        run: python scripts/check-version-code.py

@@ -2,22 +2,55 @@
 
 One-time setup steps to activate the GitHub Actions pipeline.
 
-## Release Branch → Develop: Automatic Version Bump
+## Branch → Track Model
 
-When a `release/*` branch is merged into `develop`, the **Dev Build** workflow automatically:
+The pipeline maps each branch to a Google Play track:
 
-1. Increments the **minor** version and resets the **patch** to `0`  
-   (e.g. `0.1.43` → `0.2.0`)
-2. Resets `AndroidBundleVersionCode` to `1`
-3. Commits the change back to `develop` as `github-actions[bot]`
-4. Builds the APK using the new version
+| Branch event | Workflow | Track / action |
+|--------------|----------|----------------|
+| PR merged **into** `release/**` | `release-internal.yml` | tests → `.aab` → Google Play **internal** |
+| `release/**` merged into `develop` | `bump-version.yml` | bump minor version on `develop` |
+| Manual (`workflow_dispatch`) | `prod-release.yml` | `.aab` → Google Play **production** (draft) — *future, parked* |
+| Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
 
-The bump commit carries `[skip ci]` so it does not re-trigger workflows.  
-Unity picks up the change automatically the next time the project is opened because `ProjectSettings/ProjectSettings.asset` is committed.
+Builds and tests run on the self-hosted Windows runner (zero cloud minutes). Only the
+lightweight version-code guard and the Play upload run on `ubuntu-latest` (the
+`r0adkll/upload-google-play` action is Linux/Docker only).
+
+### Release Branch → Develop: Automatic Version Bump
+
+When a `release/**` branch is merged into `develop`, `bump-version.yml`:
+
+1. Increments the **minor** version and resets the **patch** to `0` (e.g. `0.1.43` → `0.2.0`)
+2. Commits the change back to `develop` as `github-actions[bot]` with `[skip ci]`
+
+It intentionally does **not** touch `AndroidBundleVersionCode` — see below.
+
+## Version Code Rules
+
+`AndroidBundleVersionCode` must be **strictly increasing and globally unique for the
+lifetime of the app**. Google Play permanently rejects a code it has seen before, so it
+must never be reset. It is owned by the local pre-commit hook (`scripts/bump-version.ps1`),
+not by the minor-version bump.
+
+`scripts/check-version-code.py` enforces this. It authenticates with the Google Play
+service account, lists every uploaded bundle's version code (read-only — it opens an edit
+and deletes it, never commits), and fails unless the committed value is greater than both
+the Google Play maximum and the version code on the base release branch tip. It runs:
+
+- as a **pre-merge check** on PRs into `release/**` (`pr-tests.yml`) — gives a red check so
+  you bump the code before merging, and
+- as the **first job** of `release-internal.yml` — a fast backstop so a bad code fails
+  before any Unity build minutes are spent.
+
+If a duplicate code somehow merges, the build fails on the guard — push a one-line
+`AndroidBundleVersionCode` bump to recover. Optionally enable branch-protection
+"Require branches to be up to date before merging" on `release/**` to force stale PRs to
+rebase and re-run the guard (needs GitHub Pro on private repos).
 
 ## 1. Self-Hosted Runner (Windows build machine)
 
-The Android build jobs run on your local machine to avoid consuming GitHub Actions cloud minutes.
+The build and test jobs run on your local machine to avoid consuming GitHub Actions cloud minutes.
 
 1. Go to: **GitHub repo → Settings → Actions → Runners → New self-hosted runner**
 2. Select **Windows** platform
@@ -36,7 +69,8 @@ The Android build jobs run on your local machine to avoid consuming GitHub Actio
 
 ## 2. PR Tests
 
-Edit mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`. No license secrets needed — Unity is already activated on the machine.
+Edit and play mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`.
+No license secrets needed — Unity is already activated on the machine.
 
 ## 3. Android Keystore Secret
 
@@ -54,27 +88,7 @@ Add to GitHub Secrets:
 - `ANDROID_KEY_ALIAS` — `mobile-idle-builder`
 - `ANDROID_KEY_PASS` — key password
 
-## 4. Firebase App Distribution
-
-1. In Firebase Console: go to **App Distribution**
-2. Enable App Distribution for the Android app
-3. Create a tester group named `internal-testers` and add tester emails
-
-4. Get a CI token:
-   ```bash
-   firebase login:ci
-   ```
-   Copy the token output.
-
-5. Get the Firebase App ID:
-   - Firebase Console → Project settings → Your apps → Android app → App ID
-   - Looks like: `1:835677862122:android:xxxxx`
-
-6. Add to GitHub Secrets:
-   - `FIREBASE_TOKEN` — the token from `firebase login:ci`
-   - `FIREBASE_APP_ID` — the App ID from Firebase Console
-
-## 5. Google Play Internal Testing
+## 4. Google Play (Internal Testing)
 
 1. In **Google Play Console**: ensure the app has at least one release in any track (required to use the API)
 
@@ -86,22 +100,22 @@ Add to GitHub Secrets:
 3. Add to GitHub Secrets:
    - `GOOGLE_PLAY_JSON_KEY` — paste the full JSON content of the service account key file
 
-## 6. GitHub Actions Permissions
+This same service account is used by both the internal upload and the version-code guard.
 
-Ensure the repo allows Actions to create tags and releases:
+## 5. GitHub Actions Permissions
+
+Ensure the repo allows Actions to create tags, releases, and the version bump commit:
 - Settings → Actions → General → Workflow permissions → **Read and write permissions**
 
 ## Secrets Summary
 
 | Secret | Source | Used By |
 |--------|--------|---------|
-| `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | Dev + Prod builds |
-| `ANDROID_KEYSTORE_PASS` | keystore password | Dev + Prod builds |
-| `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | Dev + Prod builds |
-| `ANDROID_KEY_PASS` | key password | Dev + Prod builds |
-| `FIREBASE_TOKEN` | `firebase login:ci` | Dev distribution |
-| `FIREBASE_APP_ID` | Firebase Console | Dev distribution |
-| `GOOGLE_PLAY_JSON_KEY` | GCP service account JSON | Prod distribution |
+| `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | builds |
+| `ANDROID_KEYSTORE_PASS` | keystore password | builds |
+| `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | builds |
+| `ANDROID_KEY_PASS` | key password | builds |
+| `GOOGLE_PLAY_JSON_KEY` | GCP service account JSON | internal upload + version guard + prod (future) |
 
 ## Local Testing
 

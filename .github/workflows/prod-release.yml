@@ -1,8 +1,10 @@
 name: Prod Release
 
+# Future production pipe (parked). Internal testing is fed by release-internal.yml.
+# This ships to the Google Play *production* track as a draft, and is manual-only
+# so nothing reaches production until we deliberately trigger it.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 # Only one production release at a time
 concurrency:
@@ -119,14 +121,14 @@ jobs:
             git push origin "v${VERSION}"
           fi
 
-      - name: Upload to Google Play Internal Testing
+      - name: Upload to Google Play Production (draft)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName: com.clemtek.mobileidlebuilder
           releaseFiles: ${{ steps.aab.outputs.path }}
-          track: internal
-          status: completed
+          track: production
+          status: draft
 
       - name: Create GitHub Release
         env:

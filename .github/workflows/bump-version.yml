@@ -1,0 +1,46 @@
+name: Bump Version
+
+# When a release/** branch is merged into develop, bump the minor version and
+# reset patch (e.g. 0.2.7 -> 0.3.0). AndroidBundleVersionCode is intentionally
+# left untouched: it must stay globally monotonic for Google Play, and is owned
+# by the local pre-commit hook + the version-code guard, not by semantic bumps.
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+concurrency:
+  group: bump-version
+  cancel-in-progress: true
+
+permissions:
+  contents: write   # needed to commit the version bump back to develop
+
+jobs:
+  bump-version:
+    name: Bump Minor Version
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump minor, reset patch
+        run: |
+          CURRENT=$(grep -oP 'bundleVersion: \K[0-9]+\.[0-9]+\.[0-9]+' ProjectSettings/ProjectSettings.asset)
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+          NEW_VER="$major.$((minor + 1)).0"
+          echo "Bumping $CURRENT -> $NEW_VER"
+          sed -i "s/bundleVersion: $CURRENT/bundleVersion: $NEW_VER/" ProjectSettings/ProjectSettings.asset
+          echo "NEW_VER=$NEW_VER" >> "$GITHUB_ENV"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ProjectSettings/ProjectSettings.asset
+          git commit -m "chore: bump version to ${NEW_VER} [skip ci]"
+          git push origin ${{ github.base_ref }}
