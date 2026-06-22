@@ -52,6 +52,8 @@ namespace MobileIdleBuilder.Editor
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
             Directory.CreateDirectory(outputDir);
 
+            ConfigureIOSVersioningAndSigning();
+
             // iOS build output is a folder (Xcode project), not a single file.
             var options = new BuildPlayerOptions
             {
@@ -114,6 +116,30 @@ namespace MobileIdleBuilder.Editor
             {
                 GameLogger.Info($"Android build succeeded: {outputPath}");
                 EditorApplication.Exit(0);
+            }
+        }
+
+        // Keeps iOS in lockstep with the Android version model. CFBundleVersion (the iOS build
+        // number) rides the existing monotonic AndroidBundleVersionCode, so one counter feeds both
+        // stores and TestFlight's "duplicate build number" rejection stays aligned with Google
+        // Play's. Signing is automatic / cloud-managed in CI (xcodebuild -allowProvisioningUpdates
+        // + an App Store Connect API key), so all we configure here is the team id and automatic
+        // signing -- there is no keystore/.p12 to apply at build time.
+        private static void ConfigureIOSVersioningAndSigning()
+        {
+            PlayerSettings.iOS.buildNumber = PlayerSettings.Android.bundleVersionCode.ToString();
+            GameLogger.Info($"iOS CFBundleVersion set to {PlayerSettings.iOS.buildNumber} (from AndroidBundleVersionCode)");
+
+            string teamId = Environment.GetEnvironmentVariable("APPLE_TEAM_ID");
+            if (!string.IsNullOrEmpty(teamId))
+            {
+                PlayerSettings.iOS.appleDeveloperTeamID = teamId;
+                PlayerSettings.iOS.appleEnableAutomaticSigning = true;
+                GameLogger.Info($"iOS automatic signing enabled for team {teamId}");
+            }
+            else
+            {
+                GameLogger.Warning("APPLE_TEAM_ID not set; leaving iOS signing configuration unchanged.");
             }
         }
 
