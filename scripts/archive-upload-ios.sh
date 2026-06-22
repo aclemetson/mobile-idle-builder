@@ -102,11 +102,37 @@ EXPORT_OPTS="$PROJECT_ROOT/build/ExportOptions.plist"
 sed "s/__APPLE_TEAM_ID__/$APPLE_TEAM_ID/" "$PROJECT_ROOT/scripts/ios/ExportOptions.plist" > "$EXPORT_OPTS"
 
 echo "[ios] Exporting .ipa..."
+# On failure, xcodebuild only prints a generic "Cloud signing permission error".
+# The actionable detail (the App Store Connect API response: insufficient role,
+# certificate limit, capability mismatch, etc.) is written to IDEDistribution
+# .standard.log inside a temp .xcdistributionlogs bundle that is otherwise
+# discarded. Capture the export output, and on failure dump that detail log.
+set +e
 xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_DIR" \
     -exportOptionsPlist "$EXPORT_OPTS" \
-    "${AUTH_ARGS[@]}"
+    "${AUTH_ARGS[@]}" > export-archive.log 2>&1
+EXPORT_STATUS=$?
+set -e
+cat export-archive.log
+
+if [ "$EXPORT_STATUS" -ne 0 ]; then
+    echo "[ios] exportArchive failed with status $EXPORT_STATUS; dumping distribution logs:"
+    DIST_LOGS="$(grep -o '/var/folders/[^"]*\.xcdistributionlogs' export-archive.log | head -1 || true)"
+    if [ -n "$DIST_LOGS" ] && [ -f "$DIST_LOGS/IDEDistribution.standard.log" ]; then
+        echo "===== IDEDistribution.standard.log ($DIST_LOGS) ====="
+        cat "$DIST_LOGS/IDEDistribution.standard.log"
+        echo "===== end IDEDistribution.standard.log ====="
+    else
+        echo "[ios] Could not locate the log bundle; searching for any IDEDistribution.standard.log:"
+        find "${TMPDIR:-/var/folders}" -name 'IDEDistribution.standard.log' 2>/dev/null | while read -r f; do
+            echo "===== $f ====="
+            cat "$f"
+        done
+    fi
+    exit "$EXPORT_STATUS"
+fi
 
 IPA="$(find "$EXPORT_DIR" -name '*.ipa' | head -1 || true)"
 if [ -z "$IPA" ]; then
