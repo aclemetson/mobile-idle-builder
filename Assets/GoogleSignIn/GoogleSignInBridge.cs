@@ -1,4 +1,7 @@
-#if UNITY_ANDROID && !UNITY_EDITOR || UNITY_IOS && !UNITY_EDITOR
+// TEMP(ios-testflight): iOS path disabled until the GoogleSignIn 8.x native
+// rewrite lands; iOS uses anonymous UGS auth in the meantime. Restore
+// "|| UNITY_IOS && !UNITY_EDITOR" when modernizing.
+#if UNITY_ANDROID && !UNITY_EDITOR
 using System;
 using System.Threading.Tasks;
 using Google;

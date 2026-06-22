@@ -87,7 +87,11 @@ namespace Google {
     public static GoogleSignIn DefaultInstance {
       get {
         if (theInstance == null) {
-#if UNITY_ANDROID || UNITY_IOS
+// TEMP(ios-testflight): iOS native Google Sign-In is excluded from the build
+// until the GoogleSignIn 8.x rewrite lands. On iOS, GoogleAuthProvider stays null
+// and UGSCloudSaveService falls back to anonymous auth. Restore "|| UNITY_IOS"
+// (and re-enable the native plugin .meta files) when modernizing.
+#if UNITY_ANDROID
           theInstance = new GoogleSignIn(new GoogleSignInImpl(Configuration));
 #else
           theInstance = new GoogleSignIn(null);
