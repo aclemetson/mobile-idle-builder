@@ -18,7 +18,10 @@ name: Release iOS
 # mirroring the Google Play upload on the Android side.
 on:
   push:
-    branches: [develop]
+    # TEMP: feature branch included for the initial smoke test. Revert to
+    # `branches: [develop]` once the lane is verified green.
+    branches: [develop, feature/ios-testflight-ci]
+  workflow_dispatch:
 
 concurrency:
   group: release-ios
