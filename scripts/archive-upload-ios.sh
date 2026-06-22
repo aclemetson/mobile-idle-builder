@@ -119,16 +119,23 @@ cat export-archive.log
 
 if [ "$EXPORT_STATUS" -ne 0 ]; then
     echo "[ios] exportArchive failed with status $EXPORT_STATUS; dumping distribution logs:"
+    # standard.log only records the step pipeline; the raw App Store Connect API
+    # refusal lives in a sibling file (critical.log / *-error logs), so dump every
+    # file in the bundle.
     DIST_LOGS="$(grep -o '/var/folders/[^"]*\.xcdistributionlogs' export-archive.log | head -1 || true)"
-    if [ -n "$DIST_LOGS" ] && [ -f "$DIST_LOGS/IDEDistribution.standard.log" ]; then
-        echo "===== IDEDistribution.standard.log ($DIST_LOGS) ====="
-        cat "$DIST_LOGS/IDEDistribution.standard.log"
-        echo "===== end IDEDistribution.standard.log ====="
-    else
-        echo "[ios] Could not locate the log bundle; searching for any IDEDistribution.standard.log:"
-        find "${TMPDIR:-/var/folders}" -name 'IDEDistribution.standard.log' 2>/dev/null | while read -r f; do
+    if [ -n "$DIST_LOGS" ] && [ -d "$DIST_LOGS" ]; then
+        echo "[ios] Distribution log bundle: $DIST_LOGS"
+        find "$DIST_LOGS" -type f | while read -r f; do
             echo "===== $f ====="
             cat "$f"
+            echo
+        done
+    else
+        echo "[ios] Could not locate the .xcdistributionlogs bundle; searching TMPDIR:"
+        find "${TMPDIR:-/var/folders}" -path '*.xcdistributionlogs/*' -type f 2>/dev/null | while read -r f; do
+            echo "===== $f ====="
+            cat "$f"
+            echo
         done
     fi
     exit "$EXPORT_STATUS"
