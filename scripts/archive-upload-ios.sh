@@ -152,10 +152,24 @@ echo "[ios] Built $IPA"
 # by key id. It is the lightest built-in uploader; if Apple removes it, swap to
 # Transporter (iTMSTransporter) or fastlane pilot.
 echo "[ios] Uploading to TestFlight..."
+# altool has been observed to exit 0 even when App Store validation REJECTS the
+# build (e.g. a 409 "Missing app icon"), which would let this job report success
+# on a build that never reaches TestFlight. Capture the output and treat a
+# non-zero status OR a failure marker in the log as a hard failure so the lane
+# goes red. `tee` keeps the output visible in the run log; PIPESTATUS reads
+# altool's real exit code past the pipe.
+set +e
 xcrun altool --upload-app \
     --type ios \
     --file "$IPA" \
     --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-    --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+    --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" 2>&1 | tee upload.log
+UPLOAD_STATUS=${PIPESTATUS[0]}
+set -e
+
+if [ "$UPLOAD_STATUS" -ne 0 ] || grep -qiE "UPLOAD FAILED|Validation failed" upload.log; then
+    echo "[ios] TestFlight upload FAILED (altool status $UPLOAD_STATUS). See the errors above." >&2
+    exit 1
+fi
 
 echo "[ios] Upload complete."
