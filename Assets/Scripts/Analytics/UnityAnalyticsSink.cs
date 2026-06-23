@@ -55,5 +55,19 @@ namespace MobileIdleBuilder
             }
 #endif
         }
+
+        public void Flush()
+        {
+#if ANALYTICS
+            try
+            {
+                AnalyticsService.Instance.Flush();
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Warning($"[Telemetry] Flush failed: {ex.Message}");
+            }
+#endif
+        }
     }
 }

@@ -16,12 +16,15 @@ namespace MobileIdleBuilder.Tests
         class RecordingSink : IAnalyticsSink
         {
             public int StartCount;
+            public int FlushCount;
             public readonly List<(string name, IDictionary<string, object> p)> Events = new();
 
             public void StartCollection() => StartCount++;
 
             public void RecordEvent(string eventName, IDictionary<string, object> parameters)
                 => Events.Add((eventName, new Dictionary<string, object>(parameters)));
+
+            public void Flush() => FlushCount++;
 
             public IDictionary<string, object> First(string name) =>
                 Events.Find(e => e.name == name).p;
@@ -110,6 +113,22 @@ namespace MobileIdleBuilder.Tests
             var p = sink.First("megastructure_stage");
             Assert.IsNotNull(p);
             Assert.AreEqual(3, p["stage"]);
+        }
+
+        [Test]
+        public void DevForceStart_StartsCollection_AndFlushPassesThrough()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);          // inject before starting
+            _svc.DevForceStart();                   // dev path: starts without the flag
+            Assert.IsTrue(_svc.IsCollecting);
+            Assert.AreEqual(1, sink.StartCount);
+
+            _svc.RecordTier(2);                     // events now flow
+            Assert.IsNotNull(sink.First("tier_reached"));
+
+            _svc.Flush();
+            Assert.AreEqual(1, sink.FlushCount);
         }
     }
 }

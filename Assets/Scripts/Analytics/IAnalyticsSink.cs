@@ -18,5 +18,8 @@ namespace MobileIdleBuilder
         /// backend accepts (string, int, long, float, double, bool, DateTime). Must not throw.
         /// </summary>
         void RecordEvent(string eventName, IDictionary<string, object> parameters);
+
+        /// <summary>Force-upload buffered events now (events are otherwise batched). Must not throw.</summary>
+        void Flush();
     }
 }

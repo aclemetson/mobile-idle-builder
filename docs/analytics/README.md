@@ -26,6 +26,26 @@ A zero-cost, zero-server way to chart the balancing telemetry collected by `Tele
   - `building_placed` → building-type distribution.
 - Pure client-side (Chart.js + PapaParse from CDN). No keys, no data leaves your browser.
 
+## Smoke-testing all 6 events in the editor
+
+Three events (`tier_reached`, `megastructure_stage`, `prestige_completed`) are hard or impossible to
+trigger by normal play, so use the dev console (backtick `` ` `` to open, or shake on device):
+
+1. Register all 6 event schemas in the UGS dashboard first (see above / `docs/agents/analytics.md`) —
+   unregistered events are rejected as **invalid**.
+2. Enter Play mode and let GameScene load (the ECS world must exist for snapshots).
+3. Open the dev console and run **`analytics fire`**. It force-starts collection (so you don't even need
+   `analytics.enabled` set for the smoke test), sends one of each of the 6 events with sample data, and
+   **flushes** so they upload immediately instead of waiting for the batch interval.
+4. Run **`analytics status`** to confirm it's collecting and see the active phase.
+5. In the dashboard (**development** environment) → **Analytics → Event Manager**, watch each event's
+   "valid received (last 24h)" count rise. Any **invalid** count = a name/type mismatch in the schema.
+6. Then chart via Data Explorer, or export CSV and open `dashboard.html`.
+
+> The editor uses the `development` environment, so smoke-test data lands there, not in `production`.
+> Real (non-forced) collection still requires `analytics.enabled = true` — `analytics fire` only bypasses
+> the flag for this manual test.
+
 ## Notes
 - Custom events must be registered as schemas in the UGS dashboard before they show up (snake_case names +
   params — see the table in `docs/agents/analytics.md`).

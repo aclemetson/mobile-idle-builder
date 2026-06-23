@@ -57,6 +57,11 @@ spending entropy moves BaseCurrency→TotalEntropySpent without changing NetWort
 Unity Dashboard → Analytics → Data Explorer (free, built-in). For the custom charts, one-click **Export CSV**
 and open `docs/analytics/dashboard.html`. The metric→balancing-lever map is in `docs/analytics/data-dictionary.md`.
 
+## Editor smoke test
+Dev console (`DevConsoleController`, `#if UNITY_EDITOR || DEVELOPMENT_BUILD`) has **`analytics fire`** — force-starts
+collection (`TelemetryService.DevForceStart`, ignores the flag), sends all 6 events with sample data, and `Flush()`es
+so they upload immediately. **`analytics status`** reports collecting/phase. See `docs/analytics/README.md`.
+
 ## Out of scope (v1)
 - GDPR/consent gating + sampling/batching (needed before store-scale release).
 - Automated/live HTML feed (would need paid UGS Data Access or a second sink).

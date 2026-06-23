@@ -196,6 +196,9 @@ namespace MobileIdleBuilder
             _sink.RecordEvent("player_snapshot", p);
         }
 
+        /// <summary>Force-upload buffered events now (events are otherwise batched on an interval).</summary>
+        public void Flush() => _sink.Flush();
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         IDictionary<string, object> NewParams() => new Dictionary<string, object>
@@ -252,6 +255,30 @@ namespace MobileIdleBuilder
         }
 
         // ── Test seams ────────────────────────────────────────────────────────
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// Dev-only: force collection on with the live UGS sink, ignoring the analytics.enabled flag,
+        /// so the dev console can smoke-test event delivery without configuring Remote Config. No-op if
+        /// already collecting (e.g. the normal flag path already started it).
+        /// </summary>
+        public void DevForceStart()
+        {
+            if (_collecting) return;
+            _phase    = string.IsNullOrEmpty(FeatureFlags.AnalyticsPhase) ? "editor-test" : FeatureFlags.AnalyticsPhase;
+            _playerId = SaveManager.Instance?.Current?.playerId ?? "";
+            _sink.StartCollection();
+            _collecting = true;
+            _sessionStartTime = Time.realtimeSinceStartup;
+            _runStartTime     = _sessionStartTime;
+            StartCoroutine(SnapshotLoop());
+            GameLogger.Info($"[Telemetry] DEV force-start (phase='{_phase}').");
+        }
+
+        public string DevStatus() => _collecting
+            ? $"collecting — phase='{_phase}', player='{_playerId}'"
+            : "not collecting (analytics.enabled=false). 'analytics fire' will force-start.";
+#endif
 
 #if UNITY_EDITOR
         /// <summary>Inject a sink without starting collection (EditMode tests for the gating contract).</summary>
