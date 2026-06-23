@@ -49,10 +49,13 @@ namespace MobileIdleBuilder.PlayModeTests
         class FakeCloud : ICloudSaveService
         {
             public SaveData ToReturn;
-            public bool IsAvailable => true;
+            public bool Available = true;
+            public int PushCount;
+            public SaveData LastPushed;
+            public bool IsAvailable => Available;
             public Task InitializeAsync()                     => Task.CompletedTask;
             public Task<SaveData> FetchAsync(string playerId) => Task.FromResult(ToReturn);
-            public Task PushAsync(SaveData data)              => Task.CompletedTask;
+            public Task PushAsync(SaveData data)              { PushCount++; LastPushed = data; return Task.CompletedTask; }
             public Task DeleteAsync()                         => Task.CompletedTask;
         }
 
@@ -76,7 +79,61 @@ namespace MobileIdleBuilder.PlayModeTests
                 "Newer cloud save should replace local Current before ECS reads it");
         }
 
+        [Test]
+        public void OnApplicationPause_Backgrounded_PushesToCloud()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationPause", true);
+
+            Assert.AreEqual(1, cloud.PushCount, "Backgrounding should push the local save to cloud");
+            Assert.AreSame(sm.Current, cloud.LastPushed, "Should push the current SaveData");
+        }
+
+        [Test]
+        public void OnApplicationQuit_PushesToCloud()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationQuit");
+
+            Assert.AreEqual(1, cloud.PushCount, "Quitting should push the local save to cloud");
+        }
+
+        [Test]
+        public void OnApplicationQuit_CloudUnavailable_DoesNotPush()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud { Available = false };
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationQuit");
+
+            Assert.AreEqual(0, cloud.PushCount, "Must not push when cloud is unavailable (local stays source of truth)");
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        SaveManager NewSaveManager()
+        {
+            _go = new GameObject("SaveManager");
+            var sm = _go.AddComponent<SaveManager>();
+            RunAwake(sm);   // fresh new-game Current (no save file); creates the real cloud service
+            return sm;
+        }
+
+        static void InvokePrivate(MonoBehaviour mb, string name, params object[] args)
+        {
+            var m = mb.GetType().GetMethod(name,
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            Assert.IsNotNull(m, $"{name} not found on {mb.GetType().Name}");
+            m.Invoke(mb, args);
+        }
+
 
         // Synchronously drives a coroutine, recursing into nested yields. WaitUntil and other
         // CustomYieldInstructions implement IEnumerator (MoveNext returns keepWaiting), so they
