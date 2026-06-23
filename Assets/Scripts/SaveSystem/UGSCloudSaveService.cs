@@ -42,11 +42,7 @@ namespace MobileIdleBuilder
 
             try
             {
-#if UNITY_EDITOR || DEV_ENVIRONMENT
-                _env = "development";
-#else
-                _env = "production";
-#endif
+                _env = UgsEnvironment.Name;
                 // "com.unity.services.core.environment-name" is the internal key used by
                 // Unity.Services.Core.Environments.EnvironmentsOptionsExtensions.SetEnvironmentName.
                 var initOptions = new InitializationOptions().SetOption("com.unity.services.core.environment-name", _env);

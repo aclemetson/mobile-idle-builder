@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#import <GoogleSignIn/GIDSignIn.h>
-@interface GoogleSignInHandler
-    : NSObject <GIDSignInDelegate, GIDSignInUIDelegate>
 
-@end
+// Local bridge header for the Google Sign-In Unity plugin (iOS).
+//
+// The original 2017 plugin declared a GIDSignInDelegate/GIDSignInUIDelegate
+// handler here. The modern GoogleSignIn SDK (>= 6.x, integrated via CocoaPods) is
+// completion-handler based and needs no such delegate, so this header now only
+// pulls in the Unity app controller, which provides UnityGetGLViewController() --
+// used to present the sign-in sheet.
+#import <UnityAppController.h>
