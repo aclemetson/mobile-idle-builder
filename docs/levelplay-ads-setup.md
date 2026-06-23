@@ -27,9 +27,9 @@ functional gain. Do these steps when you are ready to ship ads.
   compiles against the installed SDK; **device builds use it, the Editor stays on the mock**.
 - The adapter is verified against the 9.4.1 API (`LevelPlay.Init(appKey)`,
   `new LevelPlayRewardedAd(adUnitId)`, `OnAdRewarded(info, reward)` / `OnAdClosed(info)` / `OnAdDisplayFailed(info, error)`).
-- **Only remaining code step:** paste the App Key + Rewarded Ad Unit ID per platform into
-  `LevelPlayAdProvider.cs` (the `REPLACE_WITH_*` constants). Until then, device builds init-fail gracefully
-  (Free Rewards buttons stay disabled); no crash.
+- **App Key + Rewarded Ad Unit ID per platform are wired** in `LevelPlayAdProvider.cs` (public client
+  identifiers — not secrets). Remaining go-live work is platform/store config: iOS ATT
+  (`NSUserTrackingUsageDescription` + `AdConsent`), SKAdNetwork ids, and store privacy forms (below).
 
 ## 1. Your identifiers — what goes where
 
