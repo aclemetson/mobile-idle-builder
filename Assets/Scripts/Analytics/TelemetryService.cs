@@ -186,6 +186,7 @@ namespace MobileIdleBuilder
             p["base_currency"]           = progress.BaseCurrency;
             p["entropy_per_sec"]         = entropyPerSec;
             p["prestige_currency"]       = prestige.PrestigeCurrency;
+            p["paid_currency"]           = save?.paidCurrency ?? 0L;
             p["prestige_count"]          = prestige.RunCount;
             p["building_count"]          = buildingCount;
             p["highest_tier"]            = progress.CurrentTier;

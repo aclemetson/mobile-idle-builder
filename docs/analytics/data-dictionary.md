@@ -20,6 +20,7 @@ so data from different collection windows stays separable).
 | Research path / bottleneck | `research_completed.research_id` sequence + `entropy_spent_total` | Which research is a bottleneck or skipped? | research costs & prerequisites |
 | Endgame reach | `megastructure_stage.stage`, `player_snapshot.megastructure_stage` | How far into the Dyson Sphere endgame do players get, and how fast? | megastructure contribution requirements |
 | Prestige re-engagement | `player_snapshot.prestige_count` distribution | Do players re-enter the prestige loop or stop after run 1? | prestige reward attractiveness, early-loop pacing |
+| Paid currency balance | `player_snapshot.paid_currency` | How much Crystals (◆) do players accumulate / hold unspent? | crystal sink pricing, achievement/IAP grant rates |
 | Spendable vs banked | `player_snapshot.base_currency` vs `entropy_per_sec` | Is currency piling up unspent (nothing to buy) or always starved? | sink pacing, cost ramps |
 
 ## Notes on derived fields
