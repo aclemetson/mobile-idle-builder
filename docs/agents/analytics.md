@@ -54,8 +54,17 @@ spending entropy moves BaseCurrency→TotalEntropySpent without changing NetWort
 `playtime_*_sec` are session-relative (`realtimeSinceStartup`), not lifetime totals.
 
 ## Reading the data
-Unity Dashboard → Analytics → Data Explorer (free, built-in). For the custom charts, one-click **Export CSV**
-and open `docs/analytics/dashboard.html`. The metric→balancing-lever map is in `docs/analytics/data-dictionary.md`.
+Two paths, split by what Data Explorer v2 can do:
+- **Data Explorer v2 (free, in-dashboard)** — measures are built-in metrics + **event counts**; custom
+  parameters are **dimensions/filters only — you cannot aggregate a parameter value**. So it's for
+  count-by-parameter distributions (building_id, research_id, stage, run_count, highest_tier), funnels, and
+  retention, segmented by `collection_phase`.
+- **CSV → `docs/analytics/dashboard.html`** — for the value curves Data Explorer can't produce (net worth per
+  run, `entropy_per_sec` over playtime, run-length, currency balances). One-click **Export CSV** from Data
+  Explorer (free dashboard export, not the paid Snowflake stream), then load it in the HTML page.
+
+The metric→balancing-lever map is in `docs/analytics/data-dictionary.md`; that doc also flags which metrics
+are Data-Explorer-native vs CSV-only.
 
 ## Editor smoke test
 Dev console (`DevConsoleController`, `#if UNITY_EDITOR || DEVELOPMENT_BUILD`) has **`analytics fire`** — force-starts

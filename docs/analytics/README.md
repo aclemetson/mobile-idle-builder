@@ -10,11 +10,32 @@ A zero-cost, zero-server way to chart the balancing telemetry collected by `Tele
    (`development` for editor/internal). Testers pick this up on their **next app launch**.
 2. **Play / let testers play.** Events stream to UGS Analytics (free up to 50k MAU; ~50 here). Dev-environment
    events appear in the dashboard within a few minutes.
-3. **Analyze in-dashboard (free):** Unity Dashboard → Analytics → **Data Explorer**. Build queries, segment by
-   `collection_phase`, view funnels/retention. This alone covers most balancing questions.
-4. **Custom charts (optional, free):** in Data Explorer, run a query and click **Export → CSV** (this is the
-   *free* dashboard export, **not** the paid Snowflake "Data Access" raw stream). Save it under
-   `docs/analytics/data/`, then open `dashboard.html` and load the CSV.
+3. **Distributions / engagement (free, in-dashboard):** Unity Dashboard → Analytics → **Data Explorer v2**.
+   See "What Data Explorer can and can't do" below — use it for event-count breakdowns, funnels, and
+   retention, segmented by `collection_phase`.
+4. **Value curves (free, CSV → local):** for the actual balancing curves (net worth per run, income rate,
+   run length, currency balances) Data Explorer **can't** help — export CSV (Data Explorer → **Export → CSV**,
+   the *free* dashboard export, **not** the paid Snowflake "Data Access" raw stream), save it under
+   `docs/analytics/data/`, then open `dashboard.html` and load it.
+
+## What Data Explorer v2 can and can't do
+
+Data Explorer's **measures** are built-in metrics (DAU/MAU, retention, sessions) **plus event counts**.
+Custom event **parameters can only be used as dimensions/filters — you cannot aggregate a parameter value**
+(no avg/sum/max of `networth_before`, `entropy_per_sec`, etc.).
+
+- **Good for** (count of an event, broken down by a *low-cardinality* parameter, optionally filtered by
+  `collection_phase`):
+  - `building_placed` count by `building_id` — building usage distribution
+  - `research_completed` count by `research_id` — what's researched / skipped
+  - `megastructure_stage` count by `stage` — endgame reach
+  - `prestige_completed` count by `run_count` — how far into prestige players get
+  - `player_snapshot` count by `highest_tier` or `prestige_count` — player-state distribution
+  - `prestige_completed` count by Day — prestige activity; plus built-in DAU/retention/sessions
+- **Not possible** (route to the CSV dashboard / Looker Studio / Sheets instead): average or trend of any
+  numeric value — net worth per run, prestige currency per run, `entropy_per_sec` over playtime, run-length,
+  `base_currency` / `paid_currency` balances. These are continuous, so they aren't aggregatable *and* are
+  useless as a dimension (every value is unique).
 
 ## Using `dashboard.html`
 

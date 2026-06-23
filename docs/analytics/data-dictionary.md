@@ -23,6 +23,19 @@ so data from different collection windows stays separable).
 | Paid currency balance | `player_snapshot.paid_currency` | How much Crystals (◆) do players accumulate / hold unspent? | crystal sink pricing, achievement/IAP grant rates |
 | Spendable vs banked | `player_snapshot.base_currency` vs `entropy_per_sec` | Is currency piling up unspent (nothing to buy) or always starved? | sink pacing, cost ramps |
 
+## Where to view each metric
+
+UGS Data Explorer v2 can only **count events** broken down by a **dimension**; it **cannot aggregate a
+parameter value** (no avg/sum of a number). So:
+
+- **Data-Explorer-native** (count of an event by a low-cardinality parameter): building usage (`building_id`),
+  research path (`research_id`), endgame reach (`stage`), prestige depth (`run_count`), tier/prestige-count
+  distribution from `player_snapshot`. Segment any of these by `collection_phase`.
+- **CSV-only** (value curves — export CSV → `dashboard.html`): everything whose signal is a numeric *value* or
+  trend — net worth per run, prestige currency per run, `entropy_per_sec` over playtime, run length,
+  `base_currency` / `paid_currency` balances. These are continuous, so Data Explorer can neither aggregate nor
+  meaningfully group by them.
+
 ## Notes on derived fields
 
 - **`entropy_per_sec`** is *NetWorth growth per second* over the snapshot interval, not a raw production
