@@ -87,6 +87,10 @@ functional gain. Do these steps when you are ready to ship ads.
   `true`; flip to `false` as an instant kill-switch). See `docs/agents/feature-flags.md`.
 - Build to a device with LevelPlay **test mode / test devices** enabled and verify each placement grants:
   Entropy Boost, +50% Idle, Production Surge, Time Warp, Crystal Drop, and the idle-return "Double".
+- **Test Suite (no advertising IDs needed):** make a **Development Build** (Build Settings → Development
+  Build → `Debug.isDebugBuild`), launch on device, open **Free Rewards → "Launch Ad Test Suite"**. The SDK
+  opts in via `SetMetaData("is_test_suite","enable")` and `LevelPlay.LaunchTestSuite()`, both gated to dev
+  builds (never in release). Pick the Rewarded ad unit / ironSource network → Load → Show a test ad.
 
 ## Reward / cap reference
 
