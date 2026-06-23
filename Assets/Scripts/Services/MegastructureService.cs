@@ -160,7 +160,11 @@ namespace MobileIdleBuilder
             FlushToSave(SaveManager.Instance?.Current);
             SaveManager.Instance?.SaveLocal();
             OnChanged?.Invoke();
-            if (completed) OnStageCompleted?.Invoke(stage);
+            if (completed)
+            {
+                OnStageCompleted?.Invoke(stage);
+                TelemetryService.Instance?.RecordMegastructureStage(SaveManager.Instance?.Current?.megastructureStage ?? 0);
+            }
             return qty;
         }
 

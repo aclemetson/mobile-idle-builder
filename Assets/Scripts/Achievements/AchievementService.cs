@@ -181,6 +181,7 @@ namespace MobileIdleBuilder
         {
             Evaluate(AchievementTrigger.PlaceBuilding, buildingType, delta: 1);
             DailyEventService.Instance?.NotifyBuildingPlaced(buildingType);
+            TelemetryService.Instance?.RecordBuildingPlaced(buildingType);
         }
 
         /// <summary>Call when the player completes a research project.</summary>
@@ -188,11 +189,15 @@ namespace MobileIdleBuilder
         {
             Evaluate(AchievementTrigger.CompleteResearch, researchId, delta: 1);
             DailyEventService.Instance?.NotifyResearchCompleted(researchId);
+            TelemetryService.Instance?.RecordResearch(researchId);
         }
 
         /// <summary>Call when the player reaches a new tier (pass the absolute tier number).</summary>
-        public void NotifyTierReached(int tier) =>
+        public void NotifyTierReached(int tier)
+        {
             Evaluate(AchievementTrigger.ReachTier, tier.ToString(), delta: tier, absolute: true);
+            TelemetryService.Instance?.RecordTier(tier);
+        }
 
         /// <summary>Call when the player completes a prestige.</summary>
         public void NotifyPrestige() =>
