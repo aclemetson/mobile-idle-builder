@@ -88,6 +88,7 @@ namespace MobileIdleBuilder
                 PlayerPrefs.SetString(BackgroundTimestampKey, DateTime.UtcNow.ToString("o"));
                 PlayerPrefs.Save();
                 SaveLocal();
+                PushToCloudBestEffort();
             }
             else
             {
@@ -98,6 +99,21 @@ namespace MobileIdleBuilder
         void OnApplicationQuit()
         {
             SaveLocal();
+            PushToCloudBestEffort();
+        }
+
+        // Fire-and-forget cloud push for lifecycle events (background / quit). A frame-based
+        // coroutine (SaveToCloud) can't be used here because the Unity player loop is suspended
+        // once the app is backgrounded — its WaitUntil would never pump. PushAsync serializes
+        // the SaveData synchronously before its first await, so the snapshot is captured now;
+        // the network write then proceeds on whatever background grace window the OS grants.
+        // Best-effort by design: local save (above) remains the source of truth, and the next
+        // cold start's reconcile pulls cloud if it happens to be newer.
+        void PushToCloudBestEffort()
+        {
+            if (_cloud == null || !_cloud.IsAvailable) return;
+            if (!FeatureFlags.CloudSaveEnabled) return;   // honor the cloud-save kill-switch
+            _ = _cloud.PushAsync(_current);
         }
 
         // Called when the app returns from background (OnApplicationPause(false)).
