@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         // ── Keys ──────────────────────────────────────────────────────────────
         public const string PvpEnabledKey         = "pvp.enabled";
         public const string IapEnabledKey         = "iap.enabled";
+        public const string AdsEnabledKey         = "ads.enabled";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
         public const string DailyEventsEnabledKey = "dailyevents.enabled";
         public const string MaintenanceEnabledKey = "maintenance.enabled";
@@ -38,6 +39,7 @@ namespace MobileIdleBuilder
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
         public const bool PvpEnabledDefault         = false; // server backend not live yet
         public const bool IapEnabledDefault         = true;
+        public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
         public const bool CloudSaveEnabledDefault   = true;
         public const bool DailyEventsEnabledDefault = true;
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
@@ -51,6 +53,7 @@ namespace MobileIdleBuilder
         {
             new FlagDef(PvpEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
+            new FlagDef(AdsEnabledKey,         FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
             new FlagDef(DailyEventsEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
@@ -63,6 +66,7 @@ namespace MobileIdleBuilder
         // ── Typed accessors ───────────────────────────────────────────────────
         public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
+        public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
         public static bool CloudSaveEnabled   => GetBool(CloudSaveEnabledKey,   CloudSaveEnabledDefault);
         public static bool DailyEventsEnabled => GetBool(DailyEventsEnabledKey, DailyEventsEnabledDefault);
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);

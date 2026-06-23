@@ -22,6 +22,19 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 
 **Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 3 daily challenges (15◆ each), daily achievements (2/3/3/6/10 + 15 on full clear), weekly/monthly achievements, one-time progression. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr); daily achievements are kept low to avoid double-paying the daily challenges for the same actions.
 
+**Rewarded ads (free, opt-in — `AdRewardCalculator.Placements`):** watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Gated by `ads.enabled`; ships on a mock provider until LevelPlay is wired (`docs/levelplay-ads-setup.md`).
+
+| Placement | Reward | Daily cap |
+|---|---|---|
+| Entropy Boost | 10% of net worth (floor 500e) | 5 |
+| Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
+| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`, applied in `OfflineCollectionService.GetAdIdleMultiplier`) | 3 |
+| Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
+| Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
+| Crystal Drop | +25◆ | 1 |
+
+Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
+
 ## Core formulas
 
 - **Prestige wall** (when prestige unlocks): `netWorth ≥ prestige_base_value × prestige_wall_multiplier` = 5,000 × 10 = **50,000e net worth**.

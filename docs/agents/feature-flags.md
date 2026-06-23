@@ -40,6 +40,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 |---|---|---|---|
 | `pvp.enabled` | bool | `false` | `PVPService.RefreshState` forces Locked; HUD hides `btn-pvp`. Default off — backend not live. |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
+| `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/levelplay-ads-setup.md`). |
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
@@ -79,7 +80,6 @@ relevant compile-time default (e.g. a `GameConfigSO` value) as the fallback.
 
 Candidates surfaced by the codebase audit — add when the feature lands:
 
-- `ads.enabled` — rewarded video (`AdService`, future).
 - `events.enabled` / seasonal content — extends `DailyEventService`.
 - `megastructure.enabled`, `multisite.enabled`, `achievements.enabled` — kill-switches for shipped systems.
 - `managers.rarity.enabled` — gacha/rarity layer over `ManagerService`.

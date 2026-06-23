@@ -878,6 +878,27 @@ Expanded Vault    (standalone — no prerequisites)</pre>
     Crystals awarded via <code>PremiumShopService.AwardCrystals(amount)</code> → writes to <code>SaveData.paidCurrency</code> and <code>SaveData.crystalsPurchased</code> (lifetime audit).</small></p>
   </div>
 
+  <div class="phase" id="rewarded-ads-phase">
+    <div class="phase-header" style="border-left:4px solid #4dd0a8;background:#06231d;">
+      <h2>▶ Rewarded Ads (free, opt-in)</h2>
+      <p>Watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Placement table lives in <code>AdRewardCalculator.Placements</code>; reward delivery is orchestrated by <code>AdService</code>.</p>
+    </div>
+    <table>
+      <thead><tr><th>Placement</th><th>Reward</th><th>Daily cap</th></tr></thead>
+      <tbody>
+        <tr><td>Entropy Boost</td><td>10% of net worth (floor 500e)</td><td>5</td></tr>
+        <tr><td>Double Offline</td><td>re-grants the just-collected idle run (offered on the idle-return modal)</td><td>3</td></tr>
+        <tr><td>+50% Idle</td><td>offline collection rate ×1.5 for 4h</td><td>3</td></tr>
+        <tr><td>Production Surge</td><td>2× production for 30 min</td><td>2</td></tr>
+        <tr><td>Time Warp</td><td>instantly bank 1h of production</td><td>2</td></tr>
+        <tr><td>Crystal Drop</td><td>+25◆</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Kill-switch:</strong> the <code>ads.enabled</code> Remote Config flag (<code>FeatureFlags.AdsEnabled</code>). When off, <code>AdService</code> never initialises the provider, the Free Rewards nav button (<code>btn-rewards</code>) is hidden, and the idle-return "Double (Watch Ad)" button is suppressed. Takes effect on the next launch (flags resolve from cache when the HUD is built).</p>
+    <p><small>Counters reset at 00:00 UTC (<code>SaveData.adWatchCounts</code> / <code>adWatchResetUtc</code>), same pattern as daily challenges.
+    Ships on <code>MockAdProvider</code> until the LevelPlay SDK is wired (see <code>docs/levelplay-ads-setup.md</code>); the full reward/cap flow is live regardless of provider.</small></p>
+  </div>
+
 </div>
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 

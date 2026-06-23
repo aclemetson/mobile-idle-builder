@@ -44,6 +44,11 @@ namespace MobileIdleBuilder
         public List<string> dailyChallengeIds                       = new(); // today's 3 challenge ids
         public List<AchievementProgressEntry> dailyChallengeProgress = new(); // per-challenge accumulated progress
         public List<string> dailyChallengesClaimed                  = new(); // challenge ids already claimed today
+        // Rewarded ads — opt-in video rewards with per-placement daily caps. Survive prestige
+        // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
+        public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
+        public string adWatchResetUtc;                                       // ISO 8601 — when adWatchCounts were last zeroed (00:00 UTC)
+        public string adsIdleBoostExpiryUtc;                                 // ISO 8601 — null/empty = no active +50% idle-rate boost
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared

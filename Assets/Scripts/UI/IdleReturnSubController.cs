@@ -12,29 +12,39 @@ namespace MobileIdleBuilder
     /// </summary>
     public class IdleReturnSubController : MonoBehaviour
     {
+        private HUDController _hud;
         private VisualElement _modal;
         private Label         _timeLabel;
         private Label         _maxLabel;
         private VisualElement _itemList;
         private Label         _entropyLabel;
         private Button        _claimBtn;
+        private Button        _doubleBtn;
 
-        public void Init(VisualElement root)
+        // The result currently displayed, stashed so the "Double (Watch Ad)" reward can re-grant it.
+        private IdleCollectionResult _pendingResult;
+
+        public void Init(VisualElement root, HUDController hud)
         {
+            _hud          = hud;
             _modal        = root.Q("idle-return-modal");
             _timeLabel    = root.Q<Label>("idle-return-time");
             _maxLabel     = root.Q<Label>("idle-return-max");
             _itemList     = root.Q("idle-return-item-list");
             _entropyLabel = root.Q<Label>("idle-return-entropy");
             _claimBtn     = root.Q<Button>("btn-idle-return-claim");
+            _doubleBtn    = root.Q<Button>("btn-idle-return-double");
 
             if (_claimBtn != null)
                 _claimBtn.clicked += Hide;
+            if (_doubleBtn != null)
+                _doubleBtn.clicked += OnDoublePressed;
         }
 
         public void Show(IdleCollectionResult result)
         {
             if (_modal == null || result == null) return;
+            _pendingResult = result;
 
             // Time-away header
             bool wasCapped = result.CappedSeconds < result.ElapsedSeconds - 1f;
@@ -81,12 +91,50 @@ namespace MobileIdleBuilder
                 }
             }
 
+            UpdateDoubleButton(result);
             _modal.RemoveFromClassList("hidden");
+        }
+
+        /// <summary>Shows the "double your offline earnings" ad button only when it can be watched and
+        /// there is something to double.</summary>
+        private void UpdateDoubleButton(IdleCollectionResult result)
+        {
+            if (_doubleBtn == null) return;
+
+            bool offerable = result.HasAnyOutput
+                          && AdService.Instance != null
+                          && AdService.Instance.CanWatch(AdPlacement.DoubleOffline);
+
+            _doubleBtn.text = "▶ Double (Watch Ad)";
+            _doubleBtn.SetEnabled(true);
+            if (offerable) _doubleBtn.RemoveFromClassList("hidden");
+            else           _doubleBtn.AddToClassList("hidden");
+        }
+
+        private void OnDoublePressed()
+        {
+            var ads = AdService.Instance;
+            if (ads == null || _pendingResult == null) return;
+
+            ads.ShowDoubleOffline(_pendingResult, result =>
+            {
+                if (result.Granted)
+                {
+                    _doubleBtn.text = "Doubled!";
+                    _doubleBtn.SetEnabled(false);
+                    _hud?.ShowNotification("🎬", "Offline earnings doubled!");
+                }
+                else if (!string.IsNullOrEmpty(result.Message))
+                {
+                    _hud?.ShowNotification("▶", result.Message);
+                }
+            });
         }
 
         private void Hide()
         {
             _modal?.AddToClassList("hidden");
+            _pendingResult = null;
         }
 
         // ── Number formatting ─────────────────────────────────────────────────
