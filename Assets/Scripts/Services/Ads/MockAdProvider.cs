@@ -30,5 +30,8 @@ namespace MobileIdleBuilder
             GameLogger.Debug($"[Ads] MockAdProvider.ShowRewarded -> earned={GrantReward}");
             onClosed?.Invoke(GrantReward);
         }
+
+        public void LaunchTestSuite() =>
+            GameLogger.Info("[Ads] Test Suite is only available on a device build with the LevelPlay SDK.");
     }
 }

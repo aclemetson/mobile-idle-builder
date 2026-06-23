@@ -27,5 +27,11 @@ namespace MobileIdleBuilder
         /// reward is earned, or <c>false</c> if the ad was dismissed early, failed, or none was ready.
         /// </summary>
         void ShowRewarded(Action<bool> onClosed);
+
+        /// <summary>
+        /// Opens the network's integration test suite (development builds only). Real providers show a
+        /// native screen for loading/showing test ads per network; the mock no-ops.
+        /// </summary>
+        void LaunchTestSuite();
     }
 }

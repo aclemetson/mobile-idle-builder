@@ -43,6 +43,16 @@ namespace MobileIdleBuilder
             if (_rows == null) return;
             _rows.Clear();
 
+            // Development-only: open the LevelPlay Test Suite to verify mediation on a device without
+            // registering advertising IDs. Never present in a release build.
+            if (UnityEngine.Debug.isDebugBuild)
+            {
+                var testBtn = new Button { text = "🧪 Launch Ad Test Suite" };
+                testBtn.AddToClassList("craft-btn");
+                testBtn.clicked += () => AdService.Instance?.LaunchTestSuite();
+                _rows.Add(testBtn);
+            }
+
             var ads = AdService.Instance;
             if (_info != null)
             {

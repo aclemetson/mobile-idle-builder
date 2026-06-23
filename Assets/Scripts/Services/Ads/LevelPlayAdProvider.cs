@@ -47,6 +47,11 @@ namespace MobileIdleBuilder
             // iOS App Tracking Transparency must be requested before SDK init on iOS 14+.
             await AdConsent.RequestIfNeededAsync();
 
+            // Development builds opt into the LevelPlay Test Suite (must be set before Init). Never enabled
+            // in a release build, so production players can't reach it.
+            if (UnityEngine.Debug.isDebugBuild)
+                LevelPlay.SetMetaData("is_test_suite", "enable");
+
             var tcs = new TaskCompletionSource<bool>();
             LevelPlay.OnInitSuccess += _ => tcs.TrySetResult(true);
             LevelPlay.OnInitFailed  += err => { GameLogger.Warning($"[Ads] LevelPlay init failed: {err}"); tcs.TrySetResult(false); };
@@ -61,6 +66,8 @@ namespace MobileIdleBuilder
         }
 
         public void LoadRewarded() => _rewarded?.LoadAd();
+
+        public void LaunchTestSuite() => LevelPlay.LaunchTestSuite();
 
         public void ShowRewarded(Action<bool> onClosed)
         {

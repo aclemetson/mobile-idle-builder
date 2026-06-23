@@ -88,6 +88,17 @@ namespace MobileIdleBuilder
             _initStarted = true;
         }
 
+        /// <summary>
+        /// Opens the ad network's integration Test Suite (development builds only — the provider only
+        /// enables it under Debug.isDebugBuild). Use it on a device to load/show test rewarded ads and
+        /// verify mediation without registering advertising IDs.
+        /// </summary>
+        public void LaunchTestSuite()
+        {
+            EnsureProvider();
+            _provider?.LaunchTestSuite();
+        }
+
         // ── Public query API (for the UI) ─────────────────────────────────────
 
         /// <summary>True when ads are enabled and a rewarded ad can currently be shown.</summary>
