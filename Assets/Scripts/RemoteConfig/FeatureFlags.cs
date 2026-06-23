@@ -32,6 +32,8 @@ namespace MobileIdleBuilder
         public const string MaintenanceEnabledKey = "maintenance.enabled";
         public const string MaintenanceMessageKey = "maintenance.message";
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
+        public const string AnalyticsEnabledKey    = "analytics.enabled";
+        public const string AnalyticsPhaseKey      = "analytics.phase";
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
@@ -43,6 +45,8 @@ namespace MobileIdleBuilder
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
         public const string MaintenanceMessageDefault = "We're performing scheduled maintenance. Please check back soon.";
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
+        public const bool   AnalyticsEnabledDefault  = false;     // opt-in: telemetry stays off until a collection phase is opened
+        public const string AnalyticsPhaseDefault    = "default"; // label stamped on every event so phases are segmentable
 
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
@@ -55,6 +59,8 @@ namespace MobileIdleBuilder
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceMessageKey, FlagType.String),
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
+            new FlagDef(AnalyticsEnabledKey,   FlagType.Bool),
+            new FlagDef(AnalyticsPhaseKey,     FlagType.String),
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
@@ -66,6 +72,8 @@ namespace MobileIdleBuilder
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
         public static string MaintenanceMessage  => GetString(MaintenanceMessageKey,  MaintenanceMessageDefault);
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);
+        public static bool   AnalyticsEnabled => GetBool(AnalyticsEnabledKey, AnalyticsEnabledDefault);
+        public static string AnalyticsPhase   => GetString(AnalyticsPhaseKey,  AnalyticsPhaseDefault);
 
         static bool GetBool(string key, bool fallback)
         {

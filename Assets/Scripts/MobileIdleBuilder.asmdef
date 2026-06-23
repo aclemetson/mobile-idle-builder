@@ -13,6 +13,7 @@
         "Unity.Services.Core",
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
+        "Unity.Services.Analytics",
         "Unity.Purchasing",
         "Unity.Services.RemoteConfig",
         "Unity.LevelPlay"
@@ -34,6 +35,11 @@
             "name": "com.unity.remote-config",
             "expression": "",
             "define": "REMOTE_CONFIG"
+        },
+        {
+            "name": "com.unity.services.analytics",
+            "expression": "",
+            "define": "ANALYTICS"
         },
         {
             "name": "com.unity.services.levelplay",
