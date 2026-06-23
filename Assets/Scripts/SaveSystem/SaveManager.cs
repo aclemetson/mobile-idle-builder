@@ -76,6 +76,13 @@ namespace MobileIdleBuilder
         {
             yield return ReconcileWithCloud();
             CloudReconcileDone = true;
+
+            // Telemetry starts after reconcile so UGS auth + Remote Config flags are ready and
+            // _current.playerId has been synced to the UGS id. Placed here (not inside
+            // ReconcileWithCloud) so it runs on every exit path, including when the cloud-save
+            // kill-switch is off — analytics is independent of cloud save. No-op unless the
+            // analytics.enabled flag is true.
+            TelemetryService.Instance?.StartIfEnabled();
         }
 
         void OnApplicationPause(bool paused)

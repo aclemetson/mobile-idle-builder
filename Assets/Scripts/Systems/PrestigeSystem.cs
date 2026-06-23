@@ -37,6 +37,10 @@ namespace MobileIdleBuilder
 
             var prestige = SystemAPI.GetSingleton<PrestigeData>();
 
+            // Capture pre-reset values for telemetry before the reset below zeroes them.
+            float netWorthBefore = progress.NetWorth;
+            int   tierBefore     = progress.CurrentTier;
+
             // --- Calculate prestige currency earned ---
             // Formula: floor(max(0, log10(netWorth / prestigeBase) × prestigeScale))
             var cfg    = GameBootstrap.Instance?.gameConfig;
@@ -75,10 +79,12 @@ namespace MobileIdleBuilder
             SystemAPI.SetSingleton(progress);
 
             // --- Destroy all building entities (but keep permanent fixtures like Maxwell's Demon) ---
+            int buildingCount = 0;
             var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
             foreach (var (_, entity) in
                 SystemAPI.Query<RefRO<BuildingData>>().WithNone<EntropySinkTag>().WithEntityAccess())
             {
+                buildingCount++;
                 ecb.DestroyEntity(entity);
             }
 
@@ -92,6 +98,10 @@ namespace MobileIdleBuilder
             // --- Notify achievements (system is not Burst-compiled, so managed calls are safe) ---
             AchievementService.Instance?.NotifyPrestigeCurrencyEarned(earned);
             AchievementService.Instance?.NotifyPrestige();
+
+            // --- Telemetry: rich prestige event with pre-reset scale data ---
+            TelemetryService.Instance?.RecordPrestige(prestige.RunCount, netWorthBefore, earned,
+                                                      buildingCount, tierBefore);
 
             // --- Reset managed services ---
             ResearchService.Instance?.ResetAll();
