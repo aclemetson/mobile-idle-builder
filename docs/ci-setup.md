@@ -10,8 +10,14 @@ The pipeline maps each branch to a Google Play track:
 |--------------|----------|----------------|
 | Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
 | PR merged **into** `release/**` | `release-internal.yml` | `.aab` → Google Play **internal** |
+| Push to `develop` (i.e. a `release/**` merged down) | `release-ios.yml` | `.ipa` → **TestFlight** |
 | `release/**` merged into `develop` | `bump-version.yml` | bump minor version on `develop` |
 | Manual (`workflow_dispatch`) | `prod-release.yml` | `.aab` → Google Play **production** (draft) — *future, parked* |
+
+iOS builds far less often than Android on purpose: Android ships to its internal track on
+every merge into `release/**`, while iOS ships to TestFlight only when a release branch is
+merged down into `develop` (roughly once per release cycle). They build from points one
+merge apart, but it is the same code.
 
 Tests and the version-code guard run **once**, as required checks on the PR (`pr-tests.yml`)
 before the merge is allowed. The merge then triggers `release-internal.yml`, which only
@@ -146,7 +152,73 @@ Add to GitHub Secrets:
 
 This same service account is used by both the internal upload and the version-code guard.
 
-## 5. GitHub Actions Permissions
+## 5. iOS / TestFlight
+
+The iOS lane (`release-ios.yml`) runs on **GitHub-hosted** runners (not the self-hosted
+Windows machine -- iOS archiving requires macOS). To keep the expensive macOS minutes
+small, it splits the work, following GameCI's recommended iOS flow:
+
+1. **`build` (ubuntu-latest)** -- `game-ci/unity-builder@v4` generates the Xcode project.
+   Unity activation works here via the Docker image (Personal license). Output is uploaded
+   as the `ios-xcode-project` artifact.
+2. **`release` (macos-latest)** -- downloads the artifact and runs
+   `scripts/archive-upload-ios.sh`: `xcodebuild archive` + `-exportArchive` +
+   `xcrun altool --upload-app` to TestFlight. Signing is **automatic / cloud-managed**
+   via an App Store Connect API key (`-allowProvisioningUpdates`) -- no `.p12` or
+   provisioning profile to manage.
+
+> Cost note: macOS minutes bill at a **10x** multiplier. Triggering only on `develop`
+> keeps this to ~once per release. The Library cache + the Ubuntu/macOS split keep each
+> run modest, but this lane is not $0 like Android.
+
+### Build number
+
+`BuildScript.BuildIOS()` sets `CFBundleVersion` from the existing
+`AndroidBundleVersionCode`, so one monotonic counter feeds both stores. There is no
+separate pre-merge iOS guard; TestFlight rejecting a duplicate build number is the
+backstop (the same role the Play upload plays for Android).
+
+### One-time Unity license (`.ulf`) for game-ci
+
+The hosted Ubuntu runner is not pre-activated, so game-ci needs a Personal license file:
+
+1. Add a temporary workflow step (or run the `game-ci/unity-request-activation-file@v2`
+   action) to produce a `Unity_v6000.x.alf` file; download it from the run artifacts.
+2. Go to <https://license.unity3d.com/manual>, upload the `.alf`, and download the
+   returned `Unity_v6000.x.ulf`.
+3. Paste the **entire contents** of the `.ulf` into the `UNITY_LICENSE` secret.
+4. Also set `UNITY_EMAIL` and `UNITY_PASSWORD` (your Unity ID) -- game-ci Personal needs
+   all three.
+
+### Apple-side setup (one-time)
+
+In the **Apple Developer** portal:
+1. Register the App ID `com.clemtek.mobileidlebuilder` (Identifiers) and enable the
+   **In-App Purchase** capability (plus any other capability the app uses).
+2. Note your **Team ID** (Membership) -> store it as the `APPLE_TEAM_ID` repo *variable*.
+
+In **App Store Connect**:
+3. Create the app (My Apps -> +) against that bundle ID.
+4. Create an **App Store Connect API key** (Users and Access -> Integrations -> App Store
+   Connect API) with the **App Manager** role. Download the `.p8` (one-time) and note the
+   **Key ID** and **Issuer ID**.
+5. TestFlight -> Internal Testing: add internal testers (no Beta App Review required).
+6. For IAP testing: sign the Paid Apps agreement, create the IAP products, and add a
+   Sandbox tester.
+
+### iOS GitHub secrets / variables
+
+| Name | Kind | Source |
+|------|------|--------|
+| `UNITY_LICENSE` | secret | contents of the `.ulf` (steps above) |
+| `UNITY_EMAIL` | secret | Unity ID email |
+| `UNITY_PASSWORD` | secret | Unity ID password |
+| `APP_STORE_CONNECT_KEY_ID` | secret | ASC API Key ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | secret | ASC API Issuer ID |
+| `APP_STORE_CONNECT_API_KEY_P8` | secret | base64 of the `.p8` (`base64 -i AuthKey_XXX.p8 \| pbcopy`) |
+| `APPLE_TEAM_ID` | **variable** | Apple Developer Team ID |
+
+## 6. GitHub Actions Permissions
 
 Ensure the repo allows Actions to create tags, releases, and the version bump commit:
 - Settings → Actions → General → Workflow permissions → **Read and write permissions**
@@ -160,6 +232,13 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | builds |
 | `ANDROID_KEY_PASS` | key password | builds |
 | `GOOGLE_PLAY_JSON_KEY` | GCP service account JSON | internal upload + version guard + prod (future) |
+| `UNITY_LICENSE` | contents of the `.ulf` | iOS build (game-ci activation) |
+| `UNITY_EMAIL` | Unity ID email | iOS build (game-ci activation) |
+| `UNITY_PASSWORD` | Unity ID password | iOS build (game-ci activation) |
+| `APP_STORE_CONNECT_KEY_ID` | ASC API Key ID | iOS archive + TestFlight upload |
+| `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
+| `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
+| `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
 
 ## Local Testing
 
