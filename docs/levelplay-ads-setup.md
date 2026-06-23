@@ -19,35 +19,41 @@ functional gain. Do these steps when you are ready to ship ads.
 - Kill-switch: the `ads.enabled` Remote Config flag (`FeatureFlags.AdsEnabled`). Off ⇒ provider never
   initialises and the Free Rewards nav button is hidden.
 
-## 1. LevelPlay dashboard
+## 0. Status — already wired
 
-1. Create / open the app in the [LevelPlay (ironSource) dashboard](https://platform.ironsrc.com/).
-2. Add **two app entries** — one Android, one iOS — and copy each **App Key**.
-3. Create a **Rewarded Video** ad unit for each platform; copy each **Ad Unit ID**.
-4. (Optional, recommended) add mediation networks later; not required for first launch.
-5. Put the keys/IDs into `LevelPlayAdProvider.cs` (the `REPLACE_WITH_*` constants), or better, load them
-   from a config asset / Remote Config so they are not hard-coded.
+- The **`com.unity.services.levelplay` 9.4.1** package is already in `Packages/manifest.json`.
+- `MobileIdleBuilder.asmdef` references `Unity.LevelPlay` and auto-defines **`LEVELPLAY_ADS`** via a
+  versionDefine (same package→define pattern as `UNITY_PURCHASING`). So `LevelPlayAdProvider` already
+  compiles against the installed SDK; **device builds use it, the Editor stays on the mock**.
+- The adapter is verified against the 9.4.1 API (`LevelPlay.Init(appKey)`,
+  `new LevelPlayRewardedAd(adUnitId)`, `OnAdRewarded(info, reward)` / `OnAdClosed(info)` / `OnAdDisplayFailed(info, error)`).
+- **Only remaining code step:** paste the App Key + Rewarded Ad Unit ID per platform into
+  `LevelPlayAdProvider.cs` (the `REPLACE_WITH_*` constants). Until then, device builds init-fail gracefully
+  (Free Rewards buttons stay disabled); no crash.
 
-## 2. Add the SDK package
+## 1. Your identifiers — what goes where
 
-In `Packages/manifest.json` add:
+> The numeric **Unity Ads Game IDs** are NOT what the SDK init takes. `LevelPlay.Init` needs the
+> alphanumeric **App Key**. The Game IDs configure the Unity Ads *network adapter* in the dashboard.
 
-```json
-"com.unity.services.levelplay": "8.x.x"
-```
+| You have | Type | Where it goes |
+|---|---|---|
+| Org Core ID `4327788` | Unity org id | Account-level only; not used in code or per-app config. |
+| iOS Game ID `6141453` | Unity Ads Game ID | LevelPlay **dashboard** → SDK Networks → Unity Ads (LevelPlay) adapter, iOS app. |
+| Android Game ID `6141452` | Unity Ads Game ID | LevelPlay **dashboard** → SDK Networks → Unity Ads (LevelPlay) adapter, Android app. |
+| **App Key** (Android + iOS) | LevelPlay app key | **Code** — `LevelPlayAdProvider.AppKey`. Find it in **Project Settings → LevelPlay → Apps** ("AppKey: ...") or the dashboard per app. |
+| **Rewarded Ad Unit ID** (Android + iOS) | LevelPlay ad unit | **Code** — `LevelPlayAdProvider.RewardedAdUnit`. Create a **Rewarded** ad unit per platform in the dashboard. |
 
-(Use the latest verified version. After import, run any **Force Resolve** the package prompts for and
-verify the Android External Dependency Manager resolves Google Play services.)
+## 2. Dashboard setup
 
-## 3. Enable the integration
-
-Add `LEVELPLAY_ADS` to **Scripting Define Symbols** for Android and iOS
-(`Project Settings → Player → Other Settings → Scripting Define Symbols`, or via the build script).
-With the define set, device builds use `LevelPlayAdProvider`; the Editor stays on the mock.
-
-Then verify the API calls in `LevelPlayAdProvider.cs` against the installed SDK version — class/method
-names (`LevelPlay.Init`, `LevelPlayRewardedAd`, the event names) can change between major versions. The
-structure (init → load → readiness → show-with-result-callback) must not change; AdService depends on it.
+1. In the [LevelPlay dashboard](https://platform.ironsrc.com/), confirm the **Android and iOS app**
+   entries exist (each has an **App Key**).
+2. Under **SDK Networks / Mediation**, add **Unity Ads (LevelPlay)** as a network and enter your **Game
+   IDs** (Android `6141452`, iOS `6141453`) so LevelPlay can serve Unity Ads. Add other networks later for
+   more fill.
+3. Create a **Rewarded Video** ad unit per platform → copy each **Ad Unit ID**.
+4. After any package/network change, run the LevelPlay **Integration Manager** in the Editor and any
+   **Force Resolve** the Android External Dependency Manager prompts for.
 
 ## 4. Android
 

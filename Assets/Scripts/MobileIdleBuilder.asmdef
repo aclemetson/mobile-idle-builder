@@ -14,7 +14,8 @@
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
         "Unity.Purchasing",
-        "Unity.Services.RemoteConfig"
+        "Unity.Services.RemoteConfig",
+        "Unity.LevelPlay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -33,6 +34,11 @@
             "name": "com.unity.remote-config",
             "expression": "",
             "define": "REMOTE_CONFIG"
+        },
+        {
+            "name": "com.unity.services.levelplay",
+            "expression": "",
+            "define": "LEVELPLAY_ADS"
         }
     ],
     "noEngineReferences": false

@@ -22,7 +22,11 @@ namespace MobileIdleBuilder
     /// </summary>
     public class LevelPlayAdProvider : IAdProvider
     {
-        // TODO(go-live): replace with the real values from the LevelPlay dashboard (per platform).
+        // TODO(go-live): paste the two LevelPlay values per platform. IMPORTANT: AppKey is the LevelPlay
+        // *App Key* (alphanumeric, shown as "AppKey: ..." in Project Settings > LevelPlay > Apps, or in
+        // the dashboard) — NOT the numeric Unity Ads Game ID. The Unity Ads Game IDs / Org Core ID go in
+        // the LevelPlay dashboard when configuring the Unity Ads network adapter, not here. RewardedAdUnit
+        // is the Rewarded ad-unit id created in the dashboard. See docs/levelplay-ads-setup.md.
 #if UNITY_IOS
         const string AppKey         = "REPLACE_WITH_IOS_APP_KEY";
         const string RewardedAdUnit = "REPLACE_WITH_IOS_REWARDED_AD_UNIT";
