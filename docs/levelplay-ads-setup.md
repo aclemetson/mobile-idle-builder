@@ -39,8 +39,8 @@ functional gain. Do these steps when you are ready to ship ads.
 | You have | Type | Where it goes |
 |---|---|---|
 | Org Core ID `4327788` | Unity org id | Account-level only; not used in code or per-app config. |
-| iOS Game ID `6141453` | Unity Ads Game ID | LevelPlay **dashboard** → SDK Networks → Unity Ads (LevelPlay) adapter, iOS app. |
-| Android Game ID `6141452` | Unity Ads Game ID | LevelPlay **dashboard** → SDK Networks → Unity Ads (LevelPlay) adapter, Android app. |
+| iOS Game ID `6141453` | Unity Ads Game ID | *Optional* — only if adding Unity Ads as an extra network (dashboard → SDK Networks). Unused with ironSource-only. |
+| Android Game ID `6141452` | Unity Ads Game ID | *Optional* — only if adding Unity Ads as an extra network (dashboard → SDK Networks). Unused with ironSource-only. |
 | **App Key** (Android + iOS) | LevelPlay app key | **Code** — `LevelPlayAdProvider.AppKey`. Find it in **Project Settings → LevelPlay → Apps** ("AppKey: ...") or the dashboard per app. |
 | **Rewarded Ad Unit ID** (Android + iOS) | LevelPlay ad unit | **Code** — `LevelPlayAdProvider.RewardedAdUnit`. Create a **Rewarded** ad unit per platform in the dashboard. |
 
@@ -48,9 +48,11 @@ functional gain. Do these steps when you are ready to ship ads.
 
 1. In the [LevelPlay dashboard](https://platform.ironsrc.com/), confirm the **Android and iOS app**
    entries exist (each has an **App Key**).
-2. Under **SDK Networks / Mediation**, add **Unity Ads (LevelPlay)** as a network and enter your **Game
-   IDs** (Android `6141452`, iOS `6141453`) so LevelPlay can serve Unity Ads. Add other networks later for
-   more fill.
+2. Ensure **at least one ad network** is enabled (mediation has no demand otherwise). **ironSource
+   Bidding** is enabled and is sufficient on its own to serve and test rewarded ads. Adding **Unity Ads
+   (LevelPlay)** as an extra network — entering your **Game IDs** (Android `6141452`, iOS `6141453`) under
+   **SDK Networks** — is *optional* and only increases fill/revenue. With ironSource-only, the Game IDs
+   are unused.
 3. Create a **Rewarded Video** ad unit per platform → copy each **Ad Unit ID**.
 4. After any package/network change, run the LevelPlay **Integration Manager** in the Editor and any
    **Force Resolve** the Android External Dependency Manager prompts for.
