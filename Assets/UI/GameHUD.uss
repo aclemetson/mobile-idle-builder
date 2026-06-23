@@ -843,3 +843,11 @@
     -unity-font-style: bold;
     padding: var(--spacing-xs) var(--spacing-md);
 }
+
+/* ---- Rewarded-ad "Double offline" button (idle-return modal) ---- */
+.idle-return-double {
+    background-color: rgba(255, 193, 7, 0.18);
+    border-color: rgba(255, 193, 7, 0.55);
+    color: rgb(255, 213, 79);
+    -unity-font-style: bold;
+}

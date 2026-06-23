@@ -15,6 +15,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |
 | balance numbers, currencies, costs, formulas | `economy-balance.md` |
 | remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
+| rewarded ads, ad SDK, LevelPlay go-live | `../levelplay-ads-setup.md` |
 | any code change (before committing) | `testing.md` |
 
 ## Feature assignments (`tasks/`)

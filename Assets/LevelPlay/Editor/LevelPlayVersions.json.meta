@@ -1,10 +1,5 @@
 fileFormatVersion: 2
-guid: ca932999723384cdc86087c8423332bb
-labels:
-- gvh
-- gvh_manifest
-timeCreated: 1508875148
-licenseType: Free
+guid: 8c7bb8571affcd641b1de9b47163624b
 TextScriptImporter:
   externalObjects: {}
   userData: 

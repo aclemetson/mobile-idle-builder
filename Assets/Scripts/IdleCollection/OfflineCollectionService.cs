@@ -88,7 +88,7 @@ namespace MobileIdleBuilder
 
             float effectiveCap  = GetEffectiveIdleCap(config, upgrades);
             float cappedSeconds = Math.Min(elapsedSeconds, effectiveCap);
-            float rate          = GetEffectiveCollectionRate(config, upgrades);
+            float rate          = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
 
             var result = ComputePayout(snapshots, cappedSeconds, rate);
             result.ElapsedSeconds = elapsedSeconds;
@@ -125,6 +125,15 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// Multiplier applied to the effective collection rate while a rewarded-ad idle boost is active
+        /// (1.5x), else 1. Applied AFTER the base-rate cap so the boost can push offline collection above
+        /// the normal ceiling — that is the point of the reward.
+        /// </summary>
+        public static float GetAdIdleMultiplier(SaveData save)
+            => PremiumShopCalculator.IsBoostActive(save?.adsIdleBoostExpiryUtc)
+                ? AdRewardCalculator.IdleRateBoostMultiplier : 1f;
+
+        /// <summary>
         /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of offline
         /// production at the current collection rate would yield, from the latest captured
         /// snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
@@ -143,7 +152,7 @@ namespace MobileIdleBuilder
                 ? save.siteSnapshots
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
-            float rate   = GetEffectiveCollectionRate(config, upgrades);
+            float rate   = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
             var   result = ComputePayout(snapshots, seconds, rate);
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;

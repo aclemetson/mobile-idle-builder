@@ -222,6 +222,47 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNull(OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f));
         }
 
+        // ── Rewarded-ad idle-rate boost (+50%) ────────────────────────────────
+
+        [Test]
+        public void AdIdleMultiplier_IsOne_WhenNoBoost()
+        {
+            var save = MakeSave(null);
+            save.adsIdleBoostExpiryUtc = null;
+            Assert.AreEqual(1f, OfflineCollectionService.GetAdIdleMultiplier(save));
+        }
+
+        [Test]
+        public void AdIdleMultiplier_IsBoosted_WhenActive()
+        {
+            var save = MakeSave(null);
+            save.adsIdleBoostExpiryUtc = DateTime.UtcNow.AddHours(1).ToString("O");
+            Assert.AreEqual(AdRewardCalculator.IdleRateBoostMultiplier,
+                            OfflineCollectionService.GetAdIdleMultiplier(save));
+        }
+
+        [Test]
+        public void AdIdleMultiplier_IsOne_WhenExpired()
+        {
+            var save = MakeSave(null);
+            save.adsIdleBoostExpiryUtc = DateTime.UtcNow.AddHours(-1).ToString("O");
+            Assert.AreEqual(1f, OfflineCollectionService.GetAdIdleMultiplier(save));
+        }
+
+        [Test]
+        public void ComputeForDuration_AppliesIdleBoost_WhenActive()
+        {
+            var save = MakeSave(OneChain(
+                new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 3f }));
+            save.adsIdleBoostExpiryUtc = DateTime.UtcNow.AddHours(1).ToString("O");
+
+            // Without boost this is 10800 (rate 0.5); with +50% the rate is 0.75 → 16200.
+            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(16200L, result.EntropyEarned, "1/s × 7200 s × (0.5 × 1.5) × 3 sell");
+        }
+
         // ── Multi-site aggregation (siteSnapshots) ────────────────────────────
 
         [Test]
