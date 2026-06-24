@@ -1388,11 +1388,11 @@ prestige: {
     },
     {
       id: 'research_overdrive', name: 'Research Overdrive', tier: 3,
-      effectType: 'ResearchSpeed', effectPerLevel: 15, unit: '%',
-      maxLevel: 4, baseCost: 120, costScaling: 3.0,
-      costs: [120, 360, 1080, 3240],
-      prereqs: [{ id: 'memory_resonance', minLevel: 3 }],
-      description: 'Research completes 15% faster per level.',
+      effectType: 'ResearchSpeed', effectPerLevel: 5, unit: '%',
+      maxLevel: 10, baseCost: 30, costScaling: 1.65,
+      costs: [30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800],
+      prereqs: [{ id: 'memory_resonance', minLevel: 2 }],
+      description: 'Research timers complete 5% faster per level (max -50%).',
     },
     {
       id: 'entropy_echo', name: 'Entropy Echo', tier: 3,

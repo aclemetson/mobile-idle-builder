@@ -35,6 +35,8 @@ namespace MobileIdleBuilder.PlayModeTests
 
         ResearchSO _resA; // no prerequisites, costBaseCurrency=100
         ResearchSO _resB; // requires _resA, costBaseCurrency=200
+        ResearchSO _resTimed; // no prerequisites, costBaseCurrency=100, durationSeconds=60
+        ResearchSO _resTimed2; // no prerequisites, costBaseCurrency=100, durationSeconds=3600
 
         [SetUp]
         public void SetUp()
@@ -61,6 +63,20 @@ namespace MobileIdleBuilder.PlayModeTests
             _resB.displayName      = "Test B";
             _resB.costBaseCurrency = 200;
             _resB.prerequisites    = new[] { _resA };
+
+            _resTimed = ScriptableObject.CreateInstance<ResearchSO>();
+            _resTimed.id               = "test_res_timed";
+            _resTimed.displayName      = "Test Timed";
+            _resTimed.costBaseCurrency = 100;
+            _resTimed.prerequisites    = null;
+            _resTimed.durationSeconds  = 60;
+
+            _resTimed2 = ScriptableObject.CreateInstance<ResearchSO>();
+            _resTimed2.id               = "test_res_timed2";
+            _resTimed2.displayName      = "Test Timed 2";
+            _resTimed2.costBaseCurrency = 100;
+            _resTimed2.prerequisites    = null;
+            _resTimed2.durationSeconds  = 3600;
         }
 
         [TearDown]
@@ -79,6 +95,8 @@ namespace MobileIdleBuilder.PlayModeTests
 
             if (_resA != null) { Object.DestroyImmediate(_resA); _resA = null; }
             if (_resB != null) { Object.DestroyImmediate(_resB); _resB = null; }
+            if (_resTimed  != null) { Object.DestroyImmediate(_resTimed);  _resTimed  = null; }
+            if (_resTimed2 != null) { Object.DestroyImmediate(_resTimed2); _resTimed2 = null; }
         }
 
         void SpawnServices()
@@ -229,7 +247,132 @@ namespace MobileIdleBuilder.PlayModeTests
                 "Must advance from the live ResearchService unlock state, even if the save list is out of sync");
         }
 
+        // ── Research timer ────────────────────────────────────────────────────
+
+        [Test]
+        public void StartTimedResearch_DoesNotUnlockImmediately_AndSetsActiveTimer()
+        {
+            SpawnServices();
+            ResearchService.Instance.Purchase(_resTimed); // durationSeconds=60
+
+            Assert.IsFalse(ResearchService.Instance.IsUnlocked(_resTimed.id),
+                "Timed research must not unlock immediately on start");
+            Assert.IsTrue(ResearchService.Instance.HasActiveResearch,
+                "A timer must be running after starting timed research");
+            Assert.AreEqual(_resTimed.id, ResearchService.Instance.ActiveResearchId);
+            Assert.AreEqual(_resTimed.id, SaveManager.Instance.Current.activeResearchId,
+                "Active research id must be persisted");
+            Assert.IsFalse(string.IsNullOrEmpty(SaveManager.Instance.Current.activeResearchCompleteUtc),
+                "Completion time must be persisted");
+
+            var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
+            Assert.AreEqual(900L, progress.BaseCurrency,
+                "Entropy must be paid up front when the timer starts");
+        }
+
+        [Test]
+        public void ZeroDurationResearch_UnlocksInstantly_NoActiveTimer()
+        {
+            SpawnServices();
+            ResearchService.Instance.Purchase(_resA); // durationSeconds defaults to 0
+
+            Assert.IsTrue(ResearchService.Instance.IsUnlocked(_resA.id),
+                "Zero-duration research must unlock instantly");
+            Assert.IsFalse(ResearchService.Instance.HasActiveResearch,
+                "No timer should remain for an instant research");
+        }
+
+        [Test]
+        public void ProcessActiveTimer_CompletesWhenElapsed()
+        {
+            SpawnServices();
+            ResearchService.Instance.Purchase(_resTimed);
+
+            // Force the cached completion time into the past (simulates the timer elapsing / offline).
+            SetActiveCompleteUtc(ResearchService.Instance, System.DateTime.UtcNow.AddSeconds(-1));
+            ResearchService.Instance.ProcessActiveTimer();
+
+            Assert.IsTrue(ResearchService.Instance.IsUnlocked(_resTimed.id),
+                "Research must complete once its timer has elapsed");
+            Assert.IsFalse(ResearchService.Instance.HasActiveResearch,
+                "Timer must be cleared after completion");
+            Assert.IsTrue(string.IsNullOrEmpty(SaveManager.Instance.Current.activeResearchId),
+                "Persisted active id must be cleared on completion");
+        }
+
+        [Test]
+        public void OneAtATime_BlocksStartingSecondResearch()
+        {
+            SpawnServices();
+            ResearchService.Instance.Purchase(_resTimed);   // starts a timer
+            ResearchService.Instance.Purchase(_resTimed2);  // no prereq, affordable, but lab is busy
+
+            Assert.AreEqual(_resTimed.id, ResearchService.Instance.ActiveResearchId,
+                "The first research must stay active");
+            Assert.IsFalse(ResearchService.Instance.IsUnlocked(_resTimed2.id),
+                "A second research must not start while one is in progress");
+        }
+
+        [Test]
+        public void SkipActive_SpendsCrystalsAndCompletes()
+        {
+            SpawnServices();
+            SaveManager.Instance.Current.paidCurrency = 200;
+            ResearchService.Instance.Purchase(_resTimed2); // 3600s -> skip cost 150◆
+
+            bool skipped = ResearchService.Instance.SkipActive();
+
+            Assert.IsTrue(skipped, "Skip should succeed with enough crystals");
+            Assert.IsTrue(ResearchService.Instance.IsUnlocked(_resTimed2.id),
+                "Skipped research must complete immediately");
+            Assert.AreEqual(50L, SaveManager.Instance.Current.paidCurrency,
+                "Skip must deduct the 150◆ (1 skip-hour) cost from crystals");
+        }
+
+        [Test]
+        public void SkipActive_FailsWhenNotEnoughCrystals()
+        {
+            SpawnServices();
+            SaveManager.Instance.Current.paidCurrency = 10; // < 150
+            ResearchService.Instance.Purchase(_resTimed2);
+
+            bool skipped = ResearchService.Instance.SkipActive();
+
+            Assert.IsFalse(skipped, "Skip must fail without enough crystals");
+            Assert.IsTrue(ResearchService.Instance.HasActiveResearch,
+                "Timer must keep running when a skip is unaffordable");
+            Assert.AreEqual(10L, SaveManager.Instance.Current.paidCurrency,
+                "No crystals should be spent on a failed skip");
+        }
+
+        [Test]
+        public void ResetAll_ClearsActiveTimer()
+        {
+            SpawnServices();
+            ResearchService.Instance.Purchase(_resTimed);
+            ResearchService.Instance.ResetAll();
+
+            Assert.IsFalse(ResearchService.Instance.HasActiveResearch,
+                "Prestige reset must drop the in-progress timer");
+        }
+
+        // ── Skip-cost formula (pure) ──────────────────────────────────────────
+
+        [Test]
+        public void CalcResearchSkipCost_MatchesAnchor()
+        {
+            Assert.AreEqual(150L, PremiumShopCalculator.CalcResearchSkipCost(3600), "1 hour = 150◆");
+            Assert.AreEqual(300L, PremiumShopCalculator.CalcResearchSkipCost(7200), "2 hours = 300◆");
+            Assert.AreEqual(1L,   PremiumShopCalculator.CalcResearchSkipCost(10),   "Tiny timer floors at 1◆");
+            Assert.AreEqual(0L,   PremiumShopCalculator.CalcResearchSkipCost(0),    "No time remaining = free");
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void SetActiveCompleteUtc(ResearchService svc, System.DateTime when) =>
+            typeof(ResearchService)
+                .GetField("_activeCompleteUtc", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(svc, when);
 
         static void RunStart(MonoBehaviour mb) =>
             mb.GetType()

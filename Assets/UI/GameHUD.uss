@@ -20,7 +20,26 @@
     background-color: rgba(10, 14, 26, 0.88);
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
-    min-height: 48px;
+    min-height: 52px;
+}
+
+/* Active-research strip directly under the top bar (toggled in HUDStatusBarController) */
+.research-status {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 4px var(--spacing-md);
+    background-color: rgba(0, 229, 255, 0.10);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+}
+
+.research-status-label {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
 }
 
 .inventory-bar {
@@ -379,10 +398,21 @@
     margin-top: 4px;
 }
 
+.research-card-info {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .research-card-cost {
     color: var(--color-primary);
     font-size: var(--font-size-sm);
     -unity-font-style: bold;
+}
+
+.research-card-time {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: 2px;
 }
 
 .research-card-cost--unaffordable {
@@ -401,6 +431,12 @@
 .research-card--unlocked {
     opacity: 0.55;
     border-color: var(--color-success);
+}
+
+/* Research currently in progress (timer running) */
+.research-card--in-progress {
+    border-color: var(--color-primary);
+    background-color: rgba(0, 229, 255, 0.08);
 }
 
 /* ---- Slide-up panel ---- */

@@ -23,6 +23,7 @@ MonoBehaviour:
   depthInTree: 3
   costBaseCurrency: 2000
   costPrestigeCurrency: 0
+  durationSeconds: 600
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []

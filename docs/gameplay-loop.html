@@ -769,9 +769,9 @@ Expanded Vault    (standalone — no prerequisites)</pre>
       <li><code>NotifyLogin()</code> → call from <code>SaveManager.Start()</code> or <code>GameBootstrap</code> once per session</li>
       <li><code>NotifyCraft(itemId, qty)</code> → already called from <code>ManualCraftService</code>; ensure <code>ProductionSystem</code> also calls it per automated output</li>
       <li><code>NotifyBuildingPlaced(type)</code> → call from <code>BuildingPlacementController.OnBuildingPlaced</code></li>
-      <li><code>NotifyResearchCompleted(id)</code> → call from <code>ResearchService.Purchase()</code></li>
+      <li><code>NotifyResearchCompleted(id)</code> → called from <code>ResearchService.CompleteResearch()</code> (when the research timer finishes / is skipped)</li>
       <li><code>NotifyPrestige()</code> → call from <code>PrestigeSystem</code> after reset completes</li>
-      <li><code>NotifyEntropySpent(amount)</code> → call from <code>ResearchService.Purchase()</code> and building placement cost deduction</li>
+      <li><code>NotifyEntropySpent(amount)</code> → called from <code>ResearchService.Purchase()</code> (entropy paid up front when research starts) and building placement cost deduction</li>
       <li><code>NotifyPrestigeCurrencyEarned(amount)</code> → call from <code>PrestigeSystem</code> when PC is calculated</li>
       <li><code>NotifyTierReached(tier)</code> → call when <code>PlayerProgressData.CurrentTier</code> increments</li>
       <li><code>NotifyPVPWin()</code> → call from <code>PVPService</code> on match completion</li>
