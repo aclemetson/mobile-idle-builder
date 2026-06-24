@@ -5,8 +5,7 @@
     <ui:VisualElement name="splash-root" class="splash-root">
 
         <ui:VisualElement name="splash-content" class="splash-content">
-            <ui:Label name="splash-title"    text="QUANTUM"                  class="splash-title" />
-            <ui:Label name="splash-subtitle" text="FOUNDRY"                  class="splash-subtitle" />
+            <ui:Label name="splash-title"    text="QUANTUM FOUNDRY"          class="splash-title" />
             <ui:VisualElement                                                  class="splash-rule" />
             <ui:Label name="splash-tagline"  text="Build. Collapse. Repeat." class="splash-tagline" />
         </ui:VisualElement>
