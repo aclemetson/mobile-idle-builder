@@ -104,10 +104,10 @@ namespace MobileIdleBuilder
 
             new UpgradeDef(
                 "research_overdrive", "Research Overdrive",
-                "Research completes 15% faster per level.",
-                UpgradeEffectType.ResearchSpeed, 0.15f, 4,
-                new[]{ 120, 360, 1080, 3240 },
-                new[]{ ("memory_resonance", 3) }),
+                "Research timers complete 5% faster per level (max -50%).",
+                UpgradeEffectType.ResearchSpeed, 0.05f, 10,
+                new[]{ 30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800 },
+                new[]{ ("memory_resonance", 2) }),
 
             new UpgradeDef(
                 "entropy_echo", "Entropy Echo",

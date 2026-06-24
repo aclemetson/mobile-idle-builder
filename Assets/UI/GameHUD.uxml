@@ -27,6 +27,11 @@
             <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 
+        <!-- ═══ ACTIVE RESEARCH STRIP (shown only while a research timer runs) ═══ -->
+        <ui:VisualElement name="research-status" class="research-status hidden">
+            <ui:Label name="research-status-label" text="" class="research-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 

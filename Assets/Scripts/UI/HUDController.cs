@@ -52,6 +52,11 @@ namespace MobileIdleBuilder
         private ScrollView _recipeList, _buildingsList, _codexList,
                            _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+        // Research timer UI (live countdown + skip on the in-progress card)
+        private Label      _researchCountdownLabel;
+        private Button     _researchSkipBtn;
+        private bool       _researchSkipConfirming;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
         private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
         private Button     _btnEnterPVP;
 
@@ -563,13 +568,58 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
+
+            // Drive the live research countdown while the panel is open (paused when it closes).
+            if (_researchTicker == null)
+                _researchTicker = _researchList.schedule.Execute(UpdateResearchCountdown).Every(1000);
+            else
+                _researchTicker.Resume();
+
             OnResearchPanelOpened?.Invoke();
+        }
+
+        // Updates just the active card's countdown + skip cost each second, so an open inline
+        // skip confirm is not blown away by a full rebuild.
+        private void UpdateResearchCountdown()
+        {
+            if (_researchPanel == null || _researchPanel.ClassListContains("hidden"))
+            {
+                _researchTicker?.Pause();
+                return;
+            }
+            if (researchService == null || !researchService.HasActiveResearch) return;
+
+            double rem = researchService.ActiveRemainingSeconds;
+            if (_researchCountdownLabel != null)
+                _researchCountdownLabel.text = $"⏳ {FormatResearchTimer(rem)}";
+
+            if (_researchSkipBtn != null && !_researchSkipConfirming)
+            {
+                long cost     = researchService.ActiveSkipCost;
+                long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.SetEnabled(crystals >= cost);
+            }
+        }
+
+        public static string FormatResearchTimer(double seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = System.TimeSpan.FromSeconds(System.Math.Ceiling(seconds));
+            if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes:D2}m {ts.Seconds:D2}s";
+            if (ts.TotalMinutes >= 1) return $"{ts.Minutes}m {ts.Seconds:D2}s";
+            return $"{ts.Seconds}s";
         }
 
         private void BuildResearchList()
         {
             if (_researchList == null) return;
             _researchList.Clear();
+
+            // Reset per-build references for the active-research card (reassigned below if present).
+            _researchCountdownLabel = null;
+            _researchSkipBtn        = null;
+            _researchSkipConfirming = false;
 
             if (researchService == null || researchService.AllResearch == null ||
                 researchService.AllResearch.Count == 0)
@@ -619,6 +669,12 @@ namespace MobileIdleBuilder
                     card.Add(descLabel);
                 }
 
+                bool isActive    = researchService.HasActiveResearch &&
+                                   researchService.ActiveResearchId == research.id;
+                bool labBusy     = researchService.HasActiveResearch && !isActive;
+
+                if (isActive) card.AddToClassList("research-card--in-progress");
+
                 if (!unlocked)
                 {
                     var footer = new VisualElement();
@@ -634,27 +690,46 @@ namespace MobileIdleBuilder
                         prereqLabel.AddToClassList("research-card-prereq");
                         footer.Add(prereqLabel);
                     }
+                    else if (isActive)
+                    {
+                        // In-progress: live countdown + skip-for-crystals
+                        _researchCountdownLabel = new Label($"⏳ {FormatResearchTimer(researchService.ActiveRemainingSeconds)}");
+                        _researchCountdownLabel.AddToClassList("research-card-cost");
+                        footer.Add(_researchCountdownLabel);
+                        BuildResearchSkipUi(footer, research);
+                    }
                     else
                     {
-                        // Cost badge
+                        // Cost + effective research time (after the Research Overdrive discount),
+                        // stacked so the Start button stays on the right.
+                        var info = new VisualElement();
+                        info.AddToClassList("research-card-info");
+
                         bool affordable = currentEntropy >= research.costBaseCurrency;
                         var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
                         costLabel.AddToClassList("research-card-cost");
                         if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
-                        footer.Add(costLabel);
+                        info.Add(costLabel);
 
-                        // Purchase button
-                        var purchaseBtn = new Button { text = "Unlock" };
-                        purchaseBtn.AddToClassList("craft-btn");
-                        purchaseBtn.SetEnabled(canPurchase);
+                        int effSecs    = researchService.EffectiveDurationSeconds(research);
+                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        timeLabel.AddToClassList("research-card-time");
+                        info.Add(timeLabel);
+
+                        footer.Add(info);
+
+                        // Start button (disabled while the lab is busy with another research)
+                        var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
+                        startBtn.AddToClassList("craft-btn");
+                        startBtn.SetEnabled(!labBusy && canPurchase);
 
                         var captured = research;
-                        purchaseBtn.clicked += () =>
+                        startBtn.clicked += () =>
                         {
                             researchService.Purchase(captured);
                             BuildResearchList();
                         };
-                        footer.Add(purchaseBtn);
+                        footer.Add(startBtn);
                     }
 
                     card.Add(footer);
@@ -662,6 +737,39 @@ namespace MobileIdleBuilder
 
                 _researchList.Add(card);
             }
+        }
+
+        // Skip button for the in-progress research. First tap reveals a Confirm/Cancel row so
+        // spending crystals is always a deliberate two-tap action (no generic confirm modal exists).
+        private void BuildResearchSkipUi(VisualElement footer, ResearchSO research)
+        {
+            long cost     = researchService.ActiveSkipCost;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+
+            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn.AddToClassList("craft-btn");
+            _researchSkipBtn.SetEnabled(crystals >= cost);
+            _researchSkipBtn.clicked += () =>
+            {
+                _researchSkipConfirming = true;
+                footer.Remove(_researchSkipBtn);
+
+                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                confirm.AddToClassList("craft-btn");
+                confirm.clicked += () =>
+                {
+                    researchService.SkipActive(); // completion fires OnResearchUnlocked → rebuild
+                    BuildResearchList();
+                };
+
+                var cancel = new Button { text = "✕" };
+                cancel.AddToClassList("craft-btn");
+                cancel.clicked += () => BuildResearchList();
+
+                footer.Add(confirm);
+                footer.Add(cancel);
+            };
+            footer.Add(_researchSkipBtn);
         }
 
         private void OnResearchUnlocked(ResearchSO research)

@@ -102,6 +102,7 @@ namespace MobileIdleBuilder.Editor
         public int      depth_in_tree          = 0;
         public int      cost_base_currency     = 100;
         public int      cost_prestige_currency = 0;
+        public int      duration_seconds       = 0;
         public string[] unlocks_items          = Array.Empty<string>();
         public string[] unlocks_recipes        = Array.Empty<string>();
         public string[] unlocks_buildings      = Array.Empty<string>();

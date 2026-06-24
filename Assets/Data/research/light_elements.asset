@@ -23,6 +23,7 @@ MonoBehaviour:
   depthInTree: 2
   costBaseCurrency: 1000
   costPrestigeCurrency: 0
+  durationSeconds: 120
   unlocksItems:
   - {fileID: 11400000, guid: 7a943f92f16babd4d99dcc1c0b813968, type: 2}
   - {fileID: 11400000, guid: 7ccf03d0ad1be2d4a9a061bbe7f99d2d, type: 2}

@@ -20,6 +20,9 @@ namespace MobileIdleBuilder
         public int costBaseCurrency;
         public int costPrestigeCurrency;    // 0 for most research
 
+        [Header("Timer")]
+        public int durationSeconds;         // research time in seconds; 0 = instant unlock
+
         [Header("Unlocks")]
         public ItemSO[] unlocksItems;
         public RecipeSO[] unlocksRecipes;

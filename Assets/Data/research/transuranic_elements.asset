@@ -24,6 +24,7 @@ MonoBehaviour:
   depthInTree: 6
   costBaseCurrency: 500000
   costPrestigeCurrency: 0
+  durationSeconds: 7200
   unlocksItems:
   - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
   unlocksRecipes:
