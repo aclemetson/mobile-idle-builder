@@ -20,9 +20,9 @@ MonoBehaviour:
     weight: 0.5
   - item: {fileID: 11400000, guid: a56a125a7923c0d489b69e975b5a0027, type: 2}
     weight: 0.5
-  collectionRate: 1
+  tapCooldownSeconds: 1.5
   fieldColor: {r: 1, g: 0.41960785, b: 0.20784314, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: A region of space dense with confined quarks. Positive-polarity zones
-    yield Up Quarks; negative-polarity zones yield Down Quarks. Harvesters placed
-    here extract the field's particles automatically.
+    yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a
+    particle, then wait out the field's recharge.

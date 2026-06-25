@@ -135,6 +135,11 @@ namespace MobileIdleBuilder
     {
         public string fieldId;  // matches FieldSO.id
         public int[]  position; // [x, y] grid cell
+
+        // Tap cooldown (radial wheel). Empty/null = ready. ISO 8601 UTC instant the field recharges,
+        // so the cooldown keeps ticking while the app is closed and cannot be reset by relaunching.
+        public string cooldownEndUtc;
+        public float  cooldownDurationSec; // full length when started, so the wheel resumes its fraction
     }
 
     [Serializable]

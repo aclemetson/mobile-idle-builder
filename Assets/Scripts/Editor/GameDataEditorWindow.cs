@@ -350,6 +350,7 @@ namespace MobileIdleBuilder.Editor
             r.cost_prestige_currency = IntField("Cost (Prestige)",      r.cost_prestige_currency);
             r.resets_on_prestige     = Toggle("Resets on Prestige",     r.resets_on_prestige);
             r.prestige_memory_discount = FloatField("Prestige Discount %", r.prestige_memory_discount);
+            r.field_cooldown_mult = FloatField("Field Cooldown Mult", r.field_cooldown_mult);
             r.icon_path    = PathField("Icon Path",    r.icon_path);
             r.codex_entry  = TextArea("Codex Entry",   r.codex_entry);
 
@@ -544,7 +545,7 @@ namespace MobileIdleBuilder.Editor
             f.id           = TextField("ID",           f.id);
             f.display_name = TextField("Display Name", f.display_name);
             f.field_type   = StringPopup("Field Type", f.field_type, FieldTypeOptions);
-            f.collection_rate = FloatField("Collection Rate (items/s)", f.collection_rate);
+            f.tap_cooldown_seconds = FloatField("Tap Cooldown (s)", f.tap_cooldown_seconds);
             f.field_color  = ColorHexField("Field Color", f.field_color);
             f.field_icon_path = PathField("Icon Path", f.field_icon_path);
 

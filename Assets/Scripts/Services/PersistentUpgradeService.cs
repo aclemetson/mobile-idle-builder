@@ -72,6 +72,12 @@ namespace MobileIdleBuilder
                 UpgradeEffectType.VaultCapacity, 20f, 5,
                 new[]{ 25, 38, 56, 84, 126 }),
 
+            new UpgradeDef(
+                "field_cooldown", "Quick Hands",
+                "Field tap cooldown is 5% shorter per level (max -50%).",
+                UpgradeEffectType.FieldCooldownReduction, 0.05f, 10,
+                new[]{ 20, 35, 55, 85, 130, 200, 305, 465, 705, 1070 }),
+
             // ── Tier 2: require 1 Tier-1 level ───────────────────────────────
             new UpgradeDef(
                 "quantum_yield", "Quantum Yield",
@@ -88,13 +94,6 @@ namespace MobileIdleBuilder
                 new[]{ ("memory_resonance", 1) }),
 
             // ── Tier 3: require deeper investment ────────────────────────────
-            new UpgradeDef(
-                "decay_mastery", "Decay Mastery",
-                "Decay particle collection rate +25% per level.",
-                UpgradeEffectType.DecayCollectionRate, 0.25f, 4,
-                new[]{ 100, 250, 625, 1562 },
-                new[]{ ("quantum_yield", 2) }),
-
             new UpgradeDef(
                 "turnkey_builder", "Turnkey Builder",
                 "Start each run with +1 pre-placed Harvester per level.",

@@ -103,6 +103,7 @@ namespace MobileIdleBuilder.Editor
         public int      cost_base_currency     = 100;
         public int      cost_prestige_currency = 0;
         public int      duration_seconds       = 0;
+        public float    field_cooldown_mult    = 1f;
         public string[] unlocks_items          = Array.Empty<string>();
         public string[] unlocks_recipes        = Array.Empty<string>();
         public string[] unlocks_buildings      = Array.Empty<string>();
@@ -302,7 +303,7 @@ namespace MobileIdleBuilder.Editor
         public string             display_name  = "";
         public string             field_type    = "Quark";
         public List<FieldDropJson>drops         = new();
-        public float              collection_rate = 1f;
+        public float              tap_cooldown_seconds = 1.5f;
         public string             field_color   = "#FFFFFF";
         public string             field_icon_path = "TODO";
         public string             codex_entry   = "";

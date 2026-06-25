@@ -103,7 +103,7 @@ namespace MobileIdleBuilder
         CraftSpeedMultiplier,
         VaultCapacity,
         ResearchSpeed,
-        DecayCollectionRate,
+        FieldCooldownReduction,   // additive fraction per level off the field tap cooldown (+0.05 = 5 %)
         BuildingStartPrePlaced,
         OutputQuantityMultiplier,
         BuildingCostReduction,

@@ -246,11 +246,23 @@ namespace MobileIdleBuilder
             // --- Fields ---
             grid.fields.Clear();
             foreach (var kv in FieldGenerator.GetAllFields())
-                grid.fields.Add(new FieldSaveData
+            {
+                var fsd = new FieldSaveData
                 {
                     fieldId  = kv.Value.id,
                     position = new[] { kv.Key.x, kv.Key.y }
-                });
+                };
+
+                // Persist a still-running tap cooldown so it cannot be reset by relaunching.
+                var cd = FieldGenerator.GetFieldInstanceAt(kv.Key.x, kv.Key.y)?.Cooldown;
+                if (cd != null && cd.IsOnCooldown)
+                {
+                    fsd.cooldownEndUtc      = cd.EndUtc.ToString("O");
+                    fsd.cooldownDurationSec = cd.DurationSec;
+                }
+
+                grid.fields.Add(fsd);
+            }
 
             RebuildIdleSnapshot(save);
         }

@@ -32,6 +32,9 @@ namespace MobileIdleBuilder
         string _playerId = "";
         string _phase = "default";
 
+        // Session-cumulative count of manual field taps that collected an item (snapshot dimension).
+        int    _fieldCollections;
+
         // Run-length / playtime tracking (realtimeSinceStartup is monotonic and pause-independent).
         float _sessionStartTime;
         float _runStartTime;
@@ -155,6 +158,16 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// Bumps the session field-collection counter (one manual field tap that yielded an item).
+        /// Surfaced as the <c>field_collections</c> snapshot dimension — no per-tap event is emitted.
+        /// </summary>
+        public void NotifyFieldCollected()
+        {
+            if (!_collecting) return;
+            _fieldCollections++;
+        }
+
+        /// <summary>
         /// Emits a full player-state snapshot. Called on the 5-minute loop and at each prestige.
         /// <c>entropy_per_sec</c> is the NetWorth growth rate over the interval since the previous
         /// snapshot — a clean income-rate proxy because spending entropy moves BaseCurrency into
@@ -193,6 +206,8 @@ namespace MobileIdleBuilder
             p["megastructure_stage"]     = save?.megastructureStage ?? 0;
             p["research_unlocked_count"] = save?.unlockedResearch?.Count ?? 0;
             p["playtime_total_sec"]      = (long)(now - _sessionStartTime);
+            p["field_collections"]       = _fieldCollections;
+            p["field_cooldown_sec"]      = ManualFieldCollector.CurrentEffectiveFieldCooldown();
             _sink.RecordEvent("player_snapshot", p);
         }
 

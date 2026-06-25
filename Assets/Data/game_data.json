@@ -101,7 +101,7 @@
       "unlocks_recipes": ["proton", "neutron"],
       "unlocks_buildings": ["strong_force_combiner"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["hydrogen_synthesis", "nucleon_harvesting"],
+      "unlocks_research": ["hydrogen_synthesis", "nucleon_harvesting", "rapid_extraction_i"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.25,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
@@ -185,6 +185,49 @@
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.2,
       "codex_entry": "Two harvesters on opposing polarity fields can be merged into a single Nucleon Harvester, producing protons or neutrons directly without quark combination.",
+      "icon_path": "TODO"
+    },
+    {
+      "_comment": "Field tap-cooldown reduction branch — purely a manual-collection modifier, gates no buildings/items",
+      "id": "rapid_extraction_i",
+      "display_name": "Rapid Extraction I",
+      "description": "Field tap cooldown is 15% shorter.",
+      "branch": "Engineering",
+      "prerequisites": ["recombination_i"],
+      "depth_in_tree": 1,
+      "cost_base_currency": 150,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 30,
+      "field_cooldown_mult": 0.85,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["rapid_extraction_ii"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.25,
+      "codex_entry": "Refining the extraction pulse lets a field recharge faster after each manual tap, shortening the wait between collections.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "rapid_extraction_ii",
+      "display_name": "Rapid Extraction II",
+      "description": "Field tap cooldown is a further 20% shorter.",
+      "branch": "Engineering",
+      "prerequisites": ["rapid_extraction_i"],
+      "depth_in_tree": 2,
+      "cost_base_currency": 600,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 120,
+      "field_cooldown_mult": 0.8,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.2,
+      "codex_entry": "A tuned resonance cascade drives field recharge near its physical limit, collapsing the cooldown between taps.",
       "icon_path": "TODO"
     },
     {
@@ -3646,10 +3689,10 @@
         { "item": "up_quark", "weight": 0.5 },
         { "item": "down_quark", "weight": 0.5 }
       ],
-      "collection_rate": 1.0,
+      "tap_cooldown_seconds": 1.5,
       "field_color": "#FF6B35",
       "field_icon_path": "TODO",
-      "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Harvesters placed here extract the field's particles automatically."
+      "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a particle, then wait out the field's recharge."
     },
     {
       "id": "electron_field",
@@ -3658,10 +3701,10 @@
       "drops": [
         { "item": "electron", "weight": 1.0 }
       ],
-      "collection_rate": 1.0,
+      "tap_cooldown_seconds": 1.5,
       "field_color": "#4ECDC4",
       "field_icon_path": "TODO",
-      "codex_entry": "A region saturated with free leptons. Harvesters placed here collect Electrons continuously. Electrons are essential for completing any atom."
+      "codex_entry": "A region saturated with free leptons. Tap to collect an Electron, then wait out the field's recharge. Electrons are essential for completing any atom."
     }
   ],
 

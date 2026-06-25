@@ -47,7 +47,12 @@ carries `player_id` + `collection_phase`.
 | `research_completed` | research_id, entropy_spent_total | `AchievementService.NotifyResearchCompleted` |
 | `tier_reached` | tier | `AchievementService.NotifyTierReached` (no caller yet — fires when one is added) |
 | `megastructure_stage` | stage | `MegastructureService.Deduct` on stage completion |
-| `player_snapshot` | networth, base_currency, entropy_per_sec, prestige_currency, paid_currency, prestige_count, building_count, highest_tier, megastructure_stage, research_unlocked_count, playtime_total_sec | snapshot loop (5 min) + each prestige |
+| `player_snapshot` | networth, base_currency, entropy_per_sec, prestige_currency, paid_currency, prestige_count, building_count, highest_tier, megastructure_stage, research_unlocked_count, playtime_total_sec, field_collections, field_cooldown_sec | snapshot loop (5 min) + each prestige |
+
+`field_collections` (Integer) = session-cumulative manual field taps that yielded an item, bumped via
+`TelemetryService.NotifyFieldCollected` from `ManualFieldCollector`. `field_cooldown_sec` (Float) = the current
+effective field tap cooldown (base × research mult × (1 − prestige reduction)); the lever for tuning the
+manual-collection loop.
 
 `entropy_per_sec` = NetWorth growth rate over the snapshot interval — a clean income-rate proxy, since
 spending entropy moves BaseCurrency→TotalEntropySpent without changing NetWorth (only production raises it).
