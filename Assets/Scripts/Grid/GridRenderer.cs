@@ -314,14 +314,19 @@ namespace MobileIdleBuilder
 
         // ---- Field tile colour ----
 
+        /// <summary>How far the field tile is tinted from the base tile colour toward the field
+        /// colour (0 = plain tile, 1 = full field colour). Kept low so the wire-mesh overlay is the
+        /// dominant visual and the tile only hints at the field type.</summary>
+        private const float FieldTileTintStrength = 0.22f;
+
         /// <summary>
-        /// Paints a cell permanently with the field's identity colour.
+        /// Paints a cell with a muted hint of the field's identity colour.
         /// This sits below tutorial and ghost layers in RestoreCell priority.
         /// </summary>
         public void SetFieldTileColor(int x, int y, Color color)
         {
             if (!IsInBounds(x, y)) return;
-            _fieldTileColors[new Vector2Int(x, y)] = color;
+            _fieldTileColors[new Vector2Int(x, y)] = Color.Lerp(tileColor, color, FieldTileTintStrength);
             RestoreCell(x, y);
         }
 
