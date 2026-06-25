@@ -48,6 +48,10 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |
 | `analytics.enabled` | bool | `false` | Master switch for `TelemetryService` (UGS Analytics). **Default off** ⇒ telemetry is opt-in: flip on to open a collection phase. See `analytics.md`. |
 | `analytics.phase` | string | `"default"` | Label stamped on every event as `collection_phase` so collection windows stay segmentable in Data Explorer. |
+| `gamedata.updatedUtc` | string | `""` | ISO-8601 UTC publish stamp of the current game values. Drives the one-shot update-notice modal (`GameUpdateNotice.ShouldShow` vs `SaveData.lastSeenGameDataUtc`); blank ⇒ never shown. Bump it to announce a balance change to everyone on next launch. |
+| `gamedata.version` | int | `0` | Monotonic, human-facing version label. Low-cardinality dimension on the `game_update_notice` analytics event (rollout reach). |
+| `gamedata.noticeTitle` | string | `"Game Updated"` | Title shown on the update-notice modal. |
+| `gamedata.noticeMessage` | string | (generic) | Body text shown on the update-notice modal. |
 
 ## Maintenance mode
 

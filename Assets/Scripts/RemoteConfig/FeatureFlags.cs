@@ -34,6 +34,10 @@ namespace MobileIdleBuilder
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
         public const string AnalyticsEnabledKey    = "analytics.enabled";
         public const string AnalyticsPhaseKey      = "analytics.phase";
+        public const string GameDataUpdatedUtcKey  = "gamedata.updatedUtc";
+        public const string GameDataVersionKey     = "gamedata.version";
+        public const string GameDataNoticeTitleKey = "gamedata.noticeTitle";
+        public const string GameDataNoticeMessageKey = "gamedata.noticeMessage";
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
@@ -47,6 +51,13 @@ namespace MobileIdleBuilder
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
         public const bool   AnalyticsEnabledDefault  = false;     // opt-in: telemetry stays off until a collection phase is opened
         public const string AnalyticsPhaseDefault    = "default"; // label stamped on every event so phases are segmentable
+        // Game-data update notice. updatedUtc drives the once-per-publish popup (blank => never show);
+        // version is the human-facing label / low-cardinality telemetry dimension. Defaults keep a fresh
+        // install (or any fetch failure) silent until the dashboard publishes a stamp.
+        public const string GameDataUpdatedUtcDefault  = "";              // ISO-8601 UTC; blank => no notice
+        public const int    GameDataVersionDefault     = 0;
+        public const string GameDataNoticeTitleDefault = "Game Updated";
+        public const string GameDataNoticeMessageDefault = "We've adjusted some game values to improve balance. Tap to continue.";
 
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
@@ -61,6 +72,10 @@ namespace MobileIdleBuilder
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
             new FlagDef(AnalyticsEnabledKey,   FlagType.Bool),
             new FlagDef(AnalyticsPhaseKey,     FlagType.String),
+            new FlagDef(GameDataUpdatedUtcKey,    FlagType.String),
+            new FlagDef(GameDataVersionKey,       FlagType.Int),
+            new FlagDef(GameDataNoticeTitleKey,   FlagType.String),
+            new FlagDef(GameDataNoticeMessageKey, FlagType.String),
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
@@ -74,11 +89,21 @@ namespace MobileIdleBuilder
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);
         public static bool   AnalyticsEnabled => GetBool(AnalyticsEnabledKey, AnalyticsEnabledDefault);
         public static string AnalyticsPhase   => GetString(AnalyticsPhaseKey,  AnalyticsPhaseDefault);
+        public static string GameDataUpdatedUtc   => GetString(GameDataUpdatedUtcKey,   GameDataUpdatedUtcDefault);
+        public static int    GameDataVersion      => GetInt(GameDataVersionKey,         GameDataVersionDefault);
+        public static string GameDataNoticeTitle  => GetString(GameDataNoticeTitleKey,  GameDataNoticeTitleDefault);
+        public static string GameDataNoticeMessage => GetString(GameDataNoticeMessageKey, GameDataNoticeMessageDefault);
 
         static bool GetBool(string key, bool fallback)
         {
             var svc = FeatureFlagService.Instance;
             return svc != null ? svc.GetBool(key, fallback) : fallback;
+        }
+
+        static int GetInt(string key, int fallback)
+        {
+            var svc = FeatureFlagService.Instance;
+            return svc != null ? svc.GetInt(key, fallback) : fallback;
         }
 
         static string GetString(string key, string fallback)

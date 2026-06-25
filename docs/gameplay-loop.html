@@ -196,6 +196,12 @@
     </div>
   </div>
 
+  <!-- Live-tuning callout -->
+  <div class="callout" style="border-left-color:#79c0ff;">
+    <h3 style="color:#79c0ff;">Live tuning &amp; player notice</h3>
+    <p style="font-size:12px;color:#8b949e;">The shipped <code>game_data.json</code> stays the baked, offline-safe source of truth. Select <strong>scalars</strong> (GameConfig globals, item sell values, research costs/durations) can be re-tuned without a store release via the <code>gamedata.overrides</code> Remote Config blob, overlaid onto the baked values at boot for the next cold start. When a balance change is published, the remote <code>gamedata.updatedUtc</code> stamp is bumped; on their next launch every player whose saved <code>lastSeenGameDataUtc</code> is older sees a one-shot "Game Updated" notice, then the marker is recorded so it fires once per publish. (Building/field overrides are a follow-up.)</p>
+  </div>
+
   <!-- Items Table -->
   <div class="phase" id="bal-items-phase">
     <div class="phase-header" style="border-left:4px solid #d2a8ff;background:#1a1224;">
