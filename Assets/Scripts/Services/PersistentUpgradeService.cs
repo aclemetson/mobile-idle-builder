@@ -72,6 +72,12 @@ namespace MobileIdleBuilder
                 UpgradeEffectType.VaultCapacity, 20f, 5,
                 new[]{ 25, 38, 56, 84, 126 }),
 
+            new UpgradeDef(
+                "field_cooldown", "Quick Hands",
+                "Field tap cooldown is 5% shorter per level (max -50%).",
+                UpgradeEffectType.FieldCooldownReduction, 0.05f, 10,
+                new[]{ 20, 35, 55, 85, 130, 200, 305, 465, 705, 1070 }),
+
             // ── Tier 2: require 1 Tier-1 level ───────────────────────────────
             new UpgradeDef(
                 "quantum_yield", "Quantum Yield",
@@ -89,13 +95,6 @@ namespace MobileIdleBuilder
 
             // ── Tier 3: require deeper investment ────────────────────────────
             new UpgradeDef(
-                "decay_mastery", "Decay Mastery",
-                "Decay particle collection rate +25% per level.",
-                UpgradeEffectType.DecayCollectionRate, 0.25f, 4,
-                new[]{ 100, 250, 625, 1562 },
-                new[]{ ("quantum_yield", 2) }),
-
-            new UpgradeDef(
                 "turnkey_builder", "Turnkey Builder",
                 "Start each run with +1 pre-placed Harvester per level.",
                 UpgradeEffectType.BuildingStartPrePlaced, 1f, 3,
@@ -104,10 +103,10 @@ namespace MobileIdleBuilder
 
             new UpgradeDef(
                 "research_overdrive", "Research Overdrive",
-                "Research completes 15% faster per level.",
-                UpgradeEffectType.ResearchSpeed, 0.15f, 4,
-                new[]{ 120, 360, 1080, 3240 },
-                new[]{ ("memory_resonance", 3) }),
+                "Research timers complete 5% faster per level (max -50%).",
+                UpgradeEffectType.ResearchSpeed, 0.05f, 10,
+                new[]{ 30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800 },
+                new[]{ ("memory_resonance", 2) }),
 
             new UpgradeDef(
                 "entropy_echo", "Entropy Echo",

@@ -27,6 +27,11 @@
             <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 
+        <!-- ═══ ACTIVE RESEARCH STRIP (shown only while a research timer runs) ═══ -->
+        <ui:VisualElement name="research-status" class="research-status hidden">
+            <ui:Label name="research-status-label" text="" class="research-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
@@ -65,6 +70,7 @@
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
                 <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
+                <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
@@ -160,6 +166,20 @@
                 <ui:Button name="btn-claim-login" text="Claim" class="craft-btn" />
                 <ui:Label text="Daily Challenges" class="recipe-name" />
                 <ui:VisualElement name="daily-challenges-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
+        <!-- ═══ FREE REWARDS (REWARDED ADS) PANEL ═══ -->
+        <ui:VisualElement name="rewards-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Free Rewards" class="panel-title" />
+                <ui:Button name="btn-close-rewards" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:ScrollView name="rewards-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:Label name="rewards-info" text="Watch a short ad for a bonus. Limited per day." class="recipe-inputs" />
+                <ui:VisualElement name="rewards-rows" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -461,7 +481,21 @@
                                vertical-scroller-visibility="Auto"
                                horizontal-scroller-visibility="Hidden" />
                 <ui:Label name="idle-return-entropy" text="" class="recipe-inputs" />
+                <ui:Button name="btn-idle-return-double" text="▶ Double (Watch Ad)" class="craft-btn idle-return-double hidden" />
                 <ui:Button name="btn-idle-return-claim" text="Claim" class="craft-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ GAME UPDATE NOTICE (shown once per published gamedata.updatedUtc) ═══ -->
+        <ui:VisualElement name="game-update-modal" class="idle-return-modal hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
+            <ui:VisualElement name="game-update-backdrop" class="idle-return-backdrop" />
+            <ui:VisualElement name="game-update-card" class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="game-update-title" text="Game Updated" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="game-update-message" text="" class="game-update-message" />
+                <ui:Button name="btn-game-update-ok" text="OK" class="craft-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 

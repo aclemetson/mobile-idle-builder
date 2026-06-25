@@ -4,8 +4,8 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// Ensures the persistent premium-economy singletons exist at startup without requiring
-    /// manual scene placement. Runs after the first scene loads; creates PremiumShopService and
-    /// IAPService on DontDestroyOnLoad GameObjects if they are not already present.
+    /// manual scene placement. Runs after the first scene loads; creates PremiumShopService,
+    /// IAPService, and AdService on DontDestroyOnLoad GameObjects if they are not already present.
     ///
     /// Both services are SingletonMonoBehaviour with PersistAcrossScenes => true, so AddComponent
     /// runs their Awake synchronously (assigning Instance and calling DontDestroyOnLoad). Created
@@ -23,6 +23,8 @@ namespace MobileIdleBuilder
             if (IAPService.Instance == null)
                 new GameObject("[IAPService]").AddComponent<IAPService>();
 #endif
+            if (AdService.Instance == null)
+                new GameObject("[AdService]").AddComponent<AdService>();
         }
     }
 }

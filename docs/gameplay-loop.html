@@ -83,6 +83,37 @@
   </div>
 
   <div class="callout">
+    <h3>Field Collection (Tap + Cooldown)</h3>
+    <p>Quantum fields are <strong>tap-to-collect</strong>. Each tap on a field yields <strong>one</strong> item
+       (weighted by the field's drop table) and puts that field on a short <strong>cooldown</strong> — there is no
+       longer any "active field" continuous auto-collection. A small <strong>radial wheel</strong> appears above the
+       tapped field and empties clockwise like a clock; the field cannot be tapped again until the wheel runs out
+       (<code>ManualFieldCollector</code> + <code>FieldCooldownIndicator</code>).</p>
+    <ul>
+      <li><strong>Base cooldown</strong> = <code>FieldSO.tapCooldownSeconds</code> (1.5 s by default).</li>
+      <li><strong>Persistence</strong> — the cooldown is stored as a UTC timestamp, so it keeps ticking while the app
+          is closed and <em>cannot</em> be reset by quitting and relaunching. A cooldown that fully elapsed while
+          away is simply ready on return.</li>
+      <li><strong>Effective cooldown</strong> = <code>base × researchMult × (1 − prestigeReduction)</code>, floored
+          at 0.25 s.</li>
+    </ul>
+    <p>Two upgrade tracks shorten the cooldown and stack multiplicatively:</p>
+    <ul>
+      <li><strong>Research (per run):</strong> <em>Rapid Extraction I</em> (−15%) → <em>Rapid Extraction II</em>
+          (−20% more), via <code>ResearchSO.fieldCooldownMult</code>.</li>
+      <li><strong>Prestige (permanent):</strong> <em>Quick Hands</em> — −5% per level, max −50%
+          (<code>UpgradeEffectType.FieldCooldownReduction</code>).</li>
+    </ul>
+    <p>Note: the <strong>Harvester</strong> building still auto-collects from a field continuously — that is a
+       separate, automated system (<code>CollectorSystem</code>) and is unaffected by the manual tap cooldown.</p>
+    <p><strong>Visual feedback.</strong> Each field is drawn as a <strong>wire-mesh</strong> overlay across its 1x1
+       tile — a "mathematical field" grid whose lines <strong>fluctuate with noise</strong>
+       (<code>FieldWireMesh</code> + the <code>MobileIdleBuilder/FieldWireMesh</code> shader). There is no longer a
+       continuous ambient particle stream; instead a <strong>tap bounces the mesh and births a short particle
+       burst</strong> from the tile (<code>FieldEffect.Burst</code>), so collection always reads as a deliberate hit.</p>
+  </div>
+
+  <div class="callout">
     <h3>Conveyor Placement (Mobile)</h3>
     <p>Conveyors use a deliberate, <strong>tap-based</strong> flow (not press-drag) so a stray touch can never
        drop an abandoned belt. Opening the Conveyor card enters the mode in <strong>Create</strong>; the camera
@@ -168,6 +199,12 @@
     <div style="margin-top:10px;font-size:12px;color:#8b949e;">
       Prestige wall = <code id="cfg-prestige-wall">5,000e</code> &nbsp;·&nbsp; Tutorial end surplus ≈ <code>12e</code>
     </div>
+  </div>
+
+  <!-- Live-tuning callout -->
+  <div class="callout" style="border-left-color:#79c0ff;">
+    <h3 style="color:#79c0ff;">Live tuning &amp; player notice</h3>
+    <p style="font-size:12px;color:#8b949e;">The shipped <code>game_data.json</code> stays the baked, offline-safe source of truth. Select <strong>scalars</strong> (GameConfig globals, item sell values, research costs/durations) can be re-tuned without a store release via the <code>gamedata.overrides</code> Remote Config blob, overlaid onto the baked values at boot for the next cold start. When a balance change is published, the remote <code>gamedata.updatedUtc</code> stamp is bumped; on their next launch every player whose saved <code>lastSeenGameDataUtc</code> is older sees a one-shot "Game Updated" notice, then the marker is recorded so it fires once per publish. (Building/field overrides are a follow-up.)</p>
   </div>
 
   <!-- Items Table -->
@@ -515,8 +552,9 @@
     <pre style="font-family:monospace;font-size:12px;color:#c9d1d9;line-height:1.7;margin:0;overflow-x:auto;">Entropy Headstart ─────────────────────────────────► Entropy Echo      (needs L3+)
 Memory Resonance  ──► Efficient Layouts (needs L1)  ► Turnkey Builder   (needs L2+)
                   └──────────────────────────────────► Research Overdrive (needs L3+)
-Assembly Line     ──► Quantum Yield     (needs L1)  ► Decay Mastery     (needs L2+)
-Expanded Vault    (standalone — no prerequisites)</pre>
+Assembly Line     ──► Quantum Yield     (needs L1)
+Expanded Vault    (standalone — no prerequisites)
+Quick Hands       (standalone — no prerequisites)</pre>
   </div>
 
   <!-- §4 Run Simulator -->
@@ -769,9 +807,9 @@ Expanded Vault    (standalone — no prerequisites)</pre>
       <li><code>NotifyLogin()</code> → call from <code>SaveManager.Start()</code> or <code>GameBootstrap</code> once per session</li>
       <li><code>NotifyCraft(itemId, qty)</code> → already called from <code>ManualCraftService</code>; ensure <code>ProductionSystem</code> also calls it per automated output</li>
       <li><code>NotifyBuildingPlaced(type)</code> → call from <code>BuildingPlacementController.OnBuildingPlaced</code></li>
-      <li><code>NotifyResearchCompleted(id)</code> → call from <code>ResearchService.Purchase()</code></li>
+      <li><code>NotifyResearchCompleted(id)</code> → called from <code>ResearchService.CompleteResearch()</code> (when the research timer finishes / is skipped)</li>
       <li><code>NotifyPrestige()</code> → call from <code>PrestigeSystem</code> after reset completes</li>
-      <li><code>NotifyEntropySpent(amount)</code> → call from <code>ResearchService.Purchase()</code> and building placement cost deduction</li>
+      <li><code>NotifyEntropySpent(amount)</code> → called from <code>ResearchService.Purchase()</code> (entropy paid up front when research starts) and building placement cost deduction</li>
       <li><code>NotifyPrestigeCurrencyEarned(amount)</code> → call from <code>PrestigeSystem</code> when PC is calculated</li>
       <li><code>NotifyTierReached(tier)</code> → call when <code>PlayerProgressData.CurrentTier</code> increments</li>
       <li><code>NotifyPVPWin()</code> → call from <code>PVPService</code> on match completion</li>
@@ -876,6 +914,27 @@ Expanded Vault    (standalone — no prerequisites)</pre>
     </ol>
     <p><small>Until IAP is live, the Buy tab shows "Coming Soon" labels and disabled buttons.
     Crystals awarded via <code>PremiumShopService.AwardCrystals(amount)</code> → writes to <code>SaveData.paidCurrency</code> and <code>SaveData.crystalsPurchased</code> (lifetime audit).</small></p>
+  </div>
+
+  <div class="phase" id="rewarded-ads-phase">
+    <div class="phase-header" style="border-left:4px solid #4dd0a8;background:#06231d;">
+      <h2>▶ Rewarded Ads (free, opt-in)</h2>
+      <p>Watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Placement table lives in <code>AdRewardCalculator.Placements</code>; reward delivery is orchestrated by <code>AdService</code>.</p>
+    </div>
+    <table>
+      <thead><tr><th>Placement</th><th>Reward</th><th>Daily cap</th></tr></thead>
+      <tbody>
+        <tr><td>Entropy Boost</td><td>10% of net worth (floor 500e)</td><td>5</td></tr>
+        <tr><td>Double Offline</td><td>re-grants the just-collected idle run (offered on the idle-return modal)</td><td>3</td></tr>
+        <tr><td>+50% Idle</td><td>offline collection rate ×1.5 for 4h</td><td>3</td></tr>
+        <tr><td>Production Surge</td><td>2× production for 30 min</td><td>2</td></tr>
+        <tr><td>Time Warp</td><td>instantly bank 1h of production</td><td>2</td></tr>
+        <tr><td>Crystal Drop</td><td>+25◆</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Kill-switch:</strong> the <code>ads.enabled</code> Remote Config flag (<code>FeatureFlags.AdsEnabled</code>). When off, <code>AdService</code> never initialises the provider, the Free Rewards nav button (<code>btn-rewards</code>) is hidden, and the idle-return "Double (Watch Ad)" button is suppressed. Takes effect on the next launch (flags resolve from cache when the HUD is built).</p>
+    <p><small>Counters reset at 00:00 UTC (<code>SaveData.adWatchCounts</code> / <code>adWatchResetUtc</code>), same pattern as daily challenges.
+    Ships on <code>MockAdProvider</code> until the LevelPlay SDK is wired (see <code>docs/levelplay-ads-setup.md</code>); the full reward/cap flow is live regardless of provider.</small></p>
   </div>
 
 </div>

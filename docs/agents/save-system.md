@@ -31,7 +31,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 
 | Class | Role |
 |---|---|
-| `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. 60s autosave; saves on pause. Cloud reconcile: newest `lastSaved` timestamp wins, loser kept as 24h backup. |
+| `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. 60s autosave; `SaveLocal()` + best-effort cloud push (`PushToCloudBestEffort`) on both background (`OnApplicationPause(true)`) and quit (`OnApplicationQuit`) — fire-and-forget Task, not the `SaveToCloud` coroutine, since the player loop is suspended once backgrounded; honors the `CloudSaveEnabled` kill-switch. Cloud reconcile: newest `lastSaved` timestamp wins, loser kept as 24h backup. |
 | `LocalSaveService` | JSON file read/write. |
 | `UGSCloudSaveService` + `AuthSessionPolicy` | UGS Cloud Save; Google sign-in with 30/90-day re-auth policy; anonymous fallback. |
 | `PrestigeSaveWatcher` | Clears idle snapshot when `PrestigeData.RunCount` changes (prevents double-earning). |
@@ -51,6 +51,11 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 - `GridSaveService.RebuildIdleSnapshot()` (end of `FlushToSave()`/`LoadGrid()`) walks the saved grid, computes producer→sink chains via `IdleGraphAnalyzer.BuildSnapshot`, baking in `prestigeSpeedMultiplier × boost` at `GridSaveService.cs:335`.
 - `RebuildIdleSnapshot()` also mirrors the active snapshot into `save.siteSnapshots[activeSiteIndex]` (`MirrorActiveSiteSnapshot`).
 - On next launch `OfflineCollectionService.CalculateAndApply()` pays out: elapsed seconds capped by `GetEffectiveIdleCap()` (config base + `IdleTimeCap` upgrade), rate scaled by `IdleCollectionRate` upgrade; `idleCollectionApplied` timestamp prevents double-apply. It iterates **all** `siteSnapshots` (every unlocked site earns for the offline window), falling back to the lone `idleSnapshot` on legacy/single-site saves.
+
+## Research timer (`ResearchService`)
+
+- One research runs at a time. `SaveData.activeResearchId` + `activeResearchCompleteUtc` (ISO-UTC, same timed-effect pattern as `speedBoostExpiryUtc`) hold the in-progress node and its finish time. `ResearchService` caches these on `Start()` (`RestoreActiveTimer`) and completes offline if already elapsed; `Update()` completes it live; `SkipActive()` finishes it early for crystals.
+- **Prestige:** research fully resets, so both fields are cleared (set to null) in `PrestigeSaveWatcher` and `PrestigeSystem` alongside `unlockedResearch`, and `ResearchService.ResetAll()` drops the cached timer. (Recipe knowledge survives prestige — that is separate, in `unlockedRecipes`.)
 
 ## Multi-grids / sites (`SiteService`)
 

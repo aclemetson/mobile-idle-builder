@@ -17,20 +17,12 @@
 }
 
 .splash-title {
-    font-size: 52px;
+    font-size: 64px;
     color: var(--color-primary);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
-    letter-spacing: 6px;
-}
-
-.splash-subtitle {
-    font-size: 52px;
-    color: var(--color-text-primary);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    letter-spacing: 6px;
-    margin-top: -8px;
+    letter-spacing: 4px;
+    white-space: normal;
 }
 
 .splash-rule {
@@ -42,7 +34,7 @@
 }
 
 .splash-tagline {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     color: var(--color-text-secondary);
     -unity-text-align: middle-center;
     letter-spacing: 2px;

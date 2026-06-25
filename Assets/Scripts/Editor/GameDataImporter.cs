@@ -307,6 +307,8 @@ namespace MobileIdleBuilder.Editor
             so.depthInTree          = data.depth_in_tree;
             so.costBaseCurrency     = data.cost_base_currency;
             so.costPrestigeCurrency = data.cost_prestige_currency;
+            so.durationSeconds      = data.duration_seconds;
+            so.fieldCooldownMult    = data.field_cooldown_mult;
             so.unlocksGridExpansion = data.unlocks_grid_expansion;
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;
@@ -539,7 +541,7 @@ namespace MobileIdleBuilder.Editor
 
             so.id            = data.id;
             so.displayName   = data.display_name;
-            so.collectionRate= data.collection_rate;
+            so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
             if (TryParseEnum<FieldType>(data.field_type, $"FieldSO '{data.id}'.fieldType", out var ft))

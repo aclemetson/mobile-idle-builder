@@ -136,6 +136,14 @@ namespace MobileIdleBuilder
 
             if (buildingGate == BuildingInteractionGate.BlockAll)
             {
+                // A tap on a bare field cell belongs to field collection, not the building system —
+                // don't show the "no building interaction" warning for it. Still fires for real
+                // buildings (e.g. a Harvester on a field cell, or Maxwell's Demon).
+                bool bareField =
+                    FieldGenerator.GetFieldInstanceAt(cell.x, cell.y) != null &&
+                    (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y));
+                if (bareField) return false;
+
                 ToastService.Instance?.Post("building");
                 return false;
             }

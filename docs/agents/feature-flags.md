@@ -40,6 +40,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 |---|---|---|---|
 | `pvp.enabled` | bool | `false` | `PVPService.RefreshState` forces Locked; HUD hides `btn-pvp`. Default off — backend not live. |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
+| `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/levelplay-ads-setup.md`). |
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
@@ -47,6 +48,26 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |
 | `analytics.enabled` | bool | `false` | Master switch for `TelemetryService` (UGS Analytics). **Default off** ⇒ telemetry is opt-in: flip on to open a collection phase. See `analytics.md`. |
 | `analytics.phase` | string | `"default"` | Label stamped on every event as `collection_phase` so collection windows stay segmentable in Data Explorer. |
+| `gamedata.updatedUtc` | string | `""` | ISO-8601 UTC publish stamp of the current game values. Drives the one-shot update-notice modal (`GameUpdateNotice.ShouldShow` vs `SaveData.lastSeenGameDataUtc`); blank ⇒ never shown. Bump it to announce a balance change to everyone on next launch. |
+| `gamedata.version` | int | `0` | Monotonic, human-facing version label. Low-cardinality dimension on the `game_update_notice` analytics event (rollout reach). |
+| `gamedata.noticeTitle` | string | `"Game Updated"` | Title shown on the update-notice modal. |
+| `gamedata.noticeMessage` | string | (generic) | Body text shown on the update-notice modal. |
+| `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
+
+## Game-data overrides
+
+`gamedata.overrides` is a curated, **scalar-only** override layer over the baked `game_data.json` baseline (the full dataset still ships in the build and is the offline fallback). It lets you re-tune select numbers **without a store release**.
+
+- **Schema** (arrays of entries — `JsonUtility` can't deserialize id-keyed maps):
+  ```json
+  { "config":   [ { "field": "prestigeBaseValue", "value": 600 } ],
+    "items":    [ { "id": "iron", "field": "baseSellValue", "value": 2 } ],
+    "research": [ { "id": "automation_1", "field": "durationSeconds", "value": 300 } ] }
+  ```
+- **Allow-list:** only fields in the `Set*Field` switches of `GameDataOverrides.cs` are honored (ids/refs/arrays are never overridable, so the importer's cross-references stay intact). Unknown field/id ⇒ ignored. See `Assets/Data/overrides.sample.json` for the documented field set.
+- **Applied at boot** in-place onto the shared loaded SOs by their owners (`GameBootstrap` → GameConfig, `ItemDatabase`, `ResearchService`), so every consumer sees the override with no per-consumer change.
+- **Timing:** fetched/cached via this same Feature Flag service (remote > cache > default), so a freshly-published blob takes effect on the **next cold start** — pair it with a `gamedata.updatedUtc` bump to notify players.
+- **Not yet overridable:** buildings and fields (no central runtime registry — they're reached only via `BuildingPlacementController.availableBuildings` / `FieldGenerator`; a follow-up can extend `GameDataOverrides` once a registry exists).
 
 ## Maintenance mode
 
@@ -79,7 +100,6 @@ relevant compile-time default (e.g. a `GameConfigSO` value) as the fallback.
 
 Candidates surfaced by the codebase audit — add when the feature lands:
 
-- `ads.enabled` — rewarded video (`AdService`, future).
 - `events.enabled` / seasonal content — extends `DailyEventService`.
 - `megastructure.enabled`, `multisite.enabled`, `achievements.enabled` — kill-switches for shipped systems.
 - `managers.rarity.enabled` — gacha/rarity layer over `ManagerService`.

@@ -19,6 +19,8 @@ namespace MobileIdleBuilder
         private Label         _crystalLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
+        private VisualElement _researchStatus;
+        private Label         _researchStatusLabel;
 
         private readonly Dictionary<int, Label> _inventoryLabels = new();
 
@@ -37,6 +39,8 @@ namespace MobileIdleBuilder
         private bool  _lastPrestigeAvailable  = false;
         private long  _lastHeldPC             = long.MinValue;
         private long  _lastCrystals           = long.MinValue;
+        private string _lastResearchId        = null;
+        private int    _lastResearchRemaining = int.MinValue;
 
         public void Init(VisualElement root)
         {
@@ -46,6 +50,8 @@ namespace MobileIdleBuilder
             _crystalLabel        = root.Q<Label>("crystal-label");
             _powerLabel          = root.Q<Label>("power-label");
             _btnPrestige         = root.Q<Button>("btn-prestige");
+            _researchStatus      = root.Q("research-status");
+            _researchStatusLabel = root.Q<Label>("research-status-label");
         }
 
         public void SetECSContext(EntityManager em, EntityQuery inventoryQuery,
@@ -70,6 +76,7 @@ namespace MobileIdleBuilder
             }
             if (!_powerQuery.IsEmpty) RefreshPowerLabel();
             RefreshCrystalLabel();
+            RefreshResearchStatus();
         }
 
         private void RefreshInventoryBar()
@@ -183,6 +190,36 @@ namespace MobileIdleBuilder
             if (crystals == _lastCrystals) return;
             _lastCrystals     = crystals;
             _crystalLabel.text = $"◆ {crystals:N0}";
+        }
+
+        // Shows the active research name + remaining time in a strip under the top bar; hides it
+        // when nothing is in progress. Dirty-flagged on (id, whole-second remaining) so it only
+        // writes the DOM once per second.
+        private void RefreshResearchStatus()
+        {
+            if (_researchStatus == null) return;
+
+            var rs = ResearchService.Instance;
+            if (rs == null || !rs.HasActiveResearch)
+            {
+                if (_lastResearchId != null)
+                {
+                    _lastResearchId        = null;
+                    _lastResearchRemaining = int.MinValue;
+                    _researchStatus.style.display = DisplayStyle.None;
+                }
+                return;
+            }
+
+            int    remaining = Mathf.CeilToInt((float)rs.ActiveRemainingSeconds);
+            string id        = rs.ActiveResearchId;
+            if (id == _lastResearchId && remaining == _lastResearchRemaining) return;
+            _lastResearchId        = id;
+            _lastResearchRemaining = remaining;
+
+            string name = rs.ActiveResearch != null ? rs.ActiveResearch.displayName : "Research";
+            _researchStatusLabel.text = $"🔬 {name}   ⏳ {HUDController.FormatResearchTimer(remaining)}";
+            _researchStatus.style.display = DisplayStyle.Flex;
         }
     }
 }

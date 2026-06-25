@@ -78,7 +78,6 @@ namespace MobileIdleBuilder
             bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);
             if (inspectorHit)
             {
-                fieldCollector?.DeactivateField();
                 AnchorPresence(screenPos);
                 return;
             }
@@ -112,7 +111,6 @@ namespace MobileIdleBuilder
             }
 
             // Tap on empty ground — clear any building selection and anchor presence
-            fieldCollector?.DeactivateField();
             buildingInspector?.ClearSelection();
             AnchorPresence(screenPos);
         }

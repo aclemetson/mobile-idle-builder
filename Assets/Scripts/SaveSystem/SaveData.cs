@@ -21,11 +21,14 @@ namespace MobileIdleBuilder
         public List<string> permanentUpgrades = new();
         public List<string> unlockedSites      = new();   // site ids unlocked; survives prestige. site_origin implicit.
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
+        public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
+        public string activeResearchId;                     // id of the research currently in progress; null/empty = none (one at a time). Cleared on prestige.
+        public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
         public List<string> codex                           = new();
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
@@ -44,6 +47,11 @@ namespace MobileIdleBuilder
         public List<string> dailyChallengeIds                       = new(); // today's 3 challenge ids
         public List<AchievementProgressEntry> dailyChallengeProgress = new(); // per-challenge accumulated progress
         public List<string> dailyChallengesClaimed                  = new(); // challenge ids already claimed today
+        // Rewarded ads — opt-in video rewards with per-placement daily caps. Survive prestige
+        // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
+        public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
+        public string adWatchResetUtc;                                       // ISO 8601 — when adWatchCounts were last zeroed (00:00 UTC)
+        public string adsIdleBoostExpiryUtc;                                 // ISO 8601 — null/empty = no active +50% idle-rate boost
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared
@@ -128,6 +136,11 @@ namespace MobileIdleBuilder
     {
         public string fieldId;  // matches FieldSO.id
         public int[]  position; // [x, y] grid cell
+
+        // Tap cooldown (radial wheel). Empty/null = ready. ISO 8601 UTC instant the field recharges,
+        // so the cooldown keeps ticking while the app is closed and cannot be reset by relaunching.
+        public string cooldownEndUtc;
+        public float  cooldownDurationSec; // full length when started, so the wheel resumes its fraction
     }
 
     [Serializable]

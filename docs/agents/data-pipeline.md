@@ -48,9 +48,10 @@ After ANY edit to `game_data.json` or `achievements.json`:
   "output_item": "orbital_frame", "output_quantity": 1,
   "base_craft_time": 30.0, "required_research": "megastructure_theory" }
 
-// research
+// research  (duration_seconds = research timer; 0 = instant unlock. See economy-balance.md for the depth curve.)
 { "id": "megastructure_theory", "display_name": "Megastructure Theory",
-  "cost_base_currency": 50000000, "prerequisites": ["component_engineering"],
+  "cost_base_currency": 50000000, "duration_seconds": 14400,
+  "prerequisites": ["component_engineering"],
   "unlocks_items": ["dyson_node"], "unlocks_recipes": ["dyson_node"] }
 ```
 

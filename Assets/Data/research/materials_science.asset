@@ -24,6 +24,8 @@ MonoBehaviour:
   depthInTree: 5
   costBaseCurrency: 150000
   costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
   - {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}

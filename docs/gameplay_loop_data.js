@@ -203,6 +203,8 @@ research: [
   { id:'hydrogen_synthesis',     label:'Hydrogen Synthesis',     branch:'Nuclear',     cost:50,        discount:0.25, prereqs:'Recombination I',                     unlocks:'Hydrogen, Atom Generator' },
   { id:'automation_i',           label:'Automation I',           branch:'Engineering', cost:25,        discount:0.50, prereqs:'Hydrogen Synthesis',                  unlocks:'Harvester' },
   { id:'nucleon_harvesting',     label:'Nucleon Harvesting',     branch:'Engineering', cost:800,       discount:0.20, prereqs:'Recombination I',                     unlocks:'Nucleon Harvester (special)' },
+  { id:'rapid_extraction_i',     label:'Rapid Extraction I',     branch:'Engineering', cost:150,       discount:0.25, prereqs:'Recombination I',                     unlocks:'Field tap cooldown −15%' },
+  { id:'rapid_extraction_ii',    label:'Rapid Extraction II',    branch:'Engineering', cost:600,       discount:0.20, prereqs:'Rapid Extraction I',                   unlocks:'Field tap cooldown −20% more' },
   { id:'atomic_assembly',        label:'Atomic Assembly',        branch:'Chemistry',   cost:500,       discount:0.20, prereqs:'Hydrogen Synthesis',                  unlocks:'He-4, Li, C, O, Si, Fe + gates: Light/Mid Elements, Mol. Synthesis' },
   { id:'isotopes',               label:'Isotope Engineering',    branch:'Nuclear',     cost:1500,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'D, T, C-14, Isotopic Manipulator' },
   { id:'heavy_elements',         label:'Heavy Elements',         branch:'Nuclear',     cost:3000,      discount:0.10, prereqs:'Atomic Assembly',                     unlocks:'Uranium + gate: Transuranic Synthesis' },
@@ -1352,6 +1354,14 @@ prestige: {
       prereqs: [],
       description: 'Increase inventory capacity by +20 slots per level.',
     },
+    {
+      id: 'field_cooldown', name: 'Quick Hands', tier: 1,
+      effectType: 'FieldCooldownReduction', effectPerLevel: 5, unit: '%',
+      maxLevel: 10, baseCost: 20, costScaling: 1.5,
+      costs: [20, 35, 55, 85, 130, 200, 305, 465, 705, 1070],
+      prereqs: [],
+      description: 'Field tap cooldown is 5% shorter per level (max −50%).',
+    },
     // ── Tier 2: require 1 Tier-1 level ──────────────────────────────────
     {
       id: 'quantum_yield', name: 'Quantum Yield', tier: 2,
@@ -1371,14 +1381,6 @@ prestige: {
     },
     // ── Tier 3: require deeper investment ───────────────────────────────
     {
-      id: 'decay_mastery', name: 'Decay Mastery', tier: 3,
-      effectType: 'DecayCollectionRate', effectPerLevel: 25, unit: '%',
-      maxLevel: 4, baseCost: 100, costScaling: 2.5,
-      costs: [100, 250, 625, 1562],
-      prereqs: [{ id: 'quantum_yield', minLevel: 2 }],
-      description: 'Decay particle collection rate +25% per level.',
-    },
-    {
       id: 'turnkey_builder', name: 'Turnkey Builder', tier: 3,
       effectType: 'BuildingStartPrePlaced', effectPerLevel: 1, unit: 'harvester',
       maxLevel: 3, baseCost: 150, costScaling: 5.0,
@@ -1388,11 +1390,11 @@ prestige: {
     },
     {
       id: 'research_overdrive', name: 'Research Overdrive', tier: 3,
-      effectType: 'ResearchSpeed', effectPerLevel: 15, unit: '%',
-      maxLevel: 4, baseCost: 120, costScaling: 3.0,
-      costs: [120, 360, 1080, 3240],
-      prereqs: [{ id: 'memory_resonance', minLevel: 3 }],
-      description: 'Research completes 15% faster per level.',
+      effectType: 'ResearchSpeed', effectPerLevel: 5, unit: '%',
+      maxLevel: 10, baseCost: 30, costScaling: 1.65,
+      costs: [30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800],
+      prereqs: [{ id: 'memory_resonance', minLevel: 2 }],
+      description: 'Research timers complete 5% faster per level (max -50%).',
     },
     {
       id: 'entropy_echo', name: 'Entropy Echo', tier: 3,

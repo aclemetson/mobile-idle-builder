@@ -21,7 +21,10 @@ so data from different collection windows stays separable).
 | Endgame reach | `megastructure_stage.stage`, `player_snapshot.megastructure_stage` | How far into the Dyson Sphere endgame do players get, and how fast? | megastructure contribution requirements |
 | Prestige re-engagement | `player_snapshot.prestige_count` distribution | Do players re-enter the prestige loop or stop after run 1? | prestige reward attractiveness, early-loop pacing |
 | Paid currency balance | `player_snapshot.paid_currency` | How much Crystals (◆) do players accumulate / hold unspent? | crystal sink pricing, achievement/IAP grant rates |
+| Balance-update rollout reach | `game_update_notice.data_version` | How many players actually saw a published game-data change (and at which `gamedata.version`)? | confirms a remote balance bump propagated before reading post-change metrics |
 | Spendable vs banked | `player_snapshot.base_currency` vs `entropy_per_sec` | Is currency piling up unspent (nothing to buy) or always starved? | sink pacing, cost ramps |
+| Manual-collection engagement | `player_snapshot.field_collections` over `playtime_total_sec` | Are players actively tapping fields, or ignoring manual collection once idle income kicks in? | field tap cooldown, drop value, early-game idle pacing |
+| Field cooldown reached | `player_snapshot.field_cooldown_sec` | How far have players driven the tap cooldown down via research + Quick Hands? Is the floor too easy/hard to hit? | `FieldSO.tapCooldownSeconds`, research `field_cooldown_mult`, Quick Hands per-level reduction |
 
 ## Where to view each metric
 
@@ -30,11 +33,12 @@ parameter value** (no avg/sum of a number). So:
 
 - **Data-Explorer-native** (count of an event by a low-cardinality parameter): building usage (`building_id`),
   research path (`research_id`), endgame reach (`stage`), prestige depth (`run_count`), tier/prestige-count
-  distribution from `player_snapshot`. Segment any of these by `collection_phase`.
+  distribution from `player_snapshot`, balance-update reach (`data_version`). Segment any of these by `collection_phase`.
 - **CSV-only** (value curves — export CSV → `dashboard.html`): everything whose signal is a numeric *value* or
   trend — net worth per run, prestige currency per run, `entropy_per_sec` over playtime, run length,
-  `base_currency` / `paid_currency` balances. These are continuous, so Data Explorer can neither aggregate nor
-  meaningfully group by them.
+  `base_currency` / `paid_currency` balances, and `field_cooldown_sec`. These are continuous, so Data Explorer
+  can neither aggregate nor meaningfully group by them. `field_collections` is a count, so it trends as a curve
+  in CSV but can also be coarsely bucketed in Data Explorer.
 
 ## Notes on derived fields
 

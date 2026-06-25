@@ -979,7 +979,7 @@ function updatePrestigeSimulator(totalPC) {
     VaultCapacity:            (v) => `+${v} inventory slots`,
     OutputQuantityMultiplier: (v) => `+${v}% output quantity`,
     BuildingCostReduction:    (v) => `−${v}% building costs`,
-    DecayCollectionRate:      (v) => `+${v}% decay collection`,
+    FieldCooldownReduction:   (v) => `−${v}% field tap cooldown`,
     BuildingStartPrePlaced:   (v) => `+${v} pre-placed Harvester${v > 1 ? 's' : ''}`,
     ResearchSpeed:            (v) => `+${v}% research speed`,
     PrestigeGainMultiplier:   (v) => `+${v}% prestige currency earned`,

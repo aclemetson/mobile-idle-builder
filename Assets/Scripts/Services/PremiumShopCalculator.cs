@@ -83,6 +83,20 @@ namespace MobileIdleBuilder
         public static float GetSpeedBoostMultiplier(string expiryUtc)
             => IsBoostActive(expiryUtc) ? SpeedBoostMultiplier : 1f;
 
+        // ── Research Skip Helpers ─────────────────────────────────────────────
+
+        // Crystals to instantly finish a running research timer, priced at the 150◆/skip-hour
+        // anchor against the time remaining. Always at least 1◆ so a skip is never free, and
+        // early (seconds-long) research costs only a crystal or two.
+        public const int CrystalsPerSkipHour = 150;
+
+        /// <summary>Crystal cost to skip the remaining research time. Rounds up; floor of 1◆.</summary>
+        public static long CalcResearchSkipCost(double remainingSeconds)
+        {
+            if (remainingSeconds <= 0) return 0;
+            return Math.Max(1, (long)Math.Ceiling(remainingSeconds / 3600.0 * CrystalsPerSkipHour));
+        }
+
         // ── Entropy Helpers ───────────────────────────────────────────────────
 
         /// <summary>Calculates the entropy amount for a tier given the last known net worth.</summary>

@@ -26,7 +26,9 @@ namespace MobileIdleBuilder
         private ManagersSubController               _managers;
         private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
+        private RewardedAdsSubController            _rewards;
         private IdleReturnSubController             _idleReturn;
+        private GameUpdateNoticeSubController       _gameUpdate;
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
         private SitesSubController                  _sites;
@@ -44,13 +46,18 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel, _sitesPanel, _managersPanel, _megastructurePanel;
+                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
                            _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+        // Research timer UI (live countdown + skip on the in-progress card)
+        private Label      _researchCountdownLabel;
+        private Button     _researchSkipBtn;
+        private bool       _researchSkipConfirming;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
         private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
         private Button     _btnEnterPVP;
 
@@ -128,7 +135,10 @@ namespace MobileIdleBuilder
             _managers     = GetComponent<ManagersSubController>();
             _megastructure = GetComponent<MegastructureSubController>();
             _daily        = GetComponent<DailyEventsSubController>();
+            // Added in code (not the scene) so the Free Rewards panel works without manual wiring.
+            _rewards      = GetComponent<RewardedAdsSubController>() ?? gameObject.AddComponent<RewardedAdsSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
+            _gameUpdate   = GetComponent<GameUpdateNoticeSubController>() ?? gameObject.AddComponent<GameUpdateNoticeSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
             _sites        = GetComponent<SitesSubController>();
@@ -170,7 +180,9 @@ namespace MobileIdleBuilder
             _managers?.Init(root, this);
             _megastructure?.Init(root, this);
             _daily?.Init(root, this);
-            _idleReturn?.Init(root);
+            _rewards?.Init(root, this);
+            _idleReturn?.Init(root, this);
+            _gameUpdate?.Init(root, this);
             _shop?.Initialize(root);
             _settings?.Initialize(root);
             _sites?.Init(root, this);
@@ -325,6 +337,7 @@ namespace MobileIdleBuilder
             _managersPanel     = root.Q("managers-panel");
             _megastructurePanel = root.Q("megastructure-panel");
             _dailyPanel        = root.Q("daily-panel");
+            _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
@@ -336,7 +349,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel
             };
 
@@ -421,6 +434,10 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
             var btnDaily = root.Q<Button>("btn-daily");
             if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
+            // Free Rewards (rewarded ads) — nav button hidden by ApplyFeatureFlagGates when ads.enabled is off.
+            var btnRewards = root.Q<Button>("btn-rewards");
+            if (btnRewards != null)
+                btnRewards.clicked += () => TryOpenPanel(OpenRewardsPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
 
             // Achievement category tabs
@@ -451,6 +468,8 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
             var btnCloseDaily = root.Q<Button>("btn-close-daily");
             if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
+            var btnCloseRewards = root.Q<Button>("btn-close-rewards");
+            if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
@@ -552,13 +571,58 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
+
+            // Drive the live research countdown while the panel is open (paused when it closes).
+            if (_researchTicker == null)
+                _researchTicker = _researchList.schedule.Execute(UpdateResearchCountdown).Every(1000);
+            else
+                _researchTicker.Resume();
+
             OnResearchPanelOpened?.Invoke();
+        }
+
+        // Updates just the active card's countdown + skip cost each second, so an open inline
+        // skip confirm is not blown away by a full rebuild.
+        private void UpdateResearchCountdown()
+        {
+            if (_researchPanel == null || _researchPanel.ClassListContains("hidden"))
+            {
+                _researchTicker?.Pause();
+                return;
+            }
+            if (researchService == null || !researchService.HasActiveResearch) return;
+
+            double rem = researchService.ActiveRemainingSeconds;
+            if (_researchCountdownLabel != null)
+                _researchCountdownLabel.text = $"⏳ {FormatResearchTimer(rem)}";
+
+            if (_researchSkipBtn != null && !_researchSkipConfirming)
+            {
+                long cost     = researchService.ActiveSkipCost;
+                long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.SetEnabled(crystals >= cost);
+            }
+        }
+
+        public static string FormatResearchTimer(double seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = System.TimeSpan.FromSeconds(System.Math.Ceiling(seconds));
+            if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes:D2}m {ts.Seconds:D2}s";
+            if (ts.TotalMinutes >= 1) return $"{ts.Minutes}m {ts.Seconds:D2}s";
+            return $"{ts.Seconds}s";
         }
 
         private void BuildResearchList()
         {
             if (_researchList == null) return;
             _researchList.Clear();
+
+            // Reset per-build references for the active-research card (reassigned below if present).
+            _researchCountdownLabel = null;
+            _researchSkipBtn        = null;
+            _researchSkipConfirming = false;
 
             if (researchService == null || researchService.AllResearch == null ||
                 researchService.AllResearch.Count == 0)
@@ -608,6 +672,12 @@ namespace MobileIdleBuilder
                     card.Add(descLabel);
                 }
 
+                bool isActive    = researchService.HasActiveResearch &&
+                                   researchService.ActiveResearchId == research.id;
+                bool labBusy     = researchService.HasActiveResearch && !isActive;
+
+                if (isActive) card.AddToClassList("research-card--in-progress");
+
                 if (!unlocked)
                 {
                     var footer = new VisualElement();
@@ -623,27 +693,46 @@ namespace MobileIdleBuilder
                         prereqLabel.AddToClassList("research-card-prereq");
                         footer.Add(prereqLabel);
                     }
+                    else if (isActive)
+                    {
+                        // In-progress: live countdown + skip-for-crystals
+                        _researchCountdownLabel = new Label($"⏳ {FormatResearchTimer(researchService.ActiveRemainingSeconds)}");
+                        _researchCountdownLabel.AddToClassList("research-card-cost");
+                        footer.Add(_researchCountdownLabel);
+                        BuildResearchSkipUi(footer, research);
+                    }
                     else
                     {
-                        // Cost badge
+                        // Cost + effective research time (after the Research Overdrive discount),
+                        // stacked so the Start button stays on the right.
+                        var info = new VisualElement();
+                        info.AddToClassList("research-card-info");
+
                         bool affordable = currentEntropy >= research.costBaseCurrency;
                         var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
                         costLabel.AddToClassList("research-card-cost");
                         if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
-                        footer.Add(costLabel);
+                        info.Add(costLabel);
 
-                        // Purchase button
-                        var purchaseBtn = new Button { text = "Unlock" };
-                        purchaseBtn.AddToClassList("craft-btn");
-                        purchaseBtn.SetEnabled(canPurchase);
+                        int effSecs    = researchService.EffectiveDurationSeconds(research);
+                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        timeLabel.AddToClassList("research-card-time");
+                        info.Add(timeLabel);
+
+                        footer.Add(info);
+
+                        // Start button (disabled while the lab is busy with another research)
+                        var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
+                        startBtn.AddToClassList("craft-btn");
+                        startBtn.SetEnabled(!labBusy && canPurchase);
 
                         var captured = research;
-                        purchaseBtn.clicked += () =>
+                        startBtn.clicked += () =>
                         {
                             researchService.Purchase(captured);
                             BuildResearchList();
                         };
-                        footer.Add(purchaseBtn);
+                        footer.Add(startBtn);
                     }
 
                     card.Add(footer);
@@ -651,6 +740,39 @@ namespace MobileIdleBuilder
 
                 _researchList.Add(card);
             }
+        }
+
+        // Skip button for the in-progress research. First tap reveals a Confirm/Cancel row so
+        // spending crystals is always a deliberate two-tap action (no generic confirm modal exists).
+        private void BuildResearchSkipUi(VisualElement footer, ResearchSO research)
+        {
+            long cost     = researchService.ActiveSkipCost;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+
+            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn.AddToClassList("craft-btn");
+            _researchSkipBtn.SetEnabled(crystals >= cost);
+            _researchSkipBtn.clicked += () =>
+            {
+                _researchSkipConfirming = true;
+                footer.Remove(_researchSkipBtn);
+
+                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                confirm.AddToClassList("craft-btn");
+                confirm.clicked += () =>
+                {
+                    researchService.SkipActive(); // completion fires OnResearchUnlocked → rebuild
+                    BuildResearchList();
+                };
+
+                var cancel = new Button { text = "✕" };
+                cancel.AddToClassList("craft-btn");
+                cancel.clicked += () => BuildResearchList();
+
+                footer.Add(confirm);
+                footer.Add(cancel);
+            };
+            footer.Add(_researchSkipBtn);
         }
 
         private void OnResearchUnlocked(ResearchSO research)
@@ -711,6 +833,7 @@ namespace MobileIdleBuilder
         {
             if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
             if (!FeatureFlags.DailyEventsEnabled) SetElementVisible(root.Q<Button>("btn-daily"), false);
+            if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
         }
 
         private void OpenSitesPanel()
@@ -726,6 +849,13 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _daily?.Refresh();
             SetElementVisible(_dailyPanel, true);
+        }
+
+        private void OpenRewardsPanel()
+        {
+            CloseAllPanels();
+            _rewards?.Refresh();
+            SetElementVisible(_rewardsPanel, true);
         }
 
         private void OpenShopPanel()
@@ -1546,6 +1676,27 @@ namespace MobileIdleBuilder
 
         // Idle-return modal pass-through (delegated to IdleReturnSubController)
         public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
+
+        /// <summary>
+        /// Shows the game-data update notice once if the remote <c>gamedata.updatedUtc</c> stamp is
+        /// newer than the saved marker, then records the marker so it fires once per published stamp.
+        /// Called by ECSLoadBridge after the save is applied. No-op (silent) on any blank/stale stamp.
+        /// </summary>
+        public void MaybeShowGameUpdateNotice()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
+                return;
+
+            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save != null)
+            {
+                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+                SaveManager.Instance.SaveLocal();
+            }
+        }
 
         private void PositionTooltip(VisualElement anchor)
         {

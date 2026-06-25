@@ -41,6 +41,9 @@ namespace MobileIdleBuilder
             }
 
             GameLogger.Info($"[ItemDatabase] Registered on '{gameObject.name}' with {_byItemId.Count} items.");
+
+            // Overlay any cached remote balance overrides onto the loaded items (no-op when none published).
+            GameDataOverrides.ApplyItems(_allItems);
         }
 
         public IReadOnlyList<ItemSO> All => _allItems;

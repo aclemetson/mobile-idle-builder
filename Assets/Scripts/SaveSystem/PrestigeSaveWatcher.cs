@@ -56,6 +56,8 @@ namespace MobileIdleBuilder
 
                 // Research fully resets on prestige (player re-unlocks each run).
                 save.unlockedResearch = new();
+                save.activeResearchId = null;
+                save.activeResearchCompleteUtc = null;
 
                 save.tutorial.hasCompletedFirstRun = true;
                 save.tutorial.isActive             = false;
