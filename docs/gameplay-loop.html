@@ -83,6 +83,32 @@
   </div>
 
   <div class="callout">
+    <h3>Field Collection (Tap + Cooldown)</h3>
+    <p>Quantum fields are <strong>tap-to-collect</strong>. Each tap on a field yields <strong>one</strong> item
+       (weighted by the field's drop table) and puts that field on a short <strong>cooldown</strong> — there is no
+       longer any "active field" continuous auto-collection. A small <strong>radial wheel</strong> appears above the
+       tapped field and empties clockwise like a clock; the field cannot be tapped again until the wheel runs out
+       (<code>ManualFieldCollector</code> + <code>FieldCooldownIndicator</code>).</p>
+    <ul>
+      <li><strong>Base cooldown</strong> = <code>FieldSO.tapCooldownSeconds</code> (1.5 s by default).</li>
+      <li><strong>Persistence</strong> — the cooldown is stored as a UTC timestamp, so it keeps ticking while the app
+          is closed and <em>cannot</em> be reset by quitting and relaunching. A cooldown that fully elapsed while
+          away is simply ready on return.</li>
+      <li><strong>Effective cooldown</strong> = <code>base × researchMult × (1 − prestigeReduction)</code>, floored
+          at 0.25 s.</li>
+    </ul>
+    <p>Two upgrade tracks shorten the cooldown and stack multiplicatively:</p>
+    <ul>
+      <li><strong>Research (per run):</strong> <em>Rapid Extraction I</em> (−15%) → <em>Rapid Extraction II</em>
+          (−20% more), via <code>ResearchSO.fieldCooldownMult</code>.</li>
+      <li><strong>Prestige (permanent):</strong> <em>Quick Hands</em> — −5% per level, max −50%
+          (<code>UpgradeEffectType.FieldCooldownReduction</code>).</li>
+    </ul>
+    <p>Note: the <strong>Harvester</strong> building still auto-collects from a field continuously — that is a
+       separate, automated system (<code>CollectorSystem</code>) and is unaffected by the manual tap cooldown.</p>
+  </div>
+
+  <div class="callout">
     <h3>Conveyor Placement (Mobile)</h3>
     <p>Conveyors use a deliberate, <strong>tap-based</strong> flow (not press-drag) so a stray touch can never
        drop an abandoned belt. Opening the Conveyor card enters the mode in <strong>Create</strong>; the camera
@@ -515,8 +541,9 @@
     <pre style="font-family:monospace;font-size:12px;color:#c9d1d9;line-height:1.7;margin:0;overflow-x:auto;">Entropy Headstart ─────────────────────────────────► Entropy Echo      (needs L3+)
 Memory Resonance  ──► Efficient Layouts (needs L1)  ► Turnkey Builder   (needs L2+)
                   └──────────────────────────────────► Research Overdrive (needs L3+)
-Assembly Line     ──► Quantum Yield     (needs L1)  ► Decay Mastery     (needs L2+)
-Expanded Vault    (standalone — no prerequisites)</pre>
+Assembly Line     ──► Quantum Yield     (needs L1)
+Expanded Vault    (standalone — no prerequisites)
+Quick Hands       (standalone — no prerequisites)</pre>
   </div>
 
   <!-- §4 Run Simulator -->

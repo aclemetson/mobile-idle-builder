@@ -10,21 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
-  m_Name: nucleon_harvesting
+  m_Name: rapid_extraction_ii
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
-  id: nucleon_harvesting
-  displayName: Nucleon Harvesting
-  description: Unlock the Nucleon Harvester special upgrade for paired field harvesters
-    on opposing polarity fields.
+  id: rapid_extraction_ii
+  displayName: Rapid Extraction II
+  description: Field tap cooldown is a further 20% shorter.
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
-  depthInTree: 1
-  costBaseCurrency: 800
+  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
+  depthInTree: 2
+  costBaseCurrency: 600
   costPrestigeCurrency: 0
-  durationSeconds: 30
-  fieldCooldownMult: 1
+  durationSeconds: 120
+  fieldCooldownMult: 0.8
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
@@ -32,5 +31,5 @@ MonoBehaviour:
   unlocksResearch: []
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
-  codexEntry: Two harvesters on opposing polarity fields can be merged into a single
-    Nucleon Harvester, producing protons or neutrons directly without quark combination.
+  codexEntry: A tuned resonance cascade drives field recharge near its physical limit,
+    collapsing the cooldown between taps.

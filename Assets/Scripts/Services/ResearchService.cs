@@ -71,6 +71,23 @@ namespace MobileIdleBuilder
         public bool IsUnlocked(string id) =>
             !string.IsNullOrEmpty(id) && _unlockedIds.Contains(id);
 
+        /// <summary>
+        /// Product of <see cref="ResearchSO.fieldCooldownMult"/> across every unlocked research node.
+        /// Returns 1 when nothing relevant is unlocked. Used to shorten the field tap cooldown
+        /// (combines multiplicatively with the permanent prestige reduction).
+        /// </summary>
+        public float GetFieldCooldownMultiplier()
+        {
+            if (_allResearch == null) return 1f;
+            float mult = 1f;
+            foreach (var r in _allResearch)
+            {
+                if (r == null || r.fieldCooldownMult >= 1f) continue;
+                if (IsUnlocked(r.id)) mult *= r.fieldCooldownMult;
+            }
+            return mult;
+        }
+
         /// <summary>True while a research timer is running (one research at a time).</summary>
         public bool HasActiveResearch => _activeResearch != null;
 

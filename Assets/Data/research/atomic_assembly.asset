@@ -24,6 +24,7 @@ MonoBehaviour:
   costBaseCurrency: 500
   costPrestigeCurrency: 0
   durationSeconds: 30
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 06518bba2d1ed46478d8250e3ed0edcb, type: 2}
   - {fileID: 11400000, guid: 1861494e6440194438a3d3f9af7636d5, type: 2}
