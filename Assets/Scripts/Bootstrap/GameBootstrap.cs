@@ -12,5 +12,15 @@ namespace MobileIdleBuilder
         protected override bool PersistAcrossScenes => true;
 
         [SerializeField] public GameConfigSO gameConfig;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (Instance != this) return;
+
+            // Overlay any cached remote balance overrides onto the shared GameConfig instance at boot,
+            // before any system reads it (no-op when no blob is published). See GameDataOverrides.
+            GameDataOverrides.ApplyConfig(gameConfig);
+        }
     }
 }

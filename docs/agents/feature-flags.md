@@ -52,6 +52,22 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `gamedata.version` | int | `0` | Monotonic, human-facing version label. Low-cardinality dimension on the `game_update_notice` analytics event (rollout reach). |
 | `gamedata.noticeTitle` | string | `"Game Updated"` | Title shown on the update-notice modal. |
 | `gamedata.noticeMessage` | string | (generic) | Body text shown on the update-notice modal. |
+| `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
+
+## Game-data overrides
+
+`gamedata.overrides` is a curated, **scalar-only** override layer over the baked `game_data.json` baseline (the full dataset still ships in the build and is the offline fallback). It lets you re-tune select numbers **without a store release**.
+
+- **Schema** (arrays of entries — `JsonUtility` can't deserialize id-keyed maps):
+  ```json
+  { "config":   [ { "field": "prestigeBaseValue", "value": 600 } ],
+    "items":    [ { "id": "iron", "field": "baseSellValue", "value": 2 } ],
+    "research": [ { "id": "automation_1", "field": "durationSeconds", "value": 300 } ] }
+  ```
+- **Allow-list:** only fields in the `Set*Field` switches of `GameDataOverrides.cs` are honored (ids/refs/arrays are never overridable, so the importer's cross-references stay intact). Unknown field/id ⇒ ignored. See `Assets/Data/overrides.sample.json` for the documented field set.
+- **Applied at boot** in-place onto the shared loaded SOs by their owners (`GameBootstrap` → GameConfig, `ItemDatabase`, `ResearchService`), so every consumer sees the override with no per-consumer change.
+- **Timing:** fetched/cached via this same Feature Flag service (remote > cache > default), so a freshly-published blob takes effect on the **next cold start** — pair it with a `gamedata.updatedUtc` bump to notify players.
+- **Not yet overridable:** buildings and fields (no central runtime registry — they're reached only via `BuildingPlacementController.availableBuildings` / `FieldGenerator`; a follow-up can extend `GameDataOverrides` once a registry exists).
 
 ## Maintenance mode
 
