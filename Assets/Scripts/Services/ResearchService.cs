@@ -38,6 +38,9 @@ namespace MobileIdleBuilder
             if (Instance != this) return;
             var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
             _allResearch = db != null ? db.allResearch : System.Array.Empty<ResearchSO>();
+
+            // Overlay any cached remote balance overrides onto the loaded research (no-op when none published).
+            GameDataOverrides.ApplyResearch(_allResearch);
         }
 
         void Start()
