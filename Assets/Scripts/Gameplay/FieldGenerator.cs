@@ -366,6 +366,9 @@ namespace MobileIdleBuilder
             var effect = go.AddComponent<FieldEffect>();
             effect.Initialize(fieldSO.fieldColor, _fieldParticleMaterial);
 
+            // Noise-fluctuating wire-mesh overlay across the tile; bounces on tap.
+            go.AddComponent<FieldWireMesh>().Initialize(fieldSO.fieldColor, cs);
+
             // Per-field tap cooldown + radial countdown wheel (built lazily on first cooldown).
             go.AddComponent<FieldCooldownIndicator>();
         }

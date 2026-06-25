@@ -20,6 +20,9 @@ namespace MobileIdleBuilder
         [Tooltip("Physics layers checked by the tap raycast. Leave as Everything when fields use the Default layer.")]
         [SerializeField] private LayerMask fieldLayerMask = ~0;
 
+        /// <summary>Particles emitted from a field's tile each time it is tapped.</summary>
+        private const int TapBurstCount = 14;
+
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _tutorialQuery;
@@ -135,6 +138,10 @@ namespace MobileIdleBuilder
 
             if (!CollectOne(field))
                 return false;
+
+            // Tap juice: bounce the wire-mesh and birth a particle burst from the tile.
+            instance.GetComponent<FieldWireMesh>()?.TriggerBounce();
+            instance.GetComponent<FieldEffect>()?.Burst(TapBurstCount);
 
             cooldown?.StartCooldown(EffectiveCooldownFor(field.tapCooldownSeconds));
             return true;

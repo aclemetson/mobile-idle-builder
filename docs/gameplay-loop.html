@@ -106,6 +106,11 @@
     </ul>
     <p>Note: the <strong>Harvester</strong> building still auto-collects from a field continuously — that is a
        separate, automated system (<code>CollectorSystem</code>) and is unaffected by the manual tap cooldown.</p>
+    <p><strong>Visual feedback.</strong> Each field is drawn as a <strong>wire-mesh</strong> overlay across its 1x1
+       tile — a "mathematical field" grid whose lines <strong>fluctuate with noise</strong>
+       (<code>FieldWireMesh</code> + the <code>MobileIdleBuilder/FieldWireMesh</code> shader). There is no longer a
+       continuous ambient particle stream; instead a <strong>tap bounces the mesh and births a short particle
+       burst</strong> from the tile (<code>FieldEffect.Burst</code>), so collection always reads as a deliberate hit.</p>
   </div>
 
   <div class="callout">
