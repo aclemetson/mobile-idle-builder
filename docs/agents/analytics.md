@@ -47,6 +47,7 @@ carries `player_id` + `collection_phase`.
 | `research_completed` | research_id, entropy_spent_total | `AchievementService.NotifyResearchCompleted` |
 | `tier_reached` | tier | `AchievementService.NotifyTierReached` (no caller yet — fires when one is added) |
 | `megastructure_stage` | stage | `MegastructureService.Deduct` on stage completion |
+| `game_update_notice` | data_version | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
 | `player_snapshot` | networth, base_currency, entropy_per_sec, prestige_currency, paid_currency, prestige_count, building_count, highest_tier, megastructure_stage, research_unlocked_count, playtime_total_sec, field_collections, field_cooldown_sec | snapshot loop (5 min) + each prestige |
 
 `field_collections` (Integer) = session-cumulative manual field taps that yielded an item, bumped via

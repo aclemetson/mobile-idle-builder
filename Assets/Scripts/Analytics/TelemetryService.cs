@@ -158,6 +158,19 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// The game-data update notice was shown to the player (a newer <c>gamedata.updatedUtc</c> stamp
+        /// was published). <paramref name="dataVersion"/> is the low-cardinality <c>gamedata.version</c>
+        /// label — use it to confirm a balance change's rollout reach in Data Explorer.
+        /// </summary>
+        public void RecordGameUpdateNotice(int dataVersion)
+        {
+            if (!_collecting) return;
+            var p = NewParams();
+            p["data_version"] = dataVersion;
+            _sink.RecordEvent("game_update_notice", p);
+        }
+
+        /// <summary>
         /// Bumps the session field-collection counter (one manual field tap that yielded an item).
         /// Surfaced as the <c>field_collections</c> snapshot dimension — no per-tap event is emitted.
         /// </summary>

@@ -161,6 +161,10 @@ namespace MobileIdleBuilder
                 FindAnyObjectByType<HUDController>()?.ShowIdleReturn(_pendingIdleResult);
                 _pendingIdleResult = null;
             }
+
+            // Game-data update notice renders above the idle-return modal (z-index 101 > 100):
+            // closing it reveals the welcome-back modal beneath. No-op unless a newer stamp is published.
+            FindAnyObjectByType<HUDController>()?.MaybeShowGameUpdateNotice();
         }
 
         // ── Load path ─────────────────────────────────────────────────────

@@ -28,6 +28,7 @@ namespace MobileIdleBuilder
         private DailyEventsSubController            _daily;
         private RewardedAdsSubController            _rewards;
         private IdleReturnSubController             _idleReturn;
+        private GameUpdateNoticeSubController       _gameUpdate;
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
         private SitesSubController                  _sites;
@@ -137,6 +138,7 @@ namespace MobileIdleBuilder
             // Added in code (not the scene) so the Free Rewards panel works without manual wiring.
             _rewards      = GetComponent<RewardedAdsSubController>() ?? gameObject.AddComponent<RewardedAdsSubController>();
             _idleReturn   = GetComponent<IdleReturnSubController>();
+            _gameUpdate   = GetComponent<GameUpdateNoticeSubController>() ?? gameObject.AddComponent<GameUpdateNoticeSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
             _sites        = GetComponent<SitesSubController>();
@@ -180,6 +182,7 @@ namespace MobileIdleBuilder
             _daily?.Init(root, this);
             _rewards?.Init(root, this);
             _idleReturn?.Init(root, this);
+            _gameUpdate?.Init(root, this);
             _shop?.Initialize(root);
             _settings?.Initialize(root);
             _sites?.Init(root, this);
@@ -1673,6 +1676,27 @@ namespace MobileIdleBuilder
 
         // Idle-return modal pass-through (delegated to IdleReturnSubController)
         public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
+
+        /// <summary>
+        /// Shows the game-data update notice once if the remote <c>gamedata.updatedUtc</c> stamp is
+        /// newer than the saved marker, then records the marker so it fires once per published stamp.
+        /// Called by ECSLoadBridge after the save is applied. No-op (silent) on any blank/stale stamp.
+        /// </summary>
+        public void MaybeShowGameUpdateNotice()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
+                return;
+
+            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save != null)
+            {
+                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+                SaveManager.Instance.SaveLocal();
+            }
+        }
 
         private void PositionTooltip(VisualElement anchor)
         {
