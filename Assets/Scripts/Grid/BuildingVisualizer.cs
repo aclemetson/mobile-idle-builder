@@ -28,6 +28,11 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), (int, int)>      _footprints        = new();
         private readonly HashSet<(int, int)>                      _highlighted       = new();
         private readonly Dictionary<(int, int), GameObject>       _spawnedCubes      = new();
+        private readonly Dictionary<(int, int), Color>            _baseColors        = new();
+        // Collectors whose field had not spawned yet at visual-creation time (load ordering): keyed
+        // to the time they were registered, so their field colour can be resolved once it appears.
+        private readonly Dictionary<(int, int), float>            _pendingFieldColor = new();
+        private readonly List<(int, int)>                         _resolvedFieldBuffer = new();
         private readonly HashSet<(int, int)>                      _portedCells       = new();
         private readonly Dictionary<(int, int), List<GameObject>> _spawnedPortArrows = new();
 
@@ -38,7 +43,7 @@ namespace MobileIdleBuilder
         private (int, int) _hoveredCell = (-1, -1);
 
         private static readonly Color DefaultCubeColor   = Color.white;
-        private static readonly Color HoverCubeColor     = new Color(0.35f, 0.9f, 1f);
+        private static readonly Color HoverCubeColor     = new Color(1f, 0.82f, 0.15f); // yellow hover highlight
         private static readonly Color UnpoweredCubeColor = new Color(0.9f,  0.25f, 0.25f); // red — no power in range
 
         void Start()
@@ -105,12 +110,15 @@ namespace MobileIdleBuilder
                 fpData.Dispose();
             }
 
-            // Pass 2: highlight tiles and spawn cube placeholders
-            var positions = _buildingQuery.ToComponentDataArray<GridPosition>(Allocator.Temp);
-            for (int i = 0; i < positions.Length; i++)
+            // Pass 2: highlight tiles and spawn building visuals (cube, or spindle for collectors)
+            var em        = World.DefaultGameObjectInjectionWorld.EntityManager;
+            var bEntities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < bEntities.Length; i++)
             {
-                int x    = positions[i].Cell.x;
-                int y    = positions[i].Cell.y;
+                var ent  = bEntities[i];
+                var gp   = em.GetComponentData<GridPosition>(ent);
+                int x    = gp.Cell.x;
+                int y    = gp.Cell.y;
                 var cell = (x, y);
 
                 if (_highlighted.Contains(cell)) continue;
@@ -143,20 +151,45 @@ namespace MobileIdleBuilder
                     mr.shadowCastingMode = ShadowCastingMode.Off;
                     mr.receiveShadows    = false;
 
-                    // PresenceReceiver owns all colour state for this cube
+                    // Field-collector buildings (anything carrying CollectorData) resemble the field
+                    // they sit on, so their base colour is the field colour rather than plain white.
+                    bool  isCollector  = em.HasComponent<CollectorData>(ent);
+                    Color baseColor    = DefaultCubeColor;
+                    bool  fieldPending = false;
+                    if (isCollector)
+                    {
+                        var field = FieldGenerator.GetFieldAt(x, y);
+                        if (field != null) baseColor = field.fieldColor;
+                        else fieldPending = true; // field not spawned yet (load ordering) — resolve later
+                    }
+
+                    // PresenceReceiver owns all colour state for this cube; _baseColors remembers the
+                    // logical base so power/hover tints restore to it (not white) afterwards.
                     var pr = cube.AddComponent<PresenceReceiver>();
-                    pr.SetBaseColor(DefaultCubeColor);
+                    pr.SetBaseColor(baseColor);
+                    _baseColors[cell] = baseColor;
+
+                    // Swap the cube for the procedural spindle structure — a round body tapering to a
+                    // singularity point, with a flat front facade + emission aperture facing the output.
+                    if (isCollector)
+                    {
+                        cube.name = $"Collector_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(
+                            (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        cube.AddComponent<CollectorStructure>().Initialize(ent, baseColor);
+                        if (fieldPending) _pendingFieldColor[cell] = Time.time;
+                    }
 
                     _spawnedCubes[cell] = cube;
                 }
             }
-            positions.Dispose();
+            bEntities.Dispose();
 
             // Pass 3: draw port arrows from SO port layout
             if (!_portQueryReady || _portQuery.IsEmpty) return;
 
             var entities = _portQuery.ToEntityArray(Allocator.Temp);
-            var em       = World.DefaultGameObjectInjectionWorld.EntityManager;
             float portHeight = 1.1f;
             float cs2        = gridRenderer.CellSize;
 
@@ -207,10 +240,40 @@ namespace MobileIdleBuilder
 
         void Update()
         {
+            if (_pendingFieldColor.Count > 0) ResolvePendingFieldColors();
+
             _powerTintTimer += Time.deltaTime;
             if (_powerTintTimer < 0.4f) return;
             _powerTintTimer = 0f;
             RefreshPowerTint();
+        }
+
+        // Collectors created before their field spawned (load ordering) start at the default colour;
+        // once FieldGenerator has the field, apply its colour to the body + spindle/particles. Gives
+        // up after 10s so a genuinely field-less collector doesn't poll forever.
+        private void ResolvePendingFieldColors()
+        {
+            _resolvedFieldBuffer.Clear();
+            foreach (var kv in _pendingFieldColor)
+            {
+                var cell  = kv.Key;
+                var field = FieldGenerator.GetFieldAt(cell.Item1, cell.Item2);
+                if (field != null)
+                {
+                    _baseColors[cell] = field.fieldColor;
+                    if (_spawnedCubes.TryGetValue(cell, out var cube) && cube != null)
+                    {
+                        ApplyCubeColor(cube, field.fieldColor);
+                        cube.GetComponent<CollectorStructure>()?.SetFieldColor(field.fieldColor);
+                    }
+                    _resolvedFieldBuffer.Add(cell);
+                }
+                else if (Time.time - kv.Value > 10f)
+                {
+                    _resolvedFieldBuffer.Add(cell); // give up; leave the default colour
+                }
+            }
+            foreach (var c in _resolvedFieldBuffer) _pendingFieldColor.Remove(c);
         }
 
         private void RefreshPowerTint()
@@ -231,7 +294,7 @@ namespace MobileIdleBuilder
                 // Don't fight the hover highlight; it reasserts on the next tick after un-hover.
                 if (cell == _hoveredCell) continue;
                 if (_spawnedCubes.TryGetValue(cell, out var cube) && cube != null)
-                    ApplyCubeColor(cube, status.IsConnected == 0 ? UnpoweredCubeColor : DefaultCubeColor);
+                    ApplyCubeColor(cube, status.IsConnected == 0 ? UnpoweredCubeColor : BaseColorFor(cell));
             }
             entities.Dispose();
         }
@@ -277,6 +340,8 @@ namespace MobileIdleBuilder
                 if (cube != null) Destroy(cube);
                 _spawnedCubes.Remove(cell);
             }
+            _baseColors.Remove(cell);
+            _pendingFieldColor.Remove(cell);
 
             if (_spawnedPortArrows.TryGetValue(cell, out var arrows))
             {
@@ -302,7 +367,7 @@ namespace MobileIdleBuilder
 
             // Restore previous
             if (_spawnedCubes.TryGetValue(_hoveredCell, out var prev) && prev != null)
-                ApplyCubeColor(prev, DefaultCubeColor);
+                ApplyCubeColor(prev, BaseColorFor(_hoveredCell));
 
             _hoveredCell = anchorCell;
 
@@ -314,9 +379,13 @@ namespace MobileIdleBuilder
         public void ClearHover()
         {
             if (_spawnedCubes.TryGetValue(_hoveredCell, out var prev) && prev != null)
-                ApplyCubeColor(prev, DefaultCubeColor);
+                ApplyCubeColor(prev, BaseColorFor(_hoveredCell));
             _hoveredCell = (-1, -1);
         }
+
+        /// <summary>The logical base colour for a cell (field colour for collectors, else white).</summary>
+        private Color BaseColorFor((int, int) cell) =>
+            _baseColors.TryGetValue(cell, out var c) ? c : DefaultCubeColor;
 
         private static void ApplyCubeColor(GameObject go, Color color)
         {
