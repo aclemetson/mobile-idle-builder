@@ -36,6 +36,11 @@ namespace MobileIdleBuilder
         private readonly HashSet<(int, int)>                      _portedCells       = new();
         private readonly Dictionary<(int, int), List<GameObject>> _spawnedPortArrows = new();
 
+        // Buildings whose grid-tile highlight is shown only while selected (the entropy sink), rather
+        // than permanently like every other building. Keyed by anchor cell.
+        private readonly HashSet<(int, int)>                      _deferHighlight    = new();
+        private (int, int)                                        _selectedDeferCell = (-1, -1);
+
         // Maps every occupied cell (including non-anchor cells of multi-tile buildings)
         // back to the anchor cell so SetHover can find the right cube.
         private readonly Dictionary<(int, int), (int, int)>      _cellToAnchor      = new();
@@ -45,6 +50,7 @@ namespace MobileIdleBuilder
         private static readonly Color DefaultCubeColor   = Color.white;
         private static readonly Color HoverCubeColor     = new Color(1f, 0.82f, 0.15f); // yellow hover highlight
         private static readonly Color UnpoweredCubeColor = new Color(0.9f,  0.25f, 0.25f); // red — no power in range
+        private static readonly Color EntropySinkGold    = new Color(1.0f, 0.78f, 0.30f); // Maxwell's Demon torus base
 
         void Start()
         {
@@ -126,10 +132,15 @@ namespace MobileIdleBuilder
                 int fw = 1, fh = 1;
                 if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
 
+                // Maxwell's Demon (entropy sink): the grid beneath it is highlighted only while the
+                // building is selected, so defer its footprint highlight to SelectBuilding().
+                bool isSink = em.HasComponent<EntropySinkTag>(ent);
+                if (isSink) _deferHighlight.Add(cell);
+
                 for (int dx = 0; dx < fw; dx++)
                     for (int dy = 0; dy < fh; dy++)
                     {
-                        gridRenderer?.SetTileHighlight(x + dx, y + dy, true);
+                        if (!isSink) gridRenderer?.SetTileHighlight(x + dx, y + dy, true);
                         GridOccupancy.Instance?.Register(x + dx, y + dy);
                         _cellToAnchor[(x + dx, y + dy)] = cell;
                     }
@@ -162,6 +173,10 @@ namespace MobileIdleBuilder
                         if (field != null) baseColor = field.fieldColor;
                         else fieldPending = true; // field not spawned yet (load ordering) — resolve later
                     }
+                    else if (isSink)
+                    {
+                        baseColor = EntropySinkGold; // gold base; power/hover tints restore to gold, not white
+                    }
 
                     // PresenceReceiver owns all colour state for this cube; _baseColors remembers the
                     // logical base so power/hover tints restore to it (not white) afterwards.
@@ -179,6 +194,17 @@ namespace MobileIdleBuilder
                         cube.transform.localScale = Vector3.one * cs;
                         cube.AddComponent<CollectorStructure>().Initialize(ent, baseColor);
                         if (fieldPending) _pendingFieldColor[cell] = Time.time;
+                    }
+
+                    // Maxwell's Demon (entropy sink): swap the cube for a flat gold torus that fills the
+                    // footprint. Ports are drawn separately (Pass 3) so they stay put; keep the donut low.
+                    if (isSink)
+                    {
+                        cube.name = $"Sink_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(
+                            (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
+                        cube.transform.localScale = new Vector3(cs * fw - gap, cs * fw - gap, cs * fh - gap);
+                        cube.AddComponent<EntropySinkStructure>().Initialize(ent);
                     }
 
                     _spawnedCubes[cell] = cube;
@@ -199,6 +225,10 @@ namespace MobileIdleBuilder
                 var cell = (pos.Cell.x, pos.Cell.y);
 
                 if (_portedCells.Contains(cell)) continue;
+
+                // Entropy sink (Maxwell's Demon): keep its input ports for gameplay but draw no
+                // arrows — its own input visuals will be added later.
+                if (em.HasComponent<EntropySinkTag>(entities[i])) { _portedCells.Add(cell); continue; }
 
                 var ports     = em.GetBuffer<PlacedPortData>(entities[i]);
                 var arrowList = new List<GameObject>();
@@ -334,6 +364,8 @@ namespace MobileIdleBuilder
 
             _highlighted.Remove(cell);
             _footprints.Remove(cell);
+            _deferHighlight.Remove(cell);
+            if (_selectedDeferCell == cell) _selectedDeferCell = (-1, -1);
 
             if (_spawnedCubes.TryGetValue(cell, out var cube))
             {
@@ -350,6 +382,42 @@ namespace MobileIdleBuilder
                 _spawnedPortArrows.Remove(cell);
             }
             _portedCells.Remove(cell);
+        }
+
+        // ----------------------------------------------------------------
+        // Selection highlight (deferred-highlight buildings only — the entropy sink)
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Marks the building containing (x, y) as selected. For buildings whose footprint highlight is
+        /// deferred (the entropy sink), this lights up the grid beneath it; for every other building it
+        /// is a no-op (their footprint is always highlighted). Clears any previous deferred highlight.
+        /// </summary>
+        public void SelectBuilding(int x, int y)
+        {
+            DeselectBuilding();
+            if (!_cellToAnchor.TryGetValue((x, y), out var anchor)) return;
+            if (!_deferHighlight.Contains(anchor)) return;
+
+            SetFootprintHighlight(anchor, true);
+            _selectedDeferCell = anchor;
+        }
+
+        /// <summary>Removes the deferred selection highlight from the grid, if one is active.</summary>
+        public void DeselectBuilding()
+        {
+            if (_selectedDeferCell == (-1, -1)) return;
+            SetFootprintHighlight(_selectedDeferCell, false);
+            _selectedDeferCell = (-1, -1);
+        }
+
+        private void SetFootprintHighlight((int, int) anchor, bool on)
+        {
+            int fw = 1, fh = 1;
+            if (_footprints.TryGetValue(anchor, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
+            for (int dx = 0; dx < fw; dx++)
+                for (int dy = 0; dy < fh; dy++)
+                    gridRenderer?.SetTileHighlight(anchor.Item1 + dx, anchor.Item2 + dy, on);
         }
 
         // ----------------------------------------------------------------

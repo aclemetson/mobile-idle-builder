@@ -88,9 +88,44 @@ On **load**, a collector's visual can be created before its field has spawned fr
 (called from `Update`) applies the field colour to the body + `CollectorStructure.SetFieldColor` once
 the field appears (giving up after 10s).
 
+### Entropy-sink "torus" structure (Maxwell's Demon)
+A flat gold donut that fills the 3x3 footprint, surfaced with swirling gold patterns that a C#
+script crossfades between at random. Replaces the placeholder cube for **any building carrying
+`EntropySinkTag`** (the Maxwell's Demon marker — data-driven, no hardcoded id).
+
+- `Assets/Scripts/Gameplay/TorusMeshBuilder.cs` — surface-of-revolution builder: a small circular
+  tube (`MinorRadius`) swept around the Y axis at `MajorRadius`, so the ring lies **flat** in XZ
+  with its hole facing up. `Default` outer diameter ≈ 1 local unit (host is scaled to fill 3x3).
+  Seam column **and** row are duplicated for a clean wrap; `uv.x` runs around the ring, `uv.y` around
+  the tube — these drive the shader patterns.
+- `Assets/Scripts/Gameplay/EntropySinkStructure.cs` — MonoBehaviour. Builds the torus, gold material,
+  and is the **random pattern swapper**: holds a pattern for a random dwell (3–6 s), then crossfades
+  (`_Blend` 0→1) to a new random pattern and repeats; only writes `_Blend` while fading (idle
+  otherwise). Also turns the ring slowly on Y. The per-pixel swirl itself is `_Time`-driven in the
+  shader.
+- `Assets/Shaders/EntropySinkTorus.shader` — URP Unlit, gold `_BaseColor` (left for `PresenceReceiver`
+  to drive) + `_AccentColor` highlights tracing one of **5 procedural patterns** (spiral stripes,
+  radial bands, woven checker, sunburst, drifting noise) selected by `_PatternA`/`_PatternB` and
+  crossfaded by `_Blend`; `_SwirlSpeed` scrolls them via `_Time`. No textures (mobile safe).
+- `Assets/Scripts/Tests/TorusMeshBuilderTests.cs` — EditMode invariants (vertex/triangle counts,
+  central hole exists, flat low profile, bounds, unit normals).
+
+Wiring: `BuildingVisualizer.Refresh()` Pass 2 detects sinks via `em.HasComponent<EntropySinkTag>(entity)`,
+sits the host on the grid plane (`localPosition.y = 0`) scaled to the full footprint, gives it a **gold
+base colour** (so power/hover tints restore to gold, not white), and attaches `EntropySinkStructure`.
+
+Two sink-specific deviations from the normal building visuals:
+- **No port arrows.** Pass 3 skips arrow creation for the sink (the input ports still exist in ECS for
+  conveyor deposits); bespoke input visuals are planned later.
+- **Selection-only grid highlight.** Instead of permanently colouring its footprint tiles like every
+  other building, the sink's anchor is added to `_deferHighlight` and its tiles light up only while it is
+  selected. `BuildingInspectorController` drives this via `BuildingVisualizer.SelectBuilding(x,y)` /
+  `DeselectBuilding()`, the latter also hooked to `MaxwellsDemonController.OnClosed` so the X button keeps
+  the highlight in sync. `SelectBuilding`/`DeselectBuilding` are no-ops for non-deferred buildings.
+
 ## Extending to other buildings (future)
 
-Other building types are still placeholder cubes. To give a new building its own woven form,
-add a profile/builder following the `CollectorMeshBuilder` pattern and branch in
-`BuildingVisualizer` Pass 2. A general per-building procedural-structure system is intentionally
-out of scope until more building art direction is locked.
+The collector spindle and the entropy-sink torus are the two worked examples of the house pattern.
+To give another building type its own form, add a profile/builder following the `CollectorMeshBuilder`
+/ `TorusMeshBuilder` pattern and branch in `BuildingVisualizer` Pass 2. A general per-building
+procedural-structure system is intentionally out of scope until more building art direction is locked.

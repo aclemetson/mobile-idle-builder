@@ -39,6 +39,10 @@ namespace MobileIdleBuilder
             if (deconstructController == null) deconstructController = FindAnyObjectByType<DeconstructController>();
             if (maxwellsDemon        == null) maxwellsDemon        = FindAnyObjectByType<MaxwellsDemonController>();
 
+            // The demon panel can be dismissed by its own close button (bypassing ClearSelection),
+            // so mirror its closed state to drop the grid selection highlight.
+            if (maxwellsDemon != null) maxwellsDemon.OnClosed += OnDemonClosed;
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
 
@@ -55,12 +59,21 @@ namespace MobileIdleBuilder
 
         void OnDestroy()
         {
+            if (maxwellsDemon != null) maxwellsDemon.OnClosed -= OnDemonClosed;
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated && _ecsReady)
             {
                 _buildingQuery.Dispose();
                 _tutorialQuery.Dispose();
             }
+        }
+
+        // Keep the grid selection highlight in sync when the demon panel closes itself.
+        private void OnDemonClosed()
+        {
+            HasSelection = false;
+            buildingVisualizer?.DeselectBuilding();
         }
 
         void Update()
@@ -199,6 +212,11 @@ namespace MobileIdleBuilder
                 }
             }
 
+            // Light up the grid under the selected building (only buildings with a deferred footprint
+            // highlight — the entropy sink — actually change; for others this is a no-op).
+            var foundPos = _em.GetComponentData<GridPosition>(found);
+            buildingVisualizer?.SelectBuilding(foundPos.Cell.x, foundPos.Cell.y);
+
             // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
             if (_em.HasComponent<EntropySinkTag>(found))
             {
@@ -218,6 +236,7 @@ namespace MobileIdleBuilder
         {
             if (!HasSelection) return;
             HasSelection = false;
+            buildingVisualizer?.DeselectBuilding();
             hudController?.HideBuildingInspector();
             maxwellsDemon?.Close();
         }
