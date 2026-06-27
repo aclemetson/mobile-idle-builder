@@ -3201,6 +3201,7 @@
       "input_slot_labels": ["Up Quarks", "Down Quarks"],
       "is_entropy_sink": false,
       "footprint": [2, 1],
+      "structure_kind": "StrongForceCombiner",
       "ports": [
         { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "North" },
         { "port_type": "Input",  "local_cell": [1, 0], "local_facing": "North" },
@@ -3260,6 +3261,7 @@
       "input_slot_labels": [],
       "is_entropy_sink": false,
       "footprint": [1, 1],
+      "structure_kind": "BasicGenerator",
       "ports": [],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
@@ -3374,7 +3376,14 @@
       "input_slot_labels": ["Protons", "Neutrons", "Electrons"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "ports": [],
+      "structure_kind": "AtomGenerator",
+      "_note_ports": "Output exits the South (front) edge. Input.Facing = item travel direction, so the intake is on the OPPOSITE edge: West-facing -> East edge, East-facing -> West edge, South-facing -> North edge. Gives intakes on the E/W/N edges and the output on the S edge.",
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "South" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
@@ -3430,7 +3439,12 @@
       "input_slot_labels": ["Base Element", "Neutrons"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "ports": [],
+      "structure_kind": "IsotopicManipulator",
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
@@ -3486,6 +3500,7 @@
       "is_entropy_sink": false,
       "footprint": [2, 2],
       "_note_footprint": "Houses the Isotopic Manipulator inside it — larger footprint.",
+      "structure_kind": "RadioactiveContainment",
       "ports": [],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
@@ -3538,7 +3553,12 @@
       "input_slot_labels": ["Primary Element", "Secondary Element"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "ports": [],
+      "structure_kind": "MolecularSynthesizer",
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
@@ -3594,7 +3614,12 @@
       "input_slot_labels": ["Primary Molecule", "Secondary Molecule"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "ports": [],
+      "structure_kind": "MaterialsForge",
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
@@ -3650,7 +3675,12 @@
       "input_slot_labels": ["Primary Material", "Secondary Material"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "ports": [],
+      "structure_kind": "ComponentFabricator",
+      "ports": [
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
+        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],

@@ -140,6 +140,12 @@ namespace MobileIdleBuilder
             if (building?.isEntropySink == true)
                 _em.AddComponentData(entity, new EntropySinkTag());
 
+            // Bespoke procedural structure selector (data-driven, no hardcoded ids). Collectors and
+            // entropy sinks are detected by their gameplay components; everything else that declares a
+            // structureKind gets it here so BuildingVisualizer can pick the right form on place + load.
+            if (building != null && building.structureKind != BuildingStructureKind.None)
+                _em.AddComponentData(entity, new BuildingVisualStyle { Kind = (int)building.structureKind });
+
             // Any MustBeOnField building (port-layout or legacy) is an autonomous collector.
             // CollectorData must be added AFTER the entity archetype is fixed by AddComponentData
             // calls above, and regardless of whether the building defines a port layout.

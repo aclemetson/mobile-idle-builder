@@ -72,6 +72,7 @@ namespace MobileIdleBuilder
 
         [Header("Placement")]
         public Vector2Int footprint = Vector2Int.one; // width x height in grid cells
+        public BuildingStructureKind structureKind;   // bespoke procedural form (None = placeholder cube)
         public BuildingPort[] ports;                  // input/output port layout in local (unrotated) space
         public PlacementRule placementRule;
         public BuildingCategory[] compatibleAdjacentCategories;

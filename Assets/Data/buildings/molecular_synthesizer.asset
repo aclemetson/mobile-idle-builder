@@ -45,7 +45,17 @@ MonoBehaviour:
   - Secondary Element
   isEntropySink: 0
   footprint: {x: 1, y: 1}
-  ports: []
+  structureKind: 4
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: 
