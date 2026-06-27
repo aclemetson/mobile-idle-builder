@@ -41,6 +41,7 @@ MonoBehaviour:
   - Down Quarks
   isEntropySink: 0
   footprint: {x: 2, y: 1}
+  structureKind: 2
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}

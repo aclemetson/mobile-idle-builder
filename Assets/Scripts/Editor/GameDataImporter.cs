@@ -454,6 +454,11 @@ namespace MobileIdleBuilder.Editor
             if (data.footprint?.Length >= 2)
                 so.footprint = new Vector2Int(data.footprint[0], data.footprint[1]);
 
+            so.structureKind = BuildingStructureKind.None;
+            if (!string.IsNullOrEmpty(data.structure_kind) &&
+                TryParseEnum<BuildingStructureKind>(data.structure_kind, $"BuildingSO '{data.id}'.structureKind", out var sk))
+                so.structureKind = sk;
+
             so.compatibleAdjacentCategories = ParseEnumArray<BuildingCategory>(
                 data.compatible_adjacent_categories, $"BuildingSO '{data.id}'.compatibleAdjacentCategories");
             so.compatibleFields = ParseEnumArray<FieldType>(

@@ -56,6 +56,45 @@ This guide covers manual verification of every dev-console testing feature. Work
 
 ---
 
+## Part 1.5 — Building Spawn (visual / structure testing)
+
+Spawns buildings through the real `BuildingPlacer`, so they get the same components, ports, holes, and
+procedural structure as a player placement. Use this to eyeball every building's art without grinding
+research. Spawned buildings persist in the save (use `clear save` to wipe).
+
+### Commands
+
+| Command | What it does |
+|---------|--------------|
+| `list buildings` | Lists every placeable building: `name  #id  WxH footprint  structureKind` |
+| `spawn building <id>` | Spawns one building at the first free cell. `<id>` = asset name (e.g. `atomic_assembler`) or numeric `#id` |
+| `spawn building <id> <x> <y>` | Spawns one building at grid cell (x, y) |
+| `spawn all buildings` | Spawns one of every building in `availableBuildings` for a one-shot visual sweep |
+
+Notes:
+- Only buildings wired into the HUD's `BuildingPlacementController.availableBuildings` can be spawned —
+  `list buildings` shows exactly what's available.
+- `structureKind` in the listing tells you which procedural form to expect: `AtomGenerator` (orbital
+  nucleus), `None` (placeholder cube — not yet given a custom form). The harvester (spindle) and
+  Maxwell's Demon (torus) are driven by their gameplay components, so they show `None` here but still
+  render their bespoke structure.
+- Field collectors are spawned with a South output direction; they may render with the default (no-field)
+  colour if dropped on a bare cell.
+- Production buildings only fire their completion flare when inputs are satisfied + powered. To see the
+  Atom Generator's flare, also `spawn building basic_generator` next to it and `add item proton 99` etc.
+
+### What to verify per structure
+
+- [ ] `spawn building atomic_assembler` → round glowing **nucleus** with 3 tilted electrons orbiting it
+- [ ] Atom Generator shows a lit **output aperture** on one edge and recessed **intake mouths** on the others
+- [ ] `spawn building harvester` → tapering **spindle** with a front emission door
+- [ ] `spawn building maxwells_demon` → flat gold **torus** filling its 3x3 footprint
+- [ ] `spawn all buildings` → every building shows its bespoke structure (no placeholder cubes remain):
+  generator spire, combiner rounded prism, isotopic breathing nucleus, molecular cluster, forge crucible,
+  fabricator precision core, containment lead dome
+
+---
+
 ## Part 2 — tutorial list
 
 ### 2.1 Basic Output

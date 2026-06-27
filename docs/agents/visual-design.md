@@ -1,6 +1,7 @@
 # Visual Design — Structure Art Direction & Procedural Meshes
 
 > Verified against: `feature/field-wire-mesh`, 2026-06-25.
+> Port holes + Atom Generator structure + per-building drafts added 2026-06-27.
 
 How buildings and field structures are rendered, and the art direction they should follow.
 Read this when touching structure visuals, procedural geometry, or shaders.
@@ -123,9 +124,100 @@ Two sink-specific deviations from the normal building visuals:
   `DeselectBuilding()`, the latter also hooked to `MaxwellsDemonController.OnClosed` so the X button keeps
   the highlight in sync. `SelectBuilding`/`DeselectBuilding` are no-ops for non-deferred buildings.
 
-## Extending to other buildings (future)
+### Atom Generator "orbital nucleus" structure (the Atom Generator building)
+A round glowing nucleus circled by tilted electron orbit rings, each carrying a bright electron that
+travels around it. The body is **round on every side** (no flat front facade) — its holes are placed
+as separate fixtures at the port edges (see "Port holes" below), so the nucleus stays a clean atom.
+Selected **data-drivenly** by `BuildingStructureKind.AtomGenerator` (see "Choosing a structure" below),
+not a hardcoded id.
 
-The collector spindle and the entropy-sink torus are the two worked examples of the house pattern.
-To give another building type its own form, add a profile/builder following the `CollectorMeshBuilder`
-/ `TorusMeshBuilder` pattern and branch in `BuildingVisualizer` Pass 2. A general per-building
-procedural-structure system is intentionally out of scope until more building art direction is locked.
+- `Assets/Scripts/Gameplay/AtomNucleusMeshBuilder.cs` — surface-of-revolution builder. An ellipse
+  silhouette (perfect round dome) peaking at the equator, with a small planted base floor; the top
+  collapses to **one shared apex vertex**; `uv.y` runs 0 (base) → 1 (apex) so the shader can glow the
+  core + tip. Unlike `CollectorMeshBuilder` it does **not** flatten the front.
+- `Assets/Scripts/Gameplay/AtomGeneratorStructure.cs` — MonoBehaviour. Builds the nucleus + 3 tilted
+  electron orbits (thin `TorusMeshBuilder` rings; the whole pivot spins about its own normal so the
+  symmetric ring looks fixed while the attached electron orbits) + slow breathe motion. Polls
+  `RecipeProcessData.Progress`: `ProductionSystem` resets it to 0 on completion, so a frame-over-frame
+  **drop** means an atom was assembled → fire a decaying `_PulseAmp` flare (reuses `WireBounce`).
+- `Assets/Shaders/AtomGenerator.shader` — URP Unlit, shading only: body emission + a hot nucleus core
+  glowing brightest at the equator and apex, `_PulseAmp` flares it on each assembly. `_BaseColor` is
+  left for `PresenceReceiver` to drive (warm gold base).
+- `Assets/Scripts/Tests/AtomNucleusMeshBuilderTests.cs` — EditMode invariants (counts, single apex
+  on-axis, **round** cross-section, bounds, unit normals).
+
+## Port holes (building input/output apertures)
+
+Buildings show their I/O as physical holes placed at their **port edges**, so item flow reads at a
+glance. Two distinct shapes (the grammar):
+
+- **Output hole** = a lit, convex emission aperture — `ApertureMeshBuilder.BuildArchDoor` (the arched
+  doorway the harvester already uses), tinted bright/warm so it reads as glowing.
+- **Input hole** = a recessed, concave intake mouth — `ApertureMeshBuilder.BuildIntakeMouth` (a funnel
+  receding to a dark throat), tinted dark/cool so it reads as a hole items are fed INTO.
+
+**Where a hole sits (must match the conveyor contract in `ConveyorSystem.HasMatchingPort`):**
+- **Output port:** hole on the `Facing` edge, opening outward (`Facing` = the direction it ejects).
+- **Input port:** hole on the edge **opposite** `Facing`, opening outward toward the belt. `Input.Facing`
+  is the *travel direction of incoming items*, so a south-facing input is fed from the building's north
+  edge. (When authoring `ports` in `game_data.json`, to put an intake on the **East** edge use
+  `local_facing: "West"`, etc. See the `_note_ports` on `atomic_assembler`.)
+
+**Mechanism:** `BuildingVisualizer.Refresh()` Pass 3 already iterates `PlacedPortData` per building to
+draw the port arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per
+port (`CreateHoleFixture`) at the resolved edge, rotated so the fixture's local +Z faces outward. The
+arch-door / intake meshes and their materials are **shared singletons** built once at the cell size
+(`EnsureHoleAssets`) so holes are allocation-free; they're tracked in `_spawnedPortArrows` for cleanup.
+
+**Future polish (not yet done):** holes are tinted by a generic output-warm / input-cool scheme.
+`PlacedPortData` does not carry which input *slot* (item) a port feeds, so per-item tinting (proton =
+gold, neutron = grey, electron = blue, as in the drafts below) needs a port→slot mapping first.
+
+## Choosing a structure (data-driven, no hardcoded ids)
+
+`BuildingSO.structureKind` (enum `BuildingStructureKind`, sourced from `structure_kind` in
+`game_data.json`) declares a building's bespoke form. `BuildingPlacer` copies it onto the entity as
+`BuildingVisualStyle` at placement — and therefore on **load**, which re-runs `PlaceBuilding`.
+`BuildingVisualizer` Pass 2 switches on it. Collectors and entropy sinks keep being detected by their
+gameplay components (`CollectorData` / `EntropySinkTag`); `structureKind` covers the producer forms.
+To add a new building form: write its mesh builder + shader + MonoBehaviour, add an enum case, set
+`structure_kind` in the JSON, and add a Pass 2 branch.
+
+## Per-building structures (all implemented)
+
+Every building now has a bespoke procedural structure (file = `Assets/Scripts/Gameplay/<Name>Structure.cs`,
+selected via `structureKind`). All follow the house language (solid rounded bodies with volume; slow,
+alive motion; mobile-safe unlit shaders) and — except the two non-conveyor cases — carry the port-hole
+door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Progress`).
+
+- **Basic Generator — "energy spire"** (`BasicGeneratorStructure`, Power, no holes): tall thin round
+  spindle (`CollectorMeshBuilder`, FrontFlattenFrac=1) tapering to a crackling tip; electric cyan; a
+  ~1.5s heartbeat flares the tip and emits expanding, fading flat light-rings (`TorusMeshBuilder`) on the
+  ground — power broadcasting. Not a producer, so the pulse is time-driven.
+- **Strong Force Combiner** (`StrongForceCombinerStructure`, 2×1): a soft **rounded rectangular prism**
+  (`RoundedBoxMeshBuilder` — a superellipsoid dome that fills the footprint, Roundness 0.5) flowing from
+  its two inlet faces to its single outlet face, doors flush on the flat faces. A binding glow builds
+  with craft progress, then flares when a nucleon is forged. (An earlier orbiting-quark "knot" was
+  dropped — it read too flat.)
+- **Isotopic Manipulator — "breathing nucleus"** (`IsotopicManipulatorStructure`, 1×1): the Atom
+  Generator's body + shader, green-tinged, with a slow heavy breathing swell and one tilted equatorial
+  ring whose grey neutrons drift radially IN and OUT (opposite phase) — slower by design.
+- **Molecular Synthesizer — "bonded molecule"** (`MolecularSynthesizerStructure`, 1×1): a solid teal
+  central bulb (`AtomNucleusMeshBuilder` + AtomGenerator shader) with two smaller satellite lobes fused
+  to it; the cluster tumbles slowly; a bond flare on each synthesis. Central bulb on the host so it keeps
+  power/hover tints.
+- **Materials Forge — "crucible"** (`MaterialsForgeStructure`, 1×1): a rounded steel furnace block
+  (`RoundedBoxMeshBuilder`) with an orange heat crown and a shimmering molten pool on top; on each forge a
+  white-hot ingot rises from the pool and cools to steel, with a body flare.
+- **Component Fabricator — "precision core"** (`ComponentFabricatorStructure`, 1×1, endgame): a sleek
+  tall violet rounded body crowned by a slowly rotating halo ring (`TorusMeshBuilder`); a charging glow
+  builds with progress, then a crystalline component assembles at the apex and rises with the strongest
+  flare of the chain.
+- **Radioactive Containment — "lead shell"** (`RadioactiveContainmentStructure`, 2×2, no holes): a sealed
+  lead-grey dome (`RoundedBoxMeshBuilder` sized to footprint) ringed near the apex by a slow amber-green
+  containment field (`TorusMeshBuilder`); irregular (randomised) decay flashes flare the shell and
+  brighten the ring. Contains rather than emits.
+
+`RoundedBoxMeshBuilder` (superellipsoid dome) is the reusable form for footprint-filling solid bodies;
+`CollectorMeshBuilder` (with FrontFlattenFrac=1) gives round spindles; `AtomNucleusMeshBuilder` gives the
+nucleus bulb. Pick/compose these for any future building rather than adding one-off builders.

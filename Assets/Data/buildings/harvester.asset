@@ -39,6 +39,7 @@ MonoBehaviour:
   inputSlotLabels: []
   isEntropySink: 0
   footprint: {x: 1, y: 1}
+  structureKind: 0
   ports: []
   placementRule: 1
   compatibleAdjacentCategories: 
