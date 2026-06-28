@@ -81,7 +81,7 @@ SaveData (save.json) ◄──ECSLoadBridge.FlushToSave()/ApplyLoadedSave()─�
 
 ## Do NOT edit
 
-- `docs/gameplay-loop.html`, `gameplay-loop.js`, `gameplay-loop.css` — human reference site. Look values up in `docs/gameplay_loop_data.js` if needed; never load the HTML.
+- `docs/gameplay-loop.html`, `gameplay-loop.js`, `gameplay-loop.css`, `docs/gameplay_loop_data.js` — human-only reference site; it may lag behind code, so do NOT treat it as authoritative or look balance values up there. For authoritative item/recipe/building/cost values use `Assets/Data/game_data.json` (the single source of truth). Never load the HTML.
 - Generated `.asset` files under `Assets/Data/` and `Assets/Resources/` — regenerate by editing `game_data.json` and re-running the importer (see `data-pipeline.md`).
 - Any UXML other than `Assets/UI/GameHUD.uxml`, `SplashScreen.uxml`, `LoadingScreen.uxml` without first grepping that it is actually loaded at runtime (CLAUDE.md rule).
 - `Assets/GoogleSignIn/` native plugin code.
