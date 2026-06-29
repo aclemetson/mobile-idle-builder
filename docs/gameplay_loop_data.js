@@ -1414,12 +1414,12 @@ prestige: {
 // yield/regime is a DESIGN placeholder. Do NOT treat as authoritative.
 nuclear: {
   regimes: [
-    { key:'genesis',   label:'Genesis (assembler)',   color:'#d2a8ff', note:'H = proton + electron' },
-    { key:'fusion',    label:'Fusion ladder (Z2-26)',  color:'#3fb950', note:'fuse up toward iron' },
-    { key:'fission',   label:'Fission / fragments',    color:'#f0883e', note:'split heavies down toward iron' },
-    { key:'field',     label:'Fissile field + decay',  color:'#58a6ff', note:'harvested heavy + decay chains' },
-    { key:'breeding',  label:'Neutron breeding',       color:'#db61a2', note:'transuranics by neutron capture' },
-    { key:'synthesis', label:'Accelerator synthesis',  color:'#8b949e', note:'super-heavies, codex only' },
+    { key:'genesis',   label:'Genesis (assembler)',          color:'#d2a8ff', note:'H = proton + electron' },
+    { key:'fusion',    label:'Fusion ladder (Z2-26)',        color:'#3fb950', note:'fuse up to iron (natural peak)' },
+    { key:'fission',   label:'Fission / fragments',          color:'#f0883e', note:'split heavies down toward iron' },
+    { key:'field',     label:'Fissile field + decay',        color:'#58a6ff', note:'harvested heavy + decay chains; last natural = U' },
+    { key:'breeding',  label:'Neutron breeding (post-iron)', color:'#db61a2', note:'Breeder Reactor: actinides, value climbs PAST iron' },
+    { key:'synthesis', label:'Accelerator synthesis (post-iron)', color:'#e3b341', note:'Particle Accelerator: superheavies to Og (global max)' },
   ],
   // ~20 implemented elements (game_data.json) — shown with a dot in the grid.
   impl: [1,2,3,4,5,6,7,8,13,14,26,28,29,30,47,74,78,79,92,94],
@@ -1470,9 +1470,13 @@ nuclear: {
     [0,0,0,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103],
   ],
   // New nuclear buildings (design). Schema mirrors game_data.json buildings[].
+  // Radioactive Containment (existing) gains an auto-decay toggle: ON -> passive
+  // entropy at decay_value_fraction (~0.3); OFF -> route to Maxwell's Demon for full value.
   buildings: [
-    { name:'Fusion Reactor',  id:'fusion_reactor',  tier:2, inputs:'2 light nuclei (+ H / neutron fuel)', output:'next element up the ladder', byproducts:'neutron, positron, gamma, neutrino', gate:'fusion_i' },
-    { name:'Fission Reactor', id:'fission_reactor', tier:2, inputs:'fissile isotope + neutron trigger',   output:'2-3 mid-weight fragments',    byproducts:'neutron x2-3, gamma, beta',        gate:'fission_i' },
+    { name:'Fusion Reactor',       id:'fusion_reactor',       tier:2, inputs:'2 light nuclei (+ H / neutron fuel)',         output:'next element up the ladder',  byproducts:'neutron, positron, gamma, neutrino', gate:'fusion_i' },
+    { name:'Fission Reactor',      id:'fission_reactor',      tier:2, inputs:'fissile isotope + neutron trigger',           output:'2-3 mid-weight fragments',    byproducts:'neutron x2-3, gamma, beta',          gate:'fission_i' },
+    { name:'Breeder Reactor',      id:'breeder_reactor',      tier:5, inputs:'actinide(Z) + many neutrons',                 output:'next actinide (Z+1), post-iron', byproducts:'beta, neutrino, gamma',           gate:'neutron_breeding_i (post-iron)' },
+    { name:'Particle Accelerator', id:'particle_accelerator', tier:5, inputs:'heavy target + light projectile (Ca-48) + huge eV', output:'superheavy (to Og), post-iron', byproducts:'neutron x1-4, gamma',          gate:'accelerator_i (post-iron)' },
   ],
   // Exotic particles (existing + design additions).
   particles: [
@@ -1483,16 +1487,18 @@ nuclear: {
     { name:'Gamma photon',  sym:'g',  charge:'0',  source:'most fusion / fission / decay', use:'energy recovery -> eV (power grid)', yield:20, status:'design' },
     { name:'Neutrino',      sym:'v',  charge:'0',  source:'beta decay & fusion',        use:'mostly escapes (educational)',      yield:1,  status:'design' },
   ],
-  // New research gates (design). Fission opens EARLY (around Be/B); the two ladders
-  // then run in parallel, both racing toward iron.
+  // New research gates (design). Natural tree: fission opens EARLY (around Be/B),
+  // then fusion+fission run in parallel up/down to iron. Reaching iron opens TWO
+  // post-iron branches (their own building each), priced in prestige currency + crystals.
   research: [
     { id:'fusion_i',           branch:'Nuclear',      prereq:'atomic_assembly',    unlocks:'Fusion Reactor; He -> C fusion' },
     { id:'fissile_extraction', branch:'Nuclear',      prereq:'fusion_i (at Be/B)', unlocks:'U / Pu fissile fields (map purchase); cheap heavy feedstock + decay chains' },
     { id:'fission_i',          branch:'Nuclear',      prereq:'fissile_extraction', unlocks:'Fission Reactor; split fissile fuel into mid-weight fragments (climb down)' },
     { id:'fusion_ii',          branch:'Nuclear',      prereq:'fusion_i',           unlocks:'alpha process O -> Si (Z8-14)' },
     { id:'fission_ii',         branch:'Nuclear',      prereq:'fission_i',          unlocks:'denser fragment chains toward near-iron metals (Co/Ni/Cu/Zn)' },
-    { id:'fusion_iii / fission_iii', branch:'Astrophysics', prereq:'*_ii',         unlocks:'last rungs of each ladder converging on Fe (jackpot)' },
-    { id:'transuranics',       branch:'Nuclear',      prereq:'fission_i',          unlocks:'breeding Np -> Fm; accelerator Z>=101 (low-value codex tail)' },
+    { id:'fusion_iii / fission_iii', branch:'Astrophysics', prereq:'*_ii',         unlocks:'last rungs converging on Fe (natural peak)' },
+    { id:'neutron_breeding_i..iii', branch:'Transmutation (post-iron)', prereq:'reach iron',        unlocks:'Breeder Reactor; Np/Pu -> Cf/Es/Fm (value climbs past iron)' },
+    { id:'accelerator_i..iv',  branch:'Accelerator (post-iron)',  prereq:'neutron_breeding_i + iron', unlocks:'Particle Accelerator; Md -> Og (global max, ~11.3Q)' },
   ],
 },
 

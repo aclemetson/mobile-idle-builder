@@ -1037,20 +1037,26 @@ function nucRegime(z) {
   return 'synthesis';
 }
 
-// Entropy yield (= base_sell_value) under the CONVERGENT model: value is a tall
-// tent peaking at iron, which is a deliberate long-term apex (~168M e — reached
-// only after a month-plus of play and many prestiges). Fusion doubles per Z up
-// to iron (preserving the tutorial H=5..O=640 rungs); fission descends from iron
-// in small steps to a cheap uranium floor (~64 e). Transuranics fall below U.
-// See docs/agents/elements-and-isotopes.md "Entropy-yield ladder".
+// Entropy yield (= base_sell_value). Three regions:
+//  * Fusion (Z1-26): doubles per Z to the NATURAL peak iron = 5*2^25 (~168M e),
+//    preserving the tutorial H=5..O=640 rungs.
+//  * Fission descent (Z27-92): falls from iron to a cheap uranium floor (~64 e).
+//  * Post-iron synthesis (Z93-118): a SECOND endgame unlocked after iron — value
+//    rises AGAIN above iron, doubling per Z up to Oganesson (~11.3 quadrillion,
+//    the global max). Neutron breeding (93-100) then accelerator synthesis (101-118).
+// See docs/agents/elements-and-isotopes.md "Entropy-yield ladder" / "Post-iron synthesis".
 function nucYield(z) {
-  if (z <= 26) return 5 * Math.pow(2, z - 1);          // fusion: H=5 .. Fe=167,772,160 (apex)
-  return Math.max(1, Math.round(64 * Math.pow(2621440, (92 - z) / 66))); // fission/transuranic
+  if (z <= 26) return 5 * Math.pow(2, z - 1);                              // fusion -> iron (natural peak)
+  if (z <= 92) return Math.max(1, Math.round(64 * Math.pow(2621440, (92 - z) / 66))); // fission descent -> U
+  return Math.round(167772160 * Math.pow(2, z - 92));                      // synthetic climb past iron -> Og
 }
 
 function nucFmt(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  if (n >= 1e15) return (n / 1e15).toFixed(1).replace(/\.0$/, '') + 'Q';
+  if (n >= 1e12) return (n / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
   return '' + n;
 }
 

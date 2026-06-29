@@ -503,23 +503,25 @@
 <div id="elements" class="tab-content">
 
   <div class="callout">
-    <h3>The Iron Valley &mdash; two ladders converging on iron</h3>
-    <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so <strong>entropy value peaks at iron and falls
-       off on BOTH sides</strong>. Fusion climbs up to iron; fission breaks heavy nuclei down to iron. Iron is the
-       jackpot &mdash; a <strong>long-term apex worth ~168M e, a month-plus of play and many prestiges away</strong>.
-       The feedstock at each far end (hydrogen = 5, uranium = 64) is cheap. <strong>Fission unlocks early</strong>
-       (around Be/B) so both ladders climb toward iron in parallel over many prestige cycles.</p>
-    <pre class="pt-diagram">                   IRON-56  = MAX (~168,000,000 e)  &lt;- the long-term apex
-                       /\
-     fusion (build up)/  \fission (break down)
-     big ~2x/Z steps /    \ smaller ~1.25x/Z steps, many rungs
-                    /      \
-   H(5) He Li B C O/        \.. Ag .. W   U(64) Pu .. Og(1)
-   |- FUSION rises ->|       |&lt;- FISSION rises -|
-   cheap light feedstock     cheap heavy feedstock (fissile fields)</pre>
+    <h3>The Iron Valley + the post-iron climb</h3>
+    <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so the <strong>natural</strong> economy (fusion up +
+       fission down, Z1&ndash;92) is a tent peaking at iron (~168M e) &mdash; a long-term apex a month-plus and many
+       prestiges away. Uranium (~64 e) is the <strong>last natural element</strong>. Everything past it is
+       <strong>synthesized with energy</strong> &mdash; a second endgame, unlocked only after iron, whose value
+       rises <em>again, past iron</em>, to <strong>Oganesson (~11.3 quadrillion e), the global max</strong>.</p>
+    <pre class="pt-diagram"> value
+   |                                            Og ~11.3Q  = GLOBAL max
+   |                                           /  (post-iron SYNTHESIS)
+   |   Fe ~168M (natural peak)      Np ~336M  /
+   |  /  \                              \    /
+   | /    \  fission descent             \  /
+   |/      \__________________ U 64 -CLIFF-\/   U = last natural element
+   H ==fusion up==> Fe ==fission down==> U | ==breed==> Fm ==accelerate==> Og
+   1      ->        26     ->            92 93   ->    100 101    ->        118
+   \--------- NATURAL TENT (Z1-92) --------/  \---- POST-IRON SYNTHESIS ----/</pre>
     <p style="font-size:12px;color:#8b949e;">Full design reference: <code>docs/agents/elements-and-isotopes.md</code>.
-       <code>game_data.json</code> is the source of truth; the implemented elements <em>above iron</em> still hold the
-       old monotonic values and must be rebalanced down to the fission-ladder targets shown here.</p>
+       <code>game_data.json</code> is the source of truth; all implemented element values are superseded by the three
+       ladder formulas and must be re-derived (e.g. Pu jumps from a cheap floor to ~671M as a post-iron synthetic).</p>
   </div>
 
   <div class="card">
@@ -561,7 +563,7 @@
   <div class="phase">
     <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
       <h2>Research Gates (design)</h2>
-      <span class="phase-meta">fission opens early (around Be/B) &mdash; both ladders then run in parallel toward iron</span>
+      <span class="phase-meta">fission opens early (Be/B); reaching iron unlocks two post-iron branches (breeding, accelerator)</span>
     </div>
     <table>
       <thead><tr><th>Research</th><th>Branch</th><th>Prereq</th><th>Unlocks</th></tr></thead>
@@ -570,20 +572,23 @@
   </div>
 
   <div class="callout" style="border-left-color:#d2a8ff;">
-    <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; convergent (iron-peaked)</h3>
-    <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code> (the Maxwell's Demon sink pays
-       this when an item is deposited). Value is a <strong>tall tent peaking at iron (~168M e)</strong> &mdash; a
-       deliberate long-term apex, a month-plus of play and many prestiges away. Two ladders climb toward it from
-       opposite ends; the fission side is <strong>denser</strong> (more nuclides, smaller per-step gaps).</p>
-    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">Fusion ladder (Z1&rarr;26, climb up)</strong> &mdash; <code>yield(Z) = 5 &times; 2<sup>(Z&minus;1)</sup></code>; preserves the tutorial H..O rungs and doubles per Z to iron:</p>
-    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O    F  ...  Si   ...    Ca      ...     Mn            Fe(apex)
+    <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; natural tent + post-iron climb</h3>
+    <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code>. Three regions: fusion rises to the
+       <strong>natural peak at iron (~168M e)</strong>, fission descends to <strong>uranium (~64 e)</strong>, then the
+       <strong>post-iron synthesis</strong> climbs past iron to <strong>Oganesson (~11.3Q e, the global max)</strong>.</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">1. Fusion (Z1&rarr;26)</strong> &mdash; <code>5 &times; 2<sup>(Z&minus;1)</sup></code>; preserves tutorial H..O, doubles to iron:</p>
+    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O    F  ...  Si   ...    Ca      ...     Mn            Fe(peak)
 e :  5  10  20  40   80  160  320  640 1280   40,960  2,621,440  83,886,080  167,772,160</pre>
-    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">Fission ladder (Z92&rarr;26, climb down)</strong> &mdash; <code>yield(Z) = round(64 &times; 2,621,440<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored at the top, uranium floored at 64 e, transuranics below that:</p>
-    <pre class="pt-spine">Z :     27         28        30        36       47      56    74  82 92 94 100 118
-el:     Co         Ni        Zn        Kr       Ag      Ba     W  Pb  U Pu  Fm  Og
-e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 64 41 11  1</pre>
-    <p style="font-size:11px;color:#8b949e;"><strong style="color:#d2a8ff;">Why iron is the cap:</strong> capping the element layer at iron keeps the table one coherent tent and makes iron a true summit; the continuing climb past it lives in the molecule&rarr;material&rarr;component tiers, built from the <em>cheap</em> abundant elements (not iron).
-       <strong style="color:#f0883e;">Migration:</strong> implemented values follow the OLD thinned model and must be re-derived from both formulas (Fe 5,120&rarr;167,772,160; U 1,310,720&rarr;64).</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">2. Fission (Z92&rarr;26)</strong> &mdash; <code>round(64 &times; 2,621,440<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored, U floored at 64:</p>
+    <pre class="pt-spine">Z :     27         28        30        36       47      56    74  82  90 92
+el:     Co         Ni        Zn        Kr       Ag      Ba     W  Pb  Th  U
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 46 64</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#e3b341;">3. Post-iron synthesis (Z93&rarr;118)</strong> &mdash; <code>round(167,772,160 &times; 2<sup>(Z&minus;92)</sup>)</code>; doubles past iron to Og. Breeding (93&ndash;100) then accelerator (101&ndash;118):</p>
+    <pre class="pt-spine">Z :     93        94        96         100          103             110                    118
+el:     Np        Pu        Cm         Fm           Lr             Ds                     Og
+e : 335,544,320 671,088,640 2,684,354,560 42,949,672,960 343,597,383,680 43,980,465,111,040 11,258,999,068,426,240</pre>
+    <p style="font-size:11px;color:#8b949e;">The curve rises to iron, falls to uranium, jumps the <strong>natural/synthetic cliff</strong> (U 64 &rarr; Np 336M), then rises far past iron to Og.
+       <strong style="color:#f0883e;">Migration:</strong> implemented values follow the OLD thinned model and must be re-derived from all three formulas (Fe 5,120&rarr;167,772,160; U 1,310,720&rarr;64; Pu 2,621,440&rarr;671,088,640).</p>
   </div>
 
 </div>

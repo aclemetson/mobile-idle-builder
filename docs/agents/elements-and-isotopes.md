@@ -2,7 +2,7 @@
 
 **Scope:** The full periodic table as game content — how every element (Z=1..118) and its key isotopes are created (existing buildings + new nuclear buildings + a new fissile-field map purchase), its craft time, its entropy yield, and the exotic particles nuclear reactions produce. This is the **design spec** for later implementation; it is not itself shipped content. For currency/formula context read `economy-balance.md`; for how to author items/recipes read `data-pipeline.md`; for the power grid read `ecs-patterns.md`; for new-building art read `visual-design.md`.
 
-> Verified against: `992a572`, 2026-06-29 (convergent iron-peaked value model). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `992a572`, 2026-06-29 (natural tent to iron + post-iron synthesis endgame). If code contradicts this doc, trust the code and update this doc.
 
 > **Authoritative source:** `Assets/Data/game_data.json` is the single source of truth (editor importer turns it into ScriptableObjects). Do NOT treat `docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` as authoritative — they are a human-only visual reference and may lag. Values marked **(impl)** below are read from `game_data.json` as of the stamp; values marked **(design)** are proposals to author when the feature lands.
 
@@ -10,39 +10,42 @@
 
 **Existing (impl):** ~20 elements (H, He, Li, Be, B, C, N, O, Si, Al, Fe, Ni, Cu, Zn, Ag, Au, Pt, W, U, Pu), 4 isotopes (deuterium, tritium, carbon-14, U-235), 2 particles (alpha, beta). Built in the **Atomic Assembler** (`atomic_assembler`) from `proton`/`neutron`/`electron`, isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no recipes/buildings yet**.
 
-**Proposed (design):** fill the table to all 118 elements; add **Fusion Reactor** and **Fission Reactor** buildings; add **Uranium/Plutonium fissile fields** as a map purchase; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta.
+**Proposed (design):** fill the table to all 118 elements; add **Fusion Reactor**, **Fission Reactor**, **Breeder Reactor**, and **Particle Accelerator** buildings; add **Uranium/Plutonium fissile fields** as a map purchase; extend **Radioactive Containment** with an auto-decay setting; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta.
 
-## Creation regimes — the iron valley (two ladders converging on Fe)
+## Creation regimes — the natural tent, then the post-iron climb
 
-Binding energy per nucleon peaks at iron-56. **Both** production directions release energy as they climb toward iron, and the entropy economy mirrors that exactly: **value peaks at iron and falls off on both sides.** Iron is the convergence jackpot; the feedstock at each ladder's far end (hydrogen on one side, uranium on the other) is cheap.
+Binding energy per nucleon peaks at iron-56. The **natural** economy (fusion + fission, Z1–92) is therefore a tent that peaks at iron (~168M e) — both feedstocks (hydrogen, uranium) are cheap and both directions climb toward iron. Past uranium, elements **no longer occur naturally**; they must be **synthesized with energy input** — a *second* endgame unlocked only after iron, whose value climbs **again, past iron**, to the global peak at Oganesson (~11.3 quadrillion e).
 
 ```
-                       IRON-56  = MAX value (~168,000,000 e)
-                          /\           <- the long-term apex: a month+
-        fusion (build up)/  \fission    of play and many prestiges away
-        big ~2x/Z steps /    \ smaller ~1.25x/Z steps, many rungs
-                       /      \
-   H(5) He Li B C N O /        \ .. Ag .. W   U(64) Pu .. Og(1)
-   |- FUSION rises ->|          |<- FISSION rises -|
-   cheap light feedstock        cheap heavy feedstock (fissile fields)
+ value
+   |                                                    Og ~11.3Q  = GLOBAL max
+   |                                                   /  (post-iron SYNTHESIS)
+   |   Fe ~168M  (natural peak)            Np ~336M   /
+   |  /  \                                    \      /
+   | /    \  fission descent                   \    /
+   |/      \____________________  U 64 -- CLIFF -\--/   U = last natural element
+   H ==fusion up==> Fe ==fission down==> U | ==breed==> Fm ==accelerate==> Og
+   1       ->        26      ->          92  93    ->  100  101    ->      118
+   \------------- NATURAL TENT (Z1-92) -------/  \---- POST-IRON SYNTHESIS ----/
 ```
 
-Key consequences of the convergent model (see the ladder section for numbers):
-- **Iron (Z26) is the single highest-value element (~168,000,000 e) and a deliberate long-term apex.** The player should NOT reach iron quickly — it takes **a month-plus of regular play and a good stack of prestiges + prestige upgrades** to climb either ladder to the summit (see "Pacing & gating"). Everything else is worth less.
-- **Uranium and the heavy naturals are CHEAP feedstock (~64 e), not the apex.** You profit by fissioning them *down* toward iron, exactly as you profit by fusing hydrogen *up* toward iron.
-- **Fission is unlocked early** (around Beryllium/Boron). From then on the two ladders run in parallel and the player slowly races both toward iron over many prestige cycles.
-- Beyond the element layer, the value climb continues in the **molecule → material → component** tiers (which consume the cheap, abundant elements) — so iron capping the *element* sub-economy is intentional, not a dead end.
+Key points (numbers in the ladder section):
+- **Iron (Z26, ~168M e) is the NATURAL peak and a long-term goal** — a month-plus of play and many prestiges to climb either natural ladder to it (see "Pacing & gating"). It is no longer the *global* max.
+- **Uranium (Z92, ~64 e) is the last natural element** and the cheap bottom of the fission descent. Everything past it is artificial.
+- **Post-iron synthesis is a separate endgame, unlocked only after iron.** Value rises again past iron through two branches that mirror real-world methods — **neutron breeding** (Z93–100) then **accelerator synthesis** (Z101–118) — up to **Oganesson, the single most valuable item in the game**.
+- **Natural/synthetic cliff at Z92→93:** uranium (~64) sits right next to neptunium (~336M). The jump marks the boundary where matter stops being harvested and starts being manufactured at great cost.
+- The natural elements still feed the **molecule → material → component** tiers (built from the *cheap, abundant* light elements).
 
-Six regimes (the Atomic Assembler remains a universal but deliberately expensive fallback for any element — see below):
+Regimes (the Atomic Assembler remains a universal but deliberately expensive fallback for any element — see below):
 
 | Regime | Z range | Direction | Building(s) | Notes |
 |---|---|---|---|---|
 | **Genesis** | 1 (H) | — | Atomic Assembler | `proton + electron`. The fuel source for fusion; cheapest element. |
-| **Fusion ladder** | 2–26 (He → Fe) | climb **up** to iron | **Fusion Reactor** (Assembler fallback) | He (p-p chain), C (triple-alpha), O/Ne/Mg/Si (alpha process), up to Fe-56. Value rises in big ~2× steps. |
+| **Fusion ladder** | 2–26 (He → Fe) | climb **up** to iron | **Fusion Reactor** | He (p-p chain), C (triple-alpha), alpha process O→Si, up to Fe-56. Value rises in big ~2× steps. |
 | **Fission / fragments** | 27–80 | climb **down** to iron | **Fission Reactor** | Split heavy/fissile nuclei into mid-weight fragments; each fragment is closer to iron and worth more. Many rungs, small gaps. |
-| **Fissile field + decay** | 81–92 (→ U) | feedstock + decay | **Fissile Field** + decay | The naturally-occurring heavies (U, Th, and their U/Th decay chains: Pa, Ra, Rn, Po, Pb…) harvested from the field. Cheap entry point for the fission ladder. |
-| **Neutron breeding** | 93–100 (Np → Fm) | bred up from U | **Fission Reactor** (breeding) | Np/Pu/Am/Cm by neutron capture on fissile fuel. Below uranium in value (further from iron). |
-| **Accelerator synthesis** | 101–118 | synthesized | accelerator | Super-heavies, fleeting half-lives, lowest value. Mostly codex / prestige-completion content. |
+| **Fissile field + decay** | 81–92 (→ U) | feedstock + decay | **Fissile Field** + Radioactive Containment | The naturally-occurring heavies (U, Th, and their decay chains: Pa, Ra, Rn, Po, Pb…) harvested from the field. Cheap entry for the fission ladder. |
+| **Neutron breeding** (post-iron) | 93–100 (Np → Fm) | climb **up** past iron | **Breeder Reactor** | Real method: successive neutron capture + β-decay on actinide fuel. Its own research branch, gated after iron. Value rises past iron (336M → ~43B). |
+| **Accelerator synthesis** (post-iron) | 101–118 (Md → Og) | climb **up** past iron | **Particle Accelerator** | Real method: heavy-ion fusion — fire a light projectile (e.g. Ca-48) at an actinide target. Its own research branch. Steepest, rarest tier (86B → ~11.3Q). Mostly codex/prestige trophies. |
 
 **Why the Atomic Assembler is the "slow path" (and the reactors are the shortcuts the player wants).** The Assembler builds an atom one nucleon at a time: craft time ≈ atomic mass (seconds) and historic power cost scaled with mass (`mass × 5 eV`). Iron is 56 nucleons; uranium is 238. Doing that at scale is intentionally painful — the **Fusion Reactor** (combine two cheaper light nuclei) and **Fission Reactor** (split one expensive heavy nucleus into several mid-weight ones) are the throughput shortcuts that the nuclear research tree unlocks. This mirrors the existing "shortcut building" pattern (Strong Force Combiner is the bulk shortcut for protons/neutrons vs. hand-crafting).
 
@@ -54,10 +57,22 @@ Reuse the existing `BuildingSO` schema (`game_data.json` `buildings[]`): `id`, `
 |---|---|---|---|---|---|---|
 | **Fusion Reactor** | `fusion_reactor` | 2 | 2 (light nuclei + optional neutron/H isotope fuel) | next element up the ladder | neutron, positron, gamma, neutrino (per reaction) | `fusion_i` |
 | **Fission Reactor** | `fission_reactor` | 2 | 2 (fissile isotope + neutron trigger) | 2–3 mid-weight fragment elements | neutron ×2–3, gamma, (beta from fragments) | `fission_i` |
+| **Breeder Reactor** | `breeder_reactor` | 5 | actinide(Z) + many neutrons | next actinide (Z+1) | beta, neutrino, gamma | `neutron_breeding_i` (post-iron) |
+| **Particle Accelerator** | `particle_accelerator` | 5 | heavy target + light projectile (e.g. Ca-48) + huge eV | superheavy(Z) | neutron ×1–4, gamma | `accelerator_i` (post-iron) |
 
-- **Category:** recommend reusing `BuildingCategory.Transient` (both are recipe-processing producers like the Assembler) rather than adding `Nuclear` — avoids an enum migration. If a distinct power/visual treatment is wanted, add `BuildingCategory.Nuclear` and `BuildingStructureKind.FusionReactor`/`FissionReactor` (see `visual-design.md`; both want bespoke procedural forms — a magnetic-confinement torus for fusion, a shielded rod-array core for fission — not the placeholder cube).
-- **Power:** both are high-draw consumers (above Materials Forge, below Component Fabricator); a fusion run should require enough generator coverage that the player must invest in the power grid first. Authoring TBD against the static-draw ladder in `economy-balance.md`.
-- **Reaction model:** a fusion/fission recipe is an ordinary `RecipeSO` with `category` = `Fusion`/`Fission`, real `inputs`, an `output_item`, and a `byproducts[]` list (the particle emissions). The Isotopic Manipulator's `neutron_adjustment[]` convention is the precedent for nuclear bookkeeping. Fission's multiple outputs are modelled as one primary `output_item` plus extra fragment items in `byproducts[]`.
+- **Category:** recommend reusing `BuildingCategory.Transient` (all four are recipe-processing producers like the Assembler) rather than adding `Nuclear` — avoids an enum migration. If a distinct power/visual treatment is wanted, add `BuildingCategory.Nuclear` and `BuildingStructureKind.FusionReactor`/`FissionReactor`/`BreederReactor`/`ParticleAccelerator` (see `visual-design.md`; bespoke procedural forms — a magnetic-confinement torus, a shielded rod-array core, a tall neutron-flux pile, a ring-collider — not the placeholder cube).
+- **Power:** all are high-draw consumers; the post-iron pair (Breeder, Accelerator) are the highest in the game — the **Particle Accelerator** in particular should demand more eV than anything else, gating it behind a fully built-out power grid. Authoring TBD against the static-draw ladder in `economy-balance.md`.
+- **Reaction model:** every nuclear recipe is an ordinary `RecipeSO` with `category` = `Fusion`/`Fission` (reuse for breeding/accelerator, or add `Breeding`/`Synthesis` to `RecipeCategory`), real `inputs`, an `output_item`, and a `byproducts[]` list. The Isotopic Manipulator's `neutron_adjustment[]` convention is the precedent. Fission's multiple outputs are one primary `output_item` plus extra fragments in `byproducts[]`.
+- **Tier:** Breeder Reactor and Particle Accelerator are **tier 5 / post-iron** — they unlock only after iron and on their own research branches (see "Post-iron synthesis").
+
+### Radioactive Containment — auto-decay setting (extends an existing building)
+
+Unstable elements (everything past Z83, and all post-iron synthetics) are radioactive — they decay whether you want them to or not. **Radioactive Containment** gains a per-building **decay-mode toggle**:
+
+- **Auto-decay ON** — housed unstable items passively convert to entropy at a **fraction of base value** (`decay_value_fraction`, design default **0.3**) over time, emitting decay particles (alpha/beta caught as usual). Hands-off, idle-friendly: the building is a partial entropy sink.
+- **Auto-decay OFF** — items are simply held; conveyor them out to **Maxwell's Demon for the FULL base value**. Requires active logistics.
+
+This is the post-iron risk/reward: the synthetics are worth a fortune, but capturing full value means routing them through the demon before they "decay" (i.e. paying the logistics cost), while AFK players still bank ~30% automatically. Schema: add `decay_mode` (enum) + `decay_value_fraction` (float) to `BuildingSO`, plus a runtime setting persisted per-building (like the existing manager assignment).
 
 ### Milestone fusion reactions (design)
 
@@ -74,7 +89,23 @@ Reuse the existing `BuildingSO` schema (`game_data.json` `buildings[]`): `id`, `
 |---|---|---|---|---|
 | U-235 fission | uranium_235 + neutron | barium + krypton | 2–3× neutron, gamma | reactor / weapon fission |
 | Pu-239 fission | plutonium (Pu-239) + neutron | xenon + zirconium | 2–3× neutron, gamma | breeder-reactor fission |
-| Neutron breeding | uranium + neutron | (U-239 →) neptunium → plutonium | beta, neutrino | transuranic synthesis |
+
+### Post-iron synthesis reactions (design)
+
+**Neutron breeding** (Breeder Reactor) — successive neutron capture then β-decay, the real route to the actinides:
+
+| Reaction | Inputs | Output | Byproducts | Analogue |
+|---|---|---|---|---|
+| U → Np | uranium + neutron | neptunium | beta, neutrino, gamma | U-238(n,γ)→U-239 →β Np-239 |
+| Np → Pu | neptunium + neutron | plutonium | beta, neutrino | Np-239 →β Pu-239 |
+| Pu → … → Fm | actinide(Z) + neutron | actinide(Z+1) | beta, neutrino, gamma | reactor n-capture chain up to fermium |
+
+**Accelerator synthesis** (Particle Accelerator) — heavy-ion fusion: fire a light projectile at a heavy target. Recycles a fusion-ladder element (Ca-48) and a breeding-ladder actinide as inputs:
+
+| Reaction | Inputs | Output | Byproducts | Analogue |
+|---|---|---|---|---|
+| hot fusion | actinide target (Pu/Am/Cm/Bk/Cf) + calcium (Ca-48) | superheavy (Fl…Og) | neutron ×3–4, gamma | Ca-48 + actinide → Z114–118 |
+| cold fusion | lead/bismuth + medium ion (Ti/Cr/Fe/Zn) | superheavy (Rf…Cn) | neutron ×1, gamma | Pb/Bi-target route → Z104–112 |
 
 ## Fissile fields (new map purchase)
 
@@ -199,32 +230,32 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 | 90 | Th | Thorium | 232 | FLD (decay) | 100 | ◻ |
 | 91 | Pa | Protactinium | 231 | FLD (decay) | 80 | ◻ |
 | 92 | U | Uranium | 238 | FLD (decay) | 64 | ✅ |
-| 93 | Np | Neptunium | 237 | BRD | 51 | ◻ |
-| 94 | Pu | Plutonium | 244 | BRD | 41 | ✅ |
-| 95 | Am | Americium | 243 | BRD | 33 | ◻ |
-| 96 | Cm | Curium | 247 | BRD | 26 | ◻ |
-| 97 | Bk | Berkelium | 247 | BRD | 21 | ◻ |
-| 98 | Cf | Californium | 251 | BRD | 17 | ◻ |
-| 99 | Es | Einsteinium | 252 | BRD | 13 | ◻ |
-| 100 | Fm | Fermium | 257 | BRD | 11 | ◻ |
-| 101 | Md | Mendelevium | 258 | ACC | 9 | ◻ |
-| 102 | No | Nobelium | 259 | ACC | 7 | ◻ |
-| 103 | Lr | Lawrencium | 266 | ACC | 5 | ◻ |
-| 104 | Rf | Rutherfordium | 267 | ACC | 4 | ◻ |
-| 105 | Db | Dubnium | 268 | ACC | 3 | ◻ |
-| 106 | Sg | Seaborgium | 269 | ACC | 3 | ◻ |
-| 107 | Bh | Bohrium | 270 | ACC | 2 | ◻ |
-| 108 | Hs | Hassium | 269 | ACC | 2 | ◻ |
-| 109 | Mt | Meitnerium | 278 | ACC | 1 | ◻ |
-| 110 | Ds | Darmstadtium | 281 | ACC | 1 | ◻ |
-| 111 | Rg | Roentgenium | 282 | ACC | 1 | ◻ |
-| 112 | Cn | Copernicium | 285 | ACC | 1 | ◻ |
-| 113 | Nh | Nihonium | 286 | ACC | 1 | ◻ |
-| 114 | Fl | Flerovium | 289 | ACC | 1 | ◻ |
-| 115 | Mc | Moscovium | 290 | ACC | 1 | ◻ |
-| 116 | Lv | Livermorium | 293 | ACC | 1 | ◻ |
-| 117 | Ts | Tennessine | 294 | ACC | 1 | ◻ |
-| 118 | Og | Oganesson | 294 | ACC | 1 | ◻ |
+| 93 | Np | Neptunium | 237 | BRD (breeding) | 335,544,320 | ◻ |
+| 94 | Pu | Plutonium | 244 | BRD (breeding) | 671,088,640 | ✅ |
+| 95 | Am | Americium | 243 | BRD (breeding) | 1,342,177,280 | ◻ |
+| 96 | Cm | Curium | 247 | BRD (breeding) | 2,684,354,560 | ◻ |
+| 97 | Bk | Berkelium | 247 | BRD (breeding) | 5,368,709,120 | ◻ |
+| 98 | Cf | Californium | 251 | BRD (breeding) | 10,737,418,240 | ◻ |
+| 99 | Es | Einsteinium | 252 | BRD (breeding) | 21,474,836,480 | ◻ |
+| 100 | Fm | Fermium | 257 | BRD (breeding) | 42,949,672,960 | ◻ |
+| 101 | Md | Mendelevium | 258 | ACC (collider) | 85,899,345,920 | ◻ |
+| 102 | No | Nobelium | 259 | ACC (collider) | 171,798,691,840 | ◻ |
+| 103 | Lr | Lawrencium | 266 | ACC (collider) | 343,597,383,680 | ◻ |
+| 104 | Rf | Rutherfordium | 267 | ACC (collider) | 687,194,767,360 | ◻ |
+| 105 | Db | Dubnium | 268 | ACC (collider) | 1,374,389,534,720 | ◻ |
+| 106 | Sg | Seaborgium | 269 | ACC (collider) | 2,748,779,069,440 | ◻ |
+| 107 | Bh | Bohrium | 270 | ACC (collider) | 5,497,558,138,880 | ◻ |
+| 108 | Hs | Hassium | 269 | ACC (collider) | 10,995,116,277,760 | ◻ |
+| 109 | Mt | Meitnerium | 278 | ACC (collider) | 21,990,232,555,520 | ◻ |
+| 110 | Ds | Darmstadtium | 281 | ACC (collider) | 43,980,465,111,040 | ◻ |
+| 111 | Rg | Roentgenium | 282 | ACC (collider) | 87,960,930,222,080 | ◻ |
+| 112 | Cn | Copernicium | 285 | ACC (collider) | 175,921,860,444,160 | ◻ |
+| 113 | Nh | Nihonium | 286 | ACC (collider) | 351,843,720,888,320 | ◻ |
+| 114 | Fl | Flerovium | 289 | ACC (collider) | 703,687,441,776,640 | ◻ |
+| 115 | Mc | Moscovium | 290 | ACC (collider) | 1,407,374,883,553,280 | ◻ |
+| 116 | Lv | Livermorium | 293 | ACC (collider) | 2,814,749,767,106,560 | ◻ |
+| 117 | Ts | Tennessine | 294 | ACC (collider) | 5,629,499,534,213,120 | ◻ |
+| 118 | Og | Oganesson | 294 | ACC (collider) | 11,258,999,068,426,240 | ◻ |
 
 ## Milestone deep-dives
 
@@ -236,13 +267,13 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 
 **O / Si (Z8 / Z14).** Alpha-process rungs: `carbon + helium_4 → oxygen`, continuing to Ne/Mg/Si. 640e / 1,280e. Silicon is the gateway to molecules (silica) and components (semiconductor wafer) downstream — see `economy-balance.md` phases ⑫–⑭.
 
-**Fe — Iron (Z26).** The **apex**: `silicon (+ alpha steps) → iron + γ + ν`, 56s assembler, **~167,772,160 e (5 × 2²⁵) — the single highest-value element and the game's long-term element goal**. Fusion stops releasing energy here and the fission ladder also peaks here: both ladders converge on iron, reachable only after a month-plus of play and many prestiges (see "Pacing & gating"). Nickel (Z28, the true binding-energy peak in reality) sits two rungs down the fission side (~107M e), and Cobalt (Z27) one rung down (~134M e) — the near-iron elements are themselves endgame-grade.
+**Fe — Iron (Z26).** The **natural peak**: `silicon (+ alpha steps) → iron + γ + ν`, 56s assembler, **~167,772,160 e (5 × 2²⁵)**. Fusion stops releasing energy here and the fission ladder also peaks here — both natural ladders converge on iron, reachable only after a month-plus of play and many prestiges (see "Pacing & gating"). Iron is no longer the *global* max: it is the gateway that **unlocks the post-iron synthesis endgame**. Cobalt (Z27, ~134M) and Nickel (Z28, ~107M) sit just down the fission side — the near-iron elements are themselves endgame-grade.
 
-**U — Uranium (Z92).** **Cheap heavy feedstock, not the apex.** Harvested from a Uranium fissile field (FLD) and worth only **~64e** (Be/B-tier — unlocked around the same time) — you profit by fissioning it *down* toward iron, not by selling it raw. Enrich to U-235 in the Isotopic Manipulator (`uranium → uranium_235 + α`, impl); U-235 is the Fission Reactor fuel. Decay chain (α/β) seeds Th→Pa→…→Pb collection, all near the U price floor. (Its `game_data.json` value of 1,310,720e is the old monotonic model and must be rebalanced down.)
+**U — Uranium (Z92).** **The last natural element — cheap feedstock, not an apex.** Harvested from a Uranium fissile field (FLD), worth only **~64e** — you profit by fissioning it *down* toward iron, not by selling it raw. Enrich to U-235 in the Isotopic Manipulator (`uranium → uranium_235 + α`, impl); U-235 is the Fission Reactor fuel, and U is also the **breeding feedstock** for the post-iron endgame. Decay chain (α/β) seeds Th→Pa→…→Pb collection. (Its `game_data.json` value of 1,310,720e is the old model and must be rebalanced down.)
 
-**Pu — Plutonium (Z94).** First transuranic: bred from uranium by neutron capture (`uranium + neutron → … → plutonium`, BRD) or harvested from a Plutonium field. Pu-239 is the breeder-fuel fission input. **~41e** — just below uranium (further from iron); economically marginal, valued for its role as fission fuel rather than as a sale item.
+**Pu — Plutonium (Z94).** **First major synthetic** — bred from uranium by neutron capture in the **Breeder Reactor** (`U + n → … → Pu`). Past the natural/synthetic cliff, so its value jumps to **~671M e** (above iron). Pu-239 is both a fission fuel *and* an accelerator target (Ca-48 + Pu → flerovium). The point where the economy crosses from "harvested" to "manufactured."
 
-**Transuranics (Np…Og).** Bred (Np–Fm) or accelerator-synthesized (Z≳101); fleeting half-lives, **6–37e** (below the U floor). Primarily **codex completion / prestige flex**, not core economy — the further past uranium, the *less* an element is worth.
+**Transuranics & superheavies (Np…Og).** The post-iron endgame: bred (Np–Fm, ~336M–43B) then accelerator-synthesized (Md–Og, ~86B–**11.3Q**). Mostly **collection/prestige trophies** but now the *highest* values in the game — **Oganesson (Z118) is the single most valuable item**, the 100%-completion capstone. All are radioactive, so each unit is either auto-decayed for ~30% in Radioactive Containment or routed to Maxwell's Demon for full value.
 
 ## Isotope taxonomy
 
@@ -254,41 +285,47 @@ Isotopes share an element's `atomic_number` but differ in `atomic_mass`; they ar
 | Helium | He-3 / He-4 | He-4 impl; He-3 = fusion intermediate (design) | He-4 = alpha nucleus |
 | Carbon | C-12 / C-14 (+2n, β, 5,730 yr) | `carbon + 2n` | C-14 impl, 240e |
 | Uranium | U-238 / U-235 (fissile) | `uranium → U-235 + α` | U-235 ≈ 2× U = **~128e** under the convergent model (impl value 2,621,440e to be rebalanced); fissile |
-| Plutonium | Pu-239 (fissile, design) | breeding | weapons/breeder fuel; base ~41e |
+| Plutonium | Pu-239 (fissile, design) | breeding | post-iron synthetic; base **~671M e** (Pu-239 the breeder/accelerator fuel) |
 | Cobalt | Co-60 (design, β/γ) | `cobalt + n` | classic radioactive-source teachable; near-iron, base ~134M e |
 
-**Isotope yield rule:** nominal `base_sell_value × 1.5` (`isotope_sell_multiplier`, per `economy-balance.md`), tuned per isotope — deuterium ≈1.6× H, C-14 = 1.5× C, U-235 = 2× U. Because the base element value now follows the convergent (iron-peaked) curve, isotopes track their parent — a near-iron isotope is valuable, a heavy-actinide isotope is cheap. Authoritative per-isotope values live in `game_data.json`.
+**Isotope yield rule:** nominal `base_sell_value × 1.5` (`isotope_sell_multiplier`, per `economy-balance.md`), tuned per isotope — deuterium ≈1.6× H, C-14 = 1.5× C, U-235 = 2× U. Because the base element value now follows the natural-tent-plus-synthetic-climb curve, isotopes track their parent — a near-iron or synthetic isotope is hugely valuable, a uranium-floor isotope is cheap. Authoritative per-isotope values live in `game_data.json`.
 
 ## Entropy-yield ladder (the single "entropy generated" number)
 
 Per the locked design, **"entropy generated" by an element = its entropy yield = `base_sell_value`** (the Maxwell's-Demon entropy sink pays `base_sell_value × qty` when an item is sunk). No separate thermodynamic-byproduct mechanic.
 
-**Convergent model — a tall tent peaking at iron (~168M e).** Two ladders climb toward Fe-56 (the binding-energy peak) from opposite ends; iron is the single maximum and both feedstocks (hydrogen, uranium) are cheap. Iron is a **long-term apex** — the climb up either ladder is metered out over a month-plus of prestiges (see "Pacing & gating"). The fission ladder is *denser* (more elements, smaller per-step gaps) because there are far more nuclides between uranium and iron than between hydrogen and iron.
+Three regions: the **natural tent** (fusion up + fission down, peaking at iron ~168M), then the **post-iron synthesis climb** (rising past iron to Oganesson, the global max ~11.3Q).
 
-**Fusion ladder (Z1→26, climb up).** A clean per-Z doubling: `yield(Z) = 5 × 2^(Z − 1)`. This preserves the tutorial rungs (H..O) exactly and simply keeps doubling all the way to iron — every element gets a distinct rung, big ~2× steps:
+**1. Fusion ladder (Z1→26, climb up).** A clean per-Z doubling: `yield(Z) = 5 × 2^(Z − 1)`. Preserves the tutorial rungs (H..O) exactly and keeps doubling to the natural peak at iron — every element a distinct rung, big ~2× steps:
 
 ```
 el:  H  He  Li  Be   B    C    N    O    F    Ne ...  Si  ...  Ca   ...   Mn          Fe(apex)
 Z :  1   2   3   4    5    6    7    8    9    10      14       20         25            26
 e :  5  10  20  40   80  160  320  640 1280  2560   40,960  2,621,440  83,886,080  167,772,160
 ```
-(This replaces the old thinned ladder — it removes the Al>Si inversion and makes value strictly rise with Z to iron. H..O stay pinned for tutorial balance.)
 
-**Fission ladder (Z92→26, climb down).** A dense descending ladder anchored to the same iron peak: `yield(Z) = round( 64 × 2,621,440^((92 − Z) / 66) )` for Z ≥ 27 (the constant `2,621,440 = iron / 64`). Iron-anchored at the top (gives 167,772,160 at Z = 26), uranium floored at **64 e** (Be/B-tier — cheap feedstock), transuranics below that (floored at 1). Per-step ratio ≈ `2,621,440^(1/66) ≈ 1.25` (about +25% per Z toward iron) — still smaller gaps than the fusion side's 2×/rung, because the fission side packs ~66 rungs into the same height.
+**2. Fission ladder (Z92→26, climb down).** A dense descending ladder anchored to the same iron peak: `yield(Z) = round( 64 × 2,621,440^((92 − Z) / 66) )` for 27 ≤ Z ≤ 92 (`2,621,440 = iron / 64`). Iron at the top, uranium floored at **64 e** (the last natural element). Per-step ratio ≈ `2,621,440^(1/66) ≈ 1.25` (+25% per Z toward iron) — smaller gaps than fusion's 2×/rung because it packs ~66 rungs into the same height:
 
 ```
-Z :     27        28        30        36        47       56     74    82   92  94 100 118
-el:     Co        Ni        Zn        Kr        Ag       Ba      W    Pb    U  Pu  Fm  Og
-e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 64  41  11   1
+Z :     27        28        30        36        47       56     74    82    90  92
+el:     Co        Ni        Zn        Kr        Ag       Ba      W    Pb    Th   U
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601  46  64
 ```
 
-So the near-iron elements on *both* sides (Mn/Cr on fusion, Co/Ni on fission) are themselves endgame-grade millions, and the cheap feedstocks (H = 5, U = 64) bookend the tent.
+**3. Post-iron synthesis ladder (Z93→118, climb past iron).** A second rising ladder for the artificial elements: `yield(Z) = round( 167,772,160 × 2^(Z − 92) )` — doubling per Z from above iron up to **Oganesson, the single most valuable item in the game**. Neutron breeding (93–100) then accelerator synthesis (101–118):
 
-**Why iron is the cap (and that's fine).** Capping the *element* layer at iron (rather than letting heavies run to billions, as the old monotonic ladder did) keeps the table a single coherent tent and makes iron a genuine summit both ladders race toward. The continuing value climb past iron lives in the **molecule → material → component** tiers, which are built from the **cheap, abundant elements** (H, C, N, O, Si, common metals) — not from iron. Iron and the near-iron high-value elements are a prestige-flex / collection / special-recipe goal, not a bulk crafting input.
+```
+Z :     93        94        96         100          103          110            118
+el:     Np        Pu        Cm         Fm           Lr           Ds             Og
+e : 335,544,320 671,088,640 2,684,354,560 42,949,672,960 343,597,383,680 43,980,465,111,040 11,258,999,068,426,240
+        (336M)    (671M)     (2.68B)      (43B)         (344B)         (44T)          (11.26Q)
+```
 
-> **Migration note:** the implemented elements (Si, Al, Fe, Ni…Pu) follow the OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the two formulas above** — fusion `5 × 2^(Z−1)` (e.g. Si 1,280→40,960, Fe 5,120→167,772,160), fission `round(64 × 2,621,440^((92−Z)/66))` (e.g. Ni 10,240→~107M, U 1,310,720→64, Pu 2,621,440→41). H..O are unchanged. Downstream tier-3+ recipes that consume heavy elements (e.g. `uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis and sell values reviewed — molecules/materials should be re-pointed at the cheap elements where possible, and any iron-bearing recipe re-priced above iron.
+So the curve **rises to iron, falls to uranium, then jumps the natural/synthetic cliff (U 64 → Np 336M) and rises far past iron to Og**. The near-iron elements on both natural sides (Mn/Cr, Co/Ni) are endgame-grade millions; the synthetics are the true pinnacle.
 
-> **Balance caveat:** iron at ~168M (vs the old 5,120) is intentional but raises late-element netWorth sharply, which feeds prestige `✦` (≈log10 netWorth, `economy-balance.md` risk #4). The point is that iron is *gated* (not cheaply farmable) so netWorth rises gradually; verify the per-rung research/power/throughput gates actually meter the climb to ≈a month before authoring final numbers.
+> **Migration note:** every implemented element follows OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the three formulas above** — e.g. Si 1,280→40,960, Fe 5,120→167,772,160, Ni 10,240→~107M, U 1,310,720→64, **Pu 2,621,440→671,088,640** (Pu is now a post-iron synthetic, not cheap). H..O are unchanged. Downstream tier-3+ recipes that consume heavy/iron elements (`uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis re-reviewed; the synthetic elements (up to ~10^16) now exceed even the megastructure component tier, so they sit at the very top of the entropy economy.
+
+> **Balance caveat:** Oganesson at ~10^16 is the new netWorth ceiling, far above the old element economy. It is reachable only after the full post-iron endgame (iron first, then both synthesis branches), so it should not distort early/mid pacing — but re-check prestige `✦` (≈log10 netWorth) and the megastructure interaction, since synthetics now out-value tier-5 components. Final constants need an idle-sim pass.
 
 ## Pacing & gating — iron is ~a month away
 
@@ -301,6 +338,8 @@ Iron must read as a **long-term apex**: the player should reach it only after **
 
 > **Tuning levers (to dial the ~1-month target after playtest):** raise the deep-tier research ✦ costs; steepen the final transition-metal rungs (e.g. ×3–4 per Z for Sc→Fe, pushing iron into the billions); raise near-iron power draw; or slow the per-prestige reachable-rung gain. Keep H..O untouched (tutorial). The exact curve needs an idle-sim pass — this section defines the *shape* (gated, compounding, prestige-bound), not final constants.
 
+**Post-iron is a *second* endgame, even later.** Reaching iron only *opens* the breeding and accelerator branches; completing the periodic table to Oganesson is the true 100% goal, gated on top of iron by ✦/crystal-priced research, the highest power draw in the game (Particle Accelerator), and the input loop (bred actinides + Ca-48). Its payout is enormous (up to ~10^16) but metered by the auto-decay/Maxwell's-Demon logistics choice on every unstable output — so even at the top, value is *earned* through routing, not farmed passively.
+
 ## Research gates (design)
 
 New nodes on the existing `ResearchBranch.Nuclear` / `Astrophysics` branches. **Fission opens early** — once the player has fused a few rungs (around Beryllium/Boron) they unlock `fissile_extraction`, gain the Uranium field, and start the *second* ladder. From there fusion and fission run **in parallel**, both racing toward iron; `heavy_elements` is repurposed (the old "Uranium = endgame" gate is gone). Entropy costs follow the "≈10–30 min of current-phase income" house rule.
@@ -312,15 +351,25 @@ New nodes on the existing `ResearchBranch.Nuclear` / `Astrophysics` branches. **
 | `fission_i` | Nuclear | `fissile_extraction` | Fission Reactor; split fissile fuel into mid-weight fragments (climb down toward iron) |
 | `fusion_ii` | Nuclear | `fusion_i` | alpha process O→Si (Z8–14) |
 | `fission_ii` | Nuclear | `fission_i` | denser fragment chains toward the near-iron metals (Co/Ni/Cu/Zn) |
-| `fusion_iii` / `fission_iii` | Astrophysics | `fusion_ii` / `fission_ii` | the last rungs of each ladder converging on **Fe** (the jackpot) |
-| `transuranics` | Nuclear | `fission_i` | neutron breeding Np→Fm; accelerator synthesis Z≥101 (low-value codex tail) |
+| `fusion_iii` / `fission_iii` | Astrophysics | `fusion_ii` / `fission_ii` | the last rungs of each ladder converging on **Fe** (the natural apex) |
+
+**Post-iron branches (unlocked only after iron).** Reaching iron opens two *new* research branches — broken out from the natural tree, each with its own building, gated behind a "reach iron" milestone (e.g. a `craft Fe` condition or an `iron_mastery` capstone). These are deep endgame: their nodes cost **prestige currency (✦)** and crystals, not just entropy.
+
+| Research branch (design) | `ResearchBranch` | Prereq | Building | Unlocks |
+|---|---|---|---|---|
+| **Neutron Breeding** `neutron_breeding_i…iii` | `Nuclear` (or new `Transmutation`) | reach iron | **Breeder Reactor** | Np/Pu (i) → Am/Cm/Bk (ii) → Cf/Es/Fm (iii); value climbs past iron (336M→43B) |
+| **Accelerator Synthesis** `accelerator_i…iv` | new `Accelerator` (or `Astrophysics`) | `neutron_breeding_i` + reach iron | **Particle Accelerator** | Md–Rf (i) → Db–Mt (ii) → Ds–Cn (iii) → Nh–Og (iv); the steepest, rarest tier up to Oganesson (~11.3Q) |
+
+The accelerator branch depends on breeding because its **targets are bred actinides** (Pu/Am/Cm/Bk/Cf) and its **projectile is Ca-48** — so the post-iron endgame consumes both a fusion-ladder element (calcium) and breeding-ladder actinides, closing the loop.
 
 ## Known gaps / TBD (reconcile at implementation)
 
-- **Enum additions:** `FieldType.Uranium`/`Plutonium`; `DecayType.BetaPlus` (positron); optional `BuildingCategory.Nuclear` + `BuildingStructureKind.FusionReactor`/`FissionReactor`. Each is a code change outside this doc pass.
-- **Yield rebalance (high priority):** all implemented element values must be re-derived from the convergent formulas — fusion `5 × 2^(Z−1)` (iron becomes the global max at **167,772,160 e**), fission `round(64 × 2,621,440^((92−Z)/66))` (U→64, Pu→41). The old thinned/monotonic `game_data.json` values are superseded. All (design) particle/isotope yields are likewise placeholders.
-- **Pacing not yet simulated:** the "~1 month to iron" target depends on research ✦ costs, power draw, and prestige-multiplier curves that need an idle-sim pass (see "Pacing & gating"). The value curve is set; the *gates* are described in shape only.
-- **Cross-tier reconciliation:** with iron at ~168M, tier-3+ recipes that consume heavy/iron elements (`iron_oxide`, `steel`, `uranium_hexafluoride`) need re-pricing — molecules/materials should draw on cheap abundant elements, and any genuinely iron-bearing item must sell above iron.
+- **Enum additions:** `FieldType.Uranium`/`Plutonium`; `DecayType.BetaPlus` (positron); optional `BuildingCategory.Nuclear` + `BuildingStructureKind.FusionReactor`/`FissionReactor`/`BreederReactor`/`ParticleAccelerator`; optional `RecipeCategory.Breeding`/`Synthesis`; optional `ResearchBranch.Transmutation`/`Accelerator`. Each is a code change outside this doc pass.
+- **Radioactive Containment decay setting:** new `BuildingSO` fields `decay_mode` (auto-decay vs hold) + `decay_value_fraction` (default 0.3), plus a per-building persisted setting and an `EntropySinkSystem`-style passive-decay path that pays the fraction and emits decay particles.
+- **Yield rebalance (high priority):** every implemented element value is re-derived from the three formulas — fusion `5 × 2^(Z−1)` (iron = natural peak **167,772,160 e**), fission `round(64 × 2,621,440^((92−Z)/66))` (U→64), synthesis `round(167,772,160 × 2^(Z−92))` (Np→336M, **Pu→671M**, Og→~1.13×10^16, the global max). Old thinned `game_data.json` values are superseded; all (design) particle/isotope yields are placeholders.
+- **Pacing not yet simulated:** "~1 month to iron" and the further post-iron endgame depend on research ✦/crystal costs, power draw, and prestige-multiplier curves that need an idle-sim pass. The value curves are set; the *gates* are shape-only.
+- **Cross-tier reconciliation:** iron (~168M) and especially the synthetics (up to ~10^16) now exceed the molecule/material/component/megastructure sell tiers. Tier-3+ recipes that consume heavy/iron elements (`iron_oxide`, `steel`, `uranium_hexafluoride`) need re-pricing; confirm where post-iron synthetics sit relative to the megastructure endgame (they currently out-value tier-5 components).
+- **Post-iron unlock condition:** define the "reach iron" gate that opens the breeding/accelerator branches (a `craft Fe` achievement-style condition or an `iron_mastery` capstone research).
 - **Power authoring:** Fusion/Fission Reactor `base_power_cost_ev` not yet placed on the static-draw ladder.
 - **Codex-only tail:** Z≳101 (and most transuranics) are intended as codex/prestige-completion content, not core-loop economy — confirm before authoring full recipes.
 - **Fission fragment modelling:** multi-output fission (one `output_item` + fragments in `byproducts[]`) needs the production system to credit byproduct items on craft — verify the existing byproduct path (used by U-235 enrichment's alpha) handles multiple/element byproducts, not just particles.
