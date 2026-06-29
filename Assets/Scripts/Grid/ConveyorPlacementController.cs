@@ -47,6 +47,7 @@ namespace MobileIdleBuilder
         public bool IsPlacing     { get; private set; }
         public bool IsDestroyMode => _mode == Mode.Destroy;
         public bool HasCandidate  { get; private set; }
+        public bool HasStart      => _hasStart;
 
         /// <summary>Raised when conveyor mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
@@ -54,6 +55,9 @@ namespace MobileIdleBuilder
         public event Action<bool> OnModeChanged;
         /// <summary>Raised when a placement candidate appears (true) or is cleared (false).</summary>
         public event Action<bool> OnCandidateChanged;
+        /// <summary>Raised when a start anchor is set (true) or cleared (false), so the HUD can offer a
+        /// "start somewhere else" reset while staying in build mode.</summary>
+        public event Action<bool> OnStartChanged;
         /// <summary>Raised after a run is confirmed and placed (drives the tutorial's conveyor step).</summary>
         public event Action OnChainPlaced;
 
@@ -179,9 +183,20 @@ namespace MobileIdleBuilder
             // Auto-chain: the run's end becomes the next start so the player can keep extending.
             Vector2Int newStart = _destCell;
             ClearStartAndCandidate();
-            _hasStart  = true;
             _startCell = newStart;
+            SetHasStart(true);
             MarkStart();
+        }
+
+        /// <summary>
+        /// "New start" button — drops the current start anchor and any pending candidate, returning to
+        /// the "tap a start" state WITHOUT leaving conveyor mode, so the player can begin a fresh run
+        /// from a different cell instead of having to exit and re-enter the mode.
+        /// </summary>
+        public void ResetStart()
+        {
+            if (!IsPlacing || IsDestroyMode) return;
+            ClearStartAndCandidate();
         }
 
         /// <summary>X button — drops the pending end/path but keeps the current start.</summary>
@@ -279,8 +294,8 @@ namespace MobileIdleBuilder
             if (!_hasStart)
             {
                 if (!IsValidEndpoint(cell)) return;
-                _hasStart  = true;
                 _startCell = cell;
+                SetHasStart(true);
                 ClearHover();
                 MarkStart();
                 return;
@@ -442,7 +457,7 @@ namespace MobileIdleBuilder
             gridRenderer.ClearConveyorGhost();
             gridRenderer.ClearConveyorHoverCell();
             gridRenderer.ClearDeconstructHover();
-            _hasStart    = false;
+            SetHasStart(false);
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
             _isSingle    = false;
@@ -462,7 +477,7 @@ namespace MobileIdleBuilder
             conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             ClearHover();
-            _hasStart    = false;
+            SetHasStart(false);
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
             _isSingle    = false;
@@ -477,6 +492,14 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
         // Grid helper
         // ----------------------------------------------------------------
+
+        /// <summary>Sets the start-anchor flag, raising <see cref="OnStartChanged"/> only on a change.</summary>
+        private void SetHasStart(bool value)
+        {
+            if (_hasStart == value) return;
+            _hasStart = value;
+            OnStartChanged?.Invoke(value);
+        }
 
         private Vector2Int WorldToCell(Vector2 screenPos)
         {

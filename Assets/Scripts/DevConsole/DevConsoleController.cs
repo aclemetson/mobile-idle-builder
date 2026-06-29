@@ -352,6 +352,24 @@ namespace MobileIdleBuilder.Dev
                     return sb.ToString().TrimEnd();
                 });
 
+            // ── building spawning (visual / structure testing) ───────────────
+            _registry.Register("list buildings", "List placeable buildings (name, #, footprint, structure)",
+                _ => ListBuildings());
+
+            _registry.Register("spawn building <id>", "Spawn a building by name or # at the first free cell",
+                args => SpawnBuilding(args[0], null, null));
+
+            _registry.Register("spawn building <id> <x> <y>", "Spawn a building by name or # at cell (x, y)",
+                args =>
+                {
+                    if (!int.TryParse(args[1], out int x) || !int.TryParse(args[2], out int y))
+                        return "Error: <x> and <y> must be integers.";
+                    return SpawnBuilding(args[0], x, y);
+                });
+
+            _registry.Register("spawn all buildings", "Spawn one of every building for a visual sweep",
+                _ => SpawnAllBuildings());
+
             // ── currency & prestige currency ─────────────────────────────────
             _registry.Register("add currency <amount>", "Add BaseCurrency",
                 args =>
@@ -931,6 +949,107 @@ namespace MobileIdleBuilder.Dev
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Reloading...";
                 });
+        }
+
+        // ── Building spawn helpers ────────────────────────────────────────────
+
+        private static string ListBuildings()
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null || pc.availableBuildings.Length == 0)
+                return "Error: BuildingPlacementController.availableBuildings is empty (wire it on the HUD).";
+
+            var sb = new StringBuilder($"Buildings ({pc.availableBuildings.Length}):\n");
+            foreach (var entry in pc.availableBuildings)
+            {
+                var b = entry.building;
+                if (b == null) continue;
+                sb.AppendLine($"  {b.name,-24} #{b.buildingId,-2} {b.footprint.x}x{b.footprint.y}  {b.structureKind}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        // Spawns a building by string name (asset id, e.g. "atomic_assembler") or numeric buildingId,
+        // via the real BuildingPlacer so it gets the same components/visuals as a player placement.
+        // Auto-picks the first free cell when (cx, cy) are omitted.
+        private static string SpawnBuilding(string id, int? cx, int? cy)
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null) return "Error: BuildingPlacementController not in scene.";
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null) return "Error: BuildingPlacer not in scene.";
+            var grid = FindAnyObjectByType<GridRenderer>();
+            if (grid == null) return "Error: GridRenderer not in scene.";
+
+            bool numeric = int.TryParse(id, out int numId);
+            BuildingPlacementController.BuildingEntry entry = default;
+            bool found = false;
+            foreach (var e in pc.availableBuildings)
+            {
+                var b = e.building;
+                if (b == null) continue;
+                if ((numeric && b.buildingId == numId) ||
+                    string.Equals(b.name, id, System.StringComparison.OrdinalIgnoreCase))
+                { entry = e; found = true; break; }
+            }
+            if (!found) return $"Error: building '{id}' not found. Try 'list buildings'.";
+
+            var bso = entry.building;
+            int fw = Mathf.Max(1, bso.footprint.x);
+            int fh = Mathf.Max(1, bso.footprint.y);
+
+            int x, y;
+            if (cx.HasValue && cy.HasValue) { x = cx.Value; y = cy.Value; }
+            else if (!FindFreeCell(grid, fw, fh, out x, out y))
+                return $"Error: no free {fw}x{fh} cell on the grid.";
+
+            // Field collectors need an output direction + get CollectorData; everything else passes null.
+            int? outDir = bso.placementRule == PlacementRule.MustBeOnField
+                ? (int)OutputDirection.South
+                : (int?)null;
+
+            if (!placer.PlaceBuilding(x, y, bso, entry.defaultRecipe, outDir))
+                return $"Error: placement failed at ({x},{y}) — occupied or out of bounds.";
+
+            FindAnyObjectByType<BuildingVisualizer>()?.Refresh();
+            return $"Spawned '{bso.name}' (#{bso.buildingId}) at ({x},{y}). Structure={bso.structureKind}.";
+        }
+
+        private static string SpawnAllBuildings()
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null || pc.availableBuildings.Length == 0)
+                return "Error: BuildingPlacementController.availableBuildings is empty.";
+
+            int placed = 0;
+            var sb = new StringBuilder();
+            foreach (var entry in pc.availableBuildings)
+            {
+                var b = entry.building;
+                if (b == null) continue;
+                string r = SpawnBuilding(b.name, null, null);
+                sb.AppendLine("  " + r);
+                if (r.StartsWith("Spawned")) placed++;
+            }
+            return $"Spawned {placed} building(s):\n{sb.ToString().TrimEnd()}";
+        }
+
+        private static bool FindFreeCell(GridRenderer grid, int fw, int fh, out int ox, out int oy)
+        {
+            for (int y = 0; y + fh <= grid.Height; y++)
+            for (int x = 0; x + fw <= grid.Width; x++)
+            {
+                bool free = true;
+                for (int dx = 0; dx < fw && free; dx++)
+                for (int dy = 0; dy < fh && free; dy++)
+                {
+                    if (!grid.IsInBounds(x + dx, y + dy)) free = false;
+                    else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x + dx, y + dy)) free = false;
+                }
+                if (free) { ox = x; oy = y; return true; }
+            }
+            ox = oy = -1;
+            return false;
         }
     }
 }

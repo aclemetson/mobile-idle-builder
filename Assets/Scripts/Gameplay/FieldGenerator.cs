@@ -33,6 +33,12 @@ namespace MobileIdleBuilder
 
         internal static IEnumerable<KeyValuePair<Vector2Int, FieldSO>> GetAllFields() => _fieldMap;
 
+        /// <summary>
+        /// The Android-safe additive particle material assigned in the Inspector. Exposed so the
+        /// collector's emission aperture can reuse the same shipped material/variant as the fields.
+        /// </summary>
+        public static Material ParticleMaterialTemplate { get; private set; }
+
         [Serializable]
         public struct FieldEntry
         {
@@ -79,6 +85,7 @@ namespace MobileIdleBuilder
         {
             _fieldMap.Clear();
             _instanceMap.Clear();
+            ParticleMaterialTemplate = _fieldParticleMaterial;
             if (gridRenderer == null)
             {
                 GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");

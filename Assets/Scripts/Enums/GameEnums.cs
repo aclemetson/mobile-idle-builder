@@ -37,6 +37,26 @@ namespace MobileIdleBuilder
         Megastructure
     }
 
+    /// <summary>
+    /// Which procedural structure BuildingVisualizer builds for a building, instead of the placeholder
+    /// cube. Data-driven (set from BuildingSO.structureKind) so the visualizer switches on this rather
+    /// than hardcoding building ids. Collector and EntropySink are still detected via their gameplay
+    /// components (CollectorData / EntropySinkTag); the entries here are the bespoke producer forms.
+    /// Keep in sync with the art direction in docs/agents/visual-design.md.
+    /// </summary>
+    public enum BuildingStructureKind
+    {
+        None = 0,           // placeholder cube
+        AtomGenerator,      // orbital nucleus
+        StrongForceCombiner,// confinement knot
+        IsotopicManipulator,// breathing nucleus
+        MolecularSynthesizer,// bonding lattice
+        MaterialsForge,     // crucible
+        ComponentFabricator,// precision crown
+        RadioactiveContainment, // lead shell
+        BasicGenerator      // energy spire
+    }
+
     public enum FieldType
     {
         None,

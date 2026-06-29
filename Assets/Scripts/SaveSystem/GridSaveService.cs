@@ -179,6 +179,7 @@ namespace MobileIdleBuilder
 
             grid.buildings.Clear();
             grid.conveyors.Clear();
+            grid.blockedOutputs = null;
 
             // --- Buildings ---
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
@@ -242,6 +243,13 @@ namespace MobileIdleBuilder
                 if (cells.Count == 2) csd.singleDir = kv.Value.ExitDir;
                 grid.conveyors.Add(csd);
             }
+
+            // Persist blocked (dead-end) outputs: chain geometry alone would re-merge these on reload,
+            // so record which cells must stay disconnected from the belt their ExitDir points at.
+            var blocked = new List<int>();
+            foreach (var kv in segMap)
+                if (kv.Value.OutputBlocked) { blocked.Add(kv.Value.Cell.x); blocked.Add(kv.Value.Cell.y); }
+            grid.blockedOutputs = blocked.Count > 0 ? blocked.ToArray() : null;
 
             // --- Fields ---
             grid.fields.Clear();
@@ -347,6 +355,16 @@ namespace MobileIdleBuilder
                         conveyorPlacer.PlaceConveyorChain(path, (OutputDirection)csd.singleDir);
                     else
                         conveyorPlacer.PlaceConveyorChain(path);
+                }
+
+                // Re-apply dead-end blocks: chain geometry alone would re-merge belts that were drawn
+                // up to (but not onto) each other, so restore them explicitly after every chain exists.
+                if (grid.blockedOutputs != null && grid.blockedOutputs.Length >= 2)
+                {
+                    var blockedCells = new List<Vector2Int>();
+                    for (int i = 0; i + 1 < grid.blockedOutputs.Length; i += 2)
+                        blockedCells.Add(new Vector2Int(grid.blockedOutputs[i], grid.blockedOutputs[i + 1]));
+                    conveyorPlacer.ApplyBlockedOutputs(blockedCells);
                 }
             }
 

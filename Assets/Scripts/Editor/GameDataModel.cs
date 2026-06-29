@@ -256,6 +256,7 @@ namespace MobileIdleBuilder.Editor
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
         public int[]                  footprint                  = { 1, 1 };
+        public string                 structure_kind             = "None";
         public List<PortJson>         ports                      = new();
         public string                 placement_rule             = "Anywhere";
         public string[]               compatible_adjacent_categories = Array.Empty<string>();

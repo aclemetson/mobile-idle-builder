@@ -1,16 +1,16 @@
 # Economy & Balance
 
-**Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item values not listed, look up `docs/gameplay_loop_data.js` (the authoritative full dataset) — never duplicate it here.
+**Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item / recipe / building / cost values not listed, look up `Assets/Data/game_data.json` — the single source of truth that the editor importer turns into ScriptableObjects. Never duplicate that dataset here. (`docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` are a human-only visual reference and may lag behind `game_data.json` — do not treat them as authoritative.)
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `b3defb5`, 2026-06-28. If code contradicts this doc, trust the code and update this doc.
 
 ## Currencies
 
 | Currency | Earned | Spent | Storage |
 |---|---|---|---|
 | **Entropy (e)** — base | Entropy sink consumes items; starting 250/run (`game_config.starting_entropy`) | research, building placement | `PlayerProgressData.BaseCurrency` |
-| **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`) | prestige shop permanent upgrades (catalogue: `PersistentUpgradeService.cs:48`, costs 5→5400✦) | `PrestigeData.PrestigeCurrency` |
-| **Crystals (◆)** — premium | achievements (2–200◆), daily challenges/login calendar, IAP packs | premium shop: speed boosts, entropy, prestige currency | `SaveData.paidCurrency` |
+| **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`), modified by Entropy Echo (+5%/lvl) and Stellar Engine megastructure (×2); also achievements, login calendar, and crystal conversion | 12 prestige-shop upgrades (`PersistentUpgradeService.cs:48`, ≈5→5,400✦) + 8 managers (hire + star tiers, 10→4,000✦) | `PrestigeData.PrestigeCurrency` |
+| **Crystals (◆)** — premium | achievements (2–200◆), daily challenges/login calendar, Crystal Drop ad (25◆/day), IAP packs | premium shop: speed boosts, entropy, prestige currency, time warp, research skip | `SaveData.paidCurrency` |
 
 IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500◆ ($9.99), 20,000◆ ($19.99) — consumables via Unity IAP / Google Play.
 
@@ -35,6 +35,37 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 
 Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
+> **Remote balance overrides:** any `game_config` scalar (and many per-entity values) can be overridden at runtime via the `GameDataOverrides` remote-config layer without a rebuild (see `feature-flags.md`). When debugging "the number in game ≠ the number in `game_data.json`", check for an active override before assuming the doc/code is wrong.
+
+## Currency faucets & sinks (consolidated map)
+
+Every source/sink for each currency, for balancing as new content is added. Amounts above are authoritative; this is the index.
+
+**Prestige currency (✦)**
+| Direction | Source/Sink | Amount | Owner |
+|---|---|---|---|
+| faucet | prestige run | `floor(log10(netWorth/5000)×50)` | `PrestigeSystem.cs` |
+| faucet (mod) | Entropy Echo upgrade | +5%/lvl on the above | `PersistentUpgradeService.cs` |
+| faucet (mod) | Stellar Engine (megastructure stage 5) | ×2 on the above | `MegastructureService.GetPrestigeGainBonus` |
+| faucet | achievements / 28-day login calendar | per-reward (small) | `AchievementService.cs` / `DailyEventService.cs` |
+| faucet (paid) | crystal → ✦ conversion (premium shop) | 50/150/500/1,500✦ for 500/900/1,900/3,600◆ | `PremiumShopCalculator.cs:36` |
+| sink | 12 prestige-shop upgrades | ≈5 → 5,400✦ | `PersistentUpgradeService.cs` |
+| sink | hire 8 managers + star tiers (max 5★) | 10 → 4,000✦ | `ManagerService.cs` / `game_data.json` |
+
+**Crystals (◆)**
+| Direction | Source/Sink | Amount | Owner |
+|---|---|---|---|
+| faucet | achievements (daily/weekly/monthly/progression) | 2–200◆ | `AchievementService.cs` |
+| faucet | 28-day login calendar | ~750◆/cycle | `DailyEventService.cs` |
+| faucet | 3 daily challenges | 15◆ each (~45◆/day) | `DailyEventService.cs` |
+| faucet | Crystal Drop rewarded ad | 25◆, cap 1/day | `AdRewardCalculator.cs` |
+| faucet (paid) | IAP packs | 600 / 3,200 / 7,500 / 20,000◆ | `IAPService.cs` |
+| sink | speed boost / entropy / time warp | see premium-shop tiers above | `PremiumShopCalculator.cs` |
+| sink | prestige-currency conversion | 500–3,600◆ | `PremiumShopCalculator.cs:36` |
+| sink | research skip | `max(1, ceil(remaining/3600×150))◆` | `PremiumShopCalculator.CalcResearchSkipCost` |
+
+**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), multi-grid site unlocks (250,000e+).
+
 ## Core formulas
 
 - **Prestige wall** (when prestige unlocks): `netWorth ≥ prestige_base_value × prestige_wall_multiplier` = 5,000 × 10 = **50,000e net worth**.
@@ -43,7 +74,7 @@ Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same
 - **Idle/offline**: collects `idleBaseCollectionRate = 20%` of active output, max `idleBaseMaxSeconds = 2h` base, hard cap 12h (`GameConfigSO.cs:34-40`); both raisable by prestige-shop upgrades (`IdleCollectionRate`, `IdleTimeCap`).
 - **Speed boost (premium)**: timed multiplier composed onto `PrestigeData.SpeedMultiplier` at load (`ECSLoadBridge.cs:148`), stripped at save (`:236`).
 
-## Progression phases & research gates (distilled from `gameplay_loop_data.js`)
+## Progression phases & research gates (distilled from `game_data.json`)
 
 Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tutorial roadmap:
 
@@ -86,11 +117,55 @@ Starting a research costs entropy up front and then runs a **real-time timer** (
 | `surplus_containment` | Engineering | `automation_i` | 2,000e | Output Capacity upgrades (idle-stockpile wall) |
 | `feedstock_buffers` | Engineering | `molecular_synthesis` | 10,000e | Input Capacity upgrades (multi-input throughput wall) |
 
-## Prestige shop (permanent upgrades — `PersistentUpgradeService.cs:48-130`)
+## Prestige shop (12 permanent upgrades — `PersistentUpgradeService.cs:48-130`)
 
-Tier 1 (no prereqs): Entropy Headstart (+250e/run/lvl, 5–80✦), Memory Resonance (−5% research/lvl), Assembly Line (+10% craft speed/lvl), Expanded Vault (+20 slots/lvl). Tier 2: Quantum Yield (+10% output/lvl), Efficient Layouts (−5% build cost/lvl). Tier 3: Decay Mastery, Turnkey Builder, Research Overdrive (-5% research timer/lvl, 10 levels, max -50%; prereq Memory Resonance 2), Entropy Echo (+5% prestige gain/lvl), plus idle-collection upgrades. Costs roughly double per level (5 → 5,400✦ range).
+All bought with prestige currency (✦); costs roughly double per level (≈5 → 5,400✦ range). The 12 live upgrade ids (no others exist — there is no "Decay Mastery"):
 
-**Wiring caveat:** craft-speed/output upgrades currently affect idle earnings + display only, not live ECS production — see the gap map in `ecs-patterns.md` before building anything on top of them.
+| id | Name | Effect | Levels |
+|---|---|---|---|
+| `entropy_headstart` | Entropy Headstart | +250e starting entropy / run | per-lvl |
+| `memory_resonance` | Memory Resonance | −5% research cost | per-lvl |
+| `assembly_line` | Assembly Line | +10% craft speed | per-lvl |
+| `expanded_vault` | Expanded Vault | +20 inventory slots | per-lvl |
+| `field_cooldown` | Quick Hands | −5% field tap cooldown (max −50%) | per-lvl |
+| `quantum_yield` | Quantum Yield | +10% recipe output | per-lvl |
+| `efficient_layouts` | Efficient Layouts | −5% building cost (max −30%) | per-lvl |
+| `turnkey_builder` | Turnkey Builder | +1 pre-placed Harvester / run | per-lvl |
+| `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
+| `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
+| `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 2h, max 12h) | per-lvl |
+| `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 50%, max 100%) | per-lvl |
+
+**Wiring caveat:** `assembly_line` (craft speed) and `quantum_yield` (output) currently affect **idle earnings + UI display only, NOT live ECS production** — they flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` does not read. See the gap map in `ecs-patterns.md` before building anything on top of them. (Megastructure Output/Speed bonuses, by contrast, ARE live — they go through `GlobalProductionBonus`, not `PrestigeData`.)
+
+## Managers (prestige-currency sink — `game_data.json` `managers`, `ManagerService.cs`)
+
+Hireable crew; each grants ONE passive bonus to ONE assigned building. Hired managers + assignments + star levels all survive prestige (`SaveData.managerStars`). Star upgrades (max 5★) spend prestige currency; the *star-scaled* value is what gets baked/read (single accessor `ManagerService.EffectiveBonusValue`). Bonus types: CraftSpeed (×ProductionSpeed, crafters only — collectors ignore it), OutputQuantity (×recipe output, floored), PowerDiscount (multiplier on eV draw kept, e.g. 0.8 = −20%; live in `PowerGridSystem`).
+
+| Manager | Bonus | Base → 5★ value | Hire ✦ | Star costs ✦ (★1–★5) |
+|---|---|---|---|---|
+| Tinker | CraftSpeed | 1.25× → 2.05× | 10 | 0, 20, 30, 40, 50 |
+| Stoker | PowerDiscount | 0.8 → 0.4 | 10 | 0, 20, 30, 40, 50 |
+| Packrat | OutputQuantity | 2.0× → 6.0× | 25 | 0, 50, 75, 100, 125 |
+| Overclocker | CraftSpeed | 1.5× → 2.3× | 40 | 0, 80, 120, 160, 200 |
+| Conductor | PowerDiscount | 0.6 → 0.2 | 60 | 0, 120, 180, 240, 300 |
+| Duplicator | OutputQuantity | 3.0× → 7.0× | 150 | 0, 300, 450, 600, 750 |
+| Chronomancer | CraftSpeed | 2.0× → 2.8× | 300 | 0, 600, 900, 1200, 1500 |
+| Demiurge | OutputQuantity | 4.0× → 8.0× | 800 | 0, 1600, 2400, 3200, 4000 |
+
+Managers are the **primary prestige sink** alongside the prestige shop — note OutputQuantity managers ARE live in `ProductionSystem`/`CollectorSystem` (unlike the prestige-shop output upgrade), so they are the real driver of output scaling.
+
+## Megastructure (Dyson Sphere — meta layer above prestige, `MegastructureService.cs`)
+
+Endgame project gated by `megastructure_theory` research (phase ⑮). 5 stages, each consuming tier-5 components and granting a permanent stacking reward; completed stages + partial contributions survive prestige (`SaveData.megastructureStage`/`megastructureContrib*`). Reward wiring: Output/Speed bonuses push into the `GlobalProductionBonus` ECS singleton (read **live** by ProductionSystem/CollectorSystem + folded into idle); the prestige-gain bonus is read directly by `PrestigeSystem` via `GetPrestigeGainBonus()`.
+
+| Stage | Cost (tier-5 items) | Reward |
+|---|---|---|
+| 1 Scaffold Ring | 10× dyson_node | +10% output |
+| 2 Support Lattice | 25× dyson_node + 5× orbital_frame | +10% craft speed |
+| 3 Inner Shell | 50× dyson_node + 20× orbital_frame + 2× graviton_lens | +25% output |
+| 4 Stabilizer Array | 40× orbital_frame + 10× graviton_lens | +25% craft speed |
+| 5 Stellar Engine | 100× dyson_node + 80× orbital_frame + 30× graviton_lens | ×2 prestige currency earned |
 
 ## Balance derivation method (when a task file needs NEW numbers)
 
@@ -99,3 +174,17 @@ Reference game data lives in `docs/ipm-research.md` (Idle Planet Miner economy: 
 2. Research gates ≈ 10–30 minutes of current-phase income at the time they're reached.
 3. Prestige cadence target: first prestige ≈ 1–2h session; later runs faster via discounts/upgrades.
 4. Premium pricing anchors to the 600◆/$0.99 pack; a "nice-to-have" boost ≈ 50–150◆.
+
+## Economy health & risks (re-evaluated 2026-06-28 — read before adding more track)
+
+Findings from the full earning re-evaluation. These are the things most likely to bite as content/progression ("track") is extended.
+
+1. **Dead prestige multipliers (high priority).** `PrestigeData.SpeedMultiplier` and `OutputMultiplier` are shown in the UI and applied to the **idle snapshot only** — `ProductionSystem` does not read them (see `ecs-patterns.md` gap map). So the prestige-shop `assembly_line` (craft speed) and `quantum_yield` (output) upgrades barely affect *live* play. Live output scaling currently comes almost entirely from **OutputQuantity managers** + megastructure `GlobalProductionBonus`, which ARE read live. As more tiers are added, players who lean on the prestige shop will feel prestige is weak in active play. **Decision needed:** wire `PrestigeData` Speed/Output into `ProductionSystem`, or stop advertising them as live power. (Code change — out of scope for this doc pass; flagged here.)
+
+2. **Two parallel output-scaling paths.** Output now scales via (a) prestige-shop `quantum_yield` (idle/display only) and (b) OutputQuantity managers + megastructure (live). When authoring new high-tier balance, anchor expected output to the **manager + megastructure** path, not the prestige-shop path, or live-vs-idle income will diverge.
+
+3. **Crystal faucet vs sink headroom.** Free faucet ≈ 3,500◆/mo for a completionist (~23 skip-hours) against sinks anchored at 150◆/skip-hour. New crystal sinks are safe to add, but new *faucets* (more achievements/challenges as content grows) compound — keep the completionist monthly total near the ~23 skip-hour target so premium time-skips retain value.
+
+4. **Prestige cadence vs new tiers.** With `prestige_scale = 50`, each ×10 of netWorth yields only ≈ +50✦ (flat, log curve). Adding higher tiers raises the netWorth ceiling but NOT proportionally the ✦ payout, so deep runs can feel ✦-starved relative to the cost of late managers (Demiurge 800✦ hire + 4,000✦/star) and deep upgrades (≈5,400✦). When adding tiers, re-check that first prestige stays ≈1–2h and that ✦ income per run keeps pace with the new sink costs — consider raising `prestige_scale` or adding ✦ faucets rather than letting the gap widen.
+
+5. **Manager star costs are the biggest ✦ sink and are flat-authored.** Star costs live as explicit `star_costs[]` arrays in `game_data.json` (not a formula), so new managers must have their tables hand-tuned. Keep them on the same rough curve (hire cost → ★ costs scaling ~×1.5–2 per star) to avoid outliers.

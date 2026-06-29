@@ -37,6 +37,7 @@ MonoBehaviour:
   inputSlotLabels: []
   isEntropySink: 1
   footprint: {x: 3, y: 3}
+  structureKind: 0
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}

@@ -82,6 +82,7 @@ namespace MobileIdleBuilder
         private Button        _btnConveyorRotate;
         private Button        _btnConveyorConfirm;
         private Button        _btnConveyorCancelCandidate;
+        private Button        _btnConveyorNewStart;
         private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
@@ -219,6 +220,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     += OnConveyorStartChanged;
                 conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
             }
@@ -254,6 +256,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     -= OnConveyorStartChanged;
                 conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = null;
             }
@@ -405,6 +408,7 @@ namespace MobileIdleBuilder
             _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
             _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
             _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
+            _btnConveyorNewStart        = root.Q<Button>("btn-conveyor-new-start");
             _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
@@ -517,6 +521,8 @@ namespace MobileIdleBuilder
                 _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
             if (_btnConveyorCancelCandidate != null)
                 _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+            if (_btnConveyorNewStart != null)
+                _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
             if (_btnConveyorMode != null)
                 _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
@@ -1533,9 +1539,10 @@ namespace MobileIdleBuilder
 
             if (isPlacing)
             {
-                // Mode always re-enters in Create with no pending candidate.
+                // Mode always re-enters in Create with no pending start or candidate.
                 OnConveyorModeChanged(false);
                 OnConveyorCandidateChanged(false);
+                OnConveyorStartChanged(false);
             }
         }
 
@@ -1570,6 +1577,13 @@ namespace MobileIdleBuilder
                 _conveyorLabel.text = hasCandidate
                     ? "Place the belt, or adjust it"
                     : "Tap a start, then an end";
+        }
+
+        /// <summary>Shows the "start from a new cell" reset button whenever a start anchor is pending
+        /// (e.g. after auto-chaining), so the player can begin a fresh run without leaving build mode.</summary>
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            SetElementVisible(_btnConveyorNewStart, hasStart && !IsDestroyModeActive());
         }
 
         private bool IsDestroyModeActive() =>
