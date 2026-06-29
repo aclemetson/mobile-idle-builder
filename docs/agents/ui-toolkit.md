@@ -30,6 +30,16 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - **Coverage tiles**: `GridRenderer.ShowPowerCoverage(x,y,w,h,radius)` / `ClearPowerCoverage()` tint covered cells blue using the same `SetTileHighlight` layer as the placement ghost (cleared automatically by `HideGhost`). Shown while placing a generator (`BuildingPlacementController` ghost update) and while a generator/consumer is selected (`HUDBuildingInspectorSubController.AddPowerSection`, which also adds output/draw/status rows).
 - **Unpowered building tint**: `BuildingVisualizer` runs a throttled pass (~0.4s) reddening disconnected consumer cubes via the existing `PresenceReceiver` colour path (skips the currently-hovered cube).
 
+## Camera controls (orbit rig)
+
+`CameraController` (`Assets/Scripts/Camera/CameraController.cs`, on Main Camera) orbits a ground pivot rather than holding a fixed isometric angle. Authoritative state is `_pivot` (focal point on the Y=0 plane), `_yaw`, `_pitch`, and `_distance`; the transform is rederived every `LateUpdate` via `ApplyRig()` so the camera always looks at the pivot. The serialized `offset` only seeds the initial yaw/pitch/distance (default `(0,8,-6)` → the old isometric view). `OrbitOffset(yaw, pitch, distance)` is a pure static helper (edit-mode tested in `CameraControllerTests`).
+
+- **Pan** — single-finger swipe (mobile) / left-drag (desktop) moves `_pivot` along the ground via `ScreenToGround`, clamped to grid bounds by `ClampPivot`. `HandleSwipePan` skips when ≥2 touches are down.
+- **Zoom** — two-finger pinch distance and scroll wheel adjust FOV, clamped `minFOV..maxFOV` (limited zoom; no distance change).
+- **Rotate** — two-finger swipe (the fingers' centroid delta, applied *simultaneously* with pinch zoom) or middle-mouse drag (`HandleMouseOrbit`). Horizontal → yaw, vertical → pitch; pitch clamped `minPitch (10°, near-horizon) .. maxPitch (90°, straight down)`. Manual rotate cancels any active tutorial pan.
+- **Lock** — rotation and pan are gated by `_panLocked` (`SetPanLocked`). Only the Maxwell's Demon minigame locks the camera; **destroy and conveyor modes do NOT lock it**, so pan/zoom/rotate all work there (rotation is two-finger / middle-mouse and never collides with single-finger conveyor painting).
+- **Tutorial** — `PanTo(worldPos)` / `ResumeFollow()` lerp `_pivot` toward the target (API-compatible with the old `IsometricCameraFollow`).
+
 ## Building placement (tap-to-position + confirm popup)
 
 `BuildingPlacementController` does NOT place on press and does NOT lock the camera. Flow (editor mouse + mobile touch, one code path via `InputUtils`):
