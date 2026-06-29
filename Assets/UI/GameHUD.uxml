@@ -353,6 +353,7 @@
                 <ui:Button name="btn-conveyor-rotate" text="↻" tooltip="Bend route" class="conveyor-icon-btn hidden" />
                 <ui:Button name="btn-conveyor-confirm" text="✓" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden" />
                 <ui:Button name="btn-conveyor-cancel-candidate" text="✕" tooltip="Clear" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Start from a new cell" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>

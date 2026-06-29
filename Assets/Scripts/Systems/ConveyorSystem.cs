@@ -120,9 +120,16 @@ namespace MobileIdleBuilder
             }
 
             // ----------------------------------------------------------------
-            // Pass 3 — Transfer items (deferred, applied after collection)
+            // Pass 3 — Transfer items
+            //
+            // Tail segments deposit into an adjacent building input (independent contention handled
+            // by the input buffer). Mid-chain segments hand off to their single NextSegment; when
+            // several segments feed one cell (a 2-3 input merge), only one item enters the merge
+            // cell per frame and the inbound directions take turns via the cell's MergeCursor, so
+            // no branch starves.
             // ----------------------------------------------------------------
-            var transfers = new List<(Entity from, Entity toSeg, Entity toBuilding, int itemID, float newProg, int deliverDir)>();
+            var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
+            var mergeTargets      = new HashSet<Entity>();
 
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -135,11 +142,9 @@ namespace MobileIdleBuilder
 
                 if (seg.NextSegment != Entity.Null)
                 {
-                    // Move to next segment if it is empty
+                    // Defer to the per-target round-robin below (handles single and merge cells alike).
                     if (!EntityManager.HasComponent<ConveyorItemData>(seg.NextSegment))
-                    {
-                        transfers.Add((e, seg.NextSegment, Entity.Null, item.ItemID, item.Progress - 1f, -1));
-                    }
+                        mergeTargets.Add(seg.NextSegment);
                     // else: back-pressure — item waits
                 }
                 else
@@ -151,38 +156,72 @@ namespace MobileIdleBuilder
                         var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
                         var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg);
                         if (SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity)
-                            transfers.Add((e, Entity.Null, bldg, item.ItemID, 0f, deliverDir));
+                            buildingDeposits.Add((e, bldg, item.ItemID, deliverDir));
                         // else: input full — item waits
                     }
                     // No adjacent input port: item waits at tail
                 }
             }
 
-            foreach (var (from, toSeg, toBuilding, itemID, newProg, deliverDir) in transfers)
+            foreach (var (from, bldg, itemID, deliverDir) in buildingDeposits)
             {
-                if (toBuilding != Entity.Null)
-                {
-                    // Deposit to building input buffer
-                    SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(toBuilding), itemID, 1);
-                    EntityManager.RemoveComponent<ConveyorItemData>(from);
+                if (!EntityManager.HasComponent<ConveyorItemData>(from)) continue;
+                SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(bldg), itemID, 1);
+                EntityManager.RemoveComponent<ConveyorItemData>(from);
 
-                    // Input particle burst toward the building's entry face (the delivery direction,
-                    // which may differ from the belt's own exit direction).
-                    if (BuildingInputFX.Instance != null)
-                    {
-                        var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
-                        BuildingInputFX.Instance.Trigger(seg.Cell, deliverDir, itemID);
-                    }
-                }
-                else if (toSeg != Entity.Null && !EntityManager.HasComponent<ConveyorItemData>(toSeg))
+                // Input particle burst toward the building's entry face (the delivery direction,
+                // which may differ from the belt's own exit direction).
+                if (BuildingInputFX.Instance != null)
                 {
-                    EntityManager.AddComponentData(toSeg, new ConveyorItemData
-                    {
-                        ItemID   = itemID,
-                        Progress = Mathf.Max(0f, newProg)
-                    });
-                    EntityManager.RemoveComponent<ConveyorItemData>(from);
+                    var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
+                    BuildingInputFX.Instance.Trigger(seg.Cell, deliverDir, itemID);
                 }
+            }
+
+            foreach (var target in mergeTargets)
+            {
+                if (EntityManager.HasComponent<ConveyorItemData>(target)) continue; // already filled
+                var tSeg = EntityManager.GetComponentData<ConveyorSegmentData>(target);
+
+                // Round-robin over the 4 directions starting at MergeCursor; accept the first inbound
+                // (a neighbour whose ExitDir points back at us) that has a ready item.
+                int cursor = ((tSeg.MergeCursor % 4) + 4) % 4;
+                Entity chosen = Entity.Null;
+                int    chosenDir = -1;
+                for (int k = 0; k < 4; k++)
+                {
+                    int dir   = (cursor + k) % 4;
+                    int2 nc   = AdjacentCell(tSeg.Cell, dir);
+                    if (!segMap.TryGetValue(nc, out Entity inSeg)) continue;
+
+                    var inData = EntityManager.GetComponentData<ConveyorSegmentData>(inSeg);
+                    if (inData.OutputBlocked) continue;                                         // dead-end: not connected
+                    int2 inExitCell = AdjacentCell(inData.Cell, inData.ExitDir);
+                    if (inExitCell.x != tSeg.Cell.x || inExitCell.y != tSeg.Cell.y) continue; // not an inbound
+                    if (!EntityManager.HasComponent<ConveyorItemData>(inSeg)) continue;
+                    if (EntityManager.GetComponentData<ConveyorItemData>(inSeg).Progress < 1f) continue;
+
+                    chosen    = inSeg;
+                    chosenDir = dir;
+                    break;
+                }
+
+                if (chosen == Entity.Null) continue;
+
+                var chosenSeg  = EntityManager.GetComponentData<ConveyorSegmentData>(chosen);
+                var chosenItem = EntityManager.GetComponentData<ConveyorItemData>(chosen);
+
+                EntityManager.AddComponentData(target, new ConveyorItemData
+                {
+                    ItemID   = chosenItem.ItemID,
+                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f)
+                });
+                EntityManager.RemoveComponent<ConveyorItemData>(chosen);
+
+                // Animate the item from the edge it actually arrived through, and advance the cursor.
+                tSeg.EntryDir    = chosenSeg.ExitDir;
+                tSeg.MergeCursor = (chosenDir + 1) % 4;
+                EntityManager.SetComponentData(target, tSeg);
             }
 
             // ----------------------------------------------------------------

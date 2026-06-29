@@ -129,6 +129,8 @@ namespace MobileIdleBuilder
         public List<BuildingSaveData> buildings  = new();
         public List<ConveyorSaveData> conveyors  = new();
         public List<FieldSaveData>   fields      = new();
+        public int[] blockedOutputs;             // flattened [x0,y0,...] of belt cells whose forward output
+                                                 // is an intentional dead-end (ran up to a belt without merging)
     }
 
     [Serializable]

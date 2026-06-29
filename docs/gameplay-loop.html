@@ -131,6 +131,18 @@
     <p>The <strong>Mode: Create / Mode: Destroy</strong> toggle sits next to Finished and always starts on Create.
        In <strong>Destroy</strong>, tapping a belt removes that single segment (its chain neighbours re-link via
        <code>ConveyorPlacer.RemoveSegmentAt</code>, shared with the global Deconstruct tool). Toggle back to keep building.</p>
+    <p><strong>River-flow visuals.</strong> Belts render as a flowing "river" ribbon (custom
+       <code>MobileIdleBuilder/ConveyorFlow</code> shader on a procedural strip mesh) whose current scrolls
+       toward the output — the flow direction reads straight from the moving water, no arrows.</p>
+    <p><strong>Merging.</strong> A run can flow into an existing belt: a grid cell may take flow from
+       <strong>2 or 3 inbound</strong> sides into its <strong>single output</strong> (a cell may merge inputs
+       but never fork its output — that placement is rejected). When several streams are ready at once the
+       inbound sides take turns (round-robin via <code>MergeCursor</code>) so no branch starves, and the merge
+       junction visibly converges. Connectivity is derived from each cell's output direction by
+       <code>ConveyorPlacer.RelinkAll</code>, so merges survive save/load and feed offline production unchanged.</p>
+    <p><strong>Auto-turn into buildings.</strong> A run that ends next to a building <em>input</em> (or starts
+       next to an <em>output</em>) auto-orients its end so the current flows into / out of the building, turning
+       90&deg; when needed (<code>ConveyorPlacer.TryAutoTurnEnds</code>).</p>
   </div>
 
   <div class="callout">
