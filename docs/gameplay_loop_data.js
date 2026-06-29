@@ -14,6 +14,7 @@
 //  9. design_gaps      13 tracked issues
 // 10. simple_overview  18 phases for the Simple Overview tab
 // 11. prestige         formula params + 10 permanent upgrades
+// 12. nuclear          periodic table (118) + nuclear buildings/particles/research (design)
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -1404,6 +1405,94 @@ prestige: {
       prereqs: [{ id: 'entropy_headstart', minLevel: 3 }, { id: 'memory_resonance', minLevel: 3 }],
       description: 'Earn +5% more prestige currency per run per level.',
     },
+  ],
+},
+
+// ─────────────────────────────────── NUCLEAR / ELEMENTS ──
+// Periodic-table + nuclear design data. Mirrors docs/agents/elements-and-isotopes.md.
+// The ~20 elements in `impl` are authoritative (game_data.json); every other
+// yield/regime is a DESIGN placeholder. Do NOT treat as authoritative.
+nuclear: {
+  regimes: [
+    { key:'genesis',   label:'Genesis (assembler)',   color:'#d2a8ff', note:'H = proton + electron' },
+    { key:'fusion',    label:'Fusion ladder (Z2-26)',  color:'#3fb950', note:'fuse up toward iron' },
+    { key:'fission',   label:'Fission / fragments',    color:'#f0883e', note:'split heavies down toward iron' },
+    { key:'field',     label:'Fissile field + decay',  color:'#58a6ff', note:'harvested heavy + decay chains' },
+    { key:'breeding',  label:'Neutron breeding',       color:'#db61a2', note:'transuranics by neutron capture' },
+    { key:'synthesis', label:'Accelerator synthesis',  color:'#8b949e', note:'super-heavies, codex only' },
+  ],
+  // ~20 implemented elements (game_data.json) — shown with a dot in the grid.
+  impl: [1,2,3,4,5,6,7,8,13,14,26,28,29,30,47,74,78,79,92,94],
+  // [z, symbol, name, mass number A (= Atomic-Assembler craft seconds)]
+  els: [
+    [1,'H','Hydrogen',1],[2,'He','Helium',4],[3,'Li','Lithium',7],[4,'Be','Beryllium',9],
+    [5,'B','Boron',11],[6,'C','Carbon',12],[7,'N','Nitrogen',14],[8,'O','Oxygen',16],
+    [9,'F','Fluorine',19],[10,'Ne','Neon',20],[11,'Na','Sodium',23],[12,'Mg','Magnesium',24],
+    [13,'Al','Aluminum',27],[14,'Si','Silicon',28],[15,'P','Phosphorus',31],[16,'S','Sulfur',32],
+    [17,'Cl','Chlorine',35],[18,'Ar','Argon',40],[19,'K','Potassium',39],[20,'Ca','Calcium',40],
+    [21,'Sc','Scandium',45],[22,'Ti','Titanium',48],[23,'V','Vanadium',51],[24,'Cr','Chromium',52],
+    [25,'Mn','Manganese',55],[26,'Fe','Iron',56],[27,'Co','Cobalt',59],[28,'Ni','Nickel',58],
+    [29,'Cu','Copper',63],[30,'Zn','Zinc',65],[31,'Ga','Gallium',69],[32,'Ge','Germanium',74],
+    [33,'As','Arsenic',75],[34,'Se','Selenium',80],[35,'Br','Bromine',79],[36,'Kr','Krypton',84],
+    [37,'Rb','Rubidium',85],[38,'Sr','Strontium',88],[39,'Y','Yttrium',89],[40,'Zr','Zirconium',90],
+    [41,'Nb','Niobium',93],[42,'Mo','Molybdenum',98],[43,'Tc','Technetium',98],[44,'Ru','Ruthenium',102],
+    [45,'Rh','Rhodium',103],[46,'Pd','Palladium',106],[47,'Ag','Silver',108],[48,'Cd','Cadmium',114],
+    [49,'In','Indium',115],[50,'Sn','Tin',120],[51,'Sb','Antimony',121],[52,'Te','Tellurium',130],
+    [53,'I','Iodine',127],[54,'Xe','Xenon',132],[55,'Cs','Cesium',133],[56,'Ba','Barium',138],
+    [57,'La','Lanthanum',139],[58,'Ce','Cerium',140],[59,'Pr','Praseodymium',141],[60,'Nd','Neodymium',142],
+    [61,'Pm','Promethium',145],[62,'Sm','Samarium',152],[63,'Eu','Europium',153],[64,'Gd','Gadolinium',158],
+    [65,'Tb','Terbium',159],[66,'Dy','Dysprosium',164],[67,'Ho','Holmium',165],[68,'Er','Erbium',166],
+    [69,'Tm','Thulium',169],[70,'Yb','Ytterbium',174],[71,'Lu','Lutetium',175],[72,'Hf','Hafnium',180],
+    [73,'Ta','Tantalum',181],[74,'W','Tungsten',184],[75,'Re','Rhenium',187],[76,'Os','Osmium',192],
+    [77,'Ir','Iridium',193],[78,'Pt','Platinum',195],[79,'Au','Gold',197],[80,'Hg','Mercury',202],
+    [81,'Tl','Thallium',205],[82,'Pb','Lead',208],[83,'Bi','Bismuth',209],[84,'Po','Polonium',209],
+    [85,'At','Astatine',210],[86,'Rn','Radon',222],[87,'Fr','Francium',223],[88,'Ra','Radium',226],
+    [89,'Ac','Actinium',227],[90,'Th','Thorium',232],[91,'Pa','Protactinium',231],[92,'U','Uranium',238],
+    [93,'Np','Neptunium',237],[94,'Pu','Plutonium',244],[95,'Am','Americium',243],[96,'Cm','Curium',247],
+    [97,'Bk','Berkelium',247],[98,'Cf','Californium',251],[99,'Es','Einsteinium',252],[100,'Fm','Fermium',257],
+    [101,'Md','Mendelevium',258],[102,'No','Nobelium',259],[103,'Lr','Lawrencium',266],[104,'Rf','Rutherfordium',267],
+    [105,'Db','Dubnium',268],[106,'Sg','Seaborgium',269],[107,'Bh','Bohrium',270],[108,'Hs','Hassium',269],
+    [109,'Mt','Meitnerium',278],[110,'Ds','Darmstadtium',281],[111,'Rg','Roentgenium',282],[112,'Cn','Copernicium',285],
+    [113,'Nh','Nihonium',286],[114,'Fl','Flerovium',289],[115,'Mc','Moscovium',290],[116,'Lv','Livermorium',293],
+    [117,'Ts','Tennessine',294],[118,'Og','Oganesson',294],
+  ],
+  // Standard periodic layout: 7 main rows + 2 f-block rows, 18 columns.
+  // 0 = empty, -1 = lanthanide placeholder, -2 = actinide placeholder.
+  layout: [
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [3,4,0,0,0,0,0,0,0,0,0,0,5,6,7,8,9,10],
+    [11,12,0,0,0,0,0,0,0,0,0,0,13,14,15,16,17,18],
+    [19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36],
+    [37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54],
+    [55,56,-1,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86],
+    [87,88,-2,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118],
+    [0,0,0,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71],
+    [0,0,0,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103],
+  ],
+  // New nuclear buildings (design). Schema mirrors game_data.json buildings[].
+  buildings: [
+    { name:'Fusion Reactor',  id:'fusion_reactor',  tier:2, inputs:'2 light nuclei (+ H / neutron fuel)', output:'next element up the ladder', byproducts:'neutron, positron, gamma, neutrino', gate:'fusion_i' },
+    { name:'Fission Reactor', id:'fission_reactor', tier:2, inputs:'fissile isotope + neutron trigger',   output:'2-3 mid-weight fragments',    byproducts:'neutron x2-3, gamma, beta',        gate:'fission_i' },
+  ],
+  // Exotic particles (existing + design additions).
+  particles: [
+    { name:'Neutron',       sym:'n0', charge:'0',  source:'fusion / fission byproduct', use:'fission trigger; isotope building', yield:3,  status:'impl' },
+    { name:'Alpha',         sym:'a',  charge:'+2', source:'alpha decay (U, Pu, Ra...)', use:'recipe input; energy recovery',     yield:50, status:'impl' },
+    { name:'Beta (b-)',     sym:'b',  charge:'-1', source:'beta-minus decay',           use:'energy recovery',                   yield:30, status:'impl' },
+    { name:'Positron (b+)', sym:'e+', charge:'+1', source:'beta-plus / p-p chain',      use:'annihilate with electron -> 2 gamma', yield:30, status:'design' },
+    { name:'Gamma photon',  sym:'g',  charge:'0',  source:'most fusion / fission / decay', use:'energy recovery -> eV (power grid)', yield:20, status:'design' },
+    { name:'Neutrino',      sym:'v',  charge:'0',  source:'beta decay & fusion',        use:'mostly escapes (educational)',      yield:1,  status:'design' },
+  ],
+  // New research gates (design). Fission opens EARLY (around Be/B); the two ladders
+  // then run in parallel, both racing toward iron.
+  research: [
+    { id:'fusion_i',           branch:'Nuclear',      prereq:'atomic_assembly',    unlocks:'Fusion Reactor; He -> C fusion' },
+    { id:'fissile_extraction', branch:'Nuclear',      prereq:'fusion_i (at Be/B)', unlocks:'U / Pu fissile fields (map purchase); cheap heavy feedstock + decay chains' },
+    { id:'fission_i',          branch:'Nuclear',      prereq:'fissile_extraction', unlocks:'Fission Reactor; split fissile fuel into mid-weight fragments (climb down)' },
+    { id:'fusion_ii',          branch:'Nuclear',      prereq:'fusion_i',           unlocks:'alpha process O -> Si (Z8-14)' },
+    { id:'fission_ii',         branch:'Nuclear',      prereq:'fission_i',          unlocks:'denser fragment chains toward near-iron metals (Co/Ni/Cu/Zn)' },
+    { id:'fusion_iii / fission_iii', branch:'Astrophysics', prereq:'*_ii',         unlocks:'last rungs of each ladder converging on Fe (jackpot)' },
+    { id:'transuranics',       branch:'Nuclear',      prereq:'fission_i',          unlocks:'breeding Np -> Fm; accelerator Z>=101 (low-value codex tail)' },
   ],
 },
 

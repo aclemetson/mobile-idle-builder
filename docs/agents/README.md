@@ -2,7 +2,7 @@
 
 Layered, token-efficient context for AI coding sessions on this repo. Read this file + `architecture.md` first (always), then ONLY the deep-dive docs the routing table names for your task. Do not re-explore the codebase for facts these docs already state. CLAUDE.md (auto-loaded) holds the workflow rules and recurring pitfalls — it is not duplicated here.
 
-> Verified against: `deea0a4`, 2026-06-11.
+> Verified against: `992a572`, 2026-06-29.
 
 ## Routing table
 
@@ -10,6 +10,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 |---|---|
 | anything (always) | `architecture.md` |
 | items / recipes / buildings / research / new content type / game_data.json | `data-pipeline.md` |
+| elements / isotopes / particles / fusion / fission / fissile fields / periodic table | `elements-and-isotopes.md` |
 | save fields, persistence, cloud, offline earnings, timed effects | `save-system.md` |
 | HUD, panels, UXML/USS, sub-controllers | `ui-toolkit.md` |
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |

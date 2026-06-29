@@ -19,6 +19,7 @@
     <button class="tab" data-tab="dialogue">Dialogue Flow</button>
     <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
+    <button class="tab" data-tab="elements">Elements &amp; Nuclear</button>
     <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
     <button class="tab" data-tab="idle">Idle Collection</button>
@@ -494,6 +495,94 @@
       </div>
 
     </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ ELEMENTS & NUCLEAR ══ -->
+<div id="elements" class="tab-content">
+
+  <div class="callout">
+    <h3>The Iron Valley &mdash; two ladders converging on iron</h3>
+    <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so <strong>entropy value peaks at iron and falls
+       off on BOTH sides</strong>. Fusion climbs up to iron; fission breaks heavy nuclei down to iron. Iron is the
+       jackpot; the feedstock at each far end (hydrogen, uranium) is cheap. <strong>Fission unlocks early</strong>
+       (around Be/B) so both ladders race toward iron in parallel.</p>
+    <pre class="pt-diagram">                          IRON-56  = MAX value (5,120 e)
+                            /\
+        fusion (build up)  /  \  fission (break down)
+        big gaps ~2x/rung /    \ small gaps ~1.08x/Z, many rungs
+                         /      \
+   H(5) He Li B C N O ../        \.. Ag .. W   U(40) Pu .. Og(6)
+   |-- FUSION value rises ->|     |&lt;- FISSION value rises -|
+   cheap light feedstock          cheap heavy feedstock (fissile fields)</pre>
+    <p style="font-size:12px;color:#8b949e;">Full design reference: <code>docs/agents/elements-and-isotopes.md</code>.
+       <code>game_data.json</code> is the source of truth; the implemented elements <em>above iron</em> still hold the
+       old monotonic values and must be rebalanced down to the fission-ladder targets shown here.</p>
+  </div>
+
+  <div class="card">
+    <h3>Periodic Table &mdash; colored by creation regime</h3>
+    <p style="font-size:12px;color:#8b949e;">Each cell shows atomic number, symbol, and entropy yield (= sell value).
+       Hover a cell for its name, mass, regime, and status. <strong>&bull;</strong> marks the ~20 elements implemented
+       today; the rest are design placeholders. Lanthanides (57&ndash;71) and actinides (89&ndash;103) are the two rows below.</p>
+    <div id="nuclear-grid"></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #3fb950;background:#0d2018;">
+      <h2>New Nuclear Buildings (design)</h2>
+      <span class="phase-meta">the throughput shortcuts past nucleon-by-nucleon assembly &middot; reuse the BuildingSO schema</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Building</th><th>id</th><th style="text-align:center;">Tier</th>
+        <th>Inputs</th><th>Output</th><th>Byproducts</th><th>Research</th>
+      </tr></thead>
+      <tbody id="nuclear-buildings-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #f0883e;background:#2b1d0e;">
+      <h2>Exotic Particles</h2>
+      <span class="phase-meta">emitted as recipe byproducts &middot; caught by Radioactive Containment &middot; gamma feeds the power grid</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Particle</th><th style="text-align:center;">Sym</th><th style="text-align:center;">Charge</th>
+        <th>Source</th><th>Use</th><th style="text-align:right;">Yield</th><th style="text-align:center;">Status</th>
+      </tr></thead>
+      <tbody id="nuclear-particles-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
+      <h2>Research Gates (design)</h2>
+      <span class="phase-meta">fission opens early (around Be/B) &mdash; both ladders then run in parallel toward iron</span>
+    </div>
+    <table>
+      <thead><tr><th>Research</th><th>Branch</th><th>Prereq</th><th>Unlocks</th></tr></thead>
+      <tbody id="nuclear-research-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="callout" style="border-left-color:#d2a8ff;">
+    <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; convergent (iron-peaked)</h3>
+    <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code> (the Maxwell's Demon sink pays
+       this when an item is deposited). Value is a <strong>tent peaking at iron</strong> (5,120 e). Two ladders climb
+       toward it from opposite ends; equivalent rungs are worth comparable amounts, but the fission side is
+       <strong>denser</strong> (more nuclides, smaller per-step gaps).</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">Fusion ladder (Z1&rarr;26, climb up)</strong> &mdash; curated doubling, big ~2&times; steps, floored at H = 5 e:</p>
+    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O   ...  Si  ... (Al) ...   Fe(peak)
+e :  5  10  20  40   80  160  320  640      1280    2560       5120</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">Fission ladder (Z92&rarr;26, climb down)</strong> &mdash; <code>yield(Z) = round(40 &times; 128<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored at the top, uranium floored at ~40 e, transuranics below that:</p>
+    <pre class="pt-spine">Z :  27   28   29   30   36   47   56   74   78   79   82   90   92   94   100  118
+el:  Co   Ni   Cu   Zn   Kr   Ag   Ba    W   Pt   Au   Pb   Th    U   Pu   Fm   Og
+e : 4757 4420 4107 3816 2455 1093  564  150  112  104   83   46   40   35   22    6</pre>
+    <p style="font-size:11px;color:#8b949e;"><strong style="color:#d2a8ff;">Why iron is the cap:</strong> per-Z doubling across 118 elements would explode (5&times;2<sup>117</sup>); capping the element layer at iron keeps numbers sane and hands the continuing climb to the molecule&rarr;material&rarr;component tiers that consume elements.
+       <strong style="color:#f0883e;">Migration:</strong> implemented above-iron elements (Ni 10,240 &rarr; Pu 2,621,440 in <code>game_data.json</code>) follow the OLD monotonic model and must be rebalanced down to these fission targets (U 1,310,720 &rarr; 40).</p>
   </div>
 
 </div>
