@@ -506,16 +506,17 @@
     <h3>The Iron Valley &mdash; two ladders converging on iron</h3>
     <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so <strong>entropy value peaks at iron and falls
        off on BOTH sides</strong>. Fusion climbs up to iron; fission breaks heavy nuclei down to iron. Iron is the
-       jackpot; the feedstock at each far end (hydrogen, uranium) is cheap. <strong>Fission unlocks early</strong>
-       (around Be/B) so both ladders race toward iron in parallel.</p>
-    <pre class="pt-diagram">                          IRON-56  = MAX value (5,120 e)
-                            /\
-        fusion (build up)  /  \  fission (break down)
-        big gaps ~2x/rung /    \ small gaps ~1.08x/Z, many rungs
-                         /      \
-   H(5) He Li B C N O ../        \.. Ag .. W   U(40) Pu .. Og(6)
-   |-- FUSION value rises ->|     |&lt;- FISSION value rises -|
-   cheap light feedstock          cheap heavy feedstock (fissile fields)</pre>
+       jackpot &mdash; a <strong>long-term apex worth ~168M e, a month-plus of play and many prestiges away</strong>.
+       The feedstock at each far end (hydrogen = 5, uranium = 64) is cheap. <strong>Fission unlocks early</strong>
+       (around Be/B) so both ladders climb toward iron in parallel over many prestige cycles.</p>
+    <pre class="pt-diagram">                   IRON-56  = MAX (~168,000,000 e)  &lt;- the long-term apex
+                       /\
+     fusion (build up)/  \fission (break down)
+     big ~2x/Z steps /    \ smaller ~1.25x/Z steps, many rungs
+                    /      \
+   H(5) He Li B C O/        \.. Ag .. W   U(64) Pu .. Og(1)
+   |- FUSION rises ->|       |&lt;- FISSION rises -|
+   cheap light feedstock     cheap heavy feedstock (fissile fields)</pre>
     <p style="font-size:12px;color:#8b949e;">Full design reference: <code>docs/agents/elements-and-isotopes.md</code>.
        <code>game_data.json</code> is the source of truth; the implemented elements <em>above iron</em> still hold the
        old monotonic values and must be rebalanced down to the fission-ladder targets shown here.</p>
@@ -571,18 +572,18 @@
   <div class="callout" style="border-left-color:#d2a8ff;">
     <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; convergent (iron-peaked)</h3>
     <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code> (the Maxwell's Demon sink pays
-       this when an item is deposited). Value is a <strong>tent peaking at iron</strong> (5,120 e). Two ladders climb
-       toward it from opposite ends; equivalent rungs are worth comparable amounts, but the fission side is
-       <strong>denser</strong> (more nuclides, smaller per-step gaps).</p>
-    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">Fusion ladder (Z1&rarr;26, climb up)</strong> &mdash; curated doubling, big ~2&times; steps, floored at H = 5 e:</p>
-    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O   ...  Si  ... (Al) ...   Fe(peak)
-e :  5  10  20  40   80  160  320  640      1280    2560       5120</pre>
-    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">Fission ladder (Z92&rarr;26, climb down)</strong> &mdash; <code>yield(Z) = round(40 &times; 128<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored at the top, uranium floored at ~40 e, transuranics below that:</p>
-    <pre class="pt-spine">Z :  27   28   29   30   36   47   56   74   78   79   82   90   92   94   100  118
-el:  Co   Ni   Cu   Zn   Kr   Ag   Ba    W   Pt   Au   Pb   Th    U   Pu   Fm   Og
-e : 4757 4420 4107 3816 2455 1093  564  150  112  104   83   46   40   35   22    6</pre>
-    <p style="font-size:11px;color:#8b949e;"><strong style="color:#d2a8ff;">Why iron is the cap:</strong> per-Z doubling across 118 elements would explode (5&times;2<sup>117</sup>); capping the element layer at iron keeps numbers sane and hands the continuing climb to the molecule&rarr;material&rarr;component tiers that consume elements.
-       <strong style="color:#f0883e;">Migration:</strong> implemented above-iron elements (Ni 10,240 &rarr; Pu 2,621,440 in <code>game_data.json</code>) follow the OLD monotonic model and must be rebalanced down to these fission targets (U 1,310,720 &rarr; 40).</p>
+       this when an item is deposited). Value is a <strong>tall tent peaking at iron (~168M e)</strong> &mdash; a
+       deliberate long-term apex, a month-plus of play and many prestiges away. Two ladders climb toward it from
+       opposite ends; the fission side is <strong>denser</strong> (more nuclides, smaller per-step gaps).</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">Fusion ladder (Z1&rarr;26, climb up)</strong> &mdash; <code>yield(Z) = 5 &times; 2<sup>(Z&minus;1)</sup></code>; preserves the tutorial H..O rungs and doubles per Z to iron:</p>
+    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O    F  ...  Si   ...    Ca      ...     Mn            Fe(apex)
+e :  5  10  20  40   80  160  320  640 1280   40,960  2,621,440  83,886,080  167,772,160</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">Fission ladder (Z92&rarr;26, climb down)</strong> &mdash; <code>yield(Z) = round(64 &times; 2,621,440<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored at the top, uranium floored at 64 e, transuranics below that:</p>
+    <pre class="pt-spine">Z :     27         28        30        36       47      56    74  82 92 94 100 118
+el:     Co         Ni        Zn        Kr       Ag      Ba     W  Pb  U Pu  Fm  Og
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 64 41 11  1</pre>
+    <p style="font-size:11px;color:#8b949e;"><strong style="color:#d2a8ff;">Why iron is the cap:</strong> capping the element layer at iron keeps the table one coherent tent and makes iron a true summit; the continuing climb past it lives in the molecule&rarr;material&rarr;component tiers, built from the <em>cheap</em> abundant elements (not iron).
+       <strong style="color:#f0883e;">Migration:</strong> implemented values follow the OLD thinned model and must be re-derived from both formulas (Fe 5,120&rarr;167,772,160; U 1,310,720&rarr;64).</p>
   </div>
 
 </div>

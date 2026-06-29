@@ -1037,22 +1037,15 @@ function nucRegime(z) {
   return 'synthesis';
 }
 
-// Entropy yield (= base_sell_value) under the CONVERGENT model: value is a tent
-// peaking at iron (Z26 = 5120 = max). Fusion side rises in big steps to iron;
-// fission side descends from iron in small steps to a cheap uranium floor (~40).
+// Entropy yield (= base_sell_value) under the CONVERGENT model: value is a tall
+// tent peaking at iron, which is a deliberate long-term apex (~168M e — reached
+// only after a month-plus of play and many prestiges). Fusion doubles per Z up
+// to iron (preserving the tutorial H=5..O=640 rungs); fission descends from iron
+// in small steps to a cheap uranium floor (~64 e). Transuranics fall below U.
 // See docs/agents/elements-and-isotopes.md "Entropy-yield ladder".
 function nucYield(z) {
-  // Fusion ladder (Z1-26): authored rising values, peak at iron.
-  const FUS = { 1:5, 2:10, 3:20, 4:40, 5:80, 6:160, 7:320, 8:640, 13:2560, 14:1280, 26:5120 };
-  if (z <= 26) {
-    if (FUS[z] != null) return FUS[z];
-    if (z <= 8)  return [0, 5, 10, 20, 40, 80, 160, 320, 640][z];
-    if (z <= 12) return 1280;   // F..Mg
-    if (z <= 20) return 2560;   // P..Ca
-    return 4096;                // Sc..Mn approaching iron
-  }
-  // Fission ladder + transuranics (Z27-118): descend from iron toward U floor (40).
-  return Math.round(40 * Math.pow(128, (92 - z) / 66));
+  if (z <= 26) return 5 * Math.pow(2, z - 1);          // fusion: H=5 .. Fe=167,772,160 (apex)
+  return Math.max(1, Math.round(64 * Math.pow(2621440, (92 - z) / 66))); // fission/transuranic
 }
 
 function nucFmt(n) {

@@ -17,21 +17,21 @@
 Binding energy per nucleon peaks at iron-56. **Both** production directions release energy as they climb toward iron, and the entropy economy mirrors that exactly: **value peaks at iron and falls off on both sides.** Iron is the convergence jackpot; the feedstock at each ladder's far end (hydrogen on one side, uranium on the other) is cheap.
 
 ```
-                              IRON-56  = MAX value (5,120 e)
-                                /\
-            fusion (build up)  /  \  fission (break down)
-            big gaps, ~2x/rung/    \ small gaps, ~1.08x/Z, many rungs
-                              /      \
-   H(5) He Li Be B C N O .. /        \ .. Ag .. W   U(40) .. Pu .. Og(6)
-   |-- FUSION, value rises ->|        |<- FISSION, value rises ->|
-   cheap light feedstock              cheap heavy feedstock (fissile fields)
+                       IRON-56  = MAX value (~168,000,000 e)
+                          /\           <- the long-term apex: a month+
+        fusion (build up)/  \fission    of play and many prestiges away
+        big ~2x/Z steps /    \ smaller ~1.25x/Z steps, many rungs
+                       /      \
+   H(5) He Li B C N O /        \ .. Ag .. W   U(64) Pu .. Og(1)
+   |- FUSION rises ->|          |<- FISSION rises -|
+   cheap light feedstock        cheap heavy feedstock (fissile fields)
 ```
 
 Key consequences of the convergent model (see the ladder section for numbers):
-- **Iron (Z26) is the single highest-value element (5,120 e).** Everything else is worth less.
-- **Uranium and the heavy naturals are CHEAP feedstock (~40 e), not the apex.** You profit by fissioning them *down* toward iron, exactly as you profit by fusing hydrogen *up* toward iron.
-- **Fission is unlocked early** (around Beryllium/Boron). From then on the two ladders run in parallel and the player races both toward iron.
-- Beyond the element layer, the value climb continues in the **molecule → material → component** tiers (which consume elements) — so iron capping the *element* sub-economy is intentional, not a dead end.
+- **Iron (Z26) is the single highest-value element (~168,000,000 e) and a deliberate long-term apex.** The player should NOT reach iron quickly — it takes **a month-plus of regular play and a good stack of prestiges + prestige upgrades** to climb either ladder to the summit (see "Pacing & gating"). Everything else is worth less.
+- **Uranium and the heavy naturals are CHEAP feedstock (~64 e), not the apex.** You profit by fissioning them *down* toward iron, exactly as you profit by fusing hydrogen *up* toward iron.
+- **Fission is unlocked early** (around Beryllium/Boron). From then on the two ladders run in parallel and the player slowly races both toward iron over many prestige cycles.
+- Beyond the element layer, the value climb continues in the **molecule → material → component** tiers (which consume the cheap, abundant elements) — so iron capping the *element* sub-economy is intentional, not a dead end.
 
 Six regimes (the Atomic Assembler remains a universal but deliberately expensive fallback for any element — see below):
 
@@ -103,7 +103,7 @@ Extend the existing particle set (`ItemCategory.Particle`, with `is_secondary_pa
 
 ## Master element table (Z = 1..118)
 
-Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craft seconds) | **Path** (creation regime) | **Yield** (entropy = `base_sell_value`) | **St** (✅ exists in `game_data.json` / ◻ design). Path codes: **ASM** assembler, **FUS** Fusion Reactor, **FIS** Fission Reactor / fragment, **FLD** fissile-field harvest + decay chain, **BRD** neutron breeding, **ACC** accelerator synthesis. **Yields follow the convergent model in the ladder section below — value peaks at iron (5,120 e) and falls off on BOTH sides.** The implemented elements above iron (Ni, Cu, Zn, Ag, W, Pt, Au, U, Pu) still carry their OLD monotonic values in `game_data.json` and must be rebalanced DOWN to these targets.
+Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craft seconds) | **Path** (creation regime) | **Yield** (entropy = `base_sell_value`) | **St** (✅ exists in `game_data.json` / ◻ design). Path codes: **ASM** assembler, **FUS** Fusion Reactor, **FIS** Fission Reactor / fragment, **FLD** fissile-field harvest + decay chain, **BRD** neutron breeding, **ACC** accelerator synthesis. **Yields follow the convergent model in the ladder section below — value peaks at iron (~167,772,160 e) and falls off on BOTH sides.** Every implemented element carries OLD thinned values in `game_data.json` and must be re-derived from the two ladder formulas (fusion values rise sharply; above-iron heavies like U/Pu drop to a cheap floor).
 
 | Z | Sym | Name | A | Path | Yield (e) | St |
 |---|---|---|---|---|---|---|
@@ -116,115 +116,115 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 | 7 | N | Nitrogen | 14 | FUS | 320 | ✅ |
 | 8 | O | Oxygen | 16 | FUS | 640 | ✅ |
 | 9 | F | Fluorine | 19 | FUS | 1,280 | ◻ |
-| 10 | Ne | Neon | 20 | FUS | 1,280 | ◻ |
-| 11 | Na | Sodium | 23 | FUS | 1,280 | ◻ |
-| 12 | Mg | Magnesium | 24 | FUS | 1,280 | ◻ |
-| 13 | Al | Aluminum | 27 | FUS | 2,560 | ✅ |
-| 14 | Si | Silicon | 28 | FUS | 1,280 | ✅ |
-| 15 | P | Phosphorus | 31 | FUS | 2,560 | ◻ |
-| 16 | S | Sulfur | 32 | FUS | 2,560 | ◻ |
-| 17 | Cl | Chlorine | 35 | FUS | 2,560 | ◻ |
-| 18 | Ar | Argon | 40 | FUS | 2,560 | ◻ |
-| 19 | K | Potassium | 39 | FUS | 2,560 | ◻ |
-| 20 | Ca | Calcium | 40 | FUS | 2,560 | ◻ |
-| 21 | Sc | Scandium | 45 | FUS | 4,096 | ◻ |
-| 22 | Ti | Titanium | 48 | FUS | 4,096 | ◻ |
-| 23 | V | Vanadium | 51 | FUS | 4,096 | ◻ |
-| 24 | Cr | Chromium | 52 | FUS | 4,096 | ◻ |
-| 25 | Mn | Manganese | 55 | FUS | 4,096 | ◻ |
-| 26 | Fe | Iron | 56 | FUS (valley) | 5,120 | ✅ |
-| 27 | Co | Cobalt | 59 | FIS | 4,757 | ◻ |
-| 28 | Ni | Nickel | 58 | FIS | 4,420 | ✅ |
-| 29 | Cu | Copper | 63 | FIS | 4,107 | ✅ |
-| 30 | Zn | Zinc | 65 | FIS | 3,816 | ✅ |
-| 31 | Ga | Gallium | 69 | FIS | 3,545 | ◻ |
-| 32 | Ge | Germanium | 74 | FIS | 3,294 | ◻ |
-| 33 | As | Arsenic | 75 | FIS | 3,060 | ◻ |
-| 34 | Se | Selenium | 80 | FIS | 2,843 | ◻ |
-| 35 | Br | Bromine | 79 | FIS | 2,642 | ◻ |
-| 36 | Kr | Krypton | 84 | FIS (fragment) | 2,455 | ◻ |
-| 37 | Rb | Rubidium | 85 | FIS | 2,281 | ◻ |
-| 38 | Sr | Strontium | 88 | FIS (fragment) | 2,119 | ◻ |
-| 39 | Y | Yttrium | 89 | FIS (fragment) | 1,969 | ◻ |
-| 40 | Zr | Zirconium | 90 | FIS (fragment) | 1,829 | ◻ |
-| 41 | Nb | Niobium | 93 | FIS | 1,700 | ◻ |
-| 42 | Mo | Molybdenum | 98 | FIS (fragment) | 1,579 | ◻ |
-| 43 | Tc | Technetium | 98 | FIS | 1,467 | ◻ |
-| 44 | Ru | Ruthenium | 102 | FIS | 1,363 | ◻ |
-| 45 | Rh | Rhodium | 103 | FIS | 1,267 | ◻ |
-| 46 | Pd | Palladium | 106 | FIS | 1,177 | ◻ |
-| 47 | Ag | Silver | 108 | FIS | 1,093 | ✅ |
-| 48 | Cd | Cadmium | 114 | FIS | 1,016 | ◻ |
-| 49 | In | Indium | 115 | FIS | 944 | ◻ |
-| 50 | Sn | Tin | 120 | FIS | 877 | ◻ |
-| 51 | Sb | Antimony | 121 | FIS | 815 | ◻ |
-| 52 | Te | Tellurium | 130 | FIS | 757 | ◻ |
-| 53 | I | Iodine | 127 | FIS (fragment) | 703 | ◻ |
-| 54 | Xe | Xenon | 132 | FIS (fragment) | 654 | ◻ |
-| 55 | Cs | Cesium | 133 | FIS (fragment) | 607 | ◻ |
-| 56 | Ba | Barium | 138 | FIS (fragment) | 564 | ◻ |
-| 57 | La | Lanthanum | 139 | FIS (fragment) | 524 | ◻ |
-| 58 | Ce | Cerium | 140 | FIS (fragment) | 487 | ◻ |
-| 59 | Pr | Praseodymium | 141 | FIS | 453 | ◻ |
-| 60 | Nd | Neodymium | 142 | FIS (fragment) | 420 | ◻ |
-| 61 | Pm | Promethium | 145 | FIS | 391 | ◻ |
-| 62 | Sm | Samarium | 152 | FIS | 363 | ◻ |
-| 63 | Eu | Europium | 153 | FIS | 337 | ◻ |
-| 64 | Gd | Gadolinium | 158 | FIS | 313 | ◻ |
-| 65 | Tb | Terbium | 159 | FIS | 291 | ◻ |
-| 66 | Dy | Dysprosium | 164 | FIS | 271 | ◻ |
-| 67 | Ho | Holmium | 165 | FIS | 251 | ◻ |
-| 68 | Er | Erbium | 166 | FIS | 234 | ◻ |
-| 69 | Tm | Thulium | 169 | FIS | 217 | ◻ |
-| 70 | Yb | Ytterbium | 174 | FIS | 202 | ◻ |
-| 71 | Lu | Lutetium | 175 | FIS | 187 | ◻ |
-| 72 | Hf | Hafnium | 180 | FIS | 174 | ◻ |
-| 73 | Ta | Tantalum | 181 | FIS | 162 | ◻ |
-| 74 | W | Tungsten | 184 | FIS | 150 | ✅ |
-| 75 | Re | Rhenium | 187 | FIS | 140 | ◻ |
-| 76 | Os | Osmium | 192 | FIS | 130 | ◻ |
-| 77 | Ir | Iridium | 193 | FIS | 120 | ◻ |
-| 78 | Pt | Platinum | 195 | FIS | 112 | ✅ |
-| 79 | Au | Gold | 197 | FIS | 104 | ✅ |
-| 80 | Hg | Mercury | 202 | FIS | 97 | ◻ |
-| 81 | Tl | Thallium | 205 | FLD (decay) | 90 | ◻ |
-| 82 | Pb | Lead | 208 | FLD (decay) | 83 | ◻ |
-| 83 | Bi | Bismuth | 209 | FLD (decay) | 78 | ◻ |
-| 84 | Po | Polonium | 209 | FLD (decay) | 72 | ◻ |
-| 85 | At | Astatine | 210 | FLD (decay) | 67 | ◻ |
-| 86 | Rn | Radon | 222 | FLD (decay) | 62 | ◻ |
-| 87 | Fr | Francium | 223 | FLD (decay) | 58 | ◻ |
-| 88 | Ra | Radium | 226 | FLD (decay) | 54 | ◻ |
-| 89 | Ac | Actinium | 227 | FLD (decay) | 50 | ◻ |
-| 90 | Th | Thorium | 232 | FLD (decay) | 46 | ◻ |
-| 91 | Pa | Protactinium | 231 | FLD (decay) | 43 | ◻ |
-| 92 | U | Uranium | 238 | FLD (decay) | 40 | ✅ |
-| 93 | Np | Neptunium | 237 | BRD | 37 | ◻ |
-| 94 | Pu | Plutonium | 244 | BRD | 35 | ✅ |
-| 95 | Am | Americium | 243 | BRD | 32 | ◻ |
-| 96 | Cm | Curium | 247 | BRD | 30 | ◻ |
-| 97 | Bk | Berkelium | 247 | BRD | 28 | ◻ |
-| 98 | Cf | Californium | 251 | BRD | 26 | ◻ |
-| 99 | Es | Einsteinium | 252 | BRD | 24 | ◻ |
-| 100 | Fm | Fermium | 257 | BRD | 22 | ◻ |
-| 101 | Md | Mendelevium | 258 | ACC | 21 | ◻ |
-| 102 | No | Nobelium | 259 | ACC | 19 | ◻ |
-| 103 | Lr | Lawrencium | 266 | ACC | 18 | ◻ |
-| 104 | Rf | Rutherfordium | 267 | ACC | 17 | ◻ |
-| 105 | Db | Dubnium | 268 | ACC | 15 | ◻ |
-| 106 | Sg | Seaborgium | 269 | ACC | 14 | ◻ |
-| 107 | Bh | Bohrium | 270 | ACC | 13 | ◻ |
-| 108 | Hs | Hassium | 269 | ACC | 12 | ◻ |
-| 109 | Mt | Meitnerium | 278 | ACC | 11 | ◻ |
-| 110 | Ds | Darmstadtium | 281 | ACC | 11 | ◻ |
-| 111 | Rg | Roentgenium | 282 | ACC | 10 | ◻ |
-| 112 | Cn | Copernicium | 285 | ACC | 9 | ◻ |
-| 113 | Nh | Nihonium | 286 | ACC | 9 | ◻ |
-| 114 | Fl | Flerovium | 289 | ACC | 8 | ◻ |
-| 115 | Mc | Moscovium | 290 | ACC | 7 | ◻ |
-| 116 | Lv | Livermorium | 293 | ACC | 7 | ◻ |
-| 117 | Ts | Tennessine | 294 | ACC | 6 | ◻ |
-| 118 | Og | Oganesson | 294 | ACC | 6 | ◻ |
+| 10 | Ne | Neon | 20 | FUS | 2,560 | ◻ |
+| 11 | Na | Sodium | 23 | FUS | 5,120 | ◻ |
+| 12 | Mg | Magnesium | 24 | FUS | 10,240 | ◻ |
+| 13 | Al | Aluminum | 27 | FUS | 20,480 | ✅ |
+| 14 | Si | Silicon | 28 | FUS | 40,960 | ✅ |
+| 15 | P | Phosphorus | 31 | FUS | 81,920 | ◻ |
+| 16 | S | Sulfur | 32 | FUS | 163,840 | ◻ |
+| 17 | Cl | Chlorine | 35 | FUS | 327,680 | ◻ |
+| 18 | Ar | Argon | 40 | FUS | 655,360 | ◻ |
+| 19 | K | Potassium | 39 | FUS | 1,310,720 | ◻ |
+| 20 | Ca | Calcium | 40 | FUS | 2,621,440 | ◻ |
+| 21 | Sc | Scandium | 45 | FUS | 5,242,880 | ◻ |
+| 22 | Ti | Titanium | 48 | FUS | 10,485,760 | ◻ |
+| 23 | V | Vanadium | 51 | FUS | 20,971,520 | ◻ |
+| 24 | Cr | Chromium | 52 | FUS | 41,943,040 | ◻ |
+| 25 | Mn | Manganese | 55 | FUS | 83,886,080 | ◻ |
+| 26 | Fe | Iron | 56 | FUS (apex) | 167,772,160 | ✅ |
+| 27 | Co | Cobalt | 59 | FIS | 134,112,510 | ◻ |
+| 28 | Ni | Nickel | 58 | FIS | 107,205,900 | ✅ |
+| 29 | Cu | Copper | 63 | FIS | 85,697,486 | ✅ |
+| 30 | Zn | Zinc | 65 | FIS | 68,504,244 | ✅ |
+| 31 | Ga | Gallium | 69 | FIS | 54,760,433 | ◻ |
+| 32 | Ge | Germanium | 74 | FIS | 43,774,003 | ◻ |
+| 33 | As | Arsenic | 75 | FIS | 34,991,750 | ◻ |
+| 34 | Se | Selenium | 80 | FIS | 27,971,455 | ◻ |
+| 35 | Br | Bromine | 79 | FIS | 22,359,622 | ◻ |
+| 36 | Kr | Krypton | 84 | FIS (fragment) | 17,873,675 | ◻ |
+| 37 | Rb | Rubidium | 85 | FIS | 14,287,730 | ◻ |
+| 38 | Sr | Strontium | 88 | FIS (fragment) | 11,421,224 | ◻ |
+| 39 | Y | Yttrium | 89 | FIS (fragment) | 9,129,816 | ◻ |
+| 40 | Zr | Zirconium | 90 | FIS (fragment) | 7,298,127 | ◻ |
+| 41 | Nb | Niobium | 93 | FIS | 5,833,925 | ◻ |
+| 42 | Mo | Molybdenum | 98 | FIS (fragment) | 4,663,481 | ◻ |
+| 43 | Tc | Technetium | 98 | FIS | 3,727,860 | ◻ |
+| 44 | Ru | Ruthenium | 102 | FIS | 2,979,950 | ◻ |
+| 45 | Rh | Rhodium | 103 | FIS | 2,382,091 | ◻ |
+| 46 | Pd | Palladium | 106 | FIS | 1,904,179 | ◻ |
+| 47 | Ag | Silver | 108 | FIS | 1,522,149 | ✅ |
+| 48 | Cd | Cadmium | 114 | FIS | 1,216,765 | ◻ |
+| 49 | In | Indium | 115 | FIS | 972,649 | ◻ |
+| 50 | Sn | Tin | 120 | FIS | 777,509 | ◻ |
+| 51 | Sb | Antimony | 121 | FIS | 621,520 | ◻ |
+| 52 | Te | Tellurium | 130 | FIS | 496,826 | ◻ |
+| 53 | I | Iodine | 127 | FIS (fragment) | 397,149 | ◻ |
+| 54 | Xe | Xenon | 132 | FIS (fragment) | 317,470 | ◻ |
+| 55 | Cs | Cesium | 133 | FIS (fragment) | 253,777 | ◻ |
+| 56 | Ba | Barium | 138 | FIS (fragment) | 202,862 | ◻ |
+| 57 | La | Lanthanum | 139 | FIS (fragment) | 162,163 | ◻ |
+| 58 | Ce | Cerium | 140 | FIS (fragment) | 129,629 | ◻ |
+| 59 | Pr | Praseodymium | 141 | FIS | 103,622 | ◻ |
+| 60 | Nd | Neodymium | 142 | FIS (fragment) | 82,832 | ◻ |
+| 61 | Pm | Promethium | 145 | FIS | 66,214 | ◻ |
+| 62 | Sm | Samarium | 152 | FIS | 52,930 | ◻ |
+| 63 | Eu | Europium | 153 | FIS | 42,310 | ◻ |
+| 64 | Gd | Gadolinium | 158 | FIS | 33,822 | ◻ |
+| 65 | Tb | Terbium | 159 | FIS | 27,036 | ◻ |
+| 66 | Dy | Dysprosium | 164 | FIS | 21,612 | ◻ |
+| 67 | Ho | Holmium | 165 | FIS | 17,276 | ◻ |
+| 68 | Er | Erbium | 166 | FIS | 13,810 | ◻ |
+| 69 | Tm | Thulium | 169 | FIS | 11,039 | ◻ |
+| 70 | Yb | Ytterbium | 174 | FIS | 8,825 | ◻ |
+| 71 | Lu | Lutetium | 175 | FIS | 7,054 | ◻ |
+| 72 | Hf | Hafnium | 180 | FIS | 5,639 | ◻ |
+| 73 | Ta | Tantalum | 181 | FIS | 4,508 | ◻ |
+| 74 | W | Tungsten | 184 | FIS | 3,603 | ✅ |
+| 75 | Re | Rhenium | 187 | FIS | 2,880 | ◻ |
+| 76 | Os | Osmium | 192 | FIS | 2,302 | ◻ |
+| 77 | Ir | Iridium | 193 | FIS | 1,841 | ◻ |
+| 78 | Pt | Platinum | 195 | FIS | 1,471 | ✅ |
+| 79 | Au | Gold | 197 | FIS | 1,176 | ✅ |
+| 80 | Hg | Mercury | 202 | FIS | 940 | ◻ |
+| 81 | Tl | Thallium | 205 | FLD (decay) | 752 | ◻ |
+| 82 | Pb | Lead | 208 | FLD (decay) | 601 | ◻ |
+| 83 | Bi | Bismuth | 209 | FLD (decay) | 480 | ◻ |
+| 84 | Po | Polonium | 209 | FLD (decay) | 384 | ◻ |
+| 85 | At | Astatine | 210 | FLD (decay) | 307 | ◻ |
+| 86 | Rn | Radon | 222 | FLD (decay) | 245 | ◻ |
+| 87 | Fr | Francium | 223 | FLD (decay) | 196 | ◻ |
+| 88 | Ra | Radium | 226 | FLD (decay) | 157 | ◻ |
+| 89 | Ac | Actinium | 227 | FLD (decay) | 125 | ◻ |
+| 90 | Th | Thorium | 232 | FLD (decay) | 100 | ◻ |
+| 91 | Pa | Protactinium | 231 | FLD (decay) | 80 | ◻ |
+| 92 | U | Uranium | 238 | FLD (decay) | 64 | ✅ |
+| 93 | Np | Neptunium | 237 | BRD | 51 | ◻ |
+| 94 | Pu | Plutonium | 244 | BRD | 41 | ✅ |
+| 95 | Am | Americium | 243 | BRD | 33 | ◻ |
+| 96 | Cm | Curium | 247 | BRD | 26 | ◻ |
+| 97 | Bk | Berkelium | 247 | BRD | 21 | ◻ |
+| 98 | Cf | Californium | 251 | BRD | 17 | ◻ |
+| 99 | Es | Einsteinium | 252 | BRD | 13 | ◻ |
+| 100 | Fm | Fermium | 257 | BRD | 11 | ◻ |
+| 101 | Md | Mendelevium | 258 | ACC | 9 | ◻ |
+| 102 | No | Nobelium | 259 | ACC | 7 | ◻ |
+| 103 | Lr | Lawrencium | 266 | ACC | 5 | ◻ |
+| 104 | Rf | Rutherfordium | 267 | ACC | 4 | ◻ |
+| 105 | Db | Dubnium | 268 | ACC | 3 | ◻ |
+| 106 | Sg | Seaborgium | 269 | ACC | 3 | ◻ |
+| 107 | Bh | Bohrium | 270 | ACC | 2 | ◻ |
+| 108 | Hs | Hassium | 269 | ACC | 2 | ◻ |
+| 109 | Mt | Meitnerium | 278 | ACC | 1 | ◻ |
+| 110 | Ds | Darmstadtium | 281 | ACC | 1 | ◻ |
+| 111 | Rg | Roentgenium | 282 | ACC | 1 | ◻ |
+| 112 | Cn | Copernicium | 285 | ACC | 1 | ◻ |
+| 113 | Nh | Nihonium | 286 | ACC | 1 | ◻ |
+| 114 | Fl | Flerovium | 289 | ACC | 1 | ◻ |
+| 115 | Mc | Moscovium | 290 | ACC | 1 | ◻ |
+| 116 | Lv | Livermorium | 293 | ACC | 1 | ◻ |
+| 117 | Ts | Tennessine | 294 | ACC | 1 | ◻ |
+| 118 | Og | Oganesson | 294 | ACC | 1 | ◻ |
 
 ## Milestone deep-dives
 
@@ -236,11 +236,11 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 
 **O / Si (Z8 / Z14).** Alpha-process rungs: `carbon + helium_4 → oxygen`, continuing to Ne/Mg/Si. 640e / 1,280e. Silicon is the gateway to molecules (silica) and components (semiconductor wafer) downstream — see `economy-balance.md` phases ⑫–⑭.
 
-**Fe — Iron (Z26).** The **apex**: `silicon (+ alpha steps) → iron + γ + ν`, 56s assembler, **5,120e — the single highest-value element**. Fusion stops releasing energy here, and the fission ladder also peaks here: both ladders converge on iron, which is the production goal from either direction. Nickel (Z28, the true binding-energy peak in reality) sits one rung down the fission side (~4,420e).
+**Fe — Iron (Z26).** The **apex**: `silicon (+ alpha steps) → iron + γ + ν`, 56s assembler, **~167,772,160 e (5 × 2²⁵) — the single highest-value element and the game's long-term element goal**. Fusion stops releasing energy here and the fission ladder also peaks here: both ladders converge on iron, reachable only after a month-plus of play and many prestiges (see "Pacing & gating"). Nickel (Z28, the true binding-energy peak in reality) sits two rungs down the fission side (~107M e), and Cobalt (Z27) one rung down (~134M e) — the near-iron elements are themselves endgame-grade.
 
-**U — Uranium (Z92).** **Cheap heavy feedstock, not the apex.** Harvested from a Uranium fissile field (FLD) and worth only **~40e** (Be-tier) — you profit by fissioning it *down* toward iron, not by selling it raw. Enrich to U-235 in the Isotopic Manipulator (`uranium → uranium_235 + α`, impl); U-235 is the Fission Reactor fuel. Decay chain (α/β) seeds Th→Pa→…→Pb collection, all near the U price floor. (Its `game_data.json` value of 1,310,720e is the old monotonic model and must be rebalanced down.)
+**U — Uranium (Z92).** **Cheap heavy feedstock, not the apex.** Harvested from a Uranium fissile field (FLD) and worth only **~64e** (Be/B-tier — unlocked around the same time) — you profit by fissioning it *down* toward iron, not by selling it raw. Enrich to U-235 in the Isotopic Manipulator (`uranium → uranium_235 + α`, impl); U-235 is the Fission Reactor fuel. Decay chain (α/β) seeds Th→Pa→…→Pb collection, all near the U price floor. (Its `game_data.json` value of 1,310,720e is the old monotonic model and must be rebalanced down.)
 
-**Pu — Plutonium (Z94).** First transuranic: bred from uranium by neutron capture (`uranium + neutron → … → plutonium`, BRD) or harvested from a Plutonium field. Pu-239 is the breeder-fuel fission input. **~35e** — just below uranium (further from iron); economically marginal, valued for its role as fission fuel rather than as a sale item.
+**Pu — Plutonium (Z94).** First transuranic: bred from uranium by neutron capture (`uranium + neutron → … → plutonium`, BRD) or harvested from a Plutonium field. Pu-239 is the breeder-fuel fission input. **~41e** — just below uranium (further from iron); economically marginal, valued for its role as fission fuel rather than as a sale item.
 
 **Transuranics (Np…Og).** Bred (Np–Fm) or accelerator-synthesized (Z≳101); fleeting half-lives, **6–37e** (below the U floor). Primarily **codex completion / prestige flex**, not core economy — the further past uranium, the *less* an element is worth.
 
@@ -253,9 +253,9 @@ Isotopes share an element's `atomic_number` but differ in `atomic_mass`; they ar
 | Hydrogen | protium / deuterium (H-2, +1n) / tritium (H-3, +2n) | `hydrogen + 1n` / `+2n` | deuterium impl (8e), tritium impl (12e, β, 12.3 yr) |
 | Helium | He-3 / He-4 | He-4 impl; He-3 = fusion intermediate (design) | He-4 = alpha nucleus |
 | Carbon | C-12 / C-14 (+2n, β, 5,730 yr) | `carbon + 2n` | C-14 impl, 240e |
-| Uranium | U-238 / U-235 (fissile) | `uranium → U-235 + α` | U-235 ≈ 2× U = **~80e** under the convergent model (impl value 2,621,440e to be rebalanced); fissile |
-| Plutonium | Pu-239 (fissile, design) | breeding | weapons/breeder fuel; base ~35e |
-| Cobalt | Co-60 (design, β/γ) | `cobalt + n` | classic radioactive-source teachable; near-iron, base ~4,760e |
+| Uranium | U-238 / U-235 (fissile) | `uranium → U-235 + α` | U-235 ≈ 2× U = **~128e** under the convergent model (impl value 2,621,440e to be rebalanced); fissile |
+| Plutonium | Pu-239 (fissile, design) | breeding | weapons/breeder fuel; base ~41e |
+| Cobalt | Co-60 (design, β/γ) | `cobalt + n` | classic radioactive-source teachable; near-iron, base ~134M e |
 
 **Isotope yield rule:** nominal `base_sell_value × 1.5` (`isotope_sell_multiplier`, per `economy-balance.md`), tuned per isotope — deuterium ≈1.6× H, C-14 = 1.5× C, U-235 = 2× U. Because the base element value now follows the convergent (iron-peaked) curve, isotopes track their parent — a near-iron isotope is valuable, a heavy-actinide isotope is cheap. Authoritative per-isotope values live in `game_data.json`.
 
@@ -263,30 +263,43 @@ Isotopes share an element's `atomic_number` but differ in `atomic_mass`; they ar
 
 Per the locked design, **"entropy generated" by an element = its entropy yield = `base_sell_value`** (the Maxwell's-Demon entropy sink pays `base_sell_value × qty` when an item is sunk). No separate thermodynamic-byproduct mechanic.
 
-**Convergent model — value is a tent peaking at iron.** Two ladders climb toward Fe-56 (the binding-energy peak) from opposite ends; iron is the single maximum and both feedstocks (hydrogen, uranium) are cheap. Equivalent rungs on the two ladders are worth comparable amounts; the fission ladder is *denser* (more elements, smaller per-step gaps) because there are far more nuclides between uranium and iron than between hydrogen and iron.
+**Convergent model — a tall tent peaking at iron (~168M e).** Two ladders climb toward Fe-56 (the binding-energy peak) from opposite ends; iron is the single maximum and both feedstocks (hydrogen, uranium) are cheap. Iron is a **long-term apex** — the climb up either ladder is metered out over a month-plus of prestiges (see "Pacing & gating"). The fission ladder is *denser* (more elements, smaller per-step gaps) because there are far more nuclides between uranium and iron than between hydrogen and iron.
 
-**Fusion ladder (Z1→26, climb up).** The existing curated doubling ladder — big ~2× steps, few rungs, floored at H = 5 e:
-
-```
-el:  H  He  Li  Be   B    C    N    O   ...  Si  ... (Al) ...   Fe(peak)
-Z :  1   2   3   4    5    6    7    8        14      13         26
-e :  5  10  20  40   80  160  320  640      1280    2560       5120
-```
-(Al > Si is an authored quirk preserved from `game_data.json`; light values H..O are pinned for tutorial balance.)
-
-**Fission ladder (Z92→26, climb down).** A dense descending ladder: `yield(Z) = round( 40 × 128^((92 − Z) / 66) )` for Z ≥ 27. Iron-anchored at the top (the formula gives 5,120 at Z = 26), uranium floored at 40 e (Be-tier — cheap feedstock), continuing below 40 for the transuranics. Per-step ratio ≈ `128^(1/66) ≈ 1.076` (about +7.6% per Z toward iron) — small gaps, exactly because the fission side is rung-dense.
+**Fusion ladder (Z1→26, climb up).** A clean per-Z doubling: `yield(Z) = 5 × 2^(Z − 1)`. This preserves the tutorial rungs (H..O) exactly and simply keeps doubling all the way to iron — every element gets a distinct rung, big ~2× steps:
 
 ```
-Z :  27   28   29   30   36   47   56   74   78   79   82   90   92   94   100  118
-el:  Co   Ni   Cu   Zn   Kr   Ag   Ba    W   Pt   Au   Pb   Th    U   Pu   Fm   Og
-e : 4757 4420 4107 3816 2455 1093  564  150  112  104   83   46   40   35   22    6
+el:  H  He  Li  Be   B    C    N    O    F    Ne ...  Si  ...  Ca   ...   Mn          Fe(apex)
+Z :  1   2   3   4    5    6    7    8    9    10      14       20         25            26
+e :  5  10  20  40   80  160  320  640 1280  2560   40,960  2,621,440  83,886,080  167,772,160
+```
+(This replaces the old thinned ladder — it removes the Al>Si inversion and makes value strictly rise with Z to iron. H..O stay pinned for tutorial balance.)
+
+**Fission ladder (Z92→26, climb down).** A dense descending ladder anchored to the same iron peak: `yield(Z) = round( 64 × 2,621,440^((92 − Z) / 66) )` for Z ≥ 27 (the constant `2,621,440 = iron / 64`). Iron-anchored at the top (gives 167,772,160 at Z = 26), uranium floored at **64 e** (Be/B-tier — cheap feedstock), transuranics below that (floored at 1). Per-step ratio ≈ `2,621,440^(1/66) ≈ 1.25` (about +25% per Z toward iron) — still smaller gaps than the fusion side's 2×/rung, because the fission side packs ~66 rungs into the same height.
+
+```
+Z :     27        28        30        36        47       56     74    82   92  94 100 118
+el:     Co        Ni        Zn        Kr        Ag       Ba      W    Pb    U  Pu  Fm  Og
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 64  41  11   1
 ```
 
-**Why iron is the cap (and that's fine).** Per-Z doubling across 118 elements would reach 5×2^117 ≈ 10^35 — unusable; and economically you don't want 118 ever-larger tiers. Capping the *element* layer at iron keeps the numbers sane, makes iron a genuine goal both ladders race toward, and hands the continuing value climb to the **molecule → material → component** tiers that consume elements (Steel 1.5M, Components 50B–100T — see `economy-balance.md`).
+So the near-iron elements on *both* sides (Mn/Cr on fusion, Co/Ni on fission) are themselves endgame-grade millions, and the cheap feedstocks (H = 5, U = 64) bookend the tent.
 
-> **Migration note:** the implemented elements **above iron** (Ni 10,240 → Pu 2,621,440 in `game_data.json`) follow the OLD monotonic ladder and must be rebalanced **down** to the fission-ladder targets above (e.g. Ni 10,240→~4,420, U 1,310,720→40, Pu 2,621,440→35). Fusion-side and sub-iron values are unchanged. Downstream tier-3+ recipes that consume heavy elements (e.g. `uranium_hexafluoride`) inherit a far cheaper cost basis — review their sell values when this lands.
+**Why iron is the cap (and that's fine).** Capping the *element* layer at iron (rather than letting heavies run to billions, as the old monotonic ladder did) keeps the table a single coherent tent and makes iron a genuine summit both ladders race toward. The continuing value climb past iron lives in the **molecule → material → component** tiers, which are built from the **cheap, abundant elements** (H, C, N, O, Si, common metals) — not from iron. Iron and the near-iron high-value elements are a prestige-flex / collection / special-recipe goal, not a bulk crafting input.
 
-> **Balance caveat:** lowering the heavy-element ceiling drops late-game netWorth, which feeds prestige `✦` (≈log10 netWorth, `economy-balance.md` risk #4). Re-check first-prestige cadence after rebalancing; the molecule/material/component tiers (unchanged) should carry netWorth past the old element ceiling.
+> **Migration note:** the implemented elements (Si, Al, Fe, Ni…Pu) follow the OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the two formulas above** — fusion `5 × 2^(Z−1)` (e.g. Si 1,280→40,960, Fe 5,120→167,772,160), fission `round(64 × 2,621,440^((92−Z)/66))` (e.g. Ni 10,240→~107M, U 1,310,720→64, Pu 2,621,440→41). H..O are unchanged. Downstream tier-3+ recipes that consume heavy elements (e.g. `uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis and sell values reviewed — molecules/materials should be re-pointed at the cheap elements where possible, and any iron-bearing recipe re-priced above iron.
+
+> **Balance caveat:** iron at ~168M (vs the old 5,120) is intentional but raises late-element netWorth sharply, which feeds prestige `✦` (≈log10 netWorth, `economy-balance.md` risk #4). The point is that iron is *gated* (not cheaply farmable) so netWorth rises gradually; verify the per-rung research/power/throughput gates actually meter the climb to ≈a month before authoring final numbers.
+
+## Pacing & gating — iron is ~a month away
+
+Iron must read as a **long-term apex**: the player should reach it only after **a month-plus of regular play and a healthy stack of prestiges + prestige upgrades**, not in the first few sessions. The ~168M e value is one half of that; the other half is *gating the climb* so the value is earned, not farmed early. Four compounding gates meter each rung toward iron (no single wall — they stack):
+
+1. **Research depth (prestige-currency gated).** Each fusion/fission tier unlocks only a few more rungs (`fusion_i` → He–C, `fusion_ii` → through Si, … up to the transition metals → Fe). The deep tiers cost **prestige currency (✦)** and/or large entropy, so they are unaffordable until the player has prestiged repeatedly and bought into the prestige shop. The last rungs (Cr/Mn→Fe, Co/Ni→Fe) sit behind the most expensive nodes.
+2. **Power (eV grid).** Heavier elements demand far more power per craft; reaching iron requires a power grid scaled up over many prestiges (generators + `PowerDiscount` managers). The near-iron rungs should out-draw anything the early grid can supply.
+3. **Input volume (combinatorial).** One iron is 26 p + 30 n + 26 e, or 13 fused heliums up a 25-rung chain — every rung multiplies the upstream demand. Producing iron at any meaningful rate needs the whole lower chain running at high throughput, which only the **prestige output/speed multipliers** (managers, megastructure `GlobalProductionBonus`, Quantum Yield) make viable.
+4. **Prestige-multiplier dependence.** Because the per-rung ~2× value step roughly tracks the cost step, net progress up the ladder comes from the *permanent* multipliers that survive prestige. Each prestige nudges the reachable rung up by ~1–2; reaching iron is therefore a function of accumulated prestige power, i.e. real-time played.
+
+> **Tuning levers (to dial the ~1-month target after playtest):** raise the deep-tier research ✦ costs; steepen the final transition-metal rungs (e.g. ×3–4 per Z for Sc→Fe, pushing iron into the billions); raise near-iron power draw; or slow the per-prestige reachable-rung gain. Keep H..O untouched (tutorial). The exact curve needs an idle-sim pass — this section defines the *shape* (gated, compounding, prestige-bound), not final constants.
 
 ## Research gates (design)
 
@@ -305,7 +318,9 @@ New nodes on the existing `ResearchBranch.Nuclear` / `Astrophysics` branches. **
 ## Known gaps / TBD (reconcile at implementation)
 
 - **Enum additions:** `FieldType.Uranium`/`Plutonium`; `DecayType.BetaPlus` (positron); optional `BuildingCategory.Nuclear` + `BuildingStructureKind.FusionReactor`/`FissionReactor`. Each is a code change outside this doc pass.
-- **Yield rebalance (high priority):** the implemented above-iron elements (Ni→Pu) still hold OLD monotonic values in `game_data.json` and must be lowered to the convergent fission-ladder targets (`yield = round(40 × 128^((92−Z)/66))`); iron becomes the global element max (5,120e). All (design) particle/isotope yields are likewise placeholders.
+- **Yield rebalance (high priority):** all implemented element values must be re-derived from the convergent formulas — fusion `5 × 2^(Z−1)` (iron becomes the global max at **167,772,160 e**), fission `round(64 × 2,621,440^((92−Z)/66))` (U→64, Pu→41). The old thinned/monotonic `game_data.json` values are superseded. All (design) particle/isotope yields are likewise placeholders.
+- **Pacing not yet simulated:** the "~1 month to iron" target depends on research ✦ costs, power draw, and prestige-multiplier curves that need an idle-sim pass (see "Pacing & gating"). The value curve is set; the *gates* are described in shape only.
+- **Cross-tier reconciliation:** with iron at ~168M, tier-3+ recipes that consume heavy/iron elements (`iron_oxide`, `steel`, `uranium_hexafluoride`) need re-pricing — molecules/materials should draw on cheap abundant elements, and any genuinely iron-bearing item must sell above iron.
 - **Power authoring:** Fusion/Fission Reactor `base_power_cost_ev` not yet placed on the static-draw ladder.
 - **Codex-only tail:** Z≳101 (and most transuranics) are intended as codex/prestige-completion content, not core-loop economy — confirm before authoring full recipes.
 - **Fission fragment modelling:** multi-output fission (one `output_item` + fragments in `byproducts[]`) needs the production system to credit byproduct items on craft — verify the existing byproduct path (used by U-235 enrichment's alpha) handles multiple/element byproducts, not just particles.
