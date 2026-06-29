@@ -208,15 +208,22 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Paints the start and end anchor cells green on top of the already-drawn orange path.
-        /// The cells must already be tracked in _conveyorGhostCells so ClearConveyorGhost restores them.
+        /// Paints the start and end anchor cells green on top of the already-drawn orange path. The
+        /// painted cells are tracked in _conveyorGhostCells so ClearConveyorGhost always restores them —
+        /// including endpoints that land on an existing belt (which the path itself does not ghost).
         /// </summary>
         public void PaintConveyorEndpoints(int sx, int sy, int ex, int ey)
         {
-            if (IsInBounds(sx, sy))
-                SetColor(_tiles[sx, sy].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
-            if ((ex != sx || ey != sy) && IsInBounds(ex, ey))
-                SetColor(_tiles[ex, ey].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+            PaintEndpoint(sx, sy);
+            if (ex != sx || ey != sy) PaintEndpoint(ex, ey);
+        }
+
+        private void PaintEndpoint(int x, int y)
+        {
+            if (!IsInBounds(x, y)) return;
+            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+            var cell = new Vector2Int(x, y);
+            if (!_conveyorGhostCells.Contains(cell)) _conveyorGhostCells.Add(cell);
         }
 
         // ---- Deconstruct hover ----

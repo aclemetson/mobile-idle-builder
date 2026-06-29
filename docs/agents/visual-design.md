@@ -26,7 +26,7 @@ building prefabs. Two patterns:
 
 1. **Primitive composition** — `GameObject.CreatePrimitive` cubes/quads/spheres, scaled and
    colored. Used by grid tiles (`GridRenderer`), placeholder building cubes
-   (`BuildingVisualizer`), conveyors (`ConveyorVisualizer`), port arrows (`OutputArrow`).
+   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`), port arrows (`OutputArrow`).
 2. **Procedural mesh builders** — pure static classes that emit a `Mesh` from generated
    vertices/indices, paired with a thin MonoBehaviour and a custom URP shader. This is the
    house pattern for distinctive structures.
@@ -42,6 +42,33 @@ building prefabs. Two patterns:
   `fix-mobile-particle-magenta.md`).
 
 ## Reference implementations
+
+### Conveyor "river" channel (belts)
+Conveyors are flowing **water** on a flat dark **bed** (no rails/walls) — direction reads from the moving
+current, not an arrow. Two stacked procedural layers per cell, both from one ribbon builder:
+- `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` — pure static ribbon builder in cell-local XZ.
+  `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the channel.
+  Shapes from one primitive: **straight** (quad strip), **bend** (quadratic Bézier, centre as control),
+  and **merge** (each inbound is drawn as a *full* edge→exit ribbon with `uv.y` 0→1 — the straight-through
+  input a complete straight piece, every turning input a complete bend piece — all sharing the exit half,
+  so they overlay and blend into one seamless outflow). A `widthFrac` arg builds the **floor**
+  (`FloorWidthFrac` == `WaterWidthFrac`, at `FloorY`) under the inner **water** (`WaterWidthFrac`, `FlowY`).
+- `Assets/Shaders/ConveyorFlow.shader` — URP Unlit **translucent** water (`Transparent+50`, above the
+  transparent grid tiles or they overdraw it at some camera angles). Lengthwise streaks (functions of
+  `uv.x`) drift downstream; every `uv.y` wave uses a whole number of cycles/cell so the flow is
+  continuous across collinear edges. Soft (alpha-faded) banks.
+- `Assets/Shaders/ConveyorChannel.shader` — **opaque**, flat dark bed (drawn at `Geometry`, writes depth so
+  it sits over the grid tiles). Same footprint as the water; it only gives the translucent ribbon a base
+  and occludes the grid tiles beneath (no rails or bolts).
+- Both custom shaders are registered in `GraphicsSettings.asset` `m_AlwaysIncludedShaders` (else magenta
+  on Android).
+- `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns a `Channel` (floor) + `Flow` (water) child per
+  segment, sharing one material each (fall back to the opaque primitive material if a shader is missing).
+  `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change across
+  the whole graph); item spheres still float on the water. Inbound edges per cell come from neighbours
+  whose `ExitDir` points back at the cell — the same geometry `ConveyorPlacer.RelinkAll` uses.
+- `Assets/Scripts/Tests/ConveyorFlowMeshBuilderTests.cs` — EditMode invariants (straight/bend vertex
+  counts, merge arms reaching each inbound + exit edge, monotonic flow UVs, flat low profile).
 
 ### Field wire-mesh (tappable resource fields)
 - `Assets/Scripts/Gameplay/FieldWireMeshBuilder.cs` — line-topology grid mesh.
