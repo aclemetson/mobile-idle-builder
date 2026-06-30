@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MobileIdleBuilder
 {
@@ -22,10 +23,30 @@ namespace MobileIdleBuilder
 
         void Start()
         {
+            if (Instance != this) return; // a duplicate destroyed by SingletonMonoBehaviour.Awake
+            BindToWorld();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected override void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            base.OnDestroy();
+        }
+
+        // This is a persistent (DontDestroyOnLoad) singleton, but the DOTS world + SubScene
+        // entities are rebuilt on every scene reload — e.g. starting a new game in-session. The
+        // cached _em / queries would then point at the destroyed world, so _inventoryQuery.IsEmpty
+        // reads true and the HUD recipe panel shows an empty inventory (0/x, craft greyed out).
+        // Re-acquire them on each load. Mirrors DevConsoleController.OnSceneLoaded.
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => BindToWorld();
+
+        private void BindToWorld()
+        {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
             {
-                GameLogger.Error("[ManualCraftService] No default DOTS world found.");
+                IsReady = false;
                 return;
             }
 
