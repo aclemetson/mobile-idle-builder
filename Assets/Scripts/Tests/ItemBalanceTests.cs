@@ -28,10 +28,10 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is51()
+        public void AllItems_TotalCount_Is149()
         {
-            Assert.AreEqual(51, _items.Length,
-                $"Expected 51 items in Resources/Items/, found {_items.Length}. " +
+            Assert.AreEqual(149, _items.Length,
+                $"Expected 149 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -43,7 +43,10 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T1_Proton_SellValue()      => AssertSell("proton",     3f);
         [Test] public void T1_Neutron_SellValue()     => AssertSell("neutron",    3f);
 
-        // ── Tier 2 — Elements (×2 ladder anchored at H=5) ───────────────────
+        // ── Tier 2 — Elements (convergent value model: fusion doubles up to the iron
+        //    peak Z26 = 167,772,160; fission descends Z27→92 to the uranium floor = 64;
+        //    post-iron synthesis Z93→118 climbs past iron to Oganesson = the global max).
+        //    See docs/agents/elements-and-isotopes.md. Values = nucYield(Z). ──────────────
 
         [Test] public void T2_Hydrogen_SellValue()    => AssertSell("hydrogen",   5f);
         [Test] public void T2_Helium4_SellValue()     => AssertSell("helium_4",   10f);
@@ -53,25 +56,28 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T2_Carbon_SellValue()      => AssertSell("carbon",     160f);
         [Test] public void T2_Nitrogen_SellValue()    => AssertSell("nitrogen",   320f);
         [Test] public void T2_Oxygen_SellValue()      => AssertSell("oxygen",     640f);
-        [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    1280f);
-        [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   2560f);
-        [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       5120f);
-        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     10240f);
-        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     20480f);
-        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       40960f);
-        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     81920f);
-        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       163840f);
-        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   327680f);
-        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   655360f);
-        [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    1310720f);
-        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  2621440f);
+        [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    40960f);
+        [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   20480f);
+        [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       167772160f);   // natural peak
+        [Test] public void T2_Cobalt_SellValue()      => AssertSell("cobalt",     134112510f);   // first fission step down
+        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     107205900f);
+        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     85697486f);
+        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       68504244f);
+        [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 3727860f);
+        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     1522149f);
+        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   3603f);
+        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   1471f);
+        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       1176f);
+        [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    64f);          // cheap fission floor
+        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  671088640f);   // post-iron breeding
+        [Test] public void T2_Oganesson_SellValue()   => AssertSell("oganesson",  11258999068426240f); // global max
 
-        // ── Tier 2 — Isotopes ────────────────────────────────────────────────
+        // ── Tier 2 — Isotopes (base = round(nucYield(Z) × isotopeSellMultiplier)) ──────
 
         [Test] public void T2_Deuterium_SellValue()   => AssertSell("deuterium",    8f);
-        [Test] public void T2_Tritium_SellValue()     => AssertSell("tritium",      12f);
+        [Test] public void T2_Tritium_SellValue()     => AssertSell("tritium",      8f);
         [Test] public void T2_Carbon14_SellValue()    => AssertSell("carbon_14",    240f);
-        [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  2621440f);
+        [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  128f);
 
         // ── Tier 2 — Decay particles ─────────────────────────────────────────
 

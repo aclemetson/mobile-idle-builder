@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: moscovium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: moscovium
+  displayName: Moscovium
+  symbol: Mc
+  icon: {fileID: 0}
+  itemId: 146
+  tier: 2
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 115
+  atomicMass: 290
+  charge: 0
+  isRadioactive: 1
+  decayType: 1
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: 'Moscovium (Mc), element number 115 with mass number 290. A superheavy
+    nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
+  codexUnlocked: 0
+  baseSellValue: 1.4073749e+15
+  isotopeSellMultiplier: 1

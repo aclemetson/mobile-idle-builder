@@ -35,6 +35,7 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "Silver has the highest electrical conductivity of any element. Gold

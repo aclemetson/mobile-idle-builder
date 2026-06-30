@@ -1,6 +1,6 @@
 # Elements & Isotopes (Design & Taxonomy)
 
-**Scope:** The full periodic table as game content — how every element (Z=1..118) and its key isotopes are created (existing buildings + new nuclear buildings + a new fissile-field map purchase), its craft time, its entropy yield, and the exotic particles nuclear reactions produce. This is the **design spec** for later implementation; it is not itself shipped content. For currency/formula context read `economy-balance.md`; for how to author items/recipes read `data-pipeline.md`; for the power grid read `ecs-patterns.md`; for new-building art read `visual-design.md`.
+**Scope:** The full periodic table as game content — how every element (Z=1..118) and its key isotopes are created (existing buildings + new nuclear buildings + a new fissile-field map purchase), its craft time, its entropy yield, and the exotic particles nuclear reactions produce. **Phase 1 (all 118 elements as Atomic-Assembler recipes) is now shipped data** — see "Phase 1 implementation status" below; the new nuclear buildings, fissile fields, and decay mechanic remain design-only. For currency/formula context read `economy-balance.md`; for how to author items/recipes read `data-pipeline.md`; for the power grid read `ecs-patterns.md`; for new-building art read `visual-design.md`.
 
 > Verified against: `992a572`, 2026-06-29 (natural tent to iron + post-iron synthesis endgame). If code contradicts this doc, trust the code and update this doc.
 
@@ -8,9 +8,18 @@
 
 ## What exists today vs. what this doc proposes
 
-**Existing (impl):** ~20 elements (H, He, Li, Be, B, C, N, O, Si, Al, Fe, Ni, Cu, Zn, Ag, Au, Pt, W, U, Pu), 4 isotopes (deuterium, tritium, carbon-14, U-235), 2 particles (alpha, beta). Built in the **Atomic Assembler** (`atomic_assembler`) from `proton`/`neutron`/`electron`, isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no recipes/buildings yet**.
+**Existing (impl):** **all 118 elements (Z=1..118)** plus 4 isotopes (deuterium, tritium, carbon-14, U-235) and 2 particles (alpha, beta), all craftable in the **Atomic Assembler** (`atomic_assembler`) from `proton`/`neutron`/`electron`. Isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no dedicated buildings yet** (every element is currently an Assembler recipe).
 
-**Proposed (design):** fill the table to all 118 elements; add **Fusion Reactor**, **Fission Reactor**, **Breeder Reactor**, and **Particle Accelerator** buildings; add **Uranium/Plutonium fissile fields** as a map purchase; extend **Radioactive Containment** with an auto-decay setting; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta.
+**Proposed (design):** add **Fusion Reactor**, **Fission Reactor**, **Breeder Reactor**, and **Particle Accelerator** buildings and reroute the element recipes onto them as throughput shortcuts; add **Uranium/Plutonium fissile fields** as a map purchase; extend **Radioactive Containment** with an auto-decay setting; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta; bake the element-tile visuals.
+
+### Phase 1 implementation status (data-first, shipped)
+
+The full table was implemented as pure `game_data.json` data (items `item_id` 52–149, recipes `recipe_id` 50–147) generated from the locked value model below. Notes for the next agent:
+
+- **Gating mechanism (important):** the research-node `unlocks_items`/`unlocks_recipes` arrays and the `unlockedRecipes` save list are **inert** — nothing at runtime reads them. Crafting is gated by `RecipeSO.requiredResearch`, which is now enforced by a filter in `HUDBuildingInspectorSubController` (the Assembler "Set Recipe" picker hides recipes whose research is not yet unlocked). Before Phase 1 nothing gated the picker. The tutorial unlocks each gate immediately before the matching craft, so it stays in sync.
+- **Interim research gates:** new elements are gated behind the existing element-group nodes plus three **Phase-1 placeholder** nodes — `heavy_transition_metals` (Z37–54), `lanthanides_and_heavy_metals` (Z55–86), `superheavy_synthesis` (Z101–118). These are a stand-in for the eventual fusion/fission/breeding/accelerator branches in "Research gates (design)" below; when those buildings land, re-home the recipes and retire the placeholders.
+- **`recipes.json` parity gap:** `Assets/Data/recipes.json` is a **separate hand-maintained** source (the importer never writes it) that feeds the *manual* craft menu (`RecipeDatabase` → `HUDController.BuildRecipeList`) and recipe-knowledge/codex tracking. The 98 new elements were added only to `game_data.json` (the Assembler/ECS path), so they do **not** appear in the manual menu or `RecipeKnowledgeService`. Elements are `can_craft_manually:false`, so this is acceptable for crafting, but the manual menu / codex will not list them until `recipes.json` is also populated.
+- **Visuals:** still text-only / placeholder spheres — element-tile sprites are Phase 2.
 
 ## Creation regimes — the natural tent, then the post-iron climb
 
