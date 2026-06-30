@@ -31,8 +31,37 @@ namespace MobileIdleBuilder
             public RecipeSO   defaultRecipe;
         }
 
-        [Header("Available buildings (shown in the selection panel)")]
-        public BuildingEntry[] availableBuildings;
+        private BuildingEntry[] _availableBuildings;
+
+        /// <summary>
+        /// Every placeable building, built from the generated <see cref="BuildingDatabaseSO"/>
+        /// (Resources/BuildingDatabase) rather than hand-wired in the scene — a building added to
+        /// game_data.json appears here automatically once imported. <c>defaultRecipe</c> is left null;
+        /// buildings are placed recipe-less and the player picks the recipe in the inspector (the same
+        /// behaviour the scene list had, where every entry's defaultRecipe was null). Cached after first
+        /// access. Also serves as the buildingId -> BuildingSO registry for save/load and the dev console.
+        /// </summary>
+        public BuildingEntry[] availableBuildings
+        {
+            get
+            {
+                if (_availableBuildings != null) return _availableBuildings;
+
+                var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+                if (db?.allBuildings == null)
+                {
+                    GameLogger.Warning("[BuildingPlacementController] BuildingDatabase missing — run MobileIdleBuilder > Import Game Data.");
+                    return _availableBuildings = Array.Empty<BuildingEntry>();
+                }
+
+                var list = new List<BuildingEntry>(db.allBuildings.Length);
+                foreach (var b in db.allBuildings)
+                    if (b != null)
+                        list.Add(new BuildingEntry { building = b, defaultRecipe = null });
+
+                return _availableBuildings = list.ToArray();
+            }
+        }
 
         [Header("Scene references")]
         [SerializeField] private GridRenderer        gridRenderer;

@@ -61,6 +61,8 @@ namespace MobileIdleBuilder.Editor
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
                 needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<BuildingDatabaseSO>($"{ResourcesDir}/BuildingDatabase.asset") == null)
+                needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
@@ -210,6 +212,9 @@ namespace MobileIdleBuilder.Editor
 
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
+
+            // ── Step 12.6: BuildingDatabaseSO (data-driven build menu) ───────
+            GenerateBuildingDatabase(data.buildings, buildingLookup);
 
             // ── Step 12.55: ManagerSO + ManagerDatabaseSO (no cross-refs) ────
             var managerLookup = new Dictionary<string, ManagerSO>();
@@ -646,6 +651,22 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateBuildingDatabase(List<BuildingJson> buildings,
+            Dictionary<string, BuildingSO> buildingLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/BuildingDatabase.asset";
+            var db = LoadOrCreate<BuildingDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<BuildingSO>(buildings.Count);
+            foreach (var b in buildings)
+                if (buildingLookup.TryGetValue(b.id, out var so))
+                    list.Add(so);
+
+            db.allBuildings = list.ToArray();
             EditorUtility.SetDirty(db);
         }
 

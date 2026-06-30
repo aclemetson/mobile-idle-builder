@@ -1014,7 +1014,7 @@ namespace MobileIdleBuilder.Dev
         {
             var pc = FindAnyObjectByType<BuildingPlacementController>();
             if (pc?.availableBuildings == null || pc.availableBuildings.Length == 0)
-                return "Error: BuildingPlacementController.availableBuildings is empty (wire it on the HUD).";
+                return "Error: BuildingPlacementController.availableBuildings is empty (BuildingDatabase missing — run MobileIdleBuilder > Import Game Data).";
 
             var sb = new StringBuilder($"Buildings ({pc.availableBuildings.Length}):\n");
             foreach (var entry in pc.availableBuildings)
