@@ -10639,6 +10639,58 @@
           "action": ""
         }
       ]
+    },
+    {
+      "id": "intro_nuclear_reactors_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Assembling atoms one nucleon at a time is precise, but slow. The stars found a faster way — fuse light nuclei together, or split heavy ones apart. Both roads converge on iron, the most stable nucleus there is.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "fusion_explained_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Your Fusion Reactor fuses two light nuclei into a heavier one — four hydrogen into helium, three helium into carbon, and onward up the ladder. Feed it light atoms and it climbs toward iron far faster than the Assembler ever could.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_fissile_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Matter heavier than iron cannot be cheaply fused into being — it must be mined. Fissile Extraction opens uranium and plutonium veins: the raw fuel for the other half of the nuclear ladder.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "reactors_complete_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Fusion climbs up to iron; fission breaks back down to it. You now command both directions of the nuclear ladder. Build, balance, and bank the entropy — the Foundry is yours.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
     }
   ],
 
@@ -11445,6 +11497,61 @@
       "hint": "",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "particles_loop_context" }
+    },
+
+    { "_comment": "--- PHASE ⑫: NUCLEAR REACTORS (fusion + fission shortcuts) ---" },
+    {
+      "id": "intro_nuclear_reactors",
+      "hint": "Building atoms one nucleon at a time is slow. There is a faster way.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "intro_nuclear_reactors_context" }
+    },
+    {
+      "id": "buy_fusion_i",
+      "hint": "Purchase Stellar Fusion in the Research panel to unlock the Fusion Reactor.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "fusion_i" },
+      "on_enter": { "pulse_button_id": "btn-research" }
+    },
+    {
+      "id": "place_fusion_reactor",
+      "hint": "Open the Build menu and place a Fusion Reactor.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "fusion_reactor", "min_count": 1 },
+      "on_enter": { "pulse_button_id": "btn-build" }
+    },
+    {
+      "id": "fusion_explained",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "fusion_explained_context" }
+    },
+
+    { "_comment": "--- ⑫a: Fission — the other direction (split heavies back down to iron) ---" },
+    {
+      "id": "buy_fissile_extraction",
+      "hint": "Purchase Fissile Extraction to open uranium and plutonium fields.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "fissile_extraction" },
+      "on_enter": {
+        "dialogue_id": "intro_fissile_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "buy_fission_i",
+      "hint": "Purchase Nuclear Fission to unlock the Fission Reactor.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "fission_i" },
+      "on_enter": { "pulse_button_id": "btn-research" }
+    },
+    {
+      "id": "place_fission_reactor",
+      "hint": "Open the Build menu and place a Fission Reactor.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "fission_reactor", "min_count": 1 },
+      "on_enter": { "pulse_button_id": "btn-build" }
+    },
+    {
+      "id": "reactors_complete",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "reactors_complete_context" }
     }
   ],
   "megastructure": {
