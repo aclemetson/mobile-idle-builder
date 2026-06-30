@@ -203,14 +203,10 @@ namespace MobileIdleBuilder.PlayModeTests
                 buf.Add(new InventorySlot { ItemID = _hydrogenSO.itemId, Quantity = 5 });
                 World.DefaultGameObjectInjectionWorld = world2;
 
-                // Swapping the world alone does not help — the cached query still points at the old one.
-                Assert.IsFalse(ManualCraftService.Instance.CanCraft(recipe),
-                    "stale binding still reads the old empty world before the scene-load re-bind");
-
-                RunSceneLoaded(ManualCraftService.Instance); // the fix: re-acquire EntityManager + queries
-
+                // The fix: EnsureBound() on the next call notices the default world changed and re-acquires
+                // the EntityManager + queries, so the recipe reads the rebuilt world's inventory.
                 Assert.IsTrue(ManualCraftService.Instance.CanCraft(recipe),
-                    "after re-bind the service must read the new world's inventory");
+                    "after the world is rebuilt the service must rebind and read the new world's inventory");
             }
             finally
             {
@@ -225,15 +221,6 @@ namespace MobileIdleBuilder.PlayModeTests
             mb.GetType()
               .GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
               ?.Invoke(mb, null);
-
-        static void RunSceneLoaded(MonoBehaviour mb) =>
-            mb.GetType()
-              .GetMethod("OnSceneLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
-              ?.Invoke(mb, new object[]
-              {
-                  default(UnityEngine.SceneManagement.Scene),
-                  UnityEngine.SceneManagement.LoadSceneMode.Single
-              });
 
         static void RunAwake(MonoBehaviour mb)
         {

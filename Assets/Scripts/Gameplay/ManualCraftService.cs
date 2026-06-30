@@ -3,7 +3,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace MobileIdleBuilder
 {
@@ -18,55 +17,46 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _buildingQuery;
+        private World         _boundWorld;
 
         public bool IsReady { get; private set; }
 
         void Start()
         {
             if (Instance != this) return; // a duplicate destroyed by SingletonMonoBehaviour.Awake
-            BindToWorld();
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            EnsureBound();
         }
 
-        protected override void OnDestroy()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            base.OnDestroy();
-        }
-
-        // This is a persistent (DontDestroyOnLoad) singleton, but the DOTS world + SubScene
-        // entities are rebuilt on every scene reload — e.g. starting a new game in-session. The
-        // cached _em / queries would then point at the destroyed world, so _inventoryQuery.IsEmpty
-        // reads true and the HUD recipe panel shows an empty inventory (0/x, craft greyed out).
-        // Re-acquire them on each load. Mirrors DevConsoleController.OnSceneLoaded.
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => BindToWorld();
-
-        private void BindToWorld()
+        // This is a persistent (DontDestroyOnLoad) singleton, but the DOTS world is rebuilt on every
+        // scene reload (e.g. starting a new game in-session — see DevConsoleController). A query cached
+        // against the old world reads empty, so the HUD recipe panel shows 0/x and craft is greyed out
+        // even though the inventory holds the items. Re-acquire the EntityManager + queries lazily
+        // whenever the default world changes. Checking at call time (rather than on sceneLoaded) is
+        // immune to the ordering of world recreation vs. the scene-loaded event.
+        private void EnsureBound()
         {
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null)
-            {
-                IsReady = false;
-                return;
-            }
+            if (world == null) { IsReady = false; return; }
+            if (ReferenceEquals(world, _boundWorld) && IsReady) return;
 
-            _em = world.EntityManager;
+            _boundWorld     = world;
+            _em             = world.EntityManager;
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
-                ComponentType.ReadWrite<InventorySlot>()
-            );
-            _buildingQuery = _em.CreateEntityQuery(
+                ComponentType.ReadWrite<InventorySlot>());
+            _buildingQuery  = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<BuildingData>(),
                 ComponentType.ReadWrite<RecipeProcessData>(),
                 ComponentType.ReadOnly<RecipeInputSlot>(),
-                ComponentType.ReadOnly<RecipeOutputSlot>()
-            );
+                ComponentType.ReadOnly<RecipeOutputSlot>());
             IsReady = true;
+            GameLogger.Debug("[ManualCraftService] (Re)bound to the active ECS world.");
         }
 
         /// <summary>Returns true if the player's ECS inventory has enough inputs for this recipe.</summary>
         public bool CanCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _inventoryQuery.IsEmpty) return false;
 
             var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
@@ -107,6 +97,7 @@ namespace MobileIdleBuilder
         /// <summary>Snapshot of current inventory: itemId → quantity.</summary>
         public Dictionary<int, int> GetInventoryCounts()
         {
+            EnsureBound();
             var result = new Dictionary<int, int>();
             if (!IsReady || _inventoryQuery.IsEmpty) return result;
 
@@ -124,6 +115,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool CanTriggerBuildingCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
 
             int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
@@ -173,6 +165,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TriggerBuildingCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
 
             int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
