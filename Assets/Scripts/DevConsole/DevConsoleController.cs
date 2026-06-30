@@ -429,6 +429,46 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            _registry.Register("add all elements <qty>", "Add <qty> of every Element/Isotope item (full value/visual sweep)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int qty) || qty <= 0)
+                        return "Error: <qty> must be a positive integer.";
+
+                    var db = ItemDatabase.Instance;
+                    if (db?.All == null || db.All.Count == 0)
+                        return "Error: ItemDatabase not ready or empty.";
+                    if (_inventoryQuery.IsEmpty)
+                        return "Error: Player inventory entity not found.";
+
+                    var entity = _inventoryQuery.GetSingletonEntity();
+                    var buffer = _em.GetBuffer<InventorySlot>(entity);
+
+                    int added = 0;
+                    foreach (var item in db.All)
+                    {
+                        if (item == null) continue;
+                        if (item.category != ItemCategory.Element && item.category != ItemCategory.Isotope) continue;
+
+                        int numericId = item.itemId;
+                        bool found = false;
+                        for (int i = 0; i < buffer.Length; i++)
+                        {
+                            if (buffer[i].ItemID == numericId)
+                            {
+                                var slot = buffer[i];
+                                slot.Quantity += qty;
+                                buffer[i] = slot;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) buffer.Add(new InventorySlot { ItemID = numericId, Quantity = qty });
+                        added++;
+                    }
+                    return $"Added {qty}x of {added} element/isotope items to inventory.";
+                });
+
             // ── research ──────────────────────────────────────────────────────
             _registry.Register("unlock research <id>", "Force-unlock a research node by string ID (ignores cost/prereqs)",
                 args =>
@@ -448,6 +488,23 @@ namespace MobileIdleBuilder.Dev
 
                     rs.ForceUnlock(id);
                     return $"Unlocked research '{id}'.";
+                });
+
+            _registry.Register("unlock all research", "Force-unlock every research node (ignores cost/prereqs)",
+                _ =>
+                {
+                    var rs = ResearchService.Instance;
+                    if (rs == null) return "Error: ResearchService not found.";
+                    if (rs.AllResearch == null) return "Error: no research loaded.";
+
+                    int unlocked = 0;
+                    foreach (var r in rs.AllResearch)
+                    {
+                        if (r == null || rs.IsUnlocked(r.id)) continue;
+                        rs.ForceUnlock(r.id);
+                        unlocked++;
+                    }
+                    return $"Unlocked {unlocked} research node(s). All research now complete.";
                 });
 
             // ── show prestige ─────────────────────────────────────────────────
