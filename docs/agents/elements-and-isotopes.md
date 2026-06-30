@@ -10,7 +10,9 @@
 
 **Existing (impl):** **all 118 elements (Z=1..118)** plus 4 isotopes (deuterium, tritium, carbon-14, U-235) and 2 particles (alpha, beta), all craftable in the **Atomic Assembler** (`atomic_assembler`) from `proton`/`neutron`/`electron`. Isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no dedicated buildings yet** (every element is currently an Assembler recipe).
 
-**Proposed (design):** add **Fusion Reactor**, **Fission Reactor**, **Breeder Reactor**, and **Particle Accelerator** buildings and reroute the element recipes onto them as throughput shortcuts; add **Uranium/Plutonium fissile fields** as a map purchase; extend **Radioactive Containment** with an auto-decay setting; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta; bake the element-tile visuals.
+**Also impl (Phase 3a, pre-iron slice — shipped):** **Fusion Reactor** (`fusion_reactor`) and **Fission Reactor** (`fission_reactor`) as *additive shortcut* buildings, the **Nuclear research branch** (`fusion_i/ii/iii`, `fissile_extraction`, `fission_i`), milestone reactor recipes, and **Uranium/Plutonium fissile fields** (`FieldType.Uranium/Plutonium`) + the `site_actinide_vein` purchase. See "Phase 3a implementation status" below.
+
+**Proposed (design):** add **Breeder Reactor** and **Particle Accelerator** (post-iron) buildings; extend **Radioactive Containment** with an auto-decay setting; add the **positron / gamma photon / neutrino** particles alongside the existing neutron/alpha/beta; bake the element-tile visuals.
 
 ### Phase 1 implementation status (data-first, shipped)
 
@@ -20,6 +22,18 @@ The full table was implemented as pure `game_data.json` data (items `item_id` 52
 - **Interim research gates:** new elements are gated behind the existing element-group nodes plus three **Phase-1 placeholder** nodes — `heavy_transition_metals` (Z37–54), `lanthanides_and_heavy_metals` (Z55–86), `superheavy_synthesis` (Z101–118). These are a stand-in for the eventual fusion/fission/breeding/accelerator branches in "Research gates (design)" below; when those buildings land, re-home the recipes and retire the placeholders.
 - **`recipes.json` parity gap:** `Assets/Data/recipes.json` is a **separate hand-maintained** source (the importer never writes it) that feeds the *manual* craft menu (`RecipeDatabase` → `HUDController.BuildRecipeList`) and recipe-knowledge/codex tracking. The 98 new elements were added only to `game_data.json` (the Assembler/ECS path), so they do **not** appear in the manual menu or `RecipeKnowledgeService`. Elements are `can_craft_manually:false`, so this is acceptable for crafting, but the manual menu / codex will not list them until `recipes.json` is also populated.
 - **Visuals:** still text-only / placeholder spheres — element-tile sprites are Phase 2.
+
+### Phase 3a implementation status (pre-iron reactors, shipped)
+
+The Fusion + Fission reactors are **additive shortcuts** — the Atomic Assembler keeps all 118 recipes; the reactors add *new* recipe ids that output the *same* element items, faster / from cheaper inputs. Notes for the next agent:
+
+- **Buildings:** `fusion_reactor` (`building_id` 11, gate `fusion_i`) and `fission_reactor` (`building_id` 12, gate `fission_i`), `structure_kind: None` (placeholder cube — bespoke visuals deferred). `category: Transient` (no enum migration).
+- **Research (Nuclear branch):** `fusion_i` (off `atomic_assembly`) → `fusion_ii` → `fusion_iii` (Astrophysics, iron capstone); `fusion_i` → `fissile_extraction` → `fission_i`. Gated by the same `RecipeSO.requiredResearch` filter as Phase 1.
+- **Recipes (milestone, not per-element):** fusion alpha ladder `fuse_helium`,`fuse_carbon`,`fuse_oxygen`…`fuse_iron` (12); fission `fission_u235`→barium, `fission_pu239`→xenon; harvest `collect_uranium`/`collect_plutonium`. Odd-Z / off-ladder elements stay Assembler-only.
+- **Fissile fields:** `FieldType.Uranium/Plutonium` enum + `uranium_field`/`plutonium_field` + `site_actinide_vein` (250k unlock). `ManualFieldCollector.FieldTypeToTriggerId` already maps new types via its `_` default.
+- **Byproducts are inert:** `ProductionSystem` emits only the primary `output_item` (`BuildingPlacer.cs:115-121`). Fission's second fragment (krypton/zirconium) + spare neutrons are authored in `byproducts[]` but **not produced at runtime** until byproduct emission lands (deferred follow-up #1). So fission currently yields one fragment per craft and the neutron-loop is not self-sustaining.
+- **Scene wiring is REQUIRED and manual:** `BuildingPlacementController.availableBuildings` and `FieldGenerator.fields` are `[SerializeField]` in `GameScene.unity`. The two reactors and fissile fields are **not placeable/spawnable** until wired in the Editor (a `BuildingEntry` per reactor + a default recipe; the fields added to the site's field set). Until then even dev-console `spawn building` can't see them.
+- **Tutorial:** the fusion/fission tutorial beat is **deferred** to its own pass (the core tutorial flow is race-sensitive; not touched here).
 
 ## Creation regimes — the natural tent, then the post-iron climb
 

@@ -1,0 +1,130 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: fusion_reactor
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: fusion_reactor
+  displayName: Fusion Reactor
+  description: "Fuses two light nuclei into a heavier element \u2014 the fast lane
+    up the fusion ladder. Unlocked by Stellar Fusion research."
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 11
+  tier: 2
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 40
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 836ddfb7854822e43b54924bad753eed, type: 2}
+  - {fileID: 11400000, guid: e758c6af4a6a4a24386c8e2135ee9cfb, type: 2}
+  - {fileID: 11400000, guid: a2f350106494f5c44ba427f09c97f0e0, type: 2}
+  - {fileID: 11400000, guid: 24da610dc434e6046b54f4bb4c8ecbc9, type: 2}
+  - {fileID: 11400000, guid: 3aa75351a59a7df458d9ce4ab5cf936e, type: 2}
+  - {fileID: 11400000, guid: 2bf96794b3af2ae4e93b5eab183e17a0, type: 2}
+  - {fileID: 11400000, guid: 43088a3f0b9148d4aa5d507942d133c2, type: 2}
+  - {fileID: 11400000, guid: d0974d965bf54c044b180fb892d68f36, type: 2}
+  - {fileID: 11400000, guid: 716dd01167a799d4da71115fe9297ff7, type: 2}
+  - {fileID: 11400000, guid: 10924634e73b74940943c8e88c9873e8, type: 2}
+  - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
+  - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Nucleus A
+  - Nucleus B
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 0
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 2
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 1500
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 30
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 60
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 4500
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 90
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 18000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 140
+    outputEV: 0
+    influenceRadiusTiles: 0
+    costBaseCurrency: 72000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 3000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 12000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 48000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 3000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 12000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 48000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: A magnetic-confinement chamber that forces light nuclei together against
+    their mutual repulsion. Far faster than assembling heavy atoms nucleon-by-nucleon,
+    but it only climbs as high as iron.

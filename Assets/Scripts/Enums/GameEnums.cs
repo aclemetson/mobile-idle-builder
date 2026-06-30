@@ -61,7 +61,9 @@ namespace MobileIdleBuilder
     {
         None,
         Quark,    // Generic quark field — collector buildings specify up/down quark output via their recipe
-        Lepton    // Electron field — outputItem on FieldSO is Electron
+        Lepton,   // Electron field — outputItem on FieldSO is Electron
+        Uranium,  // Fissile field — harvests uranium (U-238); seeds the fission ladder
+        Plutonium // Fissile field — harvests plutonium (Pu-239)
     }
 
     public enum DecayType
