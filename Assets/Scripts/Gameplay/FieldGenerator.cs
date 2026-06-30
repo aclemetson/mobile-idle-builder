@@ -146,8 +146,9 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Applies a site's field_overrides to the default Inspector field list, scaling each
         /// entry's count by its density multiplier and dropping fields scaled to zero. Fields
-        /// with no override keep their default count. Overrides referencing a field not in the
-        /// default set are ignored (the balance spec only scales existing fields).
+        /// with no override keep their default count. An override referencing a field NOT in the
+        /// default set INTRODUCES it (see <see cref="IntroducedFields"/>) — used for fields that
+        /// should appear only on a specific site, e.g. the fissile (uranium/plutonium) fields.
         /// </summary>
         private IEnumerable<FieldEntry> EffectiveEntries(SiteSO site)
         {
@@ -157,9 +158,11 @@ namespace MobileIdleBuilder
                     if (ov.field != null)
                         multipliers[ov.field.id] = ov.densityMultiplier;
 
+            var defaultIds = new HashSet<string>();
             foreach (var entry in fields)
             {
                 if (entry.fieldDefinition == null) continue;
+                defaultIds.Add(entry.fieldDefinition.id);
                 float m = multipliers.TryGetValue(entry.fieldDefinition.id, out var v) ? v : 1f;
                 int scaledCount = EffectiveFieldCount(entry.count, m);
                 if (scaledCount <= 0) continue;
@@ -167,6 +170,28 @@ namespace MobileIdleBuilder
                 var scaled = entry;
                 scaled.count = scaledCount;
                 yield return scaled;
+            }
+
+            foreach (var (field, count) in IntroducedFields(site, defaultIds))
+                yield return new FieldEntry { fieldDefinition = field, count = count, groupAdjacent = false };
+        }
+
+        /// <summary>
+        /// Site overrides may INTRODUCE a field absent from the default Inspector list (e.g. the
+        /// fissile fields, which should spawn only on their dedicated site). For such a field the
+        /// override's density multiplier is read as the absolute field count. Returns (field, count)
+        /// for every override whose field id is NOT in <paramref name="defaultFieldIds"/>. Pure so
+        /// the introduce-on-override behaviour is testable without a live scene.
+        /// </summary>
+        internal static IEnumerable<(FieldSO field, int count)> IntroducedFields(
+            SiteSO site, ISet<string> defaultFieldIds)
+        {
+            if (site?.fieldOverrides == null) yield break;
+            foreach (var ov in site.fieldOverrides)
+            {
+                if (ov.field == null || defaultFieldIds.Contains(ov.field.id)) continue;
+                int count = EffectiveFieldCount(1, ov.densityMultiplier);
+                if (count > 0) yield return (ov.field, count);
             }
         }
 
@@ -198,13 +223,33 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>
+        /// Builds a field-id -> FieldSO lookup spanning the default Inspector list AND every field
+        /// referenced by any site's overrides (via <see cref="SiteService"/>). Site-introduced
+        /// fields (e.g. the fissile fields) are absent from the default list, so this is what lets
+        /// them restore on reload. Falls back to the default list alone if SiteService isn't ready.
+        /// </summary>
+        private Dictionary<string, FieldSO> BuildFieldLookup()
+        {
+            var lookup = new Dictionary<string, FieldSO>();
+            foreach (var entry in fields)
+                if (entry.fieldDefinition != null)
+                    lookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+
+            var sites = SiteService.Instance?.AllSites;
+            if (sites != null)
+                foreach (var site in sites)
+                    if (site?.fieldOverrides != null)
+                        foreach (var ov in site.fieldOverrides)
+                            if (ov.field != null)
+                                lookup.TryAdd(ov.field.id, ov.field);
+            return lookup;
+        }
+
         /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
         public void SpawnFromSave(List<FieldSaveData> savedFields)
         {
-            var fieldLookup = new Dictionary<string, FieldSO>();
-            foreach (var entry in fields)
-                if (entry.fieldDefinition != null)
-                    fieldLookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+            var fieldLookup = BuildFieldLookup();
 
             foreach (var saved in savedFields)
             {

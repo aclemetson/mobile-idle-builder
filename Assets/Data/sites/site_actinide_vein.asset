@@ -17,9 +17,9 @@ MonoBehaviour:
   unlockCost: 250000
   fieldOverrides:
   - field: {fileID: 11400000, guid: 159f60aa615bd2144bfb0d2075fc0797, type: 2}
-    densityMultiplier: 1
+    densityMultiplier: 3
   - field: {fileID: 11400000, guid: bc181a5be05a2144680002660f053c9d, type: 2}
-    densityMultiplier: 1
+    densityMultiplier: 2
   - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
     densityMultiplier: 0.5
   - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}

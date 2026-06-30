@@ -9490,9 +9490,10 @@
       "id": "site_actinide_vein",
       "display_name": "Actinide Vein",
       "unlock_cost": 250000,
+      "_note_fissile": "uranium_field/plutonium_field are NOT in the default FieldGenerator list; their density_multiplier is read as an absolute field count for this site (see FieldGenerator.IntroducedFields).",
       "field_overrides": [
-        { "field": "uranium_field", "density_multiplier": 1.0 },
-        { "field": "plutonium_field", "density_multiplier": 1.0 },
+        { "field": "uranium_field", "density_multiplier": 3.0 },
+        { "field": "plutonium_field", "density_multiplier": 2.0 },
         { "field": "quark_field", "density_multiplier": 0.5 },
         { "field": "electron_field", "density_multiplier": 0.5 }
       ]
