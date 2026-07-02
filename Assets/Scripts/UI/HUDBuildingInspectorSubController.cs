@@ -170,21 +170,30 @@ namespace MobileIdleBuilder
                 {
                     AddFieldCollectorRecipeSection(_inspectorEntity, buildingSO, fieldOnTile);
                 }
-                else if (buildingSO.supportedRecipes != null && buildingSO.supportedRecipes.Length > 1)
+                else if (buildingSO.supportedRecipes != null)
                 {
-                    AddInspectorRow("—— Set Recipe ——");
+                    // Only offer recipes whose gating research has been purchased. Research-gating
+                    // the picker here is what makes the element/material research tree actually
+                    // limit what a crafter can produce (see IsRecipeAvailable).
+                    var available = new List<RecipeSO>();
                     foreach (var r in buildingSO.supportedRecipes)
+                        if (IsRecipeAvailable(r)) available.Add(r);
+
+                    if (available.Count > 1)
                     {
-                        if (r == null) continue;
-                        var captured = r;
-                        var btn = new Button { text = r.displayName ?? r.name };
-                        btn.AddToClassList("craft-btn");
-                        btn.clicked += () =>
+                        AddInspectorRow("—— Set Recipe ——");
+                        foreach (var r in available)
                         {
-                            SetBuildingRecipe(_inspectorEntity, captured);
-                            RefreshInspectorContent();
-                        };
-                        _inspectorContent?.Add(btn);
+                            var captured = r;
+                            var btn = new Button { text = r.displayName ?? r.name };
+                            btn.AddToClassList("craft-btn");
+                            btn.clicked += () =>
+                            {
+                                SetBuildingRecipe(_inspectorEntity, captured);
+                                RefreshInspectorContent();
+                            };
+                            _inspectorContent?.Add(btn);
+                        }
                     }
                 }
 
@@ -380,6 +389,19 @@ namespace MobileIdleBuilder
         {
             var svc = ResearchService.Instance;
             return svc != null && svc.IsUnlocked(researchId);
+        }
+
+        /// <summary>
+        /// A crafter recipe is selectable only once its gating research is unlocked. Recipes flagged
+        /// knownFromStart (or with no required research) are always available; a missing research
+        /// service is treated as "nothing unlocked" so gated recipes stay hidden.
+        /// </summary>
+        private static bool IsRecipeAvailable(RecipeSO r)
+        {
+            if (r == null) return false;
+            if (r.knownFromStart || r.requiredResearch == null) return true;
+            var svc = ResearchService.Instance;
+            return svc != null && svc.IsUnlocked(r.requiredResearch.id);
         }
 
         private void AddStorageUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)

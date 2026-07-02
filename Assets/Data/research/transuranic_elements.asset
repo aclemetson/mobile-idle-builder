@@ -28,12 +28,27 @@ MonoBehaviour:
   fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
+  - {fileID: 11400000, guid: 2f5ade56dc84849479196cd977a31212, type: 2}
+  - {fileID: 11400000, guid: d122a8df04b9882438bac0800c224f1d, type: 2}
+  - {fileID: 11400000, guid: c1f8395abe816e6439f2b2f386b3bd70, type: 2}
+  - {fileID: 11400000, guid: 959f572c33a24fa4392e3c959f8734ce, type: 2}
+  - {fileID: 11400000, guid: 37cf019f78be96541b4edc35491b6b86, type: 2}
+  - {fileID: 11400000, guid: f6e556eef630c3f4f88d23041c599cd5, type: 2}
+  - {fileID: 11400000, guid: 9f2edcf6f9b4fd9448f277de751a9928, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 194369f721a00bc49b6fe9c24f2c2838, type: 2}
+  - {fileID: 11400000, guid: 3147937b0dc07804f8f2554f07ad699c, type: 2}
+  - {fileID: 11400000, guid: 825eb24d3e6c9554da4e5c60fc8ad417, type: 2}
+  - {fileID: 11400000, guid: 69306d901a1f6c44ab93bec2aa585abe, type: 2}
+  - {fileID: 11400000, guid: 1c00d9d851b76d5478fa188f5eeebf46, type: 2}
+  - {fileID: 11400000, guid: 36586983fb02c21419c6c5a33a12ee3f, type: 2}
+  - {fileID: 11400000, guid: c8c257a06e26c0b4ab603655dc9d4c19, type: 2}
+  - {fileID: 11400000, guid: 38ee40ecd5e5fe744ba313e5298fb516, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.05
   codexEntry: "Plutonium does not occur naturally on Earth \u2014 it must be synthesised.

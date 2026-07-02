@@ -35,6 +35,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d88d56de2caf44a4ca4f40b9dbe3e44a, type: 2}
   - {fileID: 11400000, guid: 03e3811952427644cbaa6368ab3ad449, type: 2}
   - {fileID: 11400000, guid: 6211149976db10e4ebd805300b5afa5c, type: 2}
+  - {fileID: 11400000, guid: b98b05ac92749df4685ab1edb6588c09, type: 2}
+  - {fileID: 11400000, guid: da24fccc7e1826141ac9127c8f9877ec, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0

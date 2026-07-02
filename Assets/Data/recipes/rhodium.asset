@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: rhodium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: rhodium
+  displayName: Rhodium
+  recipeId: 80
+  tier: 2
+  category: 3
+  inputs:
+  - item: {fileID: 11400000, guid: 7b87185ea0bd04c459c841407cad7496, type: 2}
+    quantity: 45
+  - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
+    quantity: 58
+  - item: {fileID: 11400000, guid: dd3f9758ae3f5034086cb81c351137c0, type: 2}
+    quantity: 45
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: f13668c429e4b6e48aeb6ad248b56403, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 103
+  manualCraftTime: 103
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 515
+  validBuildings:
+  - {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

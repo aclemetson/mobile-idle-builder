@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f54a4614174f442bde4c9e662ec50f, type: 3}
+  m_Name: uranium_field
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
+  id: uranium_field
+  displayName: Uranium Vein
+  fieldType: 3
+  drops:
+  - item: {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
+    weight: 1
+  tapCooldownSeconds: 3
+  fieldColor: {r: 0.49803922, g: 0.72156864, b: 0, a: 1}
+  fieldIcon: {fileID: 0}
+  codexEntry: "A seam of naturally fissile ore. Tap or harvest to extract uranium
+    \u2014 the cheapest on-ramp to matter heavier than iron, and the fuel for fission."

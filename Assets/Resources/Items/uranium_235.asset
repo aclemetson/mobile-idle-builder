@@ -35,5 +35,5 @@ MonoBehaviour:
     Splitting U-235 releases enormous energy and produces alpha particles as decay
     byproducts.
   codexUnlocked: 0
-  baseSellValue: 2621440
+  baseSellValue: 128
   isotopeSellMultiplier: 2

@@ -180,6 +180,41 @@ namespace MobileIdleBuilder.PlayModeTests
                 "GetInventoryCounts must report correct quantity for proton");
         }
 
+        // ── Scene-reload re-bind (regression for the stale-world crafting bug) ──
+
+        [Test]
+        public void SceneReload_RebindsToNewWorld_InventoryVisibleAgain()
+        {
+            // ManualCraftService is a persistent (DontDestroyOnLoad) singleton, but the DOTS world
+            // is rebuilt on every scene reload (e.g. starting a new game in-session). If it kept its
+            // original EntityManager/query it would read a dead world — the HUD recipe panel then
+            // shows 0/x and craft is greyed even though the inventory has the items.
+            SpawnServices(); // binds to _testWorld (empty inventory)
+            var recipe = MakeRecipe("hydrogen", 1, "proton", 1);
+            Assert.IsFalse(ManualCraftService.Instance.CanCraft(recipe), "precondition: original world empty");
+
+            var world2 = new World("ManualCraftTestWorld2");
+            try
+            {
+                var em2     = world2.EntityManager;
+                var player2 = em2.CreateEntity();
+                em2.AddComponent<PlayerInventoryTag>(player2);
+                var buf = em2.AddBuffer<InventorySlot>(player2);
+                buf.Add(new InventorySlot { ItemID = _hydrogenSO.itemId, Quantity = 5 });
+                World.DefaultGameObjectInjectionWorld = world2;
+
+                // The fix: EnsureBound() on the next call notices the default world changed and re-acquires
+                // the EntityManager + queries, so the recipe reads the rebuilt world's inventory.
+                Assert.IsTrue(ManualCraftService.Instance.CanCraft(recipe),
+                    "after the world is rebuilt the service must rebind and read the new world's inventory");
+            }
+            finally
+            {
+                World.DefaultGameObjectInjectionWorld = _testWorld; // TearDown disposes _testWorld
+                if (world2.IsCreated) world2.Dispose();
+            }
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         static void RunStart(MonoBehaviour mb) =>

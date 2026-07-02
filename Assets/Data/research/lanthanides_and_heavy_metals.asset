@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: lanthanides_and_heavy_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: lanthanides_and_heavy_metals
+  displayName: Lanthanides and Heavy Metals
+  description: "Unlock the lanthanide series and the dense period-6 metals \u2014
+    cesium through radon."
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 400000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 05f6df57af5210046a808b6b95d4de07, type: 2}
+  - {fileID: 11400000, guid: c10fa2a929cbd404ba52d68971ab70f3, type: 2}
+  - {fileID: 11400000, guid: 3b6bb56b48796b149bb956fec342028d, type: 2}
+  - {fileID: 11400000, guid: 4ad0d4b065f5f854c88dacc5c0b6b800, type: 2}
+  - {fileID: 11400000, guid: 09365550bf87ecc4ab58ed4ce231ae58, type: 2}
+  - {fileID: 11400000, guid: 3559203236c93ea40b88a2eecb663790, type: 2}
+  - {fileID: 11400000, guid: 36999beebf5026d428597008f4af5fcc, type: 2}
+  - {fileID: 11400000, guid: 891a5a472ac25b745952379dd1c2c584, type: 2}
+  - {fileID: 11400000, guid: 4c97e0b1e325cb64ca93fbd9cad64459, type: 2}
+  - {fileID: 11400000, guid: 6abd3e5ca342ac14ba81a0c4424cc898, type: 2}
+  - {fileID: 11400000, guid: b8f816885aeef9b468f0ac814ca9c10c, type: 2}
+  - {fileID: 11400000, guid: e2ba3301ea3d71c48ae4afa51dc14afb, type: 2}
+  - {fileID: 11400000, guid: 7cbf57a91c018df4880885ce83c729d7, type: 2}
+  - {fileID: 11400000, guid: 2d107c787bc3ed3419df58a5e6eab014, type: 2}
+  - {fileID: 11400000, guid: 84ac4c5dcb5353240a87209cfe9ff3c7, type: 2}
+  - {fileID: 11400000, guid: 7d178368ea70d6e48b31e036000c77ee, type: 2}
+  - {fileID: 11400000, guid: c95a666dd713d4547902ee0d477feef7, type: 2}
+  - {fileID: 11400000, guid: aa28db57f21966c4a8e83f8e24d93c0f, type: 2}
+  - {fileID: 11400000, guid: 54e1be32f8019c0439fd8701f11665a9, type: 2}
+  - {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
+  - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
+  - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
+  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
+  - {fileID: 11400000, guid: a4b71afe142cf464e86e7f896c344a4c, type: 2}
+  - {fileID: 11400000, guid: 31a903bb240d2cc4a85b03e7aff3cab4, type: 2}
+  - {fileID: 11400000, guid: 3726ea5eb5c0cdf43911439e0557e249, type: 2}
+  - {fileID: 11400000, guid: ce9cee7e590d397499e72e76a815116f, type: 2}
+  - {fileID: 11400000, guid: 38f2388a64f8a074f928f5415d3e828f, type: 2}
+  - {fileID: 11400000, guid: 75829ddfe2b1a324e8eb7c5ec2991be3, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 13de34edb3d8f734a8bfc86f517bb09a, type: 2}
+  - {fileID: 11400000, guid: a9354aeda3fa8f14982b04ed4a057ef3, type: 2}
+  - {fileID: 11400000, guid: 00a166c1c160f944b993dd1d44a80dac, type: 2}
+  - {fileID: 11400000, guid: a567767246ab4e44c8a600e59ed104d9, type: 2}
+  - {fileID: 11400000, guid: 7f6e174a16257a34891e6266465a5377, type: 2}
+  - {fileID: 11400000, guid: 30a7c49bbf048f948b1bb10212886879, type: 2}
+  - {fileID: 11400000, guid: c0ec6aea8ef790f458b1442e890cddd9, type: 2}
+  - {fileID: 11400000, guid: 5f763c456561f704187f04ce9de776bd, type: 2}
+  - {fileID: 11400000, guid: e9407f5763fcb7f4db20fbb152cac9df, type: 2}
+  - {fileID: 11400000, guid: d6b90c69681a68646be2f5ccb890387c, type: 2}
+  - {fileID: 11400000, guid: 16811c0bee4aaa4429b87db25f6bc3cb, type: 2}
+  - {fileID: 11400000, guid: c815e5976652e9b43a9803e81a32f9f8, type: 2}
+  - {fileID: 11400000, guid: 109f0a4aabdc2004fa2a4526e827c278, type: 2}
+  - {fileID: 11400000, guid: 9954c12532b6db94282b783bc9fe618f, type: 2}
+  - {fileID: 11400000, guid: bc1e66058b73085488406197f61bbfe3, type: 2}
+  - {fileID: 11400000, guid: 065c782b0065d394b9d361e551cd9212, type: 2}
+  - {fileID: 11400000, guid: bbc8f1b28d52b1744a509727efd46e61, type: 2}
+  - {fileID: 11400000, guid: f7ff85f235831e94ba647e0046f97a29, type: 2}
+  - {fileID: 11400000, guid: 9d7a334428b7ed3439f8e123d3511657, type: 2}
+  - {fileID: 11400000, guid: 9b41005269440a8439dd73c2cd323db1, type: 2}
+  - {fileID: 11400000, guid: 4f2eb6efc8a4f814abd301b967b71296, type: 2}
+  - {fileID: 11400000, guid: e15e1b61635281f4191c28126ac186b8, type: 2}
+  - {fileID: 11400000, guid: 022f1e9be5017b649a4eca515299e95a, type: 2}
+  - {fileID: 11400000, guid: 8e0e55e2c78050943907a6e4009f843c, type: 2}
+  - {fileID: 11400000, guid: 63f1f5d2a5a55e240830fbdd28b047fd, type: 2}
+  - {fileID: 11400000, guid: 9e568d57136193f49848404b605db800, type: 2}
+  - {fileID: 11400000, guid: 0b7d70a9d4d35a24c8877dc10a1b3178, type: 2}
+  - {fileID: 11400000, guid: e26215ea54851a84db470a86e739baec, type: 2}
+  - {fileID: 11400000, guid: 4218031a3319f9c42bea7ed4154fdefc, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: The rare earths power magnets, lasers, and phosphors; the heavy metals
+    below them mark the edge of stability where the first natural radioactivity appears.

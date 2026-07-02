@@ -83,6 +83,10 @@ document.querySelectorAll('.tab').forEach(btn => {
       window._simpleInit = true;
       renderSimpleOverview();
     }
+    if (btn.dataset.tab === 'elements' && !window._nuclearInit) {
+      window._nuclearInit = true;
+      renderNuclearTab();
+    }
   });
 });
 
@@ -1015,6 +1019,127 @@ document.getElementById('sim-pc')?.addEventListener('input', e => {
   if (el) el.textContent = v.toLocaleString() + ' ✦';
   updatePrestigeSimulator(v);
 });
+
+// ─── SECTION 8c: NUCLEAR / ELEMENTS TAB ─────────────────────────────────
+// Periodic table (118) colored by creation regime + nuclear design tables.
+// Yields/regimes derived here so the data stays a list of facts (see nuclear.* in
+// LOOP_DATA). The ~20 implemented elements use authoritative game_data.json values.
+
+const NUC = (D.nuclear || {});
+const NUC_COLOR = Object.fromEntries((NUC.regimes || []).map(r => [r.key, r.color]));
+
+function nucRegime(z) {
+  if (z === 1)  return 'genesis';
+  if (z <= 26)  return 'fusion';
+  if (z <= 80)  return 'fission';
+  if (z <= 92)  return 'field';
+  if (z <= 100) return 'breeding';
+  return 'synthesis';
+}
+
+// Entropy yield (= base_sell_value). Three regions:
+//  * Fusion (Z1-26): doubles per Z to the NATURAL peak iron = 5*2^25 (~168M e),
+//    preserving the tutorial H=5..O=640 rungs.
+//  * Fission descent (Z27-92): falls from iron to a cheap uranium floor (~64 e).
+//  * Post-iron synthesis (Z93-118): a SECOND endgame unlocked after iron — value
+//    rises AGAIN above iron, doubling per Z up to Oganesson (~11.3 quadrillion,
+//    the global max). Neutron breeding (93-100) then accelerator synthesis (101-118).
+// See docs/agents/elements-and-isotopes.md "Entropy-yield ladder" / "Post-iron synthesis".
+function nucYield(z) {
+  if (z <= 26) return 5 * Math.pow(2, z - 1);                              // fusion -> iron (natural peak)
+  if (z <= 92) return Math.max(1, Math.round(64 * Math.pow(2621440, (92 - z) / 66))); // fission descent -> U
+  return Math.round(167772160 * Math.pow(2, z - 92));                      // synthetic climb past iron -> Og
+}
+
+function nucFmt(n) {
+  if (n >= 1e15) return (n / 1e15).toFixed(1).replace(/\.0$/, '') + 'Q';
+  if (n >= 1e12) return (n / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  return '' + n;
+}
+
+function nucElByZ(z) { return (NUC.els || []).find(e => e[0] === z); }
+
+function renderNuclearTab() {
+  renderPeriodicGrid();
+  renderNuclearTables();
+}
+
+function renderPeriodicGrid() {
+  const host = document.getElementById('nuclear-grid');
+  if (!host || !NUC.layout) return;
+  const implSet = new Set(NUC.impl || []);
+
+  let cells = '';
+  NUC.layout.forEach(row => {
+    row.forEach(z => {
+      if (z === 0) { cells += '<div class="pt-empty"></div>'; return; }
+      if (z < 0) {
+        const lbl = z === -1 ? '57-71' : '89-103';
+        const sub = z === -1 ? 'La-Lu' : 'Ac-Lr';
+        cells += `<div class="pt-cell pt-ph" title="${sub}"><span class="pt-sym">${lbl}</span></div>`;
+        return;
+      }
+      const el = nucElByZ(z);
+      if (!el) return;
+      const [, sym, name, a] = el;
+      const reg  = nucRegime(z);
+      const col  = NUC_COLOR[reg] || '#6e7681';
+      const y    = nucYield(z);
+      const impl = implSet.has(z);
+      const tip  = `${name} (Z${z}, A${a}) — ${reg}, yield ${y.toLocaleString()}e [${impl ? 'implemented' : 'design'}]`;
+      cells += `<div class="pt-cell" style="background:${col}" title="${tip}">`
+             + `<span class="pt-z">${z}</span><span class="pt-sym">${sym}</span>`
+             + `<span class="pt-y">${nucFmt(y)}</span>`
+             + (impl ? '<span class="pt-impl">●</span>' : '') + '</div>';
+    });
+  });
+
+  const legend = (NUC.regimes || [])
+    .map(r => `<span class="pt-leg"><span class="pt-swatch" style="background:${r.color}"></span>${r.label}</span>`)
+    .join('') + '<span class="pt-leg"><span class="pt-swatch" style="background:#21262d">●</span>● = implemented today</span>';
+
+  host.innerHTML = `<div class="pt-grid">${cells}</div><div class="pt-legend">${legend}</div>`;
+}
+
+function renderNuclearTables() {
+  const b = document.getElementById('nuclear-buildings-body');
+  if (b && NUC.buildings) {
+    b.innerHTML = NUC.buildings.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.id}</td>
+      <td style="text-align:center;">${x.tier}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.inputs}</td>
+      <td style="font-size:12px;color:#3fb950;">${x.output}</td>
+      <td style="font-size:12px;color:#f0883e;">${x.byproducts}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td></tr>`).join('');
+  }
+
+  const p = document.getElementById('nuclear-particles-body');
+  if (p && NUC.particles) {
+    p.innerHTML = NUC.particles.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="text-align:center;font-family:monospace;color:#f0883e;">${x.sym}</td>
+      <td style="text-align:center;color:#8b949e;">${x.charge}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.source}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.use}</td>
+      <td style="text-align:right;color:#79c0ff;">${x.yield}e</td>
+      <td style="text-align:center;">${x.status === 'impl'
+        ? '<span class="tag tag-milestone">impl</span>'
+        : '<span class="tag tag-silent">design</span>'}</td></tr>`).join('');
+  }
+
+  const r = document.getElementById('nuclear-research-body');
+  if (r && NUC.research) {
+    r.innerHTML = NUC.research.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td><span class="tag tag-silent">${x.branch}</span></td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.prereq}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.unlocks}</td></tr>`).join('');
+  }
+}
 
 // ─── SECTION 9: INIT ─────────────────────────────────────────────────────
 // Runs once at page load. DOM is ready because this script is at end of body.

@@ -27,8 +27,18 @@ MonoBehaviour:
   fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
+  - {fileID: 11400000, guid: 04c6bba37d3513949b42a2a6b343825f, type: 2}
+  - {fileID: 11400000, guid: 86f33cb7f76430d41a527645e1310c3a, type: 2}
+  - {fileID: 11400000, guid: ea75caa1aef345b4987bc0cad2c2a0e5, type: 2}
+  - {fileID: 11400000, guid: c63ce91f457deb241be7debf715310c2, type: 2}
+  - {fileID: 11400000, guid: 7099f20fdeb02a7459d315abc0cd3eba, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: f8006bcb629fdff4fbff9f80b1584415, type: 2}
+  - {fileID: 11400000, guid: b6ebaa20017297d47abed554d8da5187, type: 2}
+  - {fileID: 11400000, guid: 500d50b7756774f4a8b8d4aad9422943, type: 2}
+  - {fileID: 11400000, guid: bb225815adfdafe408db7fd54bfedb22, type: 2}
+  - {fileID: 11400000, guid: 704b0cc753fc47a438158cc2470d4b03, type: 2}
+  - {fileID: 11400000, guid: 3d3e136847ea6274db1eda355adc7820, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

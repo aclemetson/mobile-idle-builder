@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: superheavy_synthesis
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: superheavy_synthesis
+  displayName: Superheavy Synthesis
+  description: "Unlock accelerator synthesis of the superheavy elements \u2014 mendelevium
+    through oganesson."
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
+  depthInTree: 7
+  costBaseCurrency: 2000000
+  costPrestigeCurrency: 50
+  durationSeconds: 7200
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: d264916af2fb8b54ea40da1e8afa5606, type: 2}
+  - {fileID: 11400000, guid: 00064313e7ce75a4f87f9c3a48833292, type: 2}
+  - {fileID: 11400000, guid: d642c12530084754db2d847123751a81, type: 2}
+  - {fileID: 11400000, guid: 0d1e28a172838f6418f53873cfeab0c0, type: 2}
+  - {fileID: 11400000, guid: 34d6e3d9a51b52044acc326e34f53187, type: 2}
+  - {fileID: 11400000, guid: 4dfbadcb90371d3438d6ab1ec940dc49, type: 2}
+  - {fileID: 11400000, guid: 9b69a470e212d3e458e2e8cb6d08d8c3, type: 2}
+  - {fileID: 11400000, guid: 2f4af581c8ef6404fa9cc8658757484b, type: 2}
+  - {fileID: 11400000, guid: 46b5a6fddaf8e1e4d83eb728224eb34e, type: 2}
+  - {fileID: 11400000, guid: 621b03004af010d4ebe3cf7df59c2e9b, type: 2}
+  - {fileID: 11400000, guid: 18fc538167ecb434db4179caec349741, type: 2}
+  - {fileID: 11400000, guid: e64861209c47c0741804253575311b9c, type: 2}
+  - {fileID: 11400000, guid: bb30176d4a98f5f4d8ac9f1b35cede0b, type: 2}
+  - {fileID: 11400000, guid: e0f4d1c015e2b3e4c836bd03773cb83e, type: 2}
+  - {fileID: 11400000, guid: 70ef9811f7bb3694d9ae5300f3052719, type: 2}
+  - {fileID: 11400000, guid: d34574ed2bfe7bb4ebadf22bdf1a9c99, type: 2}
+  - {fileID: 11400000, guid: 627b1222502f88d4280d837382a8c39d, type: 2}
+  - {fileID: 11400000, guid: f4590576d290f5343b5d7c78c9204f35, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 38772baec86e4e943ae9be3fb977c6df, type: 2}
+  - {fileID: 11400000, guid: b8f3e0230b9f27b4c84e08f08fab1ea5, type: 2}
+  - {fileID: 11400000, guid: 061273e321092364aa20425ae1b9f9b6, type: 2}
+  - {fileID: 11400000, guid: 4eff544e01bcb2840a295ad801d705e1, type: 2}
+  - {fileID: 11400000, guid: e2ef2465f3290254aa2c4366454ffea6, type: 2}
+  - {fileID: 11400000, guid: caa52fc879441d34492d53663422cc75, type: 2}
+  - {fileID: 11400000, guid: 00e2d8b60141ad94199ce0630a299a2b, type: 2}
+  - {fileID: 11400000, guid: 735edd94c4d48a84cafd0836ba32687a, type: 2}
+  - {fileID: 11400000, guid: d1bffc1c8301eca429125262f30e3fc9, type: 2}
+  - {fileID: 11400000, guid: 5775faf87515f514eb65977fee6fd88f, type: 2}
+  - {fileID: 11400000, guid: c82cb0b4e7e524a4dbb9e5496bc07b63, type: 2}
+  - {fileID: 11400000, guid: 045c3ead4adcc95468b696b8b7fddb74, type: 2}
+  - {fileID: 11400000, guid: df82b103d4d1649438361edffa2f28b6, type: 2}
+  - {fileID: 11400000, guid: aa4e982084fe8c94f95c397a73e2b4db, type: 2}
+  - {fileID: 11400000, guid: ddc4af682ef835d48abb0eaf71636159, type: 2}
+  - {fileID: 11400000, guid: a86584b878aa4034ea5d10a69c54caf3, type: 2}
+  - {fileID: 11400000, guid: 2dcb39dc5b2ca994686b4b565cb636e9, type: 2}
+  - {fileID: 11400000, guid: dcb8d59c0937ed845905cec5dc1141cd, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.05
+  codexEntry: "Beyond fermium, nuclei survive only by slamming lighter atoms together
+    at relativistic speed. Each new element exists for fractions of a second \u2014
+    and is worth a fortune in captured entropy."

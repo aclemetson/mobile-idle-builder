@@ -35,5 +35,5 @@ MonoBehaviour:
     decay with a 12.3-year half-life. Combined with deuterium in the most efficient
     known fusion reaction.
   codexUnlocked: 0
-  baseSellValue: 12
+  baseSellValue: 8
   isotopeSellMultiplier: 1.5

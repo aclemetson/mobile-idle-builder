@@ -19,6 +19,7 @@
     <button class="tab" data-tab="dialogue">Dialogue Flow</button>
     <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
+    <button class="tab" data-tab="elements">Elements &amp; Nuclear</button>
     <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
     <button class="tab" data-tab="idle">Idle Collection</button>
@@ -494,6 +495,100 @@
       </div>
 
     </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ ELEMENTS & NUCLEAR ══ -->
+<div id="elements" class="tab-content">
+
+  <div class="callout">
+    <h3>The Iron Valley + the post-iron climb</h3>
+    <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so the <strong>natural</strong> economy (fusion up +
+       fission down, Z1&ndash;92) is a tent peaking at iron (~168M e) &mdash; a long-term apex a month-plus and many
+       prestiges away. Uranium (~64 e) is the <strong>last natural element</strong>. Everything past it is
+       <strong>synthesized with energy</strong> &mdash; a second endgame, unlocked only after iron, whose value
+       rises <em>again, past iron</em>, to <strong>Oganesson (~11.3 quadrillion e), the global max</strong>.</p>
+    <pre class="pt-diagram"> value
+   |                                            Og ~11.3Q  = GLOBAL max
+   |                                           /  (post-iron SYNTHESIS)
+   |   Fe ~168M (natural peak)      Np ~336M  /
+   |  /  \                              \    /
+   | /    \  fission descent             \  /
+   |/      \__________________ U 64 -CLIFF-\/   U = last natural element
+   H ==fusion up==> Fe ==fission down==> U | ==breed==> Fm ==accelerate==> Og
+   1      ->        26     ->            92 93   ->    100 101    ->        118
+   \--------- NATURAL TENT (Z1-92) --------/  \---- POST-IRON SYNTHESIS ----/</pre>
+    <p style="font-size:12px;color:#8b949e;">Full design reference: <code>docs/agents/elements-and-isotopes.md</code>.
+       <code>game_data.json</code> is the source of truth; all implemented element values are superseded by the three
+       ladder formulas and must be re-derived (e.g. Pu jumps from a cheap floor to ~671M as a post-iron synthetic).</p>
+  </div>
+
+  <div class="card">
+    <h3>Periodic Table &mdash; colored by creation regime</h3>
+    <p style="font-size:12px;color:#8b949e;">Each cell shows atomic number, symbol, and entropy yield (= sell value).
+       Hover a cell for its name, mass, regime, and status. <strong>&bull;</strong> marks the ~20 elements implemented
+       today; the rest are design placeholders. Lanthanides (57&ndash;71) and actinides (89&ndash;103) are the two rows below.</p>
+    <div id="nuclear-grid"></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #3fb950;background:#0d2018;">
+      <h2>New Nuclear Buildings (design)</h2>
+      <span class="phase-meta">the throughput shortcuts past nucleon-by-nucleon assembly &middot; reuse the BuildingSO schema</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Building</th><th>id</th><th style="text-align:center;">Tier</th>
+        <th>Inputs</th><th>Output</th><th>Byproducts</th><th>Research</th>
+      </tr></thead>
+      <tbody id="nuclear-buildings-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #f0883e;background:#2b1d0e;">
+      <h2>Exotic Particles</h2>
+      <span class="phase-meta">emitted as recipe byproducts &middot; caught by Radioactive Containment &middot; gamma feeds the power grid</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Particle</th><th style="text-align:center;">Sym</th><th style="text-align:center;">Charge</th>
+        <th>Source</th><th>Use</th><th style="text-align:right;">Yield</th><th style="text-align:center;">Status</th>
+      </tr></thead>
+      <tbody id="nuclear-particles-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
+      <h2>Research Gates (design)</h2>
+      <span class="phase-meta">fission opens early (Be/B); reaching iron unlocks two post-iron branches (breeding, accelerator)</span>
+    </div>
+    <table>
+      <thead><tr><th>Research</th><th>Branch</th><th>Prereq</th><th>Unlocks</th></tr></thead>
+      <tbody id="nuclear-research-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="callout" style="border-left-color:#d2a8ff;">
+    <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; natural tent + post-iron climb</h3>
+    <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code>. Three regions: fusion rises to the
+       <strong>natural peak at iron (~168M e)</strong>, fission descends to <strong>uranium (~64 e)</strong>, then the
+       <strong>post-iron synthesis</strong> climbs past iron to <strong>Oganesson (~11.3Q e, the global max)</strong>.</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">1. Fusion (Z1&rarr;26)</strong> &mdash; <code>5 &times; 2<sup>(Z&minus;1)</sup></code>; preserves tutorial H..O, doubles to iron:</p>
+    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O    F  ...  Si   ...    Ca      ...     Mn            Fe(peak)
+e :  5  10  20  40   80  160  320  640 1280   40,960  2,621,440  83,886,080  167,772,160</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">2. Fission (Z92&rarr;26)</strong> &mdash; <code>round(64 &times; 2,621,440<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored, U floored at 64:</p>
+    <pre class="pt-spine">Z :     27         28        30        36       47      56    74  82  90 92
+el:     Co         Ni        Zn        Kr       Ag      Ba     W  Pb  Th  U
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 46 64</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#e3b341;">3. Post-iron synthesis (Z93&rarr;118)</strong> &mdash; <code>round(167,772,160 &times; 2<sup>(Z&minus;92)</sup>)</code>; doubles past iron to Og. Breeding (93&ndash;100) then accelerator (101&ndash;118):</p>
+    <pre class="pt-spine">Z :     93        94        96         100          103             110                    118
+el:     Np        Pu        Cm         Fm           Lr             Ds                     Og
+e : 335,544,320 671,088,640 2,684,354,560 42,949,672,960 343,597,383,680 43,980,465,111,040 11,258,999,068,426,240</pre>
+    <p style="font-size:11px;color:#8b949e;">The curve rises to iron, falls to uranium, jumps the <strong>natural/synthetic cliff</strong> (U 64 &rarr; Np 336M), then rises far past iron to Og.
+       <strong style="color:#f0883e;">Migration:</strong> implemented values follow the OLD thinned model and must be re-derived from all three formulas (Fe 5,120&rarr;167,772,160; U 1,310,720&rarr;64; Pu 2,621,440&rarr;671,088,640).</p>
   </div>
 
 </div>
