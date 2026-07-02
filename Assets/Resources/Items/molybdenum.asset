@@ -15,7 +15,7 @@ MonoBehaviour:
   id: molybdenum
   displayName: Molybdenum
   symbol: Mo
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 50d6ad3a67a5b5c4f9ab58ec40b61ff2, type: 3}
   itemId: 79
   tier: 2
   category: 2

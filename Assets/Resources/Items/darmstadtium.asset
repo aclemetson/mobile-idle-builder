@@ -15,7 +15,7 @@ MonoBehaviour:
   id: darmstadtium
   displayName: Darmstadtium
   symbol: Ds
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 512fb15a43fd8124db4dc35866c04e6a, type: 3}
   itemId: 141
   tier: 2
   category: 2

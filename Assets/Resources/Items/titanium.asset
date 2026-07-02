@@ -15,7 +15,7 @@ MonoBehaviour:
   id: titanium
   displayName: Titanium
   symbol: Ti
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4c4953a1f2bf44f46a6ddac39e37e528, type: 3}
   itemId: 63
   tier: 2
   category: 2

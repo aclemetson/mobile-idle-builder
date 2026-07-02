@@ -15,7 +15,7 @@ MonoBehaviour:
   id: praseodymium
   displayName: Praseodymium
   symbol: Pr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 00b99e9995c26ac4eba95f0e578cb334, type: 3}
   itemId: 95
   tier: 2
   category: 2

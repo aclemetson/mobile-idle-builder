@@ -15,7 +15,7 @@ MonoBehaviour:
   id: rutherfordium
   displayName: Rutherfordium
   symbol: Rf
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 647419b986a1dbd44b98a5c04b152483, type: 3}
   itemId: 135
   tier: 2
   category: 2

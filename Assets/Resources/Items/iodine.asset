@@ -15,7 +15,7 @@ MonoBehaviour:
   id: iodine
   displayName: Iodine
   symbol: I
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d8d677157a97c0a46884bf4b8678b4a4, type: 3}
   itemId: 89
   tier: 2
   category: 2

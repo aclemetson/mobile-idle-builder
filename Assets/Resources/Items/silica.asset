@@ -15,7 +15,7 @@ MonoBehaviour:
   id: silica
   displayName: Silica
   symbol: "SiO\u2082"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 34ead7d9e005af847b6c049b851ae350, type: 3}
   itemId: 36
   tier: 3
   category: 4

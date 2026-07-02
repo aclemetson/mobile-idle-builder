@@ -15,7 +15,7 @@ MonoBehaviour:
   id: erbium
   displayName: Erbium
   symbol: Er
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b8cd80c286134ca4cb8f0ed15475dfaa, type: 3}
   itemId: 104
   tier: 2
   category: 2

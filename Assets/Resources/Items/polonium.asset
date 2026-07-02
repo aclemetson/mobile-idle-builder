@@ -15,7 +15,7 @@ MonoBehaviour:
   id: polonium
   displayName: Polonium
   symbol: Po
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e4228b44c3be8964a818d1d5b9fffdad, type: 3}
   itemId: 117
   tier: 2
   category: 2

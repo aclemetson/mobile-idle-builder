@@ -15,7 +15,7 @@ MonoBehaviour:
   id: bromine
   displayName: Bromine
   symbol: Br
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5d64793e9049e9a47af439bdb27db184, type: 3}
   itemId: 72
   tier: 2
   category: 2

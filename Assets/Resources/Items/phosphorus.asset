@@ -15,7 +15,7 @@ MonoBehaviour:
   id: phosphorus
   displayName: Phosphorus
   symbol: P
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2271733ff7848f446a5acb96ab7a9c63, type: 3}
   itemId: 56
   tier: 2
   category: 2

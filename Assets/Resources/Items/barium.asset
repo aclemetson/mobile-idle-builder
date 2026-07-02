@@ -15,7 +15,7 @@ MonoBehaviour:
   id: barium
   displayName: Barium
   symbol: Ba
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e7e41e2a2648e764d9b51b7a54fb4982, type: 3}
   itemId: 92
   tier: 2
   category: 2

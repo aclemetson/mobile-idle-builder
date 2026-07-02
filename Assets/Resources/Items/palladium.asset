@@ -15,7 +15,7 @@ MonoBehaviour:
   id: palladium
   displayName: Palladium
   symbol: Pd
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 45c860936a34d924f8195f3ea730e41c, type: 3}
   itemId: 83
   tier: 2
   category: 2

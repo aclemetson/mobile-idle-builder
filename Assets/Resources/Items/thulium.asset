@@ -15,7 +15,7 @@ MonoBehaviour:
   id: thulium
   displayName: Thulium
   symbol: Tm
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 29a0d73e8d3f8204ab337124781e6f1a, type: 3}
   itemId: 105
   tier: 2
   category: 2

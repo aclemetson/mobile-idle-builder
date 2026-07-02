@@ -15,7 +15,7 @@ MonoBehaviour:
   id: cadmium
   displayName: Cadmium
   symbol: Cd
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a5a31f10590b97541a43704ea1677000, type: 3}
   itemId: 84
   tier: 2
   category: 2

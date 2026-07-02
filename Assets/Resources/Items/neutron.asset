@@ -15,7 +15,7 @@ MonoBehaviour:
   id: neutron
   displayName: Neutron
   symbol: "n\u2070"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4bb5db74bceaa854985f77f4e46217d7, type: 3}
   itemId: 5
   tier: 1
   category: 1

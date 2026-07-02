@@ -187,6 +187,8 @@ namespace MobileIdleBuilder
                             var captured = r;
                             var btn = new Button { text = r.displayName ?? r.name };
                             btn.AddToClassList("craft-btn");
+                            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+                            if (icon != null) btn.Insert(0, icon);
                             btn.clicked += () =>
                             {
                                 SetBuildingRecipe(_inspectorEntity, captured);
@@ -650,6 +652,8 @@ namespace MobileIdleBuilder
                 var captured = r;
                 var btn = new Button { text = r.displayName ?? r.outputItem?.displayName ?? r.name };
                 btn.AddToClassList("craft-btn");
+                var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+                if (icon != null) btn.Insert(0, icon);
                 btn.clicked += () =>
                 {
                     SetBuildingRecipe(entity, captured);

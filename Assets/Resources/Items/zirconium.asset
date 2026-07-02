@@ -15,7 +15,7 @@ MonoBehaviour:
   id: zirconium
   displayName: Zirconium
   symbol: Zr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fc23374abc85a6a49a5dd6a318ced9dd, type: 3}
   itemId: 77
   tier: 2
   category: 2

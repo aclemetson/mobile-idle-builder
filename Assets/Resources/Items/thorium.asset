@@ -15,7 +15,7 @@ MonoBehaviour:
   id: thorium
   displayName: Thorium
   symbol: Th
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 26e353634d21c7d4ca71766129828e5b, type: 3}
   itemId: 123
   tier: 2
   category: 2

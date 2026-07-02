@@ -15,7 +15,7 @@ MonoBehaviour:
   id: zinc
   displayName: Zinc
   symbol: Zn
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9754f29affb520b4486d4a42858506fe, type: 3}
   itemId: 26
   tier: 2
   category: 2

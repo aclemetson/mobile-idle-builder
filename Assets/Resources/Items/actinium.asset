@@ -15,7 +15,7 @@ MonoBehaviour:
   id: actinium
   displayName: Actinium
   symbol: Ac
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 725702ee158b1214da603241e6066dc4, type: 3}
   itemId: 122
   tier: 2
   category: 2

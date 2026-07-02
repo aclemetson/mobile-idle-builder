@@ -15,7 +15,7 @@ MonoBehaviour:
   id: up_quark
   displayName: Up Quark
   symbol: u
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 82cf30858f4621545a851ac44b8f340f, type: 3}
   itemId: 1
   tier: 1
   category: 0

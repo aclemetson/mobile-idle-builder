@@ -15,7 +15,7 @@ MonoBehaviour:
   id: nobelium
   displayName: Nobelium
   symbol: No
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: dd87508445fd8214a9840ecec468db92, type: 3}
   itemId: 133
   tier: 2
   category: 2

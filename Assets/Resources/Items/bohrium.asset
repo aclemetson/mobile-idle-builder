@@ -15,7 +15,7 @@ MonoBehaviour:
   id: bohrium
   displayName: Bohrium
   symbol: Bh
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 48b82e0e43f0f374caad0f9993979a5d, type: 3}
   itemId: 138
   tier: 2
   category: 2

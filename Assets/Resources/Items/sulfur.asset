@@ -15,7 +15,7 @@ MonoBehaviour:
   id: sulfur
   displayName: Sulfur
   symbol: S
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e86c2c17a8259c44c8b95034a858bd36, type: 3}
   itemId: 57
   tier: 2
   category: 2

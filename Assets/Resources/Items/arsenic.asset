@@ -15,7 +15,7 @@ MonoBehaviour:
   id: arsenic
   displayName: Arsenic
   symbol: As
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3461e2508355907448ba73a19369491c, type: 3}
   itemId: 70
   tier: 2
   category: 2

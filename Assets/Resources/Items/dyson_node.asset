@@ -15,7 +15,7 @@ MonoBehaviour:
   id: dyson_node
   displayName: Dyson Node
   symbol: DN
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 109470bc3c26eba49a27689075871f2d, type: 3}
   itemId: 49
   tier: 5
   category: 6

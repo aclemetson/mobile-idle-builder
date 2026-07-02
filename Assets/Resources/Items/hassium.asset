@@ -15,7 +15,7 @@ MonoBehaviour:
   id: hassium
   displayName: Hassium
   symbol: Hs
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b5108b1274e972841bfaaf6f38933830, type: 3}
   itemId: 139
   tier: 2
   category: 2

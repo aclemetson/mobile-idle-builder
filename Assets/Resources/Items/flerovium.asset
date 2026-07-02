@@ -15,7 +15,7 @@ MonoBehaviour:
   id: flerovium
   displayName: Flerovium
   symbol: Fl
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7880e8f09ff28f34592fb6435abd2764, type: 3}
   itemId: 145
   tier: 2
   category: 2

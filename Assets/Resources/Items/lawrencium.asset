@@ -15,7 +15,7 @@ MonoBehaviour:
   id: lawrencium
   displayName: Lawrencium
   symbol: Lr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fa8c83f8cd71a574eb166be2505de302, type: 3}
   itemId: 134
   tier: 2
   category: 2

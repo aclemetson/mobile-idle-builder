@@ -15,7 +15,7 @@ MonoBehaviour:
   id: yttrium
   displayName: Yttrium
   symbol: Y
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a94376a6c767ef1419c7832affc6d00e, type: 3}
   itemId: 76
   tier: 2
   category: 2

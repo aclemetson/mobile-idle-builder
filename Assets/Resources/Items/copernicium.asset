@@ -15,7 +15,7 @@ MonoBehaviour:
   id: copernicium
   displayName: Copernicium
   symbol: Cn
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9f00a5d0b4bfb324fba322c6cb00243b, type: 3}
   itemId: 143
   tier: 2
   category: 2

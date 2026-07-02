@@ -568,8 +568,73 @@ namespace MobileIdleBuilder
         private void OpenCodexPanel()
         {
             CloseAllPanels();
-            // Content is populated externally as codex entries are discovered
+            BuildCodexList();
             SetElementVisible(_codexPanel, true);
+        }
+
+        /// <summary>
+        /// Populates the codex with an entry (tile icon + name + lore) for every item whose
+        /// crafting recipe the player has discovered, using the same known-recipe gate as the
+        /// recipe list. Rebuilt each time the panel opens.
+        /// </summary>
+        private void BuildCodexList()
+        {
+            if (_codexList == null) return;
+            _codexList.Clear();
+
+            var recipes = RecipeDatabase.Instance?.Recipes;
+            if (recipes == null) return;
+
+            var seen = new HashSet<int>();
+            int shown = 0;
+            foreach (var recipe in recipes)
+            {
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)) continue;
+
+                var item = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                if (item == null || !seen.Add(item.itemId)) continue;
+
+                var row = new VisualElement();
+                row.AddToClassList("codex-row");
+
+                var icon = MakeItemIcon(item.icon, "codex-icon");
+                if (icon != null) row.Add(icon);
+
+                var infoCol = new VisualElement();
+                infoCol.AddToClassList("codex-info");
+
+                var name = new Label(item.displayName ?? item.symbol ?? item.id);
+                name.AddToClassList("codex-name");
+                infoCol.Add(name);
+
+                if (!string.IsNullOrEmpty(item.codexEntry))
+                {
+                    var entry = new Label(item.codexEntry);
+                    entry.AddToClassList("codex-entry");
+                    infoCol.Add(entry);
+                }
+
+                row.Add(infoCol);
+                _codexList.Add(row);
+                shown++;
+            }
+
+            if (shown == 0)
+                _codexList.Add(new Label("Craft items to fill your codex."));
+        }
+
+        /// <summary>
+        /// Builds a background-image VisualElement for an item's tile sprite, or null when the
+        /// item has no icon yet (callers skip adding it so nothing breaks). Shared by the recipe
+        /// list, ingredient chips, codex, and the building inspector's recipe picker.
+        /// </summary>
+        internal static VisualElement MakeItemIcon(Sprite icon, string ussClass)
+        {
+            if (icon == null) return null;
+            var el = new VisualElement();
+            el.AddToClassList(ussClass);
+            el.style.backgroundImage = new StyleBackground(icon);
+            return el;
         }
 
         private void OpenResearchPanel()
@@ -1125,6 +1190,10 @@ namespace MobileIdleBuilder
 
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
+
+                var outputItem = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                var outputIcon = MakeItemIcon(outputItem?.icon, "item-icon");
+                if (outputIcon != null) info.Add(outputIcon);
 
                 var nameLabel = new Label(recipe.name);
                 nameLabel.AddToClassList("recipe-name");
@@ -1854,6 +1923,9 @@ namespace MobileIdleBuilder
 
                 int itemId = ItemDatabase.Instance?.GetItemId(input.id) ?? -1;
                 int count  = (itemId >= 0 && inventoryCounts.TryGetValue(itemId, out int c)) ? c : 0;
+
+                var inputIcon = MakeItemIcon(item?.icon, "recipe-input-icon");
+                if (inputIcon != null) row.Add(inputIcon);
 
                 var lbl = new Label($"{count}/{input.quantity} {sym}");
                 lbl.AddToClassList(count >= input.quantity ? "recipe-input-met" : "recipe-input-missing");

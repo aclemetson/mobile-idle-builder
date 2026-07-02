@@ -15,7 +15,7 @@ MonoBehaviour:
   id: deuterium
   displayName: Deuterium
   symbol: H-2
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 046849e89b4b0084689ae691edbaaa0a, type: 3}
   itemId: 14
   tier: 2
   category: 3

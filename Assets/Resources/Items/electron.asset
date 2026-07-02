@@ -15,7 +15,7 @@ MonoBehaviour:
   id: electron
   displayName: Electron
   symbol: "e\u207B"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7eb5036c1abec934a976a884664ecdad, type: 3}
   itemId: 3
   tier: 1
   category: 0

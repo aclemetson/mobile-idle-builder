@@ -15,7 +15,7 @@ MonoBehaviour:
   id: argon
   displayName: Argon
   symbol: Ar
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1456ea83626e65948b9b70ff599ba8d3, type: 3}
   itemId: 59
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: holmium
   displayName: Holmium
   symbol: Ho
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ba6a4cf9c08b0e04f9b1cc163ca715a2, type: 3}
   itemId: 103
   tier: 2
   category: 2

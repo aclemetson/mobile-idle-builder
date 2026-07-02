@@ -2,6 +2,7 @@
 
 > Verified against: `feature/field-wire-mesh`, 2026-06-25.
 > Port holes + Atom Generator structure + per-building drafts added 2026-06-27.
+> Element tile icons added 2026-07-02.
 
 How buildings and field structures are rendered, and the art direction they should follow.
 Read this when touching structure visuals, procedural geometry, or shaders.
@@ -40,6 +41,36 @@ building prefabs. Two patterns:
 - Per-instance color goes through a `MaterialPropertyBlock` on `_BaseColor` (never
   `enableInstancing = true` on a material — it caused magenta stripping; see
   `fix-mobile-particle-magenta.md`).
+
+## Item tile icons (2D menu sprites)
+
+Every `ItemSO` has a **periodic-table tile sprite** used in the HUD menus (not the 3D
+scene). These are 2D UI Toolkit sprites — no custom shader, so the Android magenta rules
+above do not apply.
+
+- **Generator:** `MobileIdleBuilder/Generate Element Icons` (`Assets/Scripts/Editor/ElementIconGenerator.cs`)
+  renders one 256x256 PNG per item to `Assets/Art/Icons/Elements/{id}.png` and imports it as
+  a Sprite. It renders TMP 3D text (`LiberationSans SDF`) over a procedurally-drawn rounded-rect
+  backdrop via a temp orthographic camera + `RenderPipeline.SubmitRenderRequest` (the URP-correct
+  on-demand render path in Unity 6).
+- **Assignment:** `GameDataImporter` assigns the sprite to `ItemSO.icon` via a **convention
+  fallback** — when an item's `icon_path` is still `"TODO"` it loads
+  `Assets/Art/Icons/Elements/{id}.png` if present. So the JSON stays untouched and the icon
+  survives re-imports. Run `MobileIdleBuilder/Import Game Data` after generating.
+- **Layout:** atomic number (top-left, small) · symbol (centre, large bold) · atomic mass
+  (below, small). Mass/number are shown only for elements/isotopes (`atomicNumber > 0`); a mass
+  line distinguishes isotopes from their parent element. Particles/molecules/alloys/components
+  show the symbol only.
+- **Colour = nuclear creation regime**, mirroring `docs/gameplay_loop_data.js` `nuclear.regimes`
+  so tiles match the docs periodic table. The border is the full regime colour; the interior is a
+  muted tint (`Lerp(#0d1117, regime, 0.35)`) with white text for contrast:
+  genesis `#d2a8ff` (Z1) · fusion `#3fb950` (Z2-26) · fission `#f0883e` (Z27-80) ·
+  field `#58a6ff` (Z81-92) · breeding `#db61a2` (Z93-100) · synthesis `#e3b341` (Z101-118) ·
+  non-element `#6e7681`.
+- **Where they surface:** the Assembler recipe picker (`HUDBuildingInspectorSubController`), the
+  manual recipe list + ingredient chips and the codex (`HUDController`). Bind via
+  `HUDController.MakeItemIcon(sprite, ussClass)`; USS classes `.item-icon` / `.recipe-input-icon`
+  / `.codex-icon` live in `Assets/UI/components.uss`. A null icon is skipped, never fatal.
 
 ## Reference implementations
 

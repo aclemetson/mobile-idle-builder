@@ -15,7 +15,7 @@ MonoBehaviour:
   id: moscovium
   displayName: Moscovium
   symbol: Mc
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 039366964ca918342ae83ab4c65c6695, type: 3}
   itemId: 146
   tier: 2
   category: 2

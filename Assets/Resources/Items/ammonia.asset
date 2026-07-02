@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ammonia
   displayName: Ammonia
   symbol: "NH\u2083"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 62d44e3fadf8c0b44adc720746d6f469, type: 3}
   itemId: 35
   tier: 3
   category: 4

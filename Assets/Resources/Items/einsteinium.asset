@@ -15,7 +15,7 @@ MonoBehaviour:
   id: einsteinium
   displayName: Einsteinium
   symbol: Es
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 901cba4dd8b29b14d9b5e3b011b95a14, type: 3}
   itemId: 130
   tier: 2
   category: 2

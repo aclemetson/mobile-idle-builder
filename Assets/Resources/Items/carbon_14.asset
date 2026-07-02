@@ -15,7 +15,7 @@ MonoBehaviour:
   id: carbon_14
   displayName: Carbon-14
   symbol: C-14
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d09078ec078d0b04e9b928d57fa8c7b7, type: 3}
   itemId: 16
   tier: 2
   category: 3

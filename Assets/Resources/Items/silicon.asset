@@ -15,7 +15,7 @@ MonoBehaviour:
   id: silicon
   displayName: Silicon
   symbol: Si
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8ce59fbc431a3154daff46a601bfb271, type: 3}
   itemId: 11
   tier: 2
   category: 2

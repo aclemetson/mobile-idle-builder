@@ -15,7 +15,7 @@ MonoBehaviour:
   id: indium
   displayName: Indium
   symbol: In
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b3afa9a3c2238b747ba0156eea0dfffd, type: 3}
   itemId: 85
   tier: 2
   category: 2

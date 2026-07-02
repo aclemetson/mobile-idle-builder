@@ -15,7 +15,7 @@ MonoBehaviour:
   id: neptunium
   displayName: Neptunium
   symbol: Np
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 51650e67edad0c14f9d70cef76219c53, type: 3}
   itemId: 125
   tier: 2
   category: 2

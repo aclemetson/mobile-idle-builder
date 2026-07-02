@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ytterbium
   displayName: Ytterbium
   symbol: Yb
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e30315cce7dfcf34b90fd541eab02fab, type: 3}
   itemId: 106
   tier: 2
   category: 2

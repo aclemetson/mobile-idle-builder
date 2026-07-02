@@ -15,7 +15,7 @@ MonoBehaviour:
   id: samarium
   displayName: Samarium
   symbol: Sm
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6c087811df1c67d4f964b7f9900aa558, type: 3}
   itemId: 98
   tier: 2
   category: 2

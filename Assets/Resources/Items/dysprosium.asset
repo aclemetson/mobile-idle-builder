@@ -15,7 +15,7 @@ MonoBehaviour:
   id: dysprosium
   displayName: Dysprosium
   symbol: Dy
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: df03c0b0eb22a9c41aa08f26d90da8c3, type: 3}
   itemId: 102
   tier: 2
   category: 2
