@@ -778,6 +778,29 @@ Quick Hands       (standalone — no prerequisites)</pre>
     <p>Idempotent: the <code>idleCollectionApplied</code> field in SaveData prevents double-application if cloud reconciliation swaps in a newer save mid-session.</p>
   </div>
 
+  <div class="card">
+    <h3>Continuous Motion on Return (Belt Priming)</h3>
+    <p>The Welcome Back payout answers <em>how much</em> was produced while away, but the belts themselves
+       reload empty (only chain <em>geometry</em> is saved, never the items riding them). To keep the
+       illusion that automation never stopped, each restored collector chain is re-seeded with in-transit
+       items the moment the grid loads, so belts read as full and flowing on the first frame instead of
+       visibly re-filling from the harvesters.</p>
+    <ul>
+      <li><strong>Where:</strong> <code>BeltPrimer.PrimeAllChains</code>, called once from
+          <code>GridSaveService.LoadGrid()</code> after conveyors are restored. Background → foreground
+          does not reload the grid (belts stay live), so there is no re-prime path.</li>
+      <li><strong>Spacing:</strong> one item per cell, spaced by the feeding collector's steady-state
+          cadence — <code>step = round( (1 / effectiveRate) / transportTime )</code> cells, capped at one
+          item per cell when the collector saturates the belt.</li>
+      <li><strong>Rate:</strong> the same global speed multipliers the idle snapshot uses
+          (prestige × megastructure × premium boost) fold into the spacing.</li>
+      <li><strong>Presentation only:</strong> primed items are ordinary cargo that flow to their sink /
+          inventory normally. Their count is bounded by belt length, so any entropy they add at the sink
+          is negligible next to the offline payout. First-ever sessions (tutorial-skip preset) are not
+          primed — a new factory starts empty.</li>
+    </ul>
+  </div>
+
 </div>
 
 <script src="gameplay-loop.js"></script>
