@@ -15,7 +15,7 @@ MonoBehaviour:
   id: krypton
   displayName: Krypton
   symbol: Kr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6d7e1c9589ecd1945a306f013fb01b06, type: 3}
   itemId: 73
   tier: 2
   category: 2

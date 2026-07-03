@@ -15,7 +15,7 @@ MonoBehaviour:
   id: cobalt
   displayName: Cobalt
   symbol: Co
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f520dc028ffa7d9439c72b7a15d09dc3, type: 3}
   itemId: 67
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: xenon
   displayName: Xenon
   symbol: Xe
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: aa4b8c6b2cc56e2468539535a01475bf, type: 3}
   itemId: 90
   tier: 2
   category: 2

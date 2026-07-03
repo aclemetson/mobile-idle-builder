@@ -15,7 +15,7 @@ MonoBehaviour:
   id: neon
   displayName: Neon
   symbol: Ne
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1e2a6db18a01ec3408ecb944fe480bd4, type: 3}
   itemId: 53
   tier: 2
   category: 2

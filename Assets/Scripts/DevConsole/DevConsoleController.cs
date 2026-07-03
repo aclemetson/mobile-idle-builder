@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Unity.Entities;
 using UnityEngine;
@@ -1006,6 +1007,108 @@ namespace MobileIdleBuilder.Dev
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Reloading...";
                 });
+
+            // ── snapshots (named dev save-states) ─────────────────────────────
+            // Capture the entire current game state (grid, currency, inventory, tutorial,
+            // prestige, ...) to a named file, then jump back to it later. Snapshots live in
+            // Application.persistentDataPath/snapshots and are separate from the real save.json.
+            _registry.Register("snapshot save <name>", "Capture current state to snapshots/<name>.json",
+                args => SnapshotSave(args[0]));
+
+            _registry.Register("snapshot load <name>", "Restore a saved snapshot and reload the scene",
+                args =>
+                {
+                    var data = SnapshotRead(args[0], out string err);
+                    if (data == null) return err;
+                    if (SaveManager.Instance == null) return "Error: SaveManager not ready.";
+
+                    SaveManager.Instance.DevReplaceCurrent(data);
+                    GridSaveService.Instance?.ClearGrid();
+                    // Blur before the transition so UI Toolkit's keyboard-poll timer is cancelled
+                    // before LoadSceneAsync (same Vulkan swapchain race guarded in 'clear cloud save').
+                    _inputField?.Blur();
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    return $"Loading snapshot '{args[0]}'...";
+                });
+
+            _registry.Register("snapshot list", "List all saved snapshots",
+                _ => SnapshotList());
+
+            _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
+                args => SnapshotDelete(args[0]));
+        }
+
+        // ── Snapshot helpers ──────────────────────────────────────────────────
+
+        private static string SnapshotDir =>
+            Path.Combine(Application.persistentDataPath, "snapshots");
+
+        // Snapshot names arrive as a single token (the registry splits on spaces) and are
+        // lowercased by the registry. Restrict to a safe filename charset so a name can never
+        // escape the snapshots folder via path separators or "..".
+        private static bool IsValidSnapshotName(string name) =>
+            !string.IsNullOrEmpty(name) &&
+            System.Text.RegularExpressions.Regex.IsMatch(name, "^[a-z0-9_-]+$");
+
+        private static string SnapshotSave(string name)
+        {
+            if (!IsValidSnapshotName(name))
+                return "Error: name must be letters, digits, '-' or '_' (single word, no spaces).";
+
+            var sm = SaveManager.Instance;
+            if (sm?.Current == null) return "Error: SaveManager not ready.";
+
+            sm.SaveLocal();   // flush live ECS + grid into Current before capturing
+            Directory.CreateDirectory(SnapshotDir);
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            File.WriteAllText(path, JsonUtility.ToJson(sm.Current, prettyPrint: true));
+
+            int buildings = sm.Current.currentRun?.ActiveGrid?.buildings?.Count ?? 0;
+            string step   = sm.Current.tutorial?.currentStepId;
+            return $"Snapshot '{name}' saved — {buildings} building(s), " +
+                   $"{sm.Current.currentRun?.baseCurrency ?? 0}e, tutorial '{step}'.";
+        }
+
+        private static SaveData SnapshotRead(string name, out string error)
+        {
+            error = null;
+            if (!IsValidSnapshotName(name)) { error = "Error: invalid snapshot name."; return null; }
+
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            if (!File.Exists(path)) { error = $"Error: no snapshot '{name}'. Try 'snapshot list'."; return null; }
+
+            try
+            {
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                if (data == null) { error = $"Error: snapshot '{name}' is empty or corrupt."; return null; }
+                return data;
+            }
+            catch (System.Exception e)
+            {
+                error = $"Error: failed to read snapshot '{name}': {e.Message}";
+                return null;
+            }
+        }
+
+        private static string SnapshotList()
+        {
+            if (!Directory.Exists(SnapshotDir)) return "No snapshots saved yet. Use 'snapshot save <name>'.";
+            var files = Directory.GetFiles(SnapshotDir, "*.json");
+            if (files.Length == 0) return "No snapshots saved yet. Use 'snapshot save <name>'.";
+
+            var sb = new StringBuilder($"Snapshots ({files.Length}):\n");
+            foreach (var f in files)
+                sb.AppendLine($"  {Path.GetFileNameWithoutExtension(f)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string SnapshotDelete(string name)
+        {
+            if (!IsValidSnapshotName(name)) return "Error: invalid snapshot name.";
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            if (!File.Exists(path)) return $"Error: no snapshot '{name}'.";
+            File.Delete(path);
+            return $"Snapshot '{name}' deleted.";
         }
 
         // ── Building spawn helpers ────────────────────────────────────────────

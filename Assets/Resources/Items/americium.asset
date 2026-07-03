@@ -15,7 +15,7 @@ MonoBehaviour:
   id: americium
   displayName: Americium
   symbol: Am
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 09b0b8544a4dce9418b130e1c18f06f3, type: 3}
   itemId: 126
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: protactinium
   displayName: Protactinium
   symbol: Pa
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 404cfd5b65523464bb913d95bc19093e, type: 3}
   itemId: 124
   tier: 2
   category: 2

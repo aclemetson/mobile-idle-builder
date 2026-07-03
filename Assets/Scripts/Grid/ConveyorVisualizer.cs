@@ -42,6 +42,7 @@ namespace MobileIdleBuilder
         private bool     _ownsFlowMaterial;
         private Material _channelMaterial;
         private bool     _ownsChannelMaterial;
+        private Camera   _cam;
 
         private static readonly Color FlowDeep  = new Color(0.06f, 0.20f, 0.35f);
         private static readonly Color FlowCrest = new Color(0.30f, 0.80f, 1.00f);
@@ -132,21 +133,15 @@ namespace MobileIdleBuilder
                 var item = em.GetComponentData<ConveyorItemData>(e);
                 seen.Add(e);
 
-                // Create sphere if not yet spawned
+                // Create the item visual if not yet spawned. Prefer the item's periodic-table
+                // tile sprite as a camera-facing billboard; fall back to a colour-coded sphere
+                // when no icon is available (e.g. in tests without an ItemDatabase).
                 if (!_itemSpheres.TryGetValue(e, out var sphere))
                 {
-                    sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    sphere.name = $"ConveyorItem_{e.Index}";
-                    sphere.transform.SetParent(gridRenderer.transform);
-                    sphere.transform.localScale = Vector3.one * 0.3f;
-                    Destroy(sphere.GetComponent<Collider>());
-
-                    var mr = sphere.GetComponent<MeshRenderer>();
-                    if (RenderingMaterials.Instance?.Opaque != null)
-                        mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
-                    mr.shadowCastingMode = ShadowCastingMode.Off;
-                    mr.receiveShadows    = false;
-                    SetMeshColor(mr, ItemColors.For(item.ItemID));
+                    var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
+                    sphere = (icon != null && icon.texture != null)
+                        ? CreateItemTile(gridRenderer.transform, icon.texture)
+                        : CreateItemSphere(gridRenderer.transform, item.ItemID);
                     _itemSpheres[e] = sphere;
                 }
 
@@ -158,6 +153,13 @@ namespace MobileIdleBuilder
                 Vector3 pos         = Vector3.Lerp(entryEdge, exitEdge, t);
                 pos.y               = 0.3f;
                 sphere.transform.localPosition = pos;
+
+                // Billboard tile quads to face the camera so the sprite stays readable as the
+                // camera orbits (harmless no-op for the symmetric sphere fallback).
+                if (_cam == null) _cam = Camera.main;
+                if (_cam != null)
+                    sphere.transform.rotation =
+                        Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
             }
 
             entities.Dispose();
@@ -359,6 +361,55 @@ namespace MobileIdleBuilder
             var mpb = new MaterialPropertyBlock();
             mpb.SetColor("_BaseColor", color);
             mr.SetPropertyBlock(mpb);
+        }
+
+        // A flat quad textured with the item's tile sprite (transparent-unlit material +
+        // per-item texture via MaterialPropertyBlock, so a single shared material serves all
+        // items). Billboarded toward the camera each frame in the update loop above.
+        private GameObject CreateItemTile(Transform parent, Texture tex)
+        {
+            var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            quad.name = "ConveyorItemTile";
+            quad.transform.SetParent(parent);
+            quad.transform.localScale = Vector3.one * 0.4f;
+            Destroy(quad.GetComponent<Collider>());
+
+            var mr = quad.GetComponent<MeshRenderer>();
+            // Tiles are fully opaque (dark corners), so use the opaque material — it renders solid
+            // and never washes out against the bright belt the way an alpha-blended quad did.
+            var mat = RenderingMaterials.Instance != null
+                ? (RenderingMaterials.Instance.Opaque != null
+                    ? RenderingMaterials.Instance.Opaque
+                    : RenderingMaterials.Instance.Transparent)
+                : null;
+            if (mat != null) mr.sharedMaterial = mat;
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+
+            var mpb = new MaterialPropertyBlock();
+            mpb.SetTexture("_BaseMap", tex);
+            mpb.SetColor("_BaseColor", Color.white);
+            mr.SetPropertyBlock(mpb);
+            return quad;
+        }
+
+        // Fallback visual: a colour-coded sphere (the original belt-item look) used when an
+        // item has no tile sprite.
+        private GameObject CreateItemSphere(Transform parent, int itemId)
+        {
+            var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.name = "ConveyorItem";
+            sphere.transform.SetParent(parent);
+            sphere.transform.localScale = Vector3.one * 0.3f;
+            Destroy(sphere.GetComponent<Collider>());
+
+            var mr = sphere.GetComponent<MeshRenderer>();
+            if (RenderingMaterials.Instance?.Opaque != null)
+                mr.sharedMaterial = RenderingMaterials.Instance.Opaque;
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+            SetMeshColor(mr, ItemColors.For(itemId));
+            return sphere;
         }
 
         private static Vector3 DirOffset(int dir, float magnitude)

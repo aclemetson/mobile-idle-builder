@@ -15,7 +15,7 @@ MonoBehaviour:
   id: rhenium
   displayName: Rhenium
   symbol: Re
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b93617efdbcaafc489c0a0cf48ecc811, type: 3}
   itemId: 110
   tier: 2
   category: 2

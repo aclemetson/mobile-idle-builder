@@ -15,7 +15,7 @@ MonoBehaviour:
   id: lead
   displayName: Lead
   symbol: Pb
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d3948fabb83d0864e9a6ac70a231299c, type: 3}
   itemId: 115
   tier: 2
   category: 2

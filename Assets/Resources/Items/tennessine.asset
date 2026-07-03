@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tennessine
   displayName: Tennessine
   symbol: Ts
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ed7a353e6c111d842a43b692b0a09e86, type: 3}
   itemId: 148
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tellurium
   displayName: Tellurium
   symbol: Te
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fc7c29b9140742f40b6898ce237fa61a, type: 3}
   itemId: 88
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: proton
   displayName: Proton
   symbol: "p\u207A"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5802c3ee06313ad44ae9bb58740e3d76, type: 3}
   itemId: 4
   tier: 1
   category: 1

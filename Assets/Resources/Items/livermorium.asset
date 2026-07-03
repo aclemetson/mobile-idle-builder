@@ -15,7 +15,7 @@ MonoBehaviour:
   id: livermorium
   displayName: Livermorium
   symbol: Lv
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1b715f700b181c445a4bad45f55cc233, type: 3}
   itemId: 147
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: meitnerium
   displayName: Meitnerium
   symbol: Mt
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 000b95b24c25c26449a6cca21bf28665, type: 3}
   itemId: 140
   tier: 2
   category: 2

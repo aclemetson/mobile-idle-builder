@@ -15,7 +15,7 @@ MonoBehaviour:
   id: fermium
   displayName: Fermium
   symbol: Fm
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 79c17a92ad2d43643896a721557859f4, type: 3}
   itemId: 131
   tier: 2
   category: 2

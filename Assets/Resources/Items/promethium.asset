@@ -15,7 +15,7 @@ MonoBehaviour:
   id: promethium
   displayName: Promethium
   symbol: Pm
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fb6c9ce70ec715e469dbb6518ee78e3d, type: 3}
   itemId: 97
   tier: 2
   category: 2

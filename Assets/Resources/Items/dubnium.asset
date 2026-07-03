@@ -15,7 +15,7 @@ MonoBehaviour:
   id: dubnium
   displayName: Dubnium
   symbol: Db
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c0c541c4e2e43194b9ee7c3d55a0215f, type: 3}
   itemId: 136
   tier: 2
   category: 2

@@ -391,7 +391,11 @@
                 <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
                 <ui:Button name="btn-close-inspector" text="✕" class="close-btn" />
             </ui:VisualElement>
-            <ui:ScrollView name="inspector-content" class="recipe-list"
+            <ui:VisualElement name="inspector-static" class="inspector-static" />
+            <ui:ScrollView name="inspector-recipes" class="inspector-scroll inspector-scroll--recipes"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+            <ui:ScrollView name="inspector-upgrades" class="inspector-scroll inspector-scroll--upgrades"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>

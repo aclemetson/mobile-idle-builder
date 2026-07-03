@@ -15,7 +15,7 @@ MonoBehaviour:
   id: down_quark
   displayName: Down Quark
   symbol: d
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d40144e1646d11544a0a76acfb1f5789, type: 3}
   itemId: 2
   tier: 1
   category: 0

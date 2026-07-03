@@ -15,7 +15,7 @@ MonoBehaviour:
   id: strontium
   displayName: Strontium
   symbol: Sr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6c6d1c67a1217ff429ec3fff1dbccfb0, type: 3}
   itemId: 75
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: rhodium
   displayName: Rhodium
   symbol: Rh
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 447b709c2f9077943bda08df200d4647, type: 3}
   itemId: 82
   tier: 2
   category: 2

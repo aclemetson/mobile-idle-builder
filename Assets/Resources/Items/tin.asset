@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tin
   displayName: Tin
   symbol: Sn
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f25f97ba0f8036544a4fdd0a62711c5d, type: 3}
   itemId: 86
   tier: 2
   category: 2

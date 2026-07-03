@@ -15,7 +15,7 @@ MonoBehaviour:
   id: cerium
   displayName: Cerium
   symbol: Ce
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d9ddf43d510247041a03736b1062a3bd, type: 3}
   itemId: 94
   tier: 2
   category: 2

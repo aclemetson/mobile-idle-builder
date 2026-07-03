@@ -15,7 +15,7 @@ MonoBehaviour:
   id: metamaterial
   displayName: Metamaterial
   symbol: MM
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 767f2d052129c574187b720698a3218f, type: 3}
   itemId: 45
   tier: 4
   category: 5

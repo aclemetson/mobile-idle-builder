@@ -15,7 +15,7 @@ MonoBehaviour:
   id: bismuth
   displayName: Bismuth
   symbol: Bi
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8378146a75d1bb14e810a1f779f65172, type: 3}
   itemId: 116
   tier: 2
   category: 2

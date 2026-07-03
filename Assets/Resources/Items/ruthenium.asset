@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ruthenium
   displayName: Ruthenium
   symbol: Ru
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5b175ca564b5316488cdcea3d1e18bc5, type: 3}
   itemId: 81
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: mendelevium
   displayName: Mendelevium
   symbol: Md
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a7aa41dc9deebfd4aa31dcabb1de7862, type: 3}
   itemId: 132
   tier: 2
   category: 2

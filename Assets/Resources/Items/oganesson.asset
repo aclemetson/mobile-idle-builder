@@ -15,7 +15,7 @@ MonoBehaviour:
   id: oganesson
   displayName: Oganesson
   symbol: Og
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 08dccbb9669d78f4ba199f64a0aa12ef, type: 3}
   itemId: 149
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: californium
   displayName: Californium
   symbol: Cf
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4be7901eb25991f4aae0566e1cf1c7af, type: 3}
   itemId: 129
   tier: 2
   category: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: osmium
   displayName: Osmium
   symbol: Os
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 65776efb52d0174438a3a3930434b469, type: 3}
   itemId: 111
   tier: 2
   category: 2

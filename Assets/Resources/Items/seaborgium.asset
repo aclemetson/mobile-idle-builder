@@ -15,7 +15,7 @@ MonoBehaviour:
   id: seaborgium
   displayName: Seaborgium
   symbol: Sg
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0b8ec05bc160e11449e3926d98d3c6d6, type: 3}
   itemId: 137
   tier: 2
   category: 2

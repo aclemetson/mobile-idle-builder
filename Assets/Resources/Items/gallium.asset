@@ -15,7 +15,7 @@ MonoBehaviour:
   id: gallium
   displayName: Gallium
   symbol: Ga
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ebd03a5b2b1955d45bd9cfffea7a10b2, type: 3}
   itemId: 68
   tier: 2
   category: 2

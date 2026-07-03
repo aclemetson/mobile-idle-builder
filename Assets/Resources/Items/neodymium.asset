@@ -15,7 +15,7 @@ MonoBehaviour:
   id: neodymium
   displayName: Neodymium
   symbol: Nd
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 08846cf84c439c14eb05e610dd455f6a, type: 3}
   itemId: 96
   tier: 2
   category: 2

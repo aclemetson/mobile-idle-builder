@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tantalum
   displayName: Tantalum
   symbol: Ta
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 52304dca3a4fb0044b47ca77dc0b4bb9, type: 3}
   itemId: 109
   tier: 2
   category: 2

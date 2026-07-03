@@ -15,7 +15,7 @@ MonoBehaviour:
   id: curium
   displayName: Curium
   symbol: Cm
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cbb5b8ea13c97024ab904b90d0b7d789, type: 3}
   itemId: 127
   tier: 2
   category: 2

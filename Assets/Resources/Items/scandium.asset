@@ -15,7 +15,7 @@ MonoBehaviour:
   id: scandium
   displayName: Scandium
   symbol: Sc
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e5c5640bfa9bd104a93c5eb296b9e856, type: 3}
   itemId: 62
   tier: 2
   category: 2

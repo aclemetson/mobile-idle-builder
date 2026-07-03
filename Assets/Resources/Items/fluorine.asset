@@ -15,7 +15,7 @@ MonoBehaviour:
   id: fluorine
   displayName: Fluorine
   symbol: F
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b41a7edf47d9d064f81bf7f1b8fe6ff5, type: 3}
   itemId: 52
   tier: 2
   category: 2

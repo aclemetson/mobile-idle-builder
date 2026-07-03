@@ -15,7 +15,7 @@ MonoBehaviour:
   id: radium
   displayName: Radium
   symbol: Ra
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 988df98b247a7a94180d056b23cde337, type: 3}
   itemId: 121
   tier: 2
   category: 2

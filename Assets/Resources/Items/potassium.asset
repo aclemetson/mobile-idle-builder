@@ -15,7 +15,7 @@ MonoBehaviour:
   id: potassium
   displayName: Potassium
   symbol: K
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 674362d423d94f9429883e919dce6383, type: 3}
   itemId: 60
   tier: 2
   category: 2

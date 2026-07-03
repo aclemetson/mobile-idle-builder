@@ -73,6 +73,64 @@
 }
 
 /* ================================================================
+   Item tile icons (periodic-table sprites in menus)
+   ================================================================ */
+/* Output-item icon shown on recipe rows / recipe-picker buttons. */
+.item-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    margin-right: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Smaller icon prefixed to each ingredient chip. */
+.recipe-input-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-right: 2px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Codex row: icon + name + entry text. */
+.codex-row {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    margin-bottom: var(--spacing-xs);
+}
+
+.codex-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    margin-right: var(--spacing-sm);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.codex-info {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.codex-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+.codex-entry {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+}
+
+/* ================================================================
    ProgressBar
    ================================================================ */
 
@@ -267,6 +325,9 @@
     left: var(--spacing-lg);
     right: var(--spacing-lg);
     bottom: 72px;
+    /* Cap the height so a long recipe list scrolls inside the panel instead of
+       growing upward off the top of the screen (Atom Generator has 100+ recipes). */
+    max-height: 60%;
     background-color: var(--color-surface);
     border-radius: var(--border-radius);
     border-width: 1px;

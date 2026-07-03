@@ -15,7 +15,7 @@ MonoBehaviour:
   id: uranium
   displayName: Uranium
   symbol: U
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f0f8a0eb8ffc9d646b0d3b74072aa535, type: 3}
   itemId: 13
   tier: 2
   category: 2

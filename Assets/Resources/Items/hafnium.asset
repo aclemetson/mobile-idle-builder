@@ -15,7 +15,7 @@ MonoBehaviour:
   id: hafnium
   displayName: Hafnium
   symbol: Hf
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ca4a032171639db4394aa6daccd5eef3, type: 3}
   itemId: 108
   tier: 2
   category: 2

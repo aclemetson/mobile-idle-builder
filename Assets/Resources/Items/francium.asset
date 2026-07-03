@@ -15,7 +15,7 @@ MonoBehaviour:
   id: francium
   displayName: Francium
   symbol: Fr
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fb2ec9e68711b1d46861d66fb09cdb1c, type: 3}
   itemId: 120
   tier: 2
   category: 2

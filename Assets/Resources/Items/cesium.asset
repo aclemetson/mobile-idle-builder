@@ -15,7 +15,7 @@ MonoBehaviour:
   id: cesium
   displayName: Cesium
   symbol: Cs
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ceb0e9f3f71a240478d54bddbbfecea2, type: 3}
   itemId: 91
   tier: 2
   category: 2

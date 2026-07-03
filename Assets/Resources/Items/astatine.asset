@@ -15,7 +15,7 @@ MonoBehaviour:
   id: astatine
   displayName: Astatine
   symbol: At
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ea137f8a57e28734bbff441368b974a5, type: 3}
   itemId: 118
   tier: 2
   category: 2

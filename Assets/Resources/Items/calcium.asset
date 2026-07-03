@@ -15,7 +15,7 @@ MonoBehaviour:
   id: calcium
   displayName: Calcium
   symbol: Ca
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8ad6aab7397b04f499ba1dada033406e, type: 3}
   itemId: 61
   tier: 2
   category: 2

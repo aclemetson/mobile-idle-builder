@@ -95,6 +95,46 @@ Notes:
 
 ---
 
+## Part 1.6 — Snapshots (named save-states)
+
+Capture the **entire current game state** (grid buildings/conveyors/fields, currency, inventory,
+tutorial progress, prestige, research) to a named file, then jump back to it any time. Unlike
+`tutorial skip <id>` (which restores scripted checkpoints), snapshots capture whatever you have set up
+right now — place buildings, wire conveyors, grind some resources, then snapshot it as a reusable
+starting point for testing.
+
+Snapshots are stored in `Application.persistentDataPath/snapshots/<name>.json`, separate from the real
+`save.json`, so they never collide with normal play. Names are a single word (`a-z`, `0-9`, `-`, `_`).
+
+### Commands
+
+| Command | What it does |
+|---------|--------------|
+| `snapshot save <name>` | Flushes live ECS + grid into the save, then writes `snapshots/<name>.json` |
+| `snapshot load <name>` | Swaps the in-memory save to the snapshot and reloads the scene (full re-apply) |
+| `snapshot list` | Lists every saved snapshot |
+| `snapshot delete <name>` | Removes a snapshot file |
+
+### How to verify
+
+- [ ] Place a couple of buildings + a conveyor, `add currency 5000`, then `snapshot save mytest`
+  - Expected: `Snapshot 'mytest' saved — N building(s), 5000e, tutorial '<step>'.`
+- [ ] `snapshot list` → shows `mytest`
+- [ ] `add currency 999999`, spawn more buildings, then `snapshot load mytest`
+  - Expected: `Loading snapshot 'mytest'...`, scene reloads
+  - After reload, `show progress` reports the **snapshot's** currency (not the 999999), and the grid
+    matches what you had when you saved
+- [ ] `snapshot delete mytest` → `Snapshot 'mytest' deleted.`; `snapshot list` no longer shows it
+
+Notes:
+- `snapshot load` reloads the scene (~1s), so the full save→ECS path re-applies the state cleanly.
+- Snapshots are editor / development-build only (the whole dev console is gated behind
+  `UNITY_EDITOR || DEVELOPMENT_BUILD`).
+- The auto-save loop will persist the loaded snapshot as the live save; if cloud save is on, it will
+  also push to cloud on the next interval. Use `clear save` to get back to a clean slate.
+
+---
+
 ## Part 2 — tutorial list
 
 ### 2.1 Basic Output

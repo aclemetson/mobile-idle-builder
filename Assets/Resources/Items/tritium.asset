@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tritium
   displayName: Tritium
   symbol: H-3
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 395ecbe4f67b98944811b56962e55cc9, type: 3}
   itemId: 15
   tier: 2
   category: 3

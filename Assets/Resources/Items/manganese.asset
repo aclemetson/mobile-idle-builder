@@ -15,7 +15,7 @@ MonoBehaviour:
   id: manganese
   displayName: Manganese
   symbol: Mn
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 521c593de97721245a05863899973e1d, type: 3}
   itemId: 66
   tier: 2
   category: 2

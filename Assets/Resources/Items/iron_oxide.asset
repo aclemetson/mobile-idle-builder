@@ -15,7 +15,7 @@ MonoBehaviour:
   id: iron_oxide
   displayName: Iron Oxide
   symbol: "Fe\u2082O\u2083"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cd0a353340471f54e8fc0628f74095d6, type: 3}
   itemId: 37
   tier: 3
   category: 4

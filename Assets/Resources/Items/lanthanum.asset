@@ -15,7 +15,7 @@ MonoBehaviour:
   id: lanthanum
   displayName: Lanthanum
   symbol: La
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f57845b34c799a9458bf6f6cc4db98c7, type: 3}
   itemId: 93
   tier: 2
   category: 2

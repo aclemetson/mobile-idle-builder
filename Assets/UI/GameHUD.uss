@@ -506,7 +506,54 @@
 /* ---- Recipe list ---- */
 .recipe-list {
     flex-grow: 1;
+    /* Allow the ScrollView to shrink below its content height so it actually
+       scrolls (instead of expanding the panel) when the recipe list is long. */
+    min-height: 0;
     padding: var(--spacing-sm);
+}
+
+/* The building inspector is the primary building UI and needs room for a long
+   recipe list plus upgrades, so anchor it top-and-bottom into a tall panel
+   (overriding the short bottom-anchored popup sizing it inherits from
+   .output-selector). Without this the static block + upgrades eat the capped
+   height and the recipe scroll collapses to nothing. */
+#building-inspector-panel {
+    top: var(--top-bar-height);
+    max-height: 100%;
+}
+
+/* Building inspector, three stacked regions:
+   - static status pinned on top (never scrolls),
+   - the recipe picker and the upgrades below it are two independent scrolls that
+     SHARE the leftover height. Both use flex-basis:0 so neither is collapsed by
+     its own content (the recipe list has 100+ elements; upgrades may grow), and
+     the flex-grow weights just bias how the leftover space is split. */
+.inspector-scroll {
+    padding: var(--spacing-sm);
+}
+
+.inspector-static {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: var(--spacing-sm);
+}
+
+.inspector-scroll--recipes {
+    flex-grow: 3;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    border-top-width: 1px;
+    border-top-color: var(--color-border);
+}
+
+.inspector-scroll--upgrades {
+    flex-grow: 2;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    border-top-width: 1px;
+    border-top-color: var(--color-border);
 }
 
 .recipe-row {
