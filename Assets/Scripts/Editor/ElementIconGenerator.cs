@@ -175,7 +175,7 @@ namespace MobileIdleBuilder.Editor
             readonly GameObject _root;
             readonly Camera _cam;
             readonly RenderTexture _rt;
-            readonly TextMeshPro _number, _symbol, _mass;
+            readonly TextMeshPro _symbol, _mass;
 
             public IconRig(TMP_FontAsset font)
             {
@@ -203,18 +203,22 @@ namespace MobileIdleBuilder.Editor
                 };
 
                 // NOTE: TMP 3D fontSize is in world units; at this camera scale ~1pt ≈ 0.3px,
-                // so sizes are large to read at 256px. Number/mass ~40px, symbol ~100px.
-                _number = MakeLabel(font, "Number", TextAlignmentOptions.TopLeft, 118f, Hex("#e6edf3"),
-                    new Vector4(26f, 22f, 0f, 0f));
-                _symbol = MakeLabel(font, "Symbol", TextAlignmentOptions.Center, 320f, Hex("#ffffff"),
-                    new Vector4(16f, 0f, 16f, 10f));
-                // Auto-shrink long formulas (e.g. molecule/component symbols like "SiO2", "UF6")
-                // so they fit the tile width, while 1-2 letter element symbols stay large.
-                _symbol.enableAutoSizing = true;
-                _symbol.fontSizeMax = 320f;
-                _symbol.fontSizeMin = 90f;
-                _mass = MakeLabel(font, "Mass", TextAlignmentOptions.Bottom, 132f, Hex("#e6edf3"),
-                    new Vector4(0f, 0f, 0f, 26f));
+                // so sizes are large to read at 256px. The belt tile now renders at half its old
+                // size, so the symbol must DOMINATE the tile to stay legible as a small billboard:
+                // a huge centred symbol fills nearly the whole tile, with the atomic mass shrunk to
+                // a small footer that still lets isotopes read distinctly from their parent element.
+                // Sizes are set EXPLICITLY per item (see SymbolFontSize / Render) rather than via
+                // TMP auto-sizing, which does not reliably converge in a one-shot editor render and
+                // was leaving the text tiny.
+                // Symbol centred in the upper region; the mass renders as a lifted footer below it.
+                // The mass was previously tiny and pinned to the texture's bottom edge (down in the dark
+                // border strip), so on single-char tiles like Hydrogen the '1' was effectively invisible.
+                // It is now much larger, and its bottom margin lifts it UP into the tile body, well clear
+                // of the symbol (which sits high thanks to its own 56px bottom margin).
+                _symbol = MakeLabel(font, "Symbol", TextAlignmentOptions.Center, 980f, Hex("#ffffff"),
+                    new Vector4(6f, 2f, 6f, 56f));
+                _mass = MakeLabel(font, "Mass", TextAlignmentOptions.Bottom, 450f, Hex("#e6edf3"),
+                    new Vector4(10f, 0f, 10f, 46f));
             }
 
             TextMeshPro MakeLabel(TMP_FontAsset font, string name, TextAlignmentOptions align,
@@ -239,8 +243,9 @@ namespace MobileIdleBuilder.Editor
             public Texture2D Render(ItemSO it)
             {
                 bool isElement = it.atomicNumber > 0;
-                SetText(_number, isElement ? it.atomicNumber.ToString() : string.Empty);
-                SetText(_symbol, NormalizeSymbol(string.IsNullOrEmpty(it.symbol) ? it.displayName : it.symbol));
+                string sym = NormalizeSymbol(string.IsNullOrEmpty(it.symbol) ? it.displayName : it.symbol);
+                _symbol.fontSize = SymbolFontSize(sym.Length);
+                SetText(_symbol, sym);
                 SetText(_mass, isElement && it.atomicMass > 0 ? it.atomicMass.ToString() : string.Empty);
 
                 // Render the text layer over a transparent background.
@@ -268,6 +273,25 @@ namespace MobileIdleBuilder.Editor
                 tmp.ForceMeshUpdate();
             }
 
+            // Explicit symbol size by character count (no auto-sizing). Short element symbols get
+            // huge so they fill the tile; longer isotope/molecule formulas (U-235, SiO2) step down
+            // so they still fit the tile width. Values tuned for the 256px tile at ~0.3 px per
+            // point. Single-char symbols can go largest; two-char are held back so they don't
+            // overrun the tile width.
+            static float SymbolFontSize(int len)
+            {
+                switch (len)
+                {
+                    case 0:
+                    case 1:  return 980f;
+                    case 2:  return 720f;
+                    case 3:  return 580f;
+                    case 4:  return 460f;
+                    case 5:  return 380f;
+                    default: return Mathf.Max(280f, 1800f / len);
+                }
+            }
+
             // The LiberationSans SDF atlas has no subscript/superscript glyphs, so molecule and
             // component formulas (H2O, SiO2, UF6, Fe2O3, Fe-C) would render as boxes. Fold those
             // decorative code points down to ASCII so every symbol renders.
@@ -283,16 +307,21 @@ namespace MobileIdleBuilder.Editor
                     else if (c == '²') sb.Append('2');
                     else if (c == '³') sb.Append('3');
                     else if (c >= '⁴' && c <= '⁹') sb.Append((char)('4' + (c - '⁴'))); // superscript 4-9
+                    else if (c == '⁺' || c == '₊') sb.Append('+');                     // super/subscript plus  (proton p⁺)
+                    else if (c == '⁻' || c == '₋' || c == '−') sb.Append('-');         // super/subscript / Unicode minus  (electron e⁻)
                     else if (c == '·' || c == '•' || c == '°') sb.Append('-');         // middle dot / bullet / degree
                     else sb.Append(c);
                 }
                 return sb.ToString();
             }
 
-            // Draws the rounded-rect backdrop and alpha-composites the text over it.
+            // Draws the rounded-rect backdrop and composites the text over it. The tile is fully
+            // OPAQUE: outside the rounded rect it fades to the dark base colour rather than to
+            // transparency. That dark matches the HUD panel (so menu icons still read as rounded)
+            // and, crucially, makes the belt billboard solid so it never washes out over the belt.
             static Texture2D Composite(Color regime, Texture2D textLayer)
             {
-                Color inner = Color.Lerp(BaseDark, regime, 0.35f); // muted regime tint
+                Color inner = Color.Lerp(BaseDark, regime, 0.55f); // solid regime tint
                 Color border = regime;
                 var pixels = new Color32[Size * Size];
                 var textPixels = textLayer.GetPixels32();
@@ -306,29 +335,31 @@ namespace MobileIdleBuilder.Editor
                     {
                         float sd = RoundedRectSD(new Vector2(x + 0.5f, y + 0.5f), center, half, CornerRadius);
 
-                        // Coverage: 1 well inside, fading to 0 across the outer edge (AA).
+                        // Coverage: 1 well inside the rounded rect, fading to 0 across the outer edge (AA).
                         float coverage = Mathf.Clamp01(0.5f - sd);
-                        Color bg;
+                        Color insideFill;
                         if (-sd <= BorderThickness)
                         {
                             // Blend border->inner across a 1px seam for a clean inner edge.
                             float t = Mathf.Clamp01(-sd - BorderThickness + 1f);
-                            bg = Color.Lerp(border, inner, t);
+                            insideFill = Color.Lerp(border, inner, t);
                         }
                         else
                         {
-                            bg = inner;
+                            insideFill = inner;
                         }
-                        bg.a = coverage;
+
+                        // Opaque backdrop: corners fade to the dark base, interior is the fill.
+                        Color bg = Color.Lerp(BaseDark, insideFill, coverage);
 
                         Color txt = textPixels[y * Size + x];
-                        // Alpha-over: text on top of the backdrop.
+                        // Alpha-over: text on top of the opaque backdrop.
                         float ta = txt.a;
                         Color outc;
                         outc.r = txt.r * ta + bg.r * (1f - ta);
                         outc.g = txt.g * ta + bg.g * (1f - ta);
                         outc.b = txt.b * ta + bg.b * (1f - ta);
-                        outc.a = ta + bg.a * (1f - ta);
+                        outc.a = 1f; // fully opaque
                         pixels[y * Size + x] = outc;
                     }
                 }

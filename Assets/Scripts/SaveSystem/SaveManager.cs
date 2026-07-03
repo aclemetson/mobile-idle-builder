@@ -278,6 +278,22 @@ namespace MobileIdleBuilder
             IsNewGame = true;
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// Dev-only: replaces the in-memory save with <paramref name="data"/> and writes it to disk.
+        /// Used by the dev-console snapshot loader — after calling this, reload the scene so
+        /// ECSLoadBridge re-applies the swapped state to ECS. Clears IsNewGame so the restored
+        /// currency/inventory are actually applied on reload (ApplyLoadedSave skips them for new games).
+        /// </summary>
+        public void DevReplaceCurrent(SaveData data)
+        {
+            if (data == null) return;
+            _current  = data;
+            IsNewGame = false;
+            _local.Save(_current);
+        }
+#endif
+
 #if UNITY_EDITOR
         /// <summary>Test seam: replace the cloud service after Awake but before Start runs.</summary>
         internal void SetCloudServiceForTesting(ICloudSaveService cloud) => _cloud = cloud;
