@@ -325,6 +325,9 @@
     left: var(--spacing-lg);
     right: var(--spacing-lg);
     bottom: 72px;
+    /* Cap the height so a long recipe list scrolls inside the panel instead of
+       growing upward off the top of the screen (Atom Generator has 100+ recipes). */
+    max-height: 60%;
     background-color: var(--color-surface);
     border-radius: var(--border-radius);
     border-width: 1px;
