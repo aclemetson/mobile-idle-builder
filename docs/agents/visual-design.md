@@ -3,6 +3,7 @@
 > Verified against: `feature/field-wire-mesh`, 2026-06-25.
 > Port holes + Atom Generator structure + per-building drafts added 2026-06-27.
 > Element tile icons added 2026-07-02.
+> Power Relay "broadcast pylon" structure + placement radius ring/highlight added 2026-07-03.
 
 How buildings and field structures are rendered, and the art direction they should follow.
 Read this when touching structure visuals, procedural geometry, or shaders.
@@ -252,6 +253,12 @@ door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Pro
   spindle (`CollectorMeshBuilder`, FrontFlattenFrac=1) tapering to a crackling tip; electric cyan; a
   ~1.5s heartbeat flares the tip and emits expanding, fading flat light-rings (`TorusMeshBuilder`) on the
   ground — power broadcasting. Not a producer, so the pulse is time-driven.
+- **Power Relay — "broadcast pylon"** (`PowerRelayStructure`, Power `1×2`, no holes): a tall smooth amber
+  mast (`RoundedBoxMeshBuilder`, narrow, sized to the footprint) crowned by a horizontal spinning
+  broadcast ring (`TorusMeshBuilder`), emitting **wider, slower** ground ripples than the generator.
+  Deliberately distinct from the generator's thin cyan spire (taller, amber, prominent crown ring). A
+  spreader, not a source — extends coverage but generates no eV; the pulse is time-driven. Reuses the
+  registered `MobileIdleBuilder/CollectorStructure` shader (no new shader/GraphicsSettings entry).
 - **Strong Force Combiner** (`StrongForceCombinerStructure`, 2×1): a soft **rounded rectangular prism**
   (`RoundedBoxMeshBuilder` — a superellipsoid dome that fills the footprint, Roundness 0.5) flowing from
   its two inlet faces to its single outlet face, doors flush on the flat faces. A binding glow builds
@@ -279,3 +286,18 @@ door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Pro
 `RoundedBoxMeshBuilder` (superellipsoid dome) is the reusable form for footprint-filling solid bodies;
 `CollectorMeshBuilder` (with FrontFlattenFrac=1) gives round spindles; `AtomNucleusMeshBuilder` gives the
 nucleus bulb. Pick/compose these for any future building rather than adding one-off builders.
+
+## Placement power-radius preview
+
+While a power building (generator or relay) is being positioned, the influence radius is shown as a flat
+circular **ring** on the ground plus **lighting up the placed buildings inside it** (reverting those
+outside) live as the ghost moves — replacing the old square blue tile wash. Two pieces:
+- `Assets/Scripts/Grid/PlacementRadiusIndicator.cs` — a looped `LineRenderer` circle laid flat in XZ,
+  created at runtime by `BuildingPlacementController` (no scene wiring, like the ghost arrow). `Show`/`Hide`.
+- `BuildingVisualizer.HighlightBuildingsInRange` / `ClearRangeHighlight` — tint the in-range cubes'
+  `PresenceReceiver` to a teal-green preview colour (reusing the `SetHover`/`RefreshPowerTint` colour path)
+  and restore on placement/cancel. `RefreshPowerTint` stands down while the preview is active.
+The set of lit buildings uses the shared `PowerCoverageMath.FootprintWithinRadius` (a building lights up
+if any part of its footprint square overlaps the circular power area), so it equals what `PowerGridSystem`
+will actually power and matches the drawn ring. `GridRenderer.ShowPowerCoverage` (the tile wash, still used
+by the building inspector when a placed generator is selected) also routes through the same helper.

@@ -32,11 +32,72 @@ namespace MobileIdleBuilder
         private BuildingPlacementController _placement;
         private HUDController              _hud;
         private GridRenderer              _gridRenderer;
+        private BuildingVisualizer        _buildingVisualizer;
+        private PlacementRadiusIndicator  _radiusIndicator;
+
+        // Matches BuildingVisualizer's in-range tint / the placement ring colour.
+        private static readonly Color PowerRadiusColor = new Color(0.35f, 1f, 0.75f, 0.9f);
 
         private GridRenderer GetGridRenderer()
         {
             if (_gridRenderer == null) _gridRenderer = FindAnyObjectByType<GridRenderer>();
             return _gridRenderer;
+        }
+
+        private BuildingVisualizer GetBuildingVisualizer()
+        {
+            if (_buildingVisualizer == null) _buildingVisualizer = FindAnyObjectByType<BuildingVisualizer>();
+            return _buildingVisualizer;
+        }
+
+        /// <summary>Lazily creates the selection radius ring (runtime GameObject, no scene wiring).</summary>
+        private PlacementRadiusIndicator EnsureRadiusIndicator()
+        {
+            if (_radiusIndicator == null)
+            {
+                var gr = GetGridRenderer();
+                if (gr == null) return null;
+                var go = new GameObject("InspectorPowerRadius");
+                go.transform.SetParent(gr.transform, worldPositionStays: false);
+                _radiusIndicator = go.AddComponent<PlacementRadiusIndicator>();
+            }
+            return _radiusIndicator;
+        }
+
+        /// <summary>
+        /// Draws the selected power building's reach as a circular ring and lights up the buildings it
+        /// powers (all placed buildings whose footprint overlaps its radius, excluding the source itself).
+        /// Mirrors the placement preview; the ring radius equals the powered area exactly.
+        /// </summary>
+        private void ShowSelectedPowerRadius(int cellX, int cellY, int fw, int fh, float radius)
+        {
+            var gr = GetGridRenderer();
+            if (gr == null || cellX < 0) return;
+
+            float cs     = gr.CellSize;
+            var   center = new Vector3((cellX + (fw - 1) * 0.5f) * cs, 0f, (cellY + (fh - 1) * 0.5f) * cs);
+            float worldRadius = radius * cs + Mathf.Max(fw, fh) * 0.5f * cs;
+
+            EnsureRadiusIndicator()?.Show(center, worldRadius, PowerRadiusColor);
+            GetBuildingVisualizer()?.HighlightBuildingsInRange(cellX, cellY, fw, fh, radius, (cellX, cellY));
+        }
+
+        /// <summary>Hides the selection ring and reverts the buildings it lit.</summary>
+        private void ClearSelectedPowerVisual()
+        {
+            _radiusIndicator?.Hide();
+            GetBuildingVisualizer()?.ClearRangeHighlight();
+        }
+
+        // Compact-card modifier: a selected power building shows a small top-right card (instead of the
+        // full-width bottom slab) so the influence-radius ring on the grid stays visible.
+        private const string PowerCardClass = "output-selector--power";
+
+        private void SetPowerCardCompact(bool compact)
+        {
+            if (_buildingInspectorPanel == null) return;
+            if (compact) _buildingInspectorPanel.AddToClassList(PowerCardClass);
+            else         _buildingInspectorPanel.RemoveFromClassList(PowerCardClass);
         }
 
         public void Init(VisualElement root, BuildingPlacementController placement, HUDController hud)
@@ -81,7 +142,8 @@ namespace MobileIdleBuilder
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
-            GetGridRenderer()?.ClearPowerCoverage();
+            ClearSelectedPowerVisual();
+            SetPowerCardCompact(false);
         }
 
         private void RefreshInspectorContent()
@@ -93,15 +155,12 @@ namespace MobileIdleBuilder
             _inspectorStatic.Clear();
             _inspectorRecipes.Clear();
             _inspectorUpgrades.Clear();
-            // Clear any coverage from a previously-selected generator; re-shown below if this one is a source.
-            GetGridRenderer()?.ClearPowerCoverage();
+            // Clear any radius visual from a previously-selected generator; re-shown below if this one is a source.
+            ClearSelectedPowerVisual();
 
-            BuildingData buildingData = default;
-            if (_em.HasComponent<BuildingData>(_inspectorEntity))
-            {
-                buildingData = _em.GetComponentData<BuildingData>(_inspectorEntity);
-                AddInspectorRow(_inspectorStatic, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
-            }
+            bool hasBuildingData = _em.HasComponent<BuildingData>(_inspectorEntity);
+            BuildingData buildingData = hasBuildingData
+                ? _em.GetComponentData<BuildingData>(_inspectorEntity) : default;
 
             int buildingCellX = -1, buildingCellY = -1;
             if (_em.HasComponent<GridPosition>(_inspectorEntity))
@@ -109,8 +168,26 @@ namespace MobileIdleBuilder
                 var p = _em.GetComponentData<GridPosition>(_inspectorEntity);
                 buildingCellX = p.Cell.x;
                 buildingCellY = p.Cell.y;
-                AddInspectorRow(_inspectorStatic, $"Cell: ({p.Cell.x}, {p.Cell.y})");
             }
+
+            var buildingSO = GetBuildingSO(_inspectorEntity);
+
+            // Power sources (generators, relays) get a MINIMAL top-right card so the on-grid influence
+            // ring stays visible: Output/Coverage + the coverage upgrade only. Grid-wide power totals live
+            // in the top-bar power readout; Active/Cell/Manager rows are omitted for power buildings.
+            if (buildingSO != null && buildingSO.isPowerSource)
+            {
+                SetPowerCardCompact(true);
+                AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
+                AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
+                return;
+            }
+            SetPowerCardCompact(false);
+
+            if (hasBuildingData)
+                AddInspectorRow(_inspectorStatic, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
+            if (buildingCellX >= 0)
+                AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
 
             if (_em.HasComponent<CollectorData>(_inspectorEntity))
             {
@@ -159,7 +236,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            var buildingSO = GetBuildingSO(_inspectorEntity);
+            // buildingSO fetched above (before the power-source early-out).
 
             // Field-collector recipe display: show what the underlying field produces.
             // If the field has exactly one drop item (or only one matching recipe), skip the
@@ -304,17 +381,14 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorStatic, $"Output: {outputEV:0.#} eV");
                 AddInspectorRow(_inspectorStatic, $"Coverage: {radius:0.#} tiles");
 
-                var gr = GetGridRenderer();
-                if (gr != null && cellX >= 0)
+                int fw = 1, fh = 1;
+                if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
                 {
-                    int fw = 1, fh = 1;
-                    if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
-                    {
-                        var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
-                        fw = f.Width; fh = f.Height;
-                    }
-                    gr.ShowPowerCoverage(cellX, cellY, fw, fh, radius);
+                    var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
+                    fw = f.Width; fh = f.Height;
                 }
+                // Show the reach as a circular ring and light up the buildings this source powers.
+                ShowSelectedPowerRadius(cellX, cellY, fw, fh, radius);
             }
             else if (so.requiresPower && _em.HasComponent<PowerStatus>(_inspectorEntity))
             {
@@ -350,7 +424,8 @@ namespace MobileIdleBuilder
 
             var header = new VisualElement();
             header.AddToClassList("upgrade-row-header");
-            var nameLabel  = new Label("Speed Upgrade");
+            // Power sources upgrade coverage/output, not craft speed — label it accordingly.
+            var nameLabel  = new Label(so.isPowerSource ? "Coverage Upgrade" : "Speed Upgrade");
             nameLabel.AddToClassList("upgrade-row-name");
             var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
             levelLabel.AddToClassList("upgrade-row-level");
@@ -360,7 +435,14 @@ namespace MobileIdleBuilder
 
             if (!isMaxed && next.HasValue)
             {
-                var desc = new Label($"{next.Value.outputRate:F1}× production speed");
+                string descText;
+                if (so.isPowerSource)
+                    descText = next.Value.outputEV > 0f
+                        ? $"→ {next.Value.outputEV:0.#} eV  ·  {next.Value.influenceRadiusTiles:0.#} tiles"
+                        : $"→ {next.Value.influenceRadiusTiles:0.#} tiles coverage";
+                else
+                    descText = $"{next.Value.outputRate:F1}× production speed";
+                var desc = new Label(descText);
                 desc.AddToClassList("upgrade-row-desc");
                 row.Add(desc);
 

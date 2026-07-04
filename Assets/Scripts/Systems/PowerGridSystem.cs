@@ -136,19 +136,32 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// True if the consumer rectangle [cMinX..cMaxX] x [cMinY..cMaxY] is within the influence
-        /// radius of any generator (Euclidean edge-to-edge tile gap &lt;= radius).
+        /// True if the consumer rectangle [cMinX..cMaxX] x [cMinY..cMaxY] overlaps the circular power area
+        /// of ANY generator. The power area is a circle centred on the generator footprint with radius
+        /// Rc = InfluenceRadius + half its larger dimension; a consumer connects if any part of its
+        /// footprint SQUARE (each cell spans +/-0.5) touches that circle. Managed mirror:
+        /// <see cref="PowerCoverageMath.FootprintWithinRadius"/> (keep the two in sync).
         /// </summary>
         private static bool IsWithinAnyGenerator(NativeList<GenBox> gens,
                                                  int cMinX, int cMinY, int cMaxX, int cMaxY)
         {
+            float tMinWX = cMinX - 0.5f, tMaxWX = cMaxX + 0.5f;
+            float tMinWY = cMinY - 0.5f, tMaxWY = cMaxY + 0.5f;
+
             for (int i = 0; i < gens.Length; i++)
             {
                 var g = gens[i];
-                int gapX = math.max(0, math.max(g.MinX - cMaxX, cMinX - g.MaxX));
-                int gapY = math.max(0, math.max(g.MinY - cMaxY, cMinY - g.MaxY));
-                float distSq = gapX * (float)gapX + gapY * (float)gapY;
-                if (distSq <= g.Radius * g.Radius) return true;
+                if (g.Radius <= 0f) continue;
+
+                float srcW = g.MaxX - g.MinX + 1;
+                float srcH = g.MaxY - g.MinY + 1;
+                float ccx  = (g.MinX + g.MaxX) * 0.5f;
+                float ccy  = (g.MinY + g.MaxY) * 0.5f;
+                float rc   = g.Radius + math.max(srcW, srcH) * 0.5f;
+
+                float dx = math.max(0f, math.max(tMinWX - ccx, ccx - tMaxWX));
+                float dy = math.max(0f, math.max(tMinWY - ccy, ccy - tMaxWY));
+                if (dx * dx + dy * dy <= rc * rc) return true;
             }
             return false;
         }

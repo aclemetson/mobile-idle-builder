@@ -337,6 +337,75 @@
     align-items: stretch;
 }
 
+/* Compact top-right card for a selected power building (generator / relay) so the influence-radius
+   ring drawn on the grid stays visible, instead of the full-width bottom slab covering it. The card
+   sizes to its (small) content rather than the tall top-and-bottom flex layout the inspector uses for
+   crafters, so its stats + upgrade sit tight with no empty scroll gap. */
+.output-selector--power {
+    left: auto;
+    right: var(--spacing-lg);
+    top: var(--top-bar-height);
+    bottom: auto;
+    width: 264px;
+    height: auto;
+    max-height: 70%;
+    /* Tighter panel padding than the wide crafter panel so the narrow card has usable content width. */
+    padding: var(--spacing-sm);
+}
+
+/* Power buildings have no recipes — drop the empty recipe scroll (and its stray divider). */
+.output-selector--power .inspector-scroll--recipes {
+    display: none;
+}
+
+/* Reclaim horizontal room: the stats block and the upgrade scroll add their own side padding on top
+   of the panel padding, which in a narrow card clipped the upgrade name / cost / button. Zero their
+   sides so only the panel padding (and the upgrade row's own inset) insets the content. */
+.output-selector--power .inspector-static {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Size the upgrade block to its single row instead of collapsing to just the scrollbar arrows
+   (flex-basis:0 only distributes height inside a top-and-bottom anchored panel; this card is
+   content-sized). */
+.output-selector--power .inspector-scroll--upgrades {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Trim the upgrade row's own side padding and let its title shrink so nothing clips at card width. */
+.output-selector--power .upgrade-row {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+}
+
+.output-selector--power .upgrade-row-name {
+    flex-shrink: 1;
+}
+
+/* Tighter header padding in the narrow card; the right pad reserves the corner ✕ zone so the full
+   title ("Basic Generator") fits without ellipsizing. */
+.output-selector--power .panel-header {
+    padding: var(--spacing-sm);
+    padding-right: 48px;
+}
+
+.output-selector--power .panel-title {
+    font-size: var(--font-size-md);
+}
+
+/* Smaller corner ✕ for the compact card (position is inherited from the global absolute rule). */
+.output-selector--power .close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    font-size: var(--font-size-md);
+}
+
 .output-selector__title {
     color: var(--color-primary);
     font-size: var(--font-size-md);

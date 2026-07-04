@@ -146,7 +146,7 @@ namespace MobileIdleBuilder.Tests
         public void ConsumerWithinRadius_IsConnectedAtFullSpeed()
         {
             MakeGenerator(0, 0, outputEV: 50f, radius: 3f);
-            var consumer = MakeConsumer(3, 0, drawEV: 10f); // edge gap 3 == radius 3
+            var consumer = MakeConsumer(3, 0, drawEV: 10f); // square well inside the r3 power circle
 
             Tick();
 
@@ -155,10 +155,24 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void ConsumerOutsideRadius_IsDisconnectedAndStalled()
+        public void ConsumerSquarePartiallyOverlapsRadius_IsConnected()
+        {
+            // 1x1 generator radius 3 -> power circle Rc = 3.5. Cell (4,0)'s near edge sits at x=3.5, on the
+            // ring: the square only partially reaches into the circle but must now count as within.
+            MakeGenerator(0, 0, outputEV: 50f, radius: 3f);
+            var consumer = MakeConsumer(4, 0, drawEV: 10f);
+
+            Tick();
+
+            Assert.AreEqual(1, Status(consumer).IsConnected,
+                "a footprint that only partially overlaps the power area must be powered");
+        }
+
+        [Test]
+        public void ConsumerFullyOutsideRadius_IsDisconnectedAndStalled()
         {
             MakeGenerator(0, 0, outputEV: 50f, radius: 3f);
-            var consumer = MakeConsumer(4, 0, drawEV: 10f); // edge gap 4 > radius 3
+            var consumer = MakeConsumer(5, 0, drawEV: 10f); // near edge x=4.5 > Rc 3.5 -> no overlap
 
             Tick();
 
@@ -197,6 +211,39 @@ namespace MobileIdleBuilder.Tests
 
             Assert.AreEqual(1f, Status(consumer).ThrottleRatio, 0.001f, "discounted draw fits supply -> full speed");
             Assert.AreEqual(20f, GridState().Draw, 0.001f, "draw must reflect the manager PowerDiscount");
+        }
+
+        // ── Power Relay (spreader: adds no eV, extends coverage) ───────────────
+
+        [Test]
+        public void RelayExtendsCoverage_ConsumerReachableOnlyViaRelay_IsPowered()
+        {
+            // Generator far from the consumer (out of its small radius); a relay (MaxEV 0) sits next to
+            // the consumer and re-radiates the shared pool's reach.
+            MakeGenerator(0, 0, outputEV: 50f, radius: 1f);   // small reach, far away
+            MakeGenerator(9, 0, outputEV:  0f, radius: 3f);   // the relay: 0 output, wide radius
+            var consumer = MakeConsumer(10, 0, drawEV: 10f);  // gap 10 from gen (out), gap 1 from relay (in)
+
+            Tick();
+
+            Assert.AreEqual(1, Status(consumer).IsConnected, "relay coverage must connect the consumer");
+            Assert.AreEqual(1f, Status(consumer).ThrottleRatio, 0.001f,
+                "the generator's 50 eV covers the 10 eV draw carried through the relay");
+            Assert.AreEqual(50f, GridState().Supply, 0.001f, "the relay adds nothing to supply");
+        }
+
+        [Test]
+        public void RelayWithNoGenerator_LeavesConsumerConnectedButUnpowered()
+        {
+            MakeGenerator(0, 0, outputEV: 0f, radius: 3f);    // relay only, no real source
+            var consumer = MakeConsumer(1, 0, drawEV: 10f);
+
+            Tick();
+
+            Assert.AreEqual(1, Status(consumer).IsConnected, "the consumer is within the relay's radius");
+            Assert.AreEqual(0f, Status(consumer).ThrottleRatio, 0.001f,
+                "supply is 0 with no generator, so the relay alone provides no power");
+            Assert.AreEqual(0f, GridState().Supply, 0.001f);
         }
 
         [Test]
