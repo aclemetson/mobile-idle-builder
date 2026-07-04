@@ -3,6 +3,7 @@
 **Scope:** How game content is authored, imported, and consumed. Read before adding/changing items, recipes, buildings, research, tiers, fields, dialogue, or any new content type.
 
 > Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Power Relay added (`building_id 13`) 2026-07-03 — next free `building_id` is 14.
 
 ## Single source of truth
 

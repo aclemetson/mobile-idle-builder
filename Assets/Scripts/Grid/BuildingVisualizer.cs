@@ -47,13 +47,21 @@ namespace MobileIdleBuilder
 
         private (int, int) _hoveredCell = (-1, -1);
 
+        // While a power building is being positioned, the anchors whose cubes are currently tinted the
+        // in-range preview colour, plus a flag so RefreshPowerTint stands down (it would otherwise fight
+        // the preview on its 0.4s tick, same rationale as the _hoveredCell skip).
+        private readonly HashSet<(int, int)> _rangeHighlighted = new();
+        private bool _radiusPreviewActive;
+
         private static readonly Color DefaultCubeColor   = Color.white;
         private static readonly Color HoverCubeColor     = new Color(1f, 0.82f, 0.15f); // yellow hover highlight
         private static readonly Color UnpoweredCubeColor = new Color(0.9f,  0.25f, 0.25f); // red — no power in range
+        private static readonly Color InRangePreviewColor = new Color(0.35f, 1f, 0.75f);  // bright teal-green — inside a generator's radius during placement
         private static readonly Color EntropySinkGold    = new Color(1.0f, 0.78f, 0.30f); // Maxwell's Demon torus base
         private static readonly Color AtomGeneratorGold  = new Color(1.0f, 0.66f, 0.22f); // Atom Generator nucleus base
         private static readonly Color IsotopicGreen      = new Color(0.5f, 0.85f, 0.55f); // Isotopic Manipulator nucleus base
         private static readonly Color GeneratorCyan       = new Color(0.30f, 0.85f, 1.0f); // Basic Generator spire base
+        private static readonly Color RelayAmber          = new Color(1.0f, 0.70f, 0.25f); // Power Relay broadcast-pylon base
         private static readonly Color CombinerSteel       = new Color(0.7f, 0.78f, 0.85f); // Strong Force Combiner knot base
         private static readonly Color MoleculeTeal        = new Color(0.2f, 0.8f, 0.8f);   // Molecular Synthesizer base
         private static readonly Color ForgeSteel          = new Color(0.45f, 0.45f, 0.48f);// Materials Forge furnace base
@@ -211,6 +219,10 @@ namespace MobileIdleBuilder
                     {
                         baseColor = GeneratorCyan; // electric cyan spire base
                     }
+                    else if (styleKind == BuildingStructureKind.PowerRelay)
+                    {
+                        baseColor = RelayAmber; // amber broadcast-pylon base
+                    }
                     else if (styleKind == BuildingStructureKind.StrongForceCombiner)
                     {
                         baseColor = CombinerSteel; // pale steel knot base
@@ -287,6 +299,15 @@ namespace MobileIdleBuilder
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
                         cube.transform.localScale = Vector3.one * cs;
                         cube.AddComponent<BasicGeneratorStructure>().Initialize();
+                    }
+                    else if (styleKind == BuildingStructureKind.PowerRelay)
+                    {
+                        // Uniform cell scale; the mast body sizes itself to the footprint (fw x fh).
+                        cube.name = $"PowerRelay_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(
+                            (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        cube.AddComponent<PowerRelayStructure>().Initialize(fw, fh);
                     }
                     else if (styleKind == BuildingStructureKind.StrongForceCombiner)
                     {
@@ -446,6 +467,8 @@ namespace MobileIdleBuilder
         private void RefreshPowerTint()
         {
             if (!_powerStatusQueryReady || _powerStatusQuery.IsEmpty) return;
+            // Stand down while the placement radius preview owns the cube colours.
+            if (_radiusPreviewActive) return;
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated) return;
@@ -634,6 +657,61 @@ namespace MobileIdleBuilder
             if (_spawnedCubes.TryGetValue(_hoveredCell, out var prev) && prev != null)
                 ApplyCubeColor(prev, BaseColorFor(_hoveredCell));
             _hoveredCell = (-1, -1);
+        }
+
+        // ----------------------------------------------------------------
+        // Power-radius placement preview
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Lights up every placed building whose footprint overlaps the circular power area of the source
+        /// footprint rect (gridX, gridY, w, h) with influence <paramref name="radius"/> tiles (the same
+        /// overlap test PowerGridSystem uses) and restores those that fall outside. Used both while
+        /// positioning a power building and while a placed one is selected in the inspector. Pass
+        /// <paramref name="exclude"/> to keep one anchor (e.g. the selected source itself) un-highlighted.
+        /// Call <see cref="ClearRangeHighlight"/> when the preview/selection ends. RefreshPowerTint stands
+        /// down while this is active so the two don't fight.
+        /// </summary>
+        public void HighlightBuildingsInRange(int gridX, int gridY, int w, int h, float radius,
+                                              (int, int)? exclude = null)
+        {
+            _radiusPreviewActive = true;
+            int gMaxX = gridX + w - 1;
+            int gMaxY = gridY + h - 1;
+
+            foreach (var kv in _spawnedCubes)
+            {
+                var anchor = kv.Key;
+                var cube   = kv.Value;
+                if (cube == null) continue;
+
+                int fw = 1, fh = 1;
+                if (_footprints.TryGetValue(anchor, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
+                bool inRange = !(exclude.HasValue && anchor == exclude.Value)
+                    && PowerCoverageMath.FootprintWithinRadius(
+                        gridX, gridY, gMaxX, gMaxY,
+                        anchor.Item1, anchor.Item2, anchor.Item1 + fw - 1, anchor.Item2 + fh - 1, radius);
+
+                if (inRange)
+                {
+                    ApplyCubeColor(cube, InRangePreviewColor);
+                    _rangeHighlighted.Add(anchor);
+                }
+                else if (_rangeHighlighted.Remove(anchor))
+                {
+                    ApplyCubeColor(cube, BaseColorFor(anchor));
+                }
+            }
+        }
+
+        /// <summary>Restores every building tinted by the radius preview back to its base colour.</summary>
+        public void ClearRangeHighlight()
+        {
+            foreach (var anchor in _rangeHighlighted)
+                if (_spawnedCubes.TryGetValue(anchor, out var cube) && cube != null)
+                    ApplyCubeColor(cube, BaseColorFor(anchor));
+            _rangeHighlighted.Clear();
+            _radiusPreviewActive = false;
         }
 
         /// <summary>The logical base colour for a cell (field colour for collectors, else white).</summary>

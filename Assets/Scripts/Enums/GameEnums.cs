@@ -54,7 +54,8 @@ namespace MobileIdleBuilder
         MaterialsForge,     // crucible
         ComponentFabricator,// precision crown
         RadioactiveContainment, // lead shell
-        BasicGenerator      // energy spire
+        BasicGenerator,     // energy spire
+        PowerRelay          // broadcast pylon
     }
 
     public enum FieldType

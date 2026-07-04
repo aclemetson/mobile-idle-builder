@@ -474,6 +474,10 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-md);
+    /* Reserve the top-right corner for the absolutely-pinned close button so the title / any
+       middle element (Deconstruct, crystal balance) never runs under it. */
+    padding-right: 60px;
+    position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
 }
@@ -482,9 +486,19 @@
     color: var(--color-primary);
     font-size: var(--font-size-lg);
     -unity-font-style: bold;
+    flex-shrink: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* The close button is pinned to the panel/header top-right corner (absolute) so it never competes
+   with the title for row width. Every panel header (.panel-header / .demon-panel__header) is a
+   positioning context and reserves this corner via padding-right. */
 .close-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
     width: 44px;
     height: 44px;
     border-radius: 22px;
