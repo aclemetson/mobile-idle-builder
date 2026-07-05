@@ -11,6 +11,7 @@ namespace MobileIdleBuilder
         public float powerCostEV;
         public float outputEV;               // for generators
         public float influenceRadiusTiles;   // for generators
+        public float linkRadiusTiles;        // for power sources: node-to-node connection range
         public int costBaseCurrency;
         public int costPrestigeCurrency;     // 0 if not required
     }
@@ -203,6 +204,21 @@ namespace MobileIdleBuilder
             foreach (var u in so.upgradeLevels)
                 if (u.level == level) return u.influenceRadiusTiles > 0f ? u.influenceRadiusTiles : so.influenceRadiusTiles;
             return so.influenceRadiusTiles;
+        }
+
+        /// <summary>
+        /// Returns the link (connection) radius (tiles) for a power source at <paramref name="level"/>.
+        /// This is the node-to-node grid-connection range: two power buildings are linked when their
+        /// footprint distance is within max(rangeA, rangeB). Level 1 = so.linkRadiusTiles; higher levels
+        /// look up linkRadiusTiles from upgradeLevels, falling back to the base when the entry leaves it 0.
+        /// </summary>
+        public static float LinkRadiusForLevel(BuildingSO so, int level)
+        {
+            if (so == null) return 0f;
+            if (level <= 1 || so.upgradeLevels == null) return so.linkRadiusTiles;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level) return u.linkRadiusTiles > 0f ? u.linkRadiusTiles : so.linkRadiusTiles;
+            return so.linkRadiusTiles;
         }
 
         /// <summary>

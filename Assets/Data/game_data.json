@@ -8846,7 +8846,7 @@
       "power_cost_is_dynamic": false,
       "base_output_ev": 50.0,
       "influence_radius_tiles": 2.0,
-      "link_radius_tiles": 5.0,
+      "link_radius_tiles": 4.0,
       "base_output_rate": 0.0,
       "supported_recipes": [],
       "input_slot_count": 0,
@@ -8862,9 +8862,9 @@
       "base_max_output_items": 0,
       "base_max_input_items_per_slot": 0,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 100.0, "influence_radius_tiles": 3.0, "cost_base_currency": 400, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 200.0, "influence_radius_tiles": 4.0, "cost_base_currency": 1600, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 400.0, "influence_radius_tiles": 5.0, "cost_base_currency": 6000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 100.0, "influence_radius_tiles": 3.0, "link_radius_tiles": 5.0, "cost_base_currency": 400, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 200.0, "influence_radius_tiles": 4.0, "link_radius_tiles": 6.0, "cost_base_currency": 1600, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 400.0, "influence_radius_tiles": 5.0, "link_radius_tiles": 7.0, "cost_base_currency": 6000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [],
       "has_special_upgrade": false,
@@ -8893,9 +8893,9 @@
       "power_cost_is_dynamic": false,
       "base_output_ev": 0.0,
       "influence_radius_tiles": 5.0,
-      "link_radius_tiles": 0.0,
+      "link_radius_tiles": 6.0,
       "base_output_rate": 0.0,
-      "_note_relay": "A power SPREADER, not a source: is_power_source=true so PowerGridSystem treats its InfluenceRadius as a coverage box, but base_output_ev=0 means it adds nothing to the shared eV supply. It extends the powered area; it does not increase supply. A relay with no generator in the grid supplies 0 eV, so buildings it reaches stay throttled to 0.",
+      "_note_relay": "A power SPREADER, not a source: is_power_source=true so PowerGridSystem treats its InfluenceRadius as a coverage box, but base_output_ev=0 means it adds nothing to the shared eV supply. link_radius_tiles is the connection range: the relay only extends coverage while it chains (link by link, within max of the two nodes' link ranges) back to a real generator. A relay not linked to any generator provides NO coverage (IsGridLinked=false) and is skipped entirely by PowerGridSystem.",
       "supported_recipes": [],
       "input_slot_count": 0,
       "input_slot_labels": [],
@@ -8910,9 +8910,9 @@
       "base_max_output_items": 0,
       "base_max_input_items_per_slot": 0,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 6.0, "cost_base_currency": 800,  "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 7.0, "cost_base_currency": 3200, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 8.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 6.0, "link_radius_tiles": 7.0, "cost_base_currency": 800,  "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 7.0, "link_radius_tiles": 8.0, "cost_base_currency": 3200, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 8.0, "link_radius_tiles": 9.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [],
       "has_special_upgrade": false,

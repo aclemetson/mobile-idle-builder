@@ -29,7 +29,7 @@ MonoBehaviour:
   powerCostIsDynamic: 0
   baseOutputEV: 50
   influenceRadiusTiles: 2
-  linkRadiusTiles: 5
+  linkRadiusTiles: 4
   baseOutputRate: 0
   supportedRecipes: []
   inputSlotCount: 0
@@ -50,6 +50,7 @@ MonoBehaviour:
     powerCostEV: 0
     outputEV: 100
     influenceRadiusTiles: 3
+    linkRadiusTiles: 5
     costBaseCurrency: 400
     costPrestigeCurrency: 0
   - level: 3
@@ -57,6 +58,7 @@ MonoBehaviour:
     powerCostEV: 0
     outputEV: 200
     influenceRadiusTiles: 4
+    linkRadiusTiles: 6
     costBaseCurrency: 1600
     costPrestigeCurrency: 0
   - level: 4
@@ -64,6 +66,7 @@ MonoBehaviour:
     powerCostEV: 0
     outputEV: 400
     influenceRadiusTiles: 5
+    linkRadiusTiles: 7
     costBaseCurrency: 6000
     costPrestigeCurrency: 0
   storageUpgradeLevels: []

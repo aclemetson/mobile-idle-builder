@@ -160,6 +160,23 @@
     color: var(--color-primary);
 }
 
+/* Power-connection toggle: dim grey lightning bolt when off... */
+.power-toggle-btn {
+    color: rgb(120, 130, 138);
+}
+
+/* ...bright amber, glowing ring when on. */
+.power-toggle-btn--active {
+    color: rgb(255, 214, 51);
+    border-color: rgb(255, 214, 51);
+    background-color: rgba(255, 214, 51, 0.18);
+}
+
+.power-toggle-btn--active:hover {
+    color: rgb(255, 214, 51);
+    border-color: rgb(255, 214, 51);
+}
+
 .go-back-btn {
     width: 44px;
     height: 44px;

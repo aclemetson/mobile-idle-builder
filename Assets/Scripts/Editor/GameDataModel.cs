@@ -200,6 +200,7 @@ namespace MobileIdleBuilder.Editor
         public float power_cost_ev        = 0f;
         public float output_ev            = 0f;
         public float influence_radius_tiles = 0f;
+        public float link_radius_tiles    = 0f;
         public int   cost_base_currency   = 0;
         public int   cost_prestige_currency = 0;
     }

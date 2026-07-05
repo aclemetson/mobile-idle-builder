@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -185,6 +186,10 @@ namespace MobileIdleBuilder
         // Circular influence-radius preview for power buildings (built in code, no scene wiring).
         private PlacementRadiusIndicator _radiusIndicator;
         private static readonly Color RadiusRingColor = new Color(0.35f, 1f, 0.75f, 0.9f); // matches BuildingVisualizer's in-range tint
+
+        // Dashed lines to the power buildings the pending power source would link to (built in code).
+        private PowerConnectionRenderer _connectionRenderer;
+        private static readonly Color ConnectionLineColor = new Color(1f, 0.9f, 0.3f, 0.95f); // warm amber, reads as "wired"
 
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
@@ -422,6 +427,7 @@ namespace MobileIdleBuilder
                 float worldRadius = radius * cs + Mathf.Max(fp.x, fp.y) * 0.5f * cs;
                 EnsureRadiusIndicator().Show(center, worldRadius, RadiusRingColor);
                 buildingVisualizer?.HighlightBuildingsInRange(cell.x, cell.y, fp.x, fp.y, radius);
+                ShowConnectionPreview(cell, fp, center, cs);
             }
             else
             {
@@ -563,7 +569,49 @@ namespace MobileIdleBuilder
         private void HideRadiusPreview()
         {
             _radiusIndicator?.Hide();
+            _connectionRenderer?.Hide();
             buildingVisualizer?.ClearRangeHighlight();
+        }
+
+        /// <summary>Lazily creates the dashed power-connection renderer (runtime GameObject, no scene wiring).</summary>
+        private PowerConnectionRenderer EnsureConnectionRenderer()
+        {
+            if (_connectionRenderer == null)
+            {
+                var go = new GameObject("PowerConnectionPreview");
+                go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+                _connectionRenderer = go.AddComponent<PowerConnectionRenderer>();
+            }
+            return _connectionRenderer;
+        }
+
+        /// <summary>
+        /// Draws dashed lines from the pending power source (ghost) to every already-placed power building it
+        /// would link to (within max of the two link ranges). Cleared on placement/cancel via
+        /// <see cref="HideRadiusPreview"/>.
+        /// </summary>
+        private void ShowConnectionPreview(Vector2Int cell, Vector2Int fp, Vector3 center, float cs)
+        {
+            float linkRange = BuildingSO.LinkRadiusForLevel(_pending.building, 1);
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (linkRange <= 0f || world == null || !world.IsCreated) { _connectionRenderer?.Hide(); return; }
+
+            var nodes = PowerConnectionGraph.GatherFromEcs(world.EntityManager, cs);
+            var lines = new List<(Vector3, Vector3, Color)>();
+            int gMinX = cell.x, gMinY = cell.y, gMaxX = cell.x + fp.x - 1, gMaxY = cell.y + fp.y - 1;
+
+            foreach (var n in nodes)
+            {
+                if (PowerCoverageMath.NodesLinked(
+                        gMinX, gMinY, gMaxX, gMaxY,
+                        n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
+                        linkRange, n.LinkRange))
+                {
+                    lines.Add((center, n.WorldCenter, ConnectionLineColor));
+                }
+            }
+
+            EnsureConnectionRenderer().Show(lines);
         }
 
         // ---- Footprint helpers ----

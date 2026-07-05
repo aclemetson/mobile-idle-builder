@@ -66,6 +66,7 @@ MonoBehaviour:
     powerCostEV: 90
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 15000
     costPrestigeCurrency: 0
   - level: 3
@@ -73,6 +74,7 @@ MonoBehaviour:
     powerCostEV: 135
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 60000
     costPrestigeCurrency: 0
   - level: 4
@@ -80,6 +82,7 @@ MonoBehaviour:
     powerCostEV: 210
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 240000
     costPrestigeCurrency: 0
   storageUpgradeLevels:

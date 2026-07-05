@@ -495,7 +495,139 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(ts, snap.snapshotTimestampUtc);
         }
 
+        // ── Input-limited synthesizer chains (collector → synth → sink) ────────
+
+        [Test]
+        public void Analyzer_SynthesizerBetweenCollectorAndSink_CreditsSynthesizedItemToSink()
+        {
+            // Collector (quark) → synthesizer (quark → hydrogen) → Maxwell's Demon. The demon must be
+            // credited the HYDROGEN's value, at a rate limited by the collector's throughput.
+            var snap = AnalyzeSynth(MakeCollectorSynthSinkGrid(),
+                                    collectorRate: 2f, inputQty: 1, craftTime: 0.001f);
+
+            Assert.AreEqual(1, snap.chains.Count, "exactly one terminal flow (synth → sink)");
+            Assert.IsTrue(snap.chains[0].endsAtEntropySink, "the flow ends at the entropy sink");
+            Assert.AreEqual(HydrogenItem, snap.chains[0].itemId, "the sink consumes the synthesized hydrogen");
+            Assert.AreEqual(2f, snap.chains[0].itemsPerSecond, 1e-3f, "input-limited to the collector's 2/s of quarks");
+            Assert.AreEqual(50f, snap.chains[0].baseSellValue, 1e-3f, "hydrogen's sell value, not the quark's");
+        }
+
+        [Test]
+        public void Analyzer_SynthesizerOutput_IsInputLimited_ByCollectorThroughput()
+        {
+            // 0.5 quark/s, 2 quarks per craft → 0.25 crafts/s → 0.25 hydrogen/s.
+            var snap = AnalyzeSynth(MakeCollectorSynthSinkGrid(),
+                                    collectorRate: 0.5f, inputQty: 2, craftTime: 0.001f);
+
+            Assert.AreEqual(1, snap.chains.Count);
+            Assert.AreEqual(0.25f, snap.chains[0].itemsPerSecond, 1e-4f,
+                "offline synth output cannot exceed what the upstream collector supplies");
+        }
+
+        [Test]
+        public void Analyzer_SynthesizerOutput_IsCraftRateLimited_WhenInputAbundant()
+        {
+            // Abundant quarks (100/s) but a 1s craft → capped at 1 craft/s → 1 hydrogen/s.
+            var snap = AnalyzeSynth(MakeCollectorSynthSinkGrid(),
+                                    collectorRate: 100f, inputQty: 1, craftTime: 1f);
+
+            Assert.AreEqual(1, snap.chains.Count);
+            Assert.AreEqual(1f, snap.chains[0].itemsPerSecond, 1e-4f,
+                "with inputs abundant the synth is capped by its craft time");
+        }
+
+        [Test]
+        public void Analyzer_SynthesizerWithNoUpstreamFeed_ProducesNoChain()
+        {
+            // Synth → sink but nothing feeds the synth: no offline output at all.
+            var grid = new GridSaveData
+            {
+                buildings = new List<BuildingSaveData>
+                {
+                    new BuildingSaveData { buildingId = 3, recipeId = 0,  position = new[] { 0, 3 } },
+                    new BuildingSaveData { buildingId = 2, recipeId = -1, position = new[] { 0, 6 } },
+                },
+                conveyors = new List<ConveyorSaveData>
+                {
+                    new ConveyorSaveData { cells = new[] { 0,4, 0,5 } }, // synth → sink
+                }
+            };
+
+            var snap = AnalyzeSynth(grid, collectorRate: 0f, inputQty: 1, craftTime: 1f);
+            Assert.AreEqual(0, snap.chains.Count, "a starved synthesizer earns nothing offline");
+        }
+
+        [Test]
+        public void Analyzer_StarvedSynthesizer_CreditsRawInputToInventory_NonRegressive()
+        {
+            // Collector(quark) → synth(needs quark + electron) → sink, but nothing supplies the electron, so
+            // the synth is starved (0 output). The collector's quark must NOT be silently lost — it falls
+            // back to an inventory credit, guaranteeing the offline notification never vanishes entirely.
+            const int ElectronItem = 11;
+            var snap = IdleGraphAnalyzer.BuildSnapshot(
+                MakeCollectorSynthSinkGrid(),
+                id => id == 1, id => id == 2, _ => Vector2Int.one,
+                (bid, _) => bid == 1 ? QuarkItem : -1,
+                id => id == 1 ? 2f : 0f,
+                itemId => itemId == HydrogenItem ? 50f : 1f,
+                1f, DateTime.UtcNow.ToString("O"), null,
+                (bid, _) => bid == 3
+                    ? new IdleRecipeInfo
+                    {
+                        Valid = true, OutputItemId = HydrogenItem, OutputQuantity = 1, CraftTimeSeconds = 0.001f,
+                        InputItemIds = new[] { QuarkItem, ElectronItem }, InputQuantities = new[] { 1, 1 }
+                    }
+                    : default);
+
+            Assert.AreEqual(1, snap.chains.Count, "the collector's output is not lost when the synth starves");
+            Assert.IsFalse(snap.chains[0].endsAtEntropySink, "a stuck raw input falls back to an inventory credit");
+            Assert.AreEqual(QuarkItem, snap.chains[0].itemId);
+            Assert.AreEqual(2f, snap.chains[0].itemsPerSecond, 1e-3f, "credited at the collector's raw rate");
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        private const int QuarkItem    = 10;
+        private const int HydrogenItem = 99;
+
+        // Collector(1) → synthesizer(3) → sink(2), stacked on the y axis with a 2-cell belt between each.
+        private static GridSaveData MakeCollectorSynthSinkGrid() => new GridSaveData
+        {
+            buildings = new List<BuildingSaveData>
+            {
+                new BuildingSaveData { buildingId = 1, recipeId = 0,  position = new[] { 0, 0 } }, // collector
+                new BuildingSaveData { buildingId = 3, recipeId = 0,  position = new[] { 0, 3 } }, // synthesizer
+                new BuildingSaveData { buildingId = 2, recipeId = -1, position = new[] { 0, 6 } }, // sink
+            },
+            conveyors = new List<ConveyorSaveData>
+            {
+                new ConveyorSaveData { cells = new[] { 0,1, 0,2 } }, // collector → synth
+                new ConveyorSaveData { cells = new[] { 0,4, 0,5 } }, // synth → sink
+            }
+        };
+
+        private static IdleCollectionSnapshot AnalyzeSynth(
+            GridSaveData grid, float collectorRate, int inputQty, float craftTime,
+            int outputQty = 1, float hydrogenSell = 50f) =>
+            IdleGraphAnalyzer.BuildSnapshot(
+                grid,
+                id => id == 1,                                   // collector
+                id => id == 2,                                   // entropy sink
+                _ => Vector2Int.one,
+                (bid, _) => bid == 1 ? QuarkItem : -1,           // collector outputs quark
+                id => id == 1 ? collectorRate : 0f,
+                itemId => itemId == HydrogenItem ? hydrogenSell : 1f,
+                1f,                                              // global speed multiplier
+                DateTime.UtcNow.ToString("O"),
+                null,                                            // no manager multiplier
+                (bid, _) => bid == 3
+                    ? new IdleRecipeInfo
+                    {
+                        Valid = true, OutputItemId = HydrogenItem, OutputQuantity = outputQty,
+                        CraftTimeSeconds = craftTime,
+                        InputItemIds = new[] { QuarkItem }, InputQuantities = new[] { inputQty }
+                    }
+                    : default);
 
         private static SaveData MakeSave(IdleCollectionSnapshot snapshot,
                                          float secondsAgo = 3600f,

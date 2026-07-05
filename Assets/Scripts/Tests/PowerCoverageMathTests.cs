@@ -84,5 +84,44 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(CellToCell(2, 2, 2, 2, radius: 0f), "a non-positive radius never connects");
             Assert.IsFalse(CellToCell(2, 2, 2, 2, radius: -1f), "a negative radius never connects");
         }
+
+        // ── Node-to-node link range (NodesLinked) ─────────────────────────────
+
+        // Two single-cell power nodes at (ax,ay) and (bx,by) with the given link ranges.
+        static bool CellNodesLinked(int ax, int ay, int bx, int by, float rangeA, float rangeB) =>
+            PowerCoverageMath.NodesLinked(ax, ay, ax, ay, bx, by, bx, by, rangeA, rangeB);
+
+        [Test]
+        public void NodesLinked_UsesMaxOfTheTwoRanges()
+        {
+            // Nodes 6 tiles apart on X. A has range 0, B has range 6. Rc from B = 6 + 0.5 = 6.5; A's near
+            // edge is at 5.5 <= 6.5 -> linked. The larger range governs even though A reaches nothing itself.
+            Assert.IsTrue(CellNodesLinked(0, 0, 6, 0, rangeA: 0f, rangeB: 6f),
+                "the larger of the two link ranges determines the connection");
+        }
+
+        [Test]
+        public void NodesLinked_IsSymmetric()
+        {
+            // Order must not matter, even for a differently sized pairing.
+            bool ab = PowerCoverageMath.NodesLinked(0, 0, 0, 1, 0, 5, 0, 5, 5f, 1f); // 1x2 A vs 1x1 B
+            bool ba = PowerCoverageMath.NodesLinked(0, 5, 0, 5, 0, 0, 0, 1, 1f, 5f); // swapped
+            Assert.AreEqual(ab, ba, "NodesLinked must be symmetric in the two nodes");
+        }
+
+        [Test]
+        public void NodesLinked_OutOfRange_NotLinked()
+        {
+            // 10 apart, best range 4 -> Rc 4.5, near edge 9.5 -> not linked.
+            Assert.IsFalse(CellNodesLinked(0, 0, 10, 0, rangeA: 4f, rangeB: 3f),
+                "nodes beyond the larger link range do not connect");
+        }
+
+        [Test]
+        public void NodesLinked_ZeroRanges_NeverLinked()
+        {
+            Assert.IsFalse(CellNodesLinked(0, 0, 1, 0, rangeA: 0f, rangeB: 0f),
+                "two zero-range nodes never link, even when adjacent");
+        }
     }
 }
