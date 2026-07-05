@@ -33,6 +33,11 @@ namespace MobileIdleBuilder
         private HUDSettingsSubController            _settings;
         private SitesSubController                  _sites;
 
+        // ---- Power-connection overlay toggle ----
+        private Button                              _btnPowerToggle;
+        private PowerConnectionOverlayController    _powerOverlay;
+        private bool                                _powerConnectionsShown;
+
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
         private EntityQuery   _progressQuery;
@@ -461,6 +466,15 @@ namespace MobileIdleBuilder
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
             root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
+
+            // Power-connection overlay toggle (⚡ button). Restores its persisted on/off state.
+            _btnPowerToggle = root.Q<Button>("btn-power-toggle");
+            if (_btnPowerToggle != null)
+            {
+                _powerConnectionsShown = SettingsService.Instance?.Current?.showPowerConnections ?? false;
+                ApplyPowerConnectionState();
+                _btnPowerToggle.clicked += TogglePowerConnections;
+            }
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -1744,6 +1758,40 @@ namespace MobileIdleBuilder
         }
 
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
+
+        // ============================================================
+        // Power-connection overlay toggle (⚡ top-bar button)
+        // ============================================================
+
+        private void TogglePowerConnections()
+        {
+            _powerConnectionsShown = !_powerConnectionsShown;
+            ApplyPowerConnectionState();
+            SettingsService.Instance?.SetShowPowerConnections(_powerConnectionsShown);
+        }
+
+        /// <summary>Syncs the button's on/off look and the map overlay to the current toggle state.</summary>
+        private void ApplyPowerConnectionState()
+        {
+            EnsurePowerOverlay()?.SetVisible(_powerConnectionsShown);
+
+            if (_btnPowerToggle == null) return;
+            if (_powerConnectionsShown) _btnPowerToggle.AddToClassList("power-toggle-btn--active");
+            else                        _btnPowerToggle.RemoveFromClassList("power-toggle-btn--active");
+        }
+
+        /// <summary>
+        /// Finds the map power-connection overlay, creating a runtime one if the scene has none (self-wires
+        /// to the GridRenderer via FindAnyObjectByType), so no manual scene wiring is required.
+        /// </summary>
+        private PowerConnectionOverlayController EnsurePowerOverlay()
+        {
+            if (_powerOverlay != null) return _powerOverlay;
+            _powerOverlay = FindAnyObjectByType<PowerConnectionOverlayController>();
+            if (_powerOverlay == null)
+                _powerOverlay = new GameObject("PowerConnectionOverlay").AddComponent<PowerConnectionOverlayController>();
+            return _powerOverlay;
+        }
 
         // ============================================================
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)

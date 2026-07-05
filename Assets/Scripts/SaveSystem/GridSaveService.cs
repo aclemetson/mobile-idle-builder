@@ -410,11 +410,11 @@ namespace MobileIdleBuilder
                 if (!buildingLookup.TryGetValue(buildingId, out var entry) || entry.building == null)
                     return null;
 
-                // EVERY producer-fed belt is primed, not just field collectors. Priming is
-                // presentation only, so — unlike the economic RebuildIdleSnapshot path, which counts
-                // only collector sources to avoid double-counting down the chain — there is no reason
-                // to skip synthesiser/processor belts. Skipping them was what left the long downstream
-                // belts (the bulk of the visible network) empty and "starting over" on load.
+                // EVERY producer-fed belt is primed, not just field collectors. Priming is presentation
+                // only; the economic RebuildIdleSnapshot path also walks synthesisers now (input-limited,
+                // emitting only terminal sink/inventory flows so nothing double-counts), but priming needs
+                // no such care — it just needs a rate per belt. Skipping processors was what left the long
+                // downstream belts (the bulk of the visible network) empty and "starting over" on load.
                 RecipeSO recipe = null;
                 if (recipeId >= 0 && entry.building.supportedRecipes != null)
                     recipe = Array.Find(entry.building.supportedRecipes,
@@ -496,6 +496,40 @@ namespace MobileIdleBuilder
             float getItemSellValue(int itemId) =>
                 ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
 
+            // Recipe data for offline synthesizer simulation. Only recipe-crafting buildings qualify —
+            // collectors (field taps) and entropy sinks are handled by the collector/sink paths instead.
+            IdleRecipeInfo getRecipeInfo(int buildingId, int recipeId)
+            {
+                if (!buildingLookup.TryGetValue(buildingId, out var entry)) return default;
+                var b = entry.building;
+                if (b.placementRule == PlacementRule.MustBeOnField || b.isEntropySink) return default;
+
+                RecipeSO recipe = null;
+                if (recipeId >= 0 && b.supportedRecipes != null)
+                    recipe = Array.Find(b.supportedRecipes, r => r != null && r.recipeId == recipeId);
+                recipe ??= entry.defaultRecipe;
+                if (recipe == null || recipe.outputItem == null) return default;
+
+                var ingredients = recipe.inputs ?? Array.Empty<RecipeIngredient>();
+                var inputIds  = new int[ingredients.Length];
+                var inputQtys = new int[ingredients.Length];
+                for (int i = 0; i < ingredients.Length; i++)
+                {
+                    inputIds[i]  = ingredients[i].item != null ? ingredients[i].item.itemId : -1;
+                    inputQtys[i] = ingredients[i].quantity;
+                }
+
+                return new IdleRecipeInfo
+                {
+                    Valid            = true,
+                    OutputItemId     = recipe.outputItem.itemId,
+                    OutputQuantity   = recipe.outputQuantity > 0 ? recipe.outputQuantity : 1,
+                    CraftTimeSeconds = recipe.baseCraftTime > 0f ? recipe.baseCraftTime : 1f,
+                    InputItemIds     = inputIds,
+                    InputQuantities  = inputQtys
+                };
+            }
+
             float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
             // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
             // output onto each source's output multiplier (alongside the per-building manager bonus).
@@ -521,7 +555,8 @@ namespace MobileIdleBuilder
                 getItemSellValue,
                 speedMult,
                 DateTime.UtcNow.ToString("O"),
-                getManagerOutputMultiplier);
+                getManagerOutputMultiplier,
+                getRecipeInfo);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

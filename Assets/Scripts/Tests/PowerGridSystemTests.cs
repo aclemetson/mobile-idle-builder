@@ -114,16 +114,18 @@ namespace MobileIdleBuilder.Tests
 
         // ── Proximity connection ──────────────────────────────────────────────
 
-        private Entity MakeGenerator(int x, int y, float outputEV, float radius)
+        private Entity MakeGenerator(int x, int y, float outputEV, float radius, float linkRadius = 0f)
         {
             var e = _em.CreateEntity();
             _em.AddComponentData(e, new PowerNodeData
             {
-                MaxEV = outputEV, CurrentEV = outputEV, InfluenceRadius = radius
+                MaxEV = outputEV, CurrentEV = outputEV, InfluenceRadius = radius, LinkRadius = linkRadius
             });
             _em.AddComponentData(e, new GridPosition { Cell = new int2(x, y) });
             return e;
         }
+
+        private bool IsGridLinked(Entity e) => _em.GetComponentData<PowerNodeData>(e).IsGridLinked;
 
         private Entity MakeConsumer(int x, int y, float drawEV)
         {
@@ -216,16 +218,19 @@ namespace MobileIdleBuilder.Tests
         // ── Power Relay (spreader: adds no eV, extends coverage) ───────────────
 
         [Test]
-        public void RelayExtendsCoverage_ConsumerReachableOnlyViaRelay_IsPowered()
+        public void RelayLinkedToGenerator_ExtendsCoverage_ConsumerReachableOnlyViaRelay_IsPowered()
         {
-            // Generator far from the consumer (out of its small radius); a relay (MaxEV 0) sits next to
-            // the consumer and re-radiates the shared pool's reach.
-            MakeGenerator(0, 0, outputEV: 50f, radius: 1f);   // small reach, far away
-            MakeGenerator(9, 0, outputEV:  0f, radius: 3f);   // the relay: 0 output, wide radius
+            // Generator far from the consumer (out of its small radius); a relay (MaxEV 0) sits next to the
+            // consumer and re-radiates the shared pool's reach. The relay's link range reaches the generator
+            // (gap 9), so it is grid-linked and its coverage counts.
+            var gen   = MakeGenerator(0, 0, outputEV: 50f, radius: 1f);              // small reach, far away
+            var relay = MakeGenerator(9, 0, outputEV:  0f, radius: 3f, linkRadius: 10f); // 0 output, wide radius, links back
             var consumer = MakeConsumer(10, 0, drawEV: 10f);  // gap 10 from gen (out), gap 1 from relay (in)
 
             Tick();
 
+            Assert.AreEqual(1, IsGridLinked(gen)   ? 1 : 0, "the generator is always grid-linked");
+            Assert.AreEqual(1, IsGridLinked(relay) ? 1 : 0, "the relay links back to the generator");
             Assert.AreEqual(1, Status(consumer).IsConnected, "relay coverage must connect the consumer");
             Assert.AreEqual(1f, Status(consumer).ThrottleRatio, 0.001f,
                 "the generator's 50 eV covers the 10 eV draw carried through the relay");
@@ -233,16 +238,37 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void RelayWithNoGenerator_LeavesConsumerConnectedButUnpowered()
+        public void StrandedRelay_OutOfLinkRange_ProvidesNoCoverage_ConsumerDisconnected()
         {
-            MakeGenerator(0, 0, outputEV: 0f, radius: 3f);    // relay only, no real source
+            // A relay whose link range does NOT reach the generator (gap 9, link range 3) is stranded: it is
+            // not grid-linked, so it provides no coverage and the consumer under it gets no power at all.
+            var gen   = MakeGenerator(0, 0, outputEV: 50f, radius: 1f, linkRadius: 3f);
+            var relay = MakeGenerator(9, 0, outputEV:  0f, radius: 3f, linkRadius: 3f);
+            var consumer = MakeConsumer(10, 0, drawEV: 10f);
+
+            Tick();
+
+            Assert.AreEqual(1, IsGridLinked(gen)   ? 1 : 0, "the generator is always grid-linked");
+            Assert.AreEqual(0, IsGridLinked(relay) ? 1 : 0, "a relay out of link range must NOT be grid-linked");
+            Assert.AreEqual(0, Status(consumer).IsConnected,
+                "a stranded relay provides no coverage, so the consumer is disconnected");
+            Assert.AreEqual(0f, Status(consumer).ThrottleRatio, 0.001f, "disconnected -> no power");
+        }
+
+        [Test]
+        public void RelayWithNoGenerator_ProvidesNoCoverage_ConsumerDisconnected()
+        {
+            var relay = MakeGenerator(0, 0, outputEV: 0f, radius: 3f, linkRadius: 6f); // relay only, no real source
             var consumer = MakeConsumer(1, 0, drawEV: 10f);
 
             Tick();
 
-            Assert.AreEqual(1, Status(consumer).IsConnected, "the consumer is within the relay's radius");
+            Assert.AreEqual(0, IsGridLinked(relay) ? 1 : 0,
+                "a relay with no generator anywhere in the grid is never linked");
+            Assert.AreEqual(0, Status(consumer).IsConnected,
+                "an unlinked relay provides no coverage, so the consumer is disconnected");
             Assert.AreEqual(0f, Status(consumer).ThrottleRatio, 0.001f,
-                "supply is 0 with no generator, so the relay alone provides no power");
+                "supply is 0 with no generator, and the stranded relay covers nothing");
             Assert.AreEqual(0f, GridState().Supply, 0.001f);
         }
 
@@ -261,6 +287,20 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, state.ConnectedCount);
             Assert.AreEqual(1, state.DisconnectedCount);
             Assert.AreEqual(1f, state.Ratio, 0.001f);
+        }
+
+        [Test]
+        public void GridState_ReportsPowerNodeCounts_LinkedVsStranded()
+        {
+            MakeGenerator(0, 0, outputEV: 50f, radius: 2f, linkRadius: 6f);  // generator (always linked)
+            MakeGenerator(5, 0, outputEV:  0f, radius: 3f, linkRadius: 6f);  // relay linked to the generator
+            MakeGenerator(30, 0, outputEV: 0f, radius: 3f, linkRadius: 6f);  // stranded relay (far away)
+
+            Tick();
+
+            var state = GridState();
+            Assert.AreEqual(3, state.TotalNodeCount,  "all three power nodes are counted");
+            Assert.AreEqual(2, state.LinkedNodeCount, "the generator + the near relay are grid-linked; the far relay is not");
         }
     }
 }

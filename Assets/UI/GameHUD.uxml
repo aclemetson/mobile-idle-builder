@@ -24,6 +24,7 @@
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
             <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
             <ui:Label  name="power-label"  text="⚡ 0 eV"   class="power-label" />
+            <ui:Button name="btn-power-toggle" text="⚡" class="settings-btn power-toggle-btn" />
             <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
         </ui:VisualElement>
 

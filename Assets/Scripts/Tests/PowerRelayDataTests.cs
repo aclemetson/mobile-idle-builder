@@ -29,6 +29,7 @@ namespace MobileIdleBuilder.Tests
             public bool   is_power_source;
             public float  base_output_ev;
             public float  influence_radius_tiles;
+            public float  link_radius_tiles;
             public int[]  footprint;
             public string structure_kind;
             public string required_research;
@@ -85,6 +86,19 @@ namespace MobileIdleBuilder.Tests
             var gen   = Find(data, "basic_generator");
             Assert.Greater(relay.influence_radius_tiles, gen.influence_radius_tiles,
                 "the spreader (relay) must reach further than the generator");
+        }
+
+        [Test]
+        public void PowerBuildings_HavePositiveLinkRange()
+        {
+            var data  = LoadData();
+            var relay = Find(data, "power_relay");
+            var gen   = Find(data, "basic_generator");
+            // Both power buildings must be able to join the grid; a 0 link range would strand them.
+            Assert.Greater(relay.link_radius_tiles, 0f, "the relay needs a link range or it can never wire in");
+            Assert.Greater(gen.link_radius_tiles,   0f, "the generator needs a link range so relays can chain to it");
+            Assert.GreaterOrEqual(relay.link_radius_tiles, gen.link_radius_tiles,
+                "the relay (the reach building) should link at least as far as the generator");
         }
 
         [Test]

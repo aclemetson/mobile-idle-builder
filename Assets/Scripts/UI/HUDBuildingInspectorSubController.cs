@@ -34,9 +34,12 @@ namespace MobileIdleBuilder
         private GridRenderer              _gridRenderer;
         private BuildingVisualizer        _buildingVisualizer;
         private PlacementRadiusIndicator  _radiusIndicator;
+        private PowerConnectionRenderer   _connectionRenderer;
 
         // Matches BuildingVisualizer's in-range tint / the placement ring colour.
         private static readonly Color PowerRadiusColor = new Color(0.35f, 1f, 0.75f, 0.9f);
+        // Matches the placement connection-preview colour (warm amber, reads as "wired").
+        private static readonly Color PowerConnectionColor = new Color(1f, 0.9f, 0.3f, 0.95f);
 
         private GridRenderer GetGridRenderer()
         {
@@ -64,12 +67,27 @@ namespace MobileIdleBuilder
             return _radiusIndicator;
         }
 
+        /// <summary>Lazily creates the selection connection-lines renderer (runtime GameObject, no scene wiring).</summary>
+        private PowerConnectionRenderer EnsureConnectionRenderer()
+        {
+            if (_connectionRenderer == null)
+            {
+                var gr = GetGridRenderer();
+                if (gr == null) return null;
+                var go = new GameObject("InspectorPowerConnections");
+                go.transform.SetParent(gr.transform, worldPositionStays: false);
+                _connectionRenderer = go.AddComponent<PowerConnectionRenderer>();
+            }
+            return _connectionRenderer;
+        }
+
         /// <summary>
-        /// Draws the selected power building's reach as a circular ring and lights up the buildings it
-        /// powers (all placed buildings whose footprint overlaps its radius, excluding the source itself).
+        /// Draws the selected power building's reach as a circular ring, lights up the buildings it powers
+        /// (all placed buildings whose footprint overlaps its radius, excluding the source itself), and
+        /// dashes a line to every power building it links to within its connection range.
         /// Mirrors the placement preview; the ring radius equals the powered area exactly.
         /// </summary>
-        private void ShowSelectedPowerRadius(int cellX, int cellY, int fw, int fh, float radius)
+        private void ShowSelectedPowerRadius(int cellX, int cellY, int fw, int fh, float radius, float linkRange)
         {
             var gr = GetGridRenderer();
             if (gr == null || cellX < 0) return;
@@ -80,12 +98,39 @@ namespace MobileIdleBuilder
 
             EnsureRadiusIndicator()?.Show(center, worldRadius, PowerRadiusColor);
             GetBuildingVisualizer()?.HighlightBuildingsInRange(cellX, cellY, fw, fh, radius, (cellX, cellY));
+            ShowSelectedConnections(cellX, cellY, fw, fh, linkRange, center, cs);
         }
 
-        /// <summary>Hides the selection ring and reverts the buildings it lit.</summary>
+        /// <summary>Dashes lines from the selected power node to each power building within its link range.</summary>
+        private void ShowSelectedConnections(int cellX, int cellY, int fw, int fh, float linkRange,
+                                             Vector3 center, float cs)
+        {
+            if (!_ecsReady || linkRange <= 0f) { _connectionRenderer?.Hide(); return; }
+
+            var nodes = PowerConnectionGraph.GatherFromEcs(_em, cs);
+            var lines = new List<(Vector3, Vector3, Color)>();
+            int sMaxX = cellX + fw - 1, sMaxY = cellY + fh - 1;
+
+            foreach (var n in nodes)
+            {
+                if (n.AnchorX == cellX && n.AnchorY == cellY) continue; // skip self
+                if (PowerCoverageMath.NodesLinked(
+                        cellX, cellY, sMaxX, sMaxY,
+                        n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
+                        linkRange, n.LinkRange))
+                {
+                    lines.Add((center, n.WorldCenter, PowerConnectionColor));
+                }
+            }
+
+            EnsureConnectionRenderer()?.Show(lines);
+        }
+
+        /// <summary>Hides the selection ring/connections and reverts the buildings it lit.</summary>
         private void ClearSelectedPowerVisual()
         {
             _radiusIndicator?.Hide();
+            _connectionRenderer?.Hide();
             GetBuildingVisualizer()?.ClearRangeHighlight();
         }
 
@@ -375,11 +420,13 @@ namespace MobileIdleBuilder
 
             if (so.isPowerSource)
             {
-                float outputEV = BuildingSO.PowerOutputForLevel(so, level);
-                float radius   = BuildingSO.InfluenceRadiusForLevel(so, level);
+                float outputEV  = BuildingSO.PowerOutputForLevel(so, level);
+                float radius    = BuildingSO.InfluenceRadiusForLevel(so, level);
+                float linkRange = BuildingSO.LinkRadiusForLevel(so, level);
                 AddInspectorRow(_inspectorStatic, "—— Power ——");
                 AddInspectorRow(_inspectorStatic, $"Output: {outputEV:0.#} eV");
                 AddInspectorRow(_inspectorStatic, $"Coverage: {radius:0.#} tiles");
+                AddInspectorRow(_inspectorStatic, $"Link range: {linkRange:0.#} tiles");
 
                 int fw = 1, fh = 1;
                 if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
@@ -387,8 +434,9 @@ namespace MobileIdleBuilder
                     var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
                     fw = f.Width; fh = f.Height;
                 }
-                // Show the reach as a circular ring and light up the buildings this source powers.
-                ShowSelectedPowerRadius(cellX, cellY, fw, fh, radius);
+                // Show the reach as a circular ring, light up the buildings this source powers, and dash
+                // lines to the power buildings it links to.
+                ShowSelectedPowerRadius(cellX, cellY, fw, fh, radius, linkRange);
             }
             else if (so.requiresPower && _em.HasComponent<PowerStatus>(_inspectorEntity))
             {

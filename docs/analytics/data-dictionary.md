@@ -25,6 +25,7 @@ so data from different collection windows stays separable).
 | Spendable vs banked | `player_snapshot.base_currency` vs `entropy_per_sec` | Is currency piling up unspent (nothing to buy) or always starved? | sink pacing, cost ramps |
 | Manual-collection engagement | `player_snapshot.field_collections` over `playtime_total_sec` | Are players actively tapping fields, or ignoring manual collection once idle income kicks in? | field tap cooldown, drop value, early-game idle pacing |
 | Field cooldown reached | `player_snapshot.field_cooldown_sec` | How far have players driven the tap cooldown down via research + Quick Hands? Is the floor too easy/hard to hit? | `FieldSO.tapCooldownSeconds`, research `field_cooldown_mult`, Quick Hands per-level reduction |
+| Power grid connectivity | `player_snapshot.power_nodes_total` vs `power_nodes_linked` | What fraction of placed power buildings are stranded (not chained to a generator)? A large gap means link ranges are too tight or relays are hard to wire in. | `link_radius_tiles` per power building (generator / relay) + per-upgrade-level scaling |
 
 ## Where to view each metric
 
@@ -33,7 +34,8 @@ parameter value** (no avg/sum of a number). So:
 
 - **Data-Explorer-native** (count of an event by a low-cardinality parameter): building usage (`building_id`),
   research path (`research_id`), endgame reach (`stage`), prestige depth (`run_count`), tier/prestige-count
-  distribution from `player_snapshot`, balance-update reach (`data_version`). Segment any of these by `collection_phase`.
+  distribution from `player_snapshot`, balance-update reach (`data_version`), power-grid connectivity
+  (`power_nodes_total` / `power_nodes_linked` are small counts, so they bucket cleanly). Segment any of these by `collection_phase`.
 - **CSV-only** (value curves — export CSV → `dashboard.html`): everything whose signal is a numeric *value* or
   trend — net worth per run, prestige currency per run, `entropy_per_sec` over playtime, run length,
   `base_currency` / `paid_currency` balances, and `field_cooldown_sec`. These are continuous, so Data Explorer

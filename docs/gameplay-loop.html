@@ -147,6 +147,33 @@
   </div>
 
   <div class="callout">
+    <h3>Power Grid (Connection Range + Overlay)</h3>
+    <p>Power buildings (the <strong>Basic Generator</strong> and the <strong>Power Relay</strong>) form a
+       <strong>connected grid</strong>, not a set of independent coverage circles. Each power building has a
+       <strong>link range</strong> (tiles), and two of them connect when their footprint distance is within the
+       <strong>larger</strong> of the two link ranges. A building extends the grid only if it is a generator or
+       chains, link by link, back to one.</p>
+    <ul>
+      <li><strong>Generators</strong> produce eV into a single shared pool and cover a <em>small</em> influence
+          radius (2→5 tiles across L1–L4) with a <em>short</em> link range (4→7).</li>
+      <li><strong>Power Relays</strong> produce no eV; they re-radiate the shared pool over a <em>large</em>
+          influence radius (5→8) and reach far with a <em>long</em> link range (6→9). A relay that is out of
+          link range of every generator is <strong>stranded</strong>: it is not on the grid and powers nothing —
+          so relays must be placed to chain back to a generator (directly or through other relays).</li>
+    </ul>
+    <p><strong>Seeing the connections.</strong> While positioning a power building, dashed lines preview which
+       existing power buildings it would link to (they disappear once placed). Selecting a placed power building
+       shows the same dashed links plus its influence ring. A <strong>⚡ toggle</strong> in the top bar turns the
+       whole-map power overlay on (bright bolt — all links drawn amber for wired / grey for stranded clusters,
+       plus a coverage ring around every powered building) or off (grey bolt, overlay hidden); the choice
+       persists across sessions.</p>
+    <p>Implemented in <code>PowerGridSystem</code> (connectivity flood → <code>PowerNodeData.IsGridLinked</code>),
+       shared math <code>PowerCoverageMath.NodesLinked</code>, and the
+       <code>PowerConnectionGraph</code>/<code>PowerConnectionRenderer</code>/<code>PowerConnectionOverlayController</code>
+       visualization. Power state is not saved — it recomputes from building positions/levels on load.</p>
+  </div>
+
+  <div class="callout">
     <h3>Session Authentication</h3>
     <p>Google Sign-In uses a <strong>silent-first</strong> strategy backed by two device-local timestamps
        (<code>PlayerPrefs</code> — not cloud-synced):</p>
@@ -708,25 +735,36 @@ Quick Hands       (standalone — no prerequisites)</pre>
 
   <div class="callout">
     <h3>Idle Collection</h3>
-    <p>When the player closes the app, harvesters keep running in the background — up to a capped window.
-       Only <strong>direct collector chains</strong> are simulated: Harvester → Conveyor → (Inventory or Maxwell's Demon).
-       Recipe-based synthesisers mid-chain are paused; the UI discloses this.</p>
+    <p>When the player closes the app, the whole production network keeps running in the background — up to a
+       capped window. The offline model walks the grid as a <strong>directed graph</strong>: collectors are
+       sources, recipe buildings ("synthesisers") are <strong>input-limited</strong> (they craft only as fast
+       as their incoming items allow), and entropy sinks (Maxwell's Demon) convert whatever reaches them to
+       currency. So a chain like Harvester → Combiner → Maxwell's Demon now correctly banks the value of the
+       <em>synthesised</em> item (e.g. Hydrogen), bounded by the upstream collector's real throughput so it
+       can never over-credit.</p>
   </div>
 
   <div class="card">
     <h3>How Chains Are Detected</h3>
-    <p>On every auto-save, pause, and quit the game analyses the saved grid to build a chain snapshot:</p>
+    <p>On every auto-save, pause, and quit the game analyses the saved grid to build a production-graph snapshot:</p>
     <ol>
-      <li>Walk each saved conveyor chain (head→tail).</li>
-      <li>The building one step <em>upstream</em> of the chain head must be a collector (Placement Rule = Must Be On Field).</li>
-      <li>The building one step <em>downstream</em> of the chain tail is checked:
+      <li>Each saved conveyor is an edge: the building adjacent to its <em>head</em> is the producer, the
+          building adjacent to its <em>tail</em> is the consumer (or nothing → player inventory).</li>
+      <li>Collectors (Placement Rule = Must Be On Field) produce their field item at a fixed rate. Recipe
+          buildings compute an output rate = <code>min(craft rate, what their incoming items sustain)</code>,
+          resolved in dependency order so upstream feeds downstream.</li>
+      <li>Each terminal flow is credited once:
         <ul>
-          <li>If it is an Entropy Sink (Maxwell's Demon) → chain produces entropy on return.</li>
-          <li>Otherwise → items go into player inventory.</li>
+          <li>Into an Entropy Sink (Maxwell's Demon) → produces entropy from that item's sell value on return.</li>
+          <li>Into no building → items go to player inventory.</li>
         </ul>
       </li>
     </ol>
-    <p>The snapshot is rebuilt whenever buildings or conveyors are placed or removed.</p>
+    <p>Internal producer→synthesiser edges are consumed (not double-counted). If a synthesiser ends up
+       starved (an input it needs never arrives, so it produces nothing), the item feeding it is credited to
+       inventory instead — a non-regressive fallback so no offline output is ever silently lost. Power is not
+       modelled offline (synthesisers are assumed powered). The snapshot is rebuilt whenever buildings or
+       conveyors change.</p>
   </div>
 
   <div class="card">

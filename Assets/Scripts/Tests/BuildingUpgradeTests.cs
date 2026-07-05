@@ -14,10 +14,11 @@ namespace MobileIdleBuilder.Tests
             _so = ScriptableObject.CreateInstance<BuildingSO>();
             _so.baseMaxOutputItems = 20;
             _so.baseMaxInputItemsPerSlot = 30;
+            _so.linkRadiusTiles = 4f;
             _so.upgradeLevels = new[]
             {
-                new BuildingUpgradeLevel { level = 2, outputRate = 2f, costBaseCurrency = 500 },
-                new BuildingUpgradeLevel { level = 3, outputRate = 4f, costBaseCurrency = 2000 },
+                new BuildingUpgradeLevel { level = 2, outputRate = 2f, linkRadiusTiles = 5f, costBaseCurrency = 500 },
+                new BuildingUpgradeLevel { level = 3, outputRate = 4f, linkRadiusTiles = 6f, costBaseCurrency = 2000 },
             };
             _so.storageUpgradeLevels = new[]
             {
@@ -55,6 +56,32 @@ namespace MobileIdleBuilder.Tests
         public void ProductionSpeedForLevel_NullSO_ReturnsOne()
         {
             Assert.AreEqual(1f, BuildingSO.ProductionSpeedForLevel(null, 2));
+        }
+
+        // ── LinkRadiusForLevel ────────────────────────────────────────────────
+
+        [Test]
+        public void LinkRadiusForLevel_Level1_ReturnsBase()
+        {
+            Assert.AreEqual(4f, BuildingSO.LinkRadiusForLevel(_so, 1));
+        }
+
+        [Test]
+        public void LinkRadiusForLevel_Level2_ReturnsUpgradeValue()
+        {
+            Assert.AreEqual(5f, BuildingSO.LinkRadiusForLevel(_so, 2));
+        }
+
+        [Test]
+        public void LinkRadiusForLevel_LevelNotInTable_FallsBackToBase()
+        {
+            Assert.AreEqual(4f, BuildingSO.LinkRadiusForLevel(_so, 9), "an undefined level falls back to the base link range");
+        }
+
+        [Test]
+        public void LinkRadiusForLevel_NullSO_ReturnsZero()
+        {
+            Assert.AreEqual(0f, BuildingSO.LinkRadiusForLevel(null, 2));
         }
 
         // ── OutputCapacityForLevel ────────────────────────────────────────────

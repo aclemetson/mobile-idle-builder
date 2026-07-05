@@ -47,5 +47,25 @@ namespace MobileIdleBuilder
             float dy = Mathf.Max(0f, Mathf.Max((tgtMinY - 0.5f) - ccy, ccy - (tgtMaxY + 0.5f)));
             return dx * dx + dy * dy <= rc * rc;
         }
+
+        /// <summary>
+        /// True if two power buildings are within grid-connection range of each other. The connection
+        /// distance between any two power nodes is <c>max(rangeA, rangeB)</c> (the larger of the two link
+        /// ranges wins). Reuses <see cref="FootprintWithinRadius"/> and ORs both orderings so the result is
+        /// symmetric in the two nodes regardless of which is passed first (the coverage circle is centred on
+        /// the source footprint, so a lone direction is not symmetric for differently sized footprints).
+        /// Both the managed connection previews and <see cref="PowerGridSystem"/>'s connectivity flood route
+        /// through this rule (the sim keeps an inlined Burst copy — keep the two in sync).
+        /// Unit spec: <c>PowerCoverageMathTests</c>.
+        /// </summary>
+        public static bool NodesLinked(
+            int aMinX, int aMinY, int aMaxX, int aMaxY,
+            int bMinX, int bMinY, int bMaxX, int bMaxY,
+            float rangeA, float rangeB)
+        {
+            float range = Mathf.Max(rangeA, rangeB);
+            return FootprintWithinRadius(aMinX, aMinY, aMaxX, aMaxY, bMinX, bMinY, bMaxX, bMaxY, range)
+                || FootprintWithinRadius(bMinX, bMinY, bMaxX, bMaxY, aMinX, aMinY, aMaxX, aMaxY, range);
+        }
     }
 }

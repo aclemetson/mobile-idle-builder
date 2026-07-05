@@ -483,6 +483,7 @@ namespace MobileIdleBuilder.Editor
                         powerCostEV          = ul.power_cost_ev,
                         outputEV             = ul.output_ev,
                         influenceRadiusTiles = ul.influence_radius_tiles,
+                        linkRadiusTiles      = ul.link_radius_tiles,
                         costBaseCurrency     = ul.cost_base_currency,
                         costPrestigeCurrency = ul.cost_prestige_currency
                     };
