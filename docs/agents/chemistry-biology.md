@@ -2,7 +2,7 @@
 
 **Scope:** The data/content model for the Chemistry and Biology tracks: the World layer, per-world fields, the new `OrganicCompound` item category, the research trees, buildings, and recipes. Balance numbers are first-pass anchors — tune against the progression map before committing to `game_data.json`. For the phased build order and constraints, see `tasks/feature-worlds-chem-bio.md`. For the existing periodic-table content this sits alongside, see `elements-and-isotopes.md`.
 
-> Verified against: DESIGN DRAFT (not implemented) — approved 2026-07-05. No `game_data.json` entries exist yet. When implemented, replace this line with a `<commit>, <date>` stamp.
+> Verified against: **Phase 1 implemented** 2026-07-06 (branch `feat/worlds-chem-phase1`). The **World layer** (`WorldSO`/`WorldDatabaseSO`, `worlds` in `game_data.json`, save fields, `WorldLayout` mapping) now exists; `world_physics` + `world_chemistry` (stub) are authored. Fields, `OrganicCompound` items, research, buildings, recipes below are **still design draft** (Phases 2–5). As-built: Worlds group the existing FLAT site list via `WorldSO.siteIds`; no nested save restructure.
 
 ## The World layer
 

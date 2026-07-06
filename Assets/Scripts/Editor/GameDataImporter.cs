@@ -37,6 +37,7 @@ namespace MobileIdleBuilder.Editor
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
         private const string SitesDir      = "Assets/Data/sites";
+        private const string WorldsDir     = "Assets/Data/worlds";
         private const string ManagersDir   = "Assets/Data/managers";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
@@ -60,6 +61,8 @@ namespace MobileIdleBuilder.Editor
             if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<WorldDatabaseSO>($"{ResourcesDir}/WorldDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<BuildingDatabaseSO>($"{ResourcesDir}/BuildingDatabase.asset") == null)
                 needsImport = true;
@@ -134,6 +137,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
             EnsureDirectory(SitesDir);
+            EnsureDirectory(WorldsDir);
             EnsureDirectory(ManagersDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
@@ -213,6 +217,17 @@ namespace MobileIdleBuilder.Editor
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
 
+            // ── Step 12.51: WorldSO + WorldDatabaseSO (resolves site_ids / prereq_unlock_ids) ──
+            // Worlds cross-ref site ids (from Step 8.5) and prereq research/item ids, so this
+            // must run after those lookups are populated.
+            var worldPrereqIds = new HashSet<string>();
+            foreach (var key in researchLookup.Keys) worldPrereqIds.Add(key);
+            foreach (var key in itemLookup.Keys)     worldPrereqIds.Add(key);
+            var worldLookup = new Dictionary<string, WorldSO>();
+            foreach (var world in data.worlds)
+                worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
+            GenerateWorldDatabase(data.worlds, worldLookup);
+
             // ── Step 12.6: BuildingDatabaseSO (data-driven build menu) ───────
             GenerateBuildingDatabase(data.buildings, buildingLookup);
 
@@ -238,7 +253,8 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.managers.Count} managers, " +
+                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.worlds.Count} worlds, " +
+                $"{data.managers.Count} managers, " +
                 $"{data.dialogues.Count} dialogues, " +
                 $"{data.tutorial_steps.Count} tutorial steps, " +
                 $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
@@ -653,6 +669,49 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static WorldSO GenerateWorld(WorldJson data,
+            Dictionary<string, SiteSO> siteLookup, HashSet<string> validPrereqIds)
+        {
+            string path = $"{WorldsDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<WorldSO>(path);
+
+            so.id          = data.id;
+            so.displayName = data.display_name;
+            so.unlockCost  = data.unlock_cost;
+
+            so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
+            foreach (var pid in so.prereqUnlockIds)
+                if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
+                    GameLogger.Warning($"[GameDataImporter] WorldSO '{data.id}' prereq_unlock_id '{pid}' " +
+                                       "matches no research or item id.");
+
+            so.siteIds = new List<string>(data.site_ids ?? new List<string>());
+            foreach (var sid in so.siteIds)
+                if (!string.IsNullOrEmpty(sid) && !siteLookup.ContainsKey(sid))
+                    GameLogger.Warning($"[GameDataImporter] WorldSO '{data.id}' site_id '{sid}' matches no site.");
+
+            // theme is left at the SO's existing/default value in Phase 1 (authored in Phase 5).
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateWorldDatabase(List<WorldJson> worlds,
+            Dictionary<string, WorldSO> worldLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/WorldDatabase.asset";
+            var db = LoadOrCreate<WorldDatabaseSO>(path);
+
+            var list = new List<WorldSO>(worlds.Count);
+            foreach (var w in worlds)
+                if (worldLookup.TryGetValue(w.id, out var so))
+                    list.Add(so);
+
+            db.allWorlds = list.ToArray();
             EditorUtility.SetDirty(db);
         }
 

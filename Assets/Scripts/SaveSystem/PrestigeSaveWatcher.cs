@@ -91,9 +91,10 @@ namespace MobileIdleBuilder
             save.currentRun.grids           = new List<GridSaveData>();
             save.currentRun.grid            = new GridSaveData();
             save.currentRun.activeSiteIndex = 0;
+            save.currentRun.activeWorldIndex = 0;   // back to Physics (site 0) — keep world consistent with the site reset.
             save.idleSnapshot               = new IdleCollectionSnapshot();
             save.siteSnapshots              = new List<IdleCollectionSnapshot>();
-            // save.unlockedSites: NOT touched — site unlocks survive prestige.
+            // save.unlockedSites / save.unlockedWorlds: NOT touched — site & world unlocks survive prestige.
         }
     }
 }

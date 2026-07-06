@@ -375,6 +375,21 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ResetSitesForPrestige_PreservesWorldUnlocks_ResetsActiveWorld()
+        {
+            var save = new SaveData();
+            save.unlockedWorlds = new System.Collections.Generic.List<string> { "world_chemistry" };
+            save.currentRun.activeWorldIndex = 1;
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            CollectionAssert.AreEqual(new[] { "world_chemistry" },
+                save.unlockedWorlds, "world unlocks must survive prestige (like site unlocks)");
+            Assert.AreEqual(0, save.currentRun.activeWorldIndex,
+                "active world returns to Physics (0), consistent with the site-0 reset");
+        }
+
+        [Test]
         public void ResetSitesForPrestige_NullSave_DoesNotThrow()
         {
             Assert.DoesNotThrow(() => PrestigeSaveWatcher.ResetSitesForPrestige(null));
