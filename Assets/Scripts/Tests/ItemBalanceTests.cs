@@ -28,11 +28,11 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is153()
+        public void AllItems_TotalCount_Is156()
         {
-            // 149 physics items + 4 OrganicCompound items (Chem/Bio Phase 2).
-            Assert.AreEqual(153, _items.Length,
-                $"Expected 153 items in Resources/Items/, found {_items.Length}. " +
+            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a: CO2, table_salt, sulfuric_acid).
+            Assert.AreEqual(156, _items.Length,
+                $"Expected 156 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 

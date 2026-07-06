@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: element_field_metal
   displayName: Metal Lode
-  fieldType: Element
+  fieldType: ElementMetal
   drops:
   - item: {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
     weight: 1

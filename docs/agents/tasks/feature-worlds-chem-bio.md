@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** IN PROGRESS — **Phases 1–3 DONE** (2026-07-06): P1 World data model + save partition (PR #119); P2 field-type string refactor + `OrganicCompound` items + element fields + `site_chem_lab` (PR #120); P3 `WorldService` (unlock + prereq gate + travel via `SiteService`) + `world` dev commands (branch `feat/worlds-chem-phase3`). Chemistry-focused; Biology content deferred. Phases 4–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
+**Status:** IN PROGRESS — **Phases 1–3 + 4a DONE** (2026-07-06): P1 save/data model (PR #119); P2 field-type string refactor + items/fields/site (PR #120); P3 `WorldService` + `world` dev commands (PR #121); **P4a Chemistry C1** — `chemistry_lab` research (now the world gate), Element Harvester + Compound Synthesizer + C1 compounds (branch `feat/worlds-chem-phase4a`). Chemistry-focused; Biology deferred. Next: P4b (Chemistry C2–C4), P5 (worlds UI + theming), P6 (economy re-tier). Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -78,14 +78,23 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 - **Tests:** `PlayModeTests/WorldServiceTests.cs` (pure gate: `IsUnlocked` + `PrereqsMet`). The ECS switch handoff is covered by `SiteServiceTests` (grid round-trip) + manual playtest.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 4 — Research branches + buildings + recipes
+## Phase 4 — Research branches + buildings + recipes (split into 4a/4b)
 
-**Goal:** the chem/bio content is playable and correctly gated.
+**Goal:** the chem/bio content is playable and correctly gated. Split into **4a (Chemistry C1, DONE)** and **4b (Chemistry C2–C4, pending)** for reviewability; Biology content stays deferred.
 
-- Chemistry sub-branch nodes (`chemistry_lab`, `reaction_engineering`, `organic_chemistry`, `biochem_precursors`) extending the existing `ResearchBranch.Chemistry`; add `ResearchBranch.Biology` enum value + its nodes (`biology_lab`, `cell_biology`, `multicellular_life`, `ecosystems`). Wire each World's unlock to its opening research node.
-- New buildings (Compound Synthesizer, Catalytic Reactor, Organic Synthesizer, Biosynthesizer, Cell Assembler, …) with `requiredResearch`, `compatibleFields` (new types), `supportedRecipes` whose `outputItem` matches the new fields' drops; new recipes for all C/B tier products. All data-driven in `game_data.json`.
-- **Tests:** research gates unlock the right buildings/recipes; `SOSchemaTests` for new content.
-### GATE: full suite green → commit → PR. Stop here.
+### Phase 4a — Chemistry C1 (playable slice) — DONE (2026-07-06)
+- `chemistry_lab` research node (branch Chemistry, prereq `mid_elements`, **150K** — the world gate now lives here; `world_chemistry.prereq_unlock_ids = ["chemistry_lab"]`, `unlock_cost 0`).
+- **Element Harvester** (`element_harvester`, `MustBeOnField`, `compatible_fields ["Element"]`, 6 `collect_<element>` recipes for H/C/O/Na/Cl/S) — place on a light/mineral seam, pick the element via the existing multi-output selector (`BuildingPlacementController.GetMatchingRecipes`). **Compound Synthesizer** (`compound_synthesizer`, `Anywhere`, 2 inputs) crafting the C1 compounds.
+- New Molecule items `carbon_dioxide`/`table_salt`/`sulfuric_acid` (item_id 154–156) + recipes (170–172). Icons generated. `element_field_metal` retyped to `"ElementMetal"` so the C1 harvester can't idle-farm the high-value metals (iron 167M etc.).
+- **Balance is FIRST-PASS.** The element sell-values are physics-era and exponential (chlorine 327K, iron 167M), so raw-element sinking is currently over-valued; the intended loop is harvest→synthesize→sink compounds, and the real economy pass is the **Phase 6** re-tier. Do not treat these numbers as final.
+- **Tests:** `Tests/ChemistryContentTests.cs` (chemistry_lab gate, buildings gated + compatible, C1 compounds). `ItemBalanceTests` 153→156.
+
+### Phase 4b — Chemistry C2–C4 (pending)
+- Research `reaction_engineering` (~500K) / `organic_chemistry` (~2M) / `biochem_precursors` (~5M); buildings Catalytic Reactor / Organic Synthesizer; recipes for C2–C4 culminating in the forward-declared `glucose`/`amino_acid`/`fatty_acid`/`nucleotide`. Chain the research nodes (`chemistry_lab → reaction_engineering → …`). A metal harvester (type `ElementMetal`) if C2/C3 needs metals.
+- **Tests:** research gates unlock the right buildings/recipes.
+
+### Biology (deferred): `ResearchBranch.Biology` + nodes, organic fields, Biosynthesizer/Cell Assembler, biomolecule items — land when Biology is built.
+### GATE (each of 4a/4b): full suite green → commit → PR. Stop here.
 
 ## Phase 5 — World-select UI + map theming + discoverability
 
