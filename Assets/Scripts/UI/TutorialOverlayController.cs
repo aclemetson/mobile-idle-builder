@@ -330,7 +330,7 @@ namespace MobileIdleBuilder
                 bool locked;
                 if (enter.blockCollection)
                     locked = true;
-                else if (enter.collectionFilter != FieldType.None)
+                else if (!FieldTypes.IsUnrestricted(enter.collectionFilter))
                     locked = fi.Field.fieldType != enter.collectionFilter;
                 else
                     locked = false;

@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Samarium (Sm), element number 62 with mass number 152. A fission fragment

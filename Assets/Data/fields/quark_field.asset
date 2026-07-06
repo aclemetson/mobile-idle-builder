@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: quark_field
   displayName: Quark Field
-  fieldType: 1
+  fieldType: Quark
   drops:
   - item: {fileID: 11400000, guid: 8fce1685a14924f49ad6bc0321a0d2c9, type: 2}
     weight: 0.5

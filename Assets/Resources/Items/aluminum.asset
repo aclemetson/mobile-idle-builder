@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The most abundant metal in Earth's crust, yet rare in pure form before

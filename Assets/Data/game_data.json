@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.9",
+    "version": "0.3.10",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -4348,7 +4348,44 @@
       "codex_entry": "Oganesson (Og), element number 118 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
       "base_sell_value": 11258999068426240.0,
       "isotope_sell_multiplier": 1.0
-    }
+    },
+
+    { "_organic_note": "OrganicCompound category (Chem/Bio Phase 2). Forward-declared Chemistry C4 outputs; recipes that produce them land in Phase 4. base_sell_value is a first-pass placeholder to tune with those recipes. Biology (deferred) consumes these as field feedstock.",
+      "id": "glucose", "display_name": "Glucose", "symbol": "Glc", "icon_path": "TODO",
+      "item_id": 150, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
+      "atomic_number": 0, "atomic_mass": 180, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A simple sugar and the universal cellular fuel. Chemistry's first step toward biology.",
+      "base_sell_value": 25000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "fatty_acid", "display_name": "Fatty Acid", "symbol": "FA", "icon_path": "TODO",
+      "item_id": 151, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
+      "atomic_number": 0, "atomic_mass": 256, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A long hydrocarbon chain with an acid head. The building block of cell membranes.",
+      "base_sell_value": 30000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "amino_acid", "display_name": "Amino Acid", "symbol": "AA", "icon_path": "TODO",
+      "item_id": 152, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
+      "atomic_number": 0, "atomic_mass": 110, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "The monomer of proteins. Twenty of these, chained, spell out every enzyme and structure of life.",
+      "base_sell_value": 40000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "nucleotide", "display_name": "Nucleotide", "symbol": "Nt", "icon_path": "TODO",
+      "item_id": 153, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
+      "atomic_number": 0, "atomic_mass": 330, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A base, a sugar, and a phosphate. Strung together, nucleotides encode heredity as DNA and RNA.",
+      "base_sell_value": 60000.0, "isotope_sell_multiplier": 1.0 }
   ],
 
   "recipes": [
@@ -9525,6 +9562,54 @@
       "field_color": "#C03221",
       "field_icon_path": "TODO",
       "codex_entry": "A bred-actinide deposit. Harvest plutonium \u2014 denser fission fuel, and the gateway to the transuranic ladder."
+    },
+    {
+      "_element_fields_note": "Chemistry (Chem/Bio Phase 2) feedstock. field_type 'Element' (shared) so one Element Harvester works on all three. They drop EXISTING Element items (mined, not synthesized). Introduced per-site via the absolute-count density-override path on site_chem_lab (like the fissile fields).",
+      "id": "element_field_light",
+      "display_name": "Light Element Seam",
+      "field_type": "Element",
+      "drops": [
+        { "item": "hydrogen", "weight": 1.0 },
+        { "item": "carbon", "weight": 1.0 },
+        { "item": "nitrogen", "weight": 1.0 },
+        { "item": "oxygen", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.0,
+      "field_color": "#A8DADC",
+      "field_icon_path": "TODO",
+      "codex_entry": "A deposit rich in the light elements of organic chemistry \u2014 hydrogen, carbon, nitrogen, oxygen. Mine them to feed the Compound Synthesizer."
+    },
+    {
+      "id": "element_field_metal",
+      "display_name": "Metal Lode",
+      "field_type": "Element",
+      "drops": [
+        { "item": "iron", "weight": 1.0 },
+        { "item": "copper", "weight": 1.0 },
+        { "item": "aluminum", "weight": 1.0 },
+        { "item": "nickel", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.0,
+      "field_color": "#B0BEC5",
+      "field_icon_path": "TODO",
+      "codex_entry": "A vein of workable metals \u2014 iron, copper, aluminum, nickel. The structural and catalytic backbone of inorganic chemistry."
+    },
+    {
+      "id": "element_field_mineral",
+      "display_name": "Mineral Bed",
+      "field_type": "Element",
+      "drops": [
+        { "item": "silicon", "weight": 1.0 },
+        { "item": "sodium", "weight": 1.0 },
+        { "item": "chlorine", "weight": 1.0 },
+        { "item": "sulfur", "weight": 1.0 },
+        { "item": "phosphorus", "weight": 1.0 },
+        { "item": "calcium", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.0,
+      "field_color": "#C9A227",
+      "field_icon_path": "TODO",
+      "codex_entry": "A mineral bed of salts and nonmetals \u2014 silicon, sodium, chlorine, sulfur, phosphorus, calcium. The raw stock for acids, salts, and biochemistry."
     }
   ],
 
@@ -9565,6 +9650,19 @@
         { "field": "quark_field", "density_multiplier": 0.5 },
         { "field": "electron_field", "density_multiplier": 0.5 }
       ]
+    },
+    {
+      "id": "site_chem_lab",
+      "display_name": "Chemistry Lab",
+      "unlock_cost": 0,
+      "_note_chem": "First Chemistry-world site (Chem/Bio Phase 2). element_field_* are introduced here via the absolute-count density-override path (see FieldGenerator.IntroducedFields); the default physics fields are removed. unlock_cost is 0 because the real gate is the Chemistry WORLD (world_chemistry, 150K + mid_elements) wired in Phase 3; reach this site in Phase 2 via the dev console (site unlock/switch).",
+      "field_overrides": [
+        { "field": "quark_field", "density_multiplier": 0.0 },
+        { "field": "electron_field", "density_multiplier": 0.0 },
+        { "field": "element_field_light", "density_multiplier": 3.0 },
+        { "field": "element_field_metal", "density_multiplier": 2.0 },
+        { "field": "element_field_mineral", "density_multiplier": 3.0 }
+      ]
     }
   ],
 
@@ -9582,7 +9680,7 @@
       "display_name": "Chemistry",
       "unlock_cost": 150000,
       "prereq_unlock_ids": ["mid_elements"],
-      "site_ids": []
+      "site_ids": ["site_chem_lab"]
     }
   ],
 

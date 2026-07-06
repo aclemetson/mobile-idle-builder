@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'Flerovium (Fl), element number 114 with mass number 289. A superheavy

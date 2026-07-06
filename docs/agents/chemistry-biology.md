@@ -2,7 +2,7 @@
 
 **Scope:** The data/content model for the Chemistry and Biology tracks: the World layer, per-world fields, the new `OrganicCompound` item category, the research trees, buildings, and recipes. Balance numbers are first-pass anchors — tune against the progression map before committing to `game_data.json`. For the phased build order and constraints, see `tasks/feature-worlds-chem-bio.md`. For the existing periodic-table content this sits alongside, see `elements-and-isotopes.md`.
 
-> Verified against: **Phase 1 implemented** 2026-07-06 (branch `feat/worlds-chem-phase1`). The **World layer** (`WorldSO`/`WorldDatabaseSO`, `worlds` in `game_data.json`, save fields, `WorldLayout` mapping) now exists; `world_physics` + `world_chemistry` (stub) are authored. Fields, `OrganicCompound` items, research, buildings, recipes below are **still design draft** (Phases 2–5). As-built: Worlds group the existing FLAT site list via `WorldSO.siteIds`; no nested save restructure.
+> Verified against: **Phases 1–2 implemented** 2026-07-06. Phase 1: the **World layer** (`WorldSO`/`WorldDatabaseSO`, `worlds` in `game_data.json`, save fields, `WorldLayout` mapping); Worlds group the existing FLAT site list via `WorldSO.siteIds` (no nested save restructure). **Phase 2:** field-type is now a **data-driven string** (the `FieldType` enum is gone — see `FieldTypes` helper); `ItemCategory.OrganicCompound` + 4 items (`glucose`/`fatty_acid`/`amino_acid`/`nucleotide`, forward-declared) exist; **element fields** (`element_field_light`/`metal`/`mineral`, type `"Element"`, dropping existing elements) and the first Chemistry site (`site_chem_lab`, wired to `world_chemistry`) are authored. **Still design draft (Phases 3–5):** `WorldService`/switching, chem research/buildings/recipes, worlds UI. Organic (Biology) fields deferred with Biology.
 
 ## The World layer
 
@@ -20,9 +20,9 @@ World (Biology)   ── sites[] ── grids[]   ← economic unlock: entropy +
 
 ## Item categories
 
-Existing categories (see `elements-and-isotopes.md`): RawResource, Nucleon, Element, Isotope, Particle, Molecule, Alloy, Component. **New:**
+Existing categories (see `elements-and-isotopes.md`): RawResource, Nucleon, Element, Isotope, Particle, Molecule, Alloy, Component. **New (Phase 2, DONE):**
 
-- **`OrganicCompound`** — Biology field feedstock + biomolecule inputs. Members (proposed): `amino_acid`, `glucose` (sugar), `fatty_acid` (lipid monomer), `nucleotide`. (Later: `glycerol`, `fructose`, individual bases if needed.)
+- **`OrganicCompound`** (`ItemCategory.OrganicCompound`, added Phase 2) — Biology field feedstock + biomolecule inputs. Members shipped: `glucose` (item_id 150), `fatty_acid` (151), `amino_acid` (152), `nucleotide` (153) — all tier_3, `is_harvested:false`, forward-declared (produced by Chemistry C4 recipes in Phase 4; `base_sell_value` is a placeholder to tune there). Next free `item_id` is 154. (Later: `glycerol`, `fructose`, individual bases if needed.)
 
 Chemistry produces new **Molecule**-category items (reusing the existing category) and the first `OrganicCompound` items at its C4 tier. Biology produces new items grouped under proposed categories `Biomolecule`, `CellPart`, `Organism` (or keep them all under a single `Lifeform` category — decide at Phase 4).
 
@@ -46,9 +46,9 @@ First prestiges land across P2–P3 (wall = 50,000e net worth).
 
 **Unlock:** `chemistry_lab` research, **~150,000e**, prereq `mid_elements`. Opens the Chemistry world + map + element harvesters + Compound Synthesizer. Extends the existing `ResearchBranch.Chemistry`.
 
-**Fields (drop existing Element items — mined, not synthesized):**
+**Fields (drop existing Element items — mined, not synthesized). BUILT in Phase 2:** all three share `field_type: "Element"` (one Element Harvester covers all) and are introduced on `site_chem_lab` via the absolute-count density-override path (like the fissile fields); the site zeroes the default `quark_field`/`electron_field`. `site_chem_lab` has `unlock_cost: 0` because the real gate is the Chemistry **world** (wired in Phase 3); reach it in Phase 2 via the dev console (`site unlock`/`switch`).
 
-| Field id | Drops (weighted) |
+| Field id | Drops (equal weight) |
 |---|---|
 | `element_field_light` | hydrogen, carbon, nitrogen, oxygen |
 | `element_field_metal` | iron, copper, aluminum, nickel |
@@ -103,7 +103,7 @@ Intended order once re-tiered: **Heavy Elements & Isotopes → Transuranics/Supe
 
 ## Open decisions (resolve during build)
 
-1. `FieldType` enum extension vs. data-driven string refactor (Phase 2).
+1. ~~`FieldType` enum extension vs. data-driven string refactor (Phase 2).~~ **RESOLVED (Phase 2): data-driven string** — enum deleted, `FieldTypes` helper added.
 2. One `Lifeform` item category vs. `Biomolecule`/`CellPart`/`Organism` split (Phase 4).
 3. Whether C4 organics get their own building or extend the Organic Synthesizer.
 4. Final gate costs + whether biology tiers need intermediate sub-gates for pacing.

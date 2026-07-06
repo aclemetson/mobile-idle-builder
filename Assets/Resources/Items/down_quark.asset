@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
-  fieldType: 1
+  fieldType: Quark
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The heavier of the two light quarks, carrying a -1/3 electric charge.

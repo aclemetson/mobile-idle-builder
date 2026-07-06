@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 1
   particleUses: 3
   codexEntry: Emitted during beta decay of unstable isotopes like Tritium and Carbon-14.

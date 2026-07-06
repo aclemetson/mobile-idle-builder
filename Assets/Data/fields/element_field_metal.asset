@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f54a4614174f442bde4c9e662ec50f, type: 3}
+  m_Name: element_field_metal
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
+  id: element_field_metal
+  displayName: Metal Lode
+  fieldType: Element
+  drops:
+  - item: {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: 31333edf10e38474c90fafe8f7d578e3, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+    weight: 1
+  tapCooldownSeconds: 2
+  fieldColor: {r: 0.6901961, g: 0.74509805, b: 0.77254903, a: 1}
+  fieldIcon: {fileID: 0}
+  codexEntry: "A vein of workable metals \u2014 iron, copper, aluminum, nickel. The
+    structural and catalytic backbone of inorganic chemistry."

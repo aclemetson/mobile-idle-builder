@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f54a4614174f442bde4c9e662ec50f, type: 3}
+  m_Name: element_field_mineral
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
+  id: element_field_mineral
+  displayName: Mineral Bed
+  fieldType: Element
+  drops:
+  - item: {fileID: 11400000, guid: e9d4fd82ea10f0747bcd10d5cc822c97, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: 83c568384b6970b47a30de4c7097a7da, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: 1ee670598b76c72439e7169644de8bb6, type: 2}
+    weight: 1
+  - item: {fileID: 11400000, guid: 4c6c94900546a7340bd82fd524fc4c57, type: 2}
+    weight: 1
+  tapCooldownSeconds: 2
+  fieldColor: {r: 0.7882353, g: 0.63529414, b: 0.15294118, a: 1}
+  fieldIcon: {fileID: 0}
+  codexEntry: "A mineral bed of salts and nonmetals \u2014 silicon, sodium, chlorine,
+    sulfur, phosphorus, calcium. The raw stock for acids, salts, and biochemistry."

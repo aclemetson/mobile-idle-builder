@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Sodium (Na), element number 11 with mass number 23. Forged by fusion,

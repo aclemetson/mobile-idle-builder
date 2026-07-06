@@ -385,8 +385,7 @@ namespace MobileIdleBuilder.Editor
                 so.category = cat;
             if (TryParseEnum<DecayType>(data.decay_type, $"ItemSO '{data.id}'.decayType", out var decay))
                 so.decayType = decay;
-            if (TryParseEnum<FieldType>(data.field_type, $"ItemSO '{data.id}'.fieldType", out var ft))
-                so.fieldType = ft;
+            so.fieldType = FieldTypes.Normalize(data.field_type);
 
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
@@ -483,8 +482,7 @@ namespace MobileIdleBuilder.Editor
 
             so.compatibleAdjacentCategories = ParseEnumArray<BuildingCategory>(
                 data.compatible_adjacent_categories, $"BuildingSO '{data.id}'.compatibleAdjacentCategories");
-            so.compatibleFields = ParseEnumArray<FieldType>(
-                data.compatible_fields, $"BuildingSO '{data.id}'.compatibleFields");
+            so.compatibleFields = data.compatible_fields ?? System.Array.Empty<string>();
 
             if (data.upgrade_levels != null)
             {
@@ -572,8 +570,7 @@ namespace MobileIdleBuilder.Editor
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
-            if (TryParseEnum<FieldType>(data.field_type, $"FieldSO '{data.id}'.fieldType", out var ft))
-                so.fieldType = ft;
+            so.fieldType = FieldTypes.Normalize(data.field_type);
             if (ColorUtility.TryParseHtmlString(data.field_color, out var color))
                 so.fieldColor = color;
             so.fieldIcon = LoadAssetOrWarn<Sprite>(data.field_icon_path, $"FieldSO '{data.id}'.fieldIcon");
@@ -843,9 +840,7 @@ namespace MobileIdleBuilder.Editor
                             $"TutorialStep '{s.id}'.on_enter.highlight_mode", out var hm))
                         def.onEnter.highlightMode = hm;
 
-                    if (TryParseEnum<FieldType>(s.on_enter.collection_filter,
-                            $"TutorialStep '{s.id}'.on_enter.collection_filter", out var ft))
-                        def.onEnter.collectionFilter = ft;
+                    def.onEnter.collectionFilter = FieldTypes.Normalize(s.on_enter.collection_filter);
 
                     if (TryParseEnum<BuildingInteractionGate>(s.on_enter.building_interaction_gate,
                             $"TutorialStep '{s.id}'.on_enter.building_interaction_gate", out var big))

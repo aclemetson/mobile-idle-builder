@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Cerium (Ce), element number 58 with mass number 140. A fission fragment

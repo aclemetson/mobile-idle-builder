@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
-  fieldType: 1
+  fieldType: Quark
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "One of two quark flavours that compose protons and neutrons. Carries

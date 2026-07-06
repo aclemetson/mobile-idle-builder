@@ -111,8 +111,8 @@ namespace MobileIdleBuilder
         public HighlightMode highlightMode;
         /// <summary>True = block all field collection while this step is active.</summary>
         public bool          blockCollection;
-        /// <summary>Restrict manual field collection to this field type. None = no restriction.</summary>
-        public FieldType     collectionFilter;
+        /// <summary>Restrict manual field collection to this field-type id. "None"/empty = no restriction.</summary>
+        public string        collectionFilter = FieldTypes.None;
         /// <summary>UI button ID to pulse (e.g. "btn-research"). Empty = no pulse.</summary>
         public string        pulseButtonId;
         /// <summary>Item IDs to highlight inside the Maxwell's Demon panel. Null/empty = none.</summary>

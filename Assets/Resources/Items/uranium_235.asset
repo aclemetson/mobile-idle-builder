@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 703.8 million years
   isFissile: 1
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The fissile isotope of uranium used in nuclear reactors and weapons.
