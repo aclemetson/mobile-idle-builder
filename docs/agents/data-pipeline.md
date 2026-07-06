@@ -5,7 +5,8 @@
 > Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
 > Power Relay added (`building_id 13`) 2026-07-03 — next free `building_id` is 14.
 > `worlds` section + `WorldSO`/`WorldDatabaseSO` added 2026-07-06 (Chem/Bio Phase 1); `_meta.version` bumped to 0.3.9.
-> Chem/Bio Phase 2 (2026-07-06, `_meta.version` 0.3.10): **field "type" is now a data-driven string** (`FieldSO.fieldType`/`BuildingSO.compatibleFields`/`TutorialFlowSO.collectionFilter` are `string`/`string[]`; the `FieldType` enum is gone — use the `FieldTypes` helper; JSON was already string-valued). New `ItemCategory.OrganicCompound` + items 150–153 (next free `item_id` 154); element fields; `site_chem_lab`. New items still need a generated tile — run **Generate Element Icons** then **Import Game Data** (a new item with no icon fails `ItemIconTests`).
+> Chem/Bio Phase 2 (2026-07-06, `_meta.version` 0.3.10): **field "type" is now a data-driven string** (`FieldSO.fieldType`/`BuildingSO.compatibleFields`/`TutorialFlowSO.collectionFilter` are `string`/`string[]`; the `FieldType` enum is gone — use the `FieldTypes` helper; JSON was already string-valued). New `ItemCategory.OrganicCompound` + items 150–153; element fields; `site_chem_lab`. New items still need a generated tile — run **Generate Element Icons** then **Import Game Data** (a new item with no icon fails `ItemIconTests`).
+> Chem/Bio Phase 4a (2026-07-06, `_meta.version` 0.3.11): `chemistry_lab` research; `element_harvester` (`building_id 14`) + `compound_synthesizer` (`building_id 15`) — **next free `building_id` is 16**; 6 `collect_<element>` + 3 compound recipes (`recipe_id 164–172`, **next free 173**); Molecule items `carbon_dioxide`/`table_salt`/`sulfuric_acid` (150–156, **next free `item_id` 157**). Field-type `"ElementMetal"` added. Icons regenerated.
 
 ## Single source of truth
 

@@ -47,7 +47,7 @@ namespace MobileIdleBuilder.Editor
         private static readonly string[] PlacementRuleOptions =
             { "Anywhere", "MustBeOnField", "AdjacentToBuilding" };
         private static readonly string[] FieldTypeOptions =
-            { "None", "Quark", "Lepton", "Uranium", "Plutonium", "Element" };
+            { "None", "Quark", "Lepton", "Uranium", "Plutonium", "Element", "ElementMetal" };
         private static readonly string[] DecayTypeOptions =
             { "None", "Alpha", "Beta" };
         private static readonly string[] EnvironmentOptions =

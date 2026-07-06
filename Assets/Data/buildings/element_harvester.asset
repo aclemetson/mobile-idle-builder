@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: element_harvester
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: element_harvester
+  displayName: Element Harvester
+  description: Mines bulk elements from an Element field. Place on an element seam
+    and pick which element to extract.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 14
+  tier: 3
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 0
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 7a3bd5726f8a5e24895d0b0a3e2dbd69, type: 2}
+  - {fileID: 11400000, guid: e01e9299b817ac04199ccf12f2f0882d, type: 2}
+  - {fileID: 11400000, guid: 5546a70d14ababd4d9182f96ae90ae7c, type: 2}
+  - {fileID: 11400000, guid: 887bf25e3533dc448bb93f7d4cf3f30a, type: 2}
+  - {fileID: 11400000, guid: 78fb14b7e6d81424c8dcde03aa14d65f, type: 2}
+  - {fileID: 11400000, guid: 1f0bb43fd9479054194437589a8e7429, type: 2}
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 0
+  ports: []
+  placementRule: 1
+  compatibleAdjacentCategories: 
+  compatibleFields:
+  - Element
+  entropyCost: 5000
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 25000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 100000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 400000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 15000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 60000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 240000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: "A boring rig for matter itself. Placed on an element seam, it extracts
+    a chosen element in bulk \u2014 the raw feedstock for chemistry."

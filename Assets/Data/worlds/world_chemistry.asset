@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldSO
   id: world_chemistry
   displayName: Chemistry
-  unlockCost: 150000
+  unlockCost: 0
   prereqUnlockIds:
-  - mid_elements
+  - chemistry_lab
   siteIds:
   - site_chem_lab
   theme:
