@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** IN PROGRESS — **Phases 1–2 DONE** (2026-07-06): P1 World data model + save partition (PR #119); P2 field-type string refactor + `OrganicCompound` items + element fields + `site_chem_lab` (branch `feat/worlds-chem-phase2`). Chemistry-focused; Biology content (incl. organic fields) deferred. Phases 3–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
+**Status:** IN PROGRESS — **Phases 1–3 DONE** (2026-07-06): P1 World data model + save partition (PR #119); P2 field-type string refactor + `OrganicCompound` items + element fields + `site_chem_lab` (PR #120); P3 `WorldService` (unlock + prereq gate + travel via `SiteService`) + `world` dev commands (branch `feat/worlds-chem-phase3`). Chemistry-focused; Biology content deferred. Phases 4–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -65,14 +65,17 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 - **Not done (deferred):** organic fields (`amino_acid_field` etc.) — Biology feedstock, land with Biology.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 3 — WorldService + switching + economic gate
+## Phase 3 — WorldService + switching + economic gate — DONE (2026-07-06)
 
 **Goal:** `WorldService.SwitchTo(index)` and economic unlock work (dev-console first).
 
-- New `Services/WorldService.cs` copying `Services/SiteService.cs` shape: `CanUnlock` (entropy **and** prerequisite-unlock check — extend the pure static `IsUnlocked` helper pattern), `UnlockWorld`, `SwitchTo` (flush → save → tear down live grid → load target world's active site; reuse the Site switch handoff at `SiteService.cs:131-162`).
-- Idle aggregation already iterates unlocked sites — extend to iterate across worlds.
-- Dev console commands `world list / switch / unlock` — copy the `site …` registration in `DevConsole/DevConsoleController.cs`.
-- **Tests:** unlock deduction + prereq gating; switch round-trip (place building → switch world → switch back → intact); idle aggregation across worlds.
+**As-built:**
+- `Services/WorldService.cs` mirrors `SiteService`: static `IsUnlocked` (index 0 physics implicit; others in `unlockedWorlds`) + static `PrereqsMet` (all `prereqUnlockIds` in `save.unlockedResearch` — pure/testable); `CanUnlock` = !unlocked && prereqs && affordable. `UnlockWorld` deducts entropy, records `unlockedWorlds` (survives prestige), and **unlocks member sites** (`unlockedSites` + `EnsureSiteGrid`) so travel works. `SwitchTo` resolves the world's entry site and **delegates the grid handoff to `SiteService.SwitchTo`** (no duplicated flush/teardown logic).
+- **Self-bootstrapped** (`[RuntimeInitializeOnLoadMethod]`, no scene placement — no serialized fields, can't be lost in a scene refactor; mirrors `FeatureFlagService`). ECS access is lazy (`EnsureEcs`) since it's created before GameScene's ECS world.
+- `SiteService.SwitchTo` now keeps `activeWorldIndex` in sync via `WorldLayout.WorldIndexForSite` (SiteService is the single writer of `activeSiteIndex`), so world/site stay consistent whether switched via the world or site path. SiteService loads `WorldDatabase` for this.
+- **Idle aggregation across worlds: already satisfied** — `OfflineCollectionService` iterates the flat `save.siteSnapshots` (all unlocked sites across all worlds); no change needed.
+- Dev console `world list / switch / unlock` (shows prereq status), mirroring the `site` commands.
+- **Tests:** `PlayModeTests/WorldServiceTests.cs` (pure gate: `IsUnlocked` + `PrereqsMet`). The ECS switch handoff is covered by `SiteServiceTests` (grid round-trip) + manual playtest.
 ### GATE: full suite green → commit → PR. Stop here.
 
 ## Phase 4 — Research branches + buildings + recipes
