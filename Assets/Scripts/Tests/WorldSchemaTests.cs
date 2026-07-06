@@ -139,12 +139,19 @@ namespace MobileIdleBuilder.Tests
             CollectionAssert.Contains(chem.prereqUnlockIds, "mid_elements",
                 "world_chemistry prereq is mid_elements");
 
-            // world_physics wraps every site in the SiteDatabase.
+            // Every site in the SiteDatabase belongs to exactly one world (worlds partition the flat
+            // site list). world_physics owns the original physics sites; site_chem_lab belongs to chem.
             var sites = Resources.Load<SiteDatabaseSO>("SiteDatabase");
             Assert.IsNotNull(sites, "Resources/SiteDatabase.asset missing");
+            var owned = new HashSet<string>();
+            foreach (var w in db.allWorlds)
+                if (w?.siteIds != null)
+                    foreach (var sid in w.siteIds) owned.Add(sid);
             foreach (var s in sites.allSites)
-                CollectionAssert.Contains(physics.siteIds, s.id,
-                    $"world_physics.siteIds must include every site ({s.id})");
+                Assert.IsTrue(owned.Contains(s.id),
+                    $"site '{s.id}' must be owned by some world");
+            CollectionAssert.Contains(physics.siteIds, "site_origin",
+                "world_physics owns the origin site");
         }
 
         // ── SaveData additive fields ──────────────────────────────────────────

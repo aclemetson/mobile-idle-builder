@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: electron_field
   displayName: Lepton Field
-  fieldType: 2
+  fieldType: Lepton
   drops:
   - item: {fileID: 11400000, guid: dd3f9758ae3f5034086cb81c351137c0, type: 2}
     weight: 1

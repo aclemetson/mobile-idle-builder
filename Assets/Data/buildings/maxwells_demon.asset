@@ -77,7 +77,7 @@ MonoBehaviour:
     localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 0
   baseMaxOutputItems: 0
   baseMaxInputItemsPerSlot: 0

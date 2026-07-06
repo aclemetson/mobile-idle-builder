@@ -12,7 +12,8 @@ namespace MobileIdleBuilder
         Alloy,
         Component,
         Particle,
-        Megastructure
+        Megastructure,
+        OrganicCompound   // Chemistry C4 outputs (amino acids, sugars, lipids, nucleotides); Biology feedstock
     }
 
     public enum RecipeCategory
@@ -58,13 +59,26 @@ namespace MobileIdleBuilder
         PowerRelay          // broadcast pylon
     }
 
-    public enum FieldType
+    /// <summary>
+    /// Field "type" is a free-form string id (data-driven — new field types need no code, only JSON).
+    /// A <see cref="FieldSO"/>'s <c>fieldType</c> categorises it; <see cref="BuildingSO"/>'s
+    /// <c>compatibleFields</c> lists the field-type ids a building can be placed on; and
+    /// <c>TutorialFlowSO.collectionFilter</c> restricts manual collection to one type.
+    /// The sentinel <see cref="None"/> ("None"/empty/null) means "no type / no restriction".
+    /// Known ids in game_data.json today: None, Quark, Lepton, Uranium, Plutonium, Element.
+    /// </summary>
+    public static class FieldTypes
     {
-        None,
-        Quark,    // Generic quark field — collector buildings specify up/down quark output via their recipe
-        Lepton,   // Electron field — outputItem on FieldSO is Electron
-        Uranium,  // Fissile field — harvests uranium (U-238); seeds the fission ladder
-        Plutonium // Fissile field — harvests plutonium (Pu-239)
+        public const string None = "None";
+
+        /// <summary>True when a field-type filter imposes no restriction (null, empty, or "None").</summary>
+        public static bool IsUnrestricted(string fieldType) =>
+            string.IsNullOrEmpty(fieldType) ||
+            string.Equals(fieldType, None, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Normalises a raw field-type string: null/empty becomes the "None" sentinel.</summary>
+        public static string Normalize(string fieldType) =>
+            string.IsNullOrEmpty(fieldType) ? None : fieldType;
     }
 
     public enum DecayType

@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** IN PROGRESS — **Phase 1 DONE** (PR #119, branch `feat/worlds-chem-phase1`, 2026-07-06): World data model + save partition landed with no behavior change; Chemistry started per user direction (Biology content still deferred). Phases 2–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
+**Status:** IN PROGRESS — **Phases 1–2 DONE** (2026-07-06): P1 World data model + save partition (PR #119); P2 field-type string refactor + `OrganicCompound` items + element fields + `site_chem_lab` (branch `feat/worlds-chem-phase2`). Chemistry-focused; Biology content (incl. organic fields) deferred. Phases 3–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -53,13 +53,16 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 - **Tests:** legacy single-world save loads and plays as World 0; round-trip; `SOSchemaTests` extension for `WorldSO`.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 2 — Field taxonomy + new resources
+## Phase 2 — Field taxonomy + new resources — DONE (2026-07-06)
 
-**Goal:** element + organic fields and the `OrganicCompound` items exist and place on a map.
+**Goal:** element fields + the `OrganicCompound` items exist and place on a map.
 
-- Extend `FieldType` (`Enums/GameEnums.cs`) with element/organic types **OR** refactor field-type to a data-driven string id (preferred long-term). **Decide at phase start.** The refactor touches `Grid/BuildingPlacementController.cs` (compatibility), `Gameplay/ManualFieldCollector.cs` (`FieldTypeToTriggerId`), tutorial `collectionFilter` parsing (`GameDataImporter.cs`), and `Gameplay/FieldGenerator.cs`.
-- Add new `OrganicCompound` item category + items (`amino_acid`, `glucose`, `fatty_acid`, `nucleotide`, …) and new `fields` entries (element + organic fields) to `game_data.json`. Fields *introduced* per-site via the existing density-override absolute-count path (fissile fields are the working template).
-- **Tests:** importer parses new fields/items; field placement on a chem/bio site.
+**As-built (Chemistry-focused per user direction — organic/Biology fields DEFERRED to the Biology build):**
+- **DECIDED: field-type is a data-driven string** (not enum extension). The `FieldType` enum is deleted; `FieldSO.fieldType`/`ItemSO.fieldType`/`TutorialFlowSO.collectionFilter` are `string`, `BuildingSO.compatibleFields` is `string[]`. New `FieldTypes` helper (`Enums/GameEnums.cs`) holds the `"None"` sentinel + `IsUnrestricted`/`Normalize`. Touched: importer (stop parsing to enum), `ManualFieldCollector` (`FieldTypeToTriggerId` removed — toast now uses `field.id`, identical for tutorial fields), `TutorialOverlayController`, `BuildingPlacementController` (string equality), `GameDataEditorWindow` (dropdown is string). JSON was already string-valued, so no content churn beyond regeneration.
+- `ItemCategory.OrganicCompound` + 4 forward-declared items (`glucose`/`fatty_acid`/`amino_acid`/`nucleotide`, item_id 150–153, tier_3). **Ran Generate Element Icons** for their tiles (else `ItemIconTests` fails).
+- Element fields `element_field_light`/`metal`/`mineral` (type `"Element"`, drop existing elements) + site `site_chem_lab` (introduces them via density-override, `unlock_cost:0`; world-gated in Phase 3), wired to `world_chemistry.site_ids`.
+- **Tests:** `Tests/ChemistryContentTests.cs` (OrganicCompound items, chem site introduces element fields with string type, world owns chem site) + updated `WorldSchemaTests` (sites partitioned across worlds), `ItemBalanceTests` (149→153), `SOSchemaTests` (FieldTypes/OrganicCompound). Full suite green (734).
+- **Not done (deferred):** organic fields (`amino_acid_field` etc.) — Biology feedstock, land with Biology.
 ### GATE: full suite green → commit → PR. Stop here.
 
 ## Phase 3 — WorldService + switching + economic gate

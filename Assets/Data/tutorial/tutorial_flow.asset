@@ -30,7 +30,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -55,7 +55,7 @@ MonoBehaviour:
       highlightTarget: electron_field
       highlightMode: 2
       blockCollection: 0
-      collectionFilter: 2
+      collectionFilter: Lepton
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -86,7 +86,7 @@ MonoBehaviour:
       highlightTarget: maxwells_demon
       highlightMode: 1
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -119,7 +119,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 03000000
       buildingInteractionGate: 0
@@ -142,7 +142,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -165,7 +165,7 @@ MonoBehaviour:
       highlightTarget: quark_field
       highlightMode: 2
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -192,7 +192,7 @@ MonoBehaviour:
       highlightTarget: quark_field
       highlightMode: 2
       blockCollection: 0
-      collectionFilter: 1
+      collectionFilter: Quark
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -223,7 +223,7 @@ MonoBehaviour:
       highlightTarget: maxwells_demon
       highlightMode: 1
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -258,7 +258,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 0100000002000000
       buildingInteractionGate: 0
@@ -281,7 +281,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -304,7 +304,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-drawer-handle
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -343,7 +343,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -382,7 +382,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -410,7 +410,7 @@ MonoBehaviour:
       highlightTarget: quark_field
       highlightMode: 2
       blockCollection: 0
-      collectionFilter: 1
+      collectionFilter: Quark
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -442,7 +442,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -472,7 +472,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -498,7 +498,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -522,7 +522,7 @@ MonoBehaviour:
       highlightTarget: maxwells_demon
       highlightMode: 2
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -562,7 +562,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 0400000005000000
       buildingInteractionGate: 2
@@ -586,7 +586,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -611,7 +611,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -657,7 +657,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -686,7 +686,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -711,7 +711,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -734,7 +734,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -757,7 +757,7 @@ MonoBehaviour:
       highlightTarget: maxwells_demon
       highlightMode: 1
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -794,7 +794,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 06000000
       buildingInteractionGate: 2
@@ -817,7 +817,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 2
@@ -840,7 +840,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -863,7 +863,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 1
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 1
@@ -898,7 +898,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -922,7 +922,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -945,7 +945,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -968,7 +968,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -991,7 +991,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1015,7 +1015,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1039,7 +1039,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1062,7 +1062,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1086,7 +1086,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1110,7 +1110,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1134,7 +1134,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1157,7 +1157,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1180,7 +1180,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1203,7 +1203,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1227,7 +1227,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1250,7 +1250,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-conveyors
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1273,7 +1273,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1296,7 +1296,7 @@ MonoBehaviour:
       highlightTarget: atomic_assembler
       highlightMode: 2
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1319,7 +1319,7 @@ MonoBehaviour:
       highlightTarget: atomic_assembler
       highlightMode: 1
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 3
@@ -1342,7 +1342,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1366,7 +1366,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1389,7 +1389,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1412,7 +1412,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1438,7 +1438,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1461,7 +1461,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1484,7 +1484,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1507,7 +1507,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1533,7 +1533,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1556,7 +1556,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1580,7 +1580,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1603,7 +1603,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1627,7 +1627,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1653,7 +1653,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1676,7 +1676,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1700,7 +1700,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1723,7 +1723,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1747,7 +1747,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1773,7 +1773,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-recipes
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1796,7 +1796,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1821,7 +1821,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1844,7 +1844,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1867,7 +1867,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1891,7 +1891,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1914,7 +1914,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1937,7 +1937,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1960,7 +1960,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -1983,7 +1983,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-research
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -2006,7 +2006,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: btn-build
       demonHighlightItemIds: 
       buildingInteractionGate: 0
@@ -2029,7 +2029,7 @@ MonoBehaviour:
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
-      collectionFilter: 0
+      collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: uranium_field
   displayName: Uranium Vein
-  fieldType: 3
+  fieldType: Uranium
   drops:
   - item: {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
     weight: 1

@@ -5,6 +5,7 @@
 > Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
 > Power Relay added (`building_id 13`) 2026-07-03 — next free `building_id` is 14.
 > `worlds` section + `WorldSO`/`WorldDatabaseSO` added 2026-07-06 (Chem/Bio Phase 1); `_meta.version` bumped to 0.3.9.
+> Chem/Bio Phase 2 (2026-07-06, `_meta.version` 0.3.10): **field "type" is now a data-driven string** (`FieldSO.fieldType`/`BuildingSO.compatibleFields`/`TutorialFlowSO.collectionFilter` are `string`/`string[]`; the `FieldType` enum is gone — use the `FieldTypes` helper; JSON was already string-valued). New `ItemCategory.OrganicCompound` + items 150–153 (next free `item_id` 154); element fields; `site_chem_lab`. New items still need a generated tile — run **Generate Element Icons** then **Import Game Data** (a new item with no icon fails `ItemIconTests`).
 
 ## Single source of truth
 

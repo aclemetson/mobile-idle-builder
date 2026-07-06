@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
-  fieldType: 2
+  fieldType: Lepton
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A fundamental lepton with a -1 charge. Orbits the nucleus of atoms

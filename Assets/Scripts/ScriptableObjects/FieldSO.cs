@@ -20,7 +20,8 @@ namespace MobileIdleBuilder
     {
         public string id;
         public string displayName;
-        public FieldType fieldType;
+        [Tooltip("Free-form field-type id (data-driven). Buildings' compatibleFields match on this. See FieldTypes.")]
+        public string fieldType = FieldTypes.None;
 
         [Tooltip("Item produced each time the player taps this field.\n" +
                  "Weights are relative — equal weights = equal probability.\n" +

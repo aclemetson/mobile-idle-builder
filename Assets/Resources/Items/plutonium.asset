@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 24,100 years (Pu-239)
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Does not occur naturally on Earth \u2014 only made in reactors and

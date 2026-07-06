@@ -77,7 +77,7 @@ namespace MobileIdleBuilder
         public BuildingPort[] ports;                  // input/output port layout in local (unrotated) space
         public PlacementRule placementRule;
         public BuildingCategory[] compatibleAdjacentCategories;
-        public FieldType[] compatibleFields;
+        public string[] compatibleFields;   // field-type ids this building can be placed on (see FieldTypes)
 
         [Header("Economy")]
         public int entropyCost;             // entropy spent to place this building
