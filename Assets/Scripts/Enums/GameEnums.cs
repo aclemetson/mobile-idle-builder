@@ -54,14 +54,17 @@ namespace MobileIdleBuilder
         MaterialsForge,     // crucible
         ComponentFabricator,// precision crown
         RadioactiveContainment, // lead shell
-        BasicGenerator      // energy spire
+        BasicGenerator,     // energy spire
+        PowerRelay          // broadcast pylon
     }
 
     public enum FieldType
     {
         None,
         Quark,    // Generic quark field — collector buildings specify up/down quark output via their recipe
-        Lepton    // Electron field — outputItem on FieldSO is Electron
+        Lepton,   // Electron field — outputItem on FieldSO is Electron
+        Uranium,  // Fissile field — harvests uranium (U-238); seeds the fission ladder
+        Plutonium // Fissile field — harvests plutonium (Pu-239)
     }
 
     public enum DecayType

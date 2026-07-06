@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: power_distribution
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: power_distribution
+  displayName: Power Distribution
+  description: "Unlocks the Power Relay \u2014 a mast that broadcasts the grid's
+    power over a wide radius without generating any eV, letting one generator feed
+    distant buildings."
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  depthInTree: 2
+  costBaseCurrency: 600
+  costPrestigeCurrency: 0
+  durationSeconds: 60
+  fieldCooldownMult: 1
+  unlocksItems: []
+  unlocksRecipes: []
+  unlocksBuildings:
+  - {fileID: 11400000, guid: f03519cfa1f0a7a42afcd7ee4edda763, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.25
+  codexEntry: Power need not be generated where it is used. A resonant relay re-radiates
+    the grid's existing eV field across a far wider area than any single generator
+    can reach, decoupling where you make power from where you spend it.

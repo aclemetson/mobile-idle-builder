@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: fusion_iii
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: fusion_iii
+  displayName: Silicon Burning
+  description: "Unlock the terminal fusion rungs \u2014 sulfur through iron, the
+    natural peak."
+  icon: {fileID: 0}
+  branch: 4
+  prerequisites:
+  - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  depthInTree: 4
+  costBaseCurrency: 120000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 43088a3f0b9148d4aa5d507942d133c2, type: 2}
+  - {fileID: 11400000, guid: d0974d965bf54c044b180fb892d68f36, type: 2}
+  - {fileID: 11400000, guid: 716dd01167a799d4da71115fe9297ff7, type: 2}
+  - {fileID: 11400000, guid: 10924634e73b74940943c8e88c9873e8, type: 2}
+  - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
+  - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "The last day of a massive star: silicon burning forges its way to
+    iron-56, the most tightly bound nucleus. Fusion can climb no further \u2014 beyond
+    iron it costs more energy than it yields."

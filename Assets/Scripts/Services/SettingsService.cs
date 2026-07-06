@@ -32,6 +32,7 @@ namespace MobileIdleBuilder
         public void SetMusicVolume(float v)          { _current.musicVolume         = v; Apply(); Save(); }
         public void SetGraphicsQuality(int quality)  { _current.graphicsQuality     = quality; Apply(); Save(); }
         public void SetNotifications(bool enabled)   { _current.notificationsEnabled = enabled; Save(); }
+        public void SetShowPowerConnections(bool on) { _current.showPowerConnections = on; Save(); }
 
         // ── Internal ──────────────────────────────────────────────────────
 

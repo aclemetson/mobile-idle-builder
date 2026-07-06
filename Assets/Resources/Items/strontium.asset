@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: strontium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: strontium
+  displayName: Strontium
+  symbol: Sr
+  icon: {fileID: 21300000, guid: 6c6d1c67a1217ff429ec3fff1dbccfb0, type: 3}
+  itemId: 75
+  tier: 2
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 38
+  atomicMass: 88
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: Strontium (Sr), element number 38 with mass number 88. A fission fragment
+    on the long descent from the heavy actinides back toward iron.
+  codexUnlocked: 0
+  baseSellValue: 11421224
+  isotopeSellMultiplier: 1

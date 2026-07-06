@@ -143,3 +143,11 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 559fca6955da77345bff902cc680eb10, type: 2}
   - id: particles_loop_context
     dialogue: {fileID: 11400000, guid: e1f1eda721baabc46a11bbb8c8e08d4f, type: 2}
+  - id: intro_nuclear_reactors_context
+    dialogue: {fileID: 11400000, guid: a0399aad662fdc64ba15e71b34b02c04, type: 2}
+  - id: fusion_explained_context
+    dialogue: {fileID: 11400000, guid: add64fdf6ddc0bc45b367502b86eb4ce, type: 2}
+  - id: intro_fissile_context
+    dialogue: {fileID: 11400000, guid: 2247ffc9d3ec4544590845dd5f1363fb, type: 2}
+  - id: reactors_complete_context
+    dialogue: {fileID: 11400000, guid: d2cf1b4040bb32d408ea0c4e6e5b9281, type: 2}

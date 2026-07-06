@@ -15,7 +15,7 @@ MonoBehaviour:
   id: silver
   displayName: Silver
   symbol: Ag
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 476d731aa5396244ab8014856b812ec2, type: 3}
   itemId: 27
   tier: 2
   category: 2
@@ -35,5 +35,5 @@ MonoBehaviour:
     in solar panel contacts, antibacterial coatings, and high-performance circuit
     connections.
   codexUnlocked: 0
-  baseSellValue: 81920
+  baseSellValue: 1522149
   isotopeSellMultiplier: 1

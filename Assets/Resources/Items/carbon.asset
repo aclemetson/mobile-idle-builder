@@ -15,7 +15,7 @@ MonoBehaviour:
   id: carbon
   displayName: Carbon
   symbol: C
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1ad1ea25f6cb3344dada9c4855b78502, type: 3}
   itemId: 9
   tier: 2
   category: 2

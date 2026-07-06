@@ -221,6 +221,9 @@ namespace MobileIdleBuilder
             p["playtime_total_sec"]      = (long)(now - _sessionStartTime);
             p["field_collections"]       = _fieldCollections;
             p["field_cooldown_sec"]      = ManualFieldCollector.CurrentEffectiveFieldCooldown();
+            ReadPowerNodeCounts(out int powerNodesTotal, out int powerNodesLinked);
+            p["power_nodes_total"]       = powerNodesTotal;
+            p["power_nodes_linked"]      = powerNodesLinked;
             _sink.RecordEvent("player_snapshot", p);
         }
 
@@ -261,6 +264,29 @@ namespace MobileIdleBuilder
             {
                 GameLogger.Debug($"[Telemetry] ECS read skipped: {ex.Message}");
                 return false;
+            }
+        }
+
+        // Power grid connectivity: total placed power nodes vs how many chain back to a generator. The gap
+        // (stranded relays) is the signal that link ranges are mistuned. Reads PowerGridSystem's singleton;
+        // never throws — leaves both 0 if the grid state isn't available yet.
+        void ReadPowerNodeCounts(out int total, out int linked)
+        {
+            total = 0; linked = 0;
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+            try
+            {
+                var em = world.EntityManager;
+                using var q = em.CreateEntityQuery(ComponentType.ReadOnly<PowerGridState>());
+                if (q.CalculateEntityCount() != 1) return;
+                var state = q.GetSingleton<PowerGridState>();
+                total  = state.TotalNodeCount;
+                linked = state.LinkedNodeCount;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Debug($"[Telemetry] power-node read skipped: {ex.Message}");
             }
         }
 

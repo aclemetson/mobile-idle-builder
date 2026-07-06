@@ -1850,3 +1850,188 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+  - id: intro_nuclear_reactors
+    hintText: Building atoms one nucleon at a time is slow. There is a faster way.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: a0399aad662fdc64ba15e71b34b02c04, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: buy_fusion_i
+    hintText: Purchase Stellar Fusion in the Research panel to unlock the Fusion
+      Reactor.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: fusion_i
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: place_fusion_reactor
+    hintText: Open the Build menu and place a Fusion Reactor.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: fusion_explained
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: add64fdf6ddc0bc45b367502b86eb4ce, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: buy_fissile_extraction
+    hintText: Purchase Fissile Extraction to open uranium and plutonium fields.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: fissile_extraction
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 2247ffc9d3ec4544590845dd5f1363fb, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: buy_fission_i
+    hintText: Purchase Nuclear Fission to unlock the Fission Reactor.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: fission_i
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: place_fission_reactor
+    hintText: Open the Build menu and place a Fission Reactor.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+  - id: reactors_complete
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: d2cf1b4040bb32d408ea0c4e6e5b9281, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: 0
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []

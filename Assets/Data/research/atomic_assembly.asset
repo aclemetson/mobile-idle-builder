@@ -47,6 +47,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
   - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: "Combining protons, neutrons, and electrons into stable atoms. Each

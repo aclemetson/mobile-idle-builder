@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: fusion_ii
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: fusion_ii
+  displayName: Alpha Process
+  description: "Unlock the alpha-capture chain \u2014 oxygen through silicon by successive
+    helium fusion."
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  depthInTree: 3
+  costBaseCurrency: 20000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  unlocksItems: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: a2f350106494f5c44ba427f09c97f0e0, type: 2}
+  - {fileID: 11400000, guid: 24da610dc434e6046b54f4bb4c8ecbc9, type: 2}
+  - {fileID: 11400000, guid: 3aa75351a59a7df458d9ce4ab5cf936e, type: 2}
+  - {fileID: 11400000, guid: 2bf96794b3af2ae4e93b5eab183e17a0, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: 'In evolved stars, helium nuclei (alpha particles) are captured one
+    at a time: oxygen, neon, magnesium, silicon. Each capture climbs the fusion ladder
+    by two protons.'

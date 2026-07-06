@@ -15,7 +15,7 @@ MonoBehaviour:
   id: nickel
   displayName: Nickel
   symbol: Ni
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c736a453f9a58484aa67c417074284b0, type: 3}
   itemId: 24
   tier: 2
   category: 2
@@ -35,5 +35,5 @@ MonoBehaviour:
     steel, lithium-nickel battery cathodes, and superalloys that survive jet engine
     temperatures.
   codexUnlocked: 0
-  baseSellValue: 10240
+  baseSellValue: 107205900
   isotopeSellMultiplier: 1

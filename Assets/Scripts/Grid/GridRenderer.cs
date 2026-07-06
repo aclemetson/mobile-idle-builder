@@ -296,16 +296,17 @@ namespace MobileIdleBuilder
             ClearPowerCoverage();
             if (radius <= 0f) return;
 
-            int rad  = Mathf.CeilToInt(radius);
+            // Circle reach extends ~radius + half-footprint past the near edge, plus a cell of slack for
+            // partial-overlap tiles — widen the scan so no covered tile is missed.
+            int rad  = Mathf.CeilToInt(radius) + Mathf.Max(w, h) + 1;
             int maxX = gridX + w - 1;
             int maxY = gridY + h - 1;
             for (int cx = gridX - rad; cx <= maxX + rad; cx++)
             for (int cy = gridY - rad; cy <= maxY + rad; cy++)
             {
                 if (!IsInBounds(cx, cy)) continue;
-                int gapX = Mathf.Max(0, Mathf.Max(gridX - cx, cx - maxX));
-                int gapY = Mathf.Max(0, Mathf.Max(gridY - cy, cy - maxY));
-                if (gapX * gapX + gapY * gapY > radius * radius) continue;
+                // Single-cell tile (cx,cy) vs the source footprint — shared with PowerGridSystem/BuildingVisualizer.
+                if (!PowerCoverageMath.FootprintWithinRadius(gridX, gridY, maxX, maxY, cx, cy, cx, cy, radius)) continue;
                 SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), PowerCoverageColor);
                 _powerCoverageCells.Add(new Vector2Int(cx, cy));
             }

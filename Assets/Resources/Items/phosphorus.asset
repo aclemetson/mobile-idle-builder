@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: phosphorus
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: phosphorus
+  displayName: Phosphorus
+  symbol: P
+  icon: {fileID: 21300000, guid: 2271733ff7848f446a5acb96ab7a9c63, type: 3}
+  itemId: 56
+  tier: 2
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 15
+  atomicMass: 31
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: Phosphorus (P), element number 15 with mass number 31. Forged by fusion,
+    climbing the ladder toward iron, the most stable nucleus.
+  codexUnlocked: 0
+  baseSellValue: 81920
+  isotopeSellMultiplier: 1

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: hydrogen
   displayName: Hydrogen
   symbol: H
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: bf43dd8a7b7d27a4abe4a292f0680569, type: 3}
   itemId: 6
   tier: 2
   category: 2

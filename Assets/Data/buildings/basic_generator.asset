@@ -28,8 +28,8 @@ MonoBehaviour:
   basePowerCostEV: 0
   powerCostIsDynamic: 0
   baseOutputEV: 50
-  influenceRadiusTiles: 3
-  linkRadiusTiles: 5
+  influenceRadiusTiles: 2
+  linkRadiusTiles: 4
   baseOutputRate: 0
   supportedRecipes: []
   inputSlotCount: 0
@@ -49,21 +49,24 @@ MonoBehaviour:
     outputRate: 0
     powerCostEV: 0
     outputEV: 100
-    influenceRadiusTiles: 4
+    influenceRadiusTiles: 3
+    linkRadiusTiles: 5
     costBaseCurrency: 400
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 0
     powerCostEV: 0
     outputEV: 200
-    influenceRadiusTiles: 5
+    influenceRadiusTiles: 4
+    linkRadiusTiles: 6
     costBaseCurrency: 1600
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 0
     powerCostEV: 0
     outputEV: 400
-    influenceRadiusTiles: 6
+    influenceRadiusTiles: 5
+    linkRadiusTiles: 7
     costBaseCurrency: 6000
     costPrestigeCurrency: 0
   storageUpgradeLevels: []
@@ -72,8 +75,9 @@ MonoBehaviour:
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 0}
   availableFromStart: 1
-  tutorialNote: Introduced immediately after the Strong Force Combiner. Teaches power
-    radius and the energy grid.
+  tutorialNote: "Introduced immediately after the Strong Force Combiner. Teaches
+    power radius and the energy grid. Small radius (generates eV, short reach) \u2014
+    pair with the Power Relay to spread coverage."
   collectsDecayParticles: 0
   decayCollectionRate: 0
   codexEntry: Generates electron volts (eV) to power nearby buildings. Place within

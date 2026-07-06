@@ -1437,27 +1437,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bef4d7f39607694d91832f26e13ee43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingPlacementController
-  availableBuildings:
-  - building: {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: 3ef61526507db57469fe75545c6552cd, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: 72444c98b26dbee4f952490a77312ddc, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: 8dea9611f6a683b40898b2de81e2539a, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: a6884992fc287db43896dc3de5c78638, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: a04311d95f751514d9d93d850530272d, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: 843d72e51b7c3cd45b63328eecb849aa, type: 2}
-    defaultRecipe: {fileID: 0}
-  - building: {fileID: 11400000, guid: 4627c4887e022a84781725d823f1b2a0, type: 2}
-    defaultRecipe: {fileID: 0}
   gridRenderer: {fileID: 1750057541}
   buildingPlacer: {fileID: 1347028481}
   buildingVisualizer: {fileID: 1750057543}

@@ -14,6 +14,8 @@ namespace MobileIdleBuilder.PlayModeTests
     {
         private readonly List<SiteSO> _created = new();
 
+        private readonly List<FieldSO> _createdFields = new();
+
         private SiteSO MakeSite(string id, long cost = 0)
         {
             var s = ScriptableObject.CreateInstance<SiteSO>();
@@ -23,12 +25,23 @@ namespace MobileIdleBuilder.PlayModeTests
             return s;
         }
 
+        private FieldSO MakeField(string id)
+        {
+            var f = ScriptableObject.CreateInstance<FieldSO>();
+            f.id = id;
+            _createdFields.Add(f);
+            return f;
+        }
+
         [TearDown]
         public void Teardown()
         {
             foreach (var s in _created)
                 if (s != null) Object.DestroyImmediate(s);
             _created.Clear();
+            foreach (var f in _createdFields)
+                if (f != null) Object.DestroyImmediate(f);
+            _createdFields.Clear();
         }
 
         private static GridSaveData GridWithBuilding(int buildingId)
@@ -184,6 +197,51 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             // Origin / no override → multiplier 1 leaves the default count.
             Assert.AreEqual(3, FieldGenerator.EffectiveFieldCount(3, 1.0f));
+        }
+
+        // ── Site override can INTRODUCE a non-default field (FieldGenerator.IntroducedFields) ──
+
+        [Test]
+        public void IntroducedFields_FieldNotInDefaults_IntroducedWithMultiplierAsCount()
+        {
+            // Actinide Vein: uranium_field is NOT in the default list, so its multiplier is the count.
+            var uranium = MakeField("uranium_field");
+            var site = MakeSite("actinide_vein");
+            site.fieldOverrides.Add(new SiteFieldOverride { field = uranium, densityMultiplier = 3.0f });
+
+            var result = new List<(FieldSO field, int count)>(
+                FieldGenerator.IntroducedFields(site, new HashSet<string>()));
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual("uranium_field", result[0].field.id);
+            Assert.AreEqual(3, result[0].count);
+        }
+
+        [Test]
+        public void IntroducedFields_FieldAlreadyInDefaults_NotIntroduced()
+        {
+            // A field already in the default set is scaled in place by EffectiveEntries, not introduced.
+            var quark = MakeField("quark_field");
+            var site = MakeSite("origin");
+            site.fieldOverrides.Add(new SiteFieldOverride { field = quark, densityMultiplier = 2.0f });
+
+            var result = new List<(FieldSO field, int count)>(
+                FieldGenerator.IntroducedFields(site, new HashSet<string> { "quark_field" }));
+
+            Assert.IsEmpty(result);
+        }
+
+        [Test]
+        public void IntroducedFields_ZeroMultiplier_NotIntroduced()
+        {
+            var plutonium = MakeField("plutonium_field");
+            var site = MakeSite("origin");
+            site.fieldOverrides.Add(new SiteFieldOverride { field = plutonium, densityMultiplier = 0.0f });
+
+            var result = new List<(FieldSO field, int count)>(
+                FieldGenerator.IntroducedFields(site, new HashSet<string>()));
+
+            Assert.IsEmpty(result);
         }
     }
 }

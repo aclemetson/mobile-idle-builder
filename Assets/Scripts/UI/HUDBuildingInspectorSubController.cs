@@ -18,7 +18,9 @@ namespace MobileIdleBuilder
         private const string InputCapacityResearchId  = "feedstock_buffers";
 
         private VisualElement _buildingInspectorPanel;
-        private ScrollView    _inspectorContent;
+        private VisualElement _inspectorStatic;    // read-only status (Active..Produces), pinned above the scrolls
+        private ScrollView    _inspectorRecipes;   // Set Recipe picker (scrolls)
+        private ScrollView    _inspectorUpgrades;  // power + speed/storage/input + manager (scrolls)
         private Label         _inspectorBuildingName;
 
         private Entity _inspectorEntity      = Entity.Null;
@@ -30,6 +32,14 @@ namespace MobileIdleBuilder
         private BuildingPlacementController _placement;
         private HUDController              _hud;
         private GridRenderer              _gridRenderer;
+        private BuildingVisualizer        _buildingVisualizer;
+        private PlacementRadiusIndicator  _radiusIndicator;
+        private PowerConnectionRenderer   _connectionRenderer;
+
+        // Matches BuildingVisualizer's in-range tint / the placement ring colour.
+        private static readonly Color PowerRadiusColor = new Color(0.35f, 1f, 0.75f, 0.9f);
+        // Matches the placement connection-preview colour (warm amber, reads as "wired").
+        private static readonly Color PowerConnectionColor = new Color(1f, 0.9f, 0.3f, 0.95f);
 
         private GridRenderer GetGridRenderer()
         {
@@ -37,10 +47,110 @@ namespace MobileIdleBuilder
             return _gridRenderer;
         }
 
+        private BuildingVisualizer GetBuildingVisualizer()
+        {
+            if (_buildingVisualizer == null) _buildingVisualizer = FindAnyObjectByType<BuildingVisualizer>();
+            return _buildingVisualizer;
+        }
+
+        /// <summary>Lazily creates the selection radius ring (runtime GameObject, no scene wiring).</summary>
+        private PlacementRadiusIndicator EnsureRadiusIndicator()
+        {
+            if (_radiusIndicator == null)
+            {
+                var gr = GetGridRenderer();
+                if (gr == null) return null;
+                var go = new GameObject("InspectorPowerRadius");
+                go.transform.SetParent(gr.transform, worldPositionStays: false);
+                _radiusIndicator = go.AddComponent<PlacementRadiusIndicator>();
+            }
+            return _radiusIndicator;
+        }
+
+        /// <summary>Lazily creates the selection connection-lines renderer (runtime GameObject, no scene wiring).</summary>
+        private PowerConnectionRenderer EnsureConnectionRenderer()
+        {
+            if (_connectionRenderer == null)
+            {
+                var gr = GetGridRenderer();
+                if (gr == null) return null;
+                var go = new GameObject("InspectorPowerConnections");
+                go.transform.SetParent(gr.transform, worldPositionStays: false);
+                _connectionRenderer = go.AddComponent<PowerConnectionRenderer>();
+            }
+            return _connectionRenderer;
+        }
+
+        /// <summary>
+        /// Draws the selected power building's reach as a circular ring, lights up the buildings it powers
+        /// (all placed buildings whose footprint overlaps its radius, excluding the source itself), and
+        /// dashes a line to every power building it links to within its connection range.
+        /// Mirrors the placement preview; the ring radius equals the powered area exactly.
+        /// </summary>
+        private void ShowSelectedPowerRadius(int cellX, int cellY, int fw, int fh, float radius, float linkRange)
+        {
+            var gr = GetGridRenderer();
+            if (gr == null || cellX < 0) return;
+
+            float cs     = gr.CellSize;
+            var   center = new Vector3((cellX + (fw - 1) * 0.5f) * cs, 0f, (cellY + (fh - 1) * 0.5f) * cs);
+            float worldRadius = radius * cs + Mathf.Max(fw, fh) * 0.5f * cs;
+
+            EnsureRadiusIndicator()?.Show(center, worldRadius, PowerRadiusColor);
+            GetBuildingVisualizer()?.HighlightBuildingsInRange(cellX, cellY, fw, fh, radius, (cellX, cellY));
+            ShowSelectedConnections(cellX, cellY, fw, fh, linkRange, center, cs);
+        }
+
+        /// <summary>Dashes lines from the selected power node to each power building within its link range.</summary>
+        private void ShowSelectedConnections(int cellX, int cellY, int fw, int fh, float linkRange,
+                                             Vector3 center, float cs)
+        {
+            if (!_ecsReady || linkRange <= 0f) { _connectionRenderer?.Hide(); return; }
+
+            var nodes = PowerConnectionGraph.GatherFromEcs(_em, cs);
+            var lines = new List<(Vector3, Vector3, Color)>();
+            int sMaxX = cellX + fw - 1, sMaxY = cellY + fh - 1;
+
+            foreach (var n in nodes)
+            {
+                if (n.AnchorX == cellX && n.AnchorY == cellY) continue; // skip self
+                if (PowerCoverageMath.NodesLinked(
+                        cellX, cellY, sMaxX, sMaxY,
+                        n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
+                        linkRange, n.LinkRange))
+                {
+                    lines.Add((center, n.WorldCenter, PowerConnectionColor));
+                }
+            }
+
+            EnsureConnectionRenderer()?.Show(lines);
+        }
+
+        /// <summary>Hides the selection ring/connections and reverts the buildings it lit.</summary>
+        private void ClearSelectedPowerVisual()
+        {
+            _radiusIndicator?.Hide();
+            _connectionRenderer?.Hide();
+            GetBuildingVisualizer()?.ClearRangeHighlight();
+        }
+
+        // Compact-card modifier: a selected power building shows a small top-right card (instead of the
+        // full-width bottom slab) so the influence-radius ring on the grid stays visible.
+        private const string PowerCardClass = "output-selector--power";
+
+        private void SetPowerCardCompact(bool compact)
+        {
+            if (_buildingInspectorPanel == null) return;
+            if (compact) _buildingInspectorPanel.AddToClassList(PowerCardClass);
+            else         _buildingInspectorPanel.RemoveFromClassList(PowerCardClass);
+        }
+
         public void Init(VisualElement root, BuildingPlacementController placement, HUDController hud)
         {
             _buildingInspectorPanel = root.Q("building-inspector-panel");
-            _inspectorContent       = root.Q<ScrollView>("inspector-content");
+            _inspectorStatic        = root.Q("inspector-static");
+            _inspectorRecipes       = root.Q<ScrollView>("inspector-recipes");
+            _inspectorUpgrades      = root.Q<ScrollView>("inspector-upgrades");
             _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
             _placement              = placement;
             _hud                   = hud;
@@ -77,25 +187,25 @@ namespace MobileIdleBuilder
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
-            GetGridRenderer()?.ClearPowerCoverage();
+            ClearSelectedPowerVisual();
+            SetPowerCardCompact(false);
         }
 
         private void RefreshInspectorContent()
         {
-            if (_inspectorContent == null || !_ecsReady) return;
+            if (_inspectorStatic == null || _inspectorRecipes == null || _inspectorUpgrades == null || !_ecsReady) return;
             if (_inspectorEntity == Entity.Null) return;
             if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
 
-            _inspectorContent.Clear();
-            // Clear any coverage from a previously-selected generator; re-shown below if this one is a source.
-            GetGridRenderer()?.ClearPowerCoverage();
+            _inspectorStatic.Clear();
+            _inspectorRecipes.Clear();
+            _inspectorUpgrades.Clear();
+            // Clear any radius visual from a previously-selected generator; re-shown below if this one is a source.
+            ClearSelectedPowerVisual();
 
-            BuildingData buildingData = default;
-            if (_em.HasComponent<BuildingData>(_inspectorEntity))
-            {
-                buildingData = _em.GetComponentData<BuildingData>(_inspectorEntity);
-                AddInspectorRow($"Active: {(buildingData.IsActive ? "Yes" : "No")}");
-            }
+            bool hasBuildingData = _em.HasComponent<BuildingData>(_inspectorEntity);
+            BuildingData buildingData = hasBuildingData
+                ? _em.GetComponentData<BuildingData>(_inspectorEntity) : default;
 
             int buildingCellX = -1, buildingCellY = -1;
             if (_em.HasComponent<GridPosition>(_inspectorEntity))
@@ -103,31 +213,49 @@ namespace MobileIdleBuilder
                 var p = _em.GetComponentData<GridPosition>(_inspectorEntity);
                 buildingCellX = p.Cell.x;
                 buildingCellY = p.Cell.y;
-                AddInspectorRow($"Cell: ({p.Cell.x}, {p.Cell.y})");
             }
+
+            var buildingSO = GetBuildingSO(_inspectorEntity);
+
+            // Power sources (generators, relays) get a MINIMAL top-right card so the on-grid influence
+            // ring stays visible: Output/Coverage + the coverage upgrade only. Grid-wide power totals live
+            // in the top-bar power readout; Active/Cell/Manager rows are omitted for power buildings.
+            if (buildingSO != null && buildingSO.isPowerSource)
+            {
+                SetPowerCardCompact(true);
+                AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
+                AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
+                return;
+            }
+            SetPowerCardCompact(false);
+
+            if (hasBuildingData)
+                AddInspectorRow(_inspectorStatic, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
+            if (buildingCellX >= 0)
+                AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
 
             if (_em.HasComponent<CollectorData>(_inspectorEntity))
             {
                 var col    = _em.GetComponentData<CollectorData>(_inspectorEntity);
                 float rate = col.OutputRate > 0f ? col.OutputRate : 1f;
                 float next = Mathf.Max(0f, (1f / rate) - col.Timer);
-                AddInspectorRow("—— Collector ——");
-                AddInspectorRow($"Output rate: {col.OutputRate:F1} /s");
-                AddInspectorRow($"Next item in: {next:F2}s");
+                AddInspectorRow(_inspectorStatic, "—— Collector ——");
+                AddInspectorRow(_inspectorStatic, $"Output rate: {col.OutputRate:F1} /s");
+                AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
             }
 
             if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
             {
                 var buf = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
-                AddInspectorRow("—— Output Buffer ——");
+                AddInspectorRow(_inspectorStatic, "—— Output Buffer ——");
                 if (buf.Length == 0)
                 {
-                    AddInspectorRow("  (empty)");
+                    AddInspectorRow(_inspectorStatic, "  (empty)");
                 }
                 else
                 {
                     for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow($"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
                 }
             }
 
@@ -136,9 +264,9 @@ namespace MobileIdleBuilder
                 var buf = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
                 if (buf.Length > 0)
                 {
-                    AddInspectorRow("—— Input Buffer ——");
+                    AddInspectorRow(_inspectorStatic, "—— Input Buffer ——");
                     for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow($"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
                 }
             }
 
@@ -147,13 +275,13 @@ namespace MobileIdleBuilder
                 var buf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
                 if (buf.Length > 0)
                 {
-                    AddInspectorRow("—— Produces ——");
+                    AddInspectorRow(_inspectorStatic, "—— Produces ——");
                     for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow($"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
                 }
             }
 
-            var buildingSO = GetBuildingSO(_inspectorEntity);
+            // buildingSO fetched above (before the power-source early-out).
 
             // Field-collector recipe display: show what the underlying field produces.
             // If the field has exactly one drop item (or only one matching recipe), skip the
@@ -170,21 +298,32 @@ namespace MobileIdleBuilder
                 {
                     AddFieldCollectorRecipeSection(_inspectorEntity, buildingSO, fieldOnTile);
                 }
-                else if (buildingSO.supportedRecipes != null && buildingSO.supportedRecipes.Length > 1)
+                else if (buildingSO.supportedRecipes != null)
                 {
-                    AddInspectorRow("—— Set Recipe ——");
+                    // Only offer recipes whose gating research has been purchased. Research-gating
+                    // the picker here is what makes the element/material research tree actually
+                    // limit what a crafter can produce (see IsRecipeAvailable).
+                    var available = new List<RecipeSO>();
                     foreach (var r in buildingSO.supportedRecipes)
+                        if (IsRecipeAvailable(r)) available.Add(r);
+
+                    if (available.Count > 1)
                     {
-                        if (r == null) continue;
-                        var captured = r;
-                        var btn = new Button { text = r.displayName ?? r.name };
-                        btn.AddToClassList("craft-btn");
-                        btn.clicked += () =>
+                        AddInspectorRow(_inspectorRecipes, "—— Set Recipe ——");
+                        foreach (var r in available)
                         {
-                            SetBuildingRecipe(_inspectorEntity, captured);
-                            RefreshInspectorContent();
-                        };
-                        _inspectorContent?.Add(btn);
+                            var captured = r;
+                            var btn = new Button { text = r.displayName ?? r.name };
+                            btn.AddToClassList("craft-btn");
+                            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+                            if (icon != null) btn.Insert(0, icon);
+                            btn.clicked += () =>
+                            {
+                                SetBuildingRecipe(_inspectorEntity, captured);
+                                RefreshInspectorContent();
+                            };
+                            _inspectorRecipes?.Add(btn);
+                        }
                     }
                 }
 
@@ -208,7 +347,7 @@ namespace MobileIdleBuilder
             int siteIndex = SaveManager.Instance?.Current?.currentRun?.activeSiteIndex ?? 0;
             int posKey    = ManagerService.EncodePos(cellX, cellY);
 
-            AddInspectorRow("—— Manager ——");
+            AddInspectorRow(_inspectorUpgrades, "—— Manager ——");
 
             var current = svc.GetManagerAtBuilding(siteIndex, posKey);
             if (current != null)
@@ -231,7 +370,7 @@ namespace MobileIdleBuilder
                     RefreshInspectorContent();
                 };
                 row.Add(unassign);
-                _inspectorContent?.Add(row);
+                _inspectorUpgrades?.Add(row);
             }
 
             // Offer each hired manager not already on THIS building.
@@ -250,11 +389,11 @@ namespace MobileIdleBuilder
                     svc.Assign(capturedId, siteIndex, posKey);
                     RefreshInspectorContent();
                 };
-                _inspectorContent?.Add(btn);
+                _inspectorUpgrades?.Add(btn);
             }
 
             if (current == null && !anyOffer)
-                AddInspectorRow("  (hire a manager in the Managers panel)");
+                AddInspectorRow(_inspectorUpgrades, "  (hire a manager in the Managers panel)");
         }
 
         /// <summary>Human-readable bonus text for a star-scaled effective value.</summary>
@@ -281,23 +420,23 @@ namespace MobileIdleBuilder
 
             if (so.isPowerSource)
             {
-                float outputEV = BuildingSO.PowerOutputForLevel(so, level);
-                float radius   = BuildingSO.InfluenceRadiusForLevel(so, level);
-                AddInspectorRow("—— Power ——");
-                AddInspectorRow($"Output: {outputEV:0.#} eV");
-                AddInspectorRow($"Coverage: {radius:0.#} tiles");
+                float outputEV  = BuildingSO.PowerOutputForLevel(so, level);
+                float radius    = BuildingSO.InfluenceRadiusForLevel(so, level);
+                float linkRange = BuildingSO.LinkRadiusForLevel(so, level);
+                AddInspectorRow(_inspectorStatic, "—— Power ——");
+                AddInspectorRow(_inspectorStatic, $"Output: {outputEV:0.#} eV");
+                AddInspectorRow(_inspectorStatic, $"Coverage: {radius:0.#} tiles");
+                AddInspectorRow(_inspectorStatic, $"Link range: {linkRange:0.#} tiles");
 
-                var gr = GetGridRenderer();
-                if (gr != null && cellX >= 0)
+                int fw = 1, fh = 1;
+                if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
                 {
-                    int fw = 1, fh = 1;
-                    if (_em.HasComponent<BuildingFootprint>(_inspectorEntity))
-                    {
-                        var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
-                        fw = f.Width; fh = f.Height;
-                    }
-                    gr.ShowPowerCoverage(cellX, cellY, fw, fh, radius);
+                    var f = _em.GetComponentData<BuildingFootprint>(_inspectorEntity);
+                    fw = f.Width; fh = f.Height;
                 }
+                // Show the reach as a circular ring, light up the buildings this source powers, and dash
+                // lines to the power buildings it links to.
+                ShowSelectedPowerRadius(cellX, cellY, fw, fh, radius, linkRange);
             }
             else if (so.requiresPower && _em.HasComponent<PowerStatus>(_inspectorEntity))
             {
@@ -305,14 +444,14 @@ namespace MobileIdleBuilder
                 float draw = _em.HasComponent<PowerConsumer>(_inspectorEntity)
                     ? _em.GetComponentData<PowerConsumer>(_inspectorEntity).DrawEV
                     : 0f;
-                AddInspectorRow("—— Power ——");
-                AddInspectorRow($"Draw: {draw:0.#} eV");
+                AddInspectorRow(_inspectorStatic, "—— Power ——");
+                AddInspectorRow(_inspectorStatic, $"Draw: {draw:0.#} eV");
                 string statusText = status.IsConnected == 0
                     ? "UNPOWERED (no generator in range)"
                     : (status.ThrottleRatio < 0.999f
                         ? $"Brownout — {status.ThrottleRatio * 100f:0}% power"
                         : "Powered");
-                AddInspectorRow($"Status: {statusText}");
+                AddInspectorRow(_inspectorStatic, $"Status: {statusText}");
             }
         }
 
@@ -333,7 +472,8 @@ namespace MobileIdleBuilder
 
             var header = new VisualElement();
             header.AddToClassList("upgrade-row-header");
-            var nameLabel  = new Label("Speed Upgrade");
+            // Power sources upgrade coverage/output, not craft speed — label it accordingly.
+            var nameLabel  = new Label(so.isPowerSource ? "Coverage Upgrade" : "Speed Upgrade");
             nameLabel.AddToClassList("upgrade-row-name");
             var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
             levelLabel.AddToClassList("upgrade-row-level");
@@ -343,7 +483,14 @@ namespace MobileIdleBuilder
 
             if (!isMaxed && next.HasValue)
             {
-                var desc = new Label($"{next.Value.outputRate:F1}× production speed");
+                string descText;
+                if (so.isPowerSource)
+                    descText = next.Value.outputEV > 0f
+                        ? $"→ {next.Value.outputEV:0.#} eV  ·  {next.Value.influenceRadiusTiles:0.#} tiles"
+                        : $"→ {next.Value.influenceRadiusTiles:0.#} tiles coverage";
+                else
+                    descText = $"{next.Value.outputRate:F1}× production speed";
+                var desc = new Label(descText);
                 desc.AddToClassList("upgrade-row-desc");
                 row.Add(desc);
 
@@ -369,7 +516,7 @@ namespace MobileIdleBuilder
                 row.Add(footer);
             }
 
-            _inspectorContent?.Add(row);
+            _inspectorUpgrades?.Add(row);
         }
 
         /// <summary>
@@ -380,6 +527,19 @@ namespace MobileIdleBuilder
         {
             var svc = ResearchService.Instance;
             return svc != null && svc.IsUnlocked(researchId);
+        }
+
+        /// <summary>
+        /// A crafter recipe is selectable only once its gating research is unlocked. Recipes flagged
+        /// knownFromStart (or with no required research) are always available; a missing research
+        /// service is treated as "nothing unlocked" so gated recipes stay hidden.
+        /// </summary>
+        private static bool IsRecipeAvailable(RecipeSO r)
+        {
+            if (r == null) return false;
+            if (r.knownFromStart || r.requiredResearch == null) return true;
+            var svc = ResearchService.Instance;
+            return svc != null && svc.IsUnlocked(r.requiredResearch.id);
         }
 
         private void AddStorageUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
@@ -434,7 +594,7 @@ namespace MobileIdleBuilder
                 row.Add(footer);
             }
 
-            _inspectorContent?.Add(row);
+            _inspectorUpgrades?.Add(row);
         }
 
         private void OnSpeedUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
@@ -554,7 +714,7 @@ namespace MobileIdleBuilder
                 row.Add(footer);
             }
 
-            _inspectorContent?.Add(row);
+            _inspectorUpgrades?.Add(row);
         }
 
         private void OnInputUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
@@ -604,36 +764,38 @@ namespace MobileIdleBuilder
             // Single (or no) relevant recipe: static "Collects" display, no chooser.
             if (relevantRecipes.Count <= 1)
             {
-                AddInspectorRow("—— Collects ——");
+                AddInspectorRow(_inspectorStatic, "—— Collects ——");
                 if (relevantRecipes.Count == 1)
                 {
                     var r = relevantRecipes[0];
-                    AddInspectorRow($"  {r.outputItem.displayName ?? r.outputItem.name}");
+                    AddInspectorRow(_inspectorStatic, $"  {r.outputItem.displayName ?? r.outputItem.name}");
                 }
                 else
                 {
                     // No matching recipe in the SO — fall back to raw field drops.
                     foreach (var drop in field.drops)
                         if (drop?.item != null)
-                            AddInspectorRow($"  {drop.item.displayName ?? drop.item.name}");
+                            AddInspectorRow(_inspectorStatic, $"  {drop.item.displayName ?? drop.item.name}");
                 }
                 return;
             }
 
             // Multiple relevant recipes: let the player choose what to collect.
-            AddInspectorRow("—— Set Collection Target ——");
+            AddInspectorRow(_inspectorRecipes, "—— Set Collection Target ——");
             foreach (var r in relevantRecipes)
             {
                 if (r == null) continue;
                 var captured = r;
                 var btn = new Button { text = r.displayName ?? r.outputItem?.displayName ?? r.name };
                 btn.AddToClassList("craft-btn");
+                var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+                if (icon != null) btn.Insert(0, icon);
                 btn.clicked += () =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
                 };
-                _inspectorContent?.Add(btn);
+                _inspectorRecipes?.Add(btn);
             }
         }
 
@@ -704,11 +866,11 @@ namespace MobileIdleBuilder
                 });
         }
 
-        private void AddInspectorRow(string text)
+        private static void AddInspectorRow(VisualElement target, string text)
         {
             var lbl = new Label(text);
             lbl.AddToClassList("recipe-inputs");
-            _inspectorContent?.Add(lbl);
+            target?.Add(lbl);
         }
 
         private static string ItemName(int itemID)

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: aluminum
   displayName: Aluminum
   symbol: Al
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 78c0a43d1fd707242ad1b99a12a8bd29, type: 3}
   itemId: 23
   tier: 2
   category: 2
@@ -35,5 +35,5 @@ MonoBehaviour:
     electrolysis was discovered. Lightweight and corrosion-resistant \u2014 the backbone
     of aerospace and packaging."
   codexUnlocked: 0
-  baseSellValue: 2560
+  baseSellValue: 20480
   isotopeSellMultiplier: 1

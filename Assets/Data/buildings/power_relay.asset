@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: power_relay
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: power_relay
+  displayName: Power Relay
+  description: Broadcasts the grid's shared power over a wide radius without generating
+    any eV of its own. Place relays to carry power from your generators to distant
+    buildings.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 13
+  tier: 1
+  category: 2
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 0
+  isPowerSource: 1
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 5
+  linkRadiusTiles: 6
+  baseOutputRate: 0
+  supportedRecipes: []
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 1, y: 2}
+  structureKind: 9
+  ports: []
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: 
+  entropyCost: 300
+  baseMaxOutputItems: 0
+  baseMaxInputItemsPerSlot: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 0
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 6
+    linkRadiusTiles: 7
+    costBaseCurrency: 800
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 0
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 7
+    linkRadiusTiles: 8
+    costBaseCurrency: 3200
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 0
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 8
+    linkRadiusTiles: 9
+    costBaseCurrency: 12000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels: []
+  inputUpgradeLevels: []
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: "A resonant broadcast mast. The Relay generates no power of its own
+    \u2014 it re-radiates the grid's existing eV field across a far wider area than
+    a generator can reach, letting a single power source feed buildings spread across
+    the whole site."

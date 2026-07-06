@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: fissile_extraction
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: fissile_extraction
+  displayName: Fissile Extraction
+  description: "Unlock Uranium and Plutonium fields \u2014 the on-ramp for heavy
+    matter that fusion cannot reach."
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  depthInTree: 3
+  costBaseCurrency: 30000
+  costPrestigeCurrency: 0
+  durationSeconds: 900
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
+  - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b98b05ac92749df4685ab1edb6588c09, type: 2}
+  - {fileID: 11400000, guid: da24fccc7e1826141ac9127c8f9877ec, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "Matter heavier than iron has no cheap fusion route \u2014 it must
+    enter the economy from a fissile field. Harvest uranium and plutonium to feed
+    the fission ladder back down toward iron."

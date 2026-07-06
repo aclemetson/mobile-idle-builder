@@ -51,6 +51,7 @@ namespace MobileIdleBuilder
             };
 
         private Material   _bodyMat;
+        private Material   _rippleMat;
         private Mesh       _bodyMesh;
         private Mesh       _rippleMesh;
         private readonly Transform[]            _ripples    = new Transform[RippleCount];
@@ -99,6 +100,10 @@ namespace MobileIdleBuilder
             var transparent = RenderingMaterials.Instance != null ? RenderingMaterials.Instance.Transparent : null;
             if (transparent == null) return;
 
+            // Instance the shared transparent material so we can draw the flat ground ripples AFTER the floor
+            // tiles (same queue 3000, no depth write) — otherwise the floor sometimes sorts on top of them.
+            _rippleMat = new Material(transparent) { renderQueue = 3200 };
+
             _rippleMesh = TorusMeshBuilder.Build(40, 5,
                 new TorusMeshBuilder.TorusProfile { MajorRadius = RippleBaseRadius, MinorRadius = 0.012f });
             _rippleMpb = new MaterialPropertyBlock();
@@ -110,7 +115,7 @@ namespace MobileIdleBuilder
                 go.transform.localPosition = new Vector3(0f, 0.02f, 0f); // flat on the ground plane
                 go.AddComponent<MeshFilter>().sharedMesh = _rippleMesh;
                 var mr = go.AddComponent<MeshRenderer>();
-                mr.sharedMaterial    = transparent;
+                mr.sharedMaterial    = _rippleMat;
                 mr.shadowCastingMode = ShadowCastingMode.Off;
                 mr.receiveShadows    = false;
                 mr.lightProbeUsage   = LightProbeUsage.Off;
@@ -167,6 +172,7 @@ namespace MobileIdleBuilder
         void OnDestroy()
         {
             if (_bodyMat != null)    Destroy(_bodyMat);
+            if (_rippleMat != null)  Destroy(_rippleMat);
             if (_bodyMesh != null)   Destroy(_bodyMesh);
             if (_rippleMesh != null) Destroy(_rippleMesh);
         }

@@ -373,7 +373,80 @@ namespace MobileIdleBuilder
             if (fieldGenerator != null && grid.fields?.Count > 0)
                 fieldGenerator.SpawnFromSave(grid.fields);
 
+            // --- Prime belts (continuous-motion illusion) ---
+            // Re-seed restored chains with in-transit items so belts look like they never stopped
+            // instead of visibly re-filling from the harvesters. Presentation only; offline EARNINGS
+            // are granted separately by OfflineCollectionService. Skip on the tutorial-skip preset
+            // path (forceApply) — a first session starts from an empty, un-primed factory.
+            if (_ecsReady && hasConveyors && !forceApply)
+                PrimeBelts(save, buildingLookup);
+            else
+                GameLogger.Debug($"[Prime] skipped — ecsReady={_ecsReady} hasConveyors={hasConveyors} forceApply={forceApply}");
+
             RebuildIdleSnapshot(save);
+        }
+
+        // ── Belt priming (continuous-motion illusion) ─────────────────────────
+
+        /// <summary>
+        /// Re-seeds every restored conveyor chain with in-transit items at the feeding collector's
+        /// steady-state spacing, so belts read as "kept running" on return instead of visibly
+        /// re-filling from the harvesters. Delegates the ECS walk to <see cref="BeltPrimer"/>;
+        /// resolves each collector's output item + rate from the same building catalogue and global
+        /// multipliers that <see cref="RebuildIdleSnapshot"/> uses. Presentation only — the offline
+        /// earnings payout is handled separately by OfflineCollectionService.
+        /// </summary>
+        private void PrimeBelts(SaveData save,
+                                Dictionary<int, BuildingPlacementController.BuildingEntry> buildingLookup)
+        {
+            if (buildingLookup == null || buildingLookup.Count == 0)
+            {
+                GameLogger.Debug("[Prime] skipped — building catalogue empty (placementController not wired?).");
+                return;
+            }
+
+            BeltPrimer.CollectorOutputResolver resolve = (buildingId, recipeId) =>
+            {
+                if (!buildingLookup.TryGetValue(buildingId, out var entry) || entry.building == null)
+                    return null;
+
+                // EVERY producer-fed belt is primed, not just field collectors. Priming is presentation
+                // only; the economic RebuildIdleSnapshot path also walks synthesisers now (input-limited,
+                // emitting only terminal sink/inventory flows so nothing double-counts), but priming needs
+                // no such care — it just needs a rate per belt. Skipping processors was what left the long
+                // downstream belts (the bulk of the visible network) empty and "starting over" on load.
+                RecipeSO recipe = null;
+                if (recipeId >= 0 && entry.building.supportedRecipes != null)
+                    recipe = Array.Find(entry.building.supportedRecipes,
+                                        r => r != null && r.recipeId == recipeId);
+                recipe ??= entry.defaultRecipe;
+
+                int itemId = recipe?.outputItem?.itemId ?? -1;
+                if (itemId < 0) return null;   // building outputs nothing routable onto a belt
+
+                // Effective output rate (items/sec) for steady-state belt spacing. Field collectors run
+                // at baseOutputRate (clamped to 1 like CollectorSystem/PlaceBuilding); recipe producers
+                // run at outputQuantity / craftTime like ProductionSystem. A 0 either way falls back to
+                // 1/sec so a belt is never left unprimed by a rate that resolves to zero.
+                float rate;
+                if (entry.building.baseOutputRate > 0f)
+                    rate = entry.building.baseOutputRate;
+                else if (recipe != null && recipe.baseCraftTime > 0f)
+                    rate = Mathf.Max(1, recipe.outputQuantity) / recipe.baseCraftTime;
+                else
+                    rate = 1f;
+                return (itemId, rate);
+            };
+
+            // Same global speed factors RebuildIdleSnapshot folds into idle rates (prestige × mega × boost).
+            float megaSpeedMult = 1f + (MegastructureService.Instance?.GetSpeedBonus() ?? 0f);
+            float boostMult     = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            float globalRate    = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f)
+                                  * boostMult * megaSpeedMult;
+
+            int primed = BeltPrimer.PrimeAllChains(_em, _conveyorQuery, _buildingQuery, resolve, globalRate);
+            if (primed > 0)
+                GameLogger.Debug($"[Idle] Belt priming placed {primed} in-transit item(s) on load.");
         }
 
         // ── Idle snapshot ─────────────────────────────────────────────────────
@@ -423,6 +496,40 @@ namespace MobileIdleBuilder
             float getItemSellValue(int itemId) =>
                 ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
 
+            // Recipe data for offline synthesizer simulation. Only recipe-crafting buildings qualify —
+            // collectors (field taps) and entropy sinks are handled by the collector/sink paths instead.
+            IdleRecipeInfo getRecipeInfo(int buildingId, int recipeId)
+            {
+                if (!buildingLookup.TryGetValue(buildingId, out var entry)) return default;
+                var b = entry.building;
+                if (b.placementRule == PlacementRule.MustBeOnField || b.isEntropySink) return default;
+
+                RecipeSO recipe = null;
+                if (recipeId >= 0 && b.supportedRecipes != null)
+                    recipe = Array.Find(b.supportedRecipes, r => r != null && r.recipeId == recipeId);
+                recipe ??= entry.defaultRecipe;
+                if (recipe == null || recipe.outputItem == null) return default;
+
+                var ingredients = recipe.inputs ?? Array.Empty<RecipeIngredient>();
+                var inputIds  = new int[ingredients.Length];
+                var inputQtys = new int[ingredients.Length];
+                for (int i = 0; i < ingredients.Length; i++)
+                {
+                    inputIds[i]  = ingredients[i].item != null ? ingredients[i].item.itemId : -1;
+                    inputQtys[i] = ingredients[i].quantity;
+                }
+
+                return new IdleRecipeInfo
+                {
+                    Valid            = true,
+                    OutputItemId     = recipe.outputItem.itemId,
+                    OutputQuantity   = recipe.outputQuantity > 0 ? recipe.outputQuantity : 1,
+                    CraftTimeSeconds = recipe.baseCraftTime > 0f ? recipe.baseCraftTime : 1f,
+                    InputItemIds     = inputIds,
+                    InputQuantities  = inputQtys
+                };
+            }
+
             float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
             // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
             // output onto each source's output multiplier (alongside the per-building manager bonus).
@@ -448,7 +555,8 @@ namespace MobileIdleBuilder
                 getItemSellValue,
                 speedMult,
                 DateTime.UtcNow.ToString("O"),
-                getManagerOutputMultiplier);
+                getManagerOutputMultiplier,
+                getRecipeInfo);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

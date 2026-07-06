@@ -19,6 +19,7 @@
     <button class="tab" data-tab="dialogue">Dialogue Flow</button>
     <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
+    <button class="tab" data-tab="elements">Elements &amp; Nuclear</button>
     <button class="tab" data-tab="prestige">Prestige Shop</button>
     <button class="tab" data-tab="simple">Simple Overview</button>
     <button class="tab" data-tab="idle">Idle Collection</button>
@@ -143,6 +144,33 @@
     <p><strong>Auto-turn into buildings.</strong> A run that ends next to a building <em>input</em> (or starts
        next to an <em>output</em>) auto-orients its end so the current flows into / out of the building, turning
        90&deg; when needed (<code>ConveyorPlacer.TryAutoTurnEnds</code>).</p>
+  </div>
+
+  <div class="callout">
+    <h3>Power Grid (Connection Range + Overlay)</h3>
+    <p>Power buildings (the <strong>Basic Generator</strong> and the <strong>Power Relay</strong>) form a
+       <strong>connected grid</strong>, not a set of independent coverage circles. Each power building has a
+       <strong>link range</strong> (tiles), and two of them connect when their footprint distance is within the
+       <strong>larger</strong> of the two link ranges. A building extends the grid only if it is a generator or
+       chains, link by link, back to one.</p>
+    <ul>
+      <li><strong>Generators</strong> produce eV into a single shared pool and cover a <em>small</em> influence
+          radius (2→5 tiles across L1–L4) with a <em>short</em> link range (4→7).</li>
+      <li><strong>Power Relays</strong> produce no eV; they re-radiate the shared pool over a <em>large</em>
+          influence radius (5→8) and reach far with a <em>long</em> link range (6→9). A relay that is out of
+          link range of every generator is <strong>stranded</strong>: it is not on the grid and powers nothing —
+          so relays must be placed to chain back to a generator (directly or through other relays).</li>
+    </ul>
+    <p><strong>Seeing the connections.</strong> While positioning a power building, dashed lines preview which
+       existing power buildings it would link to (they disappear once placed). Selecting a placed power building
+       shows the same dashed links plus its influence ring. A <strong>⚡ toggle</strong> in the top bar turns the
+       whole-map power overlay on (bright bolt — all links drawn amber for wired / grey for stranded clusters,
+       plus a coverage ring around every powered building) or off (grey bolt, overlay hidden); the choice
+       persists across sessions.</p>
+    <p>Implemented in <code>PowerGridSystem</code> (connectivity flood → <code>PowerNodeData.IsGridLinked</code>),
+       shared math <code>PowerCoverageMath.NodesLinked</code>, and the
+       <code>PowerConnectionGraph</code>/<code>PowerConnectionRenderer</code>/<code>PowerConnectionOverlayController</code>
+       visualization. Power state is not saved — it recomputes from building positions/levels on load.</p>
   </div>
 
   <div class="callout">
@@ -498,6 +526,100 @@
 
 </div>
 
+<!-- ═══════════════════════════════════════ ELEMENTS & NUCLEAR ══ -->
+<div id="elements" class="tab-content">
+
+  <div class="callout">
+    <h3>The Iron Valley + the post-iron climb</h3>
+    <p>Binding energy per nucleon peaks at <strong>iron-56</strong>, so the <strong>natural</strong> economy (fusion up +
+       fission down, Z1&ndash;92) is a tent peaking at iron (~168M e) &mdash; a long-term apex a month-plus and many
+       prestiges away. Uranium (~64 e) is the <strong>last natural element</strong>. Everything past it is
+       <strong>synthesized with energy</strong> &mdash; a second endgame, unlocked only after iron, whose value
+       rises <em>again, past iron</em>, to <strong>Oganesson (~11.3 quadrillion e), the global max</strong>.</p>
+    <pre class="pt-diagram"> value
+   |                                            Og ~11.3Q  = GLOBAL max
+   |                                           /  (post-iron SYNTHESIS)
+   |   Fe ~168M (natural peak)      Np ~336M  /
+   |  /  \                              \    /
+   | /    \  fission descent             \  /
+   |/      \__________________ U 64 -CLIFF-\/   U = last natural element
+   H ==fusion up==> Fe ==fission down==> U | ==breed==> Fm ==accelerate==> Og
+   1      ->        26     ->            92 93   ->    100 101    ->        118
+   \--------- NATURAL TENT (Z1-92) --------/  \---- POST-IRON SYNTHESIS ----/</pre>
+    <p style="font-size:12px;color:#8b949e;">Full design reference: <code>docs/agents/elements-and-isotopes.md</code>.
+       <code>game_data.json</code> is the source of truth; all implemented element values are superseded by the three
+       ladder formulas and must be re-derived (e.g. Pu jumps from a cheap floor to ~671M as a post-iron synthetic).</p>
+  </div>
+
+  <div class="card">
+    <h3>Periodic Table &mdash; colored by creation regime</h3>
+    <p style="font-size:12px;color:#8b949e;">Each cell shows atomic number, symbol, and entropy yield (= sell value).
+       Hover a cell for its name, mass, regime, and status. <strong>&bull;</strong> marks the ~20 elements implemented
+       today; the rest are design placeholders. Lanthanides (57&ndash;71) and actinides (89&ndash;103) are the two rows below.</p>
+    <div id="nuclear-grid"></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #3fb950;background:#0d2018;">
+      <h2>New Nuclear Buildings (design)</h2>
+      <span class="phase-meta">the throughput shortcuts past nucleon-by-nucleon assembly &middot; reuse the BuildingSO schema</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Building</th><th>id</th><th style="text-align:center;">Tier</th>
+        <th>Inputs</th><th>Output</th><th>Byproducts</th><th>Research</th>
+      </tr></thead>
+      <tbody id="nuclear-buildings-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #f0883e;background:#2b1d0e;">
+      <h2>Exotic Particles</h2>
+      <span class="phase-meta">emitted as recipe byproducts &middot; caught by Radioactive Containment &middot; gamma feeds the power grid</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Particle</th><th style="text-align:center;">Sym</th><th style="text-align:center;">Charge</th>
+        <th>Source</th><th>Use</th><th style="text-align:right;">Yield</th><th style="text-align:center;">Status</th>
+      </tr></thead>
+      <tbody id="nuclear-particles-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" style="border-left:4px solid #58a6ff;background:#0f1f30;">
+      <h2>Research Gates (design)</h2>
+      <span class="phase-meta">fission opens early (Be/B); reaching iron unlocks two post-iron branches (breeding, accelerator)</span>
+    </div>
+    <table>
+      <thead><tr><th>Research</th><th>Branch</th><th>Prereq</th><th>Unlocks</th></tr></thead>
+      <tbody id="nuclear-research-body"></tbody><!-- populated by renderNuclearTables() -->
+    </table>
+  </div>
+
+  <div class="callout" style="border-left-color:#d2a8ff;">
+    <h3 style="color:#d2a8ff;">Entropy-yield ladder &mdash; natural tent + post-iron climb</h3>
+    <p>"Entropy generated" by an element = its yield = <code>base_sell_value</code>. Three regions: fusion rises to the
+       <strong>natural peak at iron (~168M e)</strong>, fission descends to <strong>uranium (~64 e)</strong>, then the
+       <strong>post-iron synthesis</strong> climbs past iron to <strong>Oganesson (~11.3Q e, the global max)</strong>.</p>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#3fb950;">1. Fusion (Z1&rarr;26)</strong> &mdash; <code>5 &times; 2<sup>(Z&minus;1)</sup></code>; preserves tutorial H..O, doubles to iron:</p>
+    <pre class="pt-spine">el:  H  He  Li  Be   B    C    N    O    F  ...  Si   ...    Ca      ...     Mn            Fe(peak)
+e :  5  10  20  40   80  160  320  640 1280   40,960  2,621,440  83,886,080  167,772,160</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#f0883e;">2. Fission (Z92&rarr;26)</strong> &mdash; <code>round(64 &times; 2,621,440<sup>(92&minus;Z)/66</sup>)</code>; iron-anchored, U floored at 64:</p>
+    <pre class="pt-spine">Z :     27         28        30        36       47      56    74  82  90 92
+el:     Co         Ni        Zn        Kr       Ag      Ba     W  Pb  Th  U
+e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601 46 64</pre>
+    <p style="font-size:12px;color:#8b949e;margin:6px 0 2px;"><strong style="color:#e3b341;">3. Post-iron synthesis (Z93&rarr;118)</strong> &mdash; <code>round(167,772,160 &times; 2<sup>(Z&minus;92)</sup>)</code>; doubles past iron to Og. Breeding (93&ndash;100) then accelerator (101&ndash;118):</p>
+    <pre class="pt-spine">Z :     93        94        96         100          103             110                    118
+el:     Np        Pu        Cm         Fm           Lr             Ds                     Og
+e : 335,544,320 671,088,640 2,684,354,560 42,949,672,960 343,597,383,680 43,980,465,111,040 11,258,999,068,426,240</pre>
+    <p style="font-size:11px;color:#8b949e;">The curve rises to iron, falls to uranium, jumps the <strong>natural/synthetic cliff</strong> (U 64 &rarr; Np 336M), then rises far past iron to Og.
+       <strong style="color:#f0883e;">Migration:</strong> implemented values follow the OLD thinned model and must be re-derived from all three formulas (Fe 5,120&rarr;167,772,160; U 1,310,720&rarr;64; Pu 2,621,440&rarr;671,088,640).</p>
+  </div>
+
+</div>
+
 <!-- ═══════════════════════════════════════ PRESTIGE SHOP ══ -->
 <div id="prestige" class="tab-content">
 
@@ -613,25 +735,36 @@ Quick Hands       (standalone — no prerequisites)</pre>
 
   <div class="callout">
     <h3>Idle Collection</h3>
-    <p>When the player closes the app, harvesters keep running in the background — up to a capped window.
-       Only <strong>direct collector chains</strong> are simulated: Harvester → Conveyor → (Inventory or Maxwell's Demon).
-       Recipe-based synthesisers mid-chain are paused; the UI discloses this.</p>
+    <p>When the player closes the app, the whole production network keeps running in the background — up to a
+       capped window. The offline model walks the grid as a <strong>directed graph</strong>: collectors are
+       sources, recipe buildings ("synthesisers") are <strong>input-limited</strong> (they craft only as fast
+       as their incoming items allow), and entropy sinks (Maxwell's Demon) convert whatever reaches them to
+       currency. So a chain like Harvester → Combiner → Maxwell's Demon now correctly banks the value of the
+       <em>synthesised</em> item (e.g. Hydrogen), bounded by the upstream collector's real throughput so it
+       can never over-credit.</p>
   </div>
 
   <div class="card">
     <h3>How Chains Are Detected</h3>
-    <p>On every auto-save, pause, and quit the game analyses the saved grid to build a chain snapshot:</p>
+    <p>On every auto-save, pause, and quit the game analyses the saved grid to build a production-graph snapshot:</p>
     <ol>
-      <li>Walk each saved conveyor chain (head→tail).</li>
-      <li>The building one step <em>upstream</em> of the chain head must be a collector (Placement Rule = Must Be On Field).</li>
-      <li>The building one step <em>downstream</em> of the chain tail is checked:
+      <li>Each saved conveyor is an edge: the building adjacent to its <em>head</em> is the producer, the
+          building adjacent to its <em>tail</em> is the consumer (or nothing → player inventory).</li>
+      <li>Collectors (Placement Rule = Must Be On Field) produce their field item at a fixed rate. Recipe
+          buildings compute an output rate = <code>min(craft rate, what their incoming items sustain)</code>,
+          resolved in dependency order so upstream feeds downstream.</li>
+      <li>Each terminal flow is credited once:
         <ul>
-          <li>If it is an Entropy Sink (Maxwell's Demon) → chain produces entropy on return.</li>
-          <li>Otherwise → items go into player inventory.</li>
+          <li>Into an Entropy Sink (Maxwell's Demon) → produces entropy from that item's sell value on return.</li>
+          <li>Into no building → items go to player inventory.</li>
         </ul>
       </li>
     </ol>
-    <p>The snapshot is rebuilt whenever buildings or conveyors are placed or removed.</p>
+    <p>Internal producer→synthesiser edges are consumed (not double-counted). If a synthesiser ends up
+       starved (an input it needs never arrives, so it produces nothing), the item feeding it is credited to
+       inventory instead — a non-regressive fallback so no offline output is ever silently lost. Power is not
+       modelled offline (synthesisers are assumed powered). The snapshot is rebuilt whenever buildings or
+       conveyors change.</p>
   </div>
 
   <div class="card">
@@ -681,6 +814,29 @@ Quick Hands       (standalone — no prerequisites)</pre>
       <li>Entropy line: <em>"◈ +1,250 entropy"</em> if any entropy was earned from entropy-sink chains.</li>
     </ul>
     <p>Idempotent: the <code>idleCollectionApplied</code> field in SaveData prevents double-application if cloud reconciliation swaps in a newer save mid-session.</p>
+  </div>
+
+  <div class="card">
+    <h3>Continuous Motion on Return (Belt Priming)</h3>
+    <p>The Welcome Back payout answers <em>how much</em> was produced while away, but the belts themselves
+       reload empty (only chain <em>geometry</em> is saved, never the items riding them). To keep the
+       illusion that automation never stopped, each restored collector chain is re-seeded with in-transit
+       items the moment the grid loads, so belts read as full and flowing on the first frame instead of
+       visibly re-filling from the harvesters.</p>
+    <ul>
+      <li><strong>Where:</strong> <code>BeltPrimer.PrimeAllChains</code>, called once from
+          <code>GridSaveService.LoadGrid()</code> after conveyors are restored. Background → foreground
+          does not reload the grid (belts stay live), so there is no re-prime path.</li>
+      <li><strong>Spacing:</strong> one item per cell, spaced by the feeding collector's steady-state
+          cadence — <code>step = round( (1 / effectiveRate) / transportTime )</code> cells, capped at one
+          item per cell when the collector saturates the belt.</li>
+      <li><strong>Rate:</strong> the same global speed multipliers the idle snapshot uses
+          (prestige × megastructure × premium boost) fold into the spacing.</li>
+      <li><strong>Presentation only:</strong> primed items are ordinary cargo that flow to their sink /
+          inventory normally. Their count is bounded by belt length, so any entropy they add at the sink
+          is negligible next to the offline payout. First-ever sessions (tutorial-skip preset) are not
+          primed — a new factory starts empty.</li>
+    </ul>
   </div>
 
 </div>

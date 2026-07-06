@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: promethium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: promethium
+  displayName: Promethium
+  symbol: Pm
+  icon: {fileID: 21300000, guid: fb6c9ce70ec715e469dbb6518ee78e3d, type: 3}
+  itemId: 97
+  tier: 2
+  category: 2
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 61
+  atomicMass: 145
+  charge: 0
+  isRadioactive: 1
+  decayType: 2
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: 0
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: Promethium (Pm), element number 61 with mass number 145. A fission
+    fragment on the long descent from the heavy actinides back toward iron.
+  codexUnlocked: 0
+  baseSellValue: 66214
+  isotopeSellMultiplier: 1

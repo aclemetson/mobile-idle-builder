@@ -33,6 +33,11 @@ namespace MobileIdleBuilder
         private HUDSettingsSubController            _settings;
         private SitesSubController                  _sites;
 
+        // ---- Power-connection overlay toggle ----
+        private Button                              _btnPowerToggle;
+        private PowerConnectionOverlayController    _powerOverlay;
+        private bool                                _powerConnectionsShown;
+
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
         private EntityQuery   _progressQuery;
@@ -462,6 +467,15 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
             root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
 
+            // Power-connection overlay toggle (⚡ button). Restores its persisted on/off state.
+            _btnPowerToggle = root.Q<Button>("btn-power-toggle");
+            if (_btnPowerToggle != null)
+            {
+                _powerConnectionsShown = SettingsService.Instance?.Current?.showPowerConnections ?? false;
+                ApplyPowerConnectionState();
+                _btnPowerToggle.clicked += TogglePowerConnections;
+            }
+
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
             root.Q<Button>("btn-close-buildings").clicked    += () => SetElementVisible(_buildingsPanel,    false);
@@ -568,8 +582,73 @@ namespace MobileIdleBuilder
         private void OpenCodexPanel()
         {
             CloseAllPanels();
-            // Content is populated externally as codex entries are discovered
+            BuildCodexList();
             SetElementVisible(_codexPanel, true);
+        }
+
+        /// <summary>
+        /// Populates the codex with an entry (tile icon + name + lore) for every item whose
+        /// crafting recipe the player has discovered, using the same known-recipe gate as the
+        /// recipe list. Rebuilt each time the panel opens.
+        /// </summary>
+        private void BuildCodexList()
+        {
+            if (_codexList == null) return;
+            _codexList.Clear();
+
+            var recipes = RecipeDatabase.Instance?.Recipes;
+            if (recipes == null) return;
+
+            var seen = new HashSet<int>();
+            int shown = 0;
+            foreach (var recipe in recipes)
+            {
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)) continue;
+
+                var item = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                if (item == null || !seen.Add(item.itemId)) continue;
+
+                var row = new VisualElement();
+                row.AddToClassList("codex-row");
+
+                var icon = MakeItemIcon(item.icon, "codex-icon");
+                if (icon != null) row.Add(icon);
+
+                var infoCol = new VisualElement();
+                infoCol.AddToClassList("codex-info");
+
+                var name = new Label(item.displayName ?? item.symbol ?? item.id);
+                name.AddToClassList("codex-name");
+                infoCol.Add(name);
+
+                if (!string.IsNullOrEmpty(item.codexEntry))
+                {
+                    var entry = new Label(item.codexEntry);
+                    entry.AddToClassList("codex-entry");
+                    infoCol.Add(entry);
+                }
+
+                row.Add(infoCol);
+                _codexList.Add(row);
+                shown++;
+            }
+
+            if (shown == 0)
+                _codexList.Add(new Label("Craft items to fill your codex."));
+        }
+
+        /// <summary>
+        /// Builds a background-image VisualElement for an item's tile sprite, or null when the
+        /// item has no icon yet (callers skip adding it so nothing breaks). Shared by the recipe
+        /// list, ingredient chips, codex, and the building inspector's recipe picker.
+        /// </summary>
+        internal static VisualElement MakeItemIcon(Sprite icon, string ussClass)
+        {
+            if (icon == null) return null;
+            var el = new VisualElement();
+            el.AddToClassList(ussClass);
+            el.style.backgroundImage = new StyleBackground(icon);
+            return el;
         }
 
         private void OpenResearchPanel()
@@ -1126,6 +1205,10 @@ namespace MobileIdleBuilder
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
 
+                var outputItem = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                var outputIcon = MakeItemIcon(outputItem?.icon, "item-icon");
+                if (outputIcon != null) info.Add(outputIcon);
+
                 var nameLabel = new Label(recipe.name);
                 nameLabel.AddToClassList("recipe-name");
 
@@ -1677,6 +1760,40 @@ namespace MobileIdleBuilder
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
 
         // ============================================================
+        // Power-connection overlay toggle (⚡ top-bar button)
+        // ============================================================
+
+        private void TogglePowerConnections()
+        {
+            _powerConnectionsShown = !_powerConnectionsShown;
+            ApplyPowerConnectionState();
+            SettingsService.Instance?.SetShowPowerConnections(_powerConnectionsShown);
+        }
+
+        /// <summary>Syncs the button's on/off look and the map overlay to the current toggle state.</summary>
+        private void ApplyPowerConnectionState()
+        {
+            EnsurePowerOverlay()?.SetVisible(_powerConnectionsShown);
+
+            if (_btnPowerToggle == null) return;
+            if (_powerConnectionsShown) _btnPowerToggle.AddToClassList("power-toggle-btn--active");
+            else                        _btnPowerToggle.RemoveFromClassList("power-toggle-btn--active");
+        }
+
+        /// <summary>
+        /// Finds the map power-connection overlay, creating a runtime one if the scene has none (self-wires
+        /// to the GridRenderer via FindAnyObjectByType), so no manual scene wiring is required.
+        /// </summary>
+        private PowerConnectionOverlayController EnsurePowerOverlay()
+        {
+            if (_powerOverlay != null) return _powerOverlay;
+            _powerOverlay = FindAnyObjectByType<PowerConnectionOverlayController>();
+            if (_powerOverlay == null)
+                _powerOverlay = new GameObject("PowerConnectionOverlay").AddComponent<PowerConnectionOverlayController>();
+            return _powerOverlay;
+        }
+
+        // ============================================================
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
         // ============================================================
 
@@ -1854,6 +1971,9 @@ namespace MobileIdleBuilder
 
                 int itemId = ItemDatabase.Instance?.GetItemId(input.id) ?? -1;
                 int count  = (itemId >= 0 && inventoryCounts.TryGetValue(itemId, out int c)) ? c : 0;
+
+                var inputIcon = MakeItemIcon(item?.icon, "recipe-input-icon");
+                if (inputIcon != null) row.Add(inputIcon);
 
                 var lbl = new Label($"{count}/{input.quantity} {sym}");
                 lbl.AddToClassList(count >= input.quantity ? "recipe-input-met" : "recipe-input-missing");

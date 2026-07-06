@@ -15,7 +15,7 @@ MonoBehaviour:
   id: uranium
   displayName: Uranium
   symbol: U
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f0f8a0eb8ffc9d646b0d3b74072aa535, type: 3}
   itemId: 13
   tier: 2
   category: 2
@@ -35,5 +35,5 @@ MonoBehaviour:
     slowly over billions of years. The primary fuel for nuclear fission reactors.
     Requires advanced assembly techniques."
   codexUnlocked: 0
-  baseSellValue: 1310720
+  baseSellValue: 64
   isotopeSellMultiplier: 1

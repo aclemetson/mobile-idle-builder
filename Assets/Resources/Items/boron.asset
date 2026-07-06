@@ -15,7 +15,7 @@ MonoBehaviour:
   id: boron
   displayName: Boron
   symbol: B
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 56517d43b6a94334097b310e017971d0, type: 3}
   itemId: 21
   tier: 2
   category: 2

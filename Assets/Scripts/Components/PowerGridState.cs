@@ -19,5 +19,9 @@ namespace MobileIdleBuilder
         public int   ConnectedCount;
         /// <summary>Number of consumers with no generator in range (unpowered).</summary>
         public int   DisconnectedCount;
+        /// <summary>Total number of power nodes (generators + relays) placed.</summary>
+        public int   TotalNodeCount;
+        /// <summary>Number of power nodes that chain back to a generator (IsGridLinked). Generators are always linked; stranded relays are not.</summary>
+        public int   LinkedNodeCount;
     }
 }

@@ -168,7 +168,7 @@ namespace MobileIdleBuilder
                     MaxEV           = outputEV,
                     CurrentEV       = outputEV,
                     InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(building, speedLevel),
-                    LinkRadius      = building.linkRadiusTiles,
+                    LinkRadius      = BuildingSO.LinkRadiusForLevel(building, speedLevel),
                     IsGridLinked    = false
                 });
             }

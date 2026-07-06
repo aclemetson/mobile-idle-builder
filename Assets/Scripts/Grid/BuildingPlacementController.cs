@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,8 +32,37 @@ namespace MobileIdleBuilder
             public RecipeSO   defaultRecipe;
         }
 
-        [Header("Available buildings (shown in the selection panel)")]
-        public BuildingEntry[] availableBuildings;
+        private BuildingEntry[] _availableBuildings;
+
+        /// <summary>
+        /// Every placeable building, built from the generated <see cref="BuildingDatabaseSO"/>
+        /// (Resources/BuildingDatabase) rather than hand-wired in the scene — a building added to
+        /// game_data.json appears here automatically once imported. <c>defaultRecipe</c> is left null;
+        /// buildings are placed recipe-less and the player picks the recipe in the inspector (the same
+        /// behaviour the scene list had, where every entry's defaultRecipe was null). Cached after first
+        /// access. Also serves as the buildingId -> BuildingSO registry for save/load and the dev console.
+        /// </summary>
+        public BuildingEntry[] availableBuildings
+        {
+            get
+            {
+                if (_availableBuildings != null) return _availableBuildings;
+
+                var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+                if (db?.allBuildings == null)
+                {
+                    GameLogger.Warning("[BuildingPlacementController] BuildingDatabase missing — run MobileIdleBuilder > Import Game Data.");
+                    return _availableBuildings = Array.Empty<BuildingEntry>();
+                }
+
+                var list = new List<BuildingEntry>(db.allBuildings.Length);
+                foreach (var b in db.allBuildings)
+                    if (b != null)
+                        list.Add(new BuildingEntry { building = b, defaultRecipe = null });
+
+                return _availableBuildings = list.ToArray();
+            }
+        }
 
         [Header("Scene references")]
         [SerializeField] private GridRenderer        gridRenderer;
@@ -153,6 +183,14 @@ namespace MobileIdleBuilder
         // Port-layout ghost arrows
         private readonly List<GameObject> _ghostPortArrows = new();
 
+        // Circular influence-radius preview for power buildings (built in code, no scene wiring).
+        private PlacementRadiusIndicator _radiusIndicator;
+        private static readonly Color RadiusRingColor = new Color(0.35f, 1f, 0.75f, 0.9f); // matches BuildingVisualizer's in-range tint
+
+        // Dashed lines to the power buildings the pending power source would link to (built in code).
+        private PowerConnectionRenderer _connectionRenderer;
+        private static readonly Color ConnectionLineColor = new Color(1f, 0.9f, 0.3f, 0.95f); // warm amber, reads as "wired"
+
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
 
@@ -214,6 +252,7 @@ namespace MobileIdleBuilder
         public void CancelPlacement()
         {
             gridRenderer.HideGhost();
+            HideRadiusPreview();
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             _lastGhostCell     = new(-1, -1);
@@ -327,6 +366,7 @@ namespace MobileIdleBuilder
             _hasCandidate  = false;
             _lastGhostCell = new(-1, -1);
             gridRenderer.HideGhost();
+            HideRadiusPreview();
             DestroyGhostPortArrows();
             if (_ghostArrowGO != null) _ghostArrowGO.SetActive(false);
             OnCandidateChanged?.Invoke(false);
@@ -375,10 +415,24 @@ namespace MobileIdleBuilder
             var  fp    = GetEffectiveFootprint();
             bool valid = IsCellValidForPending(cell.x, cell.y);
 
-            // Preview the power radius for generators so the player can see what they'll cover.
+            // Preview the power radius for power buildings: a circular ring on the ground plus lighting up
+            // the placed buildings that fall inside it (instead of the old square tile wash).
             if (_pending.building != null && _pending.building.isPowerSource)
-                gridRenderer.ShowPowerCoverage(cell.x, cell.y, fp.x, fp.y,
-                    BuildingSO.InfluenceRadiusForLevel(_pending.building, 1));
+            {
+                float radius = BuildingSO.InfluenceRadiusForLevel(_pending.building, 1);
+                float cs     = gridRenderer.CellSize;
+                // Centre of the footprint in world space; ring radius reaches from the footprint edge.
+                var center = new Vector3(
+                    (cell.x + (fp.x - 1) * 0.5f) * cs, 0f, (cell.y + (fp.y - 1) * 0.5f) * cs);
+                float worldRadius = radius * cs + Mathf.Max(fp.x, fp.y) * 0.5f * cs;
+                EnsureRadiusIndicator().Show(center, worldRadius, RadiusRingColor);
+                buildingVisualizer?.HighlightBuildingsInRange(cell.x, cell.y, fp.x, fp.y, radius);
+                ShowConnectionPreview(cell, fp, center, cs);
+            }
+            else
+            {
+                HideRadiusPreview();
+            }
 
             gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
             _lastGhostCell = cell;
@@ -440,6 +494,7 @@ namespace MobileIdleBuilder
                 SaveManager.Instance?.SaveLocal();
             }
 
+            HideRadiusPreview();
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             IsPlacing          = false;
@@ -494,6 +549,69 @@ namespace MobileIdleBuilder
         {
             if (_ghostArrowGO != null) { Destroy(_ghostArrowGO); _ghostArrowGO = null; }
             _ghostArrow = null;
+        }
+
+        // ---- Power-radius preview ----
+
+        /// <summary>Lazily creates the radius ring indicator (runtime GameObject, no scene wiring).</summary>
+        private PlacementRadiusIndicator EnsureRadiusIndicator()
+        {
+            if (_radiusIndicator == null)
+            {
+                var go = new GameObject("PowerRadiusIndicator");
+                go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+                _radiusIndicator = go.AddComponent<PlacementRadiusIndicator>();
+            }
+            return _radiusIndicator;
+        }
+
+        /// <summary>Hides the ring and reverts any building lit by the radius preview.</summary>
+        private void HideRadiusPreview()
+        {
+            _radiusIndicator?.Hide();
+            _connectionRenderer?.Hide();
+            buildingVisualizer?.ClearRangeHighlight();
+        }
+
+        /// <summary>Lazily creates the dashed power-connection renderer (runtime GameObject, no scene wiring).</summary>
+        private PowerConnectionRenderer EnsureConnectionRenderer()
+        {
+            if (_connectionRenderer == null)
+            {
+                var go = new GameObject("PowerConnectionPreview");
+                go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+                _connectionRenderer = go.AddComponent<PowerConnectionRenderer>();
+            }
+            return _connectionRenderer;
+        }
+
+        /// <summary>
+        /// Draws dashed lines from the pending power source (ghost) to every already-placed power building it
+        /// would link to (within max of the two link ranges). Cleared on placement/cancel via
+        /// <see cref="HideRadiusPreview"/>.
+        /// </summary>
+        private void ShowConnectionPreview(Vector2Int cell, Vector2Int fp, Vector3 center, float cs)
+        {
+            float linkRange = BuildingSO.LinkRadiusForLevel(_pending.building, 1);
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (linkRange <= 0f || world == null || !world.IsCreated) { _connectionRenderer?.Hide(); return; }
+
+            var nodes = PowerConnectionGraph.GatherFromEcs(world.EntityManager, cs);
+            var lines = new List<(Vector3, Vector3, Color)>();
+            int gMinX = cell.x, gMinY = cell.y, gMaxX = cell.x + fp.x - 1, gMaxY = cell.y + fp.y - 1;
+
+            foreach (var n in nodes)
+            {
+                if (PowerCoverageMath.NodesLinked(
+                        gMinX, gMinY, gMaxX, gMaxY,
+                        n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
+                        linkRange, n.LinkRange))
+                {
+                    lines.Add((center, n.WorldCenter, ConnectionLineColor));
+                }
+            }
+
+            EnsureConnectionRenderer().Show(lines);
         }
 
         // ---- Footprint helpers ----
