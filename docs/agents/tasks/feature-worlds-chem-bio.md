@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** DESIGN APPROVED, NOT STARTED (approved 2026-07-05). Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed. No code or `game_data.json` changes yet.
+**Status:** IN PROGRESS — **Phase 1 DONE** (branch `feat/worlds-chem-phase1`, 2026-07-06): World data model + save partition landed with no behavior change; Chemistry started per user direction (Biology content still deferred). Phases 2–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -42,9 +42,11 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 
 ---
 
-## Phase 1 — World data model + save partition (no behavior change)
+## Phase 1 — World data model + save partition (no behavior change) — DONE (2026-07-06)
 
 **Goal:** saves support N worlds grouping the existing sites; game still plays identically as World 0 = Physics.
+
+**As-built note:** Worlds are a **logical grouping over the existing FLAT site list** (not a nested save restructure). `WorldSO.siteIds` names member sites; `grids[]`/`siteSnapshots[]` stay flat/global. The save change is just two additive fields: `SaveData.unlockedWorlds` (survives prestige, mirrors `unlockedSites`) and `CurrentRunData.activeWorldIndex` (default 0). `WorldSO`/`WorldDatabaseSO` mirror the Site pair; importer pass at Step 12.51 (after sites); `WorldDatabase.asset` in Resources; `worlds` section in `game_data.json` (`_meta.version` 0.3.9). Centralized world↔site mapping in `Services/WorldLayout.cs`. `world_chemistry` is a stub (150K/`mid_elements`, empty `site_ids`) until its site lands in Phase 2/3.
 
 - New `ScriptableObjects/WorldSO.cs` + `WorldDatabaseSO.cs` (copy `SiteSO`/`SiteDatabaseSO` end-to-end): `id`, `displayName`, `unlockCost` (entropy), prerequisite unlock ids (research/item), member site ids, theme fields. New `"worlds"` array in `game_data.json`; bump `_meta.version`. Model classes in `Editor/GameDataModel.cs`; import pass in `Editor/GameDataImporter.cs` **after Sites** (cross-refs site ids).
 - Extend `SaveSystem/SaveData.cs`: group sites/grids by world; `activeWorldIndex`; `unlockedWorlds` (survives prestige — mirror `unlockedSites`). **Additive migration shim:** existing saves become World 0 = Physics; keep reading legacy `grids[]`/`activeSiteIndex` as World 0. Centralize behind a helper like the existing `SaveData.ActiveGrid`.

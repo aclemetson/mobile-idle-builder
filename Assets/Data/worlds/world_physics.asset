@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab7224ecdaed471bb7b54aadf0d99ed0, type: 3}
+  m_Name: world_physics
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldSO
+  id: world_physics
+  displayName: Particle Physics
+  unlockCost: 0
+  prereqUnlockIds: []
+  siteIds:
+  - site_origin
+  - site_quark_sea
+  - site_lepton_storm
+  - site_actinide_vein
+  theme:
+    backgroundColor: {r: 0.06, g: 0.06, b: 0.09, a: 1}
+    tileColor: {r: 0.12, g: 0.12, b: 0.16, a: 1}
+    fieldTint: {r: 1, g: 1, b: 1, a: 1}

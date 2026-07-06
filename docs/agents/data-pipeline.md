@@ -4,11 +4,12 @@
 
 > Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
 > Power Relay added (`building_id 13`) 2026-07-03 — next free `building_id` is 14.
+> `worlds` section + `WorldSO`/`WorldDatabaseSO` added 2026-07-06 (Chem/Bio Phase 1); `_meta.version` bumped to 0.3.9.
 
 ## Single source of truth
 
 `Assets/Data/game_data.json` (~5,400 lines). Top-level keys:
-`_meta`, `game_config`, `tiers`, `research`, `items`, `recipes`, `buildings`, `fields`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`.
+`_meta`, `game_config`, `tiers`, `research`, `items`, `recipes`, `buildings`, `fields`, `sites`, `worlds`, `managers`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`, `megastructure`.
 
 Separate file: `Assets/Data/achievements.json` → imported by `Assets/Scripts/Editor/AchievementImporter.cs`.
 

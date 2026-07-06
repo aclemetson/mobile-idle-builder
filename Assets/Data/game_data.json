@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.8",
+    "version": "0.3.9",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -9565,6 +9565,24 @@
         { "field": "quark_field", "density_multiplier": 0.5 },
         { "field": "electron_field", "density_multiplier": 0.5 }
       ]
+    }
+  ],
+
+  "_worlds_note": "Tracks/Worlds — the layer ABOVE sites. Each world owns a set of member sites (site_ids, referencing the flat 'sites' list), plus an economic unlock (unlock_cost entropy + prereq_unlock_ids research/item ids). world_physics (cost 0) is implicitly unlocked and wraps all existing sites; world unlocks survive prestige. site_ids/prereq_unlock_ids are validated at import (warning on unknown id). world_chemistry is a Phase 1 stub: gate authored, site_ids empty until its site lands in a later phase.",
+  "worlds": [
+    {
+      "id": "world_physics",
+      "display_name": "Particle Physics",
+      "unlock_cost": 0,
+      "prereq_unlock_ids": [],
+      "site_ids": ["site_origin", "site_quark_sea", "site_lepton_storm", "site_actinide_vein"]
+    },
+    {
+      "id": "world_chemistry",
+      "display_name": "Chemistry",
+      "unlock_cost": 150000,
+      "prereq_unlock_ids": ["mid_elements"],
+      "site_ids": []
     }
   ],
 
