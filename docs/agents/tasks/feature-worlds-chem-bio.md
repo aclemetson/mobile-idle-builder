@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** IN PROGRESS — **Phase 1 DONE** (branch `feat/worlds-chem-phase1`, 2026-07-06): World data model + save partition landed with no behavior change; Chemistry started per user direction (Biology content still deferred). Phases 2–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
+**Status:** IN PROGRESS — **Phase 1 DONE** (PR #119, branch `feat/worlds-chem-phase1`, 2026-07-06): World data model + save partition landed with no behavior change; Chemistry started per user direction (Biology content still deferred). Phases 2–6 not started. Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
