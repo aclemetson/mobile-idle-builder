@@ -140,5 +140,81 @@ namespace MobileIdleBuilder.Tests
                 Assert.AreEqual(ItemCategory.Molecule, item.category, $"{id} is a Molecule");
             }
         }
+
+        // ── Phase 4b: C2-C4 research chain / buildings / precursor recipes ─────
+
+        [Test]
+        public void ChemistryC2C4Research_IsChainedAfterLab()
+        {
+            var rdb = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            Assert.IsNotNull(rdb, "ResearchDatabase missing");
+
+            ResearchSO Find(string id) => System.Array.Find(rdb.allResearch, r => r != null && r.id == id);
+
+            // chemistry_lab -> reaction_engineering -> organic_chemistry -> biochem_precursors
+            var expected = new (string id, string prereq, int cost, ResearchBranch branch)[]
+            {
+                ("reaction_engineering", "chemistry_lab",        500000,  ResearchBranch.Chemistry),
+                ("organic_chemistry",    "reaction_engineering", 2000000, ResearchBranch.Chemistry),
+                ("biochem_precursors",   "organic_chemistry",    5000000, ResearchBranch.Chemistry),
+            };
+            foreach (var (id, prereq, cost, branch) in expected)
+            {
+                var node = Find(id);
+                Assert.IsNotNull(node, $"{id} research missing");
+                Assert.AreEqual(branch, node.branch, $"{id} branch");
+                Assert.AreEqual(cost, node.costBaseCurrency, $"{id} cost");
+                Assert.IsNotNull(System.Array.Find(node.prerequisites, p => p != null && p.id == prereq),
+                    $"{id} must require {prereq}");
+            }
+
+            // chemistry_lab chains into reaction_engineering.
+            var lab = Find("chemistry_lab");
+            Assert.IsNotNull(System.Array.Find(lab.unlocksResearch, r => r != null && r.id == "reaction_engineering"),
+                "chemistry_lab must unlock reaction_engineering");
+        }
+
+        [Test]
+        public void ChemistryC2C4Buildings_ExistAndAreGated()
+        {
+            var bdb = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            Assert.IsNotNull(bdb, "BuildingDatabase missing");
+
+            BuildingSO Find(string id) => System.Array.Find(bdb.allBuildings, b => b != null && b.id == id);
+
+            var metal = Find("metal_harvester");
+            Assert.IsNotNull(metal, "metal_harvester missing");
+            CollectionAssert.Contains(metal.compatibleFields, "ElementMetal",
+                "metal_harvester places on ElementMetal fields");
+            Assert.AreEqual("reaction_engineering", metal.requiredResearch?.id, "metal_harvester gated by reaction_engineering");
+
+            var reactor = Find("catalytic_reactor");
+            Assert.IsNotNull(reactor, "catalytic_reactor missing");
+            Assert.AreEqual("reaction_engineering", reactor.requiredResearch?.id, "catalytic_reactor gated by reaction_engineering");
+
+            var organic = Find("organic_synthesizer");
+            Assert.IsNotNull(organic, "organic_synthesizer missing");
+            Assert.AreEqual("organic_chemistry", organic.requiredResearch?.id, "organic_synthesizer gated by organic_chemistry");
+        }
+
+        [Test]
+        public void C4Recipes_ProduceOrganicCompounds_GatedByBiochemPrecursors()
+        {
+            var bdb = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            var organic = System.Array.Find(bdb.allBuildings, b => b != null && b.id == "organic_synthesizer");
+            Assert.IsNotNull(organic, "organic_synthesizer missing");
+
+            // The four forward-declared OrganicCompound items are produced here, gated by biochem_precursors.
+            foreach (var outId in new[] { "glucose", "amino_acid", "fatty_acid", "nucleotide" })
+            {
+                var recipe = System.Array.Find(organic.supportedRecipes,
+                    r => r != null && r.outputItem != null && r.outputItem.id == outId);
+                Assert.IsNotNull(recipe, $"organic_synthesizer must make {outId}");
+                Assert.AreEqual("biochem_precursors", recipe.requiredResearch?.id,
+                    $"{outId} recipe gated by biochem_precursors");
+                Assert.AreEqual(ItemCategory.OrganicCompound, recipe.outputItem.category,
+                    $"{outId} is an OrganicCompound");
+            }
+        }
     }
 }

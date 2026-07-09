@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: biochem_precursors
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: biochem_precursors
+  displayName: Biochemical Precursors
+  description: 'Assemble the four organic building blocks of life on the Organic
+    Synthesizer: sugars, amino acids, fatty acids, and nucleotides. Gates the Biology
+    world.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 5000000
+  costPrestigeCurrency: 0
+  durationSeconds: 7200
+  fieldCooldownMult: 1
+  unlocksItems: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 6c36476a5233f714990fafb65b13d44d, type: 2}
+  - {fileID: 11400000, guid: 5aa09c03c835d3e468ddf57495f161c1, type: 2}
+  - {fileID: 11400000, guid: ff6c669c9bfca0f45af985d6a3be34de, type: 2}
+  - {fileID: 11400000, guid: a8177238ba59392429c43f8bde8a9176, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: "The last step of chemistry and the first of biology. Carbon, nitrogen,
+    and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides
+    \u2014 the monomers from which life will build itself."

@@ -43,7 +43,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 94368559b4c1c924fb6cc70797b1772b, type: 2}
   - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: "The bridge from physics to chemistry. Where nuclear synthesis forged

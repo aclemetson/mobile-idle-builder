@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: metal_harvester
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: metal_harvester
+  displayName: Metal Harvester
+  description: Mines bulk metals from a Metal Lode. Place on a metal seam and pick
+    which metal to extract.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 16
+  tier: 3
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 0
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: bc8242727f23e9f4680a80515e744290, type: 2}
+  - {fileID: 11400000, guid: da4bd91a8e9ec8044a0077d480140321, type: 2}
+  - {fileID: 11400000, guid: 2da8ee24759b4bd4c973d86c65292d97, type: 2}
+  - {fileID: 11400000, guid: 3d176a030bd3d254bb6344f8e2cfc1ca, type: 2}
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 0
+  ports: []
+  placementRule: 1
+  compatibleAdjacentCategories: 
+  compatibleFields:
+  - ElementMetal
+  entropyCost: 20000
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 100000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 400000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 1600000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 60000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 240000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 960000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: A heavier cousin of the Element Harvester, geared for metal lodes.
+    Extracts iron, copper, aluminum, or nickel to feed reactors and catalysts.
