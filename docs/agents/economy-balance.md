@@ -64,7 +64,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 | sink | prestige-currency conversion | 500–3,600◆ | `PremiumShopCalculator.cs:36` |
 | sink | research skip | `max(1, ceil(remaining/3600×150))◆` | `PremiumShopCalculator.CalcResearchSkipCost` |
 
-**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), multi-grid site unlocks (250,000e+).
+**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), multi-grid site unlocks (250,000e+), **World unlocks** (Chemistry via the `chemistry_lab` research node, 150,000e — see `chemistry-biology.md`; the world's `unlock_cost` itself is 0, the research node is the gate). Chem/Bio balance is **first-pass** — the real re-tier is Phase 6.
 
 ## Core formulas
 

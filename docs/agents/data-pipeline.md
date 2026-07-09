@@ -40,6 +40,17 @@ After ANY edit to `game_data.json` or `achievements.json`:
 2. The importer must run before testing in-editor. It auto-runs on recompile if the JSON is newer than the tutorial asset, but if you are not recompiling, tell the user to run **MobileIdleBuilder → Import Game Data** manually.
 3. Never hand-edit the generated `.asset` files.
 
+## Editing surfaces
+
+Two tools edit `game_data.json` directly; both still require the importer to run afterward (see HARD RULE):
+
+- **In-Unity:** `MobileIdleBuilder → Game Data Editor` (`GameDataEditorWindow.cs`). Saves via `JsonUtility.ToJson`, which **drops all `_comment`/`_note_*` doc keys** and fully reformats.
+- **Browser:** `docs/balance-editor.html` — a balance/progression editor for designers. Presents an item-centric join view (base sell value, isotope multiplier, joined recipe craft time + `valid_buildings`, unlocking research, tutorial flag) plus Recipes/Buildings/Research/Config tabs and a Rebalance tab (deterministic "house rules" + a copy/paste Claude bridge). It reads/writes the real `game_data.json`.
+  - **Launch:** it uses the File System Access API, which needs a localhost origin and Chrome/Edge — run a static server in `docs/` (e.g. `python -m http.server 8000`) and open `http://localhost:8000/balance-editor.html`. It does **not** work over `file://`. Non-Chromium browsers fall back to file-input load + download save.
+  - **Comment-safe:** the browser's `JSON.parse` keeps `_`-prefixed keys and insertion order, and a custom serializer (`serializeGameData`) inlines primitive arrays and preserves `.0` float formatting. Round-trip is data-identical (verified deep-equal) and **comments survive**. The **first** save canonicalizes the file's hand-formatting (one-time large, data-neutral diff — commit it on its own); every save after that is a minimal, reviewable diff.
+  - **`_in_tutorial`:** the editor's per-item "Tutorial" checkbox writes a doc-only `_in_tutorial` boolean on the item. Underscore-prefixed, so the importer ignores it — it is design metadata only, distinct from actual `tutorial_steps` membership (shown read-only as "In steps").
+  - It does **not** update the `docs/gameplay_loop_data.js` mirror — that stays hand-maintained.
+
 ## Example entries (trimmed)
 
 ```jsonc

@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06). If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -25,7 +25,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `ProductionSystem.cs` | Per-building craft loop: check inputs (local `BuildingInputSlot` buffer, falls back to global inventory), advance `Progress += dt × BuildingData.ProductionSpeed`, consume inputs, deposit to `BuildingOutputSlot`. Burst-compiled `ISystem`. |
 | `CollectorSystem.cs` | Field harvesters: produce items at fixed rate, no inputs. |
 | `ConveyorSystem.cs` | Moves items building output slot → adjacent input slot, respecting ports/direction. |
-| `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's radius, computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
+| `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's `link_radius_tiles` (range-limited connections, relayed through **Power Relay** buildings), computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
 | `EntropySinkSystem.cs` | Sink building consumes items → grants entropy (base currency). |
 | `NetWorthSystem.cs` | Aggregates net worth (inventory + currency + spent); drives prestige wall. |
 | `PrestigeSystem.cs` | Wall detection + prestige execution: currency formula, run reset, building destruction, service resets, forced save. |
@@ -44,6 +44,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `PersistentUpgradeService` | `Assets/Scripts/Services/` | Prestige-shop permanent upgrades. Catalogue is the hardcoded `UpgradeDef[] All` array (`PersistentUpgradeService.cs:48`), NOT data-driven from JSON. |
 | `PremiumShopService` / `PremiumShopCalculator` / `IAPService` | `Assets/Scripts/Services/` | Crystal IAP (4 consumable packs in `IAPService.CrystalAmounts`), speed boosts (`speedBoostExpiryUtc`), entropy/PC purchases. |
 | `RecipeKnowledgeService` | `Assets/Scripts/Services/` | Recipes unlocked across runs (survives prestige). |
+| `SiteService` / `WorldService` | `Assets/Scripts/Services/` | Multi-map layer. `SiteService` unlocks/switches build sites (single writer of `activeSiteIndex`). `WorldService` is the Track/World layer above it (Physics/Chemistry/Biology): self-bootstrapped (`[RuntimeInitializeOnLoadMethod]`, no scene placement), economic unlock (entropy + prereq unlocks), delegates grid handoff to `SiteService.SwitchTo`. Only ONE world's ONE site is live ECS; the rest run on idle snapshots. See `chemistry-biology.md`. |
 | `AchievementService` | `Assets/Scripts/Achievements/` | `Notify*()` hooks + daily/weekly/monthly UTC period resets (`CheckPeriodResets()`, `AchievementService.cs:103`). Forwards 5 of its `Notify*` hooks to `DailyEventService`. |
 | `DailyEventService` | `Assets/Scripts/Services/` | 28-day login reward calendar + 3 rotating daily challenges; UTC reset mirroring `CheckPeriodResets`. Reads `DailyContentSO` (Resources). Grants via `paidCurrency` / `ECSLoadBridge.AddEntropy` / `AddPrestigeCurrency`. State survives prestige. |
 | `OfflineCollectionService` | `Assets/Scripts/IdleCollection/` | Static: computes offline earnings from `SaveData.idleSnapshot`, capped by `GetEffectiveIdleCap()`. |

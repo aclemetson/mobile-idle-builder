@@ -87,6 +87,10 @@ document.querySelectorAll('.tab').forEach(btn => {
       window._nuclearInit = true;
       renderNuclearTab();
     }
+    if (btn.dataset.tab === 'worlds' && !window._worldsInit) {
+      window._worldsInit = true;
+      renderWorldsTab();
+    }
   });
 });
 
@@ -1138,6 +1142,76 @@ function renderNuclearTables() {
       <td><span class="tag tag-silent">${x.branch}</span></td>
       <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.prereq}</td>
       <td style="font-size:12px;color:#c9d1d9;">${x.unlocks}</td></tr>`).join('');
+  }
+}
+
+// ─── WORLDS TAB (Chem/Bio Track/World layer) ─────────────────────────────
+// Data-driven from LOOP_DATA.worlds. Lazily rendered on first tab open.
+
+const WLD = (D.worlds || {});
+
+function wldStatusTag(status) {
+  if (status === 'live')     return '<span class="tag tag-milestone">live</span>';
+  if (status === 'building') return '<span class="tag tag-milestone">building</span>';
+  if (status === 'impl')     return '<span class="tag tag-milestone">impl</span>';
+  return '<span class="tag tag-silent">design</span>';
+}
+
+function renderWorldsTab() {
+  const L = document.getElementById('worlds-layers-body');
+  if (L && WLD.layers) {
+    L.innerHTML = WLD.layers.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}<div style="font-family:monospace;color:#6e7681;font-size:11px;">${x.id}</div></td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.tiers}</td>
+      <td style="font-size:12px;color:#3fb950;">${x.produces}</td>
+      <td style="font-size:11px;color:#8b949e;">${x.note}</td></tr>`).join('');
+  }
+
+  const F = document.getElementById('worlds-fields-body');
+  if (F && WLD.fields) {
+    F.innerHTML = WLD.fields.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td style="text-align:center;font-family:monospace;color:#d2a8ff;">${x.type}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.drops}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const B = document.getElementById('worlds-buildings-body');
+  if (B && WLD.buildings) {
+    B.innerHTML = WLD.buildings.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.id}</td>
+      <td style="text-align:center;">${x.tier}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.place}</td>
+      <td style="text-align:center;font-size:12px;color:#f0883e;">${x.power}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.does}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const R = document.getElementById('worlds-recipes-body');
+  if (R && WLD.recipes) {
+    R.innerHTML = WLD.recipes.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.label}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.building}</td>
+      <td style="font-family:monospace;font-size:12px;color:#c9d1d9;">${x.inputs}</td>
+      <td style="text-align:right;color:#8b949e;">${x.time}s</td>
+      <td style="text-align:right;color:#f0883e;">${x.powerEV} eV</td>
+      <td style="text-align:right;color:#3fb950;">${x.sell.toLocaleString()}e</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const RS = document.getElementById('worlds-research-body');
+  if (RS && WLD.research) {
+    RS.innerHTML = WLD.research.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td><span class="tag tag-silent">${x.branch}</span></td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.prereq}</td>
+      <td style="text-align:right;font-family:monospace;color:#79c0ff;font-size:12px;">${x.cost}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.unlocks}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
   }
 }
 

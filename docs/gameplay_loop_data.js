@@ -15,6 +15,8 @@
 // 10. simple_overview  18 phases for the Simple Overview tab
 // 11. prestige         formula params + 10 permanent upgrades
 // 12. nuclear          periodic table (118) + nuclear buildings/particles/research (design)
+// 13. worlds           Track/World layer (Physics/Chemistry/Biology) + Chemistry fields/buildings/recipes/research
+//                        Phases 1-3 + 4a shipped (Chemistry C1 playable); C2-C4 + Biology are design
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -1499,6 +1501,65 @@ nuclear: {
     { id:'fusion_iii / fission_iii', branch:'Astrophysics', prereq:'*_ii',         unlocks:'last rungs converging on Fe (natural peak)' },
     { id:'neutron_breeding_i..iii', branch:'Transmutation (post-iron)', prereq:'reach iron',        unlocks:'Breeder Reactor; Np/Pu -> Cf/Es/Fm (value climbs past iron)' },
     { id:'accelerator_i..iv',  branch:'Accelerator (post-iron)',  prereq:'neutron_breeding_i + iron', unlocks:'Particle Accelerator; Md -> Og (global max, ~11.3Q)' },
+  ],
+},
+
+// ─────────────────────────────────────── WORLDS (Chem/Bio tracks) ──
+// Track/World layer ABOVE the Site system (Physics / Chemistry / Biology).
+// Each World owns its own sites + research branch + map theme; only ONE
+// world's ONE site is live ECS, the rest run on idle snapshots. A World opens
+// by a PURE ECONOMIC gate (entropy + prereq unlocks in the prior world) — no
+// prestige-count hook. World unlocks survive prestige (like site unlocks).
+// Status: Phases 1-3 + 4a shipped (World layer, WorldService, Chemistry C1
+// playable). C2-C4 + Biology are design. See docs/agents/chemistry-biology.md.
+worlds: {
+  layers: [
+    { id:'world_physics',   name:'Physics (existing)', status:'live',     gate:'start',
+      tiers:'P1 Subatomic · P2 Atomic · P3 Molecules',
+      produces:'quarks → elements → molecules → materials → Dyson Sphere',
+      note:'the shipped game; the heavy/cosmic tail re-tiers to Act IV in Phase 6' },
+    { id:'world_chemistry', name:'Chemistry',          status:'building', gate:'chemistry_lab — 150,000e (prereq mid_elements)',
+      tiers:'C1 Inorganic · C2 Reactions · C3 Organic · C4 Biochem',
+      produces:'mined elements → inorganic compounds → basic organics',
+      note:'C1 playable (Phase 4a); C2-C4 pending (4b). world unlock_cost is 0 — the research node is the gate' },
+    { id:'world_biology',   name:'Biology',            status:'design',   gate:'biology_lab — ~10-25M e (prereq biochem_precursors)',
+      tiers:'B1 Biomolecules · B2 Cellular · B3 Multicellular · B4 Ecosystems',
+      produces:'organic compounds → cells → organisms / ecosystems',
+      note:'fully deferred; needs a new ResearchBranch.Biology + OrganicCompound fields' },
+  ],
+  // Chemistry map fields drop EXISTING Element items (mined, not synthesized).
+  // Metal seams are a separate field_type so the C1 harvester can't idle-farm
+  // the physics-era high-value metals (iron 167M etc.).
+  fields: [
+    { id:'element_field_light',   type:'Element',      drops:'hydrogen, carbon, nitrogen, oxygen',            status:'impl' },
+    { id:'element_field_mineral', type:'Element',      drops:'silicon, sodium, chlorine, sulfur, phosphorus, calcium', status:'impl' },
+    { id:'element_field_metal',   type:'ElementMetal', drops:'iron, copper, aluminum, nickel',                status:'impl' },
+  ],
+  // Chemistry buildings (Phase 4a). Schema mirrors game_data.json buildings[].
+  buildings: [
+    { name:'Element Harvester',     id:'element_harvester',     tier:3, place:'MustBeOnField [Element]', power:'none',
+      does:'mines one chosen element in bulk (6 recipes: H/C/O/Na/Cl/S — pick via the multi-output selector)', gate:'chemistry_lab', status:'impl' },
+    { name:'Compound Synthesizer',  id:'compound_synthesizer',  tier:3, place:'Anywhere · 2 inputs', power:'50 eV',
+      does:'combines mined elements into inorganic compounds (oxides, salts, acids)', gate:'chemistry_lab', status:'impl' },
+    { name:'Catalytic Reactor',     id:'catalytic_reactor',     tier:3, place:'Anywhere', power:'design',
+      does:'C2: chlorine gas, sodium hydroxide, nitric acid, catalyst', gate:'reaction_engineering', status:'design' },
+    { name:'Organic Synthesizer',   id:'organic_synthesizer',   tier:3, place:'Anywhere', power:'design',
+      does:'C3/C4: hydrocarbons → glucose / amino_acid / fatty_acid / nucleotide (World 3 feedstock)', gate:'organic_chemistry / biochem_precursors', status:'design' },
+  ],
+  // C1 compounds (Phase 4a). sell is FIRST-PASS — it tracks today's physics-era
+  // element values, which the Phase 6 economy re-tier will re-cost.
+  recipes: [
+    { id:'carbon_dioxide', label:'Carbon Dioxide (CO₂)', building:'Compound Synthesizer', inputs:'1 C + 2 O',        time:20, powerEV:100, sell:5000,   status:'impl' },
+    { id:'table_salt',     label:'Table Salt (NaCl)',    building:'Compound Synthesizer', inputs:'1 Na + 1 Cl',      time:30, powerEV:100, sell:900000, status:'impl' },
+    { id:'sulfuric_acid',  label:'Sulfuric Acid (H₂SO₄)',building:'Compound Synthesizer', inputs:'1 S + 4 O + 2 H',  time:40, powerEV:150, sell:500000, status:'impl' },
+  ],
+  // Chemistry research chain (extends the existing ResearchBranch.Chemistry).
+  research: [
+    { id:'chemistry_lab',      branch:'Chemistry', prereq:'mid_elements',        cost:'150,000e', unlocks:'opens the Chemistry world; Element Harvester + Compound Synthesizer + C1 compounds', status:'impl' },
+    { id:'reaction_engineering', branch:'Chemistry', prereq:'chemistry_lab',      cost:'~500K',    unlocks:'C2 Catalytic Reactor; reactions & catalysis', status:'design' },
+    { id:'organic_chemistry',  branch:'Chemistry', prereq:'reaction_engineering',cost:'~2M',      unlocks:'C3 Organic Synthesizer; hydrocarbons', status:'design' },
+    { id:'biochem_precursors', branch:'Chemistry', prereq:'organic_chemistry',   cost:'~5M',      unlocks:'C4 biochemistry; glucose/amino_acid/fatty_acid/nucleotide (feeds Biology)', status:'design' },
+    { id:'biology_lab',        branch:'Biology',   prereq:'biochem_precursors',  cost:'~10-25M',  unlocks:'opens the Biology world (B1 Biomolecules)', status:'design' },
   ],
 },
 
