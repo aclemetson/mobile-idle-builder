@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: catalyst
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: catalyst
+  displayName: Catalyst
+  recipeId: 180
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: 05230edc5404f6548aaafdeb9037ae12, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 45
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 150
+  validBuildings:
+  - {fileID: 11400000, guid: 87aec74fba1150b468122972c7bbeae7, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

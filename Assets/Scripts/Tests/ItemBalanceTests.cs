@@ -28,11 +28,12 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is156()
+        public void AllItems_TotalCount_Is164()
         {
-            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a: CO2, table_salt, sulfuric_acid).
-            Assert.AreEqual(156, _items.Length,
-                $"Expected 156 items in Resources/Items/, found {_items.Length}. " +
+            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a: CO2, table_salt, sulfuric_acid)
+            // + 8 C2-C3 compounds (P4b: catalyst, chlorine_gas, sodium_hydroxide, nitric_acid, ethane, octane, ethanol, polymer_precursor).
+            Assert.AreEqual(164, _items.Length,
+                $"Expected 164 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -94,6 +95,20 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           50000f);
         [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       200000f);
         [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 8000000f);
+
+        // ── Tier 3 — Chemistry compounds (C1 P4a, C2-C3 P4b). First-pass values, re-tier in Phase 6. ──
+
+        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    5000f);
+        [Test] public void T3_TableSalt_SellValue()       => AssertSell("table_salt",        900000f);
+        [Test] public void T3_SulfuricAcid_SellValue()    => AssertSell("sulfuric_acid",     500000f);
+        [Test] public void T3_Catalyst_SellValue()        => AssertSell("catalyst",          8000000f);
+        [Test] public void T3_ChlorineGas_SellValue()     => AssertSell("chlorine_gas",      700000f);
+        [Test] public void T3_SodiumHydroxide_SellValue() => AssertSell("sodium_hydroxide",  1000000f);
+        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       1200000f);
+        [Test] public void T3_Ethane_SellValue()          => AssertSell("ethane",            1500000f);
+        [Test] public void T3_Octane_SellValue()          => AssertSell("octane",            6000000f);
+        [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           3000000f);
+        [Test] public void T3_PolymerPrecursor_SellValue() => AssertSell("polymer_precursor", 12000000f);
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 
