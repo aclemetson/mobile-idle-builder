@@ -34,7 +34,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-megastructure.md` — Dyson Sphere endgame project | done (branch `feature/megastructure`) | M |
 | `tasks/feature-power-draw.md` — proximity eV power grid (makes PowerDiscount live) | done (feature/power-draw) | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
-| `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–3 + 4a done (PRs #119–122); next 4b | XL (5 phases + deferred re-tier) |
+| `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–4 + full Biology B1–B4 done (PRs #119–125+); next P5 worlds UI, P6 re-tier | XL (5 phases + deferred re-tier) |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

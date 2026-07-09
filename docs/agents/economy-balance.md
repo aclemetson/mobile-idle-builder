@@ -64,7 +64,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 | sink | prestige-currency conversion | 500–3,600◆ | `PremiumShopCalculator.cs:36` |
 | sink | research skip | `max(1, ceil(remaining/3600×150))◆` | `PremiumShopCalculator.CalcResearchSkipCost` |
 
-**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), multi-grid site unlocks (250,000e+), **World unlocks** (Chemistry via the `chemistry_lab` research node, 150,000e — see `chemistry-biology.md`; the world's `unlock_cost` itself is 0, the research node is the gate). Chem/Bio balance is **first-pass** — the real re-tier is Phase 6.
+**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), multi-grid site unlocks (250,000e+), **World unlocks** (each world's `unlock_cost` is 0 — the gate is a research node, see `chemistry-biology.md`). Research gate ladder (first-pass): **Chemistry** `chemistry_lab` 150K → `reaction_engineering` 500K → `organic_chemistry` 2M → `biochem_precursors` 5M; **Biology** `biology_lab` 10M → `cell_biology` 50M → `multicellular_life` 250M → `ecosystems` 1B. Chem/Bio balance is **first-pass** — the real re-tier is Phase 6 (which must also lift the heavy-physics/Megastructure 50M endgame above Biology's 50M–1B, and re-check the flat-log ✦ payout against the ~1B net-worth ceiling).
 
 ## Core formulas
 

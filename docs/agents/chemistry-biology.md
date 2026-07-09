@@ -2,7 +2,7 @@
 
 **Scope:** The data/content model for the Chemistry and Biology tracks: the World layer, per-world fields, the new `OrganicCompound` item category, the research trees, buildings, and recipes. Balance numbers are first-pass anchors — tune against the progression map before committing to `game_data.json`. For the phased build order and constraints, see `tasks/feature-worlds-chem-bio.md`. For the existing periodic-table content this sits alongside, see `elements-and-isotopes.md`.
 
-> Verified against: **Phases 1–3 + 4a implemented** 2026-07-06. Phase 1: the **World layer** (`WorldSO`/`WorldDatabaseSO`, `worlds` in `game_data.json`, save fields, `WorldLayout` mapping); Worlds group the existing FLAT site list via `WorldSO.siteIds` (no nested save restructure). **Phase 2:** field-type is now a **data-driven string** (the `FieldType` enum is gone — see `FieldTypes` helper); `ItemCategory.OrganicCompound` + 4 items (`glucose`/`fatty_acid`/`amino_acid`/`nucleotide`, forward-declared) exist; **element fields** (`element_field_light`/`metal`/`mineral`, dropping existing elements) and the first Chemistry site (`site_chem_lab`, wired to `world_chemistry`) are authored. **Phase 3:** `WorldService` (self-bootstrapped, mirrors `SiteService`) does unlock/travel + the economic gate; `world list/switch/unlock` dev commands. **Phase 4a:** Chemistry **C1** is playable — `chemistry_lab` research (150K, prereq `mid_elements`) is the world gate; **Element Harvester** + **Compound Synthesizer** buildings; C1 compounds (`carbon_dioxide`/`table_salt`/`sulfuric_acid`, item_id 154–156). **Still design draft (Phases 4b–5):** chem C2–C4, worlds UI + map theming. Biology fully deferred. **Balance is first-pass** (real re-tier is Phase 6).
+> Verified against: **Phases 1–4 + full Biology B1–B4 implemented** (P1–4a 2026-07-06; P4b + Biology 2026-07-09). Chemistry C2–C4 (`reaction_engineering`/`organic_chemistry`/`biochem_precursors` + Metal Harvester/Catalytic Reactor/Organic Synthesizer + the recipes that produce the OrganicCompound feedstock) and the full **Biology world** (`ResearchBranch.Biology`, `ItemCategory.Biomolecule`/`CellPart`/`Organism`, `biology_lab`→`cell_biology`→`multicellular_life`→`ecosystems`, `world_biology`+`site_bio_lab`+`"Organic"` fields, Organic Harvester/Biosynthesizer/Cell Assembler/Tissue Culture/Bioreactor, items 165–178) are all live. **Only the dev console reaches Chemistry/Biology** until the Phase 5 worlds UI ships. Older stamp: Phase 1: the **World layer** (`WorldSO`/`WorldDatabaseSO`, `worlds` in `game_data.json`, save fields, `WorldLayout` mapping); Worlds group the existing FLAT site list via `WorldSO.siteIds` (no nested save restructure). **Phase 2:** field-type is now a **data-driven string** (the `FieldType` enum is gone — see `FieldTypes` helper); `ItemCategory.OrganicCompound` + 4 items (`glucose`/`fatty_acid`/`amino_acid`/`nucleotide`, forward-declared) exist; **element fields** (`element_field_light`/`metal`/`mineral`, dropping existing elements) and the first Chemistry site (`site_chem_lab`, wired to `world_chemistry`) are authored. **Phase 3:** `WorldService` (self-bootstrapped, mirrors `SiteService`) does unlock/travel + the economic gate; `world list/switch/unlock` dev commands. **Phase 4a:** Chemistry **C1** is playable — `chemistry_lab` research (150K, prereq `mid_elements`) is the world gate; **Element Harvester** + **Compound Synthesizer** buildings; C1 compounds (`carbon_dioxide`/`table_salt`/`sulfuric_acid`, item_id 154–156). **Still design draft (Phases 4b–5):** chem C2–C4, worlds UI + map theming. Biology fully deferred. **Balance is first-pass** (real re-tier is Phase 6).
 
 ## The World layer
 
@@ -71,7 +71,7 @@ C1 shipped only the three *new* compounds (CO2, table salt, sulfuric acid). Wate
 
 ## World 3 — Biology
 
-**Unlock:** `biology_lab` research, **~10–25M e**, prereq `biochem_precursors` (must have crafted organic compounds). Opens the Biology world + map + organic harvesters + Biosynthesizer. **New `ResearchBranch.Biology` enum value.**
+**Unlock (BUILT):** `biology_lab` research, **10M e**, prereq `biochem_precursors`. `world_biology.prereq_unlock_ids = ["biology_lab"]`, `unlock_cost 0`. Opens the Biology world + `site_bio_lab` + Organic Harvester + Biosynthesizer. `ResearchBranch.Biology` added; `ItemCategory.Biomolecule`/`CellPart`/`Organism` added (full split).
 
 **Fields (drop new `OrganicCompound` items):**
 
@@ -82,14 +82,14 @@ C1 shipped only the three *new* compounds (CO2, table salt, sulfuric acid). Wate
 | `lipid_field` | fatty_acid |
 | `nucleotide_field` | nucleotide |
 
-**Tiers, walls, buildings, recipes (proposed):**
+**Tiers, walls, buildings, recipes (BUILT — item_id in parens):**
 
 | Tier | Wall (research → cost) | Building | Recipes (output ← inputs) |
 |---|---|---|---|
-| B1 Biomolecules | `biology_lab` (opens world) | Biosynthesizer | protein ← amino_acid · carbohydrate ← glucose · lipid_membrane ← fatty_acid · nucleic_acid (DNA/RNA) ← nucleotide |
-| B2 Cellular Biology | `cell_biology` ~50M | Cell Assembler | ribosome ← protein+nucleic_acid · mitochondria · cell_membrane ← lipid_membrane · prokaryotic_cell ← organelles |
-| B3 Multicellular Life | `multicellular_life` ~250M | Tissue Culture | eukaryotic_cell · tissue ← cells · organ ← tissue |
-| B4 Ecosystems *(bio endgame)* | `ecosystems` ~1B | Bioreactor / Biosphere | organism ← organs · population · ecosystem |
+| B1 Biomolecules | `biology_lab` 10M (opens world) | Biosynthesizer | protein(165) ← amino_acid · carbohydrate(166) ← glucose · lipid_membrane(167) ← fatty_acid · nucleic_acid(168) ← nucleotide. Fields drop the organics (mined); Organic Harvester collects. |
+| B2 Cellular Biology | `cell_biology` 50M | Cell Assembler | ribosome(169) ← protein+nucleic_acid · mitochondria(170) ← protein+lipid_membrane · cell_membrane(171) ← lipid_membrane+protein · prokaryotic_cell(172) ← ribosome+mitochondria+cell_membrane |
+| B3 Multicellular Life | `multicellular_life` 250M | Tissue Culture | eukaryotic_cell(173, CellPart) ← prokaryotic_cell+mitochondria · tissue(174, Organism) ← eukaryotic_cell · organ(175) ← tissue |
+| B4 Ecosystems *(bio endgame)* | `ecosystems` 1B | Bioreactor | organism(176) ← organ · population(177) ← organism · ecosystem(178) ← population |
 
 ---
 

@@ -133,5 +133,85 @@ namespace MobileIdleBuilder.Tests
                 Assert.AreEqual(ItemCategory.Biomolecule, item.category, $"{id} is a Biomolecule");
             }
         }
+
+        // ── B2-B4: research chain / buildings / item categories ────────────────
+
+        [Test]
+        public void BiologyB2B4Research_IsChainedAfterLab()
+        {
+            var rdb = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            Assert.IsNotNull(rdb, "ResearchDatabase missing");
+            ResearchSO Find(string id) => System.Array.Find(rdb.allResearch, r => r != null && r.id == id);
+
+            // biology_lab -> cell_biology -> multicellular_life -> ecosystems
+            var expected = new (string id, string prereq, long cost)[]
+            {
+                ("cell_biology",       "biology_lab",        50000000L),
+                ("multicellular_life", "cell_biology",       250000000L),
+                ("ecosystems",         "multicellular_life", 1000000000L),
+            };
+            foreach (var (id, prereq, cost) in expected)
+            {
+                var node = Find(id);
+                Assert.IsNotNull(node, $"{id} research missing");
+                Assert.AreEqual(ResearchBranch.Biology, node.branch, $"{id} is on the Biology branch");
+                Assert.AreEqual(cost, node.costBaseCurrency, $"{id} cost");
+                Assert.IsNotNull(System.Array.Find(node.prerequisites, p => p != null && p.id == prereq),
+                    $"{id} must require {prereq}");
+            }
+
+            var lab = Find("biology_lab");
+            Assert.IsNotNull(System.Array.Find(lab.unlocksResearch, r => r != null && r.id == "cell_biology"),
+                "biology_lab must unlock cell_biology");
+        }
+
+        [Test]
+        public void BiologyB2B4Buildings_ExistAndAreGated()
+        {
+            var bdb = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            Assert.IsNotNull(bdb, "BuildingDatabase missing");
+            BuildingSO Find(string id) => System.Array.Find(bdb.allBuildings, b => b != null && b.id == id);
+
+            var gates = new (string building, string research)[]
+            {
+                ("cell_assembler",  "cell_biology"),
+                ("tissue_culture",  "multicellular_life"),
+                ("bioreactor",      "ecosystems"),
+            };
+            foreach (var (building, research) in gates)
+            {
+                var b = Find(building);
+                Assert.IsNotNull(b, $"{building} missing");
+                Assert.AreEqual(research, b.requiredResearch?.id, $"{building} gated by {research}");
+                Assert.IsNotEmpty(b.supportedRecipes, $"{building} has recipes");
+            }
+        }
+
+        [Test]
+        public void B2B4Items_HaveExpectedCategories()
+        {
+            var items = Resources.LoadAll<ItemSO>("Items");
+            ItemSO Find(string id) => System.Array.Find(items, i => i.id == id);
+
+            var expected = new (string id, ItemCategory cat)[]
+            {
+                ("ribosome",         ItemCategory.CellPart),
+                ("mitochondria",     ItemCategory.CellPart),
+                ("cell_membrane",    ItemCategory.CellPart),
+                ("prokaryotic_cell", ItemCategory.CellPart),
+                ("eukaryotic_cell",  ItemCategory.CellPart),
+                ("tissue",           ItemCategory.Organism),
+                ("organ",            ItemCategory.Organism),
+                ("organism",         ItemCategory.Organism),
+                ("population",       ItemCategory.Organism),
+                ("ecosystem",        ItemCategory.Organism),
+            };
+            foreach (var (id, cat) in expected)
+            {
+                var item = Find(id);
+                Assert.IsNotNull(item, $"B2-B4 item '{id}' missing");
+                Assert.AreEqual(cat, item.category, $"{id} category");
+            }
+        }
     }
 }
