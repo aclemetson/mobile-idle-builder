@@ -34,7 +34,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a8177238ba59392429c43f8bde8a9176, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: "The last step of chemistry and the first of biology. Carbon, nitrogen,

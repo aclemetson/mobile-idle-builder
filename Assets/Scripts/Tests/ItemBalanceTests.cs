@@ -28,12 +28,12 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is164()
+        public void AllItems_TotalCount_Is168()
         {
-            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a: CO2, table_salt, sulfuric_acid)
-            // + 8 C2-C3 compounds (P4b: catalyst, chlorine_gas, sodium_hydroxide, nitric_acid, ethane, octane, ethanol, polymer_precursor).
-            Assert.AreEqual(164, _items.Length,
-                $"Expected 164 items in Resources/Items/, found {_items.Length}. " +
+            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a) + 8 C2-C3 compounds (P4b)
+            // + 4 B1 Biomolecules (Biology: protein, carbohydrate, lipid_membrane, nucleic_acid).
+            Assert.AreEqual(168, _items.Length,
+                $"Expected 168 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -109,6 +109,13 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T3_Octane_SellValue()          => AssertSell("octane",            6000000f);
         [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           3000000f);
         [Test] public void T3_PolymerPrecursor_SellValue() => AssertSell("polymer_precursor", 12000000f);
+
+        // ── Tier 3 — Biology B1 biomolecules. First-pass values, re-tier in Phase 6. ──
+
+        [Test] public void T3_Protein_SellValue()       => AssertSell("protein",       120000f);
+        [Test] public void T3_Carbohydrate_SellValue()  => AssertSell("carbohydrate",  100000f);
+        [Test] public void T3_LipidMembrane_SellValue() => AssertSell("lipid_membrane", 140000f);
+        [Test] public void T3_NucleicAcid_SellValue()   => AssertSell("nucleic_acid",  200000f);
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 

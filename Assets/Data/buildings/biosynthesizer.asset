@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: biosynthesizer
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: biosynthesizer
+  displayName: Biosynthesizer
+  description: 'Assembles organic compounds into the four macromolecules of life:
+    proteins, carbohydrates, lipid membranes, and nucleic acids.'
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 20
+  tier: 3
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 250
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 16ccd82f5311877408bff60eb9d63562, type: 2}
+  - {fileID: 11400000, guid: 6b279f427c626c1438a4eec48730f603, type: 2}
+  - {fileID: 11400000, guid: 502e00693d25a774894042a410b1a914, type: 2}
+  - {fileID: 11400000, guid: b3fb4d2eaf6fe5d438c6d7c995ad0a8c, type: 2}
+  inputSlotCount: 1
+  inputSlotLabels:
+  - Organic Compound
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 4
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: []
+  entropyCost: 1000000
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 30
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 380
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 8000000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 580
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 32000000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 860
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 128000000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 5600000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 22400000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 89600000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 5600000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 22400000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 89600000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: A warm, enzyme-packed reactor that polymerises life's monomers. One
+    intake of organic compound in; one macromolecule of life out.

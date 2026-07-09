@@ -76,6 +76,19 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Component"));
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Megastructure"));
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "OrganicCompound"));
+            // Biology track categories.
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Biomolecule"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "CellPart"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Organism"));
+        }
+
+        [Test]
+        public void ResearchBranch_HasExpectedValues()
+        {
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Chemistry"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Nuclear"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Biology"),
+                "Biology branch added for the Biology track");
         }
 
         [Test]

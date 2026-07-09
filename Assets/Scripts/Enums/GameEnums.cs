@@ -13,7 +13,11 @@ namespace MobileIdleBuilder
         Component,
         Particle,
         Megastructure,
-        OrganicCompound   // Chemistry C4 outputs (amino acids, sugars, lipids, nucleotides); Biology feedstock
+        OrganicCompound,  // Chemistry C4 outputs (amino acids, sugars, lipids, nucleotides); Biology feedstock
+        // Biology categories (Chem/Bio Biology track). Appended to preserve serialized int values.
+        Biomolecule,      // B1: proteins, carbohydrates, lipid membranes, nucleic acids
+        CellPart,         // B2-B3: organelles, cell membranes, whole cells
+        Organism          // B3-B4: tissues, organs, organisms, populations, ecosystems
     }
 
     public enum RecipeCategory
@@ -125,7 +129,8 @@ namespace MobileIdleBuilder
         Nuclear,
         Materials,
         Engineering,
-        Astrophysics
+        Astrophysics,
+        Biology       // Chem/Bio Biology track. Appended to preserve serialized int values.
     }
 
     public enum BuildEnvironment

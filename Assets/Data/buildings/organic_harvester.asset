@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: organic_harvester
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: organic_harvester
+  displayName: Organic Harvester
+  description: Harvests organic compounds from a living field. Place on an organic
+    seam and pick which compound to extract.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 19
+  tier: 3
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 0
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 8a937314ba664414097a020f5613e2b4, type: 2}
+  - {fileID: 11400000, guid: fe0e94040e80312418b902ee519d4cc2, type: 2}
+  - {fileID: 11400000, guid: ffd86a28a84901147a2c8f335941d89f, type: 2}
+  - {fileID: 11400000, guid: a071d933ad3e25e4eb3ad7266b7cad42, type: 2}
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 0
+  ports: []
+  placementRule: 1
+  compatibleAdjacentCategories: 
+  compatibleFields:
+  - Organic
+  entropyCost: 500000
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 2500000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 10000000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 40000000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 1500000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 6000000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 24000000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: "A gentle extractor tuned for living matter. Placed on an organic seam,
+    it draws out a chosen compound \u2014 glucose, amino acids, fatty acids, or nucleotides
+    \u2014 the feedstock of the Biosynthesizer."

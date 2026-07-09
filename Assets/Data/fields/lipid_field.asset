@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f54a4614174f442bde4c9e662ec50f, type: 3}
+  m_Name: lipid_field
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
+  id: lipid_field
+  displayName: Lipid Seep
+  fieldType: Organic
+  drops:
+  - item: {fileID: 11400000, guid: 88b16eecc00db8244a51c8b437db4fe0, type: 2}
+    weight: 1
+  tapCooldownSeconds: 2.5
+  fieldColor: {r: 1, g: 0.7176471, b: 0.3019608, a: 1}
+  fieldIcon: {fileID: 0}
+  codexEntry: An oily seep of long-chain fatty acids. Harvest them to build the membranes
+    that give cells their boundary.

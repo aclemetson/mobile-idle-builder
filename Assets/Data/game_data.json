@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.12",
+    "version": "0.3.13",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -831,11 +831,32 @@
       "unlocks_recipes": ["glucose", "amino_acid", "fatty_acid", "nucleotide"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "_note_unlocks_research": "Wired to ['biology_lab'] in Phase II when that node lands; kept empty here so Phase 4b imports without a forward-reference warning.",
-      "unlocks_research": [],
+      "unlocks_research": ["biology_lab"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.2,
       "codex_entry": "The last step of chemistry and the first of biology. Carbon, nitrogen, and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides \u2014 the monomers from which life will build itself.",
+      "icon_path": "TODO"
+    },
+    {
+      "_comment": "--- BIOLOGY WORLD (Chem/Bio Biology track). New branch 'Biology'. biology_lab is the Biology WORLD gate: prereq biochem_precursors (must have unlocked the organic precursors in Chemistry). Costs are FIRST-PASS (Phase 6 re-tier). ---",
+      "id": "biology_lab",
+      "display_name": "Biology Lab",
+      "description": "Open the Biology world: harvest organic compounds from living fields and assemble them into biomolecules. Gates the Organic Harvester and the Biosynthesizer.",
+      "branch": "Biology",
+      "prerequisites": ["biochem_precursors"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 10000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 7200,
+      "unlocks_items": ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
+      "unlocks_recipes": ["collect_glucose", "collect_amino_acid", "collect_fatty_acid", "collect_nucleotide", "protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
+      "unlocks_buildings": ["organic_harvester", "biosynthesizer"],
+      "unlocks_grid_expansion": false,
+      "_note_unlocks_research": "Wired to ['cell_biology'] in Phase III (B2) when that node lands; kept empty here so the B1 import has no forward-reference warning.",
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.2,
+      "codex_entry": "Chemistry made the parts; biology assembles them into machines that copy themselves. The first tier weaves monomers into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
       "icon_path": "TODO"
     }
   ],
@@ -4569,7 +4590,44 @@
       "is_fissile": false, "is_harvested": false, "field_type": "None",
       "is_secondary_particle": false, "particle_uses": 0,
       "codex_entry": "A reactive monomer poised to link into long polymer chains. The bridge between small organics and macromolecular matter.",
-      "base_sell_value": 12000000.0, "isotope_sell_multiplier": 1.0 }
+      "base_sell_value": 12000000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "_bio_b1_note": "Biology B1 biomolecules (Chem/Bio Biology track). Category Biomolecule. Assembled by the Biosynthesizer from organic compounds harvested on the Biology map. base_sell_value is FIRST-PASS (Phase 6 re-tier).",
+      "id": "protein", "display_name": "Protein", "symbol": "Prot", "icon_path": "TODO",
+      "item_id": 165, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
+      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A folded chain of amino acids. Enzymes, motors, and scaffolds — proteins do nearly all the work of a living cell.",
+      "base_sell_value": 120000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "carbohydrate", "display_name": "Carbohydrate", "symbol": "Carb", "icon_path": "TODO",
+      "item_id": 166, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
+      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A polymer of sugars. The cell's fuel store and structural fiber, from starch to cellulose.",
+      "base_sell_value": 100000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "lipid_membrane", "display_name": "Lipid Membrane", "symbol": "Lip", "icon_path": "TODO",
+      "item_id": 167, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
+      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A bilayer of fatty acids that separates inside from outside. The first boundary — without it, there is no cell.",
+      "base_sell_value": 140000.0, "isotope_sell_multiplier": 1.0 },
+
+    { "id": "nucleic_acid", "display_name": "Nucleic Acid", "symbol": "DNA", "icon_path": "TODO",
+      "item_id": 168, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
+      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
+      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
+      "is_fissile": false, "is_harvested": false, "field_type": "None",
+      "is_secondary_particle": false, "particle_uses": 0,
+      "codex_entry": "A chain of nucleotides — DNA and RNA. The molecule of heredity, storing and transcribing the instructions of life.",
+      "base_sell_value": 200000.0, "isotope_sell_multiplier": 1.0 }
   ],
 
   "recipes": [
@@ -9084,7 +9142,54 @@
       "neutron_adjustment": [], "output_item": "nucleotide", "output_quantity": 1, "byproducts": [],
       "base_craft_time": 60.0, "manual_craft_time": 0.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 300.0,
       "valid_buildings": ["organic_synthesizer"], "can_craft_manually": false, "known_from_start": false,
-      "required_research": "biochem_precursors", "unlocks_research": null, "is_simplified": false, "simplification_note": "" }
+      "required_research": "biochem_precursors", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+
+    { "_comment": "--- BIOLOGY B1: organic-compound harvest (Organic Harvester) + biomolecule synthesis (Biosynthesizer). Chem/Bio Biology track. ---",
+      "id": "collect_glucose", "display_name": "Harvest Glucose", "recipe_id": 189, "tier": 3, "category": "Molecule",
+      "inputs": [], "neutron_adjustment": [], "output_item": "glucose", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "collect_amino_acid", "display_name": "Harvest Amino Acid", "recipe_id": 190, "tier": 3, "category": "Molecule",
+      "inputs": [], "neutron_adjustment": [], "output_item": "amino_acid", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "collect_fatty_acid", "display_name": "Harvest Fatty Acid", "recipe_id": 191, "tier": 3, "category": "Molecule",
+      "inputs": [], "neutron_adjustment": [], "output_item": "fatty_acid", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "collect_nucleotide", "display_name": "Harvest Nucleotide", "recipe_id": 192, "tier": 3, "category": "Molecule",
+      "inputs": [], "neutron_adjustment": [], "output_item": "nucleotide", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+
+    { "id": "protein", "display_name": "Protein", "recipe_id": 193, "tier": 3, "category": "Molecule",
+      "inputs": [ { "item": "amino_acid", "quantity": 4 } ],
+      "neutron_adjustment": [], "output_item": "protein", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 30.0, "manual_craft_time": 0.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 250.0,
+      "valid_buildings": ["biosynthesizer"], "can_craft_manually": false, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "carbohydrate", "display_name": "Carbohydrate", "recipe_id": 194, "tier": 3, "category": "Molecule",
+      "inputs": [ { "item": "glucose", "quantity": 4 } ],
+      "neutron_adjustment": [], "output_item": "carbohydrate", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 30.0, "manual_craft_time": 0.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 250.0,
+      "valid_buildings": ["biosynthesizer"], "can_craft_manually": false, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "lipid_membrane", "display_name": "Lipid Membrane", "recipe_id": 195, "tier": 3, "category": "Molecule",
+      "inputs": [ { "item": "fatty_acid", "quantity": 4 } ],
+      "neutron_adjustment": [], "output_item": "lipid_membrane", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 30.0, "manual_craft_time": 0.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 250.0,
+      "valid_buildings": ["biosynthesizer"], "can_craft_manually": false, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    { "id": "nucleic_acid", "display_name": "Nucleic Acid", "recipe_id": 196, "tier": 3, "category": "Molecule",
+      "inputs": [ { "item": "nucleotide", "quantity": 4 } ],
+      "neutron_adjustment": [], "output_item": "nucleic_acid", "output_quantity": 1, "byproducts": [],
+      "base_craft_time": 35.0, "manual_craft_time": 0.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 300.0,
+      "valid_buildings": ["biosynthesizer"], "can_craft_manually": false, "known_from_start": false,
+      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" }
   ],
 
   "buildings": [
@@ -10127,6 +10232,116 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A three-intake synthesis train for carbon chemistry. Hydrocarbons enter, and — once the biochemical precursors are understood — the four monomers of life emerge: sugar, amino acid, fatty acid, and nucleotide."
+    },
+    {
+      "_comment": "--- BIOLOGY B1 BUILDINGS (Chem/Bio Biology track) ---",
+      "id": "organic_harvester",
+      "display_name": "Organic Harvester",
+      "description": "Harvests organic compounds from a living field. Place on an organic seam and pick which compound to extract.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 19,
+      "tier": 3,
+      "category": "Core",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": false,
+      "is_power_source": false,
+      "base_power_cost_ev": 0.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": ["collect_glucose", "collect_amino_acid", "collect_fatty_acid", "collect_nucleotide"],
+      "input_slot_count": 0,
+      "input_slot_labels": [],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "ports": [],
+      "placement_rule": "MustBeOnField",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": ["Organic"],
+      "entropy_cost": 500000,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 0,
+      "upgrade_levels": [
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 2500000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 10000000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 40000000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150, "cost_base_currency": 1500000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750, "cost_base_currency": 6000000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 24000000, "cost_prestige_currency": 0 }
+      ],
+      "has_special_upgrade": false,
+      "special_upgrade_id": null,
+      "required_research": "biology_lab",
+      "available_from_start": false,
+      "tutorial_note": "",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A gentle extractor tuned for living matter. Placed on an organic seam, it draws out a chosen compound — glucose, amino acids, fatty acids, or nucleotides — the feedstock of the Biosynthesizer."
+    },
+    {
+      "id": "biosynthesizer",
+      "display_name": "Biosynthesizer",
+      "description": "Assembles organic compounds into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 20,
+      "tier": 3,
+      "category": "Transient",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": true,
+      "is_power_source": false,
+      "base_power_cost_ev": 250.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Organic Compound"],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "structure_kind": "MolecularSynthesizer",
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 1000000,
+      "base_max_output_items": 20,
+      "base_max_input_items_per_slot": 30,
+      "upgrade_levels": [
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 380.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 8000000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 580.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 32000000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 860.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 128000000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150, "cost_base_currency": 5600000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750, "cost_base_currency": 22400000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 89600000, "cost_prestige_currency": 0 }
+      ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 5600000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 22400000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 89600000, "cost_prestige_currency": 0 }
+      ],
+      "has_special_upgrade": false,
+      "special_upgrade_id": null,
+      "required_research": "biology_lab",
+      "available_from_start": false,
+      "tutorial_note": "",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A warm, enzyme-packed reactor that polymerises life's monomers. One intake of organic compound in; one macromolecule of life out."
     }
   ],
 
@@ -10228,6 +10443,55 @@
       "field_color": "#C9A227",
       "field_icon_path": "TODO",
       "codex_entry": "A mineral bed of salts and nonmetals \u2014 silicon, sodium, chlorine, sulfur, phosphorus, calcium. The raw stock for acids, salts, and biochemistry."
+    },
+    {
+      "_organic_fields_note": "Biology (Chem/Bio Biology track) feedstock. field_type 'Organic' (shared) so one Organic Harvester works on all four. They drop the OrganicCompound items (mined, not synthesized) \u2014 the same items Chemistry C4 also crafts. Introduced per-site via the absolute-count density-override path on site_bio_lab.",
+      "id": "sugar_field",
+      "display_name": "Sugar Bloom",
+      "field_type": "Organic",
+      "drops": [
+        { "item": "glucose", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.5,
+      "field_color": "#8BC34A",
+      "field_icon_path": "TODO",
+      "codex_entry": "A field thick with photosynthetic bloom, dense in sugars. Harvest glucose \u2014 the universal cellular fuel and the base of every carbohydrate."
+    },
+    {
+      "id": "amino_acid_field",
+      "display_name": "Peptide Pool",
+      "field_type": "Organic",
+      "drops": [
+        { "item": "amino_acid", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.5,
+      "field_color": "#26A69A",
+      "field_icon_path": "TODO",
+      "codex_entry": "A primordial pool rich in free amino acids. Harvest them to feed the assembly of proteins."
+    },
+    {
+      "id": "lipid_field",
+      "display_name": "Lipid Seep",
+      "field_type": "Organic",
+      "drops": [
+        { "item": "fatty_acid", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.5,
+      "field_color": "#FFB74D",
+      "field_icon_path": "TODO",
+      "codex_entry": "An oily seep of long-chain fatty acids. Harvest them to build the membranes that give cells their boundary."
+    },
+    {
+      "id": "nucleotide_field",
+      "display_name": "Nucleotide Vein",
+      "field_type": "Organic",
+      "drops": [
+        { "item": "nucleotide", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 3.0,
+      "field_color": "#BA68C8",
+      "field_icon_path": "TODO",
+      "codex_entry": "A vein laced with free nucleotides. Harvest them to spell out nucleic acids \u2014 the memory of life."
     }
   ],
 
@@ -10281,6 +10545,20 @@
         { "field": "element_field_metal", "density_multiplier": 2.0 },
         { "field": "element_field_mineral", "density_multiplier": 3.0 }
       ]
+    },
+    {
+      "id": "site_bio_lab",
+      "display_name": "Biology Lab",
+      "unlock_cost": 0,
+      "_note_bio": "First Biology-world site (Chem/Bio Biology track). The organic fields (sugar/amino_acid/lipid/nucleotide) are introduced here via the absolute-count density-override path (see FieldGenerator.IntroducedFields); the default physics fields are removed. unlock_cost is 0 because the real gate is the Biology WORLD (world_biology, gated by the biology_lab research). Reach it via WorldService (world unlock/switch) once biology_lab is researched.",
+      "field_overrides": [
+        { "field": "quark_field", "density_multiplier": 0.0 },
+        { "field": "electron_field", "density_multiplier": 0.0 },
+        { "field": "sugar_field", "density_multiplier": 3.0 },
+        { "field": "amino_acid_field", "density_multiplier": 3.0 },
+        { "field": "lipid_field", "density_multiplier": 2.0 },
+        { "field": "nucleotide_field", "density_multiplier": 2.0 }
+      ]
     }
   ],
 
@@ -10300,6 +10578,14 @@
       "_note_gate": "Chem/Bio Phase 4a: the 150K + mid_elements gate now lives on the chemistry_lab RESEARCH node; researching it opens this world (prereq_unlock_ids). unlock_cost is 0 because the research carries the cost.",
       "prereq_unlock_ids": ["chemistry_lab"],
       "site_ids": ["site_chem_lab"]
+    },
+    {
+      "id": "world_biology",
+      "display_name": "Biology",
+      "unlock_cost": 0,
+      "_note_gate": "Chem/Bio Biology track: the 10M + biochem_precursors gate lives on the biology_lab RESEARCH node; researching it opens this world (prereq_unlock_ids). unlock_cost is 0 because the research carries the cost.",
+      "prereq_unlock_ids": ["biology_lab"],
+      "site_ids": ["site_bio_lab"]
     }
   ],
 
