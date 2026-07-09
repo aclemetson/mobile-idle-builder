@@ -154,6 +154,14 @@ namespace MobileIdleBuilder.Tests
                     $"site '{s.id}' must be owned by some world");
             CollectionAssert.Contains(physics.siteIds, "site_origin",
                 "world_physics owns the origin site");
+
+            // Biology track: world_biology exists, is gated by the biology_lab research, and owns its site.
+            var bio = System.Array.Find(db.allWorlds, w => w != null && w.id == "world_biology");
+            Assert.IsNotNull(bio, "world_biology missing from WorldDatabase");
+            Assert.AreEqual(0, bio.unlockCost, "world_biology cost moved to the biology_lab research");
+            CollectionAssert.Contains(bio.prereqUnlockIds, "biology_lab",
+                "world_biology is gated by the biology_lab research");
+            CollectionAssert.Contains(bio.siteIds, "site_bio_lab", "world_biology owns site_bio_lab");
         }
 
         // ── SaveData additive fields ──────────────────────────────────────────
