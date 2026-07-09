@@ -28,12 +28,12 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is168()
+        public void AllItems_TotalCount_Is178()
         {
-            // 149 physics + 4 OrganicCompound (P2) + 3 C1 compounds (P4a) + 8 C2-C3 compounds (P4b)
-            // + 4 B1 Biomolecules (Biology: protein, carbohydrate, lipid_membrane, nucleic_acid).
-            Assert.AreEqual(168, _items.Length,
-                $"Expected 168 items in Resources/Items/, found {_items.Length}. " +
+            // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
+            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4). Biology track complete.
+            Assert.AreEqual(178, _items.Length,
+                $"Expected 178 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -116,6 +116,19 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T3_Carbohydrate_SellValue()  => AssertSell("carbohydrate",  100000f);
         [Test] public void T3_LipidMembrane_SellValue() => AssertSell("lipid_membrane", 140000f);
         [Test] public void T3_NucleicAcid_SellValue()   => AssertSell("nucleic_acid",  200000f);
+
+        // ── Tier 3 — Biology B2-B4 (cells -> organs -> ecosystems). First-pass, re-tier in Phase 6. ──
+
+        [Test] public void T3_Ribosome_SellValue()        => AssertSell("ribosome",         2000000f);
+        [Test] public void T3_Mitochondria_SellValue()    => AssertSell("mitochondria",     3000000f);
+        [Test] public void T3_CellMembrane_SellValue()    => AssertSell("cell_membrane",    1500000f);
+        [Test] public void T3_ProkaryoticCell_SellValue() => AssertSell("prokaryotic_cell", 15000000f);
+        [Test] public void T3_EukaryoticCell_SellValue()  => AssertSell("eukaryotic_cell",  60000000f);
+        [Test] public void T3_Tissue_SellValue()          => AssertSell("tissue",           250000000f);
+        [Test] public void T3_Organ_SellValue()           => AssertSell("organ",            1000000000f);
+        [Test] public void T3_Organism_SellValue()        => AssertSell("organism",         5000000000f);
+        [Test] public void T3_Population_SellValue()      => AssertSell("population",        25000000000f);
+        [Test] public void T3_Ecosystem_SellValue()       => AssertSell("ecosystem",        150000000000f);
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 

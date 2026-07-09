@@ -43,7 +43,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bd1dde8a2ab4c52449e80942eeef3ae3, type: 2}
   - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: 'Chemistry made the parts; biology assembles them into machines that

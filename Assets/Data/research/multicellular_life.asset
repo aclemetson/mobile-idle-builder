@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: multicellular_life
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: multicellular_life
+  displayName: Multicellular Life
+  description: Grow cells into tissues and organs. Unlocks the Tissue Culture.
+  icon: {fileID: 0}
+  branch: 5
+  prerequisites:
+  - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
+  depthInTree: 8
+  costBaseCurrency: 250000000
+  costPrestigeCurrency: 0
+  durationSeconds: 14400
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: c97d9822819909e48bad2be38375d5fd, type: 2}
+  - {fileID: 11400000, guid: a775b60e267e65748a4383af8c453a13, type: 2}
+  - {fileID: 11400000, guid: 8936ca1bd0c8c174a942ecb26037ece1, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 85d297ca7c84a0e4ca2715be3bf71aa8, type: 2}
+  - {fileID: 11400000, guid: 6cd6312ee76bf954f96d05c93488a175, type: 2}
+  - {fileID: 11400000, guid: 2b4088baf350db84a8d2030600ac41b9, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: d2781fa6f2fd279479d47afa590562b3, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: "Cells stop living alone. Nucleated and specialised, they bind into
+    tissues and organs \u2014 a division of labour that lets life grow large."

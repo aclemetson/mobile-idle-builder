@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** IN PROGRESS — **Phases 1–3 + 4a DONE** (2026-07-06): P1 save/data model (PR #119); P2 field-type string refactor + items/fields/site (PR #120); P3 `WorldService` + `world` dev commands (PR #121); **P4a Chemistry C1** — `chemistry_lab` research (now the world gate), Element Harvester + Compound Synthesizer + C1 compounds (branch `feat/worlds-chem-phase4a`). Chemistry-focused; Biology deferred. Next: P4b (Chemistry C2–C4), P5 (worlds UI + theming), P6 (economy re-tier). Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed.
+**Status:** IN PROGRESS — **Phases 1–4 + full Biology DONE** (P1–4a 2026-07-06; P4b + Biology B1–B4 2026-07-09): P1 save/data model (PR #119); P2 field-type string refactor + items/fields/site (PR #120); P3 `WorldService` + `world` dev commands (PR #121); **P4a Chemistry C1** — `chemistry_lab` research (now the world gate), Element Harvester + Compound Synthesizer + C1 compounds (PR #123 area). **P4b Chemistry C2–C4** — `reaction_engineering`/`organic_chemistry`/`biochem_precursors`, Metal Harvester + Catalytic Reactor + Organic Synthesizer, C2–C4 recipes that finally produce the OrganicCompound feedstock (PR #124). **Biology B1–B4** — `ResearchBranch.Biology`, `ItemCategory.Biomolecule`/`CellPart`/`Organism`, `biology_lab`→`cell_biology`→`multicellular_life`→`ecosystems`, `world_biology` + `site_bio_lab` + organic fields, Organic Harvester/Biosynthesizer/Cell Assembler/Tissue Culture/Bioreactor, biomolecules→cells→organs→ecosystems (PRs #125 [B1] + B2–B4). Next: **P5 (worlds UI + map theming — still the only way to reach Chemistry/Biology is the dev console)**, P6 (economy re-tier). Balance numbers below are first-pass anchors.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -89,12 +89,17 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 - **Balance is FIRST-PASS.** The element sell-values are physics-era and exponential (chlorine 327K, iron 167M), so raw-element sinking is currently over-valued; the intended loop is harvest→synthesize→sink compounds, and the real economy pass is the **Phase 6** re-tier. Do not treat these numbers as final.
 - **Tests:** `Tests/ChemistryContentTests.cs` (chemistry_lab gate, buildings gated + compatible, C1 compounds). `ItemBalanceTests` 153→156.
 
-### Phase 4b — Chemistry C2–C4 (pending)
-- Research `reaction_engineering` (~500K) / `organic_chemistry` (~2M) / `biochem_precursors` (~5M); buildings Catalytic Reactor / Organic Synthesizer; recipes for C2–C4 culminating in the forward-declared `glucose`/`amino_acid`/`fatty_acid`/`nucleotide`. Chain the research nodes (`chemistry_lab → reaction_engineering → …`). A metal harvester (type `ElementMetal`) if C2/C3 needs metals.
-- **Tests:** research gates unlock the right buildings/recipes.
+### Phase 4b — Chemistry C2–C4 — DONE (2026-07-09, PR #124)
+- Research `reaction_engineering` (500K) → `organic_chemistry` (2M) → `biochem_precursors` (5M), chained after `chemistry_lab`. Buildings `metal_harvester` (16, `ElementMetal`), `catalytic_reactor` (17, C2), `organic_synthesizer` (18, C3+C4). Items 157–164 (catalyst/chlorine_gas/sodium_hydroxide/nitric_acid + ethane/octane/ethanol/polymer_precursor). Recipes 173–188 — the C4 recipes finally produce the forward-declared `glucose`/`amino_acid`/`fatty_acid`/`nucleotide` (gated `biochem_precursors`). `_meta.version` 0.3.12.
 
-### Biology (deferred): `ResearchBranch.Biology` + nodes, organic fields, Biosynthesizer/Cell Assembler, biomolecule items — land when Biology is built.
-### GATE (each of 4a/4b): full suite green → commit → PR. Stop here.
+### Biology B1–B4 — DONE (2026-07-09, PRs #125 + B2–B4)
+- **Enums:** `ResearchBranch.Biology`; `ItemCategory.Biomolecule`/`CellPart`/`Organism` (appended to preserve serialized ints).
+- **Research (branch Biology, chained):** `biology_lab` (10M, prereq `biochem_precursors`) → `cell_biology` (50M) → `multicellular_life` (250M) → `ecosystems` (1B).
+- **World/site/fields:** `world_biology` (prereq `biology_lab`) + `site_bio_lab`; four `"Organic"` fields (sugar/amino_acid/lipid/nucleotide) dropping the OrganicCompound items (mined), introduced via the absolute-count override path.
+- **Buildings (19–23):** Organic Harvester, Biosynthesizer (B1); Cell Assembler (B2); Tissue Culture (B3); Bioreactor (B4).
+- **Items (165–178):** B1 Biomolecule (protein/carbohydrate/lipid_membrane/nucleic_acid); B2 CellPart (ribosome/mitochondria/cell_membrane/prokaryotic_cell); B3 (eukaryotic_cell CellPart; tissue/organ Organism); B4 Organism (organism/population/ecosystem). Recipes 189–206. `_meta.version` 0.3.13 (B1) / 0.3.14 (B2–B4).
+- **Tests:** `Tests/BiologyContentTests.cs`; `ItemBalanceTests` 156→178; `WorldSchemaTests`/`SOSchemaTests` extended.
+### GATE (each phase): full suite green → commit → PR. Stop here.
 
 ## Phase 5 — World-select UI + map theming + discoverability
 
