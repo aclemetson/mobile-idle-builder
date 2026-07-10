@@ -56,7 +56,7 @@ MonoBehaviour:
     localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 5000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30

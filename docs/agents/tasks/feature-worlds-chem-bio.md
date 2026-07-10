@@ -1,6 +1,6 @@
 # Feature: Chemistry & Biology Tracks (Worlds)
 
-**Status:** DESIGN APPROVED, NOT STARTED (approved 2026-07-05). Discussion progression map (v0.1) rendered as an HTML artifact; balance numbers below are first-pass anchors, not committed. No code or `game_data.json` changes yet.
+**Status:** IN PROGRESS — **Phases 1–4 + full Biology DONE** (P1–4a 2026-07-06; P4b + Biology B1–B4 2026-07-09): P1 save/data model (PR #119); P2 field-type string refactor + items/fields/site (PR #120); P3 `WorldService` + `world` dev commands (PR #121); **P4a Chemistry C1** — `chemistry_lab` research (now the world gate), Element Harvester + Compound Synthesizer + C1 compounds (PR #123 area). **P4b Chemistry C2–C4** — `reaction_engineering`/`organic_chemistry`/`biochem_precursors`, Metal Harvester + Catalytic Reactor + Organic Synthesizer, C2–C4 recipes that finally produce the OrganicCompound feedstock (PR #124). **Biology B1–B4** — `ResearchBranch.Biology`, `ItemCategory.Biomolecule`/`CellPart`/`Organism`, `biology_lab`→`cell_biology`→`multicellular_life`→`ecosystems`, `world_biology` + `site_bio_lab` + organic fields, Organic Harvester/Biosynthesizer/Cell Assembler/Tissue Culture/Bioreactor, biomolecules→cells→organs→ecosystems (PRs #125 [B1] + B2–B4). Next: **P5 (worlds UI + map theming — still the only way to reach Chemistry/Biology is the dev console)**, P6 (economy re-tier). Balance numbers below are first-pass anchors.
 **Required reading:** `docs/agents/architecture.md`, `docs/agents/chemistry-biology.md` (content model), `docs/agents/data-pipeline.md`, `docs/agents/save-system.md`, `docs/agents/ecs-patterns.md`, `docs/agents/economy-balance.md`, `docs/agents/ui-toolkit.md`
 **Scope estimate:** XL. 5 build phases + 1 deferred follow-up; **each phase ends "stop, run full suite, commit, PR."** Do NOT attempt in one pass. A session picks up the next incomplete phase.
 **Branch:** one branch per phase → PR into the current integration/release branch (confirm target with user).
@@ -42,42 +42,64 @@ Costs anchored to the `economy-balance.md` phase table so they slot correctly. S
 
 ---
 
-## Phase 1 — World data model + save partition (no behavior change)
+## Phase 1 — World data model + save partition (no behavior change) — DONE (2026-07-06)
 
 **Goal:** saves support N worlds grouping the existing sites; game still plays identically as World 0 = Physics.
+
+**As-built note:** Worlds are a **logical grouping over the existing FLAT site list** (not a nested save restructure). `WorldSO.siteIds` names member sites; `grids[]`/`siteSnapshots[]` stay flat/global. The save change is just two additive fields: `SaveData.unlockedWorlds` (survives prestige, mirrors `unlockedSites`) and `CurrentRunData.activeWorldIndex` (default 0). `WorldSO`/`WorldDatabaseSO` mirror the Site pair; importer pass at Step 12.51 (after sites); `WorldDatabase.asset` in Resources; `worlds` section in `game_data.json` (`_meta.version` 0.3.9). Centralized world↔site mapping in `Services/WorldLayout.cs`. `world_chemistry` is a stub (150K/`mid_elements`, empty `site_ids`) until its site lands in Phase 2/3.
 
 - New `ScriptableObjects/WorldSO.cs` + `WorldDatabaseSO.cs` (copy `SiteSO`/`SiteDatabaseSO` end-to-end): `id`, `displayName`, `unlockCost` (entropy), prerequisite unlock ids (research/item), member site ids, theme fields. New `"worlds"` array in `game_data.json`; bump `_meta.version`. Model classes in `Editor/GameDataModel.cs`; import pass in `Editor/GameDataImporter.cs` **after Sites** (cross-refs site ids).
 - Extend `SaveSystem/SaveData.cs`: group sites/grids by world; `activeWorldIndex`; `unlockedWorlds` (survives prestige — mirror `unlockedSites`). **Additive migration shim:** existing saves become World 0 = Physics; keep reading legacy `grids[]`/`activeSiteIndex` as World 0. Centralize behind a helper like the existing `SaveData.ActiveGrid`.
 - **Tests:** legacy single-world save loads and plays as World 0; round-trip; `SOSchemaTests` extension for `WorldSO`.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 2 — Field taxonomy + new resources
+## Phase 2 — Field taxonomy + new resources — DONE (2026-07-06)
 
-**Goal:** element + organic fields and the `OrganicCompound` items exist and place on a map.
+**Goal:** element fields + the `OrganicCompound` items exist and place on a map.
 
-- Extend `FieldType` (`Enums/GameEnums.cs`) with element/organic types **OR** refactor field-type to a data-driven string id (preferred long-term). **Decide at phase start.** The refactor touches `Grid/BuildingPlacementController.cs` (compatibility), `Gameplay/ManualFieldCollector.cs` (`FieldTypeToTriggerId`), tutorial `collectionFilter` parsing (`GameDataImporter.cs`), and `Gameplay/FieldGenerator.cs`.
-- Add new `OrganicCompound` item category + items (`amino_acid`, `glucose`, `fatty_acid`, `nucleotide`, …) and new `fields` entries (element + organic fields) to `game_data.json`. Fields *introduced* per-site via the existing density-override absolute-count path (fissile fields are the working template).
-- **Tests:** importer parses new fields/items; field placement on a chem/bio site.
+**As-built (Chemistry-focused per user direction — organic/Biology fields DEFERRED to the Biology build):**
+- **DECIDED: field-type is a data-driven string** (not enum extension). The `FieldType` enum is deleted; `FieldSO.fieldType`/`ItemSO.fieldType`/`TutorialFlowSO.collectionFilter` are `string`, `BuildingSO.compatibleFields` is `string[]`. New `FieldTypes` helper (`Enums/GameEnums.cs`) holds the `"None"` sentinel + `IsUnrestricted`/`Normalize`. Touched: importer (stop parsing to enum), `ManualFieldCollector` (`FieldTypeToTriggerId` removed — toast now uses `field.id`, identical for tutorial fields), `TutorialOverlayController`, `BuildingPlacementController` (string equality), `GameDataEditorWindow` (dropdown is string). JSON was already string-valued, so no content churn beyond regeneration.
+- `ItemCategory.OrganicCompound` + 4 forward-declared items (`glucose`/`fatty_acid`/`amino_acid`/`nucleotide`, item_id 150–153, tier_3). **Ran Generate Element Icons** for their tiles (else `ItemIconTests` fails).
+- Element fields `element_field_light`/`metal`/`mineral` (type `"Element"`, drop existing elements) + site `site_chem_lab` (introduces them via density-override, `unlock_cost:0`; world-gated in Phase 3), wired to `world_chemistry.site_ids`.
+- **Tests:** `Tests/ChemistryContentTests.cs` (OrganicCompound items, chem site introduces element fields with string type, world owns chem site) + updated `WorldSchemaTests` (sites partitioned across worlds), `ItemBalanceTests` (149→153), `SOSchemaTests` (FieldTypes/OrganicCompound). Full suite green (734).
+- **Not done (deferred):** organic fields (`amino_acid_field` etc.) — Biology feedstock, land with Biology.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 3 — WorldService + switching + economic gate
+## Phase 3 — WorldService + switching + economic gate — DONE (2026-07-06)
 
 **Goal:** `WorldService.SwitchTo(index)` and economic unlock work (dev-console first).
 
-- New `Services/WorldService.cs` copying `Services/SiteService.cs` shape: `CanUnlock` (entropy **and** prerequisite-unlock check — extend the pure static `IsUnlocked` helper pattern), `UnlockWorld`, `SwitchTo` (flush → save → tear down live grid → load target world's active site; reuse the Site switch handoff at `SiteService.cs:131-162`).
-- Idle aggregation already iterates unlocked sites — extend to iterate across worlds.
-- Dev console commands `world list / switch / unlock` — copy the `site …` registration in `DevConsole/DevConsoleController.cs`.
-- **Tests:** unlock deduction + prereq gating; switch round-trip (place building → switch world → switch back → intact); idle aggregation across worlds.
+**As-built:**
+- `Services/WorldService.cs` mirrors `SiteService`: static `IsUnlocked` (index 0 physics implicit; others in `unlockedWorlds`) + static `PrereqsMet` (all `prereqUnlockIds` in `save.unlockedResearch` — pure/testable); `CanUnlock` = !unlocked && prereqs && affordable. `UnlockWorld` deducts entropy, records `unlockedWorlds` (survives prestige), and **unlocks member sites** (`unlockedSites` + `EnsureSiteGrid`) so travel works. `SwitchTo` resolves the world's entry site and **delegates the grid handoff to `SiteService.SwitchTo`** (no duplicated flush/teardown logic).
+- **Self-bootstrapped** (`[RuntimeInitializeOnLoadMethod]`, no scene placement — no serialized fields, can't be lost in a scene refactor; mirrors `FeatureFlagService`). ECS access is lazy (`EnsureEcs`) since it's created before GameScene's ECS world.
+- `SiteService.SwitchTo` now keeps `activeWorldIndex` in sync via `WorldLayout.WorldIndexForSite` (SiteService is the single writer of `activeSiteIndex`), so world/site stay consistent whether switched via the world or site path. SiteService loads `WorldDatabase` for this.
+- **Idle aggregation across worlds: already satisfied** — `OfflineCollectionService` iterates the flat `save.siteSnapshots` (all unlocked sites across all worlds); no change needed.
+- Dev console `world list / switch / unlock` (shows prereq status), mirroring the `site` commands.
+- **Tests:** `PlayModeTests/WorldServiceTests.cs` (pure gate: `IsUnlocked` + `PrereqsMet`). The ECS switch handoff is covered by `SiteServiceTests` (grid round-trip) + manual playtest.
 ### GATE: full suite green → commit → PR. Stop here.
 
-## Phase 4 — Research branches + buildings + recipes
+## Phase 4 — Research branches + buildings + recipes (split into 4a/4b)
 
-**Goal:** the chem/bio content is playable and correctly gated.
+**Goal:** the chem/bio content is playable and correctly gated. Split into **4a (Chemistry C1, DONE)** and **4b (Chemistry C2–C4, pending)** for reviewability; Biology content stays deferred.
 
-- Chemistry sub-branch nodes (`chemistry_lab`, `reaction_engineering`, `organic_chemistry`, `biochem_precursors`) extending the existing `ResearchBranch.Chemistry`; add `ResearchBranch.Biology` enum value + its nodes (`biology_lab`, `cell_biology`, `multicellular_life`, `ecosystems`). Wire each World's unlock to its opening research node.
-- New buildings (Compound Synthesizer, Catalytic Reactor, Organic Synthesizer, Biosynthesizer, Cell Assembler, …) with `requiredResearch`, `compatibleFields` (new types), `supportedRecipes` whose `outputItem` matches the new fields' drops; new recipes for all C/B tier products. All data-driven in `game_data.json`.
-- **Tests:** research gates unlock the right buildings/recipes; `SOSchemaTests` for new content.
-### GATE: full suite green → commit → PR. Stop here.
+### Phase 4a — Chemistry C1 (playable slice) — DONE (2026-07-06)
+- `chemistry_lab` research node (branch Chemistry, prereq `mid_elements`, **150K** — the world gate now lives here; `world_chemistry.prereq_unlock_ids = ["chemistry_lab"]`, `unlock_cost 0`).
+- **Element Harvester** (`element_harvester`, `MustBeOnField`, `compatible_fields ["Element"]`, 6 `collect_<element>` recipes for H/C/O/Na/Cl/S) — place on a light/mineral seam, pick the element via the existing multi-output selector (`BuildingPlacementController.GetMatchingRecipes`). **Compound Synthesizer** (`compound_synthesizer`, `Anywhere`, 2 inputs) crafting the C1 compounds.
+- New Molecule items `carbon_dioxide`/`table_salt`/`sulfuric_acid` (item_id 154–156) + recipes (170–172). Icons generated. `element_field_metal` retyped to `"ElementMetal"` so the C1 harvester can't idle-farm the high-value metals (iron 167M etc.).
+- **Balance is FIRST-PASS.** The element sell-values are physics-era and exponential (chlorine 327K, iron 167M), so raw-element sinking is currently over-valued; the intended loop is harvest→synthesize→sink compounds, and the real economy pass is the **Phase 6** re-tier. Do not treat these numbers as final.
+- **Tests:** `Tests/ChemistryContentTests.cs` (chemistry_lab gate, buildings gated + compatible, C1 compounds). `ItemBalanceTests` 153→156.
+
+### Phase 4b — Chemistry C2–C4 — DONE (2026-07-09, PR #124)
+- Research `reaction_engineering` (500K) → `organic_chemistry` (2M) → `biochem_precursors` (5M), chained after `chemistry_lab`. Buildings `metal_harvester` (16, `ElementMetal`), `catalytic_reactor` (17, C2), `organic_synthesizer` (18, C3+C4). Items 157–164 (catalyst/chlorine_gas/sodium_hydroxide/nitric_acid + ethane/octane/ethanol/polymer_precursor). Recipes 173–188 — the C4 recipes finally produce the forward-declared `glucose`/`amino_acid`/`fatty_acid`/`nucleotide` (gated `biochem_precursors`). `_meta.version` 0.3.12.
+
+### Biology B1–B4 — DONE (2026-07-09, PRs #125 + B2–B4)
+- **Enums:** `ResearchBranch.Biology`; `ItemCategory.Biomolecule`/`CellPart`/`Organism` (appended to preserve serialized ints).
+- **Research (branch Biology, chained):** `biology_lab` (10M, prereq `biochem_precursors`) → `cell_biology` (50M) → `multicellular_life` (250M) → `ecosystems` (1B).
+- **World/site/fields:** `world_biology` (prereq `biology_lab`) + `site_bio_lab`; four `"Organic"` fields (sugar/amino_acid/lipid/nucleotide) dropping the OrganicCompound items (mined), introduced via the absolute-count override path.
+- **Buildings (19–23):** Organic Harvester, Biosynthesizer (B1); Cell Assembler (B2); Tissue Culture (B3); Bioreactor (B4).
+- **Items (165–178):** B1 Biomolecule (protein/carbohydrate/lipid_membrane/nucleic_acid); B2 CellPart (ribosome/mitochondria/cell_membrane/prokaryotic_cell); B3 (eukaryotic_cell CellPart; tissue/organ Organism); B4 Organism (organism/population/ecosystem). Recipes 189–206. `_meta.version` 0.3.13 (B1) / 0.3.14 (B2–B4).
+- **Tests:** `Tests/BiologyContentTests.cs`; `ItemBalanceTests` 156→178; `WorldSchemaTests`/`SOSchemaTests` extended.
+### GATE (each phase): full suite green → commit → PR. Stop here.
 
 ## Phase 5 — World-select UI + map theming + discoverability
 

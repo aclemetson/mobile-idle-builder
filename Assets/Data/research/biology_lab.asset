@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: biology_lab
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: biology_lab
+  displayName: Biology Lab
+  description: 'Open the Biology world: harvest organic compounds from living fields
+    and assemble them into biomolecules. Gates the Organic Harvester and the Biosynthesizer.'
+  icon: {fileID: 0}
+  branch: 5
+  prerequisites:
+  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 10000000
+  costPrestigeCurrency: 0
+  durationSeconds: 7200
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 5f83ae9a620d1ba4cafcc198b79ab9a2, type: 2}
+  - {fileID: 11400000, guid: 933bfad7e4cfc524288f0b7f1a391b82, type: 2}
+  - {fileID: 11400000, guid: 322f1bf46d44c09488ddc3ac803ed97c, type: 2}
+  - {fileID: 11400000, guid: 299eb3c3033840348a05033f42360df2, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 8a937314ba664414097a020f5613e2b4, type: 2}
+  - {fileID: 11400000, guid: fe0e94040e80312418b902ee519d4cc2, type: 2}
+  - {fileID: 11400000, guid: ffd86a28a84901147a2c8f335941d89f, type: 2}
+  - {fileID: 11400000, guid: a071d933ad3e25e4eb3ad7266b7cad42, type: 2}
+  - {fileID: 11400000, guid: 16ccd82f5311877408bff60eb9d63562, type: 2}
+  - {fileID: 11400000, guid: 6b279f427c626c1438a4eec48730f603, type: 2}
+  - {fileID: 11400000, guid: 502e00693d25a774894042a410b1a914, type: 2}
+  - {fileID: 11400000, guid: b3fb4d2eaf6fe5d438c6d7c995ad0a8c, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: bd1dde8a2ab4c52449e80942eeef3ae3, type: 2}
+  - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: 'Chemistry made the parts; biology assembles them into machines that
+    copy themselves. The first tier weaves monomers into the four macromolecules
+    of life: proteins, carbohydrates, lipid membranes, and nucleic acids.'

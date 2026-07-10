@@ -30,7 +30,7 @@ namespace MobileIdleBuilder
 
         [Header("Harvesting")]
         public bool isHarvested;        // true = raw resource, no recipe
-        public FieldType fieldType;
+        public string fieldType = FieldTypes.None;   // free-form field-type id (see FieldTypes)
 
         [Header("Secondary Particle")]
         public bool isSecondaryParticle;

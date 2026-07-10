@@ -22,6 +22,7 @@ namespace MobileIdleBuilder
         public event Action OnSitesChanged;
 
         private SiteSO[] _sites;
+        private WorldDatabaseSO _worldDb;   // for keeping activeWorldIndex in sync on switch (see WorldLayout)
 
         private EntityManager _em;
         private EntityQuery   _progressQuery;
@@ -38,6 +39,7 @@ namespace MobileIdleBuilder
             _sites = db != null ? db.allSites : Array.Empty<SiteSO>();
             if (_sites.Length == 0)
                 GameLogger.Warning("[SiteService] SiteDatabase missing or empty — run MobileIdleBuilder/Import Game Data.");
+            _worldDb = Resources.Load<WorldDatabaseSO>("WorldDatabase");
         }
 
         void Start()
@@ -139,9 +141,12 @@ namespace MobileIdleBuilder
             // 1. Flush the current site → grids[current] (+ rebuild its idle snapshot).
             SaveManager.Instance.SaveLocal();
 
-            // 2. Make the target the active site (reserving its grid slot first).
+            // 2. Make the target the active site (reserving its grid slot first). Keep activeWorldIndex
+            //    consistent here — SiteService is the single writer of activeSiteIndex, so the owning
+            //    world is always resolved from the target site (whether switched via site or world UI).
             var targetGrid = GridSaveService.EnsureSiteGrid(save, index);
-            save.currentRun.activeSiteIndex = index;
+            save.currentRun.activeSiteIndex  = index;
+            save.currentRun.activeWorldIndex = WorldLayout.WorldIndexForSite(_worldDb, GetSite(index)?.id);
 
             // 3. Tear down the live grid (buildings + conveyors + occupancy + fields; fixtures kept).
             GridSaveService.Instance?.ClearGrid();

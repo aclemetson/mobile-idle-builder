@@ -109,6 +109,10 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: e3e62733b7f06bc4187f90c710833864, type: 2}
   - id: intro_quantum_domains
     dialogue: {fileID: 11400000, guid: d250f565c3f9d474089ec6a354b950d9, type: 2}
+  - id: intro_world_chemistry
+    dialogue: {fileID: 11400000, guid: 1af5689e683ed1a4884b81b8decc7091, type: 2}
+  - id: intro_world_biology
+    dialogue: {fileID: 11400000, guid: de01fe572e8254a48a1dff034e904cde, type: 2}
   - id: upgrade_complete_context
     dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
   - id: post_tutorial_intro

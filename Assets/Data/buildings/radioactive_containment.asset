@@ -40,7 +40,7 @@ MonoBehaviour:
   ports: []
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 2500
   baseMaxOutputItems: 30
   baseMaxInputItemsPerSlot: 30

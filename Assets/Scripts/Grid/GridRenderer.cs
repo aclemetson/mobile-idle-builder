@@ -42,7 +42,12 @@ namespace MobileIdleBuilder
 
         private GameObject[,]        _tiles;
         private Vector2Int           _ghostCell              = new(-1, -1);
+        // Stores the RAW field-identity colour per cell; the tile paint (RestoreCell) lerps it against
+        // the current world tileColor and multiplies by the world field tint, so a world-theme change
+        // re-derives every field tile correctly without needing the original colour re-supplied.
         private readonly Dictionary<Vector2Int, Color> _fieldTileColors = new();
+        private Color _worldFieldTint = Color.white;   // per-world multiplier for field-tile colours
+        private int   _themedWorldIndex = int.MinValue; // last world index whose theme was applied
         private readonly HashSet<Vector2Int> _tutorialHighlightCells = new();
         private readonly List<Vector2Int> _ghostCells             = new();
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
@@ -57,6 +62,50 @@ namespace MobileIdleBuilder
             // Skip if CameraController is driving the camera (it initialises its own position)
             if (Camera.main == null || Camera.main.GetComponent<CameraController>() == null)
                 CentreCamera();
+        }
+
+        // Re-theme the map when the active world changes (any path: worlds panel, sites panel, dev
+        // console, or a load into a non-Physics world). A single int compare per frame; the apply only
+        // runs on an actual change. Waits until WorldService exists so the first apply carries a real theme.
+        void Update()
+        {
+            var svc = WorldService.Instance;
+            if (svc == null) return;
+            int w = svc.ActiveIndex;
+            if (w == _themedWorldIndex) return;
+            _themedWorldIndex = w;
+            ApplyActiveWorldTheme();
+        }
+
+        // ---- Per-world map theming (Phase 5) ----
+
+        /// <summary>Applies the active world's <see cref="WorldTheme"/> to the map (tile/background/field tint).</summary>
+        public void ApplyActiveWorldTheme()
+        {
+            var svc = WorldService.Instance;
+            if (svc == null) return;
+            var world = svc.GetWorld(svc.ActiveIndex);
+            if (world?.theme != null) ApplyWorldTheme(world.theme);
+        }
+
+        /// <summary>
+        /// Repaints the map for a world theme: base tile colour, camera background, and the field-tile
+        /// tint. Field tiles keep their raw identity colour (stored per cell) and are re-lerped here, so
+        /// switching worlds recolours everything consistently.
+        /// </summary>
+        public void ApplyWorldTheme(WorldTheme theme)
+        {
+            if (theme == null) return;
+            tileColor       = theme.tileColor;
+            _worldFieldTint = theme.fieldTint;
+
+            var cam = Camera.main;
+            if (cam != null) cam.backgroundColor = theme.backgroundColor;
+
+            if (_tiles == null) return;
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    RestoreCell(x, y);
         }
 
         void BuildGrid()
@@ -334,7 +383,7 @@ namespace MobileIdleBuilder
         public void SetFieldTileColor(int x, int y, Color color)
         {
             if (!IsInBounds(x, y)) return;
-            _fieldTileColors[new Vector2Int(x, y)] = Color.Lerp(tileColor, color, FieldTileTintStrength);
+            _fieldTileColors[new Vector2Int(x, y)] = color;   // store RAW; tint+lerp applied in RestoreCell
             RestoreCell(x, y);
         }
 
@@ -385,8 +434,8 @@ namespace MobileIdleBuilder
                 color = tutorialHighlightColor;
             else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y))
                 color = occupiedColor;
-            else if (_fieldTileColors.TryGetValue(key, out var fieldColor))
-                color = fieldColor;
+            else if (_fieldTileColors.TryGetValue(key, out var fieldColorRaw))
+                color = Color.Lerp(tileColor, fieldColorRaw * _worldFieldTint, FieldTileTintStrength);
             else
                 color = tileColor;
             SetColor(tile.GetComponent<MeshRenderer>(), color);

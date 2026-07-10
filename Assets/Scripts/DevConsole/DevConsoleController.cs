@@ -718,6 +718,60 @@ namespace MobileIdleBuilder.Dev
                         : $"Error: unlock of '{site.id}' failed.";
                 });
 
+            // ── worlds (tracks) ──────────────────────────────────────────────
+            _registry.Register("world list", "List all worlds (index, id, cost, prereqs, unlocked, active)",
+                _ =>
+                {
+                    var svc = WorldService.Instance;
+                    if (svc?.AllWorlds == null || svc.AllWorlds.Count == 0)
+                        return "Error: WorldService not ready or WorldDatabase empty.";
+                    var save = SaveManager.Instance?.Current;
+                    var sb = new StringBuilder($"Worlds ({svc.AllWorlds.Count}):\n");
+                    for (int i = 0; i < svc.AllWorlds.Count; i++)
+                    {
+                        var w = svc.AllWorlds[i];
+                        if (w == null) continue;
+                        string state = svc.IsUnlocked(i) ? "unlocked"
+                                     : WorldService.PrereqsMet(save, w) ? "locked (prereqs met)"
+                                     : $"locked (needs {string.Join(",", w.prereqUnlockIds ?? new System.Collections.Generic.List<string>())})";
+                        string flags = (i == svc.ActiveIndex ? "ACTIVE " : "") + state;
+                        sb.AppendLine($"  [{i}] {w.id,-16} {w.unlockCost,12}e  {flags}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("world switch <n>", "Travel the live grid to world index n (its entry site)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n < 0)
+                        return "Error: <n> must be a non-negative integer.";
+                    var svc = WorldService.Instance;
+                    if (svc == null) return "Error: WorldService not ready.";
+                    if (svc.GetWorld(n) == null) return $"Error: no world at index {n}. Try 'world list'.";
+                    if (!svc.IsUnlocked(n)) return $"Error: world [{n}] is locked. Unlock it first.";
+                    if (n == svc.ActiveIndex) return $"Already on world [{n}].";
+                    return svc.SwitchTo(n)
+                        ? $"Traveled to world [{n}] '{svc.GetWorld(n).id}'."
+                        : $"Error: switch to world [{n}] failed.";
+                });
+
+            _registry.Register("world unlock <id>", "Unlock a world by id (checks prereqs, deducts entropy)",
+                args =>
+                {
+                    var svc = WorldService.Instance;
+                    if (svc == null) return "Error: WorldService not ready.";
+                    int idx = svc.IndexOf(args[0]);
+                    var w = svc.GetWorld(idx);
+                    if (w == null) return $"Error: unknown world '{args[0]}'. Try 'world list'.";
+                    if (svc.IsUnlocked(idx)) return $"World '{w.id}' already unlocked.";
+                    if (!WorldService.PrereqsMet(SaveManager.Instance?.Current, w))
+                        return $"Error: prereqs unmet for '{w.id}' (needs {string.Join(",", w.prereqUnlockIds ?? new System.Collections.Generic.List<string>())}).";
+                    if (!svc.CanUnlock(idx)) return $"Error: cannot afford '{w.id}' ({w.unlockCost}e).";
+                    return svc.UnlockWorld(w.id)
+                        ? $"Unlocked world '{w.id}' for {w.unlockCost}e."
+                        : $"Error: unlock of '{w.id}' failed.";
+                });
+
             // ── tutorial ─────────────────────────────────────────────────────
             _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
                 _ =>

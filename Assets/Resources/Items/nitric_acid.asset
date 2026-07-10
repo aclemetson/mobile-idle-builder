@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: nitric_acid
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: nitric_acid
+  displayName: Nitric Acid
+  symbol: HNO3
+  icon: {fileID: 21300000, guid: 24b4bfa49c528ff4d98764730ccbece0, type: 3}
+  itemId: 160
+  tier: 3
+  category: 4
+  tierData: {fileID: 11400000, guid: 7a6db1aac1e073d47b2c9ce89ee09dac, type: 2}
+  atomicNumber: 0
+  atomicMass: 63
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 0
+  fieldType: None
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: A powerful oxidizing acid of nitrogen, oxygen, and hydrogen. The reagent
+    behind fertilizers, explosives, and etched metal.
+  codexUnlocked: 0
+  baseSellValue: 1200000
+  isotopeSellMultiplier: 1

@@ -121,13 +121,13 @@ namespace MobileIdleBuilder
             // Tutorial gates — block or filter, posting a toast so the player gets feedback.
             if (!IsCollectionAllowed(out var filterType))
             {
-                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
+                ToastService.Instance?.Post(field.id);
                 return false;
             }
 
-            if (filterType != FieldType.None && field.fieldType != filterType)
+            if (!FieldTypes.IsUnrestricted(filterType) && field.fieldType != filterType)
             {
-                ToastService.Instance?.Post(FieldTypeToTriggerId(field.fieldType));
+                ToastService.Instance?.Post(field.id);
                 return false;
             }
 
@@ -237,9 +237,9 @@ namespace MobileIdleBuilder
         /// restrict collection to a specific field without a second ECS read.
         /// Both values are read directly from TutorialFlowSO — no step names in code.
         /// </summary>
-        private bool IsCollectionAllowed(out FieldType collectionFilter)
+        private bool IsCollectionAllowed(out string collectionFilter)
         {
-            collectionFilter = FieldType.None;
+            collectionFilter = FieldTypes.None;
             if (!_queriesReady || _tutorialQuery.IsEmpty) return true;
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
@@ -256,13 +256,5 @@ namespace MobileIdleBuilder
             collectionFilter = enter.collectionFilter;
             return true;
         }
-
-        private static string FieldTypeToTriggerId(FieldType fieldType) =>
-            fieldType switch
-            {
-                FieldType.Quark  => "quark_field",
-                FieldType.Lepton => "electron_field",
-                _                => $"{fieldType.ToString().ToLowerInvariant()}_field"
-            };
     }
 }

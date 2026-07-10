@@ -21,6 +21,7 @@ namespace MobileIdleBuilder.Editor
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
         public List<SiteJson>            sites           = new();
+        public List<WorldJson>           worlds          = new();
         public List<ManagerJson>         managers        = new();
         public List<DialogueJson>        dialogues       = new();
         public List<DailyRewardJson>     daily_rewards   = new();
@@ -39,6 +40,7 @@ namespace MobileIdleBuilder.Editor
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
             sites           ??= new List<SiteJson>();
+            worlds          ??= new List<WorldJson>();
             managers        ??= new List<ManagerJson>();
             dialogues       ??= new List<DialogueJson>();
             daily_rewards   ??= new List<DailyRewardJson>();
@@ -52,6 +54,7 @@ namespace MobileIdleBuilder.Editor
             foreach (var b in buildings)      b?.Initialize();
             foreach (var f in fields)         f?.Initialize();
             foreach (var s in sites)          s?.Initialize();
+            foreach (var w in worlds)         w?.Initialize();
             foreach (var d in dialogues)      d?.Initialize();
             foreach (var s in tutorial_steps) s?.Initialize();
         }
@@ -329,6 +332,31 @@ namespace MobileIdleBuilder.Editor
         public List<SiteFieldOverrideJson>   field_overrides = new();
 
         public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
+    }
+
+    [Serializable]
+    internal class WorldThemeJson
+    {
+        public string background_color = "";  // hex, e.g. "#0d1117" (empty = keep WorldTheme default)
+        public string tile_color       = "";  // hex base tile colour
+        public string field_tint       = "";  // hex multiplier applied to field-tile colours
+    }
+
+    [Serializable]
+    internal class WorldJson
+    {
+        public string         id                = "";
+        public string         display_name      = "";
+        public long           unlock_cost       = 0;
+        public List<string>   prereq_unlock_ids = new();  // research/item ids that gate the unlock
+        public List<string>   site_ids          = new();  // member site ids (flat global site list), in order
+        public WorldThemeJson theme;                       // map palette/tint (optional; null = defaults)
+
+        public void Initialize()
+        {
+            prereq_unlock_ids ??= new List<string>();
+            site_ids          ??= new List<string>();
+        }
     }
 
     [Serializable]

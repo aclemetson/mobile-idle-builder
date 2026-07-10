@@ -75,6 +75,20 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Alloy"));
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Component"));
             Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Megastructure"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "OrganicCompound"));
+            // Biology track categories.
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Biomolecule"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "CellPart"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ItemCategory), "Organism"));
+        }
+
+        [Test]
+        public void ResearchBranch_HasExpectedValues()
+        {
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Chemistry"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Nuclear"));
+            Assert.IsTrue(System.Enum.IsDefined(typeof(ResearchBranch), "Biology"),
+                "Biology branch added for the Biology track");
         }
 
         [Test]
@@ -86,11 +100,27 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FieldType_HasNoneQuarkLepton()
+        public void FieldTypes_UnrestrictedSentinel()
         {
-            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "None"));
-            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Quark"));
-            Assert.IsTrue(System.Enum.IsDefined(typeof(FieldType), "Lepton"));
+            // Field type is now a free-form string id; "None"/empty/null means "no restriction".
+            Assert.IsTrue(FieldTypes.IsUnrestricted(null));
+            Assert.IsTrue(FieldTypes.IsUnrestricted(""));
+            Assert.IsTrue(FieldTypes.IsUnrestricted("None"));
+            Assert.IsTrue(FieldTypes.IsUnrestricted("none"));
+            Assert.IsFalse(FieldTypes.IsUnrestricted("Quark"));
+            Assert.IsFalse(FieldTypes.IsUnrestricted("Element"));
+            Assert.AreEqual("None", FieldTypes.Normalize(null));
+            Assert.AreEqual("None", FieldTypes.Normalize(""));
+            Assert.AreEqual("Element", FieldTypes.Normalize("Element"));
+        }
+
+        [Test]
+        public void FieldSO_FieldTypeIsString()
+        {
+            Assert.AreEqual(typeof(string), typeof(FieldSO).GetField("fieldType").FieldType,
+                "FieldSO.fieldType must be a data-driven string id (not an enum)");
+            Assert.AreEqual(typeof(string[]), typeof(BuildingSO).GetField("compatibleFields").FieldType,
+                "BuildingSO.compatibleFields must be a string[] of field-type ids");
         }
 
         // ── RecipeIngredient struct ───────────────────────────────────────────

@@ -28,10 +28,12 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is149()
+        public void AllItems_TotalCount_Is178()
         {
-            Assert.AreEqual(149, _items.Length,
-                $"Expected 149 items in Resources/Items/, found {_items.Length}. " +
+            // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
+            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4). Biology track complete.
+            Assert.AreEqual(178, _items.Length,
+                $"Expected 178 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -93,6 +95,40 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           50000f);
         [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       200000f);
         [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 8000000f);
+
+        // ── Tier 3 — Chemistry compounds (C1 P4a, C2-C3 P4b). First-pass values, re-tier in Phase 6. ──
+
+        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    5000f);
+        [Test] public void T3_TableSalt_SellValue()       => AssertSell("table_salt",        900000f);
+        [Test] public void T3_SulfuricAcid_SellValue()    => AssertSell("sulfuric_acid",     500000f);
+        [Test] public void T3_Catalyst_SellValue()        => AssertSell("catalyst",          8000000f);
+        [Test] public void T3_ChlorineGas_SellValue()     => AssertSell("chlorine_gas",      700000f);
+        [Test] public void T3_SodiumHydroxide_SellValue() => AssertSell("sodium_hydroxide",  1000000f);
+        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       1200000f);
+        [Test] public void T3_Ethane_SellValue()          => AssertSell("ethane",            1500000f);
+        [Test] public void T3_Octane_SellValue()          => AssertSell("octane",            6000000f);
+        [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           3000000f);
+        [Test] public void T3_PolymerPrecursor_SellValue() => AssertSell("polymer_precursor", 12000000f);
+
+        // ── Tier 3 — Biology B1 biomolecules. First-pass values, re-tier in Phase 6. ──
+
+        [Test] public void T3_Protein_SellValue()       => AssertSell("protein",       120000f);
+        [Test] public void T3_Carbohydrate_SellValue()  => AssertSell("carbohydrate",  100000f);
+        [Test] public void T3_LipidMembrane_SellValue() => AssertSell("lipid_membrane", 140000f);
+        [Test] public void T3_NucleicAcid_SellValue()   => AssertSell("nucleic_acid",  200000f);
+
+        // ── Tier 3 — Biology B2-B4 (cells -> organs -> ecosystems). First-pass, re-tier in Phase 6. ──
+
+        [Test] public void T3_Ribosome_SellValue()        => AssertSell("ribosome",         2000000f);
+        [Test] public void T3_Mitochondria_SellValue()    => AssertSell("mitochondria",     3000000f);
+        [Test] public void T3_CellMembrane_SellValue()    => AssertSell("cell_membrane",    1500000f);
+        [Test] public void T3_ProkaryoticCell_SellValue() => AssertSell("prokaryotic_cell", 15000000f);
+        [Test] public void T3_EukaryoticCell_SellValue()  => AssertSell("eukaryotic_cell",  60000000f);
+        [Test] public void T3_Tissue_SellValue()          => AssertSell("tissue",           250000000f);
+        [Test] public void T3_Organ_SellValue()           => AssertSell("organ",            1000000000f);
+        [Test] public void T3_Organism_SellValue()        => AssertSell("organism",         5000000000f);
+        [Test] public void T3_Population_SellValue()      => AssertSell("population",        25000000000f);
+        [Test] public void T3_Ecosystem_SellValue()       => AssertSell("ecosystem",        150000000000f);
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 

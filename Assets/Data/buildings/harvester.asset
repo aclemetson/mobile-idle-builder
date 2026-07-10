@@ -45,7 +45,9 @@ MonoBehaviour:
   ports: []
   placementRule: 1
   compatibleAdjacentCategories: 
-  compatibleFields: 0100000002000000
+  compatibleFields:
+  - Quark
+  - Lepton
   entropyCost: 100
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

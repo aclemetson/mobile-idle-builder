@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: plutonium_field
   displayName: Plutonium Vein
-  fieldType: 4
+  fieldType: Plutonium
   drops:
   - item: {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
     weight: 1

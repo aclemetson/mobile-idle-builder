@@ -20,7 +20,9 @@ namespace MobileIdleBuilder
         public float prestigeCostReduction    = 0f;
         public List<string> permanentUpgrades = new();
         public List<string> unlockedSites      = new();   // site ids unlocked; survives prestige. site_origin implicit.
+        public List<string> unlockedWorlds     = new();   // world ids unlocked; survives prestige. world_physics implicit (like site_origin).
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
+        public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
@@ -98,6 +100,7 @@ namespace MobileIdleBuilder
         public GridSaveData grid                    = new();   // legacy single-grid mirror of grids[0]; kept for backward-compat reads
         public List<GridSaveData> grids             = new();   // index = site index; grids[0] mirrors 'grid'. Reset on prestige.
         public int          activeSiteIndex         = 0;       // index into grids of the live site
+        public int          activeWorldIndex        = 0;       // index into WorldDatabase of the active world; 0 = Physics. Keep consistent with activeSiteIndex via WorldLayout.
         public List<string> researchProgressKeys    = new();
         public List<float>  researchProgressValues  = new();
 

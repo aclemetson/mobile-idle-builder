@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: tissue_culture
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: tissue_culture
+  displayName: Tissue Culture
+  description: Grows cells into nucleated eukaryotes, then into tissues and organs.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 22
+  tier: 3
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 600
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 85d297ca7c84a0e4ca2715be3bf71aa8, type: 2}
+  - {fileID: 11400000, guid: 6cd6312ee76bf954f96d05c93488a175, type: 2}
+  - {fileID: 11400000, guid: 2b4088baf350db84a8d2030600ac41b9, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Cell
+  - Organelle
+  isEntropySink: 0
+  footprint: {x: 1, y: 1}
+  structureKind: 4
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: []
+  entropyCost: 25000000
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 30
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 900
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 200000000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 1350
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 800000000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 2025
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: -1094967296
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 140000000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 560000000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: -2054967296
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 140000000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 560000000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: -2054967296
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
+  availableFromStart: 0
+  tutorialNote: 
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: A perfused growth chamber. It nurtures cells into nucleated eukaryotes
+    and coaxes them to bind into tissues and organs.

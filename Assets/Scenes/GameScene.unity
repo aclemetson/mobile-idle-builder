@@ -448,7 +448,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52d91607817693441bcb72fe21b58039, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManagerService
 --- !u!114 &262970774
 MonoBehaviour:
@@ -460,7 +460,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf6e515c078291a43a8536d509ed1b3a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MegastructureService
 --- !u!1 &330585543
 GameObject:
@@ -618,6 +618,10 @@ MonoBehaviour:
   zoomSpeed: 0.05
   scrollZoom: 4
   tutorialPanSpeed: 4
+  minPitch: 10
+  maxPitch: 90
+  rotateSpeedTouch: 0.2
+  rotateSpeedMouse: 0.2
   gridRenderer: {fileID: 1750057541}
 --- !u!1 &410087039
 GameObject:
@@ -1110,6 +1114,7 @@ GameObject:
   - component: {fileID: 4000000011}
   - component: {fileID: 4000000012}
   - component: {fileID: 4000000013}
+  - component: {fileID: 4000000014}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1456,6 +1461,7 @@ MonoBehaviour:
   gridRenderer: {fileID: 1750057541}
   buildingVisualizer: {fileID: 1750057543}
   conveyorVisualizer: {fileID: 2094864783}
+  conveyorPlacer: {fileID: 0}
   hudDocument: {fileID: 1347028483}
 --- !u!1 &1989330742
 GameObject:
@@ -1712,6 +1718,7 @@ MonoBehaviour:
   gridRenderer: {fileID: 1750057541}
   conveyorPlacer: {fileID: 2094864784}
   cameraController: {fileID: 0}
+  conveyorVisualizer: {fileID: 0}
 --- !u!4 &2094864786
 Transform:
   m_ObjectHideFlags: 0
@@ -2007,7 +2014,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd7e8d34bd78394eaad08628150e252, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ManagersSubController
 --- !u!114 &4000000013
 MonoBehaviour:
@@ -2019,8 +2026,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fd50ce7f6efbc34da96fe4ae08d8a4c, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MegastructureSubController
+--- !u!114 &4000000014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347028480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ed9f20b18148d945b27e10554cfc41f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldsSubController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
