@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: intro_world_chemistry
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: "You have crossed a threshold. Physics forged the elements one nucleus
+      at a time \u2014 Chemistry mines them in bulk and forces them into new bonds.
+      A whole world opens."
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "The Chemistry map has its own sites and its own element seams. Harvest
+      raw elements, synthesize compounds, and climb toward the organic precursors
+      of life. Travel between worlds from the Worlds panel whenever you wish \u2014
+      each keeps producing while you are away."
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

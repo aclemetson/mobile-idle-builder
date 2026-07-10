@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.14",
+    "version": "0.3.15",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -10969,7 +10969,9 @@
       "display_name": "Particle Physics",
       "unlock_cost": 0,
       "prereq_unlock_ids": [],
-      "site_ids": ["site_origin", "site_quark_sea", "site_lepton_storm", "site_actinide_vein"]
+      "site_ids": ["site_origin", "site_quark_sea", "site_lepton_storm", "site_actinide_vein"],
+      "_theme_note": "Phase 5 per-world map palette (consumed by GridRenderer). Empty/omitted keeps the WorldTheme default. Physics uses the default cool blue-gray look.",
+      "theme": { "background_color": "#0d1117", "tile_color": "#1e2233", "field_tint": "#ffffff" }
     },
     {
       "id": "world_chemistry",
@@ -10977,7 +10979,8 @@
       "unlock_cost": 0,
       "_note_gate": "Chem/Bio Phase 4a: the 150K + mid_elements gate now lives on the chemistry_lab RESEARCH node; researching it opens this world (prereq_unlock_ids). unlock_cost is 0 because the research carries the cost.",
       "prereq_unlock_ids": ["chemistry_lab"],
-      "site_ids": ["site_chem_lab"]
+      "site_ids": ["site_chem_lab"],
+      "theme": { "background_color": "#08171c", "tile_color": "#123039", "field_tint": "#bfeede" }
     },
     {
       "id": "world_biology",
@@ -10985,7 +10988,8 @@
       "unlock_cost": 0,
       "_note_gate": "Chem/Bio Biology track: the 10M + biochem_precursors gate lives on the biology_lab RESEARCH node; researching it opens this world (prereq_unlock_ids). unlock_cost is 0 because the research carries the cost.",
       "prereq_unlock_ids": ["biology_lab"],
-      "site_ids": ["site_bio_lab"]
+      "site_ids": ["site_bio_lab"],
+      "theme": { "background_color": "#0a160d", "tile_color": "#17301c", "field_tint": "#cfeeb0" }
     }
   ],
 
@@ -11803,6 +11807,49 @@
         {
           "speaker_name": "The Architect",
           "text": "Open the menu and tap Domains to survey what is within reach. An inactive Domain keeps producing while you work elsewhere — collected the next time you return to it.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "_worlds_intro_note": "Chem/Bio Phase 5: one-shot intro dialogue played the first time each World is unlocked from the Worlds panel (WorldsSubController). Dialogue id convention is 'intro_' + world id.",
+      "id": "intro_world_chemistry",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "You have crossed a threshold. Physics forged the elements one nucleus at a time — Chemistry mines them in bulk and forces them into new bonds. A whole world opens.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The Chemistry map has its own sites and its own element seams. Harvest raw elements, synthesize compounds, and climb toward the organic precursors of life. Travel between worlds from the Worlds panel whenever you wish — each keeps producing while you are away.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_world_biology",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "From dead chemistry, something new: matter that copies itself. Biology takes the organic precursors you have learned to make and assembles them into the machinery of life.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Harvest organic compounds from the living fields, build biomolecules, then cells, tissues, organs — and at last a whole ecosystem. This is the summit of the journey: from quarks to a living world.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",

@@ -171,13 +171,46 @@ namespace MobileIdleBuilder.Tests
         {
             var save = new SaveData();
             save.unlockedWorlds.Add("world_chemistry");
+            save.worldsIntroSeen.Add("world_chemistry");
             save.currentRun.activeWorldIndex = 1;
 
             var json   = JsonUtility.ToJson(save);
             var loaded = JsonUtility.FromJson<SaveData>(json);
 
             CollectionAssert.Contains(loaded.unlockedWorlds, "world_chemistry");
+            CollectionAssert.Contains(loaded.worldsIntroSeen, "world_chemistry");
             Assert.AreEqual(1, loaded.currentRun.activeWorldIndex);
+        }
+
+        // ── Phase 5: per-world map theme is imported from JSON ────────────────
+
+        [Test]
+        public void GeneratedWorlds_HaveDistinctThemes()
+        {
+            var db = Resources.Load<WorldDatabaseSO>("WorldDatabase");
+            Assert.IsNotNull(db, "WorldDatabase missing — run Import Game Data");
+
+            WorldSO Find(string id) => System.Array.Find(db.allWorlds, w => w != null && w.id == id);
+            var physics = Find("world_physics");
+            var chem    = Find("world_chemistry");
+            var bio     = Find("world_biology");
+            Assert.IsNotNull(physics?.theme, "world_physics theme missing");
+            Assert.IsNotNull(chem?.theme,    "world_chemistry theme missing");
+            Assert.IsNotNull(bio?.theme,     "world_biology theme missing");
+
+            // Themes were imported from JSON (not left at identical defaults): each world's tile colour differs.
+            Assert.AreNotEqual(physics.theme.tileColor, chem.theme.tileColor, "chemistry should re-theme the tiles");
+            Assert.AreNotEqual(physics.theme.tileColor, bio.theme.tileColor,  "biology should re-theme the tiles");
+            Assert.AreNotEqual(chem.theme.tileColor,    bio.theme.tileColor,  "chemistry and biology differ");
+        }
+
+        [Test]
+        public void WorldIntroDialogues_Exist()
+        {
+            var db = Resources.Load<DialogueDatabaseSO>("DialogueDatabase");
+            Assert.IsNotNull(db, "DialogueDatabase missing — run Import Game Data");
+            Assert.IsNotNull(db.Get("intro_world_chemistry"), "intro_world_chemistry dialogue missing");
+            Assert.IsNotNull(db.Get("intro_world_biology"),   "intro_world_biology dialogue missing");
         }
 
         [Test]
