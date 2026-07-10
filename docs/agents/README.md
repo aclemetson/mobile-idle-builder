@@ -18,6 +18,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | balance numbers, currencies, costs, formulas | `economy-balance.md` |
 | remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
 | telemetry, analytics events, player data collection, balancing dashboards | `analytics.md` |
+| crash/exception reporting, Cloud Diagnostics, debug data to Unity Cloud, symbol upload | `../cloud-diagnostics-setup.md` |
 | building/structure visuals, procedural meshes, shaders, art direction | `visual-design.md` |
 | rewarded ads, ad SDK, LevelPlay go-live | `../levelplay-ads-setup.md` |
 | any code change (before committing) | `testing.md` |
