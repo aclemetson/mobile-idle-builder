@@ -335,13 +335,22 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class WorldThemeJson
+    {
+        public string background_color = "";  // hex, e.g. "#0d1117" (empty = keep WorldTheme default)
+        public string tile_color       = "";  // hex base tile colour
+        public string field_tint       = "";  // hex multiplier applied to field-tile colours
+    }
+
+    [Serializable]
     internal class WorldJson
     {
-        public string       id                = "";
-        public string       display_name      = "";
-        public long         unlock_cost       = 0;
-        public List<string> prereq_unlock_ids = new();  // research/item ids that gate the unlock
-        public List<string> site_ids          = new();  // member site ids (flat global site list), in order
+        public string         id                = "";
+        public string         display_name      = "";
+        public long           unlock_cost       = 0;
+        public List<string>   prereq_unlock_ids = new();  // research/item ids that gate the unlock
+        public List<string>   site_ids          = new();  // member site ids (flat global site list), in order
+        public WorldThemeJson theme;                       // map palette/tint (optional; null = defaults)
 
         public void Initialize()
         {

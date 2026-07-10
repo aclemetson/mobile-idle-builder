@@ -32,6 +32,7 @@ namespace MobileIdleBuilder
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
         private SitesSubController                  _sites;
+        private WorldsSubController                 _worlds;
 
         // ---- Power-connection overlay toggle ----
         private Button                              _btnPowerToggle;
@@ -51,7 +52,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _managersPanel, _megastructurePanel;
+                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -148,6 +149,7 @@ namespace MobileIdleBuilder
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
             _sites        = GetComponent<SitesSubController>();
+            _worlds       = GetComponent<WorldsSubController>();
         }
 
         void OnEnable()
@@ -192,6 +194,7 @@ namespace MobileIdleBuilder
             _shop?.Initialize(root);
             _settings?.Initialize(root);
             _sites?.Init(root, this);
+            _worlds?.Init(root, this);
             BindButtons(root);
             ApplyAchievementsGate();
             ApplyMegastructureGate();
@@ -302,6 +305,7 @@ namespace MobileIdleBuilder
             _inspector?.SetECSContext(_em);
             _prestigeShop?.SetECSContext(_em);
             _sites?.SetECSContext(_em);
+            _worlds?.SetECSContext(_em);
         }
 
         void Update()
@@ -352,13 +356,14 @@ namespace MobileIdleBuilder
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
             _sitesPanel        = root.Q("sites-panel");
+            _worldsPanel       = root.Q("worlds-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
                 _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
-                _shopPanel, _settingsPanel, _sitesPanel
+                _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
             // Panel content
@@ -460,6 +465,7 @@ namespace MobileIdleBuilder
                 BuildAchievementsList();
             };
             root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
+            root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
@@ -492,6 +498,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
             root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
+            root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
 
             // PVP actions (queried after _btnEnterPVP is set in QueryElements)
             if (_btnEnterPVP != null)
@@ -927,6 +934,13 @@ namespace MobileIdleBuilder
             _sites?.ClearNavHighlight();
             _sites?.Refresh();
             SetElementVisible(_sitesPanel, true);
+        }
+
+        private void OpenWorldsPanel()
+        {
+            CloseAllPanels();
+            _worlds?.Refresh();
+            SetElementVisible(_worldsPanel, true);
         }
 
         private void OpenDailyPanel()

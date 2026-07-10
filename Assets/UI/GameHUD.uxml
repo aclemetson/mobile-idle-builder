@@ -74,6 +74,7 @@
                 <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
+                <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
                 <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
@@ -239,6 +240,20 @@
                 <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
             </ui:VisualElement>
             <ui:ScrollView name="sites-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ WORLDS / TRACKS PANEL ═══ -->
+        <ui:VisualElement name="worlds-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Worlds" class="panel-title" />
+                <ui:Button name="btn-close-worlds" text="✕" class="close-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement name="worlds-balance" class="prestige-shop-balance">
+                <ui:Label name="worlds-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
+            </ui:VisualElement>
+            <ui:ScrollView name="worlds-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>

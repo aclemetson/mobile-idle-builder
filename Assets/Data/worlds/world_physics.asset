@@ -22,6 +22,6 @@ MonoBehaviour:
   - site_lepton_storm
   - site_actinide_vein
   theme:
-    backgroundColor: {r: 0.06, g: 0.06, b: 0.09, a: 1}
-    tileColor: {r: 0.12, g: 0.12, b: 0.16, a: 1}
+    backgroundColor: {r: 0.050980393, g: 0.06666667, b: 0.09019608, a: 1}
+    tileColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
     fieldTint: {r: 1, g: 1, b: 1, a: 1}

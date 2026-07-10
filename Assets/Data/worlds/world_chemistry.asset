@@ -20,6 +20,6 @@ MonoBehaviour:
   siteIds:
   - site_chem_lab
   theme:
-    backgroundColor: {r: 0.06, g: 0.06, b: 0.09, a: 1}
-    tileColor: {r: 0.12, g: 0.12, b: 0.16, a: 1}
-    fieldTint: {r: 1, g: 1, b: 1, a: 1}
+    backgroundColor: {r: 0.03137255, g: 0.09019608, b: 0.10980392, a: 1}
+    tileColor: {r: 0.07058824, g: 0.1882353, b: 0.22352941, a: 1}
+    fieldTint: {r: 0.7490196, g: 0.93333334, b: 0.87058824, a: 1}

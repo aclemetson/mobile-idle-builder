@@ -690,7 +690,14 @@ namespace MobileIdleBuilder.Editor
                 if (!string.IsNullOrEmpty(sid) && !siteLookup.ContainsKey(sid))
                     GameLogger.Warning($"[GameDataImporter] WorldSO '{data.id}' site_id '{sid}' matches no site.");
 
-            // theme is left at the SO's existing/default value in Phase 1 (authored in Phase 5).
+            // Phase 5: per-world map theme. Empty/invalid hex keeps the WorldTheme default (Physics look).
+            so.theme ??= new WorldTheme();
+            if (data.theme != null)
+            {
+                if (ColorUtility.TryParseHtmlString(data.theme.background_color, out var bg))   so.theme.backgroundColor = bg;
+                if (ColorUtility.TryParseHtmlString(data.theme.tile_color, out var tile))       so.theme.tileColor       = tile;
+                if (ColorUtility.TryParseHtmlString(data.theme.field_tint, out var tint))       so.theme.fieldTint       = tint;
+            }
 
             EditorUtility.SetDirty(so);
             return so;
