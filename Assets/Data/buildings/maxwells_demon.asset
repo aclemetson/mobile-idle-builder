@@ -37,62 +37,77 @@ MonoBehaviour:
   inputSlotLabels: []
   isEntropySink: 1
   footprint: {x: 3, y: 3}
+  structureKind: 0
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 2
+    localFacing: 0
   - portType: 0
     localCell: {x: 1, y: 0}
-    localFacing: 2
+    localFacing: 0
   - portType: 0
     localCell: {x: 2, y: 0}
-    localFacing: 2
+    localFacing: 0
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
+    localFacing: 1
   - portType: 0
     localCell: {x: 0, y: 1}
-    localFacing: 3
+    localFacing: 1
   - portType: 0
     localCell: {x: 0, y: 2}
-    localFacing: 3
+    localFacing: 1
   - portType: 0
     localCell: {x: 2, y: 0}
-    localFacing: 1
+    localFacing: 3
   - portType: 0
     localCell: {x: 2, y: 1}
-    localFacing: 1
+    localFacing: 3
   - portType: 0
     localCell: {x: 2, y: 2}
-    localFacing: 1
+    localFacing: 3
   - portType: 0
     localCell: {x: 0, y: 2}
-    localFacing: 0
+    localFacing: 2
   - portType: 0
     localCell: {x: 1, y: 2}
-    localFacing: 0
+    localFacing: 2
   - portType: 0
     localCell: {x: 2, y: 2}
-    localFacing: 0
+    localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 0
+  baseMaxOutputItems: 0
+  baseMaxInputItemsPerSlot: 0
   upgradeLevels:
   - level: 2
-    outputRate: 0
+    outputRate: 2
     powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
-    costBaseCurrency: 300
+    linkRadiusTiles: 0
+    costBaseCurrency: 200
     costPrestigeCurrency: 0
   - level: 3
-    outputRate: 0
+    outputRate: 4
     powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
-    costBaseCurrency: 1200
+    linkRadiusTiles: 0
+    costBaseCurrency: 800
     costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 300
+    costBaseCurrency: 150
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 1500
+    costBaseCurrency: 600
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 0}

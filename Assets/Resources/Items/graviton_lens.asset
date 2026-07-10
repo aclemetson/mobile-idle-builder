@@ -15,7 +15,7 @@ MonoBehaviour:
   id: graviton_lens
   displayName: Graviton Lens
   symbol: GL
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e0b964e67701e2b41b0f3f4d6eeb9cd0, type: 3}
   itemId: 51
   tier: 5
   category: 6
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A metamaterial array that bends spacetime curvature. Compensates for

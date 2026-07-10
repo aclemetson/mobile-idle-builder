@@ -15,7 +15,7 @@ MonoBehaviour:
   id: boron
   displayName: Boron
   symbol: B
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 56517d43b6a94334097b310e017971d0, type: 3}
   itemId: 21
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A metalloid bridging metals and nonmetals. Boron carbide is one of

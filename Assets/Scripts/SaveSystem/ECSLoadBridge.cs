@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MobileIdleBuilder
 {
@@ -17,6 +18,17 @@ namespace MobileIdleBuilder
 
         public bool IsLoaded { get; private set; }
 
+        /// <summary>
+        /// True only once <see cref="ApplyLoadedSave"/> has actually copied the on-disk save into ECS.
+        /// Stays false when the load aborts (no ECS world, or the baked SubScene entities never appeared
+        /// within the timeout — common right after a code change forces a SubScene re-bake). Callers MUST
+        /// gate any FlushToSave on this: flushing baked-default ECS state when the save was never applied
+        /// would overwrite the good on-disk save with zeros.
+        /// </summary>
+        public bool SaveApplied { get; private set; }
+
+        IdleCollectionResult _pendingIdleResult;
+
         EntityManager _em;
         EntityQuery   _progressQuery;
         EntityQuery   _prestigeQuery;
@@ -28,10 +40,32 @@ namespace MobileIdleBuilder
             base.Awake();
         }
 
+        void OnEnable()  => SceneManager.sceneLoaded += OnSceneLoaded;
+        void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        // When another singleton's DontDestroyOnLoad drags this component into a new scene,
+        // re-run initialization so ApplyLoadedSave() fires against the fresh ECS SubScene.
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (Instance != this) return;
+            if (scene.name == SceneLoader.LoadingSceneName) return;
+            if (!IsLoaded) return; // still initializing from Start()
+
+            IsLoaded = false;
+            StopAllCoroutines();
+            StartCoroutine(InitializeAsync());
+        }
+
         IEnumerator Start()
         {
+            yield return StartCoroutine(InitializeAsync());
+        }
+
+        IEnumerator InitializeAsync()
+        {
             if (Instance != this) yield break;
-            GameLogger.Info("[ECSLoadBridge] Start — polling for ECS world");
+            SaveApplied = false; // not applied until ApplyLoadedSave runs below
+            GameLogger.Info("[ECSLoadBridge] Initializing — polling for ECS world");
 
             // Poll for the ECS world — it may not be ready on the first frame on Android.
             const float kWorldTimeout = 5f;
@@ -68,7 +102,11 @@ namespace MobileIdleBuilder
             float logTimer = 0f;
             while (elapsed < kTimeout)
             {
-                if (!_progressQuery.IsEmpty && !_prestigeQuery.IsEmpty && !_inventoryQuery.IsEmpty)
+                // Tutorial is included here: if its singleton lags even one frame behind the
+                // others, ApplyLoadedSave would skip the tutorial block and the baked step-0
+                // default would survive, replaying the intro on every load.
+                if (!_progressQuery.IsEmpty && !_prestigeQuery.IsEmpty && !_inventoryQuery.IsEmpty
+                    && !_tutorialQuery.IsEmpty)
                     break;
                 elapsed  += Time.deltaTime;
                 logTimer += Time.deltaTime;
@@ -86,16 +124,47 @@ namespace MobileIdleBuilder
             {
                 GameLogger.Error($"[ECSLoadBridge] Timeout after {elapsed:F1}s — " +
                     $"progress={!_progressQuery.IsEmpty}  prestige={!_prestigeQuery.IsEmpty}  " +
-                    $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}");
+                    $"inventory={!_inventoryQuery.IsEmpty}  tutorial={!_tutorialQuery.IsEmpty}. " +
+                    "Save NOT applied (SaveApplied stays false) — flushes are suppressed so the on-disk " +
+                    "save is preserved. If this followed a code change, the SubScene likely needs re-baking.");
                 IsLoaded = true;
                 yield break;
             }
 
-            GameLogger.Info($"[ECSLoadBridge] All entities found after {elapsed:F1}s — applying save");
+            GameLogger.Info($"[ECSLoadBridge] All entities found after {elapsed:F1}s — waiting for cloud reconcile");
+
+            // Wait for SaveManager to finish cloud reconciliation so Current is final
+            // (local or cloud-replaced) before we copy it into ECS. Without this, ECS could be
+            // seeded from the local save while a slower cloud fetch replaces Current afterward,
+            // and the next FlushToSave would write the stale ECS state back over the cloud data.
+            // Bounded so a slow or offline network never blocks the load indefinitely.
+            const float kCloudTimeout = 5f;
+            float cloudElapsed = 0f;
+            var sm = SaveManager.Instance;
+            while (sm != null && !sm.CloudReconcileDone && cloudElapsed < kCloudTimeout)
+            {
+                cloudElapsed += Time.deltaTime;
+                yield return null;
+            }
+            if (sm != null && !sm.CloudReconcileDone)
+                GameLogger.Warning($"[ECSLoadBridge] Cloud reconcile not done after {cloudElapsed:F1}s — applying current save anyway.");
+
+            GameLogger.Info("[ECSLoadBridge] Applying save to ECS");
             ApplyLoadedSave();
             GridSaveService.Instance?.LoadGrid();
+            SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
             IsLoaded = true;
             GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
+
+            if (_pendingIdleResult != null)
+            {
+                FindAnyObjectByType<HUDController>()?.ShowIdleReturn(_pendingIdleResult);
+                _pendingIdleResult = null;
+            }
+
+            // Game-data update notice renders above the idle-return modal (z-index 101 > 100):
+            // closing it reveals the welcome-back modal beneath. No-op unless a newer stamp is published.
+            FindAnyObjectByType<HUDController>()?.MaybeShowGameUpdateNotice();
         }
 
         // ── Load path ─────────────────────────────────────────────────────
@@ -105,13 +174,27 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
+            // Restore purchased permanent upgrades first — effects depend on this
+            PersistentUpgradeService.Instance?.LoadFromSave(save.permanentUpgrades);
+
+            // Restore megastructure progress and push its global bonuses into the ECS singleton now that
+            // the player entity exists (the service's own Start may have run before SubScene load).
+            if (MegastructureService.Instance != null)
+            {
+                MegastructureService.Instance.LoadFromSave(save);
+                MegastructureService.Instance.ApplyBonusToECS();
+            }
+
             // Prestige multipliers — always safe to apply (defaults match SaveData defaults)
             var prestige = _prestigeQuery.GetSingleton<PrestigeData>();
-            prestige.RunCount            = save.prestigeCount;
-            prestige.PrestigeCurrency    = save.prestigeCurrency;
-            prestige.SpeedMultiplier     = save.prestigeSpeedMultiplier;
-            prestige.OutputMultiplier    = save.prestigeOutputMultiplier;
-            prestige.CostReduction       = save.prestigeCostReduction;
+            prestige.RunCount              = save.prestigeCount;
+            prestige.PrestigeCurrency      = save.prestigeCurrency;
+            prestige.PrestigeCurrencySpent = save.prestigeCurrencySpent;
+            // Apply speed boost on top of the prestige base (2× when active, 1× otherwise)
+            float speedBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier * speedBoost;
+            prestige.OutputMultiplier      = save.prestigeOutputMultiplier;
+            prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
 
             // Tutorial — always restore so baked defaults never clobber saved progress
@@ -134,13 +217,31 @@ namespace MobileIdleBuilder
                 }
                 _tutorialQuery.SetSingleton(ts);
             }
+            else if (!string.IsNullOrEmpty(save.tutorial.currentStepId))
+            {
+                // The readiness gate in InitializeAsync should prevent this; if it still
+                // happens (e.g. entity-load timeout) the baked step-0 default will stand and
+                // the intro replays. Surface it loudly rather than silently regressing.
+                GameLogger.Warning($"[Save] Tutorial entity not present at load — saved step " +
+                          $"'{save.tutorial.currentStepId}' was NOT applied; baked default stands.");
+            }
+
+            // Calculate and merge idle earnings before restoring ECS buffers
+            var idleResult = OfflineCollectionService.CalculateAndApply(
+                save,
+                GameBootstrap.Instance?.gameConfig,
+                PersistentUpgradeService.Instance);
+            if (idleResult != null)
+                _pendingIdleResult = idleResult;
 
             // On fresh install, skip currency + inventory so SubScene baked defaults stand
             if (SaveManager.Instance.IsNewGame) return;
 
             // Currency
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            progress.BaseCurrency = save.currentRun.baseCurrency;
+            progress.BaseCurrency      = save.currentRun.baseCurrency;
+            progress.TotalEntropySpent = save.currentRun.totalEntropySpent;
+            progress.BaseNetWorth      = save.currentRun.baseNetWorth;
             _progressQuery.SetSingleton(progress);
 
             // Inventory
@@ -164,13 +265,27 @@ namespace MobileIdleBuilder
         public void FlushToSave()
         {
             if (!IsLoaded) return;
+            // Never write ECS state back to the save unless the save was actually applied to ECS.
+            // Otherwise a raced/timed-out load (baked defaults) would overwrite the good save with zeros.
+            if (!SaveApplied)
+            {
+                GameLogger.Warning("[ECSLoadBridge] FlushToSave skipped — save was never applied to ECS " +
+                    "(load raced/timed out). On-disk save left intact.");
+                return;
+            }
 
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
             // Currency
             if (!_progressQuery.IsEmpty)
-                save.currentRun.baseCurrency = _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
+            {
+                var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                save.currentRun.baseCurrency      = pp.BaseCurrency;
+                save.currentRun.totalEntropySpent = pp.TotalEntropySpent;
+                save.currentRun.baseNetWorth      = pp.BaseNetWorth;
+                save.lastKnownNetWorth            = pp.NetWorth;
+            }
 
             // Prestige
             if (!_prestigeQuery.IsEmpty)
@@ -178,7 +293,10 @@ namespace MobileIdleBuilder
                 var p = _prestigeQuery.GetSingleton<PrestigeData>();
                 save.prestigeCount              = p.RunCount;
                 save.prestigeCurrency           = p.PrestigeCurrency;
-                save.prestigeSpeedMultiplier    = p.SpeedMultiplier;
+                save.prestigeCurrencySpent      = p.PrestigeCurrencySpent;
+                // Strip the shop boost before saving so base × boost isn't accumulated on each save
+                float activeBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+                save.prestigeSpeedMultiplier    = activeBoost > 1f ? p.SpeedMultiplier / activeBoost : p.SpeedMultiplier;
                 save.prestigeOutputMultiplier   = p.OutputMultiplier;
                 save.prestigeCostReduction      = p.CostReduction;
             }
@@ -208,7 +326,9 @@ namespace MobileIdleBuilder
                 var ts   = _tutorialQuery.GetSingleton<TutorialStateData>();
                 var flow = TutorialFlowSO.Current;
                 save.tutorial.isActive            = ts.IsActive;
-                save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete;
+                // Never downgrade: PrestigeSystem sets hasCompletedFirstRun on SaveData before
+                // ECS TutorialStateData is updated, so preserve any true already on the save.
+                save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete || save.tutorial.hasCompletedFirstRun;
                 save.tutorial.currentStepId = (flow?.steps != null && ts.CurrentStepIndex < flow.steps.Length)
                     ? flow.steps[ts.CurrentStepIndex].id
                     : save.tutorial.currentStepId;
@@ -216,14 +336,59 @@ namespace MobileIdleBuilder
             }
         }
 
+        // ── Shop ECS write-through ────────────────────────────────────────────
+
+        /// <summary>Adds entropy directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
+        public void AddEntropy(long amount)
+        {
+            if (!IsLoaded || _progressQuery.IsEmpty) return;
+            var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+            pp.BaseCurrency += amount;
+            _progressQuery.SetSingleton(pp);
+        }
+
+        /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
+        public void AddPrestigeCurrency(long amount)
+        {
+            if (!IsLoaded || _prestigeQuery.IsEmpty) return;
+            var p = _prestigeQuery.GetSingleton<PrestigeData>();
+            p.PrestigeCurrency += amount;
+            _prestigeQuery.SetSingleton(p);
+        }
+
+        /// <summary>
+        /// Merges items into the live ECS inventory buffer (Time Warp instant collection).
+        /// No-op when ECS is not loaded; callers fall back to writing SaveData in that case.
+        /// </summary>
+        public void AddInventoryItems(System.Collections.Generic.IReadOnlyDictionary<int, int> items)
+        {
+            if (items == null || items.Count == 0) return;
+            if (!IsLoaded || _inventoryQuery.IsEmpty) return;
+            var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            foreach (var kvp in items)
+                if (kvp.Value > 0)
+                    SlotBufferUtils.AddToInventory(ref buffer, kvp.Key, kvp.Value);
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
-        static int ResolveStepIndex(string stepId)
+        internal static int ResolveStepIndex(string stepId)
         {
+            // Empty id is a legitimate fresh-game value — resolve to step 0 silently.
+            if (string.IsNullOrEmpty(stepId)) return 0;
+
             var flow = TutorialFlowSO.Current;
-            if (flow?.steps == null || string.IsNullOrEmpty(stepId)) return 0;
+            if (flow?.steps == null)
+            {
+                GameLogger.Warning($"[Save] Cannot resolve tutorial step '{stepId}' — " +
+                          $"TutorialFlowSO.Current is null; defaulting to step 0.");
+                return 0;
+            }
             for (int i = 0; i < flow.steps.Length; i++)
                 if (flow.steps[i].id == stepId) return i;
+
+            GameLogger.Warning($"[Save] Saved tutorial step '{stepId}' not found in flow " +
+                      $"({flow.steps.Length} steps) — defaulting to step 0 (id drift?).");
             return 0;
         }
     }

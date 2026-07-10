@@ -35,21 +35,29 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d88d56de2caf44a4ca4f40b9dbe3e44a, type: 2}
   - {fileID: 11400000, guid: 03e3811952427644cbaa6368ab3ad449, type: 2}
   - {fileID: 11400000, guid: 6211149976db10e4ebd805300b5afa5c, type: 2}
+  - {fileID: 11400000, guid: b98b05ac92749df4685ab1edb6588c09, type: 2}
+  - {fileID: 11400000, guid: da24fccc7e1826141ac9127c8f9877ec, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0
   footprint: {x: 1, y: 1}
+  structureKind: 0
   ports: []
   placementRule: 1
   compatibleAdjacentCategories: 
-  compatibleFields: 0100000002000000
+  compatibleFields:
+  - Quark
+  - Lepton
   entropyCost: 100
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 0
   upgradeLevels:
   - level: 2
     outputRate: 2
     powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 500
     costPrestigeCurrency: 0
   - level: 3
@@ -57,6 +65,7 @@ MonoBehaviour:
     powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 2000
     costPrestigeCurrency: 0
   - level: 4
@@ -64,8 +73,23 @@ MonoBehaviour:
     powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 8000
     costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 300
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 1200
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 5000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 1
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}

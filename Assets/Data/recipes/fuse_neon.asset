@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: fuse_neon
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: fuse_neon
+  displayName: Fuse Neon
+  recipeId: 151
+  tier: 2
+  category: 8
+  inputs:
+  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 06518bba2d1ed46478d8250e3ed0edcb, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: a23e5b9e76e088e4493537f741bcce74, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 10
+  manualCraftTime: 10
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 50
+  validBuildings:
+  - {fileID: 11400000, guid: e11788d032fc84a48819ecc26d1b74fe, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: Fusion shortcut; the Atomic Assembler can also build this element.

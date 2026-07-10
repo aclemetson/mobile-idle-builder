@@ -22,6 +22,8 @@ MonoBehaviour:
   depthInTree: 4
   costBaseCurrency: 25000
   costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
   - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
@@ -33,6 +35,7 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "Silver has the highest electrical conductivity of any element. Gold

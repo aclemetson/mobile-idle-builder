@@ -1,5 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -19,12 +21,13 @@ namespace MobileIdleBuilder.Dev
     {
         // ── Activation ────────────────────────────────────────────────────────
 
-        private const float ShakeThreshold    = 2.5f;   // g-force above which a peak is counted
-        private const float ShakeWindow       = 1.5f;   // seconds the peaks must fall within
-        private const int   ShakePeaksRequired = 3;     // number of threshold crossings to trigger
+        private const float ShakeThreshold    = 2.5f;
+        private const float ShakeWindow       = 1.5f;
+        private const int   ShakePeaksRequired = 3;
 
-        private readonly Queue<float> _shakePeakTimes = new();
-        private bool _wasAboveShakeThreshold;
+        private readonly ShakePeakDetector _shakeDetector =
+            new ShakePeakDetector(ShakeThreshold, ShakeWindow, ShakePeaksRequired);
+
         private bool _isVisible;
         private bool _clearFieldNextFrame;
         private bool _refocusFieldNextFrame;
@@ -50,29 +53,75 @@ namespace MobileIdleBuilder.Dev
 
         private DevCommandRegistry _registry;
 
+        // ── Singleton ─────────────────────────────────────────────────────────
+
+        private static DevConsoleController s_Instance;
+
         // ── Unity lifecycle ───────────────────────────────────────────────────
+
+        void Awake()
+        {
+            if (s_Instance != null && s_Instance != this)
+            {
+                Destroy(gameObject);   // destroy the whole GO so the UIDocument goes with it
+                return;
+            }
+            s_Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
 
         void OnEnable()
         {
+            BindUI();
+            SetVisible(false);
+        }
+
+        private void BindUI()
+        {
+            GameLogger.Info("[DevConsole] BindUI — start");
             var root = GetComponent<UIDocument>().rootVisualElement;
+
             _consoleRoot = root.Q("dev-console-root");
             _logView     = root.Q<ScrollView>("dev-console-log");
             _inputField  = root.Q<TextField>("dev-console-input");
 
-            root.Q<Button>("btn-close-console").clicked += () => SetVisible(false);
-            root.Q<Button>("btn-submit-console").clicked += SubmitCommand;
+            // Stale label references belong to the old visual tree.
+            _logLabels.Clear();
+
+            var closeBtn  = root.Q<Button>("btn-close-console");
+            var submitBtn = root.Q<Button>("btn-submit-console");
+
+            // Unregister first so repeated BindUI calls don't stack duplicates.
+            closeBtn.clicked  -= OnCloseButtonClicked;
+            submitBtn.clicked -= SubmitCommand;
+            _inputField?.UnregisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
+            root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+
+            closeBtn.clicked  += OnCloseButtonClicked;
+            submitBtn.clicked += SubmitCommand;
             _inputField.RegisterCallback<KeyDownEvent>(OnInputKeyDown, TrickleDown.TrickleDown);
 
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+            GameLogger.Info("[DevConsole] BindUI — done");
 
-            SetVisible(false);
+            // Block world input (camera pan + gameplay taps) over the console overlay.
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+        }
+
+        private void OnCloseButtonClicked() => SetVisible(false);
+
+        void OnDisable()
+        {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+            UIInputBlocker.SetModal(this, false);
         }
 
         void Start()
         {
-            if (Accelerometer.current != null)
-                InputSystem.EnableDevice(Accelerometer.current);
+            TryEnableAccelerometer();
+            InputSystem.onDeviceChange += OnInputDeviceChange;
 
             _registry = new DevCommandRegistry();
             RegisterCommands();
@@ -91,8 +140,50 @@ namespace MobileIdleBuilder.Dev
 
         void OnDestroy()
         {
+            InputSystem.onDeviceChange -= OnInputDeviceChange;
+            if (s_Instance == this)
+            {
+                s_Instance = null;
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+            }
             if (Accelerometer.current != null)
                 InputSystem.DisableDevice(Accelerometer.current);
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — scene='{scene.name}'  _isVisible={_isVisible}");
+
+            // Re-acquire ECS queries — the world is recreated on each scene reload.
+            var world = World.DefaultGameObjectInjectionWorld;
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — world={(world != null ? "found" : "null")}");
+            if (world != null)
+            {
+                _em             = world.EntityManager;
+                _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PrestigeData>());
+                _inventoryQuery = _em.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadWrite<InventorySlot>());
+                _tutorialQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>());
+            }
+
+            // Re-bind UI — UIDocument rebuilds its visual tree on each scene reload.
+            // Without this, _consoleRoot and button handlers point to the old detached tree.
+            BindUI();
+            // Close the console only when we arrive at the destination scene, not during the
+            // intermediate loading screen.  Calling SetVisible(false) while LoadingScreen is
+            // active dismisses the soft keyboard mid-LoadSceneAsync and deadlocks Vulkan.
+            if (scene.name != SceneLoader.LoadingSceneName)
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — destination scene, calling SetVisible(false)");
+                SetVisible(false);
+            }
+            else
+            {
+                GameLogger.Info($"[DevConsole] OnSceneLoaded — loading screen, keeping console state _isVisible={_isVisible}");
+            }
+            GameLogger.Info($"[DevConsole] OnSceneLoaded — done for scene='{scene.name}'");
         }
 
         void Update()
@@ -122,37 +213,42 @@ namespace MobileIdleBuilder.Dev
 
         private void OnRootKeyDown(KeyDownEvent e) { /* reserved for future use */ }
 
+        private static void TryEnableAccelerometer()
+        {
+            if (Accelerometer.current != null)
+                InputSystem.EnableDevice(Accelerometer.current);
+        }
+
+        private static void OnInputDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (device is Accelerometer && change == InputDeviceChange.Added)
+                InputSystem.EnableDevice(device);
+        }
+
         private void DetectShake()
         {
             var accel = Accelerometer.current;
             if (accel == null) return;
 
+            // On Android the device may arrive after Start(); enable it lazily.
+            if (!accel.enabled)
+                InputSystem.EnableDevice(accel);
+
             float magnitude = accel.acceleration.ReadValue().magnitude;
-            bool isAbove = magnitude > ShakeThreshold;
-
-            // Count rising edges (transitions from below to above threshold)
-            if (isAbove && !_wasAboveShakeThreshold)
-            {
-                float now = Time.realtimeSinceStartup;
-                _shakePeakTimes.Enqueue(now);
-                while (_shakePeakTimes.Count > 0 && now - _shakePeakTimes.Peek() > ShakeWindow)
-                    _shakePeakTimes.Dequeue();
-
-                if (_shakePeakTimes.Count >= ShakePeaksRequired)
-                {
-                    _shakePeakTimes.Clear();
-                    SetVisible(!_isVisible);
-                }
-            }
-
-            _wasAboveShakeThreshold = isAbove;
+            if (_shakeDetector.Feed(magnitude, Time.realtimeSinceStartup))
+                SetVisible(!_isVisible);
         }
 
         // ── Visibility ────────────────────────────────────────────────────────
 
         private void SetVisible(bool visible)
         {
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — consoleRoot={((_consoleRoot == null) ? "null" : "ok")}");
             _isVisible = visible;
+            // The console is a debug overlay sharing the HUD's panel; block ALL world input
+            // (camera pan + gameplay taps) while it is open rather than relying on per-element
+            // hit-testing across the shared panel.
+            UIInputBlocker.SetModal(this, visible);
             if (_consoleRoot == null) return;
 
             if (visible)
@@ -167,6 +263,7 @@ namespace MobileIdleBuilder.Dev
             {
                 _consoleRoot.AddToClassList("hidden");
             }
+            GameLogger.Info($"[DevConsole] SetVisible({visible}) — done");
         }
 
         // ── Input ─────────────────────────────────────────────────────────────
@@ -196,9 +293,19 @@ namespace MobileIdleBuilder.Dev
                 AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
             }
 
-            _refocusFieldNextFrame = true;
-
-            _inputField.Focus();
+            // Don't re-focus if a scene transition is already underway — keeping the input
+            // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
+            // screen where it fires CloseTouchScreenKeyboard() on the same frame as
+            // LoadSceneAsync, triggering a Vulkan swapchain race on Android.
+            if (!SceneLoader.IsTransitioning)
+            {
+                _refocusFieldNextFrame = true;
+                _inputField.Focus();
+            }
+            else
+            {
+                _inputField.Blur();
+            }
         }
 
         // ── Log ───────────────────────────────────────────────────────────────
@@ -245,6 +352,24 @@ namespace MobileIdleBuilder.Dev
                             sb.AppendLine($"  {item.id,-24} {item.symbol} {item.displayName}");
                     return sb.ToString().TrimEnd();
                 });
+
+            // ── building spawning (visual / structure testing) ───────────────
+            _registry.Register("list buildings", "List placeable buildings (name, #, footprint, structure)",
+                _ => ListBuildings());
+
+            _registry.Register("spawn building <id>", "Spawn a building by name or # at the first free cell",
+                args => SpawnBuilding(args[0], null, null));
+
+            _registry.Register("spawn building <id> <x> <y>", "Spawn a building by name or # at cell (x, y)",
+                args =>
+                {
+                    if (!int.TryParse(args[1], out int x) || !int.TryParse(args[2], out int y))
+                        return "Error: <x> and <y> must be integers.";
+                    return SpawnBuilding(args[0], x, y);
+                });
+
+            _registry.Register("spawn all buildings", "Spawn one of every building for a visual sweep",
+                _ => SpawnAllBuildings());
 
             // ── currency & prestige currency ─────────────────────────────────
             _registry.Register("add currency <amount>", "Add BaseCurrency",
@@ -305,6 +430,84 @@ namespace MobileIdleBuilder.Dev
                     return $"Added {qty}x {itemId} (new slot).";
                 });
 
+            _registry.Register("add all elements <qty>", "Add <qty> of every Element/Isotope item (full value/visual sweep)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int qty) || qty <= 0)
+                        return "Error: <qty> must be a positive integer.";
+
+                    var db = ItemDatabase.Instance;
+                    if (db?.All == null || db.All.Count == 0)
+                        return "Error: ItemDatabase not ready or empty.";
+                    if (_inventoryQuery.IsEmpty)
+                        return "Error: Player inventory entity not found.";
+
+                    var entity = _inventoryQuery.GetSingletonEntity();
+                    var buffer = _em.GetBuffer<InventorySlot>(entity);
+
+                    int added = 0;
+                    foreach (var item in db.All)
+                    {
+                        if (item == null) continue;
+                        if (item.category != ItemCategory.Element && item.category != ItemCategory.Isotope) continue;
+
+                        int numericId = item.itemId;
+                        bool found = false;
+                        for (int i = 0; i < buffer.Length; i++)
+                        {
+                            if (buffer[i].ItemID == numericId)
+                            {
+                                var slot = buffer[i];
+                                slot.Quantity += qty;
+                                buffer[i] = slot;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) buffer.Add(new InventorySlot { ItemID = numericId, Quantity = qty });
+                        added++;
+                    }
+                    return $"Added {qty}x of {added} element/isotope items to inventory.";
+                });
+
+            // ── research ──────────────────────────────────────────────────────
+            _registry.Register("unlock research <id>", "Force-unlock a research node by string ID (ignores cost/prereqs)",
+                args =>
+                {
+                    var rs = ResearchService.Instance;
+                    if (rs == null) return "Error: ResearchService not found.";
+
+                    string id    = args[0];
+                    bool   exists = false;
+                    if (rs.AllResearch != null)
+                        foreach (var r in rs.AllResearch)
+                            if (r != null && r.id == id) { exists = true; break; }
+                    if (!exists)
+                        return $"Error: research '{id}' not found. Use lowercase IDs from game_data.json (e.g. megastructure_theory).";
+                    if (rs.IsUnlocked(id))
+                        return $"Research '{id}' already unlocked.";
+
+                    rs.ForceUnlock(id);
+                    return $"Unlocked research '{id}'.";
+                });
+
+            _registry.Register("unlock all research", "Force-unlock every research node (ignores cost/prereqs)",
+                _ =>
+                {
+                    var rs = ResearchService.Instance;
+                    if (rs == null) return "Error: ResearchService not found.";
+                    if (rs.AllResearch == null) return "Error: no research loaded.";
+
+                    int unlocked = 0;
+                    foreach (var r in rs.AllResearch)
+                    {
+                        if (r == null || rs.IsUnlocked(r.id)) continue;
+                        rs.ForceUnlock(r.id);
+                        unlocked++;
+                    }
+                    return $"Unlocked {unlocked} research node(s). All research now complete.";
+                });
+
             // ── show prestige ─────────────────────────────────────────────────
             _registry.Register("show prestige", "Dump PrestigeData (run count, currency, multipliers)",
                 _ =>
@@ -315,12 +518,21 @@ namespace MobileIdleBuilder.Dev
                 });
 
             // ── show progress ─────────────────────────────────────────────────
-            _registry.Register("show progress", "Dump PlayerProgressData (NetWorth, wall, prestige flag)",
+            _registry.Register("show progress", "Dump PlayerProgressData (entropy, tier, research, NetWorth, prestige)",
                 _ =>
                 {
                     if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
                     var data = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-                    return $"NetWorth={data.NetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
+                    int researchCount = -1;
+                    var rs2 = ResearchService.Instance;
+                    if (rs2?.AllResearch != null)
+                    {
+                        researchCount = 0;
+                        foreach (var r in rs2.AllResearch)
+                            if (rs2.IsUnlocked(r.id)) researchCount++;
+                    }
+                    string research = researchCount >= 0 ? researchCount.ToString() : "?";
+                    return $"Entropy={data.BaseCurrency}  Tier={data.CurrentTier}  Research={research}  NetWorth={data.NetWorth:F0}  Base={data.BaseNetWorth:F0}  Wall={data.PrestigeWallValue:F0}  Available={data.PrestigeAvailable}";
                 });
 
             // ── set prestige available ────────────────────────────────────────
@@ -448,6 +660,118 @@ namespace MobileIdleBuilder.Dev
                     return "All achievements force-completed.";
                 });
 
+            // ── sites (multi-grids) ──────────────────────────────────────────
+            _registry.Register("site list", "List all build sites (index, id, cost, unlocked, active)",
+                _ =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc?.AllSites == null || svc.AllSites.Count == 0)
+                        return "Error: SiteService not ready or SiteDatabase empty.";
+                    var sb = new StringBuilder($"Sites ({svc.AllSites.Count}):\n");
+                    for (int i = 0; i < svc.AllSites.Count; i++)
+                    {
+                        var s = svc.AllSites[i];
+                        if (s == null) continue;
+                        string flags = (i == svc.ActiveIndex ? "ACTIVE " : "")
+                                     + (svc.IsUnlocked(i) ? "unlocked" : "locked");
+                        sb.AppendLine($"  [{i}] {s.id,-18} {s.unlockCost,12}e  {flags}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("site switch <n>", "Switch the live grid to site index n",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n < 0)
+                        return "Error: <n> must be a non-negative integer.";
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    if (svc.GetSite(n) == null) return $"Error: no site at index {n}. Try 'site list'.";
+                    if (!svc.IsUnlocked(n)) return $"Error: site [{n}] is locked. Unlock it first.";
+                    if (n == svc.ActiveIndex) return $"Already on site [{n}].";
+                    return svc.SwitchTo(n)
+                        ? $"Switched to site [{n}] '{svc.GetSite(n).id}'."
+                        : $"Error: switch to [{n}] failed.";
+                });
+
+            _registry.Register("domains intro", "Replay the one-shot Quantum Domains intro dialogue",
+                _ =>
+                {
+                    var sites = FindAnyObjectByType<SitesSubController>();
+                    if (sites == null) return "Error: SitesSubController not in scene (wire it on the HUD GameObject).";
+                    sites.ReplayDomainsIntroForTesting();
+                    return "Replaying Quantum Domains intro.";
+                });
+
+            _registry.Register("site unlock <id>", "Unlock a site by id (deducts entropy)",
+                args =>
+                {
+                    var svc = SiteService.Instance;
+                    if (svc == null) return "Error: SiteService not ready.";
+                    int idx = svc.IndexOf(args[0]);
+                    var site = svc.GetSite(idx);
+                    if (site == null) return $"Error: unknown site '{args[0]}'. Try 'site list'.";
+                    if (svc.IsUnlocked(idx)) return $"Site '{site.id}' already unlocked.";
+                    if (!svc.CanUnlock(idx)) return $"Error: cannot afford '{site.id}' ({site.unlockCost}e).";
+                    return svc.UnlockSite(site.id)
+                        ? $"Unlocked '{site.id}' for {site.unlockCost}e."
+                        : $"Error: unlock of '{site.id}' failed.";
+                });
+
+            // ── worlds (tracks) ──────────────────────────────────────────────
+            _registry.Register("world list", "List all worlds (index, id, cost, prereqs, unlocked, active)",
+                _ =>
+                {
+                    var svc = WorldService.Instance;
+                    if (svc?.AllWorlds == null || svc.AllWorlds.Count == 0)
+                        return "Error: WorldService not ready or WorldDatabase empty.";
+                    var save = SaveManager.Instance?.Current;
+                    var sb = new StringBuilder($"Worlds ({svc.AllWorlds.Count}):\n");
+                    for (int i = 0; i < svc.AllWorlds.Count; i++)
+                    {
+                        var w = svc.AllWorlds[i];
+                        if (w == null) continue;
+                        string state = svc.IsUnlocked(i) ? "unlocked"
+                                     : WorldService.PrereqsMet(save, w) ? "locked (prereqs met)"
+                                     : $"locked (needs {string.Join(",", w.prereqUnlockIds ?? new System.Collections.Generic.List<string>())})";
+                        string flags = (i == svc.ActiveIndex ? "ACTIVE " : "") + state;
+                        sb.AppendLine($"  [{i}] {w.id,-16} {w.unlockCost,12}e  {flags}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("world switch <n>", "Travel the live grid to world index n (its entry site)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n < 0)
+                        return "Error: <n> must be a non-negative integer.";
+                    var svc = WorldService.Instance;
+                    if (svc == null) return "Error: WorldService not ready.";
+                    if (svc.GetWorld(n) == null) return $"Error: no world at index {n}. Try 'world list'.";
+                    if (!svc.IsUnlocked(n)) return $"Error: world [{n}] is locked. Unlock it first.";
+                    if (n == svc.ActiveIndex) return $"Already on world [{n}].";
+                    return svc.SwitchTo(n)
+                        ? $"Traveled to world [{n}] '{svc.GetWorld(n).id}'."
+                        : $"Error: switch to world [{n}] failed.";
+                });
+
+            _registry.Register("world unlock <id>", "Unlock a world by id (checks prereqs, deducts entropy)",
+                args =>
+                {
+                    var svc = WorldService.Instance;
+                    if (svc == null) return "Error: WorldService not ready.";
+                    int idx = svc.IndexOf(args[0]);
+                    var w = svc.GetWorld(idx);
+                    if (w == null) return $"Error: unknown world '{args[0]}'. Try 'world list'.";
+                    if (svc.IsUnlocked(idx)) return $"World '{w.id}' already unlocked.";
+                    if (!WorldService.PrereqsMet(SaveManager.Instance?.Current, w))
+                        return $"Error: prereqs unmet for '{w.id}' (needs {string.Join(",", w.prereqUnlockIds ?? new System.Collections.Generic.List<string>())}).";
+                    if (!svc.CanUnlock(idx)) return $"Error: cannot afford '{w.id}' ({w.unlockCost}e).";
+                    return svc.UnlockWorld(w.id)
+                        ? $"Unlocked world '{w.id}' for {w.unlockCost}e."
+                        : $"Error: unlock of '{w.id}' failed.";
+                });
+
             // ── tutorial ─────────────────────────────────────────────────────
             _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
                 _ =>
@@ -492,6 +816,189 @@ namespace MobileIdleBuilder.Dev
                     return $"Tutorial skipped. {unlocked} research node(s) unlocked.";
                 });
 
+            _registry.Register("tutorial list", "List all tutorial step IDs with their indices",
+                _ =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    var sb = new StringBuilder($"Tutorial steps ({flow.steps.Length} total):\n");
+                    for (int i = 0; i < flow.steps.Length; i++)
+                        sb.AppendLine($"  [{i,2}]  {flow.steps[i].id}");
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("tutorial skip <id>", "Skip to a tutorial step by ID (use 'tutorial list' to find IDs)",
+                args =>
+                {
+                    var flow = TutorialFlowSO.Current;
+                    if (flow?.steps == null || flow.steps.Length == 0)
+                        return "Error: TutorialFlowSO not loaded. Run the GameData importer.";
+
+                    // Find step index — args[0] is already lowercased by registry
+                    int idx = -1;
+                    string targetId = args[0];
+                    for (int i = 0; i < flow.steps.Length; i++)
+                    {
+                        if (flow.steps[i].id.ToLowerInvariant() == targetId)
+                        {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    if (idx < 0)
+                        return $"Unknown step '{targetId}'. Type 'tutorial list' to see all IDs.";
+
+                    string canonicalId = flow.steps[idx].id;
+
+                    // ── ECS: set tutorial step, entropy, and net worth ────────
+                    long  entropy    = TutorialStepPresets.GetEntropy(flow, idx);
+                    float netWorth   = TutorialStepPresets.GetNetWorth(flow, idx);
+                    long  totalSpent = TutorialStepPresets.GetTotalEntropySpent(flow, idx);
+                    float totalEarned = (float)(entropy + totalSpent);
+
+                    if (!_tutorialQuery.IsEmpty)
+                    {
+                        var entity = _tutorialQuery.GetSingletonEntity();
+                        var ts     = _em.GetComponentData<TutorialStateData>(entity);
+                        ts.CurrentStepIndex = idx;
+                        ts.IsActive         = true;
+                        _em.SetComponentData(entity, ts);
+                    }
+
+                    if (!_progressQuery.IsEmpty)
+                    {
+                        var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                        pp.BaseCurrency      = entropy;
+                        pp.TotalEntropySpent = totalSpent;
+                        pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
+                        pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
+                        _progressQuery.SetSingleton(pp);
+                    }
+
+                    // ── Research: unlock all gates for steps 0..(idx-1) ──────
+                    var rs           = ResearchService.Instance;
+                    int  unlocked    = 0;
+                    long researchCost = 0;
+                    if (rs != null)
+                    {
+                        for (int i = 0; i < idx; i++)
+                        {
+                            var cond = flow.steps[i].advanceCondition;
+                            if (cond?.type == ConditionType.ResearchUnlocked &&
+                                !string.IsNullOrEmpty(cond.researchId))
+                            {
+                                rs.ForceUnlock(cond.researchId);
+                                unlocked++;
+                                foreach (var r in rs.AllResearch)
+                                    if (r != null && r.id == cond.researchId)
+                                        { researchCost += r.costBaseCurrency; break; }
+                            }
+                        }
+                    }
+
+                    // ── SaveData: persist tutorial and currency state ─────────
+                    var save = SaveManager.Instance?.Current;
+                    if (save != null)
+                    {
+                        save.tutorial.currentStepId           = canonicalId;
+                        save.tutorial.isActive                 = true;
+                        save.currentRun.baseCurrency           = entropy;
+                        save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
+                    }
+
+                    // ── Grid: apply building/conveyor preset if defined ───────
+                    var buildings = TutorialStepPresets.GetBuildings(canonicalId);
+                    var conveyors = TutorialStepPresets.GetConveyors(canonicalId);
+
+                    if (buildings != null && save != null)
+                    {
+                        save.currentRun.grid.buildings = new List<BuildingSaveData>(buildings);
+                        save.currentRun.grid.conveyors = conveyors != null
+                            ? new List<ConveyorSaveData>(conveyors)
+                            : new List<ConveyorSaveData>();
+                        var presetFields = TutorialStepPresets.GetFields(canonicalId);
+                        save.currentRun.grid.fields = presetFields != null
+                            ? new List<FieldSaveData>(presetFields)
+                            : new List<FieldSaveData>();
+                        GridSaveService.Instance?.ClearGrid();
+                        GridSaveService.Instance?.LoadGrid(forceApply: true);
+
+                        // Set TotalEntropySpent = actual research costs + actual building costs
+                        // so net worth (BaseCurrency + TotalEntropySpent) correctly reflects
+                        // the full investment at this tutorial checkpoint.
+                        long buildingCost  = GridSaveService.Instance?.ComputeGridBuildingCost() ?? 0;
+                        long totalInvested = researchCost + buildingCost;
+                        if (!_progressQuery.IsEmpty)
+                        {
+                            var pp = _progressQuery.GetSingleton<PlayerProgressData>();
+                            pp.BaseCurrency      = entropy;
+                            pp.TotalEntropySpent = totalInvested;
+                            pp.BaseNetWorth      = 0f;
+                            pp.NetWorth          = entropy + totalInvested;
+                            _progressQuery.SetSingleton(pp);
+                        }
+
+                        SaveManager.Instance.SaveLocal(skipGridFlush: true);
+                        return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                               $"{unlocked} research node(s) unlocked. Grid applied.";
+                    }
+
+                    SaveManager.Instance?.SaveLocal();
+
+                    string gridNote = idx >= 31
+                        ? " (grid preset not yet captured — place buildings manually if needed)"
+                        : string.Empty;
+
+                    return $"Skipped to '{canonicalId}' [{idx}]. Entropy: {entropy}e. " +
+                           $"{unlocked} research node(s) unlocked.{gridNote}";
+                });
+
+            // ── testing helpers ───────────────────────────────────────────────
+            _registry.Register("reset firstrun", "Reset hasCompletedFirstRun=false so the prestige unlock notification can re-trigger",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    save.tutorial.hasCompletedFirstRun = false;
+                    SaveManager.Instance.SaveLocal();
+                    return "hasCompletedFirstRun reset to false and saved. Run 'reload', then 'tutorial skip <id>' + 'set prestige available' + prestige to re-test.";
+                });
+
+            // ── analytics / telemetry ────────────────────────────────────────
+            _registry.Register("analytics status", "Show whether telemetry is collecting + the phase",
+                _ =>
+                {
+                    var t = TelemetryService.Instance;
+                    return t == null ? "Error: TelemetryService not found." : t.DevStatus();
+                });
+
+            _registry.Register("analytics fire", "Fire all 6 telemetry events with sample data and flush to UGS",
+                _ =>
+                {
+                    var t = TelemetryService.Instance;
+                    if (t == null) return "Error: TelemetryService not found.";
+
+                    // Force-start with the live UGS sink so this works even if analytics.enabled is off.
+                    // (If the flag already started collection, this is a no-op.)
+                    t.DevForceStart();
+
+                    t.RecordBuildingPlaced("dev_test_building");
+                    t.RecordResearch("dev_test_research");
+                    t.RecordTier(3);
+                    t.RecordMegastructureStage(1);
+                    // Sends prestige_completed AND an internal player_snapshot:
+                    t.RecordPrestige(runCount: 1, netWorthBefore: 12345f, prestigeCurrencyEarned: 42,
+                                     buildingCount: 7, highestTier: 3);
+                    t.CaptureSnapshot();   // explicit snapshot in case the prestige one couldn't read ECS
+                    t.Flush();             // push immediately instead of waiting for the batch interval
+
+                    return "Fired: building_placed, research_completed, tier_reached, megastructure_stage, " +
+                           "prestige_completed, player_snapshot. Flushed. Check Event Manager (dev env) shortly.";
+                });
+
             // ── save / reload ─────────────────────────────────────────────────
             _registry.Register("save", "Force local save",
                 _ =>
@@ -503,9 +1010,49 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("clear save", "Delete local save file and reload scene",
                 _ =>
                 {
-                    new LocalSaveService().Delete();
+                    GridSaveService.Instance?.ClearGrid();
+                    SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: false);
+                    SaveManager.Instance?.ResetToFreshSave();
+                    PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                    AchievementService.Instance?.ResetInMemory();
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Save cleared. Reloading...";
+                });
+
+            _registry.Register("clear cloud save", "Delete cloud + local save and restart from tutorial (debug only)",
+                _ =>
+                {
+                    var sm = SaveManager.Instance;
+                    if (sm == null)
+                    {
+                        // SaveManager not ready yet (running before GameScene initializes).
+                        // Wipe local files/prefs now and defer the cloud delete to next boot.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: true);
+                        SceneLoader.GoTo("GameScene");
+                        return "SaveManager not ready — local cleared, cloud wipe deferred to next GameScene load.";
+                    }
+                    GameLogger.Info("[DevConsole] clear cloud save — starting coroutine");
+                    StartCoroutine(sm.DeleteCloudSave(success =>
+                    {
+                        GameLogger.Info($"[DevConsole] clear cloud save callback — success={success}  activeScene='{SceneManager.GetActiveScene().name}'");
+                        if (!success)
+                            AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
+                        GridSaveService.Instance?.ClearGrid();
+                        // On an offline/failed cloud delete, schedule the wipe so the cloud key is
+                        // removed on the next boot instead of silently leaving stale cloud data.
+                        SaveWipe.WipeFilesAndPrefs(scheduleCloudWipe: !success);
+                        sm.ResetToFreshSave();
+                        PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                        AchievementService.Instance?.ResetInMemory();
+                        // Blur the input field before transitioning so UI Toolkit's keyboard-poll
+                        // timer is cancelled before LoadSceneAsync runs (async path: field was
+                        // re-focused by SubmitCommand after this coroutine started).
+                        _inputField?.Blur();
+                        GameLogger.Info("[DevConsole] clear cloud save — calling SceneLoader.GoTo");
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                        GameLogger.Info("[DevConsole] clear cloud save — SceneLoader.GoTo returned");
+                    }));
+                    return "Deleting cloud + local save. Reloading...";
                 });
 
             _registry.Register("reload", "Reload the active scene",
@@ -514,6 +1061,209 @@ namespace MobileIdleBuilder.Dev
                     SceneLoader.GoTo(SceneManager.GetActiveScene().name);
                     return "Reloading...";
                 });
+
+            // ── snapshots (named dev save-states) ─────────────────────────────
+            // Capture the entire current game state (grid, currency, inventory, tutorial,
+            // prestige, ...) to a named file, then jump back to it later. Snapshots live in
+            // Application.persistentDataPath/snapshots and are separate from the real save.json.
+            _registry.Register("snapshot save <name>", "Capture current state to snapshots/<name>.json",
+                args => SnapshotSave(args[0]));
+
+            _registry.Register("snapshot load <name>", "Restore a saved snapshot and reload the scene",
+                args =>
+                {
+                    var data = SnapshotRead(args[0], out string err);
+                    if (data == null) return err;
+                    if (SaveManager.Instance == null) return "Error: SaveManager not ready.";
+
+                    SaveManager.Instance.DevReplaceCurrent(data);
+                    GridSaveService.Instance?.ClearGrid();
+                    // Blur before the transition so UI Toolkit's keyboard-poll timer is cancelled
+                    // before LoadSceneAsync (same Vulkan swapchain race guarded in 'clear cloud save').
+                    _inputField?.Blur();
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    return $"Loading snapshot '{args[0]}'...";
+                });
+
+            _registry.Register("snapshot list", "List all saved snapshots",
+                _ => SnapshotList());
+
+            _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
+                args => SnapshotDelete(args[0]));
+        }
+
+        // ── Snapshot helpers ──────────────────────────────────────────────────
+
+        private static string SnapshotDir =>
+            Path.Combine(Application.persistentDataPath, "snapshots");
+
+        // Snapshot names arrive as a single token (the registry splits on spaces) and are
+        // lowercased by the registry. Restrict to a safe filename charset so a name can never
+        // escape the snapshots folder via path separators or "..".
+        private static bool IsValidSnapshotName(string name) =>
+            !string.IsNullOrEmpty(name) &&
+            System.Text.RegularExpressions.Regex.IsMatch(name, "^[a-z0-9_-]+$");
+
+        private static string SnapshotSave(string name)
+        {
+            if (!IsValidSnapshotName(name))
+                return "Error: name must be letters, digits, '-' or '_' (single word, no spaces).";
+
+            var sm = SaveManager.Instance;
+            if (sm?.Current == null) return "Error: SaveManager not ready.";
+
+            sm.SaveLocal();   // flush live ECS + grid into Current before capturing
+            Directory.CreateDirectory(SnapshotDir);
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            File.WriteAllText(path, JsonUtility.ToJson(sm.Current, prettyPrint: true));
+
+            int buildings = sm.Current.currentRun?.ActiveGrid?.buildings?.Count ?? 0;
+            string step   = sm.Current.tutorial?.currentStepId;
+            return $"Snapshot '{name}' saved — {buildings} building(s), " +
+                   $"{sm.Current.currentRun?.baseCurrency ?? 0}e, tutorial '{step}'.";
+        }
+
+        private static SaveData SnapshotRead(string name, out string error)
+        {
+            error = null;
+            if (!IsValidSnapshotName(name)) { error = "Error: invalid snapshot name."; return null; }
+
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            if (!File.Exists(path)) { error = $"Error: no snapshot '{name}'. Try 'snapshot list'."; return null; }
+
+            try
+            {
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                if (data == null) { error = $"Error: snapshot '{name}' is empty or corrupt."; return null; }
+                return data;
+            }
+            catch (System.Exception e)
+            {
+                error = $"Error: failed to read snapshot '{name}': {e.Message}";
+                return null;
+            }
+        }
+
+        private static string SnapshotList()
+        {
+            if (!Directory.Exists(SnapshotDir)) return "No snapshots saved yet. Use 'snapshot save <name>'.";
+            var files = Directory.GetFiles(SnapshotDir, "*.json");
+            if (files.Length == 0) return "No snapshots saved yet. Use 'snapshot save <name>'.";
+
+            var sb = new StringBuilder($"Snapshots ({files.Length}):\n");
+            foreach (var f in files)
+                sb.AppendLine($"  {Path.GetFileNameWithoutExtension(f)}");
+            return sb.ToString().TrimEnd();
+        }
+
+        private static string SnapshotDelete(string name)
+        {
+            if (!IsValidSnapshotName(name)) return "Error: invalid snapshot name.";
+            string path = Path.Combine(SnapshotDir, name + ".json");
+            if (!File.Exists(path)) return $"Error: no snapshot '{name}'.";
+            File.Delete(path);
+            return $"Snapshot '{name}' deleted.";
+        }
+
+        // ── Building spawn helpers ────────────────────────────────────────────
+
+        private static string ListBuildings()
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null || pc.availableBuildings.Length == 0)
+                return "Error: BuildingPlacementController.availableBuildings is empty (BuildingDatabase missing — run MobileIdleBuilder > Import Game Data).";
+
+            var sb = new StringBuilder($"Buildings ({pc.availableBuildings.Length}):\n");
+            foreach (var entry in pc.availableBuildings)
+            {
+                var b = entry.building;
+                if (b == null) continue;
+                sb.AppendLine($"  {b.name,-24} #{b.buildingId,-2} {b.footprint.x}x{b.footprint.y}  {b.structureKind}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        // Spawns a building by string name (asset id, e.g. "atomic_assembler") or numeric buildingId,
+        // via the real BuildingPlacer so it gets the same components/visuals as a player placement.
+        // Auto-picks the first free cell when (cx, cy) are omitted.
+        private static string SpawnBuilding(string id, int? cx, int? cy)
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null) return "Error: BuildingPlacementController not in scene.";
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null) return "Error: BuildingPlacer not in scene.";
+            var grid = FindAnyObjectByType<GridRenderer>();
+            if (grid == null) return "Error: GridRenderer not in scene.";
+
+            bool numeric = int.TryParse(id, out int numId);
+            BuildingPlacementController.BuildingEntry entry = default;
+            bool found = false;
+            foreach (var e in pc.availableBuildings)
+            {
+                var b = e.building;
+                if (b == null) continue;
+                if ((numeric && b.buildingId == numId) ||
+                    string.Equals(b.name, id, System.StringComparison.OrdinalIgnoreCase))
+                { entry = e; found = true; break; }
+            }
+            if (!found) return $"Error: building '{id}' not found. Try 'list buildings'.";
+
+            var bso = entry.building;
+            int fw = Mathf.Max(1, bso.footprint.x);
+            int fh = Mathf.Max(1, bso.footprint.y);
+
+            int x, y;
+            if (cx.HasValue && cy.HasValue) { x = cx.Value; y = cy.Value; }
+            else if (!FindFreeCell(grid, fw, fh, out x, out y))
+                return $"Error: no free {fw}x{fh} cell on the grid.";
+
+            // Field collectors need an output direction + get CollectorData; everything else passes null.
+            int? outDir = bso.placementRule == PlacementRule.MustBeOnField
+                ? (int)OutputDirection.South
+                : (int?)null;
+
+            if (!placer.PlaceBuilding(x, y, bso, entry.defaultRecipe, outDir))
+                return $"Error: placement failed at ({x},{y}) — occupied or out of bounds.";
+
+            FindAnyObjectByType<BuildingVisualizer>()?.Refresh();
+            return $"Spawned '{bso.name}' (#{bso.buildingId}) at ({x},{y}). Structure={bso.structureKind}.";
+        }
+
+        private static string SpawnAllBuildings()
+        {
+            var pc = FindAnyObjectByType<BuildingPlacementController>();
+            if (pc?.availableBuildings == null || pc.availableBuildings.Length == 0)
+                return "Error: BuildingPlacementController.availableBuildings is empty.";
+
+            int placed = 0;
+            var sb = new StringBuilder();
+            foreach (var entry in pc.availableBuildings)
+            {
+                var b = entry.building;
+                if (b == null) continue;
+                string r = SpawnBuilding(b.name, null, null);
+                sb.AppendLine("  " + r);
+                if (r.StartsWith("Spawned")) placed++;
+            }
+            return $"Spawned {placed} building(s):\n{sb.ToString().TrimEnd()}";
+        }
+
+        private static bool FindFreeCell(GridRenderer grid, int fw, int fh, out int ox, out int oy)
+        {
+            for (int y = 0; y + fh <= grid.Height; y++)
+            for (int x = 0; x + fw <= grid.Width; x++)
+            {
+                bool free = true;
+                for (int dx = 0; dx < fw && free; dx++)
+                for (int dy = 0; dy < fh && free; dy++)
+                {
+                    if (!grid.IsInBounds(x + dx, y + dy)) free = false;
+                    else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x + dx, y + dy)) free = false;
+                }
+                if (free) { ox = x; oy = y; return true; }
+            }
+            ox = oy = -1;
+            return false;
         }
     }
 }

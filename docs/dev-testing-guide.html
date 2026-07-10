@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Foundry — Dev Console Testing Checklist</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --surface-alt:  #21262d;
+      --border:       #30363d;
+      --border-soft:  #21262d;
+      --text:         #c9d1d9;
+      --text-muted:   #8b949e;
+      --text-heading: #e6edf3;
+      --blue:         #58a6ff;
+      --green:        #3fb950;
+      --orange:       #f0883e;
+      --purple:       #d2a8ff;
+      --red:          #f85149;
+      --yellow:       #d29922;
+      --mono:         "Cascadia Code", "Fira Code", "Consolas", monospace;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Sticky header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px 10px;
+    }
+    .site-header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin-bottom: 10px;
+    }
+    .site-header h1 span { color: var(--blue); }
+
+    /* ── Progress bar ── */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .progress-track {
+      flex: 1;
+      min-width: 160px;
+      height: 6px;
+      background: var(--surface-alt);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .progress-label strong { color: var(--green); }
+    .btn-reset {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 10px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-reset:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── How-to callout ── */
+    .how-to {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--blue);
+      border-radius: 6px;
+      padding: 12px 18px;
+      margin: 20px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 6px 24px;
+      font-size: 13px;
+    }
+    .how-to-title {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue);
+      margin-bottom: 4px;
+    }
+    .how-to li { list-style: none; padding-left: 1em; text-indent: -1em; }
+    .how-to li::before { content: "›  "; color: var(--text-muted); }
+    .how-to code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #ffa657;
+    }
+
+    /* ── Main layout ── */
+    .main { padding: 0 24px 60px; max-width: 900px; margin: 0 auto; }
+
+    /* ── Section (details/summary) ── */
+    details.section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    details.section[open] summary { border-bottom: 1px solid var(--border-soft); }
+    summary.section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    summary.section-header::-webkit-details-marker { display: none; }
+    .section-chevron {
+      color: var(--text-muted);
+      font-size: 11px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    details[open] .section-chevron { transform: rotate(90deg); }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-heading);
+      flex: 1;
+    }
+    .section-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .badge-ready   { background: #0d2018; color: var(--green);  border: 1px solid #1a6e40; }
+    .badge-pending { background: #1a1200; color: var(--orange); border: 1px solid #8a4a00; }
+    .section-progress { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+    /* Pending overlay */
+    details.pending .section-body {
+      position: relative;
+    }
+    .pending-banner {
+      background: #1a1200;
+      border: 1px solid #8a4a00;
+      border-radius: 4px;
+      padding: 8px 14px;
+      margin: 12px 16px 0;
+      font-size: 12px;
+      color: var(--orange);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Section body ── */
+    .section-body { padding: 12px 0 6px; }
+
+    /* ── Sub-heading inside a section ── */
+    .sub-heading {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 12px 16px 4px;
+      border-top: 1px solid var(--border-soft);
+      margin-top: 6px;
+    }
+    .sub-heading:first-of-type { border-top: none; margin-top: 0; }
+
+    /* ── Check item ── */
+    .check-item {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      transition: background 0.1s;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-item.done { opacity: 0.5; }
+    .check-item.done .check-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .check-label {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 0 10px;
+      cursor: pointer;
+      align-items: start;
+    }
+    .check-input {
+      margin-top: 3px;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+    .check-content { min-width: 0; }
+    .check-text { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+    .check-text strong { color: var(--text-heading); }
+    .check-text em { color: var(--text-muted); font-style: normal; }
+    .check-item.done .check-text em { text-decoration: line-through; }
+
+    /* ── Content blocks ── */
+    .block { border-radius: 4px; padding: 7px 11px; margin: 5px 0; font-size: 12px; }
+
+    .cmd-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 3px solid #f0883e;
+      font-family: var(--mono);
+      color: #ffa657;
+    }
+    .cmd-block::before { content: "▶ "; color: #8b949e; }
+
+    .expected-block {
+      background: #0d2018;
+      border: 1px solid #1a6e40;
+      border-left: 3px solid var(--green);
+      font-family: var(--mono);
+      color: var(--green);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .expected-block .lbl { color: #8b949e; font-family: sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 3px; }
+
+    .verify-block {
+      background: #1a1224;
+      border: 1px solid #3d2060;
+      border-left: 3px solid var(--purple);
+      color: var(--purple);
+    }
+    .verify-block .lbl { color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 3px; }
+    .verify-block ul { margin-left: 16px; }
+    .verify-block li { margin-bottom: 2px; }
+
+    .note-block {
+      background: #1a1200;
+      border: 1px solid #8a4a00;
+      border-left: 3px solid var(--orange);
+      color: var(--orange);
+    }
+
+    .inline-code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #ffa657;
+    }
+
+    /* ── Spot-check table ── */
+    .spot-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 4px; }
+    .spot-table th {
+      background: var(--bg);
+      padding: 6px 10px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .spot-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+    .spot-table tr:last-child td { border-bottom: none; }
+    .spot-table .mono { font-family: var(--mono); color: var(--blue); font-size: 11px; }
+    .spot-table .idx  { font-family: var(--mono); color: var(--text-muted); font-size: 11px; }
+    .spot-table .chk-cell input { accent-color: var(--green); width: 14px; height: 14px; cursor: pointer; }
+    .spot-table tr.row-done { opacity: 0.45; }
+    .spot-table tr.row-done .mono { text-decoration: line-through; }
+
+    /* ── Reference tables at bottom ── */
+    .ref-section { margin-top: 32px; }
+    .ref-section h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-heading);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ref-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+    .ref-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .ref-table-wrap h3 { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border-soft); }
+    .ref-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ref-table th { padding: 6px 10px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); background: var(--bg); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border-soft); }
+    .ref-table td { padding: 5px 10px; border-bottom: 1px solid var(--border-soft); }
+    .ref-table tr:last-child td { border-bottom: none; }
+    .ref-table .mono { font-family: var(--mono); color: var(--blue); font-size: 11px; }
+    .ref-table .num  { font-family: var(--mono); color: var(--green); text-align: right; }
+    .ref-table .note { color: var(--text-muted); font-size: 11px; }
+    .ref-table .gate { color: var(--orange); font-family: var(--mono); font-size: 11px; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="site-header">
+  <h1>Quantum Foundry — <span>Dev Console Testing Checklist</span></h1>
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-label" id="progress-label">0 / 0 complete</span>
+    <button class="btn-reset" onclick="resetAll()">Reset All</button>
+  </div>
+</div>
+
+<div class="how-to">
+  <p class="how-to-title">How to use</p>
+  <li>Enter Unity <strong>Play Mode</strong> before running any command</li>
+  <li>Open console: <code>`</code> (backtick) on desktop · shake on device</li>
+  <li>Type command and press <strong>Enter</strong></li>
+  <li>Commands are <strong>case-insensitive</strong></li>
+  <li>Checks persist in <strong>localStorage</strong> — reopen freely</li>
+  <li>Sections marked <span style="color:var(--orange);font-weight:600;">⚠ PENDING</span> require Test Mode to be implemented</li>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════════ PREREQUISITES -->
+<details class="section" open>
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Prerequisites — Start Here Every Session</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="pre">0 / 2</span>
+  </summary>
+  <div class="section-body">
+
+    <div class="check-item" id="ci-pre-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-pre-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Start with a clean save to eliminate state bleed from a previous session.</p>
+        <div class="block cmd-block">clear save</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Save cleared. Reloading...</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Scene reloads; tutorial starts from the very beginning (intro dialogue fires)</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-pre-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-pre-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Confirm the fresh-game state is correct.</p>
+        <div class="block cmd-block">show progress</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li><code class="inline-code">BaseCurrency</code> ≈ 0–10e (baked default before tutorial grants entropy)</li>
+            <li><code class="inline-code">CurrentTier</code> = 0 or 1</li>
+            <li>No research unlocked (research panel is empty)</li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════ PART 1 — BASICS -->
+<details class="section" open>
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 1 — Dev Console Basics</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p1">0 / 5</span>
+  </summary>
+  <div class="section-body">
+
+    <p class="sub-heading">1.1 Open &amp; Close</p>
+
+    <div class="check-item" id="ci-p1-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p1-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Press <strong>backtick ` </strong> while in Play Mode — console overlay appears and input field auto-focuses.</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>First-open log line reads: <em>Dev console ready. Type 'help' for commands.</em></div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p1-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p1-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Press <strong>` </strong> again — console closes cleanly.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">1.2 Help Command</p>
+
+    <div class="check-item" id="ci-p1-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p1-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Run <code class="inline-code">help</code> and confirm all of these entries are present in the output.</p>
+        <div class="block cmd-block">help</div>
+        <div class="block verify-block"><span class="lbl">Must see</span>
+          <ul>
+            <li><code class="inline-code">tutorial list</code></li>
+            <li><code class="inline-code">tutorial skip &lt;id&gt;</code></li>
+            <li><code class="inline-code">skip tutorial</code></li>
+            <li><code class="inline-code">add currency &lt;amount&gt;</code></li>
+            <li><code class="inline-code">show progress</code></li>
+            <li><code class="inline-code">save</code> · <code class="inline-code">clear save</code> · <code class="inline-code">reload</code></li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">1.3 Error Handling</p>
+
+    <div class="check-item" id="ci-p1-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p1-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Unknown command returns a red error.</p>
+        <div class="block cmd-block">foo bar baz</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Unknown command. Type 'help' for a list of commands.</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p1-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p1-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text"><code class="inline-code">tutorial skip</code> with no ID (2 tokens) is rejected — pattern requires exactly 3 tokens.</p>
+        <div class="block cmd-block">tutorial skip</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Unknown command. Type 'help' for a list of commands.</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════════════════════ PART 2 — TUTORIAL LIST -->
+<details class="section" open>
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 2 — tutorial list</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p2">0 / 13</span>
+  </summary>
+  <div class="section-body">
+
+    <div class="check-item" id="ci-p2-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p2-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Command returns the full step list with correct count.</p>
+        <div class="block cmd-block">tutorial list</div>
+        <div class="block expected-block"><span class="lbl">Expected (first &amp; last lines)</span>Tutorial steps (71 total):
+  [ 0]  intro_dialogue
+  ...
+  [70]  particles_loop_complete</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Scroll through — 71 entries, no repeated or skipped indices</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">2.1 Spot-check Key Step IDs</p>
+    <p style="padding:4px 16px 8px;font-size:12px;color:var(--text-muted);">Scan the list output and tick each entry once you've confirmed the index and ID match exactly.</p>
+
+    <table class="spot-table">
+      <thead><tr>
+        <th class="chk-cell" style="width:36px;text-align:center;">✓</th>
+        <th>Index</th>
+        <th>Expected Step ID</th>
+        <th>Phase</th>
+      </tr></thead>
+      <tbody id="spot-table-body"></tbody>
+    </table>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════════ PART 3 — PHASE 1: PRE-RESEARCH -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 3 — Steps 0–10: Pre-Research Phase</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p3">0 / 4</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">No research unlocks. Entropy stays at 250. No grid changes. No scene reload.</div>
+
+    <p class="sub-heading">3.1 Tutorial Start</p>
+    <div class="check-item" id="ci-p3-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p3-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip intro_dialogue</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'intro_dialogue' [0]. Entropy: 250e. 0 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Hint bar is <em>empty</em>; intro dialogue overlay fires; entropy HUD shows <strong>250</strong></div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">3.2 First Collection</p>
+    <div class="check-item" id="ci-p3-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p3-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip collect_first_electron</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'collect_first_electron' [1]. Entropy: 250e. 0 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Hint bar: <em>Tap the electron field to collect 5 electrons.</em></li>
+            <li>Electron field highlighted; quark field &amp; buildings locked</li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">3.3 Quark Collection</p>
+    <div class="check-item" id="ci-p3-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p3-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip collect_quarks</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'collect_quarks' [6]. Entropy: 250e. 0 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Hint: <em>Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.</em> Collection filter = Quarks only</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">3.4 Research Drawer Prompt</p>
+    <div class="check-item" id="ci-p3-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p3-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip open_research_drawer</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'open_research_drawer' [10]. Entropy: 250e. 0 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Hint: <em>Open the menu on the left to find the Research panel.</em> Drawer-handle button is pulsing</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════ PART 4 — RESEARCH GATE 1: RECOMBINATION I -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 4 — Research Gate 1: Recombination I</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p4">0 / 3</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">Check both BEFORE and AFTER the purchase step — research count changes at the boundary.</div>
+
+    <p class="sub-heading">4.1 AT the Purchase Step (Research Not Yet Unlocked)</p>
+    <div class="check-item" id="ci-p4-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p4-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_recombination_i</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_recombination_i' [11]. Entropy: 265e. 0 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Entropy: <strong>265</strong> (enough to afford 100e Recombination I)</li>
+            <li>Research panel: Recombination I shows as <strong>Available to Purchase</strong> — NOT purchased</li>
+            <li>Research panel: Hydrogen Synthesis is locked/unavailable</li>
+            <li>Build menu: Proton &amp; Neutron recipes <em>not</em> visible yet</li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">4.2 PAST the Purchase Step (Research Now Force-Unlocked)</p>
+    <div class="check-item" id="ci-p4-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p4-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip recombination_unlocked</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'recombination_unlocked' [12]. Entropy: 165e. 1 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Entropy: <strong>165</strong> (−100e purchase reflected)</li>
+            <li>Research panel: Recombination I shows as <strong>Purchased ✓</strong></li>
+            <li>Build menu: <strong>Proton &amp; Neutron recipes now visible</strong></li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">4.3 Mid-Phase — Research Persists Through Further Skips</p>
+    <div class="check-item" id="ci-p4-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p4-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip collect_quarks_for_nucleons</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'collect_quarks_for_nucleons' [13]. Entropy: 165e. 1 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Hint: <em>Collect 8 Up Quarks and 8 Down Quarks…</em> · Research panel still shows Recombination I as purchased ✓</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════ PART 5 — RESEARCH GATE 2: HYDROGEN SYNTHESIS -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 5 — Research Gate 2: Hydrogen Synthesis</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p5">0 / 2</span>
+  </summary>
+  <div class="section-body">
+
+    <p class="sub-heading">5.1 AT the Purchase Step</p>
+    <div class="check-item" id="ci-p5-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p5-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_hydrogen_synthesis</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_hydrogen_synthesis' [20]. Entropy: 177e. 1 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>177</strong> · Recombination I ✓ · <strong>Hydrogen Synthesis = Available</strong> (50e cost)</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">5.2 PAST the Purchase Step</p>
+    <div class="check-item" id="ci-p5-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p5-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip gather_for_hydrogen</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'gather_for_hydrogen' [21]. Entropy: 127e. 2 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>127</strong> · Recombination I ✓ · <strong>Hydrogen Synthesis ✓</strong> · Hydrogen recipe visible in Build menu</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════ PART 6 — RESEARCH GATE 3: AUTOMATION I -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 6 — Research Gate 3: Automation I</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p6">0 / 2</span>
+  </summary>
+  <div class="section-body">
+
+    <p class="sub-heading">6.1 AT the Purchase Step</p>
+    <div class="check-item" id="ci-p6-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p6-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_automation_i</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_automation_i' [29]. Entropy: 137e. 2 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>137</strong> · 2 prior nodes purchased · <strong>Automation I = Available</strong> (25e) · Harvester <em>not yet</em> in build menu</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">6.2 PAST the Purchase Step — Pre-Building Placement</p>
+    <div class="check-item" id="ci-p6-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p6-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip place_first_building</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'place_first_building' [30]. Entropy: 112e. 3 research node(s) unlocked.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Entropy: <strong>112</strong> (enough to buy 100e Harvester)</li>
+            <li>All 3 tutorial research nodes purchased ✓ (Recombination I, Hydrogen Synthesis, Automation I)</li>
+            <li>Hint: <em>Place a Harvester on the quark or lepton field…</em></li>
+            <li><strong>Harvester available</strong> in build menu · Build button pulsing</li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════════════ PART 7 — GRID STEPS (31+) -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 7 — Grid Steps (31+): ECS Correct, Buildings Manual</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p7">0 / 6</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">Grid presets are <strong>not yet captured</strong>. ECS step index, entropy, and research are all set correctly. Buildings must be placed manually after the skip. Output will include a (grid preset not yet captured…) suffix.</div>
+
+    <p class="sub-heading">7.1 Warning Fires — First Grid Step</p>
+    <div class="check-item" id="ci-p7-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip place_conveyor</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'place_conveyor' [31]. Entropy: 12e. 3 research node(s) unlocked. (grid preset not yet captured — place buildings manually if needed)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Output is <strong>green</strong> (success, not error) · Hint: <em>Connect the Harvester to Maxwell's Demon with a conveyor belt.</em> · Grid is empty — no buildings placed by the skip · Entropy: <strong>12</strong></div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">7.2 SFC Phase Entry Points</p>
+    <div class="check-item" id="ci-p7-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip intro_sfc</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'intro_sfc' [33]. Entropy: 50e. 3 research node(s) unlocked. (grid preset not yet captured…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Hint: <em>Save up entropy to place the Strong Force Combiner.</em></div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p7-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip place_sfc</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'place_sfc' [34]. Entropy: 200e. 3 research node(s) unlocked. (grid preset not yet captured…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>200</strong> (exact SFC cost) · Build menu shows SFC available · Hint: <em>Open the Build menu and place a Strong Force Combiner on the grid.</em></div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">7.3 Nucleon Pipeline Complete</p>
+    <div class="check-item" id="ci-p7-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip nucleon_loop_complete</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'nucleon_loop_complete' [41]. Entropy: 100e. 3 research node(s) unlocked. (grid preset not yet captured…)</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">7.4 Atom Generator</p>
+    <div class="check-item" id="ci-p7-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip place_atom_generator</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'place_atom_generator' [43]. Entropy: 350e. 3 research node(s) unlocked. (grid preset not yet captured…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>350</strong> (exact Atom Generator cost) · Build menu shows Atom Generator available</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">7.5 Building Upgrades</p>
+    <div class="check-item" id="ci-p7-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p7-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip upgrade_atom_generator_speed</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'upgrade_atom_generator_speed' [48]. Entropy: 1000e. 3 research node(s) unlocked. (grid preset not yet captured…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>1000</strong> (exact L2 speed upgrade cost)</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════ PART 8 — POST-TUTORIAL RESEARCH GATES -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 8 — Post-Tutorial Research Gates (Steps 51–70)</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p8">0 / 8</span>
+  </summary>
+  <div class="section-body">
+
+    <p class="sub-heading">8.1 Atomic Assembly</p>
+    <div class="check-item" id="ci-p8-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_atomic_assembly</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_atomic_assembly' [51]. Entropy: 500e. 3 research node(s) unlocked. (grid preset…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>3 prior nodes purchased · <strong>Atomic Assembly = Available</strong> (500e cost)</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p8-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip atomic_assembly_unlocked</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'atomic_assembly_unlocked' [52]. Entropy: 50e. <strong>4</strong> research node(s) unlocked. (grid preset…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span><strong>Atomic Assembly ✓</strong> · Atom Generator recipe panel now includes Helium-4 and heavier elements</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">8.2 Heavy Elements</p>
+    <div class="check-item" id="ci-p8-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_heavy_elements</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_heavy_elements' [55]. Entropy: 3000e. 4 research node(s) unlocked. (grid preset…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>3000</strong> · 4 prior nodes ✓ · Heavy Elements = Available (3000e)</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p8-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip heavy_elements_unlocked</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'heavy_elements_unlocked' [56]. Entropy: 50e. <strong>5</strong> research node(s) unlocked. (grid preset…)</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">8.3 Isotope Engineering</p>
+    <div class="check-item" id="ci-p8-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_isotope_engineering</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_isotope_engineering' [59]. Entropy: 1500e. 5 research node(s) unlocked. (grid preset…)</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p8-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip isotopes_unlocked</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'isotopes_unlocked' [60]. Entropy: 50e. <strong>6</strong> research node(s) unlocked. (grid preset…)</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">8.4 Radioactive Isotopes — Final Gate</p>
+    <div class="check-item" id="ci-p8-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip buy_radioactive_isotopes</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_radioactive_isotopes' [64]. Entropy: 5000e. 6 research node(s) unlocked. (grid preset…)</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy: <strong>5000</strong> · Both Isotope Engineering AND Heavy Elements show as purchased</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p8-8">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p8-8" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Last step in the flow — confirms step index ceiling is correct.</p>
+        <div class="block cmd-block">tutorial skip particles_loop_complete</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'particles_loop_complete' [70]. Entropy: 50e. <strong>7</strong> research node(s) unlocked. (grid preset…)</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ══════════════════════════════ PART 9 — ERROR HANDLING & EDGE CASES -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 9 — Error Handling &amp; Edge Cases</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p9">0 / 4</span>
+  </summary>
+  <div class="section-body">
+
+    <div class="check-item" id="ci-p9-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p9-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text"><strong>Unknown step ID</strong> — red error with hint to run <code class="inline-code">tutorial list</code>.</p>
+        <div class="block cmd-block">tutorial skip not_a_real_step</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Unknown step 'not_a_real_step'. Type 'tutorial list' to see all IDs.</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p9-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p9-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text"><strong>Partial step name</strong> — exact match required, no prefix/fuzzy matching.</p>
+        <div class="block cmd-block">tutorial skip intro</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Unknown step 'intro'. Type 'tutorial list' to see all IDs.</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p9-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p9-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text"><strong>Step ID with spaces instead of underscores</strong> — becomes 6 tokens, fails to match 3-token pattern.</p>
+        <div class="block cmd-block">tutorial skip buy recombination i</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Unknown command. Type 'help' for a list of commands.</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p9-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p9-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text"><strong>Case insensitivity</strong> — all-caps input resolves to canonical lower-case ID.</p>
+        <div class="block cmd-block">TUTORIAL SKIP BUY_RECOMBINATION_I</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Skipped to 'buy_recombination_i' [11]. Entropy: 265e. 0 research node(s) unlocked.</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ════════════════════════════════════════ PART 10 — STATE PERSISTENCE -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 10 — State Persistence: Skip → Save → Reload</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p10">0 / 7</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">Confirms that SaveData is written correctly so a manual reload restores the exact skip state.</div>
+
+    <p class="sub-heading">10.1 Single-Research Checkpoint</p>
+    <div class="check-item" id="ci-p10-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Skip, save, then reload. Verify entropy and research survive the reload.</p>
+        <div class="block cmd-block">tutorial skip collect_quarks_for_nucleons</div>
+        <div class="block cmd-block">save</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Saved.</div>
+        <div class="block cmd-block">reload</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p10-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">After reload — confirm entropy loaded from save.</p>
+        <div class="block cmd-block">show progress</div>
+        <div class="block verify-block"><span class="lbl">In-game</span><code class="inline-code">BaseCurrency</code> ≈ <strong>165</strong></div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p10-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">After reload — confirm tutorial step and research state loaded correctly.</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Hint bar: <em>Collect 8 Up Quarks and 8 Down Quarks…</em></li>
+            <li>Research panel: <strong>Recombination I shows as purchased ✓</strong></li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">10.2 All-Three-Research Checkpoint</p>
+    <div class="check-item" id="ci-p10-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">tutorial skip place_first_building</div>
+        <div class="block cmd-block">save</div>
+        <div class="block cmd-block">reload</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p10-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">After reload — all 3 research nodes and entropy survive.</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>
+          <ul>
+            <li>Entropy ≈ <strong>112</strong></li>
+            <li>Research panel: all 3 tutorial nodes purchased (Recombination I, Hydrogen Synthesis, Automation I)</li>
+            <li>Hint: <em>Place a Harvester on the quark or lepton field…</em></li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">10.3 tutorial skip Reload Path</p>
+    <div class="check-item" id="ci-p10-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Once a grid preset is populated, skip auto-saves and reloads. Verify post-reload state. <em>(Run after at least one grid preset is filled in.)</em></p>
+        <div class="block cmd-block">tutorial skip place_conveyor</div>
+        <div class="block expected-block"><span class="lbl">Expected (auto-reloads)</span>Skipped to 'place_conveyor' [31]. Entropy: 12e. 3 research node(s) unlocked. Reloading scene to apply grid…</div>
+        <div class="block verify-block"><span class="lbl">After reload</span>Entropy: <strong>12</strong> · 3 research purchased · Buildings present on grid · Hint: <em>Connect the Harvester to Maxwell's Demon with a conveyor belt.</em></div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p10-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p10-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Run <code class="inline-code">clear save</code> to clean up after grid tests.</p>
+        <div class="block cmd-block">clear save</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Save cleared. Reloading...</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════ PART 11 — PENDING: FIELD DETERMINISM -->
+<details class="section pending">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 11 — ⚠ PENDING: Test Mode — Deterministic Field Layout</span>
+    <span class="section-badge badge-pending">Pending</span>
+    <span class="section-progress" data-section="p11">0 / 10</span>
+  </summary>
+  <div class="section-body">
+    <div class="pending-banner">⚠ Outdated: the <code style="color:inherit;background:none;padding:0;">_testModeEnabled</code> toggle was removed. The origin field layout is now ALWAYS deterministic (FieldGenerator seeds with SiteFieldSeedBase), so the per-step instructions below that reference toggling Test Mode no longer apply — a fresh start always produces the same layout.</div>
+
+    <p class="sub-heading">Setup</p>
+    <div class="check-item" id="ci-p11-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">In the Editor (not Play Mode), find the <strong>Managers</strong> GameObject in the Hierarchy and select the <strong>GameBootstrap</strong> component.</p>
+        <div class="block verify-block"><span class="lbl">In-editor</span>
+          <ul>
+            <li><strong>Test Mode — Editor Only</strong> header is visible</li>
+            <li><code class="inline-code">Test Mode Enabled</code> checkbox — default <strong>unchecked</strong></li>
+            <li><code class="inline-code">Test Mode Field Seed</code> int field — default <strong>42</strong></li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">11.1 Default Behavior Is Still Random</p>
+    <div class="check-item" id="ci-p11-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">With <strong>Test Mode Enabled = unchecked</strong>, enter Play, run <code class="inline-code">clear save</code>, note field positions.</p>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p11-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Exit Play, re-enter Play, run <code class="inline-code">clear save</code> again — field positions are <strong>different</strong> from the first run.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">11.2 Seed 42 Produces Consistent Layout</p>
+    <div class="check-item" id="ci-p11-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Check <strong>Test Mode Enabled</strong>, leave seed = <strong>42</strong>. Enter Play → <code class="inline-code">clear save</code>. Record field positions below.</p>
+        <div class="block verify-block"><span class="lbl">Record canonical layout (seed 42)</span>
+          <ul>
+            <li>Electron field: cell ( &nbsp;&nbsp;&nbsp;&nbsp; , &nbsp;&nbsp;&nbsp;&nbsp; )</li>
+            <li>Quark field 1:  cell ( &nbsp;&nbsp;&nbsp;&nbsp; , &nbsp;&nbsp;&nbsp;&nbsp; )</li>
+            <li>Quark field 2:  cell ( &nbsp;&nbsp;&nbsp;&nbsp; , &nbsp;&nbsp;&nbsp;&nbsp; ) ← adjacent to Quark 1</li>
+          </ul>
+        </div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p11-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Exit Play → re-enter Play → <code class="inline-code">clear save</code>. Field positions are <strong>identical</strong> to run 1.</p>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p11-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Third run — identical positions again. The layout is <strong>fully repeatable</strong>.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">11.3 Different Seed Produces Different Layout</p>
+    <div class="check-item" id="ci-p11-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Change <strong>Test Mode Field Seed</strong> to <strong>99</strong>. Enter Play → <code class="inline-code">clear save</code>. Field positions differ from the seed-42 layout recorded above.</p>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p11-8">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-8" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Change seed back to <strong>42</strong>. Enter Play → <code class="inline-code">clear save</code>. Original seed-42 layout returns exactly.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">11.4 Returning Player Uses Saved Positions (Not Seed)</p>
+    <div class="check-item" id="ci-p11-9">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-9" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">With seed 42 active and fields visible, run <code class="inline-code">save</code> then exit Play. Change seed to <strong>99</strong>. Re-enter Play. Fields should be in the <strong>saved positions</strong> (seed 42 layout) — not re-randomized with seed 99.</p>
+        <div class="block note-block" style="font-size:12px;">Confirms FieldGenerator's returning-player branch bypasses the seed. Seed only applies on new games.</div>
+      </div></label>
+    </div>
+
+    <div class="check-item" id="ci-p11-10">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p11-10" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Run <code class="inline-code">clear save</code> (forces a new game). Re-enter Play. Fields now use seed <strong>99</strong> layout — not the previously saved positions.</p>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════ PART 12 — PENDING: SAVE SUPPRESSION -->
+<details class="section pending">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 12 — ⚠ PENDING: Test Mode — Save Suppression</span>
+    <span class="section-badge badge-pending">Pending</span>
+    <span class="section-progress" data-section="p12">0 / 9</span>
+  </summary>
+  <div class="section-body">
+    <div class="pending-banner">⚠ Requires Test Mode save-guard in SaveManager (auto-save, pause, quit) to be implemented. Enable Test Mode in GameBootstrap before running these checks.</div>
+
+    <p class="sub-heading">Setup</p>
+    <div class="check-item" id="ci-p12-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Confirm <strong>Test Mode Enabled = true</strong>. Enter Play. Run <code class="inline-code">clear save</code>.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">12.1 Auto-Save Does Not Fire</p>
+    <div class="check-item" id="ci-p12-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Run <code class="inline-code">add currency 9999</code>, then wait <strong>90 seconds</strong> (longer than the 60s auto-save interval).</p>
+        <div class="block cmd-block">add currency 9999</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p12-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Exit Play → re-enter Play → run <code class="inline-code">show progress</code>. BaseCurrency is <strong>not</strong> 9999 — auto-save was suppressed.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">12.2 Pause Does Not Save</p>
+    <div class="check-item" id="ci-p12-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">In Play, run <code class="inline-code">add currency 9999</code>, then alt-tab away from Unity (triggers OnApplicationPause). Return to Unity, exit Play, re-enter Play. BaseCurrency is <strong>not</strong> 9999.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">12.3 Quit Does Not Save</p>
+    <div class="check-item" id="ci-p12-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">In Play, run <code class="inline-code">add currency 9999</code>, then exit Play (triggers OnApplicationQuit). Re-enter Play. BaseCurrency is <strong>not</strong> 9999.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">12.4 Explicit save Command Still Works</p>
+    <div class="check-item" id="ci-p12-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">In Play, run <code class="inline-code">add currency 9999</code> then explicitly <code class="inline-code">save</code>.</p>
+        <div class="block cmd-block">add currency 9999</div>
+        <div class="block cmd-block">save</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Saved.</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p12-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Exit Play → re-enter Play → run <code class="inline-code">show progress</code>. BaseCurrency reflects the saved value (≈ starting amount + 9999). Explicit save was <strong>not</strong> suppressed.</p>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">12.5 tutorial skip Reload Still Works</p>
+    <div class="check-item" id="ci-p12-8">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-8" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Run <code class="inline-code">tutorial skip gather_for_hydrogen</code> (internally calls SaveLocal before reloading). Scene reloads.</p>
+        <div class="block cmd-block">tutorial skip gather_for_hydrogen</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p12-9">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p12-9" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">After reload, confirm: entropy ≈ <strong>127</strong>, 2 research nodes purchased, hint shows <em>Collect 4 Up Quarks…</em>. Save suppression did <strong>not</strong> block the skip's internal save.</p>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════ PART 13 — PENDING: COMBINED WORKFLOW -->
+<details class="section pending">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 13 — ⚠ PENDING: Combined Testing Workflow</span>
+    <span class="section-badge badge-pending">Pending</span>
+    <span class="section-progress" data-section="p13">0 / 7</span>
+  </summary>
+  <div class="section-body">
+    <div class="pending-banner">⚠ Run only after Parts 11 and 12 both pass in full.</div>
+
+    <p class="sub-heading">Canonical Session</p>
+    <div class="check-item" id="ci-p13-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-1" onchange="onCheck(this)">
+      <div class="check-content"><p class="check-text">Enable Test Mode (seed 42). Enter Play → <code class="inline-code">clear save</code>. Note field positions — same as seed-42 layout.</p></div></label>
+    </div>
+    <div class="check-item" id="ci-p13-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Skip to Automation I gate and purchase it manually.</p>
+        <div class="block cmd-block">tutorial skip buy_automation_i</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy 137 · Automation I is available in Research panel · Purchase it manually → hint advances to <em>Place a Harvester…</em></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p13-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Skip to nucleon loop (grid steps); manually place buildings to satisfy the step conditions. Tutorial advances through each step normally.</p>
+        <div class="block cmd-block">tutorial skip nucleon_loop_complete</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">No State Bleed Between Runs</p>
+    <div class="check-item" id="ci-p13-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-4" onchange="onCheck(this)">
+      <div class="check-content"><p class="check-text">While still in the above session, run <code class="inline-code">clear save</code>. State resets to a fresh game.</p></div></label>
+    </div>
+    <div class="check-item" id="ci-p13-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-5" onchange="onCheck(this)">
+      <div class="check-content"><p class="check-text">Fields appear at the <strong>same seed-42 positions</strong> — not reseeded differently after the clear.</p></div></label>
+    </div>
+    <div class="check-item" id="ci-p13-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-6" onchange="onCheck(this)">
+      <div class="check-content"><p class="check-text">Research panel is empty — no research purchased. Entropy is back to the starting default.</p></div></label>
+    </div>
+    <div class="check-item" id="ci-p13-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p13-7" onchange="onCheck(this)">
+      <div class="check-content"><p class="check-text">Run a full skip sequence again from scratch — all expected outputs match with no stale state from the previous run.</p></div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════ PART 14 — QUANTUM DOMAINS (MULTI-GRIDS) -->
+<details class="section">
+  <summary class="section-header">
+    <span class="section-chevron">›</span>
+    <span class="section-title">Part 14 — Quantum Domains (Multi-Grids)</span>
+    <span class="section-badge badge-ready">Ready</span>
+    <span class="section-progress" data-section="p14">0 / 13</span>
+  </summary>
+  <div class="section-body">
+    <div class="block note-block" style="margin:8px 16px 0;font-size:12px;">Requires the <code style="color:inherit;background:none;padding:0;">SiteService</code> component on the Services object and <code style="color:inherit;background:none;padding:0;">SitesSubController</code> on the HUD object (both wired in GameScene). If a <code>site</code> command returns "not ready", the component is missing.</div>
+
+    <p class="sub-heading">14.1 Listing &amp; Unlocking</p>
+    <div class="check-item" id="ci-p14-1">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-1" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Clear the tutorial nav-gate so the Domains panel/commands are usable.</p>
+        <div class="block cmd-block">skip tutorial</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-2">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-2" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site list</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>3 sites — <code class="inline-code">[0] site_origin … ACTIVE unlocked</code> · <code class="inline-code">[1] site_quark_sea 250,000e locked</code> · <code class="inline-code">[2] site_lepton_storm 10,000,000e locked</code></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-3">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-3" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">add currency 300000</div>
+        <div class="block cmd-block">site unlock site_quark_sea</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Unlocked 'site_quark_sea' for 250000e.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Entropy dropped by 250,000 · <code class="inline-code">site list</code> shows <strong>[1] unlocked</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-4">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-4" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">UI path — same unlock through the panel. Open drawer → <strong>Domains</strong> → Quark Sea row → <strong>Unlock</strong> becomes <strong>Confirm?</strong>; tap again to commit.</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>Two-tap confirm spends entropy · row flips to <strong>Unlocked</strong> with a <strong>Travel</strong> button</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.2 Travel &amp; Independent Grids</p>
+    <div class="check-item" id="ci-p14-5">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-5" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 1</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Switched to site [1] 'site_quark_sea'.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Grid empties · field layout regenerates with <strong>denser quark fields and NO electron fields</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-6">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-6" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Place a Harvester (or any building) on Quark Sea, then travel back to Origin.</p>
+        <div class="block cmd-block">site switch 0</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Origin's original buildings/conveyors/fields are <strong>restored intact</strong></div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-7">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-7" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 1</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>The Quark Sea building placed earlier is <strong>still there</strong> — each site keeps its own grid</div>
+      </div></label>
+    </div>
+    <div class="check-item" id="ci-p14-8">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-8" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Travel while a placement overlay is active — it must cancel first (no stuck overlay over the new grid).</p>
+        <div class="block verify-block"><span class="lbl">In-game</span>Start placing a building, then tap <strong>Travel</strong> in the Domains panel → placement overlay is dismissed before the grid swaps</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.3 Second Domain</p>
+    <div class="check-item" id="ci-p14-9">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-9" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">add currency 11000000</div>
+        <div class="block cmd-block">site unlock site_lepton_storm</div>
+        <div class="block cmd-block">site switch 2</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Lepton Storm: <strong>electron-dense fields, NO quark fields</strong></div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.4 Offline Aggregation Across Sites</p>
+    <div class="check-item" id="ci-p14-10">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-10" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">Build a producer→Maxwell's Demon chain on two unlocked sites, then save, wait 30s+, and reload.</p>
+        <div class="block cmd-block">save</div>
+        <div class="block cmd-block">reload</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Idle-return payout reflects <strong>every unlocked site</strong>, not just the active one</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.5 Prestige Preserves Unlocks, Clears Grids</p>
+    <div class="check-item" id="ci-p14-11">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-11" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">With ≥1 extra domain unlocked and built on, force a prestige.</p>
+        <div class="block cmd-block">set prestige available</div>
+        <div class="block cmd-block">force prestige</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>All grids cleared · back on Origin (site 0) · <code class="inline-code">site list</code> shows Quark Sea + Lepton Storm <strong>still unlocked</strong> (unlocks survive prestige) · no phantom offline earnings from the old sites next launch</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.6 Domains Introduction</p>
+    <div class="check-item" id="ci-p14-12">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-12" onchange="onCheck(this)">
+      <div class="check-content">
+        <p class="check-text">The intro normally fires once when <code class="inline-code">materials_science</code> research is unlocked. Replay it directly:</p>
+        <div class="block cmd-block">domains intro</div>
+        <div class="block expected-block"><span class="lbl">Expected</span>Replaying Quantum Domains intro.</div>
+        <div class="block verify-block"><span class="lbl">In-game</span>Architect dialogue plays · the <strong>Domains</strong> nav button is highlighted · opening the panel clears the highlight</div>
+      </div></label>
+    </div>
+
+    <p class="sub-heading">14.7 Error Handling</p>
+    <div class="check-item" id="ci-p14-13">
+      <label class="check-label"><input type="checkbox" class="check-input" id="cb-p14-13" onchange="onCheck(this)">
+      <div class="check-content">
+        <div class="block cmd-block">site switch 9</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Error: no site at index 9. Try 'site list'.</div>
+        <div class="block cmd-block">site unlock not_a_site</div>
+        <div class="block expected-block"><span class="lbl">Expected (red)</span>Error: unknown site 'not_a_site'. Try 'site list'.</div>
+      </div></label>
+    </div>
+
+  </div>
+</details>
+
+<!-- ════════════════════════════════════════════ REFERENCE TABLES -->
+<div class="ref-section">
+  <h2>Quick Reference</h2>
+  <div class="ref-tables">
+
+    <div class="ref-table-wrap">
+      <h3>Research Count by Skip Target</h3>
+      <table class="ref-table">
+        <thead><tr><th>Skip target range</th><th style="text-align:right;">Unlocked</th><th>Nodes purchased</th></tr></thead>
+        <tbody>
+          <tr><td>Steps 0–10</td><td class="num">0</td><td class="note">—</td></tr>
+          <tr><td class="gate">buy_recombination_i [11]</td><td class="num">0</td><td class="note">about to buy</td></tr>
+          <tr><td>Steps 12–19</td><td class="num">1</td><td class="note">recombination_i</td></tr>
+          <tr><td class="gate">buy_hydrogen_synthesis [20]</td><td class="num">1</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 21–28</td><td class="num">2</td><td class="note">+ hydrogen_synthesis</td></tr>
+          <tr><td class="gate">buy_automation_i [29]</td><td class="num">2</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 30–50</td><td class="num">3</td><td class="note">+ automation_i</td></tr>
+          <tr><td class="gate">buy_atomic_assembly [51]</td><td class="num">3</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 52–54</td><td class="num">4</td><td class="note">+ atomic_assembly</td></tr>
+          <tr><td class="gate">buy_heavy_elements [55]</td><td class="num">4</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 56–58</td><td class="num">5</td><td class="note">+ heavy_elements</td></tr>
+          <tr><td class="gate">buy_isotope_engineering [59]</td><td class="num">5</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 60–63</td><td class="num">6</td><td class="note">+ isotopes</td></tr>
+          <tr><td class="gate">buy_radioactive_isotopes [64]</td><td class="num">6</td><td class="note">+ about to buy</td></tr>
+          <tr><td>Steps 65–70</td><td class="num">7</td><td class="note">+ radioactive_isotopes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ref-table-wrap">
+      <h3>Entropy by Phase Entry Point</h3>
+      <table class="ref-table">
+        <thead><tr><th>Step ID</th><th style="text-align:right;">Entropy</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">intro_dialogue</td><td class="num">250</td><td class="note">Starting default</td></tr>
+          <tr><td class="mono">buy_recombination_i</td><td class="num">265</td><td class="note">After selling e/q (+15)</td></tr>
+          <tr><td class="mono">recombination_unlocked</td><td class="num">165</td><td class="note">After −100e</td></tr>
+          <tr><td class="mono">buy_hydrogen_synthesis</td><td class="num">177</td><td class="note">After selling P/N (+12)</td></tr>
+          <tr><td class="mono">gather_for_hydrogen</td><td class="num">127</td><td class="note">After −50e</td></tr>
+          <tr><td class="mono">buy_automation_i</td><td class="num">137</td><td class="note">After selling H (+10)</td></tr>
+          <tr><td class="mono">place_first_building</td><td class="num">112</td><td class="note">After −25e</td></tr>
+          <tr><td class="mono">place_conveyor</td><td class="num">12</td><td class="note">After −100e Harvester</td></tr>
+          <tr><td class="mono">place_sfc</td><td class="num">200</td><td class="note">Idle; exact SFC cost</td></tr>
+          <tr><td class="mono">nucleon_loop_complete</td><td class="num">100</td><td class="note">Pipeline running</td></tr>
+          <tr><td class="mono">place_atom_generator</td><td class="num">350</td><td class="note">Idle; exact Atom Gen cost</td></tr>
+          <tr><td class="mono">upgrade_atom_generator_speed</td><td class="num">1,000</td><td class="note">Idle; exact L2 cost</td></tr>
+          <tr><td class="mono">buy_atomic_assembly</td><td class="num">500</td><td class="note">Idle; exact research cost</td></tr>
+          <tr><td class="mono">buy_heavy_elements</td><td class="num">3,000</td><td class="note">Idle; exact research cost</td></tr>
+          <tr><td class="mono">buy_isotope_engineering</td><td class="num">1,500</td><td class="note">Idle; exact research cost</td></tr>
+          <tr><td class="mono">buy_radioactive_isotopes</td><td class="num">5,000</td><td class="note">Idle; exact research cost</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const STORAGE_KEY = 'qf-testing-checks';
+const SPOT_CHECKS = [
+  { idx: '[ 0]', id: 'intro_dialogue',           phase: 'Tutorial Start' },
+  { idx: '[11]', id: 'buy_recombination_i',       phase: 'Research Gate 1' },
+  { idx: '[20]', id: 'buy_hydrogen_synthesis',    phase: 'Research Gate 2' },
+  { idx: '[29]', id: 'buy_automation_i',          phase: 'Research Gate 3' },
+  { idx: '[30]', id: 'place_first_building',      phase: 'First Building' },
+  { idx: '[31]', id: 'place_conveyor',            phase: '← First Grid Step' },
+  { idx: '[41]', id: 'nucleon_loop_complete',     phase: 'Nucleon Pipeline' },
+  { idx: '[43]', id: 'place_atom_generator',      phase: 'Atom Generator' },
+  { idx: '[51]', id: 'buy_atomic_assembly',       phase: 'Post-Tutorial' },
+  { idx: '[59]', id: 'buy_isotope_engineering',   phase: 'Isotopes' },
+  { idx: '[64]', id: 'buy_radioactive_isotopes',  phase: 'Radioactive' },
+  { idx: '[70]', id: 'particles_loop_complete',   phase: 'Final Step' },
+];
+
+// ── Build spot-check table ─────────────────────────────────────────────────
+(function buildSpotTable() {
+  const tbody = document.getElementById('spot-table-body');
+  SPOT_CHECKS.forEach((row, i) => {
+    const id = 'cb-spot-' + i;
+    const tr = document.createElement('tr');
+    tr.id = 'row-spot-' + i;
+    tr.innerHTML = `
+      <td class="chk-cell" style="text-align:center;"><input type="checkbox" id="${id}" class="check-input" onchange="onCheck(this)"></td>
+      <td class="idx">${row.idx}</td>
+      <td class="mono">${row.id}</td>
+      <td style="color:var(--text-muted);font-size:12px;">${row.phase}</td>`;
+    tbody.appendChild(tr);
+  });
+})();
+
+// ── State management ──────────────────────────────────────────────────────
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function applyState() {
+  const state = loadState();
+  document.querySelectorAll('.check-input').forEach(cb => {
+    if (state[cb.id]) {
+      cb.checked = true;
+      markDone(cb);
+    }
+  });
+  updateAll();
+}
+
+function onCheck(cb) {
+  const state = loadState();
+  if (cb.checked) { state[cb.id] = true; markDone(cb); }
+  else { delete state[cb.id]; unmarkDone(cb); }
+  saveState(state);
+  updateAll();
+}
+
+function markDone(cb) {
+  // check-item
+  const item = cb.closest('.check-item');
+  if (item) item.classList.add('done');
+  // spot-table row
+  const row = cb.closest('tr');
+  if (row) row.classList.add('row-done');
+}
+function unmarkDone(cb) {
+  const item = cb.closest('.check-item');
+  if (item) item.classList.remove('done');
+  const row = cb.closest('tr');
+  if (row) row.classList.remove('row-done');
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────
+function updateAll() {
+  const all   = document.querySelectorAll('.check-input');
+  const done  = document.querySelectorAll('.check-input:checked');
+  const total = all.length;
+  const count = done.length;
+  const pct   = total ? (count / total) * 100 : 0;
+
+  document.getElementById('progress-fill').style.width = pct + '%';
+  const lbl = document.getElementById('progress-label');
+  lbl.innerHTML = `<strong>${count}</strong> / ${total} complete`;
+
+  // Per-section counters
+  document.querySelectorAll('[data-section]').forEach(el => {
+    const sec = el.dataset.section;
+    // find the nearest details ancestor, then all checkboxes within
+    const details = el.closest('details');
+    if (!details) return;
+    const secAll  = details.querySelectorAll('.check-input').length;
+    const secDone = details.querySelectorAll('.check-input:checked').length;
+    el.textContent = `${secDone} / ${secAll}`;
+    el.style.color = secDone === secAll && secAll > 0 ? 'var(--green)' : 'var(--text-muted)';
+  });
+}
+
+function resetAll() {
+  if (!confirm('Reset all checkboxes? This cannot be undone.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('.check-input').forEach(cb => {
+    cb.checked = false;
+    unmarkDone(cb);
+  });
+  updateAll();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+applyState();
+</script>
+
+</body>
+</html>

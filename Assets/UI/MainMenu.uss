@@ -139,6 +139,23 @@
     background-color: rgba(0, 229, 255, 0.40);
 }
 
+/* Disabled state for gated buttons */
+.menu-btn:disabled {
+    opacity: 0.35;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+/* Hint shown beneath a locked button */
+.menu-btn-locked-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: italic;
+    -unity-text-align: upper-center;
+    margin-top: -10px;
+    margin-bottom: var(--spacing-xs);
+}
+
 /* ---- Version label ---- */
 .menu-version {
     position: absolute;

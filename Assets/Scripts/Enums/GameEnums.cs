@@ -12,7 +12,12 @@ namespace MobileIdleBuilder
         Alloy,
         Component,
         Particle,
-        Megastructure
+        Megastructure,
+        OrganicCompound,  // Chemistry C4 outputs (amino acids, sugars, lipids, nucleotides); Biology feedstock
+        // Biology categories (Chem/Bio Biology track). Appended to preserve serialized int values.
+        Biomolecule,      // B1: proteins, carbohydrates, lipid membranes, nucleic acids
+        CellPart,         // B2-B3: organelles, cell membranes, whole cells
+        Organism          // B3-B4: tissues, organs, organisms, populations, ecosystems
     }
 
     public enum RecipeCategory
@@ -37,11 +42,47 @@ namespace MobileIdleBuilder
         Megastructure
     }
 
-    public enum FieldType
+    /// <summary>
+    /// Which procedural structure BuildingVisualizer builds for a building, instead of the placeholder
+    /// cube. Data-driven (set from BuildingSO.structureKind) so the visualizer switches on this rather
+    /// than hardcoding building ids. Collector and EntropySink are still detected via their gameplay
+    /// components (CollectorData / EntropySinkTag); the entries here are the bespoke producer forms.
+    /// Keep in sync with the art direction in docs/agents/visual-design.md.
+    /// </summary>
+    public enum BuildingStructureKind
     {
-        None,
-        Quark,    // Generic quark field — collector buildings specify up/down quark output via their recipe
-        Lepton    // Electron field — outputItem on FieldSO is Electron
+        None = 0,           // placeholder cube
+        AtomGenerator,      // orbital nucleus
+        StrongForceCombiner,// confinement knot
+        IsotopicManipulator,// breathing nucleus
+        MolecularSynthesizer,// bonding lattice
+        MaterialsForge,     // crucible
+        ComponentFabricator,// precision crown
+        RadioactiveContainment, // lead shell
+        BasicGenerator,     // energy spire
+        PowerRelay          // broadcast pylon
+    }
+
+    /// <summary>
+    /// Field "type" is a free-form string id (data-driven — new field types need no code, only JSON).
+    /// A <see cref="FieldSO"/>'s <c>fieldType</c> categorises it; <see cref="BuildingSO"/>'s
+    /// <c>compatibleFields</c> lists the field-type ids a building can be placed on; and
+    /// <c>TutorialFlowSO.collectionFilter</c> restricts manual collection to one type.
+    /// The sentinel <see cref="None"/> ("None"/empty/null) means "no type / no restriction".
+    /// Known ids in game_data.json today: None, Quark, Lepton, Uranium, Plutonium, Element.
+    /// </summary>
+    public static class FieldTypes
+    {
+        public const string None = "None";
+
+        /// <summary>True when a field-type filter imposes no restriction (null, empty, or "None").</summary>
+        public static bool IsUnrestricted(string fieldType) =>
+            string.IsNullOrEmpty(fieldType) ||
+            string.Equals(fieldType, None, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Normalises a raw field-type string: null/empty becomes the "None" sentinel.</summary>
+        public static string Normalize(string fieldType) =>
+            string.IsNullOrEmpty(fieldType) ? None : fieldType;
     }
 
     public enum DecayType
@@ -88,7 +129,8 @@ namespace MobileIdleBuilder
         Nuclear,
         Materials,
         Engineering,
-        Astrophysics
+        Astrophysics,
+        Biology       // Chem/Bio Biology track. Appended to preserve serialized int values.
     }
 
     public enum BuildEnvironment
@@ -103,11 +145,16 @@ namespace MobileIdleBuilder
         CraftSpeedMultiplier,
         VaultCapacity,
         ResearchSpeed,
-        DecayCollectionRate,
+        FieldCooldownReduction,   // additive fraction per level off the field tap cooldown (+0.05 = 5 %)
         BuildingStartPrePlaced,
         OutputQuantityMultiplier,
         BuildingCostReduction,
-        PrestigeMemoryDiscount
+        PrestigeMemoryDiscount,
+        StartingEntropyBonus,     // flat entropy added to BaseCurrency at run start
+        GlobalResearchDiscount,   // additive % off all research costs
+        PrestigeGainMultiplier,   // % bonus to PC earned per prestige
+        IdleTimeCap,              // additive seconds per level (+1800 = 30 min)
+        IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
     }
 
     public enum AchievementTrigger
@@ -118,7 +165,22 @@ namespace MobileIdleBuilder
         ReachTier,
         Prestige,
         WinPVP,
-        UnlockCodex
+        UnlockCodex,
+        Login,                        // fires once per game session start
+        SpendEntropy,                 // delta = entropy amount spent (additive)
+        TotalPrestigeCurrencyEarned   // delta = PC earned this prestige (additive across runs)
+    }
+
+    /// <summary>
+    /// Determines reset cadence. Progression achievements are permanent milestones;
+    /// Daily/Weekly/Monthly re-lock and reset at the start of each new period.
+    /// </summary>
+    public enum AchievementCategory
+    {
+        Progression,
+        Daily,
+        Weekly,
+        Monthly
     }
 
     public enum CosmeticType
@@ -174,8 +236,9 @@ namespace MobileIdleBuilder
     /// <summary>Restricts which buildings the player may tap during a tutorial step.</summary>
     public enum BuildingInteractionGate
     {
-        None,           // No restriction — all buildings are tappable (default)
-        BlockAll,       // Block all building taps (e.g. while collecting resources)
-        EntropySinkOnly // Only Maxwell's Demon may be opened (e.g. while directed to sell)
+        None,                // No restriction — all buildings are tappable (default)
+        BlockAll,            // Block all building taps (e.g. while collecting resources)
+        EntropySinkOnly,     // Only Maxwell's Demon may be opened (e.g. while directed to sell)
+        AtomicAssemblerOnly  // Only the Atom Generator (atomic_assembler) may be opened
     }
 }

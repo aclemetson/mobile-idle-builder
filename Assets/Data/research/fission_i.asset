@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: fission_i
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: fission_i
+  displayName: Nuclear Fission
+  description: "Unlock the Fission Reactor \u2014 split fissile nuclei into mid-weight
+    fragments worth far more than their fuel."
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
+  depthInTree: 4
+  costBaseCurrency: 80000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 3c0787a948f661f48a2ca71ec42eaeb1, type: 2}
+  - {fileID: 11400000, guid: 81d3e11de48055f4386e1eaa2dee8aff, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: e4346b137e117ed4a80e2d84116dc0f8, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: "A slow neutron splits a heavy fissile nucleus into two mid-weight
+    fragments \u2014 each closer to iron, and each worth far more than the cheap
+    fuel that produced it. The fragments and spare neutrons are caught for reuse."

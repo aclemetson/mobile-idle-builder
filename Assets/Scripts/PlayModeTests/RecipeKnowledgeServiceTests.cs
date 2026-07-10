@@ -1,13 +1,12 @@
-using System.Collections;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
-    /// PlayMode tests for RecipeKnowledgeService (load paths, IsKnown, MarkKnown, cross-prestige persistence).
+    /// EditMode tests for RecipeKnowledgeService (load paths, IsKnown, MarkKnown, cross-prestige persistence).
     ///
     /// RecipeDatabase.Instance is null in these tests — SyncWithRecipeDatabase() logs a warning
     /// and skips, so no database asset is required.
@@ -33,44 +32,44 @@ namespace MobileIdleBuilder.PlayModeTests
             if (File.Exists(_filePath)) File.Delete(_filePath);
         }
 
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
             if (_go != null)
             {
-                Object.Destroy(_go);
+                Object.DestroyImmediate(_go);
                 _go = null;
-                yield return null;
             }
 
             if (File.Exists(_filePath)) File.Delete(_filePath);
             if (_backup != null) File.WriteAllText(_filePath, _backup);
         }
 
-        IEnumerator SpawnService()
+        void SpawnService()
         {
             _go = new GameObject("RecipeKnowledgeService");
-            _go.AddComponent<RecipeKnowledgeService>();
-            yield return null;
+            var svc = _go.AddComponent<RecipeKnowledgeService>();
+            RunAwake(svc);
+            RunStart(svc);
         }
 
         // ── IsKnown ──────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator IsKnown_ReturnsFalse_ForUnknownId()
+        [Test]
+        public void IsKnown_ReturnsFalse_ForUnknownId()
         {
-            yield return SpawnService();
+            SpawnService();
             Assert.IsFalse(RecipeKnowledgeService.Instance.IsKnown(TestRecipeId),
                 "Unknown recipe id must not be considered known");
         }
 
-        [UnityTest]
-        public IEnumerator IsKnown_ReturnsFalse_WhenEntryExistsButPreviousResearchFalse()
+        [Test]
+        public void IsKnown_ReturnsFalse_WhenEntryExistsButPreviousResearchFalse()
         {
             string json = $"{{\"entries\":[{{\"id\":\"{TestRecipeId}\",\"previous_research\":false}}]}}";
             File.WriteAllText(_filePath, json);
 
-            yield return SpawnService();
+            SpawnService();
 
             Assert.IsFalse(RecipeKnowledgeService.Instance.IsKnown(TestRecipeId),
                 "Entry with previous_research=false must not be considered known");
@@ -78,10 +77,10 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── MarkKnown ────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator MarkKnown_SetsIsKnownTrue()
+        [Test]
+        public void MarkKnown_SetsIsKnownTrue()
         {
-            yield return SpawnService();
+            SpawnService();
 
             RecipeKnowledgeService.Instance.MarkKnown(TestRecipeId);
 
@@ -89,10 +88,10 @@ namespace MobileIdleBuilder.PlayModeTests
                 "Recipe must be known after MarkKnown");
         }
 
-        [UnityTest]
-        public IEnumerator MarkKnown_Idempotent_SecondCallDoesNotThrow()
+        [Test]
+        public void MarkKnown_Idempotent_SecondCallDoesNotThrow()
         {
-            yield return SpawnService();
+            SpawnService();
 
             RecipeKnowledgeService.Instance.MarkKnown(TestRecipeId);
 
@@ -103,16 +102,15 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Cross-prestige persistence ────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator MarkKnown_PersistsAcrossServiceRecreation()
+        [Test]
+        public void MarkKnown_PersistsAcrossServiceRecreation()
         {
-            yield return SpawnService();
+            SpawnService();
             RecipeKnowledgeService.Instance.MarkKnown(TestRecipeId);
-            Object.Destroy(_go);
+            Object.DestroyImmediate(_go);
             _go = null;
-            yield return null;
 
-            yield return SpawnService();
+            SpawnService();
 
             Assert.IsTrue(RecipeKnowledgeService.Instance.IsKnown(TestRecipeId),
                 "IsKnown must return true after the service is destroyed and recreated");
@@ -120,34 +118,34 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Load paths ───────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator Load_ReadsExistingRuntimeFile_WithPreviousResearchTrue()
+        [Test]
+        public void Load_ReadsExistingRuntimeFile_WithPreviousResearchTrue()
         {
             string json = $"{{\"entries\":[{{\"id\":\"{TestRecipeId}\",\"previous_research\":true}}]}}";
             File.WriteAllText(_filePath, json);
 
-            yield return SpawnService();
+            SpawnService();
 
             Assert.IsTrue(RecipeKnowledgeService.Instance.IsKnown(TestRecipeId),
                 "Service must read previous_research=true from an existing runtime save file");
         }
 
-        [UnityTest]
-        public IEnumerator Load_FallsBackToEmptyState_WhenNoFileOrDefaultAsset()
+        [Test]
+        public void Load_FallsBackToEmptyState_WhenNoFileOrDefaultAsset()
         {
             // No file on disk and _defaultKnowledgeAsset is null (not wired in tests)
-            yield return SpawnService();
+            SpawnService();
 
             Assert.IsFalse(RecipeKnowledgeService.Instance.IsKnown(TestRecipeId),
                 "Service must start with no known recipes when neither a save file nor a default asset exists");
         }
 
-        [UnityTest]
-        public IEnumerator Load_HandlesMalformedSaveFile_FallsBackToEmptyState()
+        [Test]
+        public void Load_HandlesMalformedSaveFile_FallsBackToEmptyState()
         {
             File.WriteAllText(_filePath, "not valid json{{}}");
 
-            yield return SpawnService();
+            SpawnService();
 
             // Service should start without crashing; knowledge state is empty
             Assert.IsNotNull(RecipeKnowledgeService.Instance,
@@ -157,15 +155,34 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── SyncWithRecipeDatabase ────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator SyncWithRecipeDatabase_SkipsGracefully_WhenDatabaseIsNull()
+        [Test]
+        public void SyncWithRecipeDatabase_SkipsGracefully_WhenDatabaseIsNull()
         {
             // RecipeDatabase.Instance is null because no RecipeDatabase MonoBehaviour is present.
             // Start() must complete without throwing a NullReferenceException.
-            yield return SpawnService();
+            SpawnService();
 
             Assert.IsNotNull(RecipeKnowledgeService.Instance,
                 "Service must initialise correctly even when RecipeDatabase is unavailable");
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void RunStart(MonoBehaviour mb) =>
+            mb.GetType()
+              .GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+              ?.Invoke(mb, null);
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
         }
     }
 }

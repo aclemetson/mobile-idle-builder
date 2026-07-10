@@ -1,0 +1,90 @@
+# ECS Patterns (DOTS/Entities)
+
+**Scope:** How systems, components, authoring, and the Mono↔ECS boundary work here. Read before writing or modifying any ECS code.
+
+> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Power Relay (spreader) + shared `PowerCoverageMath` + placement radius preview added 2026-07-03.
+> Range-limited node-to-node connectivity (`LinkRadius`/`IsGridLinked` now live) + dashed connection previews + `⚡` overlay toggle added 2026-07-04.
+
+## Component inventory (`Assets/Scripts/Components/`)
+
+Singletons (one entity each, baked in the SubScene): `PlayerProgressData`, `PrestigeData`, `TutorialStateData`, `PlayerInventoryTag` (+ `InventorySlot` dynamic buffer).
+
+Per-building: `BuildingData` (type, level, `ProductionSpeed`, `IsActive`), `GridPosition`, `BuildingTransformData`, `BuildingFootprint`, `RecipeProcessData` (RecipeID, CraftTime, Progress, IsCrafting, InputsSatisfied), `PlacedPortData`, `OutputDirectionData`, `BuildingLocalInventory`/`BuildingInventoryConfig`, buffers `RecipeInputSlot`, `RecipeOutputSlot`, `BuildingInputSlot`, `BuildingOutputSlot`. Tags: `EntropySinkTag`. Other: `ConveyorData`, `CollectorData`, `PowerNodeData` (generators + relays; incl. `LinkRadius`/`IsGridLinked`), `PowerConsumer` + `PowerStatus` (powered buildings), `ItemData`. Singleton: `PowerGridState`.
+
+Buffer helpers live in `Assets/Scripts/Components/SlotBufferUtils.cs` (count/add/remove for inventory and slot buffers) — always use these, never hand-roll buffer loops.
+
+## Anatomy of a system (copy `ProductionSystem.cs`)
+
+This repo uses **`ISystem` structs** (Burst-compiled where possible), not `SystemBase` classes:
+
+```csharp
+[BurstCompile]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+public partial struct MySystem : ISystem
+{
+    public void OnCreate(ref SystemState state)
+    {
+        state.RequireForUpdate<PlayerProgressData>();   // gate until singletons exist
+    }
+    public void OnUpdate(ref SystemState state)
+    {
+        var progress = SystemAPI.GetSingleton<PlayerProgressData>();
+        foreach (var (a, b) in SystemAPI.Query<RefRO<BuildingData>, RefRW<RecipeProcessData>>()) { ... }
+        SystemAPI.SetSingleton(progress);               // write singleton back explicitly
+    }
+}
+```
+
+- Structural changes (destroy/create entities) inside iteration: use a temp `EntityCommandBuffer`, playback after the loop — see `PrestigeSystem.cs:72-84`.
+- Managed calls (services, logging) are allowed only in **non-Burst** systems — `PrestigeSystem` calls `AchievementService.Instance?.NotifyPrestige()` because it is not Burst-compiled. Never call managed code from a `[BurstCompile]` method.
+- Ordering: declare `[UpdateAfter(typeof(...))]` if you depend on another system's writes in the same frame.
+
+## Authoring/baking (`Assets/Scripts/Authoring/`)
+
+SubScene `Assets/Scenes/GameScene/TestSubScene.unity` holds authoring GameObjects; bakers convert them to entities at bake time. `PlayerInventoryAuthoring.cs` is the singleton-entity pattern: one authoring component bakes `PlayerInventoryTag` + `InventorySlot` buffer + `PrestigeData` defaults (`PlayerInventoryAuthoring.cs:42-46`) + `PlayerProgressData`. **A new singleton component is added in an existing authoring baker, not by creating a new SubScene object** — extend `PlayerInventoryAuthoring`'s baker and set defaults that match the `SaveData` field defaults (the ECSLoadBridge comment "defaults match SaveData defaults" is a real invariant).
+
+Runtime entity creation (buildings placed during play) bypasses baking: `Assets/Scripts/Gameplay/BuildingPlacer.cs` creates entities directly with `EntityManager` (`PlaceBuilding()` sets `BuildingData.ProductionSpeed` from `BuildingSO.ProductionSpeedForLevel` at `BuildingPlacer.cs:69` and `RecipeProcessData.CraftTime = recipe.baseCraftTime` at `:85-93`).
+
+## Sanctioned Mono↔ECS bridge patterns (pick one, don't invent)
+
+1. **Load/flush singletons** — `ECSLoadBridge.ApplyLoadedSave()` / `FlushToSave()`: cached `EntityQuery` + `GetSingleton`/`SetSingleton`. For persisted state.
+2. **Write-through on live purchase** — `ECSLoadBridge.AddEntropy()` (`ECSLoadBridge.cs:279`): guarded by `IsLoaded` and `query.IsEmpty`. For services granting currency.
+3. **Direct query from UI** — `HUDController` / sub-controllers cache an `EntityQuery` in `SetECSContext(EntityManager)` and read singletons per-refresh (`PrestigeShopSubController.cs:31-36`). UI writes singletons only for player actions (e.g., purchase deducts `PrestigeData`).
+
+Rules: always check `query.IsEmpty` before `GetSingleton`; never touch ECS before `ECSLoadBridge.IsLoaded`; remember anything written to ECS must be covered by `FlushToSave()` or it won't persist (see `save-system.md`).
+
+## Where multipliers actually apply (gap map — important for new bonus features)
+
+| Multiplier | Live ECS production | Idle snapshot | UI/cost |
+|---|---|---|---|
+| `BuildingData.ProductionSpeed` (upgrade level) | YES (`ProductionSystem.cs:81`) | indirectly via output rate | shown in inspector |
+| `PrestigeData.SpeedMultiplier` | **NO — not read by ProductionSystem** | YES (`GridSaveService.cs:335`) | shown only |
+| `PrestigeData.OutputMultiplier` | **NO** | no | shown only |
+| `PrestigeData.CostReduction` | n/a | n/a | YES (`HUDController.cs:961,1000`) |
+| `ManagerAssignmentData.AppliedOutputMult` (per-building manager) | YES — `ProductionSystem.cs` deposit loop AND `CollectorSystem.cs` deposit, gated by `HasComponent` | YES (`GridSaveService.RebuildIdleSnapshot` → `IdleGraphAnalyzer` `getManagerOutputMultiplier`, applied to every producing node — collector AND synthesizer) | Managers panel + inspector assign row |
+| Manager `CraftSpeed` (baked into `BuildingData.ProductionSpeed`) | YES for crafters (`ProductionSystem.cs:81`); **NO for collectors** (`CollectorSystem` ignores `ProductionSpeed`, uses `CollectorData.OutputRate`) | **NO** — offline synth craft rate uses the recipe's `baseCraftTime` × global speed, not the manager CraftSpeed baked into `ProductionSpeed` | inspector |
+| `ManagerAssignmentData.AppliedPowerMult` (PowerDiscount) | YES — `PowerGridSystem` multiplies the consumer's `PowerConsumer.DrawEV` by it when the component is present (Burst-read), reducing global draw | no — offline synthesis ignores power entirely (no brownout/throttle modelled offline) | Managers panel + inspector power row |
+| `GlobalProductionBonus.{OutputMult,SpeedMult}` (megastructure stage rewards, singleton on the player entity) | YES — `ProductionSystem` scales craft progress by `SpeedMult` and deposit qty by `OutputMult`; `CollectorSystem` scales deposit by `OutputMult` (both Burst, `HasSingleton`-guarded, compose on top of manager mults) | YES — folded into `GridSaveService.RebuildIdleSnapshot` (`SpeedMult` into `speedMult`, `OutputMult` into the per-source output multiplier) | Megastructure panel; `MegastructureService` writes the singleton on load / stage completion |
+
+If a feature needs a bonus to affect live production, either (a) bake it into `BuildingData.ProductionSpeed` at every site that sets it (`BuildingPlacer.cs:69`, upgrade at `HUDBuildingInspectorSubController.cs:303`, restore via `GridSaveService.LoadGrid` → `BuildingPlacer.PlaceBuilding`), or (b) make `ProductionSystem` read a singleton multiplier (one site, affects everything). Option (b) is simpler and is the recommended approach — but then also update `GridSaveService.RebuildIdleSnapshot()` so offline earnings stay consistent. **The megastructure feature is the worked example of (b):** the blittable `GlobalProductionBonus` singleton (baked on the player entity in `PlayerInventoryAuthoring`, written by `MegastructureService`) is read live by `ProductionSystem`/`CollectorSystem` and folded into the idle snapshot — copy this pattern for any future global multiplier rather than the per-placement baking. (Note: live deposits floor the multiplied integer quantity, so a global output bonus on a single-item recipe is mostly visible in the idle/income path, like manager OutputQuantity.)
+
+**Managers feature note:** per-building manager bonuses use approach (a) for CraftSpeed (bake into `ProductionSpeed`, re-applied via `ManagerService.ReapplyAfterSpeedReset`/`ReapplyAllAssignments`) and a per-building component (`ManagerAssignmentData`) read live for OutputQuantity. OutputQuantity is honoured by BOTH `ProductionSystem` (crafters) and `CollectorSystem` (collectors) so idle == live. PowerDiscount is now live: `PowerGridSystem` reads `AppliedPowerMult` and scales the consumer's `PowerConsumer.DrawEV` down before summing global draw (see Power below).
+
+**Star tiers (manager upgrades):** the value baked/read is the *star-scaled* effective value, NOT `ManagerSO.bonusValue`. Every read routes through the single accessor `ManagerService.EffectiveBonusValue(id)` (bake in `ManagerBonus.Bake(..., effectiveValue)`, idle in `GetIdleOutputMultiplierAt`, UI text) so they always agree. Star tables (`starBonusValues[]`/`starCosts[]`, max 5) live in `game_data.json` → `ManagerSO`; stars persist in `SaveData.managerStars` and survive prestige. A star upgrade on an assigned CraftSpeed manager re-bakes exactly (remove-then-apply, no float division) in `ManagerService.UpgradeStar`. PowerDiscount stars are live — the star-scaled `AppliedPowerMult` flows through `PowerGridSystem`.
+
+## Power (proximity grid, single shared pool)
+
+`PowerGridSystem` (`[UpdateBefore(typeof(ProductionSystem))]`, Burst) runs every frame and is the real power model:
+- **Components.** Power nodes (generators AND relays) carry `PowerNodeData` (`MaxEV` = output eV, `InfluenceRadius` = coverage tiles, `LinkRadius` = node-to-node connection range, `IsGridLinked` = sim-computed connectivity result); consumers carry `PowerConsumer { DrawEV }` + `PowerStatus { IsConnected, ThrottleRatio }`. A singleton `PowerGridState { Supply, Draw, Ratio, ConnectedCount, DisconnectedCount, TotalNodeCount, LinkedNodeCount }` is created in `PowerGridSystem.OnCreate` and published each frame for the HUD + telemetry. All baked in `BuildingPlacer` from `BuildingSO` flags (`isPowerSource`/`requiresPower`) and per-level helpers `BuildingSO.PowerOutputForLevel`/`InfluenceRadiusForLevel`/`LinkRadiusForLevel`/`PowerDrawForLevel`; re-baked on upgrade (`HUDBuildingInspectorSubController.OnSpeedUpgradeBought`) and on load (`GridSaveService.LoadGrid` → `PlaceBuilding`). (`LinkRadius`/`IsGridLinked` were vestigial before 2026-07-04 — now live.)
+- **Connectivity flood.** Before computing coverage, the system gathers every power node and floods connectivity: a node is *grid-linked* if it is a generator (`MaxEV > 0`) or chains, link by link, to one. Two nodes link when within `max(LinkRadiusA, LinkRadiusB)` of each other (footprint distance, same circle-vs-rect test as coverage). The result is written back to each `PowerNodeData.IsGridLinked`. **Only grid-linked nodes provide consumer coverage** and only linked generators add to `Supply` — a stranded relay (not chained to a generator) contributes nothing. Generators are always linked (seeded true), so `Supply` is unchanged from the pre-2026-07-04 behaviour; only relay coverage now depends on being wired in.
+- **Model.** A consumer is *connected* if **any part of its footprint square overlaps a LINKED node's circular power area** (touching counts — a geometric circle-vs-rectangle overlap, NOT a cell-centre gap, so a square that only partially reaches into the radius still connects). The circle is centred on the node footprint with radius `Rc = InfluenceRadius + halfOfItsLargerDimension` (tiles), so along an axis it reaches exactly `InfluenceRadius` tiles past the node's edge — matching the ring the player sees. Global `Supply` = Σ linked generator `MaxEV`; global `Draw` = Σ connected consumers' `DrawEV × AppliedPowerMult`. `Ratio = Draw <= Supply ? 1 : Supply/Draw`. Each consumer's `ThrottleRatio` = connected ? `Ratio` : 0.
+- **The overlap test** (closest point of the target square, each cell spanning ±0.5, to the circle centre ≤ `Rc`) lives inline in the Burst `PowerGridSystem.FootprintWithinRadius`/`IsWithinAnyGenerator`, and — for managed callers — in the shared `PowerCoverageMath.FootprintWithinRadius` static (`Assets/Scripts/Grid/`), which `GridRenderer` (coverage preview) and `BuildingVisualizer` (placement radius highlight) route through. The node-to-node link test is `PowerCoverageMath.NodesLinked` (ORs both footprint orderings for symmetry, radius = `max` of the two link ranges), mirrored inline in the Burst system. Change one, change all; unit spec is `PowerCoverageMathTests`.
+- **Generators vs. Power Relays.** A **Power Relay** is still modeled purely as data: `is_power_source: true` + `base_output_ev: 0` → `MaxEV 0` (adds nothing to `Supply`) with a **large `influence_radius_tiles`** AND a **`link_radius_tiles`** so it can chain to a generator. It *extends coverage* without generating eV — but only while grid-linked; a relay out of link range of any generator is stranded (`IsGridLinked=false`) and provides no coverage at all. Generators keep a **small** influence radius (`basic_generator` 2→5) + link range 4→7; relays a **large** influence radius (`power_relay` 5→8) + link range 6→9. See `PowerGridSystemTests` relay/stranded cases.
+- **Connection visualization** (`Assets/Scripts/Grid/`). `PowerConnectionGraph` (managed, unit-testable `BuildEdges`/`ComputeConnectivity` + an ECS `GatherFromEcs`) is the read-only mirror of the flood. `PowerConnectionRenderer` draws pooled dashed lines. Three views share them: the placement preview (`BuildingPlacementController.ShowConnectionPreview`, ghost → in-range nodes, torn down in `HideRadiusPreview`), the selection preview (`HUDBuildingInspectorSubController.ShowSelectedConnections`), and the map-wide `PowerConnectionOverlayController` toggled by the `⚡` HUD button (`HUDController.TogglePowerConnections`, persisted in `SettingsData.showPowerConnections`). The overlay draws both the dashed links AND a coverage ring (`PlacementRadiusIndicator`) around every grid-linked node. Note: flat ground decals that use a **transparent** material (the dashed lines; the generator/relay ripples) must render in a queue **after** the floor tiles (URP Unlit Transparent, queue 3000, no depth write) — they set `renderQueue = 3200` — or the floor sorts on top of them. The opaque radius ring writes depth and needs no such bump.
+- **Gating.** `ProductionSystem` multiplies progress by `PowerStatus.ThrottleRatio` (0 = stalled/disconnected, <1 = brownout) and won't auto-start at ratio 0. Buildings without `PowerStatus` run unthrottled.
+- **Nothing new is persisted** — power state recomputes from saved positions/levels on load. The legacy `CurrentEV` clamp is retained (kept for `PowerGridSystemTests`). No per-generator budgets, no power lines/routing, no recipe-dynamic draw (v1).
+
+## Testing ECS
+
+EditMode tests create a private `World` + system instance and tick it manually — copy `Assets/Scripts/Tests/ProductionSystemTests.cs` (creates entities, sets `BuildingData{ProductionSpeed}`, asserts `Progress` advanced by `dt × speed` at `:158`) or `PrestigeSystemTests.cs`.

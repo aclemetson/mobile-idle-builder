@@ -112,6 +112,23 @@ namespace MobileIdleBuilder.Tests
                 "Remainder must be preserved: 0.3+0.3=0.6 > 0.5 interval → exactly 1 item");
         }
 
+        // ── Manager OutputQuantity bonus ──────────────────────────────────────
+
+        [Test]
+        public void WithOutputQuantityManager_DepositsMultipliedAmountPerInterval()
+        {
+            // 3x OutputQuantity manager baked onto the collector.
+            _em.AddComponentData(_buildingEntity, new ManagerAssignmentData
+            {
+                ManagerIndex = 0, PreBonusSpeed = 0f, AppliedOutputMult = 3f, AppliedPowerMult = 1f
+            });
+
+            Tick(deltaTime: 1f); // OutputRate=1 → one interval
+
+            Assert.AreEqual(3, OutputCount(),
+                "OutputQuantity 3x manager must deposit 3 items per collector interval");
+        }
+
         // ── Output capacity ──────────────────────────────────────────────────
 
         [Test]

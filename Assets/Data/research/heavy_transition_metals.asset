@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: heavy_transition_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: heavy_transition_metals
+  displayName: Heavy Transition Metals
+  description: "Unlock the 4d and post-transition metals of period 5 \u2014 rubidium
+    through xenon."
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  depthInTree: 5
+  costBaseCurrency: 150000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 2cb9fa981f0d9b14fa559c3bb4e0ed2b, type: 2}
+  - {fileID: 11400000, guid: 5cf1775ba60352a4fb8cbf667244a155, type: 2}
+  - {fileID: 11400000, guid: 70db03cb72e77ac43a0fc8e06b4aa285, type: 2}
+  - {fileID: 11400000, guid: 7ff6620ad85a4db44aa38c67562cfa53, type: 2}
+  - {fileID: 11400000, guid: 52b2fc80b709dd34a9e10e068d2714c3, type: 2}
+  - {fileID: 11400000, guid: 963db6353672d4b4990fa12a6dc2a238, type: 2}
+  - {fileID: 11400000, guid: d33431e9cab622546bd9ce5c288ab98f, type: 2}
+  - {fileID: 11400000, guid: 51eae1268595286478aec2d848b53f87, type: 2}
+  - {fileID: 11400000, guid: f13668c429e4b6e48aeb6ad248b56403, type: 2}
+  - {fileID: 11400000, guid: 250a835e60fc5d54598f0179762dba83, type: 2}
+  - {fileID: 11400000, guid: 036a492c504f104499b967dbe6f05f7b, type: 2}
+  - {fileID: 11400000, guid: 739f2682a5e7a2342a6c603969edf42c, type: 2}
+  - {fileID: 11400000, guid: a5023a682df70cc46bb85d9a431dab1c, type: 2}
+  - {fileID: 11400000, guid: 2442a2f96280afe4ca690b05036abbbe, type: 2}
+  - {fileID: 11400000, guid: 67680bf3fc373ff459ee1aeb38a0dc77, type: 2}
+  - {fileID: 11400000, guid: f15dd8d2fad40b240a9bc19b3f9121e7, type: 2}
+  - {fileID: 11400000, guid: 00df9c08ff2c3a14fb5a89c4160c0cb9, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 5f18dc5ea7bd17f4a926952ecc4ad22c, type: 2}
+  - {fileID: 11400000, guid: 68618378cf078714e913c25edf946095, type: 2}
+  - {fileID: 11400000, guid: a1faacdfd690f644385fc6f53be531b9, type: 2}
+  - {fileID: 11400000, guid: a0bec931c2e9d8443bd043e76d84cb46, type: 2}
+  - {fileID: 11400000, guid: 05338c46699b15444b6aafb41e31135e, type: 2}
+  - {fileID: 11400000, guid: 70e560b444d543047ae13782e16795f0, type: 2}
+  - {fileID: 11400000, guid: 9d231ac7d5ba66348ace15ecd8628fc3, type: 2}
+  - {fileID: 11400000, guid: c67fa23b183d2a9488e461dfdf4dd1da, type: 2}
+  - {fileID: 11400000, guid: 680f668ad57dd79469e54bdeea1c72e7, type: 2}
+  - {fileID: 11400000, guid: 70413527901849740a7f9b763dd2ad94, type: 2}
+  - {fileID: 11400000, guid: 4fac324b2d14ac34bb04d812239a20f2, type: 2}
+  - {fileID: 11400000, guid: 38f69d697ff2e4241b7922bc732ce7cf, type: 2}
+  - {fileID: 11400000, guid: c4b54b81f3a58d34ebb9b8f36fa17af1, type: 2}
+  - {fileID: 11400000, guid: 3f13afc24a144f242ac5650412add6eb, type: 2}
+  - {fileID: 11400000, guid: bb996cb095f88c143882576e88d6b9e3, type: 2}
+  - {fileID: 11400000, guid: ad05b3a816076a74a9fc86827a0f9302, type: 2}
+  - {fileID: 11400000, guid: 83f91256ae3f86543915642f57ffe45f, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: 'The second row of transition metals: catalytic, refractory, and the
+    rare-earth precursors. Bridging the periodic table from the everyday metals toward
+    the lanthanides.'

@@ -23,6 +23,8 @@ MonoBehaviour:
   depthInTree: 3
   costBaseCurrency: 3000
   costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
   - {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
@@ -38,6 +40,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  - {fileID: 11400000, guid: 395c3af752d2b7a4cac0c7811dff3a78, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.15
   codexEntry: "Atoms combine into molecules through covalent and ionic bonds. Water,

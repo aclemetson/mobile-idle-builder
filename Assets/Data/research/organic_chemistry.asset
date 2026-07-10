@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: organic_chemistry
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: organic_chemistry
+  displayName: Organic Chemistry
+  description: The chemistry of carbon chains. Unlocks the Organic Synthesizer and
+    hydrocarbon products.
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  depthInTree: 5
+  costBaseCurrency: 2000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 0c56fa4024b5d354ea0d5f95d30c3697, type: 2}
+  - {fileID: 11400000, guid: 3b1015f7ab166d544b25c573a87307af, type: 2}
+  - {fileID: 11400000, guid: 21f6fa4a106cd1d41b07d4dfadc04bd6, type: 2}
+  - {fileID: 11400000, guid: 331fa66d95e168347a3e7ff618e90a8d, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 47b0f9fc00732d54092969697c2b1db8, type: 2}
+  - {fileID: 11400000, guid: d6e65c867b08ba141b15b7baa1a61316, type: 2}
+  - {fileID: 11400000, guid: 8e04e359d3be2594e9a3132c666e18a7, type: 2}
+  - {fileID: 11400000, guid: 927d9182a7da9cd4db99211e29a81d99, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: Carbon bonds to itself without limit, building chains and rings. Hydrocarbons
+    and their derivatives are the scaffolding on which all organic matter is assembled.

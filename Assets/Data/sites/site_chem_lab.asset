@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ac6ddf8ef533a41a1ddb3508cfbf90, type: 3}
+  m_Name: site_chem_lab
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteSO
+  id: site_chem_lab
+  displayName: Chemistry Lab
+  unlockCost: 0
+  fieldOverrides:
+  - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 0754564f0994d104aafd9c4698316b73, type: 2}
+    densityMultiplier: 3
+  - field: {fileID: 11400000, guid: 7f21bc40551e3bc49b69d917d4e3afe3, type: 2}
+    densityMultiplier: 2
+  - field: {fileID: 11400000, guid: 2410fc0ec4146e947a11b1a0c9048c89, type: 2}
+    densityMultiplier: 3

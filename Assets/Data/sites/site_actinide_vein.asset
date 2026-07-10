@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ac6ddf8ef533a41a1ddb3508cfbf90, type: 3}
+  m_Name: site_actinide_vein
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteSO
+  id: site_actinide_vein
+  displayName: Actinide Vein
+  unlockCost: 250000
+  fieldOverrides:
+  - field: {fileID: 11400000, guid: 159f60aa615bd2144bfb0d2075fc0797, type: 2}
+    densityMultiplier: 3
+  - field: {fileID: 11400000, guid: bc181a5be05a2144680002660f053c9d, type: 2}
+    densityMultiplier: 2
+  - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
+    densityMultiplier: 0.5
+  - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
+    densityMultiplier: 0.5

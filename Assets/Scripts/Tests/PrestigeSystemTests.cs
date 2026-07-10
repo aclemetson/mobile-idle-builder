@@ -1,5 +1,7 @@
+using System.Reflection;
 using NUnit.Framework;
 using Unity.Entities;
+using UnityEngine;
 
 namespace MobileIdleBuilder.Tests
 {
@@ -15,6 +17,8 @@ namespace MobileIdleBuilder.Tests
         private World _world;
         private EntityManager _em;
         private Entity _playerEntity;
+        private GameObject _megaServiceGO;
+        private MegastructureSO _megaData;
 
         [SetUp]
         public void Setup()
@@ -38,7 +42,38 @@ namespace MobileIdleBuilder.Tests
         [TearDown]
         public void Teardown()
         {
+            if (_megaServiceGO != null) { Object.DestroyImmediate(_megaServiceGO); _megaServiceGO = null; }
+            if (_megaData      != null) { Object.DestroyImmediate(_megaData);      _megaData      = null; }
             if (_world.IsCreated) _world.Dispose();
+        }
+
+        /// <summary>
+        /// Spawns a MegastructureService whose GetPrestigeGainBonus() reports the given bonus, by injecting
+        /// a stage carrying a PrestigeGainMultiplier reward and marking it complete. No ECS needed — the
+        /// reward query reads only the SO + completed-stage count.
+        /// </summary>
+        private void SpawnMegastructureWithPrestigeBonus(float bonus)
+        {
+            _megaData = ScriptableObject.CreateInstance<MegastructureSO>();
+            _megaData.stages = new[]
+            {
+                new MegastructureStage
+                {
+                    id = "ms_prestige", costItems = new ItemSO[0], costQuantities = new int[0],
+                    rewardType = MegastructureRewardType.PrestigeGainMultiplier, rewardValue = bonus
+                }
+            };
+
+            _megaServiceGO = new GameObject("MegastructureService");
+            var svc = _megaServiceGO.AddComponent<MegastructureService>();
+            // base.Awake() assigns the static Instance; run it without the Resources/ECS Start path.
+            typeof(SingletonMonoBehaviour<MegastructureService>)
+                .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(svc, null);
+            typeof(MegastructureService).GetField("_data", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(svc, _megaData);
+            typeof(MegastructureService).GetField("_completedStages", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(svc, 1);
         }
 
         // ── PrestigeRequested = false ────────────────────────────────────────
@@ -64,19 +99,41 @@ namespace MobileIdleBuilder.Tests
         // ── Currency calculation ─────────────────────────────────────────────
 
         [Test]
-        public void WhenRequested_AwardsCurrencyEqualToNetWorth()
+        public void WhenRequested_AwardsCurrencyViaLogFormula()
         {
+            // Formula: floor(max(0, log10(netWorth / pbase) * pscale))
+            // GameBootstrap is null in tests → defaults: pbase=5000, pscale=50
+            // At netWorth = 50000 (= wall = 5000 × 10): log10(10) × 50 = 50
             _em.SetComponentData(_playerEntity, new PlayerProgressData
             {
-                NetWorth = 5000f,
+                NetWorth = 50000f,
                 PrestigeRequested = true
             });
 
             _world.Update();
 
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
-            // Default rate = 1.0 → earned = (long)(5000 * 1.0) = 5000
-            Assert.AreEqual(5000L, prestige.PrestigeCurrency);
+            Assert.AreEqual(50L, prestige.PrestigeCurrency);
+        }
+
+        [Test]
+        public void WhenRequested_MegastructurePrestigeBonusDoublesEarned()
+        {
+            // Base award at netWorth = 50000 is 50 (see WhenRequested_AwardsCurrencyViaLogFormula).
+            // A PrestigeGainMultiplier reward of 1.0 (Stellar Engine) must double it to 100.
+            SpawnMegastructureWithPrestigeBonus(1.0f);
+
+            _em.SetComponentData(_playerEntity, new PlayerProgressData
+            {
+                NetWorth = 50000f,
+                PrestigeRequested = true
+            });
+
+            _world.Update();
+
+            var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
+            Assert.AreEqual(100L, prestige.PrestigeCurrency,
+                "Stage-5 megastructure reward must double prestige currency gain (50 → 100)");
         }
 
         [Test]
@@ -98,17 +155,18 @@ namespace MobileIdleBuilder.Tests
         public void WhenRequested_CurrencyAccumulatesAcrossRuns()
         {
             // Simulate a second prestige on top of already-held currency
+            // At netWorth = 50000: log10(10) × 50 = 50 → total = 3000 + 50 = 3050
             _em.SetComponentData(_playerEntity, new PrestigeData { PrestigeCurrency = 3000L });
             _em.SetComponentData(_playerEntity, new PlayerProgressData
             {
-                NetWorth = 2000f,
+                NetWorth = 50000f,
                 PrestigeRequested = true
             });
 
             _world.Update();
 
             var prestige = _em.GetComponentData<PrestigeData>(_playerEntity);
-            Assert.AreEqual(5000L, prestige.PrestigeCurrency, "Currency should accumulate: 3000 + 2000 = 5000");
+            Assert.AreEqual(3050L, prestige.PrestigeCurrency, "Currency should accumulate: 3000 + 50 = 3050");
         }
 
         // ── Run count ────────────────────────────────────────────────────────
@@ -143,7 +201,7 @@ namespace MobileIdleBuilder.Tests
 
             var progress = _em.GetComponentData<PlayerProgressData>(_playerEntity);
             Assert.AreEqual(0f,    progress.NetWorth,          "NetWorth should reset to 0");
-            Assert.AreEqual(0L,    progress.BaseCurrency,       "BaseCurrency should reset to 0");
+            Assert.AreEqual(0L,    progress.BaseCurrency,       "BaseCurrency resets to cfgEntropy (0 in tests — no GameBootstrap)");
             Assert.AreEqual(1,     progress.CurrentTier,        "CurrentTier should reset to 1");
             Assert.IsFalse(progress.PrestigeAvailable,          "PrestigeAvailable should reset to false");
             Assert.IsFalse(progress.PrestigeRequested,          "PrestigeRequested should clear after processing");
@@ -268,6 +326,88 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(progress.PrestigeAvailable,
                 "PrestigeAvailable must remain true once set; a second update must not clear it");
         }
+
+        // ── Multi-grids reset (PrestigeSaveWatcher.ResetSitesForPrestige) ────
+
+        [Test]
+        public void ResetSitesForPrestige_ClearsAllGridsAndReturnsToSiteZero()
+        {
+            var save = new SaveData();
+            save.currentRun.grids = new System.Collections.Generic.List<GridSaveData>
+            {
+                GridWithBuilding(1), GridWithBuilding(2), GridWithBuilding(3)
+            };
+            save.currentRun.activeSiteIndex = 2;
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            Assert.AreEqual(0, save.currentRun.grids.Count, "all sites' grids cleared");
+            Assert.AreEqual(0, save.currentRun.activeSiteIndex, "active site returns to origin");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_ClearsActiveAndPerSiteIdleSnapshots()
+        {
+            var save = new SaveData();
+            save.idleSnapshot  = SnapshotWithChain();
+            save.siteSnapshots = new System.Collections.Generic.List<IdleCollectionSnapshot>
+            {
+                SnapshotWithChain(), SnapshotWithChain()
+            };
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            Assert.AreEqual(0, save.idleSnapshot.chains.Count, "active idle snapshot wiped");
+            Assert.AreEqual(0, save.siteSnapshots.Count, "per-site snapshots wiped");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_PreservesSiteUnlocks()
+        {
+            var save = new SaveData();
+            save.unlockedSites = new System.Collections.Generic.List<string>
+                { "site_quark_sea", "site_lepton_storm" };
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            CollectionAssert.AreEqual(new[] { "site_quark_sea", "site_lepton_storm" },
+                save.unlockedSites, "site unlocks must survive prestige");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_PreservesWorldUnlocks_ResetsActiveWorld()
+        {
+            var save = new SaveData();
+            save.unlockedWorlds = new System.Collections.Generic.List<string> { "world_chemistry" };
+            save.currentRun.activeWorldIndex = 1;
+
+            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+
+            CollectionAssert.AreEqual(new[] { "world_chemistry" },
+                save.unlockedWorlds, "world unlocks must survive prestige (like site unlocks)");
+            Assert.AreEqual(0, save.currentRun.activeWorldIndex,
+                "active world returns to Physics (0), consistent with the site-0 reset");
+        }
+
+        [Test]
+        public void ResetSitesForPrestige_NullSave_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() => PrestigeSaveWatcher.ResetSitesForPrestige(null));
+        }
+
+        private static GridSaveData GridWithBuilding(int buildingId)
+        {
+            var g = new GridSaveData();
+            g.buildings.Add(new BuildingSaveData { buildingId = buildingId, position = new[] { 1, 1 } });
+            return g;
+        }
+
+        private static IdleCollectionSnapshot SnapshotWithChain() =>
+            new IdleCollectionSnapshot
+            {
+                chains = new System.Collections.Generic.List<IdleChainEntry>
+                    { new IdleChainEntry { itemId = 1, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f } }
+            };
 
         [Test]
         public void WhenWallIsZero_PrestigeNeverAvailable()

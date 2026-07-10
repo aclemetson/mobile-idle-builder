@@ -15,7 +15,7 @@ MonoBehaviour:
   id: quantum_processor
   displayName: Quantum Processor
   symbol: QP
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 43049403e3bdbc64889ad88723b44201, type: 3}
   itemId: 46
   tier: 5
   category: 6
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A processor that harnesses quantum superposition and entanglement.

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: oxygen
   displayName: Oxygen
   symbol: O
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5c537c13942dee447ae92580a1b89095, type: 3}
   itemId: 10
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The third most abundant element in the universe. Highly reactive and

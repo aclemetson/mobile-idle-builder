@@ -58,7 +58,7 @@ namespace MobileIdleBuilder
             Vector3 segCenter = new Vector3(segCell.x * cs, 0.4f, segCell.y * cs);
             // Burst at the exit face of the segment (= building's input face)
             Vector3 burstPos  = segCenter + DirToVector3(exitDir) * (cs * 0.45f);
-            Color   color     = ItemColor(itemID);
+            Color   color     = ItemColors.For(itemID);
 
             // 5 dots fanning outward in the XZ plane from the impact point
             const int count = 5;
@@ -126,12 +126,5 @@ namespace MobileIdleBuilder
                 OutputDirection.West  => Vector3.left,
                 _                     => Vector3.zero
             };
-
-        // Golden-ratio hue spread — same formula used by ConveyorVisualizer
-        private static Color ItemColor(int itemID)
-        {
-            float hue = (itemID * 0.618034f) % 1f;
-            return Color.HSVToRGB(hue, 0.9f, 1f);
-        }
     }
 }

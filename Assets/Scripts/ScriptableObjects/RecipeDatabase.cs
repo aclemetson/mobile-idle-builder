@@ -46,7 +46,7 @@ namespace MobileIdleBuilder
     [DefaultExecutionOrder(-80)]
     public class RecipeDatabase : SingletonMonoBehaviour<RecipeDatabase>
     {
-        protected override bool PersistAcrossScenes => true;
+        protected override bool PersistAcrossScenes => false;
 
         [SerializeField] private TextAsset recipesJsonAsset;
 

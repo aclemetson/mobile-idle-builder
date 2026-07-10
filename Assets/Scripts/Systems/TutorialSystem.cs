@@ -59,8 +59,7 @@ namespace MobileIdleBuilder
             // Lets returning players who already have research jump ahead automatically.
             if (step.skipCondition != null && !string.IsNullOrEmpty(step.skipCondition.researchId))
             {
-                if (SaveManager.Instance != null &&
-                    SaveManager.Instance.Current.unlockedResearch.Contains(step.skipCondition.researchId))
+                if (IsResearchUnlocked(step.skipCondition.researchId))
                 {
                     int skipIdx = FindStepIndex(flow, step.skipCondition.skipToId);
                     if (skipIdx >= 0)
@@ -144,8 +143,7 @@ namespace MobileIdleBuilder
                     return true;
 
                 case ConditionType.ResearchUnlocked:
-                    return SaveManager.Instance != null &&
-                           SaveManager.Instance.Current.unlockedResearch.Contains(c.researchId);
+                    return IsResearchUnlocked(c.researchId);
 
                 case ConditionType.BuildingMin:
                     int buildingCount = 0;
@@ -165,6 +163,27 @@ namespace MobileIdleBuilder
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// True if the given research is unlocked. Prefers ResearchService's live
+        /// in-memory unlock set (updated unconditionally on every purchase — the same
+        /// source the research-panel "purchased" checkmark uses), and only falls back
+        /// to the persisted save list if the service is unavailable. Reading the live
+        /// service avoids a stall where a purchase shows as done in the UI but the
+        /// save layer (SaveManager.Current) is absent or lagging, leaving a research-
+        /// gated tutorial step unable to advance.
+        /// </summary>
+        private static bool IsResearchUnlocked(string researchId)
+        {
+            if (string.IsNullOrEmpty(researchId)) return false;
+
+            if (ResearchService.Instance != null)
+                return ResearchService.Instance.IsUnlocked(researchId);
+
+            var save = SaveManager.Instance?.Current;
+            return save?.unlockedResearch != null &&
+                   save.unlockedResearch.Contains(researchId);
+        }
 
         private static int FindStepIndex(TutorialFlowSO flow, string id)
         {

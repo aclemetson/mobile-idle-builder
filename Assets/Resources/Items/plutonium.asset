@@ -15,7 +15,7 @@ MonoBehaviour:
   id: plutonium
   displayName: Plutonium
   symbol: Pu
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9f2216c379cd35241ae48d15673c06da, type: 3}
   itemId: 31
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 24,100 years (Pu-239)
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Does not occur naturally on Earth \u2014 only made in reactors and
     particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling
     it requires exquisite precision."
   codexUnlocked: 0
-  baseSellValue: 2621440
+  baseSellValue: 671088640
   isotopeSellMultiplier: 1

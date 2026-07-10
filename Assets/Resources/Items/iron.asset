@@ -15,7 +15,7 @@ MonoBehaviour:
   id: iron
   displayName: Iron
   symbol: Fe
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fc59297711292334b8aa7759b12b3be4, type: 3}
   itemId: 12
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The most common element on Earth by mass. The endpoint of stellar
     fusion \u2014 stars cannot fuse elements heavier than iron without consuming
     more energy than they produce."
   codexUnlocked: 0
-  baseSellValue: 5120
+  baseSellValue: 167772160
   isotopeSellMultiplier: 1

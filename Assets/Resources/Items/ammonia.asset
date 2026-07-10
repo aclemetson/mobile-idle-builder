@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ammonia
   displayName: Ammonia
   symbol: "NH\u2083"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 62d44e3fadf8c0b44adc720746d6f469, type: 3}
   itemId: 35
   tier: 3
   category: 4
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The Haber\u2013Bosch synthesis of ammonia is arguably the most important

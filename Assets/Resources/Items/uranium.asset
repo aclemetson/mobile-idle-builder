@@ -15,7 +15,7 @@ MonoBehaviour:
   id: uranium
   displayName: Uranium
   symbol: U
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f0f8a0eb8ffc9d646b0d3b74072aa535, type: 3}
   itemId: 13
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 4.47 billion years
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The heaviest naturally occurring element. Radioactive \u2014 decays
     slowly over billions of years. The primary fuel for nuclear fission reactors.
     Requires advanced assembly techniques."
   codexUnlocked: 0
-  baseSellValue: 1310720
+  baseSellValue: 64
   isotopeSellMultiplier: 1

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: reaction_engineering
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: reaction_engineering
+  displayName: Reaction Engineering
+  description: Industrial reactions and catalysis. Unlocks the Metal Harvester and
+    the Catalytic Reactor for salts, acids, and catalysts.
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  depthInTree: 4
+  costBaseCurrency: 500000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 05230edc5404f6548aaafdeb9037ae12, type: 2}
+  - {fileID: 11400000, guid: 8c0ef490aabebc54ea115e69c7078119, type: 2}
+  - {fileID: 11400000, guid: 0103bdc103276ff4893c18e5a7ddcbc4, type: 2}
+  - {fileID: 11400000, guid: d0242ae0a576323418664de78adb6e1b, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: bc8242727f23e9f4680a80515e744290, type: 2}
+  - {fileID: 11400000, guid: da4bd91a8e9ec8044a0077d480140321, type: 2}
+  - {fileID: 11400000, guid: 2da8ee24759b4bd4c973d86c65292d97, type: 2}
+  - {fileID: 11400000, guid: 3d176a030bd3d254bb6344f8e2cfc1ca, type: 2}
+  - {fileID: 11400000, guid: c3a61525422235843814e1a78386f282, type: 2}
+  - {fileID: 11400000, guid: 7ca21ee808e044545b7a679be6199966, type: 2}
+  - {fileID: 11400000, guid: 68e2ac9bc7adf9c41898ac0eaea123e0, type: 2}
+  - {fileID: 11400000, guid: dce66a6e3c2e8fa458c3d2588ae8268b, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: ff09fcfa870f5744db4f8099de5adc32, type: 2}
+  - {fileID: 11400000, guid: 87aec74fba1150b468122972c7bbeae7, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: Chemistry stops being a curiosity and becomes an industry. Catalysts
+    lower the energy of reactions, and mined metals become the reactors and reagents
+    that drive them.

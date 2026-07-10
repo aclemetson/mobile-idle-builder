@@ -15,7 +15,7 @@ MonoBehaviour:
   id: carbon
   displayName: Carbon
   symbol: C
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1ad1ea25f6cb3344dada9c4855b78502, type: 3}
   itemId: 9
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The basis of all organic chemistry. Carbon's ability to form four bonds

@@ -19,8 +19,15 @@ MonoBehaviour:
   netWorthToPrestigeCurrencyRate: 1
   prestigeBaseValue: 5000
   prestigeWallMultiplier: 10
+  prestigeCurrencyScale: 50
   environment: 0
   apiBaseUrl: 
   alphaParticleEVValue: 20
   betaParticleEVValue: 10
   startingEntropy: 250
+  idleBaseMaxSeconds: 7200
+  idleAbsoluteMaxSeconds: 43200
+  idleBaseCollectionRate: 0.2
+  buildingPurchaseMultiplierT1: 1.5
+  buildingPurchaseMultiplierT2: 1.4
+  buildingPurchaseMultiplierT3Plus: 1.3

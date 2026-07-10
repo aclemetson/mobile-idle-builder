@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -32,6 +33,12 @@ namespace MobileIdleBuilder
 
         internal static IEnumerable<KeyValuePair<Vector2Int, FieldSO>> GetAllFields() => _fieldMap;
 
+        /// <summary>
+        /// The Android-safe additive particle material assigned in the Inspector. Exposed so the
+        /// collector's emission aperture can reuse the same shipped material/variant as the fields.
+        /// </summary>
+        public static Material ParticleMaterialTemplate { get; private set; }
+
         [Serializable]
         public struct FieldEntry
         {
@@ -61,10 +68,24 @@ namespace MobileIdleBuilder
 
         void OnDestroy() { _fieldMap.Clear(); _instanceMap.Clear(); } // clean up between Play sessions in the editor
 
+        /// <summary>Destroys all active fields and resets their grid tile colours. Called by tutorial skip.</summary>
+        public void ClearAllFields()
+        {
+            foreach (var kv in _instanceMap)
+            {
+                if (kv.Value != null)
+                    Destroy(kv.Value.gameObject);
+                gridRenderer?.ClearFieldTileColor(kv.Key.x, kv.Key.y);
+            }
+            _fieldMap.Clear();
+            _instanceMap.Clear();
+        }
+
         IEnumerator Start()
         {
             _fieldMap.Clear();
             _instanceMap.Clear();
+            ParticleMaterialTemplate = _fieldParticleMaterial;
             if (gridRenderer == null)
             {
                 GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
@@ -73,7 +94,8 @@ namespace MobileIdleBuilder
 
             // Returning player with saved field positions: GridSaveService.LoadGrid() will call
             // SpawnFromSave() after cloud reconciliation — same timing guarantee as buildings.
-            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.grid?.fields?.Count > 0;
+            // Use the ACTIVE site's grid so a non-origin active site is handled correctly.
+            bool hasFieldSave = SaveManager.Instance?.Current?.currentRun?.ActiveGrid?.fields?.Count > 0;
             if (SaveManager.Instance != null && !SaveManager.Instance.IsNewGame && hasFieldSave)
                 yield break;
 
@@ -82,11 +104,110 @@ namespace MobileIdleBuilder
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
+            // Deterministic origin layout: every fresh start produces the same field placement,
+            // matching the always-deterministic per-site path in GenerateForSite (origin = base).
+            UnityEngine.Random.InitState(SiteFieldSeedBase);
             Shuffle(candidates);
 
-            int candidateIndex = 0;
+            PlaceEntries(fields, candidates);
+        }
 
+        /// <summary>
+        /// Base offset for the per-site deterministic field seed. Each site regenerates with
+        /// <c>SiteFieldSeedBase + siteIndex</c> so a site's first-visit layout is reproducible.
+        /// </summary>
+        private const int SiteFieldSeedBase = 0x51E0;
+
+        /// <summary>
+        /// Regenerates this grid's fields for a build site, applying the site's per-field
+        /// density overrides (multiplier 0 = field absent, 2 = double count). Called by
+        /// SiteService.SwitchTo() on the first visit to a site (when its grid has no saved
+        /// fields). Buildings/conveyors must already be placed so their cells are excluded.
+        /// Deterministic: same site index always produces the same layout.
+        /// </summary>
+        public void GenerateForSite(SiteSO site, int siteIndex)
+        {
+            if (gridRenderer == null)
+            {
+                GameLogger.Error("[FieldGenerator] GridRenderer reference is missing.");
+                return;
+            }
+
+            ClearAllFields();
+            BuildDemonExclusionZone();
+
+            var candidates = BuildCandidateList();
+            UnityEngine.Random.InitState(SiteFieldSeedBase + siteIndex);
+            Shuffle(candidates);
+
+            PlaceEntries(EffectiveEntries(site), candidates);
+        }
+
+        /// <summary>
+        /// Applies a site's field_overrides to the default Inspector field list, scaling each
+        /// entry's count by its density multiplier and dropping fields scaled to zero. Fields
+        /// with no override keep their default count. An override referencing a field NOT in the
+        /// default set INTRODUCES it (see <see cref="IntroducedFields"/>) — used for fields that
+        /// should appear only on a specific site, e.g. the fissile (uranium/plutonium) fields.
+        /// </summary>
+        private IEnumerable<FieldEntry> EffectiveEntries(SiteSO site)
+        {
+            var multipliers = new Dictionary<string, float>();
+            if (site?.fieldOverrides != null)
+                foreach (var ov in site.fieldOverrides)
+                    if (ov.field != null)
+                        multipliers[ov.field.id] = ov.densityMultiplier;
+
+            var defaultIds = new HashSet<string>();
             foreach (var entry in fields)
+            {
+                if (entry.fieldDefinition == null) continue;
+                defaultIds.Add(entry.fieldDefinition.id);
+                float m = multipliers.TryGetValue(entry.fieldDefinition.id, out var v) ? v : 1f;
+                int scaledCount = EffectiveFieldCount(entry.count, m);
+                if (scaledCount <= 0) continue;
+
+                var scaled = entry;
+                scaled.count = scaledCount;
+                yield return scaled;
+            }
+
+            foreach (var (field, count) in IntroducedFields(site, defaultIds))
+                yield return new FieldEntry { fieldDefinition = field, count = count, groupAdjacent = false };
+        }
+
+        /// <summary>
+        /// Site overrides may INTRODUCE a field absent from the default Inspector list (e.g. the
+        /// fissile fields, which should spawn only on their dedicated site). For such a field the
+        /// override's density multiplier is read as the absolute field count. Returns (field, count)
+        /// for every override whose field id is NOT in <paramref name="defaultFieldIds"/>. Pure so
+        /// the introduce-on-override behaviour is testable without a live scene.
+        /// </summary>
+        internal static IEnumerable<(FieldSO field, int count)> IntroducedFields(
+            SiteSO site, ISet<string> defaultFieldIds)
+        {
+            if (site?.fieldOverrides == null) yield break;
+            foreach (var ov in site.fieldOverrides)
+            {
+                if (ov.field == null || defaultFieldIds.Contains(ov.field.id)) continue;
+                int count = EffectiveFieldCount(1, ov.densityMultiplier);
+                if (count > 0) yield return (ov.field, count);
+            }
+        }
+
+        /// <summary>
+        /// A site's effective field count = base count × density multiplier, rounded.
+        /// multiplier 0 removes the field (returns 0); 2 doubles it. Pure so the per-site
+        /// field-distribution balance is testable without a live scene.
+        /// </summary>
+        internal static int EffectiveFieldCount(int baseCount, float densityMultiplier) =>
+            Mathf.RoundToInt(baseCount * densityMultiplier);
+
+        /// <summary>Places every field entry into the shuffled candidate cells.</summary>
+        private void PlaceEntries(IEnumerable<FieldEntry> entries, List<Vector2Int> candidates)
+        {
+            int candidateIndex = 0;
+            foreach (var entry in entries)
             {
                 if (entry.fieldDefinition == null) continue;
 
@@ -102,13 +223,33 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>
+        /// Builds a field-id -> FieldSO lookup spanning the default Inspector list AND every field
+        /// referenced by any site's overrides (via <see cref="SiteService"/>). Site-introduced
+        /// fields (e.g. the fissile fields) are absent from the default list, so this is what lets
+        /// them restore on reload. Falls back to the default list alone if SiteService isn't ready.
+        /// </summary>
+        private Dictionary<string, FieldSO> BuildFieldLookup()
+        {
+            var lookup = new Dictionary<string, FieldSO>();
+            foreach (var entry in fields)
+                if (entry.fieldDefinition != null)
+                    lookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+
+            var sites = SiteService.Instance?.AllSites;
+            if (sites != null)
+                foreach (var site in sites)
+                    if (site?.fieldOverrides != null)
+                        foreach (var ov in site.fieldOverrides)
+                            if (ov.field != null)
+                                lookup.TryAdd(ov.field.id, ov.field);
+            return lookup;
+        }
+
         /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
         public void SpawnFromSave(List<FieldSaveData> savedFields)
         {
-            var fieldLookup = new Dictionary<string, FieldSO>();
-            foreach (var entry in fields)
-                if (entry.fieldDefinition != null)
-                    fieldLookup.TryAdd(entry.fieldDefinition.id, entry.fieldDefinition);
+            var fieldLookup = BuildFieldLookup();
 
             foreach (var saved in savedFields)
             {
@@ -118,7 +259,23 @@ namespace MobileIdleBuilder
                     continue;
                 }
                 OccupyAndSpawn(saved.position[0], saved.position[1], fieldSO);
+                RestoreCooldown(saved);
             }
+        }
+
+        /// <summary>
+        /// Re-applies a still-running tap cooldown to a freshly spawned field. A cooldown that
+        /// elapsed while the app was closed is simply left ready (the field is immediately tappable).
+        /// </summary>
+        private static void RestoreCooldown(FieldSaveData saved)
+        {
+            if (string.IsNullOrEmpty(saved.cooldownEndUtc)) return;
+            if (!DateTime.TryParse(saved.cooldownEndUtc, null, DateTimeStyles.RoundtripKind, out var endUtc))
+                return;
+            if (endUtc <= DateTime.UtcNow) return;
+
+            var cd = GetFieldInstanceAt(saved.position[0], saved.position[1])?.Cooldown;
+            cd?.RestoreCooldown(endUtc, saved.cooldownDurationSec);
         }
 
         /// <summary>
@@ -260,6 +417,12 @@ namespace MobileIdleBuilder
 
             var effect = go.AddComponent<FieldEffect>();
             effect.Initialize(fieldSO.fieldColor, _fieldParticleMaterial);
+
+            // Noise-fluctuating wire-mesh overlay across the tile; bounces on tap.
+            go.AddComponent<FieldWireMesh>().Initialize(fieldSO.fieldColor, cs);
+
+            // Per-field tap cooldown + radial countdown wheel (built lazily on first cooldown).
+            go.AddComponent<FieldCooldownIndicator>();
         }
 
         // ----------------------------------------------------------------

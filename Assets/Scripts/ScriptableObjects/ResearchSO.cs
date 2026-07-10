@@ -20,6 +20,14 @@ namespace MobileIdleBuilder
         public int costBaseCurrency;
         public int costPrestigeCurrency;    // 0 for most research
 
+        [Header("Timer")]
+        public int durationSeconds;         // research time in seconds; 0 = instant unlock
+
+        [Header("Modifiers")]
+        [Tooltip("Multiplier applied to the field tap cooldown while this research is unlocked.\n" +
+                 "1 = no effect; 0.85 = 15% shorter. Stacks multiplicatively across unlocked research.")]
+        public float fieldCooldownMult = 1f;
+
         [Header("Unlocks")]
         public ItemSO[] unlocksItems;
         public RecipeSO[] unlocksRecipes;

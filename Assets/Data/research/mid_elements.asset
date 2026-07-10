@@ -23,14 +23,32 @@ MonoBehaviour:
   depthInTree: 2
   costBaseCurrency: 2000
   costPrestigeCurrency: 0
+  durationSeconds: 120
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
   - {fileID: 11400000, guid: 31333edf10e38474c90fafe8f7d578e3, type: 2}
   - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+  - {fileID: 11400000, guid: 83c568384b6970b47a30de4c7097a7da, type: 2}
+  - {fileID: 11400000, guid: ffbf17ea0335f1f4a95224f9f5aec3ae, type: 2}
+  - {fileID: 11400000, guid: 1ee670598b76c72439e7169644de8bb6, type: 2}
+  - {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
+  - {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
+  - {fileID: 11400000, guid: 55585eeeadbafda4aa27cffdaeccfce5, type: 2}
+  - {fileID: 11400000, guid: 89b33da28615202459096ab75d854a0d, type: 2}
+  - {fileID: 11400000, guid: 4c6c94900546a7340bd82fd524fc4c57, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 1a3e3177c0b831141a11f311376338b6, type: 2}
   - {fileID: 11400000, guid: 686915205fa3e1e4bb3c71a9e8a9b7de, type: 2}
   - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
+  - {fileID: 11400000, guid: fc406f4622834104b94f739bd09197cb, type: 2}
+  - {fileID: 11400000, guid: a322d9465bd69de418a6ab0e08e35062, type: 2}
+  - {fileID: 11400000, guid: e972d0a97d7c252418eed0b58a7c85b0, type: 2}
+  - {fileID: 11400000, guid: 7b67c59b65b4ca648a22954c99ac1245, type: 2}
+  - {fileID: 11400000, guid: 8361a21711e0df842a571b96eed08d08, type: 2}
+  - {fileID: 11400000, guid: e6d17d0c279f3d741ab864cc22385e40, type: 2}
+  - {fileID: 11400000, guid: 360d891c40547be4a92e11ee6f1bff1c, type: 2}
+  - {fileID: 11400000, guid: 6a35a542696bd444baf960c7f6e3ad99, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

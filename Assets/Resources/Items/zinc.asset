@@ -15,7 +15,7 @@ MonoBehaviour:
   id: zinc
   displayName: Zinc
   symbol: Zn
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9754f29affb520b4486d4a42858506fe, type: 3}
   itemId: 26
   tier: 2
   category: 2
@@ -28,11 +28,11 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Zinc galvanises steel against corrosion and is half of brass alloy.
     Essential in human biology as a cofactor in hundreds of enzymes.
   codexUnlocked: 0
-  baseSellValue: 40960
+  baseSellValue: 68504240
   isotopeSellMultiplier: 1

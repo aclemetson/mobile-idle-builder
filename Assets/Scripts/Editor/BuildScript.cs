@@ -13,6 +13,12 @@ namespace MobileIdleBuilder.Editor
         public static void BuildAndroid()    => BuildAndroidInternal(appBundle: true);
         public static void BuildAndroidApk() => BuildAndroidInternal(appBundle: false);
 
+        // Internal testing build: compiles in the dev console and dev-only tooling by defining
+        // the DEVELOPMENT_BUILD symbol, but produces a normal (non-debuggable) release bundle.
+        // We do NOT use BuildOptions.Development -- in Unity 6 that sets android:debuggable="true"
+        // in the manifest, which Google Play rejects ("APK is marked as debuggable").
+        public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, devTooling: true);
+
         public static void BuildWindows()
         {
             string version    = PlayerSettings.bundleVersion;
@@ -46,6 +52,8 @@ namespace MobileIdleBuilder.Editor
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
             Directory.CreateDirectory(outputDir);
 
+            ConfigureIOSVersioningAndSigning();
+
             // iOS build output is a folder (Xcode project), not a single file.
             var options = new BuildPlayerOptions
             {
@@ -68,7 +76,7 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
-        private static void BuildAndroidInternal(bool appBundle)
+        private static void BuildAndroidInternal(bool appBundle, bool devTooling = false)
         {
             string version   = PlayerSettings.bundleVersion;
             string ext       = appBundle ? "aab" : "apk";
@@ -78,8 +86,15 @@ namespace MobileIdleBuilder.Editor
 
             ConfigureAndroidKeystore();
 
-            PlayerSettings.Android.useCustomKeystore = true;
             EditorUserBuildSettings.buildAppBundle = appBundle;
+
+            // Define DEVELOPMENT_BUILD for compilation only (dev console + tooling) via
+            // extraScriptingDefines, while keeping options = BuildOptions.None so the bundle is a
+            // normal release build. A real BuildOptions.Development build sets
+            // android:debuggable="true", which Google Play rejects; this gives us the symbol
+            // without the debuggable manifest. Nothing reads Debug.isDebugBuild at runtime.
+            string[] extraDefines = devTooling ? new[] { "DEVELOPMENT_BUILD" } : null;
+            GameLogger.Info($"Android build extra defines: {(extraDefines == null ? "(none)" : string.Join(";", extraDefines))}");
 
             var options = new BuildPlayerOptions
             {
@@ -87,6 +102,7 @@ namespace MobileIdleBuilder.Editor
                 locationPathName = outputPath,
                 target = BuildTarget.Android,
                 options = BuildOptions.None,
+                extraScriptingDefines = extraDefines,
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
@@ -103,10 +119,38 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
+        // Keeps iOS in lockstep with the Android version model. CFBundleVersion (the iOS build
+        // number) rides the existing monotonic AndroidBundleVersionCode, so one counter feeds both
+        // stores and TestFlight's "duplicate build number" rejection stays aligned with Google
+        // Play's. Signing is automatic / cloud-managed in CI (xcodebuild -allowProvisioningUpdates
+        // + an App Store Connect API key), so all we configure here is the team id and automatic
+        // signing -- there is no keystore/.p12 to apply at build time.
+        private static void ConfigureIOSVersioningAndSigning()
+        {
+            PlayerSettings.iOS.buildNumber = PlayerSettings.Android.bundleVersionCode.ToString();
+            GameLogger.Info($"iOS CFBundleVersion set to {PlayerSettings.iOS.buildNumber} (from AndroidBundleVersionCode)");
+
+            string teamId = Environment.GetEnvironmentVariable("APPLE_TEAM_ID");
+            if (!string.IsNullOrEmpty(teamId))
+            {
+                PlayerSettings.iOS.appleDeveloperTeamID = teamId;
+                PlayerSettings.iOS.appleEnableAutomaticSigning = true;
+                GameLogger.Info($"iOS automatic signing enabled for team {teamId}");
+            }
+            else
+            {
+                GameLogger.Warning("APPLE_TEAM_ID not set; leaving iOS signing configuration unchanged.");
+            }
+        }
+
         private static void ConfigureAndroidKeystore()
         {
             string keystorePath = Path.Combine(Directory.GetCurrentDirectory(), "secrets", "user.keystore");
 
+            // useCustomKeystore must be enabled BEFORE the keystore name and passwords are
+            // assigned: Unity ignores the password setters while it is false, which yields an
+            // unsigned AAB that Google Play rejects ("All uploaded bundles must be signed").
+            PlayerSettings.Android.useCustomKeystore = true;
             PlayerSettings.Android.keystoreName = keystorePath;
             PlayerSettings.Android.keystorePass = GetEnvOrArg("ANDROID_KEYSTORE_PASS");
             PlayerSettings.Android.keyaliasName = GetEnvOrArg("ANDROID_KEY_ALIAS");

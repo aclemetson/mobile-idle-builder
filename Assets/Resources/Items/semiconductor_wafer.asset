@@ -15,7 +15,7 @@ MonoBehaviour:
   id: semiconductor_wafer
   displayName: Semiconductor Wafer
   symbol: Si-W
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0433228f9f99356498c380673b0fbbe0, type: 3}
   itemId: 42
   tier: 4
   category: 5
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Ultrapure crystalline silicon sliced to sub-millimetre thickness. The

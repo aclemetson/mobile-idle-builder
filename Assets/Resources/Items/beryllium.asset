@@ -15,7 +15,7 @@ MonoBehaviour:
   id: beryllium
   displayName: Beryllium
   symbol: Be
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 28e5cf9729049424dad4a0aa6445a816, type: 3}
   itemId: 20
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Harder than steel and lighter than aluminium. Beryllium is transparent

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: methane
   displayName: Methane
   symbol: "CH\u2084"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a09769eca19138f469c1cc3d72922ad7, type: 3}
   itemId: 34
   tier: 3
   category: 4
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The simplest hydrocarbon. Natural gas is mostly methane. SpaceX's Raptor

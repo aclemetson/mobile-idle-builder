@@ -25,8 +25,8 @@ MonoBehaviour:
   obsoleteCondition: 
   requiresPower: 1
   isPowerSource: 0
-  basePowerCostEV: 0
-  powerCostIsDynamic: 1
+  basePowerCostEV: 25
+  powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
@@ -42,32 +42,73 @@ MonoBehaviour:
   - Neutrons
   isEntropySink: 0
   footprint: {x: 1, y: 1}
-  ports: []
+  structureKind: 3
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 1500
+  baseMaxOutputItems: 15
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 1
-    powerCostEV: 0
+    powerCostEV: 40
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 2000
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 2
-    powerCostEV: 0
+    powerCostEV: 60
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 8000
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 4
-    powerCostEV: 0
+    powerCostEV: 90
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 32000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 100
+    costBaseCurrency: 1500
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 500
+    costBaseCurrency: 6000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 2500
+    costBaseCurrency: 24000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 1500
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 6000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 24000
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}

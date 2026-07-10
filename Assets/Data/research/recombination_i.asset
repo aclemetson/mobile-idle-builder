@@ -22,6 +22,8 @@ MonoBehaviour:
   depthInTree: 0
   costBaseCurrency: 100
   costPrestigeCurrency: 0
+  durationSeconds: 10
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 7b87185ea0bd04c459c841407cad7496, type: 2}
   - {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
@@ -34,6 +36,7 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
+  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.25
   codexEntry: The foundational discovery enabling nucleon synthesis. By controlling

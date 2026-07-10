@@ -15,7 +15,7 @@ MonoBehaviour:
   id: titanium_alloy
   displayName: Titanium Alloy
   symbol: Ti-A
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3c0d115bd221eb240981dcda5c2d7d0c, type: 3}
   itemId: 41
   tier: 4
   category: 5
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Titanium alloyed with aluminium and vanadium \u2014 the aerospace

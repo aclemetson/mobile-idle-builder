@@ -1,15 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.IO;
 using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace MobileIdleBuilder.PlayModeTests
 {
     /// <summary>
-    /// PlayMode tests for ManualCraftService (CanCraft, TryCraft, GetInventoryCounts).
+    /// EditMode tests for ManualCraftService (CanCraft, TryCraft, GetInventoryCounts).
     ///
     /// ManualCraftService.CanCraft / TryCraft call ItemDatabase.Instance.GetItemId(string),
     /// so an ItemDatabase is required. The [SerializeField] items field is injected via
@@ -17,7 +16,8 @@ namespace MobileIdleBuilder.PlayModeTests
     /// AchievementServiceTests.
     ///
     /// ManualCraftService.Start() uses World.DefaultGameObjectInjectionWorld, which must be
-    /// set before the service's Start() fires (done in SetUp).
+    /// set before the service's Start() fires (done in SetUp). Start() is invoked explicitly
+    /// via reflection since EditMode does not call it automatically.
     /// </summary>
     [TestFixture]
     public class ManualCraftServiceTests
@@ -61,13 +61,12 @@ namespace MobileIdleBuilder.PlayModeTests
             _protonSO.itemId = 4;
         }
 
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
-            if (_serviceGO      != null) { Object.Destroy(_serviceGO);      _serviceGO      = null; }
-            if (_itemDatabaseGO != null) { Object.Destroy(_itemDatabaseGO); _itemDatabaseGO = null; }
-            if (_saveManagerGO  != null) { Object.Destroy(_saveManagerGO);  _saveManagerGO  = null; }
-            yield return null;
+            if (_serviceGO      != null) { Object.DestroyImmediate(_serviceGO);      _serviceGO      = null; }
+            if (_itemDatabaseGO != null) { Object.DestroyImmediate(_itemDatabaseGO); _itemDatabaseGO = null; }
+            if (_saveManagerGO  != null) { Object.DestroyImmediate(_saveManagerGO);  _saveManagerGO  = null; }
 
             if (_testWorld.IsCreated) _testWorld.Dispose();
             World.DefaultGameObjectInjectionWorld = null;
@@ -75,24 +74,23 @@ namespace MobileIdleBuilder.PlayModeTests
             if (File.Exists(_savePath)) File.Delete(_savePath);
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
-            if (_hydrogenSO != null) { Object.Destroy(_hydrogenSO); _hydrogenSO = null; }
-            if (_protonSO   != null) { Object.Destroy(_protonSO);   _protonSO   = null; }
+            if (_hydrogenSO != null) { Object.DestroyImmediate(_hydrogenSO); _hydrogenSO = null; }
+            if (_protonSO   != null) { Object.DestroyImmediate(_protonSO);   _protonSO   = null; }
         }
 
-        IEnumerator SpawnServices()
+        void SpawnServices()
         {
             _saveManagerGO = new GameObject("SaveManager");
-            _saveManagerGO.AddComponent<SaveManager>();
-            yield return null;
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
 
             _itemDatabaseGO = new GameObject("ItemDatabase");
-            _itemDatabaseGO.AddComponent<ItemDatabase>(); // Awake loads from Resources
+            { var db = _itemDatabaseGO.AddComponent<ItemDatabase>(); RunAwake(db); } // Awake loads from Resources
             ItemDatabase.InjectForTesting(new ItemSO[] { _hydrogenSO, _protonSO }); // override with test SOs
-            yield return null;
 
             _serviceGO = new GameObject("ManualCraftService");
-            _serviceGO.AddComponent<ManualCraftService>();
-            yield return null;
+            var svc = _serviceGO.AddComponent<ManualCraftService>();
+            RunAwake(svc);
+            RunStart(svc); // Start() → ECS setup (_em, queries, IsReady = true)
         }
 
         static RecipeJson MakeRecipe(string inputId, int inputQty, string outputId, int outputQty) =>
@@ -110,19 +108,19 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── CanCraft ─────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator CanCraft_FalseWhenInventoryEmpty()
+        [Test]
+        public void CanCraft_FalseWhenInventoryEmpty()
         {
-            yield return SpawnServices();
+            SpawnServices();
             var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
             Assert.IsFalse(ManualCraftService.Instance.CanCraft(recipe),
                 "CanCraft must return false when inventory is empty");
         }
 
-        [UnityTest]
-        public IEnumerator CanCraft_TrueWhenInventoryHasSufficientItems()
+        [Test]
+        public void CanCraft_TrueWhenInventoryHasSufficientItems()
         {
-            yield return SpawnServices();
+            SpawnServices();
             AddInventoryItem(_hydrogenSO.itemId, 3);
             var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
             Assert.IsTrue(ManualCraftService.Instance.CanCraft(recipe),
@@ -131,19 +129,19 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── TryCraft ─────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator TryCraft_ReturnsFalseWhenCannotCraft()
+        [Test]
+        public void TryCraft_ReturnsFalseWhenCannotCraft()
         {
-            yield return SpawnServices();
+            SpawnServices();
             var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
             Assert.IsFalse(ManualCraftService.Instance.TryCraft(recipe),
                 "TryCraft must return false when inputs are unavailable");
         }
 
-        [UnityTest]
-        public IEnumerator TryCraft_ConsumesInputItems()
+        [Test]
+        public void TryCraft_ConsumesInputItems()
         {
-            yield return SpawnServices();
+            SpawnServices();
             AddInventoryItem(_hydrogenSO.itemId, 3);
             var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
             ManualCraftService.Instance.TryCraft(recipe);
@@ -153,10 +151,10 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual(1, remaining, "TryCraft must consume the recipe's input quantity");
         }
 
-        [UnityTest]
-        public IEnumerator TryCraft_DepositsOutputItem()
+        [Test]
+        public void TryCraft_DepositsOutputItem()
         {
-            yield return SpawnServices();
+            SpawnServices();
             AddInventoryItem(_hydrogenSO.itemId, 2);
             var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
             ManualCraftService.Instance.TryCraft(recipe);
@@ -168,10 +166,10 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── GetInventoryCounts ────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator GetInventoryCounts_ReflectsCurrentBuffer()
+        [Test]
+        public void GetInventoryCounts_ReflectsCurrentBuffer()
         {
-            yield return SpawnServices();
+            SpawnServices();
             AddInventoryItem(_hydrogenSO.itemId, 5);
             AddInventoryItem(_protonSO.itemId, 3);
 
@@ -180,6 +178,60 @@ namespace MobileIdleBuilder.PlayModeTests
                 "GetInventoryCounts must report correct quantity for hydrogen");
             Assert.AreEqual(3, counts[_protonSO.itemId],
                 "GetInventoryCounts must report correct quantity for proton");
+        }
+
+        // ── Scene-reload re-bind (regression for the stale-world crafting bug) ──
+
+        [Test]
+        public void SceneReload_RebindsToNewWorld_InventoryVisibleAgain()
+        {
+            // ManualCraftService is a persistent (DontDestroyOnLoad) singleton, but the DOTS world
+            // is rebuilt on every scene reload (e.g. starting a new game in-session). If it kept its
+            // original EntityManager/query it would read a dead world — the HUD recipe panel then
+            // shows 0/x and craft is greyed even though the inventory has the items.
+            SpawnServices(); // binds to _testWorld (empty inventory)
+            var recipe = MakeRecipe("hydrogen", 1, "proton", 1);
+            Assert.IsFalse(ManualCraftService.Instance.CanCraft(recipe), "precondition: original world empty");
+
+            var world2 = new World("ManualCraftTestWorld2");
+            try
+            {
+                var em2     = world2.EntityManager;
+                var player2 = em2.CreateEntity();
+                em2.AddComponent<PlayerInventoryTag>(player2);
+                var buf = em2.AddBuffer<InventorySlot>(player2);
+                buf.Add(new InventorySlot { ItemID = _hydrogenSO.itemId, Quantity = 5 });
+                World.DefaultGameObjectInjectionWorld = world2;
+
+                // The fix: EnsureBound() on the next call notices the default world changed and re-acquires
+                // the EntityManager + queries, so the recipe reads the rebuilt world's inventory.
+                Assert.IsTrue(ManualCraftService.Instance.CanCraft(recipe),
+                    "after the world is rebuilt the service must rebind and read the new world's inventory");
+            }
+            finally
+            {
+                World.DefaultGameObjectInjectionWorld = _testWorld; // TearDown disposes _testWorld
+                if (world2.IsCreated) world2.Dispose();
+            }
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        static void RunStart(MonoBehaviour mb) =>
+            mb.GetType()
+              .GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+              ?.Invoke(mb, null);
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
         }
     }
 }

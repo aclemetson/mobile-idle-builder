@@ -37,8 +37,9 @@ namespace MobileIdleBuilder
             }
 
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
-            if (progress.NetWorth == total) return;
-            progress.NetWorth = total;
+            float desired = total + (float)(progress.BaseCurrency + progress.TotalEntropySpent) + progress.BaseNetWorth;
+            if (progress.NetWorth == desired) return;
+            progress.NetWorth = desired;
             SystemAPI.SetSingleton(progress);
         }
     }

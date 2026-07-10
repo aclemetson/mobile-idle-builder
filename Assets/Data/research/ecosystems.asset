@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: ecosystems
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: ecosystems
+  displayName: Ecosystems
+  description: Compose organs into whole organisms, populations, and ecosystems.
+    The Biology endgame. Unlocks the Bioreactor.
+  icon: {fileID: 0}
+  branch: 5
+  prerequisites:
+  - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
+  depthInTree: 8
+  costBaseCurrency: 1000000000
+  costPrestigeCurrency: 0
+  durationSeconds: 14400
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: bf32c39c42d11d346ae9d06a9e0ce027, type: 2}
+  - {fileID: 11400000, guid: 8ba56f4f09425b24d87600db1bd3f384, type: 2}
+  - {fileID: 11400000, guid: 88e0fca711b528940814ceaa6e48087a, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: d53537728d9aec347928ba017f4695df, type: 2}
+  - {fileID: 11400000, guid: 3106e20e01a1ea0419b3ba5dc264d799, type: 2}
+  - {fileID: 11400000, guid: 5a475200ecb7cb146b0d05ff3b53500f, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 14f9eda2ef5d53a41820907a34d68144, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: "Organs become organisms, organisms become populations, and populations
+    weave into an ecosystem \u2014 a self-sustaining web of life. From quarks to
+    a living world."

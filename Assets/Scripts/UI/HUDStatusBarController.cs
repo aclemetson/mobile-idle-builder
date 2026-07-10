@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,8 +15,12 @@ namespace MobileIdleBuilder
     {
         private VisualElement _drawerInventory;
         private Label         _entropyLabel;
+        private Label         _prestigeTopbarLabel;
+        private Label         _crystalLabel;
         private Label         _powerLabel;
         private Button        _btnPrestige;
+        private VisualElement _researchStatus;
+        private Label         _researchStatusLabel;
 
         private readonly Dictionary<int, Label> _inventoryLabels = new();
 
@@ -30,16 +33,25 @@ namespace MobileIdleBuilder
         // Dirty-flag state
         private int   _lastInventoryHash      = int.MinValue;
         private long  _lastBaseCurrency       = long.MinValue;
-        private float _lastPowerCurrent       = -1f;
-        private float _lastPowerMax           = -1f;
+        private float _lastPowerDraw          = -1f;
+        private float _lastPowerSupply        = -1f;
+        private int   _lastDisconnected       = -1;
         private bool  _lastPrestigeAvailable  = false;
+        private long  _lastHeldPC             = long.MinValue;
+        private long  _lastCrystals           = long.MinValue;
+        private string _lastResearchId        = null;
+        private int    _lastResearchRemaining = int.MinValue;
 
         public void Init(VisualElement root)
         {
-            _drawerInventory = root.Q("drawer-inventory");
-            _entropyLabel    = root.Q<Label>("entropy-label");
-            _powerLabel      = root.Q<Label>("power-label");
-            _btnPrestige     = root.Q<Button>("btn-prestige");
+            _drawerInventory     = root.Q("drawer-inventory");
+            _entropyLabel        = root.Q<Label>("entropy-label");
+            _prestigeTopbarLabel = root.Q<Label>("prestige-topbar-label");
+            _crystalLabel        = root.Q<Label>("crystal-label");
+            _powerLabel          = root.Q<Label>("power-label");
+            _btnPrestige         = root.Q<Button>("btn-prestige");
+            _researchStatus      = root.Q("research-status");
+            _researchStatusLabel = root.Q<Label>("research-status-label");
         }
 
         public void SetECSContext(EntityManager em, EntityQuery inventoryQuery,
@@ -60,8 +72,11 @@ namespace MobileIdleBuilder
             {
                 RefreshEntropyLabel();
                 RefreshPrestigeButton();
+                RefreshPrestigeTopbarLabel();
             }
             if (!_powerQuery.IsEmpty) RefreshPowerLabel();
+            RefreshCrystalLabel();
+            RefreshResearchStatus();
         }
 
         private void RefreshInventoryBar()
@@ -123,20 +138,27 @@ namespace MobileIdleBuilder
         private void RefreshPowerLabel()
         {
             if (_powerLabel == null) return;
-            var nodes = _powerQuery.ToComponentDataArray<PowerNodeData>(Allocator.Temp);
-            float current = 0f, max = 0f;
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                current += nodes[i].CurrentEV;
-                max     += nodes[i].MaxEV;
-            }
-            nodes.Dispose();
 
-            if (Mathf.Approximately(current, _lastPowerCurrent) &&
-                Mathf.Approximately(max, _lastPowerMax)) return;
-            _lastPowerCurrent = current;
-            _lastPowerMax     = max;
-            _powerLabel.text  = HUDController.FormatPowerLabel(current, max);
+            // PowerGridState is the singleton written each frame by PowerGridSystem: global eV draw
+            // (connected consumers) vs supply (all generators), plus the unpowered consumer count.
+            var state = _powerQuery.GetSingleton<PowerGridState>();
+
+            if (Mathf.Approximately(state.Draw, _lastPowerDraw) &&
+                Mathf.Approximately(state.Supply, _lastPowerSupply) &&
+                state.DisconnectedCount == _lastDisconnected) return;
+            _lastPowerDraw    = state.Draw;
+            _lastPowerSupply  = state.Supply;
+            _lastDisconnected = state.DisconnectedCount;
+
+            bool brownout = state.Draw > state.Supply + 0.001f;
+            bool warn     = brownout || state.DisconnectedCount > 0;
+
+            string text = HUDController.FormatPowerLabel(state.Draw, state.Supply);
+            if (state.DisconnectedCount > 0) text += $"  ({state.DisconnectedCount} unpowered)";
+            if (warn) text = "⚠ " + text;
+
+            _powerLabel.text = text;
+            _powerLabel.EnableInClassList("power-brownout", warn);
         }
 
         private void RefreshPrestigeButton()
@@ -148,6 +170,56 @@ namespace MobileIdleBuilder
             _btnPrestige.style.display = progress.PrestigeAvailable
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;
+        }
+
+        private void RefreshPrestigeTopbarLabel()
+        {
+            if (_prestigeTopbarLabel == null) return;
+            var entity   = _progressQuery.GetSingletonEntity();
+            var prestige = _em.GetComponentData<PrestigeData>(entity);
+            long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
+            if (held == _lastHeldPC) return;
+            _lastHeldPC                  = held;
+            _prestigeTopbarLabel.text    = $"✦ {held:N0}";
+        }
+
+        private void RefreshCrystalLabel()
+        {
+            if (_crystalLabel == null) return;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0L;
+            if (crystals == _lastCrystals) return;
+            _lastCrystals     = crystals;
+            _crystalLabel.text = $"◆ {crystals:N0}";
+        }
+
+        // Shows the active research name + remaining time in a strip under the top bar; hides it
+        // when nothing is in progress. Dirty-flagged on (id, whole-second remaining) so it only
+        // writes the DOM once per second.
+        private void RefreshResearchStatus()
+        {
+            if (_researchStatus == null) return;
+
+            var rs = ResearchService.Instance;
+            if (rs == null || !rs.HasActiveResearch)
+            {
+                if (_lastResearchId != null)
+                {
+                    _lastResearchId        = null;
+                    _lastResearchRemaining = int.MinValue;
+                    _researchStatus.style.display = DisplayStyle.None;
+                }
+                return;
+            }
+
+            int    remaining = Mathf.CeilToInt((float)rs.ActiveRemainingSeconds);
+            string id        = rs.ActiveResearchId;
+            if (id == _lastResearchId && remaining == _lastResearchRemaining) return;
+            _lastResearchId        = id;
+            _lastResearchRemaining = remaining;
+
+            string name = rs.ActiveResearch != null ? rs.ActiveResearch.displayName : "Research";
+            _researchStatusLabel.text = $"🔬 {name}   ⏳ {HUDController.FormatResearchTimer(remaining)}";
+            _researchStatus.style.display = DisplayStyle.Flex;
         }
     }
 }

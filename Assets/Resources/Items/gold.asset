@@ -15,7 +15,7 @@ MonoBehaviour:
   id: gold
   displayName: Gold
   symbol: Au
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 25e81b99320fa2142aa4cc60c738fc5d, type: 3}
   itemId: 28
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Chemically inert, immune to corrosion, and malleable beyond any other
     metal. Every connector in space hardware is gold-plated. Its rarity is a product
     of neutron star collisions.
   codexUnlocked: 0
-  baseSellValue: 163840
+  baseSellValue: 1176
   isotopeSellMultiplier: 1

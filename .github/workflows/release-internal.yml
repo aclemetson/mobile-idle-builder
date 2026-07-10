@@ -1,0 +1,117 @@
+name: Release Internal
+
+# Test pipe: a PR merged INTO a release/** branch -> signed .aab on the local
+# Windows runner -> Google Play internal testing track.
+#
+# Tests and the version-code guard are NOT repeated here: they already ran as
+# required checks on the PR (pr-tests.yml) before the merge was allowed. This
+# workflow only builds and uploads. The Play upload itself is the final backstop
+# -- it rejects a duplicate version code at upload time.
+on:
+  pull_request:
+    types: [closed]
+    branches: ['release/**']
+
+# One internal build per release branch; a burst of merges collapses to the
+# latest (cancel the in-flight build instead of queueing several Unity builds).
+concurrency:
+  group: release-internal-${{ github.base_ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Build the AAB on the local Windows machine ───────────────────────────────
+  build:
+    name: Android AAB Build
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, windows, unity]
+
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Read version
+        id: version
+        shell: powershell
+        run: |
+          $content = Get-Content "ProjectSettings\ProjectSettings.asset" -Raw
+          if ($content -match 'bundleVersion:\s*(\d+\.\d+\.\d+)') {
+            $ver = $Matches[1]
+            Write-Host "Building version: $ver"
+            echo "value=$ver" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Error "Could not parse bundleVersion from ProjectSettings.asset"; exit 1
+          }
+
+      - name: Write keystore
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if (-not (Test-Path "secrets")) { New-Item -ItemType Directory "secrets" | Out-Null }
+          $bytes = [System.Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
+          [System.IO.File]::WriteAllBytes("secrets\user.keystore", $bytes)
+
+      - name: Build AAB
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1 -ExecuteMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopment
+
+      - name: Sign AAB
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: |
+          $aab = (Get-ChildItem build\Android\*.aab | Select-Object -First 1).FullName
+          powershell -ExecutionPolicy Bypass -File .\scripts\sign-aab.ps1 -AabPath $aab
+
+      - name: Remove keystore
+        if: always()
+        shell: powershell
+        run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log-internal-${{ github.run_number }}
+          path: build-android.log
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-${{ github.run_number }}
+          path: build/Android/*.aab
+          retention-days: 30
+
+  # ── Job 3: Upload to Google Play internal track (ubuntu, Docker action) ──────
+  upload:
+    name: Google Play Internal
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-aab-${{ github.run_number }}
+          path: dist/
+
+      - name: Find AAB
+        id: aab
+        run: echo "path=$(ls dist/*.aab | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Google Play Internal Testing
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          packageName: com.clemtek.mobileidlebuilder
+          releaseFiles: ${{ steps.aab.outputs.path }}
+          track: internal
+          status: completed

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: alpha_particle
   displayName: Alpha Particle
   symbol: "\u03B1"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6f8a7d508d6123145aad6eecf2cdc002, type: 3}
   itemId: 18
   tier: 2
   category: 7
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 1
   particleUses: 7
   codexEntry: 'Emitted during alpha decay of heavy radioactive isotopes. Equivalent

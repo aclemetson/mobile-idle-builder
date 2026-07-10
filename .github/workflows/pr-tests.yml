@@ -2,16 +2,38 @@ name: PR Tests
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, 'release/**']
 
 concurrency:
   group: pr-tests-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
+  # Manual gate before anything runs on the self-hosted runner. Bound to the
+  # protected `self-hosted-approval` environment, so it pauses until a required
+  # reviewer (the repo owner) approves. Skipped for owner-authored PRs, which
+  # keeps the owner's own fast path unchanged. Runs on a GitHub-hosted runner so
+  # the self-hosted machine is never touched while waiting for approval.
+  approval-gate:
+    name: Approve self-hosted run
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.author_association != 'OWNER'
+    runs-on: ubuntu-latest
+    environment: self-hosted-approval
+    steps:
+      - run: echo "Approved by required reviewer to run on the self-hosted runner."
+
   test:
     name: Edit Mode Tests
-    if: startsWith(github.head_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository
+    needs: [approval-gate]
+    # Same-repo only: never run untrusted fork code on the self-hosted runner.
+    # Run once the gate is approved (success) or skipped for an owner PR;
+    # always() is required so a skipped `needs` job does not skip this job.
+    if: >-
+      always() &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (needs.approval-gate.result == 'success' || needs.approval-gate.result == 'skipped')
     runs-on: [self-hosted, windows, unity]
 
     steps:
@@ -41,3 +63,28 @@ jobs:
           name: test-results-${{ github.run_number }}
           path: TestResults
           retention-days: 14
+
+  # Pre-merge gate for PRs into a release branch: catch a duplicate / non-increasing
+  # version code while the PR is still open (the build workflow re-checks as a backstop).
+  version-guard:
+    name: Version Code Guard
+    if: startsWith(github.base_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API client
+        run: pip install --quiet google-api-python-client google-auth
+
+      - name: Check version code is new and increasing
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          BASE_REF: ${{ github.base_ref }}
+        run: python scripts/check-version-code.py

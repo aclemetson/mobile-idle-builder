@@ -16,5 +16,8 @@ namespace MobileIdleBuilder
 
         /// <summary>Returns true if a network connection is available and init succeeded.</summary>
         bool IsAvailable { get; }
+
+        /// <summary>Delete the cloud save key for the signed-in player. No-op if unavailable.</summary>
+        Task DeleteAsync();
     }
 }

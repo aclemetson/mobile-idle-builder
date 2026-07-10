@@ -17,35 +17,46 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _buildingQuery;
+        private World         _boundWorld;
 
         public bool IsReady { get; private set; }
 
         void Start()
         {
-            var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null)
-            {
-                GameLogger.Error("[ManualCraftService] No default DOTS world found.");
-                return;
-            }
+            if (Instance != this) return; // a duplicate destroyed by SingletonMonoBehaviour.Awake
+            EnsureBound();
+        }
 
-            _em = world.EntityManager;
+        // This is a persistent (DontDestroyOnLoad) singleton, but the DOTS world is rebuilt on every
+        // scene reload (e.g. starting a new game in-session — see DevConsoleController). A query cached
+        // against the old world reads empty, so the HUD recipe panel shows 0/x and craft is greyed out
+        // even though the inventory holds the items. Re-acquire the EntityManager + queries lazily
+        // whenever the default world changes. Checking at call time (rather than on sceneLoaded) is
+        // immune to the ordering of world recreation vs. the scene-loaded event.
+        private void EnsureBound()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) { IsReady = false; return; }
+            if (ReferenceEquals(world, _boundWorld) && IsReady) return;
+
+            _boundWorld     = world;
+            _em             = world.EntityManager;
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
-                ComponentType.ReadWrite<InventorySlot>()
-            );
-            _buildingQuery = _em.CreateEntityQuery(
+                ComponentType.ReadWrite<InventorySlot>());
+            _buildingQuery  = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<BuildingData>(),
                 ComponentType.ReadWrite<RecipeProcessData>(),
                 ComponentType.ReadOnly<RecipeInputSlot>(),
-                ComponentType.ReadOnly<RecipeOutputSlot>()
-            );
+                ComponentType.ReadOnly<RecipeOutputSlot>());
             IsReady = true;
+            GameLogger.Debug("[ManualCraftService] (Re)bound to the active ECS world.");
         }
 
         /// <summary>Returns true if the player's ECS inventory has enough inputs for this recipe.</summary>
         public bool CanCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _inventoryQuery.IsEmpty) return false;
 
             var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
@@ -79,12 +90,14 @@ namespace MobileIdleBuilder
             if (outputId >= 0)
                 SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
 
+            AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
             return true;
         }
 
         /// <summary>Snapshot of current inventory: itemId → quantity.</summary>
         public Dictionary<int, int> GetInventoryCounts()
         {
+            EnsureBound();
             var result = new Dictionary<int, int>();
             if (!IsReady || _inventoryQuery.IsEmpty) return result;
 
@@ -102,6 +115,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool CanTriggerBuildingCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
 
             int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
@@ -151,6 +165,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool TriggerBuildingCraft(RecipeJson recipe)
         {
+            EnsureBound();
             if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
 
             int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;

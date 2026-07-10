@@ -17,6 +17,8 @@ namespace MobileIdleBuilder
         public float netWorthToPrestigeCurrencyRate = 1.0f;
         public float prestigeBaseValue = 5000f;
         public float prestigeWallMultiplier = 10.0f;
+        [Tooltip("Multiplier in: PC = floor(log10(netWorth / prestigeBaseValue) × scale)")]
+        public float prestigeCurrencyScale = 50f;
 
         [Header("Environment")]
         public BuildEnvironment environment;
@@ -28,5 +30,21 @@ namespace MobileIdleBuilder
 
         [Header("Starting State")]
         public long startingEntropy;
+
+        [Header("Idle Collection")]
+        [Tooltip("Base maximum idle time in seconds before idle collection stops (2 hours).")]
+        public float idleBaseMaxSeconds = 7200f;
+        [Tooltip("Hard cap on idle time regardless of upgrades (12 hours).")]
+        public float idleAbsoluteMaxSeconds = 43200f;
+        [Tooltip("Fraction of active-play output collected while idle before upgrades (0..1).")]
+        public float idleBaseCollectionRate = 0.20f;
+
+        [Header("Building Purchase Scaling")]
+        [Tooltip("Each additional placement of the same Tier 1 building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT1 = 1.5f;
+        [Tooltip("Each additional placement of the same Tier 2 building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT2 = 1.4f;
+        [Tooltip("Each additional placement of the same Tier 3+ building costs base × multiplier^(n-1)")]
+        public float buildingPurchaseMultiplierT3Plus = 1.3f;
     }
 }

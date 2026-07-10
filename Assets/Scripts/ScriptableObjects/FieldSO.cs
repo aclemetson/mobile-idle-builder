@@ -20,15 +20,17 @@ namespace MobileIdleBuilder
     {
         public string id;
         public string displayName;
-        public FieldType fieldType;
+        [Tooltip("Free-form field-type id (data-driven). Buildings' compatibleFields match on this. See FieldTypes.")]
+        public string fieldType = FieldTypes.None;
 
-        [Tooltip("Items produced when the player taps or stands near this field.\n" +
+        [Tooltip("Item produced each time the player taps this field.\n" +
                  "Weights are relative — equal weights = equal probability.\n" +
                  "Single entry = always that item.")]
         public List<FieldDropEntry> drops = new();
 
-        [Tooltip("Items per second automatically collected while the player is within the proximity radius.")]
-        [Min(0.1f)] public float collectionRate = 1f;
+        [Tooltip("Seconds the field is on cooldown after a tap before it can be tapped again.\n" +
+                 "Shortened by research and the 'Quick Hands' prestige upgrade.")]
+        [Min(0.1f)] public float tapCooldownSeconds = 1.5f;
 
         public Color fieldColor;
         public Sprite fieldIcon;

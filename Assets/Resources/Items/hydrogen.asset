@@ -15,7 +15,7 @@ MonoBehaviour:
   id: hydrogen
   displayName: Hydrogen
   symbol: H
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: bf43dd8a7b7d27a4abe4a292f0680569, type: 3}
   itemId: 6
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The simplest and most abundant element in the universe. One proton,

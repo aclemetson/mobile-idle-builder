@@ -23,12 +23,18 @@ MonoBehaviour:
   depthInTree: 2
   costBaseCurrency: 1000
   costPrestigeCurrency: 0
+  durationSeconds: 120
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 7a943f92f16babd4d99dcc1c0b813968, type: 2}
   - {fileID: 11400000, guid: 7ccf03d0ad1be2d4a9a061bbe7f99d2d, type: 2}
+  - {fileID: 11400000, guid: e6ba63c2e5deb7d41b3d61d79e8aaaa5, type: 2}
+  - {fileID: 11400000, guid: a23e5b9e76e088e4493537f741bcce74, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: be0454f0bf6baca449c8e6291edc1be9, type: 2}
   - {fileID: 11400000, guid: 07802ddc5ba0150489b8882bd8778805, type: 2}
+  - {fileID: 11400000, guid: 0199a3c08e4ec1d4ea4d67a94d8931f2, type: 2}
+  - {fileID: 11400000, guid: 62fb9a403ccade74fabb57937dc69396, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

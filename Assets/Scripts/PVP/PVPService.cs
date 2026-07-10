@@ -51,7 +51,7 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO  gameConfig;
         [SerializeField] HUDController hudController;
 
-        protected override bool PersistAcrossScenes => true;
+        protected override bool PersistAcrossScenes => false;
 
         /// <summary>Fired when State changes — HUD panel should rebuild.</summary>
         public event Action OnStateChanged;
@@ -166,6 +166,13 @@ namespace MobileIdleBuilder
 
         void RefreshState()
         {
+            // Remote kill-switch: keep PVP fully locked until the backend is enabled for this environment.
+            if (!FeatureFlags.PvpEnabled)
+            {
+                State = PVPState.Locked;
+                return;
+            }
+
             var save = SaveManager.Instance?.Current;
             if (save == null || save.prestigeCount < PvpPrestigeUnlockCount)
             {
@@ -213,6 +220,7 @@ namespace MobileIdleBuilder
             RefreshState();
             OnStateChanged?.Invoke();
 
+            AchievementService.Instance?.NotifyPVPWin();
             hudController?.ShowNotification("⚔", "Competition run ended! Score is being calculated.", "warning");
 
             if (Application.internetReachability != NetworkReachability.NotReachable &&

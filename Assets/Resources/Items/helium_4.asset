@@ -15,7 +15,7 @@ MonoBehaviour:
   id: helium_4
   displayName: Helium-4
   symbol: He
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c4bbc941ec1115a429982ea55eeff86a, type: 3}
   itemId: 7
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The second lightest element, produced in stellar cores through hydrogen

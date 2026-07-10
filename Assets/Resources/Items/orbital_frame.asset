@@ -15,7 +15,7 @@ MonoBehaviour:
   id: orbital_frame
   displayName: Orbital Frame
   symbol: OF
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 95560fc81603c9a46a685367bb40f080, type: 3}
   itemId: 50
   tier: 5
   category: 6
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The load-bearing superstructure of a megastructure. Woven from titanium

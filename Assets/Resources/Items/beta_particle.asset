@@ -15,7 +15,7 @@ MonoBehaviour:
   id: beta_particle
   displayName: Beta Particle
   symbol: "\u03B2"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c7158e0109e3f6945a96c0756091a21e, type: 3}
   itemId: 19
   tier: 2
   category: 7
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 1
   particleUses: 3
   codexEntry: Emitted during beta decay of unstable isotopes like Tritium and Carbon-14.

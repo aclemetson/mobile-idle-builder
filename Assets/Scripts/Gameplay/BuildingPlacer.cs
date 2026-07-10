@@ -24,7 +24,8 @@ namespace MobileIdleBuilder
         /// Pass outputDirection for field-collector buildings; omit (null) for all others.
         /// </summary>
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
-                                  int? outputDirection = null, int rotation = 0, bool flipped = false)
+                                  int? outputDirection = null, int rotation = 0, bool flipped = false,
+                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -62,10 +63,12 @@ namespace MobileIdleBuilder
 
             _em.SetComponentData(entity, new BuildingData
             {
-                BuildingType    = building != null ? building.buildingId : 0,
-                UpgradeLevel    = 1,
-                ProductionSpeed = 1f,
-                IsActive        = true
+                BuildingType        = building != null ? building.buildingId : 0,
+                UpgradeLevel        = speedLevel,
+                StorageUpgradeLevel = storageLevel,
+                InputUpgradeLevel   = inputLevel,
+                ProductionSpeed     = BuildingSO.ProductionSpeedForLevel(building, speedLevel),
+                IsActive            = true
             });
 
             _em.AddComponentData(entity, new BuildingTransformData
@@ -92,8 +95,8 @@ namespace MobileIdleBuilder
 
             _em.SetComponentData(entity, new BuildingInventoryConfig
             {
-                OutputCapacity = 20,
-                InputCapacity  = 20
+                OutputCapacity = BuildingSO.OutputCapacityForLevel(building, storageLevel),
+                InputCapacity  = BuildingSO.InputCapacityForLevel(building, inputLevel)
             });
 
             if (recipe != null)
@@ -137,6 +140,12 @@ namespace MobileIdleBuilder
             if (building?.isEntropySink == true)
                 _em.AddComponentData(entity, new EntropySinkTag());
 
+            // Bespoke procedural structure selector (data-driven, no hardcoded ids). Collectors and
+            // entropy sinks are detected by their gameplay components; everything else that declares a
+            // structureKind gets it here so BuildingVisualizer can pick the right form on place + load.
+            if (building != null && building.structureKind != BuildingStructureKind.None)
+                _em.AddComponentData(entity, new BuildingVisualStyle { Kind = (int)building.structureKind });
+
             // Any MustBeOnField building (port-layout or legacy) is an autonomous collector.
             // CollectorData must be added AFTER the entity archetype is fixed by AddComponentData
             // calls above, and regardless of whether the building defines a port layout.
@@ -148,6 +157,29 @@ namespace MobileIdleBuilder
 
             if (fw > 1 || fh > 1)
                 _em.AddComponentData(entity, new BuildingFootprint { Width = fw, Height = fh });
+
+            // Power: generators emit eV + a coverage radius; consumers carry their draw and a status
+            // slot that PowerGridSystem writes each frame. All values scale with the speed level.
+            if (building != null && building.isPowerSource)
+            {
+                float outputEV = BuildingSO.PowerOutputForLevel(building, speedLevel);
+                _em.AddComponentData(entity, new PowerNodeData
+                {
+                    MaxEV           = outputEV,
+                    CurrentEV       = outputEV,
+                    InfluenceRadius = BuildingSO.InfluenceRadiusForLevel(building, speedLevel),
+                    LinkRadius      = BuildingSO.LinkRadiusForLevel(building, speedLevel),
+                    IsGridLinked    = false
+                });
+            }
+            else if (building != null && building.requiresPower)
+            {
+                _em.AddComponentData(entity, new PowerConsumer
+                {
+                    DrawEV = BuildingSO.PowerDrawForLevel(building, speedLevel)
+                });
+                _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            }
 
             if (hasPorts)
             {

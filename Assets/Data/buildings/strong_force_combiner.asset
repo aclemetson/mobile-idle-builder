@@ -40,18 +40,31 @@ MonoBehaviour:
   - Up Quarks
   - Down Quarks
   isEntropySink: 0
-  footprint: {x: 1, y: 1}
-  ports: []
+  footprint: {x: 2, y: 1}
+  structureKind: 2
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 0
+  - portType: 0
+    localCell: {x: 1, y: 0}
+    localFacing: 0
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 200
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 2
     powerCostEV: 18
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 300
     costPrestigeCurrency: 0
   - level: 3
@@ -59,6 +72,7 @@ MonoBehaviour:
     powerCostEV: 30
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 1200
     costPrestigeCurrency: 0
   - level: 4
@@ -66,7 +80,34 @@ MonoBehaviour:
     powerCostEV: 50
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 5000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 200
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 800
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 3500
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 200
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 800
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 3500
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}

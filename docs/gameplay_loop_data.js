@@ -8,11 +8,15 @@
 //  3. recipes          49 recipes          (sync with game_data.json recipes)
 //  4. buildings        10 buildings        (sync with game_data.json buildings[].entropy_cost)
 //  5. research         20 nodes            (sync with game_data.json research[].cost_base_currency)
-//  6. tutorial_phases   6 phases / 48 steps with doc annotations
+//  6. tutorial_phases   6 phases / 50 steps with doc annotations (incl. upgrade tutorial ⑥ cont.)
 //  7. post_tutorial_phases  9 phases (Runs 2+, phases 7–15)
 //  8. dialogues        12 phase groups / ~40 dialogue entries
 //  9. design_gaps      13 tracked issues
-// 10. simple_overview  17 phases for the Simple Overview tab
+// 10. simple_overview  18 phases for the Simple Overview tab
+// 11. prestige         formula params + 10 permanent upgrades
+// 12. nuclear          periodic table (118) + nuclear buildings/particles/research (design)
+// 13. worlds           Track/World layer (Physics/Chemistry/Biology) + Chemistry fields/buildings/recipes/research
+//                        Phases 1-3 + 4a shipped (Chemistry C1 playable); C2-C4 + Biology are design
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -144,22 +148,55 @@ recipes: [
 ],
 
 // ─────────────────────────────────────── BUILDINGS ──
+// buf: { out: base output buffer items, in: base input buffer per slot (0 = n/a) }
+// ups: speed upgrades  [{ e: cost, r: new rate }]  (output_rate multiplier; for Demon: throughput multiplier)
+// sus: storage upgrades [{ e: cost, b: new max output buffer }]
 buildings: [
   // Tier 1
-  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,       draw:'—',        out:'—',     rate:'1/s',    ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}] },
-  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,       draw:'10 eV',    out:'—',     rate:'1/s',    ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}] },
-  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,       draw:'—',        out:'50 eV', rate:'—',      ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}] },
-  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,         draw:'—',        out:'—',     rate:'entropy', ups:[{e:300},{e:1200}] },
+  { id:'harvester',               label:'Harvester',               tier:1, cat:'Core',      cost:100,     draw:'—',        out:'—',     rate:'1/s',
+    buf:{out:20, in:0},
+    ups:[{e:500,r:'2/s'},{e:2000,r:'4/s'},{e:8000,r:'8/s'}],
+    sus:[{e:300,b:150},{e:1200,b:750},{e:5000,b:4000}] },
+  { id:'strong_force_combiner',   label:'Strong Force Combiner',   tier:1, cat:'Transient', cost:200,     draw:'10 eV',    out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:300,r:'2/s'},{e:1200,r:'4/s'},{e:5000,r:'8/s'}],
+    sus:[{e:200,b:150},{e:800,b:750},{e:3500,b:4000}] },
+  { id:'basic_generator',         label:'Basic Generator',         tier:1, cat:'Power',     cost:150,     draw:'—',        out:'50 eV', rate:'—',
+    buf:{out:0, in:0},
+    ups:[{e:400,o:'100 eV'},{e:1600,o:'200 eV'},{e:6000,o:'400 eV'}],
+    sus:[] },
+  { id:'maxwells_demon',          label:"Maxwell's Demon",         tier:1, cat:'Core',      cost:0,       draw:'—',        out:'—',     rate:'entropy',
+    buf:{out:0, in:0},
+    ups:[{e:200,r:'2× throughput'},{e:800,r:'4× throughput'}],
+    sus:[{e:150,b:300},{e:600,b:1500}] },
   // Tier 2
-  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:200,       draw:'mass×5',   out:'—',     rate:'1/s',    ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}] },
-  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500,      draw:'n×8',      out:'—',     rate:'0.5/s',  ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}] },
-  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500,      draw:'30 eV',    out:'—',     rate:'decay',  ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}] },
+  { id:'atomic_assembler',        label:'Atom Generator',          tier:2, cat:'Transient', cost:350,     draw:'mass×5',   out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:1000,r:'2/s'},{e:4000,r:'4/s'},{e:16000,r:'8/s'}],
+    sus:[{e:700,b:150},{e:2800,b:750},{e:11000,b:4000}] },
+  { id:'isotopic_manipulator',    label:'Isotopic Manipulator',    tier:2, cat:'Transient', cost:1500,    draw:'n×8',      out:'—',     rate:'0.5/s',
+    buf:{out:15, in:30},
+    ups:[{e:2000,r:'1/s'},{e:8000,r:'2/s'},{e:32000,r:'4/s'}],
+    sus:[{e:1500,b:100},{e:6000,b:500},{e:24000,b:2500}] },
+  { id:'radioactive_containment', label:'Radioactive Containment', tier:2, cat:'Core',      cost:2500,    draw:'30 eV',    out:'—',     rate:'decay',
+    buf:{out:30, in:30},
+    ups:[{e:3000,d:'50 eV'},{e:12000,d:'80 eV'}],
+    sus:[{e:2000,b:200},{e:8000,b:1000}] },
   // Tier 3
-  { id:'molecular_synthesizer',   label:'Molecular Synthesizer',   tier:3, cat:'Transient', cost:5000,      draw:'recipe',   out:'—',     rate:'1/s',    ups:[{e:50000,r:'2/s'},{e:200000,r:'4/s'},{e:800000,r:'8/s'}] },
+  { id:'molecular_synthesizer',   label:'Molecular Synthesizer',   tier:3, cat:'Transient', cost:5000,    draw:'recipe',   out:'—',     rate:'1/s',
+    buf:{out:20, in:30},
+    ups:[{e:50000,r:'2/s'},{e:200000,r:'4/s'},{e:800000,r:'8/s'}],
+    sus:[{e:35000,b:150},{e:140000,b:750},{e:560000,b:4000}] },
   // Tier 4
-  { id:'materials_forge',         label:'Materials Forge',         tier:4, cat:'Transient', cost:50000,     draw:'recipe',   out:'—',     rate:'0.5/s',  ups:[{e:1000000,r:'1/s'},{e:5000000,r:'2/s'},{e:25000000,r:'4/s'}] },
+  { id:'materials_forge',         label:'Materials Forge',         tier:4, cat:'Transient', cost:50000,   draw:'recipe',   out:'—',     rate:'0.5/s',
+    buf:{out:15, in:30},
+    ups:[{e:1000000,r:'1/s'},{e:5000000,r:'2/s'},{e:25000000,r:'4/s'}],
+    sus:[{e:700000,b:100},{e:3500000,b:500},{e:17500000,b:2500}] },
   // Tier 5
-  { id:'component_fabricator',    label:'Component Fabricator',    tier:5, cat:'Transient', cost:5000000,   draw:'recipe',   out:'—',     rate:'0.25/s', ups:[{e:100000000,r:'0.5/s'},{e:1000000000,r:'1/s'}] },
+  { id:'component_fabricator',    label:'Component Fabricator',    tier:5, cat:'Transient', cost:5000000, draw:'recipe',   out:'—',     rate:'0.25/s',
+    buf:{out:10, in:30},
+    ups:[{e:100000000,r:'0.5/s'},{e:1000000000,r:'1/s'}],
+    sus:[{e:70000000,b:75},{e:700000000,b:375}] },
 ],
 
 // ─────────────────────────────────────── RESEARCH ──
@@ -169,6 +206,8 @@ research: [
   { id:'hydrogen_synthesis',     label:'Hydrogen Synthesis',     branch:'Nuclear',     cost:50,        discount:0.25, prereqs:'Recombination I',                     unlocks:'Hydrogen, Atom Generator' },
   { id:'automation_i',           label:'Automation I',           branch:'Engineering', cost:25,        discount:0.50, prereqs:'Hydrogen Synthesis',                  unlocks:'Harvester' },
   { id:'nucleon_harvesting',     label:'Nucleon Harvesting',     branch:'Engineering', cost:800,       discount:0.20, prereqs:'Recombination I',                     unlocks:'Nucleon Harvester (special)' },
+  { id:'rapid_extraction_i',     label:'Rapid Extraction I',     branch:'Engineering', cost:150,       discount:0.25, prereqs:'Recombination I',                     unlocks:'Field tap cooldown −15%' },
+  { id:'rapid_extraction_ii',    label:'Rapid Extraction II',    branch:'Engineering', cost:600,       discount:0.20, prereqs:'Rapid Extraction I',                   unlocks:'Field tap cooldown −20% more' },
   { id:'atomic_assembly',        label:'Atomic Assembly',        branch:'Chemistry',   cost:500,       discount:0.20, prereqs:'Hydrogen Synthesis',                  unlocks:'He-4, Li, C, O, Si, Fe + gates: Light/Mid Elements, Mol. Synthesis' },
   { id:'isotopes',               label:'Isotope Engineering',    branch:'Nuclear',     cost:1500,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'D, T, C-14, Isotopic Manipulator' },
   { id:'heavy_elements',         label:'Heavy Elements',         branch:'Nuclear',     cost:3000,      discount:0.10, prereqs:'Atomic Assembly',                     unlocks:'Uranium + gate: Transuranic Synthesis' },
@@ -183,7 +222,7 @@ research: [
   // ── Tier 3–5 processing gates ──
   { id:'molecular_synthesis',    label:'Molecular Synthesis',    branch:'Chemistry',   cost:3000,      discount:0.15, prereqs:'Atomic Assembly',                     unlocks:'LH₂, H₂O, CH₄, NH₃, Molecular Synthesizer' },
   { id:'advanced_molecules',     label:'Advanced Molecules',     branch:'Chemistry',   cost:20000,     discount:0.10, prereqs:'Mol. Synthesis + Mid Elements',       unlocks:'SiO₂, Fe₂O₃, UF₆' },
-  { id:'materials_science',      label:'Materials Science',      branch:'Materials',   cost:150000,    discount:0.10, prereqs:'Adv. Molecules + Transition Metals',  unlocks:'Steel, Carbon Fiber, Ti Alloy, Materials Forge' },
+  { id:'materials_science',      label:'Materials Science',      branch:'Materials',   cost:150000,    discount:0.10, prereqs:'Adv. Molecules + Transition Metals',  unlocks:'Steel, Carbon Fiber, Ti Alloy, Materials Forge + Quantum Domains intro' },
   { id:'advanced_materials',     label:'Advanced Materials',     branch:'Materials',   cost:800000,    discount:0.05, prereqs:'Materials Science + Precious Metals', unlocks:'Si Wafer, Aerogel, Superconductor, Metamaterial' },
   { id:'component_engineering',  label:'Component Engineering',  branch:'Engineering', cost:5000000,   discount:0.05, prereqs:'Adv. Materials + Transuranic',        unlocks:'Quantum Proc., Plasma Ring, Antimatter Cell, Comp. Fabricator' },
   { id:'megastructure_theory',   label:'Megastructure Theory',   branch:'Astrophysics',cost:50000000,  discount:0.05, prereqs:'Component Engineering',               unlocks:'Dyson Node, Orbital Frame, Graviton Lens' },
@@ -375,8 +414,8 @@ tutorial_phases: [
   {
     phase: 6, label: '⑥ Automation',
     color: '#1a6e40', bg: '#0d2018',
-    meta: 'Steps 28–46 · Tutorial teaches: Automation I research, Harvester placement, conveyor routing, power system, SFC dual-recipe, nucleon pipeline, Atom Generator, hydrogen assembly · <strong style="color:#3fb950">Tutorial ends at step 46</strong>',
-    entropy_note: { text: 'Entropy after tutorial: ~12e+ (lepton Harvester + SFC nucleons + Atom Generator hydrogen · ~4e/sec)', cls: '', color: '#3fb950' },
+    meta: 'Steps 28–50 · Tutorial teaches: Automation I research, Harvester placement, conveyor routing, power system, SFC dual-recipe, nucleon pipeline, Atom Generator, hydrogen assembly, building upgrades · <strong style="color:#3fb950">Tutorial ends at step 50</strong>',
+    entropy_note: { text: 'Tutorial end state: H loop ~4e/sec · Speed Upgrade L2 purchased on Atom Generator (2× throughput) · ~8e/sec after upgrade', cls: '', color: '#3fb950' },
     steps: [
       { num:28, id:'intro_automation_i',         row_cls:'dialogue', tag_type:'dialogue',
         action:'Architect explains what Automation I unlocks and the Harvester concept.',
@@ -452,14 +491,14 @@ tutorial_phases: [
         time:'~1 min', advance:'dialogue_complete' },
       { type:'subheader', text:'⑥ cont. — Hydrogen Automation' },
       { num:42, id:'intro_atom_gen',             row_cls:'dialogue', tag_type:'dialogue',
-        action:'Silent wait until entropy ≥ 200. Dialogue fires on enter: Architect directs player to place the Atom Generator.',
+        action:'Silent wait until entropy ≥ 350. Dialogue fires on enter: Architect directs player to place the Atom Generator.',
         dlg_ref:'intro_atom_gen_context · 1 line · game live',
         cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Atom Generator available (research already done)'},
-        time:'~1–2 min idle', advance:'entropy ≥ 200' },
+        time:'~2–4 min idle', advance:'entropy ≥ 350' },
       { num:43, id:'place_atom_generator',       row_cls:'',         tag_type:'hint',
         action:'Build menu pulses. Place the Atom Generator. Uses 5 eV — existing generator handles it alongside the SFC (15 eV total vs 50 eV supply).',
         dlg_ref:'place_atom_gen_context · 1 line · game live',
-        cost:{t:'cost',v:'−200 entropy'}, reward:{t:'reward',v:'Atom Generator placed'},
+        cost:{t:'cost',v:'−350 entropy'}, reward:{t:'reward',v:'Atom Generator placed'},
         time:'~30 sec', advance:'atom_gen_count ≥ 1' },
       { num:44, id:'delete_reroute_conveyors',   row_cls:'dialogue', tag_type:'dialogue',
         action:'Architect teaches conveyor deletion before asking the player to reroute. Tap any conveyor to select it — a trash icon appears on the belt. Player must delete the proton conveyor (SFC → Demon) and the electron conveyor (Harvester → Demon) to free those ports.',
@@ -476,11 +515,27 @@ tutorial_phases: [
         dlg_ref:'route_hydrogen_context · 1 line · game live',
         cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Hydrogen (5e) selling automatically'},
         time:'~30 sec', advance:'atom_gen_output_connected' },
-      { num:47, id:'hydrogen_loop_complete',     row_cls:'milestone', tag_type:'milestone',
-        action:'Architect names the first atom, teases the full periodic table. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>',
+      { num:47, id:'hydrogen_loop_complete',     row_cls:'dialogue', tag_type:'dialogue',
+        action:'Architect names the first atom, teases the full periodic table. Upgrade tutorial begins next.',
         dlg_ref:'hydrogen_loop_context · 2 lines · game paused → live',
-        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Tutorial complete · ~4e/sec · Atomic Assembly research unlocked next'},
+        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'H loop confirmed · ~4e/sec · upgrade phase starts'},
         time:'~1 min', advance:'dialogue_complete' },
+      { type:'subheader', text:'⑥ cont. — Building Upgrades' },
+      { num:48, id:'intro_building_upgrades',    row_cls:'dialogue', tag_type:'dialogue',
+        action:'Architect introduces Speed and Storage upgrade tracks. Atom Generator highlighted (VisualOnly). Ends with prompt to tap the Atom Generator.',
+        dlg_ref:'intro_upgrades_context · 4 lines · game paused → live → live → live (highlight: atomic_assembler)',
+        cost:{t:'neutral',v:'—'}, reward:{t:'neutral',v:'Player understands both upgrade tracks'},
+        time:'~90 sec', advance:'dialogue_complete' },
+      { num:49, id:'upgrade_atom_generator_speed', row_cls:'gate', tag_type:'gate',
+        action:'Camera pans full to Atom Generator. <code>AtomicAssemblerOnly</code> gate: only Atom Generator can be opened. Player taps it and buys Speed Upgrade L2.',
+        note:'Advance fires via TutorialOverlayController.NotifyAtomGeneratorSpeedUpgraded() — call from building upgrade UI when building_type == 4.',
+        cost:{t:'cost',v:'−1,000 entropy',bold:true}, reward:{t:'reward',v:'Atom Generator 2× speed · H income doubles to ~8e/sec'},
+        time:'~2–5 min idle', advance:'atom_generator_speed_upgraded' },
+      { num:50, id:'upgrade_context',            row_cls:'milestone', tag_type:'milestone',
+        action:'Architect confirms 2× throughput. Explains Storage track for offline running. Notes prestige discount on upgrades. <strong style="color:#3fb950">Tutorial ends when dialogue completes.</strong>',
+        dlg_ref:'upgrade_complete_context · 3 lines · game paused → live → live',
+        cost:{t:'neutral',v:'—'}, reward:{t:'reward',v:'Tutorial complete · both upgrade tracks introduced · ~8e/sec'},
+        time:'~90 sec', advance:'dialogue_complete' },
     ]
   },
 ],
@@ -616,6 +671,10 @@ post_tutorial_phases: [
         action:'Buy Materials Science (150K). Requires Advanced Molecules + Transition Metals. Unlocks Materials Forge and Steel, Carbon Fiber, Titanium Alloy recipes.',
         cost:{t:'cost',v:'−150,000e',bold:true}, reward:{t:'reward',v:'Materials Forge · Steel · Carbon Fiber · Ti Alloy'},
         time:'~3–4 prestige runs', advance:'materials_science unlocked' },
+      { id:'Quantum Domains unlocked', tag_type:'milestone',
+        action:'Buying Materials Science triggers the one-shot Quantum Domains intro. A second build site — Quark Sea (quark-dense, no electron fields) — can be anchored for 250K entropy. Exactly one site is live; inactive sites keep producing offline. The unlock survives prestige (the grids do not).',
+        cost:{t:'cost',v:'−250,000e (Quark Sea)'}, reward:{t:'reward',v:'2nd build site · per-site grid + field distribution · offline income across sites'},
+        time:'—', advance:'materials_science unlocked' },
       { id:'Build Materials Forge', tag_type:'building',
         action:'Place Materials Forge. 0.5/s base output (slower — materials take time). 2 molecule input slots. Craft times: 300–500s per alloy.',
         cost:{t:'cost',v:'50,000e'}, reward:{t:'reward',v:'Steel 1.5M/unit · Carbon Fiber 6M/unit'},
@@ -649,6 +708,10 @@ post_tutorial_phases: [
         action:'Place Component Fabricator. 0.25/s base output (very slow). Craft times: 1200–2000s per component. Requires enormous power — plan generator scaling.',
         cost:{t:'cost',v:'5,000,000e'}, reward:{t:'reward',v:'Quantum Processor 50B/unit · Plasma Ring 200B/unit'},
         time:'~5 min setup', advance:'component_engineering unlocked' },
+      { id:'Quantum Domains — Lepton Storm', tag_type:'milestone',
+        action:'A third build site — Lepton Storm (electron/lepton-dense, no quark fields) — can be anchored for 10M entropy, sitting just past the Component Engineering gate. Like all domains, the unlock survives prestige.',
+        cost:{t:'cost',v:'−10,000,000e'}, reward:{t:'reward',v:'3rd build site · electron-rich field distribution'},
+        time:'—', advance:'10M entropy held' },
     ]
   },
   {
@@ -902,7 +965,7 @@ dialogues: [
       { step_ref:'Step 41', dlg_id:'nucleon_loop_context', step_label:'nucleon_loop_complete · on_enter · 2 lines',
         lines:[
           { text:'Protons and neutrons selling automatically alongside electrons. Your factory has two income streams now. Every quark from every field finds a buyer.', flags:['pause_game'] },
-          { text:'The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 200 entropy and place it.', flags:['game live'] },
+          { text:'The Atom Generator is available — you researched it when you unlocked Hydrogen Synthesis. Save up 350 entropy and place it.', flags:['game live'] },
         ]
       },
     ]
@@ -936,10 +999,30 @@ dialogues: [
           { text:"Connect the Atom Generator's output to Maxwell's Demon. Hydrogen sells for 5 entropy. A raw proton and electron would have sold for 4 — assembly adds one entropy per cycle, and that margin compounds as you scale.", flags:['game live'] },
         ]
       },
-      { step_ref:'Step 47', dlg_id:'hydrogen_loop_context', step_label:'hydrogen_loop_complete · on_enter · 2 lines · 🎉 tutorial ends',
+      { step_ref:'Step 47', dlg_id:'hydrogen_loop_context', step_label:'hydrogen_loop_complete · on_enter · 2 lines',
         lines:[
           { text:'Hydrogen. One proton, one electron — the simplest atom in existence, and the most abundant in the universe. Your factory is making it continuously, without your input.', flags:['pause_game'] },
           { text:'Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.', flags:['game live'] },
+        ]
+      },
+    ]
+  },
+  {
+    phaseLabel: '⑥ cont. — Building Upgrades (Steps 48–50)',
+    entries: [
+      { step_ref:'Step 48', dlg_id:'intro_upgrades_context', step_label:'intro_building_upgrades · on_enter · 4 lines · highlight: atomic_assembler',
+        lines:[
+          { text:'Before you start saving — your factory is running at base efficiency. Every building here can be upgraded on two separate tracks: Speed and Storage.', flags:['pause_game'] },
+          { text:'Speed upgrades multiply throughput. Level 2 doubles your production rate. Level 4 brings you to eight times the base. Same inputs, same power draw — delivered faster.', flags:['game live'] },
+          { text:'Storage upgrades expand the output buffer — how many items a building holds before it stalls. A larger buffer means the factory keeps running longer while you are away.', flags:['game live'] },
+          { text:'Tap the Atom Generator. We are upgrading its speed first — it is the bottleneck of your hydrogen line.', flags:['game live','highlight: atomic_assembler'] },
+        ]
+      },
+      { step_ref:'Step 50', dlg_id:'upgrade_complete_context', step_label:'upgrade_context · on_enter · 3 lines · 🎉 tutorial ends',
+        lines:[
+          { text:'Two times throughput. The Atom Generator now produces hydrogen at twice the rate for the same input cost. Your entropy income just doubled.', flags:['pause_game'] },
+          { text:'The Storage track works the same way — tap the building again and you will see it below the Speed upgrade. A larger output buffer means the line keeps running while you are offline.', flags:['game live'] },
+          { text:'Both tracks reset on prestige. The entropy you invest here comes back as a discount on your next run — every upgrade makes the next cycle faster.', flags:['game live'] },
         ]
       },
     ]
@@ -1123,6 +1206,11 @@ design_gaps: [
     detail:'RecipeKnowledgeService.Start() calls RecipeDatabase.Instance with no DefaultExecutionOrder set on RecipeDatabase. If ordering ever shifts, SyncWithRecipeDatabase silently skips and new recipes are never added to the cross-prestige save file.',
     default_sol:'Add [DefaultExecutionOrder(-80)] to RecipeDatabase so it always initializes before RecipeKnowledgeService (-70). Makes the dependency explicit in code rather than relying on scene insertion order.',
     default_date:'2026-05-29' },
+  { id:'gap-14', cat:'Design', status:'resolved',
+    issue:'No in-context rotate during tap-to-place confirm flow (mobile)',
+    detail:'Placement now uses tap-to-position then a world-anchored ✓/✕ confirm popup above the candidate cell. Rotate (and Flip) lived only on the bottom placement bar, so a mobile player who tapped a cell had to look away from the confirm popup to re-orient a building before accepting.',
+    default_sol:'Added a ↻ Rotate button (btn-rotate-candidate) to the confirm popup between ✕ and ✓, calling the same BuildingPlacementController.Rotate() as the bottom-bar button and the R key. HUDController shows it only when CanRotate is true; the per-frame popup re-anchor + ✓-validity refresh pick up the new footprint after each rotate. Flip stays on the bottom bar. Covered by Assets/Scripts/Tests/BuildingPlacementControllerTests.cs.',
+    default_date:'2026-06-15' },
 ],
 
 // ─────────────────────────────────────── SIMPLE OVERVIEW ──
@@ -1163,9 +1251,14 @@ simple_overview: [
     { name:'Pipeline Running',      type:'milestone',dur:240 },
   ]},
   { phase:'6C', phaseName:'Hydrogen Automation',  phaseColor:'#1a6e40', isTutorial:true,  steps:[
-    { name:'Atom Generator (200e)', type:'building', dur:180 },
+    { name:'Atom Generator (350e)', type:'building', dur:180 },
     { name:'Reroute Conveyors',     type:'action',   dur:120 },
-    { name:'Tutorial Complete',     type:'milestone',dur:120 },
+    { name:'H Loop Running',        type:'milestone',dur:120 },
+  ]},
+  { phase:'6D', phaseName:'Building Upgrades',    phaseColor:'#1a6e40', isTutorial:true,  steps:[
+    { name:'Learn Speed + Storage Tracks', type:'dialogue', dur:90  },
+    { name:'Speed Upgrade L2 (1,000e)',    type:'gate',     dur:300 },
+    { name:'Tutorial Complete',            type:'milestone',dur:90  },
   ]},
   { phase:7,    phaseName:'Run 2 Ramp-Up',        phaseColor:'#6e3a8a', isTutorial:false, steps:[
     { name:'Prestige Reset',        type:'gate',     dur:300 },
@@ -1221,5 +1314,253 @@ simple_overview: [
     { name:'Graviton Lens (endgame)',         type:'milestone',dur:6000 },
   ]},
 ],
+
+// ─────────────────────────────────── PRESTIGE SHOP ──
+// Formula: PC = floor(max(0, log10(netWorth / formulaBase) × formulaScale))
+// Sync formulaBase / formulaScale / wallMultiplier with game_data.json game_config
+prestige: {
+  formulaBase:      5000,
+  formulaScale:     50,
+  wallMultiplier:   10,
+
+  upgrades: [
+    // ── Tier 1: no prerequisites ──────────────────────────────────────────
+    {
+      id: 'entropy_headstart', name: 'Entropy Headstart', tier: 1,
+      effectType: 'StartingEntropyBonus', effectPerLevel: 250, unit: 'e',
+      maxLevel: 5, baseCost: 5, costScaling: 2.0,
+      costs: [5, 10, 20, 40, 80],
+      prereqs: [],
+      description: 'Start each run with +250 extra entropy per level.',
+    },
+    {
+      id: 'memory_resonance', name: 'Memory Resonance', tier: 1,
+      effectType: 'GlobalResearchDiscount', effectPerLevel: 5, unit: '%',
+      maxLevel: 5, baseCost: 10, costScaling: 2.0,
+      costs: [10, 20, 40, 80, 160],
+      prereqs: [],
+      description: 'All research costs 5% less per level on every run.',
+    },
+    {
+      id: 'assembly_line', name: 'Assembly Line', tier: 1,
+      effectType: 'CraftSpeedMultiplier', effectPerLevel: 10, unit: '%',
+      maxLevel: 5, baseCost: 15, costScaling: 2.0,
+      costs: [15, 30, 60, 120, 240],
+      prereqs: [],
+      description: 'All buildings craft 10% faster per level.',
+    },
+    {
+      id: 'expanded_vault', name: 'Expanded Vault', tier: 1,
+      effectType: 'VaultCapacity', effectPerLevel: 20, unit: 'slots',
+      maxLevel: 5, baseCost: 25, costScaling: 1.5,
+      costs: [25, 38, 56, 84, 126],
+      prereqs: [],
+      description: 'Increase inventory capacity by +20 slots per level.',
+    },
+    {
+      id: 'field_cooldown', name: 'Quick Hands', tier: 1,
+      effectType: 'FieldCooldownReduction', effectPerLevel: 5, unit: '%',
+      maxLevel: 10, baseCost: 20, costScaling: 1.5,
+      costs: [20, 35, 55, 85, 130, 200, 305, 465, 705, 1070],
+      prereqs: [],
+      description: 'Field tap cooldown is 5% shorter per level (max −50%).',
+    },
+    // ── Tier 2: require 1 Tier-1 level ──────────────────────────────────
+    {
+      id: 'quantum_yield', name: 'Quantum Yield', tier: 2,
+      effectType: 'OutputQuantityMultiplier', effectPerLevel: 10, unit: '%',
+      maxLevel: 5, baseCost: 40, costScaling: 2.0,
+      costs: [40, 80, 160, 320, 640],
+      prereqs: [{ id: 'assembly_line', minLevel: 1 }],
+      description: 'All recipes produce +10% more output per level.',
+    },
+    {
+      id: 'efficient_layouts', name: 'Efficient Layouts', tier: 2,
+      effectType: 'BuildingCostReduction', effectPerLevel: 5, unit: '%',
+      maxLevel: 6, baseCost: 35, costScaling: 2.0,
+      costs: [35, 70, 140, 280, 560, 1120],
+      prereqs: [{ id: 'memory_resonance', minLevel: 1 }],
+      description: 'Building placement costs 5% less per level (max −30%).',
+    },
+    // ── Tier 3: require deeper investment ───────────────────────────────
+    {
+      id: 'turnkey_builder', name: 'Turnkey Builder', tier: 3,
+      effectType: 'BuildingStartPrePlaced', effectPerLevel: 1, unit: 'harvester',
+      maxLevel: 3, baseCost: 150, costScaling: 5.0,
+      costs: [150, 750, 3750],
+      prereqs: [{ id: 'efficient_layouts', minLevel: 2 }],
+      description: 'Start each run with +1 pre-placed Harvester per level.',
+    },
+    {
+      id: 'research_overdrive', name: 'Research Overdrive', tier: 3,
+      effectType: 'ResearchSpeed', effectPerLevel: 5, unit: '%',
+      maxLevel: 10, baseCost: 30, costScaling: 1.65,
+      costs: [30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800],
+      prereqs: [{ id: 'memory_resonance', minLevel: 2 }],
+      description: 'Research timers complete 5% faster per level (max -50%).',
+    },
+    {
+      id: 'entropy_echo', name: 'Entropy Echo', tier: 3,
+      effectType: 'PrestigeGainMultiplier', effectPerLevel: 5, unit: '%',
+      maxLevel: 4, baseCost: 200, costScaling: 3.0,
+      costs: [200, 600, 1800, 5400],
+      prereqs: [{ id: 'entropy_headstart', minLevel: 3 }, { id: 'memory_resonance', minLevel: 3 }],
+      description: 'Earn +5% more prestige currency per run per level.',
+    },
+  ],
+},
+
+// ─────────────────────────────────── NUCLEAR / ELEMENTS ──
+// Periodic-table + nuclear design data. Mirrors docs/agents/elements-and-isotopes.md.
+// The ~20 elements in `impl` are authoritative (game_data.json); every other
+// yield/regime is a DESIGN placeholder. Do NOT treat as authoritative.
+nuclear: {
+  regimes: [
+    { key:'genesis',   label:'Genesis (assembler)',          color:'#d2a8ff', note:'H = proton + electron' },
+    { key:'fusion',    label:'Fusion ladder (Z2-26)',        color:'#3fb950', note:'fuse up to iron (natural peak)' },
+    { key:'fission',   label:'Fission / fragments',          color:'#f0883e', note:'split heavies down toward iron' },
+    { key:'field',     label:'Fissile field + decay',        color:'#58a6ff', note:'harvested heavy + decay chains; last natural = U' },
+    { key:'breeding',  label:'Neutron breeding (post-iron)', color:'#db61a2', note:'Breeder Reactor: actinides, value climbs PAST iron' },
+    { key:'synthesis', label:'Accelerator synthesis (post-iron)', color:'#e3b341', note:'Particle Accelerator: superheavies to Og (global max)' },
+  ],
+  // ~20 implemented elements (game_data.json) — shown with a dot in the grid.
+  impl: [1,2,3,4,5,6,7,8,13,14,26,28,29,30,47,74,78,79,92,94],
+  // [z, symbol, name, mass number A (= Atomic-Assembler craft seconds)]
+  els: [
+    [1,'H','Hydrogen',1],[2,'He','Helium',4],[3,'Li','Lithium',7],[4,'Be','Beryllium',9],
+    [5,'B','Boron',11],[6,'C','Carbon',12],[7,'N','Nitrogen',14],[8,'O','Oxygen',16],
+    [9,'F','Fluorine',19],[10,'Ne','Neon',20],[11,'Na','Sodium',23],[12,'Mg','Magnesium',24],
+    [13,'Al','Aluminum',27],[14,'Si','Silicon',28],[15,'P','Phosphorus',31],[16,'S','Sulfur',32],
+    [17,'Cl','Chlorine',35],[18,'Ar','Argon',40],[19,'K','Potassium',39],[20,'Ca','Calcium',40],
+    [21,'Sc','Scandium',45],[22,'Ti','Titanium',48],[23,'V','Vanadium',51],[24,'Cr','Chromium',52],
+    [25,'Mn','Manganese',55],[26,'Fe','Iron',56],[27,'Co','Cobalt',59],[28,'Ni','Nickel',58],
+    [29,'Cu','Copper',63],[30,'Zn','Zinc',65],[31,'Ga','Gallium',69],[32,'Ge','Germanium',74],
+    [33,'As','Arsenic',75],[34,'Se','Selenium',80],[35,'Br','Bromine',79],[36,'Kr','Krypton',84],
+    [37,'Rb','Rubidium',85],[38,'Sr','Strontium',88],[39,'Y','Yttrium',89],[40,'Zr','Zirconium',90],
+    [41,'Nb','Niobium',93],[42,'Mo','Molybdenum',98],[43,'Tc','Technetium',98],[44,'Ru','Ruthenium',102],
+    [45,'Rh','Rhodium',103],[46,'Pd','Palladium',106],[47,'Ag','Silver',108],[48,'Cd','Cadmium',114],
+    [49,'In','Indium',115],[50,'Sn','Tin',120],[51,'Sb','Antimony',121],[52,'Te','Tellurium',130],
+    [53,'I','Iodine',127],[54,'Xe','Xenon',132],[55,'Cs','Cesium',133],[56,'Ba','Barium',138],
+    [57,'La','Lanthanum',139],[58,'Ce','Cerium',140],[59,'Pr','Praseodymium',141],[60,'Nd','Neodymium',142],
+    [61,'Pm','Promethium',145],[62,'Sm','Samarium',152],[63,'Eu','Europium',153],[64,'Gd','Gadolinium',158],
+    [65,'Tb','Terbium',159],[66,'Dy','Dysprosium',164],[67,'Ho','Holmium',165],[68,'Er','Erbium',166],
+    [69,'Tm','Thulium',169],[70,'Yb','Ytterbium',174],[71,'Lu','Lutetium',175],[72,'Hf','Hafnium',180],
+    [73,'Ta','Tantalum',181],[74,'W','Tungsten',184],[75,'Re','Rhenium',187],[76,'Os','Osmium',192],
+    [77,'Ir','Iridium',193],[78,'Pt','Platinum',195],[79,'Au','Gold',197],[80,'Hg','Mercury',202],
+    [81,'Tl','Thallium',205],[82,'Pb','Lead',208],[83,'Bi','Bismuth',209],[84,'Po','Polonium',209],
+    [85,'At','Astatine',210],[86,'Rn','Radon',222],[87,'Fr','Francium',223],[88,'Ra','Radium',226],
+    [89,'Ac','Actinium',227],[90,'Th','Thorium',232],[91,'Pa','Protactinium',231],[92,'U','Uranium',238],
+    [93,'Np','Neptunium',237],[94,'Pu','Plutonium',244],[95,'Am','Americium',243],[96,'Cm','Curium',247],
+    [97,'Bk','Berkelium',247],[98,'Cf','Californium',251],[99,'Es','Einsteinium',252],[100,'Fm','Fermium',257],
+    [101,'Md','Mendelevium',258],[102,'No','Nobelium',259],[103,'Lr','Lawrencium',266],[104,'Rf','Rutherfordium',267],
+    [105,'Db','Dubnium',268],[106,'Sg','Seaborgium',269],[107,'Bh','Bohrium',270],[108,'Hs','Hassium',269],
+    [109,'Mt','Meitnerium',278],[110,'Ds','Darmstadtium',281],[111,'Rg','Roentgenium',282],[112,'Cn','Copernicium',285],
+    [113,'Nh','Nihonium',286],[114,'Fl','Flerovium',289],[115,'Mc','Moscovium',290],[116,'Lv','Livermorium',293],
+    [117,'Ts','Tennessine',294],[118,'Og','Oganesson',294],
+  ],
+  // Standard periodic layout: 7 main rows + 2 f-block rows, 18 columns.
+  // 0 = empty, -1 = lanthanide placeholder, -2 = actinide placeholder.
+  layout: [
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [3,4,0,0,0,0,0,0,0,0,0,0,5,6,7,8,9,10],
+    [11,12,0,0,0,0,0,0,0,0,0,0,13,14,15,16,17,18],
+    [19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36],
+    [37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54],
+    [55,56,-1,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86],
+    [87,88,-2,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118],
+    [0,0,0,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71],
+    [0,0,0,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103],
+  ],
+  // New nuclear buildings (design). Schema mirrors game_data.json buildings[].
+  // Radioactive Containment (existing) gains an auto-decay toggle: ON -> passive
+  // entropy at decay_value_fraction (~0.3); OFF -> route to Maxwell's Demon for full value.
+  buildings: [
+    { name:'Fusion Reactor',       id:'fusion_reactor',       tier:2, inputs:'2 light nuclei (+ H / neutron fuel)',         output:'next element up the ladder',  byproducts:'neutron, positron, gamma, neutrino', gate:'fusion_i' },
+    { name:'Fission Reactor',      id:'fission_reactor',      tier:2, inputs:'fissile isotope + neutron trigger',           output:'2-3 mid-weight fragments',    byproducts:'neutron x2-3, gamma, beta',          gate:'fission_i' },
+    { name:'Breeder Reactor',      id:'breeder_reactor',      tier:5, inputs:'actinide(Z) + many neutrons',                 output:'next actinide (Z+1), post-iron', byproducts:'beta, neutrino, gamma',           gate:'neutron_breeding_i (post-iron)' },
+    { name:'Particle Accelerator', id:'particle_accelerator', tier:5, inputs:'heavy target + light projectile (Ca-48) + huge eV', output:'superheavy (to Og), post-iron', byproducts:'neutron x1-4, gamma',          gate:'accelerator_i (post-iron)' },
+  ],
+  // Exotic particles (existing + design additions).
+  particles: [
+    { name:'Neutron',       sym:'n0', charge:'0',  source:'fusion / fission byproduct', use:'fission trigger; isotope building', yield:3,  status:'impl' },
+    { name:'Alpha',         sym:'a',  charge:'+2', source:'alpha decay (U, Pu, Ra...)', use:'recipe input; energy recovery',     yield:50, status:'impl' },
+    { name:'Beta (b-)',     sym:'b',  charge:'-1', source:'beta-minus decay',           use:'energy recovery',                   yield:30, status:'impl' },
+    { name:'Positron (b+)', sym:'e+', charge:'+1', source:'beta-plus / p-p chain',      use:'annihilate with electron -> 2 gamma', yield:30, status:'design' },
+    { name:'Gamma photon',  sym:'g',  charge:'0',  source:'most fusion / fission / decay', use:'energy recovery -> eV (power grid)', yield:20, status:'design' },
+    { name:'Neutrino',      sym:'v',  charge:'0',  source:'beta decay & fusion',        use:'mostly escapes (educational)',      yield:1,  status:'design' },
+  ],
+  // New research gates (design). Natural tree: fission opens EARLY (around Be/B),
+  // then fusion+fission run in parallel up/down to iron. Reaching iron opens TWO
+  // post-iron branches (their own building each), priced in prestige currency + crystals.
+  research: [
+    { id:'fusion_i',           branch:'Nuclear',      prereq:'atomic_assembly',    unlocks:'Fusion Reactor; He -> C fusion' },
+    { id:'fissile_extraction', branch:'Nuclear',      prereq:'fusion_i (at Be/B)', unlocks:'U / Pu fissile fields (map purchase); cheap heavy feedstock + decay chains' },
+    { id:'fission_i',          branch:'Nuclear',      prereq:'fissile_extraction', unlocks:'Fission Reactor; split fissile fuel into mid-weight fragments (climb down)' },
+    { id:'fusion_ii',          branch:'Nuclear',      prereq:'fusion_i',           unlocks:'alpha process O -> Si (Z8-14)' },
+    { id:'fission_ii',         branch:'Nuclear',      prereq:'fission_i',          unlocks:'denser fragment chains toward near-iron metals (Co/Ni/Cu/Zn)' },
+    { id:'fusion_iii / fission_iii', branch:'Astrophysics', prereq:'*_ii',         unlocks:'last rungs converging on Fe (natural peak)' },
+    { id:'neutron_breeding_i..iii', branch:'Transmutation (post-iron)', prereq:'reach iron',        unlocks:'Breeder Reactor; Np/Pu -> Cf/Es/Fm (value climbs past iron)' },
+    { id:'accelerator_i..iv',  branch:'Accelerator (post-iron)',  prereq:'neutron_breeding_i + iron', unlocks:'Particle Accelerator; Md -> Og (global max, ~11.3Q)' },
+  ],
+},
+
+// ─────────────────────────────────────── WORLDS (Chem/Bio tracks) ──
+// Track/World layer ABOVE the Site system (Physics / Chemistry / Biology).
+// Each World owns its own sites + research branch + map theme; only ONE
+// world's ONE site is live ECS, the rest run on idle snapshots. A World opens
+// by a PURE ECONOMIC gate (entropy + prereq unlocks in the prior world) — no
+// prestige-count hook. World unlocks survive prestige (like site unlocks).
+// Status: Phases 1-3 + 4a shipped (World layer, WorldService, Chemistry C1
+// playable). C2-C4 + Biology are design. See docs/agents/chemistry-biology.md.
+worlds: {
+  layers: [
+    { id:'world_physics',   name:'Physics (existing)', status:'live',     gate:'start',
+      tiers:'P1 Subatomic · P2 Atomic · P3 Molecules',
+      produces:'quarks → elements → molecules → materials → Dyson Sphere',
+      note:'the shipped game; the heavy/cosmic tail re-tiers to Act IV in Phase 6' },
+    { id:'world_chemistry', name:'Chemistry',          status:'building', gate:'chemistry_lab — 150,000e (prereq mid_elements)',
+      tiers:'C1 Inorganic · C2 Reactions · C3 Organic · C4 Biochem',
+      produces:'mined elements → inorganic compounds → basic organics',
+      note:'C1 playable (Phase 4a); C2-C4 pending (4b). world unlock_cost is 0 — the research node is the gate' },
+    { id:'world_biology',   name:'Biology',            status:'design',   gate:'biology_lab — ~10-25M e (prereq biochem_precursors)',
+      tiers:'B1 Biomolecules · B2 Cellular · B3 Multicellular · B4 Ecosystems',
+      produces:'organic compounds → cells → organisms / ecosystems',
+      note:'fully deferred; needs a new ResearchBranch.Biology + OrganicCompound fields' },
+  ],
+  // Chemistry map fields drop EXISTING Element items (mined, not synthesized).
+  // Metal seams are a separate field_type so the C1 harvester can't idle-farm
+  // the physics-era high-value metals (iron 167M etc.).
+  fields: [
+    { id:'element_field_light',   type:'Element',      drops:'hydrogen, carbon, nitrogen, oxygen',            status:'impl' },
+    { id:'element_field_mineral', type:'Element',      drops:'silicon, sodium, chlorine, sulfur, phosphorus, calcium', status:'impl' },
+    { id:'element_field_metal',   type:'ElementMetal', drops:'iron, copper, aluminum, nickel',                status:'impl' },
+  ],
+  // Chemistry buildings (Phase 4a). Schema mirrors game_data.json buildings[].
+  buildings: [
+    { name:'Element Harvester',     id:'element_harvester',     tier:3, place:'MustBeOnField [Element]', power:'none',
+      does:'mines one chosen element in bulk (6 recipes: H/C/O/Na/Cl/S — pick via the multi-output selector)', gate:'chemistry_lab', status:'impl' },
+    { name:'Compound Synthesizer',  id:'compound_synthesizer',  tier:3, place:'Anywhere · 2 inputs', power:'50 eV',
+      does:'combines mined elements into inorganic compounds (oxides, salts, acids)', gate:'chemistry_lab', status:'impl' },
+    { name:'Catalytic Reactor',     id:'catalytic_reactor',     tier:3, place:'Anywhere', power:'design',
+      does:'C2: chlorine gas, sodium hydroxide, nitric acid, catalyst', gate:'reaction_engineering', status:'design' },
+    { name:'Organic Synthesizer',   id:'organic_synthesizer',   tier:3, place:'Anywhere', power:'design',
+      does:'C3/C4: hydrocarbons → glucose / amino_acid / fatty_acid / nucleotide (World 3 feedstock)', gate:'organic_chemistry / biochem_precursors', status:'design' },
+  ],
+  // C1 compounds (Phase 4a). sell is FIRST-PASS — it tracks today's physics-era
+  // element values, which the Phase 6 economy re-tier will re-cost.
+  recipes: [
+    { id:'carbon_dioxide', label:'Carbon Dioxide (CO₂)', building:'Compound Synthesizer', inputs:'1 C + 2 O',        time:20, powerEV:100, sell:5000,   status:'impl' },
+    { id:'table_salt',     label:'Table Salt (NaCl)',    building:'Compound Synthesizer', inputs:'1 Na + 1 Cl',      time:30, powerEV:100, sell:900000, status:'impl' },
+    { id:'sulfuric_acid',  label:'Sulfuric Acid (H₂SO₄)',building:'Compound Synthesizer', inputs:'1 S + 4 O + 2 H',  time:40, powerEV:150, sell:500000, status:'impl' },
+  ],
+  // Chemistry research chain (extends the existing ResearchBranch.Chemistry).
+  research: [
+    { id:'chemistry_lab',      branch:'Chemistry', prereq:'mid_elements',        cost:'150,000e', unlocks:'opens the Chemistry world; Element Harvester + Compound Synthesizer + C1 compounds', status:'impl' },
+    { id:'reaction_engineering', branch:'Chemistry', prereq:'chemistry_lab',      cost:'~500K',    unlocks:'C2 Catalytic Reactor; reactions & catalysis', status:'design' },
+    { id:'organic_chemistry',  branch:'Chemistry', prereq:'reaction_engineering',cost:'~2M',      unlocks:'C3 Organic Synthesizer; hydrocarbons', status:'design' },
+    { id:'biochem_precursors', branch:'Chemistry', prereq:'organic_chemistry',   cost:'~5M',      unlocks:'C4 biochemistry; glucose/amino_acid/fatty_acid/nucleotide (feeds Biology)', status:'design' },
+    { id:'biology_lab',        branch:'Biology',   prereq:'biochem_precursors',  cost:'~10-25M',  unlocks:'opens the Biology world (B1 Biomolecules)', status:'design' },
+  ],
+},
 
 }; // end LOOP_DATA

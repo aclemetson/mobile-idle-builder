@@ -15,7 +15,7 @@ MonoBehaviour:
   id: water
   displayName: Water
   symbol: "H\u2082O"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 03d63cd9c1bd11143b224b7dd4ad725c, type: 3}
   itemId: 33
   tier: 3
   category: 4
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Two hydrogen, one oxygen \u2014 the universal solvent and prerequisite

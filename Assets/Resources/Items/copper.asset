@@ -15,7 +15,7 @@ MonoBehaviour:
   id: copper
   displayName: Copper
   symbol: Cu
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7f0a96a3a6a708c448ebc2f8df237f7e, type: 3}
   itemId: 25
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The best electrical conductor among common metals. In our Quantum
     Foundry, copper is synthesised atom by atom \u2014 ironic, given it is the cheapest
     ore in simpler mining games."
   codexUnlocked: 0
-  baseSellValue: 20480
+  baseSellValue: 85697490
   isotopeSellMultiplier: 1

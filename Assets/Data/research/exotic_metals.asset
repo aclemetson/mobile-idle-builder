@@ -23,6 +23,8 @@ MonoBehaviour:
   depthInTree: 5
   costBaseCurrency: 80000
   costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
   - {fileID: 11400000, guid: 833a0def7293a3b4da63df48e83593e1, type: 2}
@@ -33,6 +35,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
+  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "Platinum catalyses the reactions that make fuel cells possible. Tungsten

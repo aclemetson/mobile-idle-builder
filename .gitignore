@@ -85,6 +85,7 @@ GoogleService-Info.plist
 GoogleService-Info.plist.meta
 *.alf
 *.ulf
+*.pem
 
 # TestRunner generated files
 InitTestScene*.unity*
@@ -116,3 +117,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Python bytecode cache (from scripts/*.py)
+__pycache__/
+*.pyc

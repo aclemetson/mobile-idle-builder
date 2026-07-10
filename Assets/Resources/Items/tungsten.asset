@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tungsten
   displayName: Tungsten
   symbol: W
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1455f3805e777574bb7763e084c6272f, type: 3}
   itemId: 30
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The highest melting point of any element \u2014 3,422\xB0C. Rocket
     nozzles, light filaments, and plasma-facing components in fusion reactors all
     rely on tungsten's thermal extremity."
   codexUnlocked: 0
-  baseSellValue: 655360
+  baseSellValue: 3603
   isotopeSellMultiplier: 1

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: uranium_235
   displayName: Uranium-235
   symbol: U-235
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 976e4572ca4cfdf489403b251af01807, type: 3}
   itemId: 17
   tier: 2
   category: 3
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 703.8 million years
   isFissile: 1
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The fissile isotope of uranium used in nuclear reactors and weapons.
     Splitting U-235 releases enormous energy and produces alpha particles as decay
     byproducts.
   codexUnlocked: 0
-  baseSellValue: 2621440
+  baseSellValue: 128
   isotopeSellMultiplier: 2

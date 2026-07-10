@@ -15,7 +15,7 @@ MonoBehaviour:
   id: silicon
   displayName: Silicon
   symbol: Si
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8ce59fbc431a3154daff46a601bfb271, type: 3}
   itemId: 11
   tier: 2
   category: 2
@@ -28,11 +28,11 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A semiconductor at the heart of modern electronics. Silicon wafers
     are the foundation of processors, solar cells, and transistors.
   codexUnlocked: 0
-  baseSellValue: 1280
+  baseSellValue: 40960
   isotopeSellMultiplier: 1

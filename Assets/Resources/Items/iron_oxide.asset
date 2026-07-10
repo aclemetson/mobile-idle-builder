@@ -15,7 +15,7 @@ MonoBehaviour:
   id: iron_oxide
   displayName: Iron Oxide
   symbol: "Fe\u2082O\u2083"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cd0a353340471f54e8fc0628f74095d6, type: 3}
   itemId: 37
   tier: 3
   category: 4
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Iron oxide \u2014 rust \u2014 is the thermite reaction's fuel and

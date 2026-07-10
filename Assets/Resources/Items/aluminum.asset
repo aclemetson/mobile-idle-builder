@@ -15,7 +15,7 @@ MonoBehaviour:
   id: aluminum
   displayName: Aluminum
   symbol: Al
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 78c0a43d1fd707242ad1b99a12a8bd29, type: 3}
   itemId: 23
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "The most abundant metal in Earth's crust, yet rare in pure form before
     electrolysis was discovered. Lightweight and corrosion-resistant \u2014 the backbone
     of aerospace and packaging."
   codexUnlocked: 0
-  baseSellValue: 2560
+  baseSellValue: 20480
   isotopeSellMultiplier: 1

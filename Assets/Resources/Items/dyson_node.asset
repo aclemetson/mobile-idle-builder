@@ -15,7 +15,7 @@ MonoBehaviour:
   id: dyson_node
   displayName: Dyson Node
   symbol: DN
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 109470bc3c26eba49a27689075871f2d, type: 3}
   itemId: 49
   tier: 5
   category: 6
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The structural anchor point of a Dyson sphere. Each node bears the

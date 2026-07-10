@@ -15,7 +15,7 @@ MonoBehaviour:
   id: nitrogen
   displayName: Nitrogen
   symbol: N
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d9bdafb9522911449acecfe3e126fb61, type: 3}
   itemId: 22
   tier: 2
   category: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "78% of Earth's atmosphere. Nitrogen is the limiting nutrient in agriculture

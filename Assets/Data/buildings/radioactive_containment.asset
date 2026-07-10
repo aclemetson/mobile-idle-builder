@@ -36,17 +36,21 @@ MonoBehaviour:
   inputSlotLabels: []
   isEntropySink: 0
   footprint: {x: 2, y: 2}
+  structureKind: 7
   ports: []
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 2500
+  baseMaxOutputItems: 30
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 0
     powerCostEV: 50
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 3000
     costPrestigeCurrency: 0
   - level: 3
@@ -54,8 +58,19 @@ MonoBehaviour:
     powerCostEV: 80
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 12000
     costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 200
+    costBaseCurrency: 2000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 1000
+    costBaseCurrency: 8000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}

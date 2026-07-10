@@ -15,7 +15,7 @@ MonoBehaviour:
   id: steel
   displayName: Steel
   symbol: "Fe\xB7C"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a32e33836d9ba6041a3291e3b443a4af, type: 3}
   itemId: 39
   tier: 4
   category: 5
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Iron alloyed with controlled carbon content. The structural material

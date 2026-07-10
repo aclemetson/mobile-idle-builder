@@ -1,8 +1,10 @@
 name: Prod Release
 
+# Future production pipe (parked). Internal testing is fed by release-internal.yml.
+# This ships to the Google Play *production* track as a draft, and is manual-only
+# so nothing reaches production until we deliberately trigger it.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 # Only one production release at a time
 concurrency:
@@ -29,7 +31,7 @@ jobs:
 
       - name: Read version
         id: version
-        shell: pwsh
+        shell: powershell
         run: |
           $content = Get-Content "ProjectSettings\ProjectSettings.asset" -Raw
           if ($content -match 'bundleVersion:\s*(\d+\.\d+\.\d+)') {
@@ -41,7 +43,7 @@ jobs:
           }
 
       - name: Write keystore
-        shell: pwsh
+        shell: powershell
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -50,26 +52,26 @@ jobs:
           [System.IO.File]::WriteAllBytes("secrets\user.keystore", $bytes)
 
       - name: Build AAB
-        shell: pwsh
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1
+
+      - name: Sign AAB
+        shell: powershell
         env:
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
         run: |
-          $unity = if ($env:UNITY_PATH) { $env:UNITY_PATH } `
-                   else { "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" }
-          & $unity -batchmode -nographics -quit -projectPath . `
-            -executeMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroid `
-            -logFile build-android.log
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "--- Last 50 lines of Unity log ---"
-            Get-Content build-android.log -Tail 50
-            exit $LASTEXITCODE
-          }
+          $aab = (Get-ChildItem build\Android\*.aab | Select-Object -First 1).FullName
+          powershell -ExecutionPolicy Bypass -File .\scripts\sign-aab.ps1 -AabPath $aab
 
       - name: Remove keystore
         if: always()
-        shell: pwsh
+        shell: powershell
         run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
 
       - uses: actions/upload-artifact@v4
@@ -119,14 +121,14 @@ jobs:
             git push origin "v${VERSION}"
           fi
 
-      - name: Upload to Google Play Internal Testing
+      - name: Upload to Google Play Production (draft)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName: com.clemtek.mobileidlebuilder
           releaseFiles: ${{ steps.aab.outputs.path }}
-          track: internal
-          status: completed
+          track: production
+          status: draft
 
       - name: Create GitHub Release
         env:

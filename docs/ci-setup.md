@@ -2,22 +2,64 @@
 
 One-time setup steps to activate the GitHub Actions pipeline.
 
-## Release Branch → Develop: Automatic Version Bump
+## Branch → Track Model
 
-When a `release/*` branch is merged into `develop`, the **Dev Build** workflow automatically:
+The pipeline maps each branch to a Google Play track:
 
-1. Increments the **minor** version and resets the **patch** to `0`  
-   (e.g. `0.1.43` → `0.2.0`)
-2. Resets `AndroidBundleVersionCode` to `1`
-3. Commits the change back to `develop` as `github-actions[bot]`
-4. Builds the APK using the new version
+| Branch event | Workflow | Track / action |
+|--------------|----------|----------------|
+| Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
+| PR merged **into** `release/**` | `release-internal.yml` | `.aab` → Google Play **internal** |
+| Push to `develop` (i.e. a `release/**` merged down) | `release-ios.yml` | `.ipa` → **TestFlight** |
+| `release/**` merged into `develop` | `bump-version.yml` | bump minor version on `develop` |
+| Manual (`workflow_dispatch`) | `prod-release.yml` | `.aab` → Google Play **production** (draft) — *future, parked* |
 
-The bump commit carries `[skip ci]` so it does not re-trigger workflows.  
-Unity picks up the change automatically the next time the project is opened because `ProjectSettings/ProjectSettings.asset` is committed.
+iOS builds far less often than Android on purpose: Android ships to its internal track on
+every merge into `release/**`, while iOS ships to TestFlight only when a release branch is
+merged down into `develop` (roughly once per release cycle). They build from points one
+merge apart, but it is the same code.
+
+Tests and the version-code guard run **once**, as required checks on the PR (`pr-tests.yml`)
+before the merge is allowed. The merge then triggers `release-internal.yml`, which only
+builds and uploads — it does not re-run tests or the guard.
+
+Builds and tests run on the self-hosted Windows runner (zero cloud minutes). Only the
+lightweight version-code guard and the Play upload run on `ubuntu-latest` (the
+`r0adkll/upload-google-play` action is Linux/Docker only).
+
+### Release Branch → Develop: Automatic Version Bump
+
+When a `release/**` branch is merged into `develop`, `bump-version.yml`:
+
+1. Increments the **minor** version and resets the **patch** to `0` (e.g. `0.1.43` → `0.2.0`)
+2. Commits the change back to `develop` as `github-actions[bot]` with `[skip ci]`
+
+It intentionally does **not** touch `AndroidBundleVersionCode` — see below.
+
+## Version Code Rules
+
+`AndroidBundleVersionCode` must be **strictly increasing and globally unique for the
+lifetime of the app**. Google Play permanently rejects a code it has seen before, so it
+must never be reset. It is owned by the local pre-commit hook (`scripts/bump-version.ps1`),
+not by the minor-version bump.
+
+`scripts/check-version-code.py` enforces this. It authenticates with the Google Play
+service account, lists every uploaded bundle's version code (read-only — it opens an edit
+and deletes it, never commits), and fails unless the committed value is greater than both
+the Google Play maximum and the version code on the base release branch tip. It runs as a
+**pre-merge check** on PRs into `release/**` (`pr-tests.yml`) — a red check tells you to bump
+the code before merging.
+
+The Play upload in `release-internal.yml` is the final backstop: if a duplicate code somehow
+reaches it (e.g. two PRs merged back-to-back without the guard re-running), Google Play
+rejects the upload, so a bad code can never silently ship. Recover by pushing a one-line
+`AndroidBundleVersionCode` bump. To close that window entirely, enable branch-protection
+"Require branches to be up to date before merging" on `release/**` so stale PRs must rebase
+and re-run the guard (needs GitHub Pro on private repos).
 
 ## 1. Self-Hosted Runner (Windows build machine)
 
-The Android build jobs run on your local machine to avoid consuming GitHub Actions cloud minutes.
+The build and test jobs run on your local machine to avoid consuming GitHub Actions cloud minutes.
 
 1. Go to: **GitHub repo → Settings → Actions → Runners → New self-hosted runner**
 2. Select **Windows** platform
@@ -36,7 +78,49 @@ The Android build jobs run on your local machine to avoid consuming GitHub Actio
 
 ## 2. PR Tests
 
-Edit mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`. No license secrets needed — Unity is already activated on the machine.
+Edit and play mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`.
+No license secrets needed — Unity is already activated on the machine.
+
+### Self-Hosted Runner Approval Gate
+
+Because the runner executes PR code on a physical machine, `pr-tests.yml` requires an
+explicit approval before the `test` job runs on it. Protections, from outer to inner:
+
+1. **Fork check** — `if: github.event.pull_request.head.repo.full_name == github.repository`
+   on both the gate and the `test` job. Fork PRs never reach the runner.
+2. **`self-hosted-approval` environment** — a protected GitHub Environment whose only
+   protection rule is a required reviewer (the repo owner). The `approval-gate` job is bound
+   to it, so it **pauses in "Waiting"** until the owner clicks **Approve** in the PR / Actions
+   UI. It runs on `ubuntu-latest`, so the self-hosted machine is untouched while waiting.
+3. **Owner bypass** — the gate's `if` includes `author_association != 'OWNER'`, so the owner's
+   own PRs **skip** the gate and run immediately. The `test` job depends on the gate via
+   `needs` + `always() && (result == 'success' || result == 'skipped')`.
+
+Net behavior:
+
+| PR author | Gate | Tests on runner |
+|-----------|------|-----------------|
+| Repo owner | skipped | run immediately |
+| Any other same-repo author | waits for owner approval | run only after **Approve** |
+| Fork | n/a (blocked by fork check) | never |
+
+This applies to **all** PRs that hit the runner (`develop`, `main`, `release/**`) — the gate
+has no branch filter. The `version-guard` job is unaffected; it runs only on `ubuntu-latest`.
+
+**One-time setup** (already done; recreate if the environment is deleted):
+
+```bash
+# Add the owner (user id from `gh api users/<login> --jq .id`) as required reviewer.
+gh api -X PUT repos/<owner>/<repo>/environments/self-hosted-approval \
+  -F "reviewers[][type]=User" -F "reviewers[][id]=<owner-user-id>"
+```
+
+Or in the UI: **Settings → Environments → New environment → `self-hosted-approval` →
+Required reviewers → add yourself**.
+
+**Defense-in-depth (settings only):** set **Settings → Actions → General → Fork pull request
+workflows from outside collaborators** to **"Require approval for all external contributors"**.
+This backstops the fork check above for any future workflow edit that drops it.
 
 ## 3. Android Keystore Secret
 
@@ -54,27 +138,7 @@ Add to GitHub Secrets:
 - `ANDROID_KEY_ALIAS` — `mobile-idle-builder`
 - `ANDROID_KEY_PASS` — key password
 
-## 4. Firebase App Distribution
-
-1. In Firebase Console: go to **App Distribution**
-2. Enable App Distribution for the Android app
-3. Create a tester group named `internal-testers` and add tester emails
-
-4. Get a CI token:
-   ```bash
-   firebase login:ci
-   ```
-   Copy the token output.
-
-5. Get the Firebase App ID:
-   - Firebase Console → Project settings → Your apps → Android app → App ID
-   - Looks like: `1:835677862122:android:xxxxx`
-
-6. Add to GitHub Secrets:
-   - `FIREBASE_TOKEN` — the token from `firebase login:ci`
-   - `FIREBASE_APP_ID` — the App ID from Firebase Console
-
-## 5. Google Play Internal Testing
+## 4. Google Play (Internal Testing)
 
 1. In **Google Play Console**: ensure the app has at least one release in any track (required to use the API)
 
@@ -86,22 +150,95 @@ Add to GitHub Secrets:
 3. Add to GitHub Secrets:
    - `GOOGLE_PLAY_JSON_KEY` — paste the full JSON content of the service account key file
 
+This same service account is used by both the internal upload and the version-code guard.
+
+## 5. iOS / TestFlight
+
+The iOS lane (`release-ios.yml`) runs on **GitHub-hosted** runners (not the self-hosted
+Windows machine -- iOS archiving requires macOS). To keep the expensive macOS minutes
+small, it splits the work, following GameCI's recommended iOS flow:
+
+1. **`build` (ubuntu-latest)** -- `game-ci/unity-builder@v4` generates the Xcode project.
+   Unity activation works here via the Docker image (Personal license). Output is uploaded
+   as the `ios-xcode-project` artifact.
+2. **`release` (macos-latest)** -- downloads the artifact and runs
+   `scripts/archive-upload-ios.sh`: `xcodebuild archive` + `-exportArchive` +
+   `xcrun altool --upload-app` to TestFlight. Signing is **automatic / cloud-managed**
+   via an App Store Connect API key (`-allowProvisioningUpdates`) -- no `.p12` or
+   provisioning profile to manage.
+
+> Cost note: macOS minutes bill at a **10x** multiplier. Triggering only on `develop`
+> keeps this to ~once per release. The Library cache + the Ubuntu/macOS split keep each
+> run modest, but this lane is not $0 like Android.
+
+### Build number
+
+`BuildScript.BuildIOS()` sets `CFBundleVersion` from the existing
+`AndroidBundleVersionCode`, so one monotonic counter feeds both stores. There is no
+separate pre-merge iOS guard; TestFlight rejecting a duplicate build number is the
+backstop (the same role the Play upload plays for Android).
+
+### One-time Unity license (`.ulf`) for game-ci
+
+The hosted Ubuntu runner is not pre-activated, so game-ci needs a Personal license file:
+
+1. Add a temporary workflow step (or run the `game-ci/unity-request-activation-file@v2`
+   action) to produce a `Unity_v6000.x.alf` file; download it from the run artifacts.
+2. Go to <https://license.unity3d.com/manual>, upload the `.alf`, and download the
+   returned `Unity_v6000.x.ulf`.
+3. Paste the **entire contents** of the `.ulf` into the `UNITY_LICENSE` secret.
+4. Also set `UNITY_EMAIL` and `UNITY_PASSWORD` (your Unity ID) -- game-ci Personal needs
+   all three.
+
+### Apple-side setup (one-time)
+
+In the **Apple Developer** portal:
+1. Register the App ID `com.clemtek.mobileidlebuilder` (Identifiers) and enable the
+   **In-App Purchase** capability (plus any other capability the app uses).
+2. Note your **Team ID** (Membership) -> store it as the `APPLE_TEAM_ID` repo *variable*.
+
+In **App Store Connect**:
+3. Create the app (My Apps -> +) against that bundle ID.
+4. Create an **App Store Connect API key** (Users and Access -> Integrations -> App Store
+   Connect API) with the **App Manager** role. Download the `.p8` (one-time) and note the
+   **Key ID** and **Issuer ID**.
+5. TestFlight -> Internal Testing: add internal testers (no Beta App Review required).
+6. For IAP testing: sign the Paid Apps agreement, create the IAP products, and add a
+   Sandbox tester.
+
+### iOS GitHub secrets / variables
+
+| Name | Kind | Source |
+|------|------|--------|
+| `UNITY_LICENSE` | secret | contents of the `.ulf` (steps above) |
+| `UNITY_EMAIL` | secret | Unity ID email |
+| `UNITY_PASSWORD` | secret | Unity ID password |
+| `APP_STORE_CONNECT_KEY_ID` | secret | ASC API Key ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | secret | ASC API Issuer ID |
+| `APP_STORE_CONNECT_API_KEY_P8` | secret | base64 of the `.p8` (`base64 -i AuthKey_XXX.p8 \| pbcopy`) |
+| `APPLE_TEAM_ID` | **variable** | Apple Developer Team ID |
+
 ## 6. GitHub Actions Permissions
 
-Ensure the repo allows Actions to create tags and releases:
+Ensure the repo allows Actions to create tags, releases, and the version bump commit:
 - Settings → Actions → General → Workflow permissions → **Read and write permissions**
 
 ## Secrets Summary
 
 | Secret | Source | Used By |
 |--------|--------|---------|
-| `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | Dev + Prod builds |
-| `ANDROID_KEYSTORE_PASS` | keystore password | Dev + Prod builds |
-| `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | Dev + Prod builds |
-| `ANDROID_KEY_PASS` | key password | Dev + Prod builds |
-| `FIREBASE_TOKEN` | `firebase login:ci` | Dev distribution |
-| `FIREBASE_APP_ID` | Firebase Console | Dev distribution |
-| `GOOGLE_PLAY_JSON_KEY` | GCP service account JSON | Prod distribution |
+| `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | builds |
+| `ANDROID_KEYSTORE_PASS` | keystore password | builds |
+| `ANDROID_KEY_ALIAS` | `mobile-idle-builder` | builds |
+| `ANDROID_KEY_PASS` | key password | builds |
+| `GOOGLE_PLAY_JSON_KEY` | GCP service account JSON | internal upload + version guard + prod (future) |
+| `UNITY_LICENSE` | contents of the `.ulf` | iOS build (game-ci activation) |
+| `UNITY_EMAIL` | Unity ID email | iOS build (game-ci activation) |
+| `UNITY_PASSWORD` | Unity ID password | iOS build (game-ci activation) |
+| `APP_STORE_CONNECT_KEY_ID` | ASC API Key ID | iOS archive + TestFlight upload |
+| `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
+| `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
+| `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
 
 ## Local Testing
 

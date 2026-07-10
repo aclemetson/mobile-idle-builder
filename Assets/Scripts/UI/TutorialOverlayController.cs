@@ -29,6 +29,8 @@ namespace MobileIdleBuilder
 
         private EntityQuery _tutorialQuery;
         private bool        _queryReady;
+        private EntityQuery _powerGridQuery;
+        private bool        _powerQueryReady;
 
         void Start()
         {
@@ -47,6 +49,7 @@ namespace MobileIdleBuilder
                 hudController.OnDrawerOpened        += OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened += OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
+                hudController.OnConveyorPlaced      += OnConveyorPlacedHandler;
             }
 
             if (maxwellsDemon == null)
@@ -65,6 +68,10 @@ namespace MobileIdleBuilder
                 _tutorialQuery = world.EntityManager.CreateEntityQuery(
                     ComponentType.ReadWrite<TutorialStateData>());
                 _queryReady = true;
+
+                _powerGridQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PowerGridState>());
+                _powerQueryReady = true;
             }
         }
 
@@ -82,6 +89,7 @@ namespace MobileIdleBuilder
                 hudController.OnDrawerOpened        -= OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
+                hudController.OnConveyorPlaced      -= OnConveyorPlacedHandler;
             }
 
             if (maxwellsDemon != null)
@@ -111,13 +119,28 @@ namespace MobileIdleBuilder
                 UnlockAllFields();
                 StopPulseRoutine();
                 tutorialHighlighter?.ClearHighlight();
-                hudController?.HideTutorialHint();
+                // Don't clear the hint when ended by prestige — HUDController shows the
+                // achievements unlock hint on the same frame and we must not stomp it.
+                if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                    hudController?.HideTutorialHint();
                 dialogueController?.HideDialogue();
                 return;
             }
 
             if (!state.IsActive) return;
             _wasActive = true;
+
+            // Proximity power: the power tutorial step advances when the Combiner becomes powered.
+            // There is no manual linking, so fire consumer_powered whenever a consumer is connected.
+            // Runs every active frame (even when the step index is stable) so the event is not missed.
+            if (_powerQueryReady && !_powerGridQuery.IsEmpty &&
+                _powerGridQuery.GetSingleton<PowerGridState>().ConnectedCount > 0)
+            {
+                int before = state.CurrentStepIndex;
+                TryAdvanceOnUiEvent("consumer_powered");
+                if (_tutorialQuery.GetSingleton<TutorialStateData>().CurrentStepIndex != before)
+                    return; // advanced — OnStepChanged already ran
+            }
 
             if (state.CurrentStepIndex == _lastStepIndex) return;
 
@@ -280,6 +303,15 @@ namespace MobileIdleBuilder
         private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
+        private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
+
+        /// <summary>
+        /// Called by the building upgrade UI when the player purchases a speed upgrade on the
+        /// Atom Generator (atomic_assembler). Advances the tutorial step waiting on
+        /// "atom_generator_speed_upgraded".
+        /// </summary>
+        public void NotifyAtomGeneratorSpeedUpgraded() =>
+            TryAdvanceOnUiEvent("atom_generator_speed_upgraded");
 
         // ── Field lock states ─────────────────────────────────────────────────
 
@@ -298,7 +330,7 @@ namespace MobileIdleBuilder
                 bool locked;
                 if (enter.blockCollection)
                     locked = true;
-                else if (enter.collectionFilter != FieldType.None)
+                else if (!FieldTypes.IsUnrestricted(enter.collectionFilter))
                     locked = fi.Field.fieldType != enter.collectionFilter;
                 else
                     locked = false;

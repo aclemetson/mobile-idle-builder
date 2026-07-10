@@ -15,7 +15,7 @@ MonoBehaviour:
   id: antimatter_cell
   displayName: Antimatter Cell
   symbol: AM
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 489061e3e5f7ff94ea5bb1d40bee9413, type: 3}
   itemId: 48
   tier: 5
   category: 6
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "A magnetic bottle storing antihydrogen \u2014 matter's mirror. When

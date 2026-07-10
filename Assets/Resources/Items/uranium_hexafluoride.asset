@@ -15,7 +15,7 @@ MonoBehaviour:
   id: uranium_hexafluoride
   displayName: Uranium Hexafluoride
   symbol: "UF\u2086"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 69e101362a229874790dd15bc898e7a4, type: 3}
   itemId: 38
   tier: 3
   category: 4
@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "UF\u2086 is the gaseous compound used in uranium enrichment centrifuges.

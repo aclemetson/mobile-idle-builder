@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Unity.Services.Authentication;
+using Unity.Services.Core;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -14,15 +15,18 @@ namespace MobileIdleBuilder
     {
         protected override bool PersistAcrossScenes => true;
 
+        // PlayerPrefs key written on every background event so that a foreground
+        // resume can calculate idle earnings even when the save file's lastSaved
+        // field hasn't been flushed yet (e.g. early-termination by the OS).
+        public const string BackgroundTimestampKey = "idle_backgrounded_utc";
+
+        // Set by the editor tool (MobileIdleBuilder → Clear Save) to wipe the cloud
+        // save on next play-mode boot, after UGS has initialized.
+        public const string k_WipePending = "dev_wipe_cloud_on_boot";
+
         [Header("Config")]
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
-
-#if UNITY_EDITOR
-        [Header("Debug (Editor only)")]
-        [Tooltip("When checked, wipes unlocked research, recipes, and the current run on each Play so the tutorial restarts from step 1.")]
-        [SerializeField] bool _resetTutorialOnPlay;
-#endif
 
         LocalSaveService _local;
         ICloudSaveService _cloud;
@@ -30,6 +34,11 @@ namespace MobileIdleBuilder
 
         public SaveData Current   => _current;
         public bool     IsNewGame { get; private set; }
+
+        // True once ReconcileWithCloud() has finished (whether it pulled cloud data, found
+        // none, or cloud was unavailable). ECSLoadBridge waits on this before applying the
+        // save to ECS so a slower cloud fetch can't be clobbered by a stale local-into-ECS load.
+        public bool CloudReconcileDone { get; private set; }
 
         protected override void Awake()
         {
@@ -47,34 +56,103 @@ namespace MobileIdleBuilder
                 GameLogger.Info($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
                           $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
 
-#if UNITY_EDITOR
-            if (_resetTutorialOnPlay)
-            {
-                _current.unlockedResearch = new();
-                _current.unlockedRecipes  = new();
-                _current.currentRun       = new();
-                _current.tutorial         = new();
-                IsNewGame = true; // treat as fresh install so baked starting items are preserved
-                GameLogger.Debug("[Save] _resetTutorialOnPlay active — save/load test will NOT work while this is checked.");
-            }
-#endif
-
+            AuthSessionPolicy.RecordAppOpen();
             _cloud = new UGSCloudSaveService();
         }
 
         IEnumerator Start()
         {
             // Cloud reconciliation happens asynchronously after local is already ready
-            yield return ReconcileWithCloud();
+            yield return InitialCloudReconcile();
             StartCoroutine(AutoSaveLoop());
+        }
+
+        // Reconcile with cloud, then mark done. CloudReconcileDone is set here (after the
+        // inner coroutine returns) so every early yield-break path inside ReconcileWithCloud()
+        // (no cloud, unavailable, offline, or a successful pull) is covered. ECSLoadBridge
+        // gates ApplyLoadedSave on this flag. Internal so EditMode tests can pump it directly
+        // without the play-mode lifecycle (the test assembly runs in edit mode).
+        internal IEnumerator InitialCloudReconcile()
+        {
+            yield return ReconcileWithCloud();
+            CloudReconcileDone = true;
+
+            // Telemetry starts after reconcile so UGS auth + Remote Config flags are ready and
+            // _current.playerId has been synced to the UGS id. Placed here (not inside
+            // ReconcileWithCloud) so it runs on every exit path, including when the cloud-save
+            // kill-switch is off — analytics is independent of cloud save. No-op unless the
+            // analytics.enabled flag is true.
+            TelemetryService.Instance?.StartIfEnabled();
         }
 
         void OnApplicationPause(bool paused)
         {
-            if (paused) SaveLocal();
+            if (paused)
+            {
+                // Write departure time to PlayerPrefs immediately — this is the most
+                // reliable record because PlayerPrefs.Save() is OS-managed and
+                // survives even if the process is killed before the JSON file flushes.
+                PlayerPrefs.SetString(BackgroundTimestampKey, DateTime.UtcNow.ToString("o"));
+                PlayerPrefs.Save();
+                SaveLocal();
+                PushToCloudBestEffort();
+            }
+            else
+            {
+                OnReturnFromBackground();
+            }
         }
 
-        void OnApplicationQuit() => SaveLocal();
+        void OnApplicationQuit()
+        {
+            SaveLocal();
+            PushToCloudBestEffort();
+        }
+
+        // Fire-and-forget cloud push for lifecycle events (background / quit). A frame-based
+        // coroutine (SaveToCloud) can't be used here because the Unity player loop is suspended
+        // once the app is backgrounded — its WaitUntil would never pump. PushAsync serializes
+        // the SaveData synchronously before its first await, so the snapshot is captured now;
+        // the network write then proceeds on whatever background grace window the OS grants.
+        // Best-effort by design: local save (above) remains the source of truth, and the next
+        // cold start's reconcile pulls cloud if it happens to be newer.
+        void PushToCloudBestEffort()
+        {
+            if (_cloud == null || !_cloud.IsAvailable) return;
+            if (!FeatureFlags.CloudSaveEnabled) return;   // honor the cloud-save kill-switch
+            _ = _cloud.PushAsync(_current);
+        }
+
+        // Called when the app returns from background (OnApplicationPause(false)).
+        // Recalculates idle earnings using the PlayerPrefs departure timestamp so
+        // that background→foreground cycles show the modal, not just cold boots.
+        // Works identically on Android and iOS — no platform directives needed.
+        void OnReturnFromBackground()
+        {
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
+            {
+                GameLogger.Debug($"[Idle] OnReturnFromBackground — ECS not ready (Instance={ECSLoadBridge.Instance != null} IsLoaded={ECSLoadBridge.Instance?.IsLoaded})");
+                return;
+            }
+
+            string backgroundedAt = PlayerPrefs.GetString(BackgroundTimestampKey, string.Empty);
+            GameLogger.Debug($"[Idle] OnReturnFromBackground — backgroundedAt={backgroundedAt} lastSaved={_current?.lastSaved}");
+            if (!string.IsNullOrEmpty(backgroundedAt))
+                PlayerPrefs.DeleteKey(BackgroundTimestampKey);
+
+            var result = OfflineCollectionService.CalculateAndApply(
+                _current,
+                gameConfig,
+                PersistentUpgradeService.Instance,
+                string.IsNullOrEmpty(backgroundedAt) ? null : backgroundedAt);
+
+            if (result == null) return;
+
+            // Persist earned resources and the updated idleCollectionApplied stamp.
+            // Skip ECS/grid flushes — only currentRun (currency, inventory) changed.
+            SaveLocal(skipECSFlush: true, skipGridFlush: true);
+            FindAnyObjectByType<HUDController>()?.ShowIdleReturn(result);
+        }
 
         // ── Public API ────────────────────────────────────────────────────────
 
@@ -87,10 +165,54 @@ namespace MobileIdleBuilder
             var initTask = _cloud.InitializeAsync();
             yield return new WaitUntil(() => initTask.IsCompleted);
 
+            // Feature flags share the UGS session established above. Fetch now, before we decide
+            // whether to honor the cloud-save kill-switch below. A failed/offline fetch is a no-op
+            // (cached/default values stay in effect).
+            if (FeatureFlagService.Instance != null)
+            {
+                var flagTask = FeatureFlagService.Instance.FetchAsync();
+                yield return new WaitUntil(() => flagTask.IsCompleted);
+            }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Honor a pending wipe request from the editor tool (MobileIdleBuilder → Clear Save).
+            // Skip the cloud fetch and delete the cloud key instead; _current is already a
+            // fresh SaveData because the local file was deleted before entering play mode.
+            if (PlayerPrefs.GetInt(k_WipePending, 0) == 1)
+            {
+                PlayerPrefs.DeleteKey(k_WipePending);
+                PlayerPrefs.Save();
+                if (_cloud.IsAvailable)
+                {
+                    var wipeTask = _cloud.DeleteAsync();
+                    yield return new WaitUntil(() => wipeTask.IsCompleted);
+                    GameLogger.Info("[SaveManager] Cloud save wiped by dev tool.");
+                }
+                yield break;
+            }
+#endif
+
+            // Cloud-save kill-switch. Note this gates save-data sync only — UGS itself stayed
+            // initialized above so Remote Config (and the flags) could load.
+            if (!FeatureFlags.CloudSaveEnabled)
+            {
+                GameLogger.Info("[SaveManager] Cloud save disabled by feature flag — running local-only this session.");
+                yield break;
+            }
+
             if (!_cloud.IsAvailable) yield break;
 
             // Sync local playerId to UGS identity for cross-device consistency.
-            _current.playerId = AuthenticationService.Instance.PlayerId;
+            // Accessing AuthenticationService.Instance throws if UGS never initialized
+            // (e.g. an injected/test cloud service), so guard and keep the local id on failure.
+            try
+            {
+                _current.playerId = AuthenticationService.Instance.PlayerId;
+            }
+            catch (ServicesInitializationException)
+            {
+                GameLogger.Warning("[SaveManager] Auth not initialized — keeping local playerId.");
+            }
 
             var fetchTask = _cloud.FetchAsync(_current.playerId);
             yield return new WaitUntil(() => fetchTask.IsCompleted);
@@ -104,10 +226,24 @@ namespace MobileIdleBuilder
             }
         }
 
-        public void SaveLocal()
+        public void SaveLocal(bool skipGridFlush = false, bool skipECSFlush = false)
         {
-            ECSLoadBridge.Instance?.FlushToSave();
-            GridSaveService.Instance?.FlushToSave();
+            // If the load never applied to ECS (e.g. baked SubScene entities timed out after a recompile),
+            // ECS holds baked defaults. Flushing those would overwrite the good on-disk save with zeros.
+            // Skip both ECS and grid snapshots; _current still holds the save loaded at startup, so writing
+            // it back below is harmless (and the disk file is preserved).
+            if (ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded && !ECSLoadBridge.Instance.SaveApplied)
+            {
+                GameLogger.Warning("[Save] Load did not apply to ECS (entities not ready) — skipping ECS/grid " +
+                    "flush so the on-disk save is not overwritten with defaults.");
+                skipECSFlush  = true;
+                skipGridFlush = true;
+            }
+
+            if (!skipECSFlush)
+                ECSLoadBridge.Instance?.FlushToSave();
+            if (!skipGridFlush)
+                GridSaveService.Instance?.FlushToSave();
             GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
                       $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventoryKeys?.Count ?? 0}");
             _local.SaveWithBackup(_current);
@@ -121,6 +257,47 @@ namespace MobileIdleBuilder
             var task = _cloud.PushAsync(_current);
             yield return new WaitUntil(() => task.IsCompleted);
         }
+
+        /// <summary>Deletes the cloud save key. onDone receives true on success, false if unavailable or faulted.</summary>
+        public IEnumerator DeleteCloudSave(Action<bool> onDone = null)
+        {
+            if (_cloud == null || !_cloud.IsAvailable)
+            {
+                onDone?.Invoke(false);
+                yield break;
+            }
+            var task = _cloud.DeleteAsync();
+            yield return new WaitUntil(() => task.IsCompleted);
+            onDone?.Invoke(!task.IsFaulted);
+        }
+
+        /// <summary>Resets in-memory save state to a blank new game. Call before scene reload when wiping saves.</summary>
+        public void ResetToFreshSave()
+        {
+            _current  = new SaveData { playerId = GeneratePlayerId() };
+            IsNewGame = true;
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// Dev-only: replaces the in-memory save with <paramref name="data"/> and writes it to disk.
+        /// Used by the dev-console snapshot loader — after calling this, reload the scene so
+        /// ECSLoadBridge re-applies the swapped state to ECS. Clears IsNewGame so the restored
+        /// currency/inventory are actually applied on reload (ApplyLoadedSave skips them for new games).
+        /// </summary>
+        public void DevReplaceCurrent(SaveData data)
+        {
+            if (data == null) return;
+            _current  = data;
+            IsNewGame = false;
+            _local.Save(_current);
+        }
+#endif
+
+#if UNITY_EDITOR
+        /// <summary>Test seam: replace the cloud service after Awake but before Start runs.</summary>
+        internal void SetCloudServiceForTesting(ICloudSaveService cloud) => _cloud = cloud;
+#endif
 
         // ── Internal ──────────────────────────────────────────────────────────
 

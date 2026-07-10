@@ -15,7 +15,7 @@ MonoBehaviour:
   id: platinum
   displayName: Platinum
   symbol: Pt
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3c555efb5dd78c4409218b853059b70a, type: 3}
   itemId: 29
   tier: 2
   category: 2
@@ -28,12 +28,12 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  fieldType: 0
+  fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The premier catalytic metal. Platinum in catalytic converters eliminates
     toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature.
     Rarer than gold.
   codexUnlocked: 0
-  baseSellValue: 327680
+  baseSellValue: 1471
   isotopeSellMultiplier: 1

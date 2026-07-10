@@ -20,7 +20,26 @@
     background-color: rgba(10, 14, 26, 0.88);
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
-    min-height: 48px;
+    min-height: 52px;
+}
+
+/* Active-research strip directly under the top bar (toggled in HUDStatusBarController) */
+.research-status {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 4px var(--spacing-md);
+    background-color: rgba(0, 229, 255, 0.10);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+}
+
+.research-status-label {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
 }
 
 .inventory-bar {
@@ -38,6 +57,68 @@
 
 .power-label {
     color: var(--color-warning);
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+}
+
+.power-label.power-brownout {
+    color: var(--color-danger);
+    -unity-font-style: bold;
+}
+
+/* Placement confirm popup — world-anchored above the candidate cell (left/top set at runtime). */
+.placement-confirm-popup {
+    position: absolute;
+    flex-direction: row;
+}
+
+.placement-confirm-btn {
+    width: 56px;
+    height: 56px;
+    margin: 4px;
+    border-radius: 28px;
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--color-text-primary);
+    border-width: 2px;
+}
+
+.placement-confirm-btn--confirm {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.placement-confirm-btn--cancel {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.placement-confirm-btn--rotate {
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.placement-confirm-btn:disabled {
+    opacity: 0.4;
+}
+
+.prestige-topbar-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+}
+
+.entropy-label {
+    color: var(--color-currency-entropy);
+    font-size: var(--font-size-lg);
+    margin-left: var(--spacing-sm);
+    -unity-font-style: bold;
+}
+
+.crystal-label {
+    color: var(--color-currency-crystal);
     font-size: var(--font-size-lg);
     margin-left: var(--spacing-sm);
 }
@@ -77,6 +158,43 @@
     background-color: var(--color-surface-raised);
     border-color: var(--color-primary);
     color: var(--color-primary);
+}
+
+/* Power-connection toggle: dim grey lightning bolt when off... */
+.power-toggle-btn {
+    color: rgb(120, 130, 138);
+}
+
+/* ...bright amber, glowing ring when on. */
+.power-toggle-btn--active {
+    color: rgb(255, 214, 51);
+    border-color: rgb(255, 214, 51);
+    background-color: rgba(255, 214, 51, 0.18);
+}
+
+.power-toggle-btn--active:hover {
+    color: rgb(255, 214, 51);
+    border-color: rgb(255, 214, 51);
+}
+
+.go-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background-color: rgba(255,255,255,0.06);
+    border-color: var(--color-border);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin-right: var(--spacing-xs);
+}
+
+.go-back-btn:hover {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 /* ---- Grid area (passthrough — touch events fall through to world) ---- */
@@ -221,6 +339,10 @@
     -unity-text-align: middle-left;
 }
 
+.drawer-nav-btn--prestige {
+    color: #d2a8ff;
+}
+
 .drawer-nav-btn:hover {
     background-color: rgba(0, 229, 255, 0.08);
     border-color: rgba(0, 229, 255, 0.2);
@@ -229,6 +351,22 @@
 
 .drawer-nav-btn:active {
     background-color: rgba(0, 229, 255, 0.15);
+}
+
+.drawer-nav-btn:disabled {
+    opacity: 0.35;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+/* Hint shown beneath a locked drawer button */
+.drawer-locked-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: italic;
+    padding: 0 var(--spacing-md);
+    margin-top: -4px;
+    margin-bottom: var(--spacing-xs);
 }
 
 /* Tutorial highlight — works on drawer-nav-btn via class addition */
@@ -240,9 +378,82 @@
     -unity-font-style: bold;
 }
 
+/* ---- Research cards ---- */
+.research-card {
+    flex-direction: column;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-surface-raised);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.research-card:hover {
+    border-color: rgba(0, 229, 255, 0.4);
+}
+
+.research-card-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.research-card-desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-bottom: var(--spacing-xs);
+}
+
+.research-card-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.research-card-info {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.research-card-cost {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.research-card-time {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: 2px;
+}
+
+.research-card-cost--unaffordable {
+    color: var(--color-danger);
+}
+
+.research-card-prereq {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    -unity-font-style: italic;
+    flex-grow: 1;
+}
+
 /* Unlocked research card */
 .research-card--unlocked {
     opacity: 0.55;
+    border-color: var(--color-success);
+}
+
+/* Research currently in progress (timer running) */
+.research-card--in-progress {
+    border-color: var(--color-primary);
+    background-color: rgba(0, 229, 255, 0.08);
 }
 
 /* ---- Slide-up panel ---- */
@@ -280,6 +491,10 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-md);
+    /* Reserve the top-right corner for the absolutely-pinned close button so the title / any
+       middle element (Deconstruct, crystal balance) never runs under it. */
+    padding-right: 60px;
+    position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
 }
@@ -288,9 +503,19 @@
     color: var(--color-primary);
     font-size: var(--font-size-lg);
     -unity-font-style: bold;
+    flex-shrink: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* The close button is pinned to the panel/header top-right corner (absolute) so it never competes
+   with the title for row width. Every panel header (.panel-header / .demon-panel__header) is a
+   positioning context and reserves this corner via padding-right. */
 .close-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
     width: 44px;
     height: 44px;
     border-radius: 22px;
@@ -312,7 +537,54 @@
 /* ---- Recipe list ---- */
 .recipe-list {
     flex-grow: 1;
+    /* Allow the ScrollView to shrink below its content height so it actually
+       scrolls (instead of expanding the panel) when the recipe list is long. */
+    min-height: 0;
     padding: var(--spacing-sm);
+}
+
+/* The building inspector is the primary building UI and needs room for a long
+   recipe list plus upgrades, so anchor it top-and-bottom into a tall panel
+   (overriding the short bottom-anchored popup sizing it inherits from
+   .output-selector). Without this the static block + upgrades eat the capped
+   height and the recipe scroll collapses to nothing. */
+#building-inspector-panel {
+    top: var(--top-bar-height);
+    max-height: 100%;
+}
+
+/* Building inspector, three stacked regions:
+   - static status pinned on top (never scrolls),
+   - the recipe picker and the upgrades below it are two independent scrolls that
+     SHARE the leftover height. Both use flex-basis:0 so neither is collapsed by
+     its own content (the recipe list has 100+ elements; upgrades may grow), and
+     the flex-grow weights just bias how the leftover space is split. */
+.inspector-scroll {
+    padding: var(--spacing-sm);
+}
+
+.inspector-static {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: var(--spacing-sm);
+}
+
+.inspector-scroll--recipes {
+    flex-grow: 3;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    border-top-width: 1px;
+    border-top-color: var(--color-border);
+}
+
+.inspector-scroll--upgrades {
+    flex-grow: 2;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    border-top-width: 1px;
+    border-top-color: var(--color-border);
 }
 
 .recipe-row {
@@ -342,6 +614,29 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     margin-top: 2px;
+}
+
+.recipe-inputs-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.recipe-input-met {
+    color: var(--color-success);
+    font-size: var(--font-size-sm);
+}
+
+.recipe-input-missing {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+}
+
+.recipe-input-sep {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
 .recipe-row--locked {
@@ -374,6 +669,13 @@
     background-color: rgba(0, 229, 255, 0.36);
 }
 
+.craft-btn:disabled {
+    background-color: rgba(84, 110, 122, 0.10);
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+    opacity: 0.55;
+}
+
 /* ---- Building cards ---- */
 .building-card {
     flex-direction: row;
@@ -398,6 +700,14 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     flex-grow: 1;
+}
+
+.building-card-recipe--affordable {
+    color: var(--color-primary);
+}
+
+.building-card-recipe--unaffordable {
+    color: var(--color-danger);
 }
 
 /* ---- Placement overlay ---- */
@@ -427,6 +737,10 @@
     color: var(--color-primary);
     font-size: var(--font-size-sm);
     flex-grow: 1;
+    flex-shrink: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cancel-placement-btn {
@@ -439,6 +753,107 @@
     font-size: var(--font-size-sm);
 }
 
+/* ---- Prestige Shop balance bar ---- */
+.prestige-shop-balance {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: rgba(210, 168, 255, 0.08);
+    border-bottom-width: 1px;
+    border-color: rgba(210, 168, 255, 0.2);
+}
+
+.prestige-shop-currency-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+/* ---- Prestige shop upgrade rows ---- */
+.upgrade-row {
+    flex-direction: column;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: 2px;
+    background-color: var(--color-bg-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+}
+
+.upgrade-row:hover {
+    border-color: rgba(210, 168, 255, 0.4);
+}
+
+.upgrade-row--locked {
+    opacity: 0.45;
+}
+
+.upgrade-row--maxed {
+    border-color: var(--color-success);
+    opacity: 0.6;
+}
+
+.upgrade-row-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.upgrade-row-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+.upgrade-row-level {
+    color: #d2a8ff;
+    font-size: var(--font-size-sm);
+}
+
+.upgrade-row-desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-bottom: 6px;
+}
+
+.upgrade-row-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.upgrade-row-cost {
+    color: #d2a8ff;
+    font-size: var(--font-size-sm);
+}
+
+.upgrade-row-cost--unaffordable {
+    color: var(--color-danger);
+}
+
+.upgrade-row-prereq {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+}
+
+/* ── Megastructure panel ── */
+.megastructure-progress-label {
+    color: #d2a8ff;
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    padding-left: var(--spacing-md);
+    padding-top: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+}
+
+.megastructure-item-row {
+    flex-direction: column;
+    margin-top: var(--spacing-sm);
+}
+
 .rotate-output-btn {
     padding: var(--spacing-xs) var(--spacing-sm);
     margin-right: var(--spacing-sm);
@@ -448,4 +863,113 @@
     border-radius: var(--border-radius);
     color: var(--color-primary);
     font-size: var(--font-size-sm);
+}
+
+/* Compact icon-only buttons (Bend / Place / Clear) so the whole bar fits a phone width. */
+.conveyor-icon-btn {
+    width: 40px;
+    padding: var(--spacing-xs) 0;
+    margin-right: var(--spacing-sm);
+    -unity-text-align: middle-center;
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+/* Conveyor "Place" (confirm) variant — green to mirror the building confirm button. */
+.conveyor-confirm-btn {
+    background-color: rgba(0, 230, 118, 0.16);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+/* Conveyor Create/Destroy toggle. Defaults to the Create (cyan) look. */
+.conveyor-mode-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+    background-color: rgba(0, 229, 255, 0.12);
+    border-color: var(--color-primary);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+/* Active Destroy state — danger-red to signal taps will remove track. */
+.conveyor-mode-btn--destroy {
+    background-color: rgba(255, 23, 68, 0.14);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+/* ---- Idle Return Modal ---- */
+.idle-return-modal {
+    align-items: center;
+    justify-content: center;
+}
+
+.idle-return-backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.60);
+}
+
+.idle-return-card {
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    min-width: 280px;
+    max-width: 380px;
+    padding-bottom: var(--spacing-md);
+    position: relative;
+}
+
+.idle-return-time-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    padding: var(--spacing-xs) var(--spacing-md) 0;
+    -unity-text-align: middle-left;
+}
+
+.idle-return-max-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    padding: 0 var(--spacing-md) var(--spacing-xs);
+    -unity-text-align: middle-left;
+}
+
+.idle-return-nothing {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-md);
+    -unity-text-align: middle-center;
+}
+
+.game-update-message {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.idle-return-value {
+    color: var(--color-success);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    padding: var(--spacing-xs) var(--spacing-md);
+}
+
+/* ---- Rewarded-ad "Double offline" button (idle-return modal) ---- */
+.idle-return-double {
+    background-color: rgba(255, 193, 7, 0.18);
+    border-color: rgba(255, 193, 7, 0.55);
+    color: rgb(255, 213, 79);
+    -unity-font-style: bold;
 }

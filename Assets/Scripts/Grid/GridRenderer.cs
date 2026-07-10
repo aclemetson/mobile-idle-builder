@@ -38,14 +38,21 @@ namespace MobileIdleBuilder
 
         private static readonly Color ConveyorGhostColor    = new Color(1f,    0.5f,  0f,    0.7f); // orange
         private static readonly Color ConveyorEndpointColor = new Color(0.25f, 0.88f, 0.35f, 0.9f); // green
+        private static readonly Color PowerCoverageColor    = new Color(0.25f, 0.6f,  1f,    0.45f); // blue — power radius
 
         private GameObject[,]        _tiles;
         private Vector2Int           _ghostCell              = new(-1, -1);
+        // Stores the RAW field-identity colour per cell; the tile paint (RestoreCell) lerps it against
+        // the current world tileColor and multiplies by the world field tint, so a world-theme change
+        // re-derives every field tile correctly without needing the original colour re-supplied.
         private readonly Dictionary<Vector2Int, Color> _fieldTileColors = new();
+        private Color _worldFieldTint = Color.white;   // per-world multiplier for field-tile colours
+        private int   _themedWorldIndex = int.MinValue; // last world index whose theme was applied
         private readonly HashSet<Vector2Int> _tutorialHighlightCells = new();
         private readonly List<Vector2Int> _ghostCells             = new();
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
         private readonly List<Vector2Int> _deconstructHoverCells = new();
+        private readonly List<Vector2Int> _powerCoverageCells    = new();
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
         private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
@@ -55,6 +62,50 @@ namespace MobileIdleBuilder
             // Skip if CameraController is driving the camera (it initialises its own position)
             if (Camera.main == null || Camera.main.GetComponent<CameraController>() == null)
                 CentreCamera();
+        }
+
+        // Re-theme the map when the active world changes (any path: worlds panel, sites panel, dev
+        // console, or a load into a non-Physics world). A single int compare per frame; the apply only
+        // runs on an actual change. Waits until WorldService exists so the first apply carries a real theme.
+        void Update()
+        {
+            var svc = WorldService.Instance;
+            if (svc == null) return;
+            int w = svc.ActiveIndex;
+            if (w == _themedWorldIndex) return;
+            _themedWorldIndex = w;
+            ApplyActiveWorldTheme();
+        }
+
+        // ---- Per-world map theming (Phase 5) ----
+
+        /// <summary>Applies the active world's <see cref="WorldTheme"/> to the map (tile/background/field tint).</summary>
+        public void ApplyActiveWorldTheme()
+        {
+            var svc = WorldService.Instance;
+            if (svc == null) return;
+            var world = svc.GetWorld(svc.ActiveIndex);
+            if (world?.theme != null) ApplyWorldTheme(world.theme);
+        }
+
+        /// <summary>
+        /// Repaints the map for a world theme: base tile colour, camera background, and the field-tile
+        /// tint. Field tiles keep their raw identity colour (stored per cell) and are re-lerped here, so
+        /// switching worlds recolours everything consistently.
+        /// </summary>
+        public void ApplyWorldTheme(WorldTheme theme)
+        {
+            if (theme == null) return;
+            tileColor       = theme.tileColor;
+            _worldFieldTint = theme.fieldTint;
+
+            var cam = Camera.main;
+            if (cam != null) cam.backgroundColor = theme.backgroundColor;
+
+            if (_tiles == null) return;
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    RestoreCell(x, y);
         }
 
         void BuildGrid()
@@ -106,12 +157,26 @@ namespace MobileIdleBuilder
 
         public bool IsInBounds(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 
+        /// <summary>
+        /// Maps a world-space ground point to the grid cell whose CENTER is nearest.
+        /// Tiles are rendered centered at (x*cellSize, z*cellSize) (see BuildGrid), so cell
+        /// boundaries fall at (x ± 0.5) * cellSize — this is round-to-nearest, NOT floor.
+        /// Plain FloorToInt(world/cellSize) selects the cell a half-tile down-left of the point,
+        /// which is the classic "touch is a bit off" placement bug. All screen->cell call sites
+        /// must go through this helper so the convention can never diverge again.
+        /// </summary>
+        public static Vector2Int WorldToCell(Vector3 world, float cellSize) =>
+            new(Mathf.FloorToInt(world.x / cellSize + 0.5f),
+                Mathf.FloorToInt(world.z / cellSize + 0.5f));
+
         /// <summary>Marks a cell as permanently occupied (building placed).</summary>
         public void SetTileHighlight(int x, int y, bool highlighted)
         {
             if (!IsInBounds(x, y)) return;
-            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(),
-                     highlighted ? occupiedColor : tileColor);
+            if (highlighted)
+                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), occupiedColor);
+            else
+                RestoreCell(x, y);
         }
 
         /// <summary>Shows a single-cell ghost. Convenience overload for 1x1 buildings.</summary>
@@ -138,13 +203,14 @@ namespace MobileIdleBuilder
             }
         }
 
-        /// <summary>Clears all ghost tiles, restoring cells to their normal colour.</summary>
+        /// <summary>Clears all ghost tiles (and any power-coverage preview), restoring cells to normal.</summary>
         public void HideGhost()
         {
             foreach (var c in _ghostCells)
                 RestoreCell(c.x, c.y);
             _ghostCells.Clear();
             _ghostCell = new(-1, -1);
+            ClearPowerCoverage();
         }
 
         // ---- Conveyor ghost helpers ----
@@ -191,15 +257,22 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Paints the start and end anchor cells green on top of the already-drawn orange path.
-        /// The cells must already be tracked in _conveyorGhostCells so ClearConveyorGhost restores them.
+        /// Paints the start and end anchor cells green on top of the already-drawn orange path. The
+        /// painted cells are tracked in _conveyorGhostCells so ClearConveyorGhost always restores them —
+        /// including endpoints that land on an existing belt (which the path itself does not ghost).
         /// </summary>
         public void PaintConveyorEndpoints(int sx, int sy, int ex, int ey)
         {
-            if (IsInBounds(sx, sy))
-                SetColor(_tiles[sx, sy].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
-            if ((ex != sx || ey != sy) && IsInBounds(ex, ey))
-                SetColor(_tiles[ex, ey].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+            PaintEndpoint(sx, sy);
+            if (ex != sx || ey != sy) PaintEndpoint(ex, ey);
+        }
+
+        private void PaintEndpoint(int x, int y)
+        {
+            if (!IsInBounds(x, y)) return;
+            SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
+            var cell = new Vector2Int(x, y);
+            if (!_conveyorGhostCells.Contains(cell)) _conveyorGhostCells.Add(cell);
         }
 
         // ---- Deconstruct hover ----
@@ -259,17 +332,65 @@ namespace MobileIdleBuilder
             _fieldHoverCell = new(-1, -1);
         }
 
-        // ---- Field tile colour ----
+        // ---- Power coverage ----
 
         /// <summary>
-        /// Paints a cell permanently with the field's identity colour.
+        /// Tints every cell within <paramref name="radius"/> tiles (Euclidean edge-to-edge gap) of the
+        /// footprint rect (gridX, gridY, w, h) with the power-coverage colour. Mirrors the connection
+        /// test in PowerGridSystem so the highlighted area equals the powered area. Replaces any
+        /// previous coverage highlight.
+        /// </summary>
+        public void ShowPowerCoverage(int gridX, int gridY, int w, int h, float radius)
+        {
+            ClearPowerCoverage();
+            if (radius <= 0f) return;
+
+            // Circle reach extends ~radius + half-footprint past the near edge, plus a cell of slack for
+            // partial-overlap tiles — widen the scan so no covered tile is missed.
+            int rad  = Mathf.CeilToInt(radius) + Mathf.Max(w, h) + 1;
+            int maxX = gridX + w - 1;
+            int maxY = gridY + h - 1;
+            for (int cx = gridX - rad; cx <= maxX + rad; cx++)
+            for (int cy = gridY - rad; cy <= maxY + rad; cy++)
+            {
+                if (!IsInBounds(cx, cy)) continue;
+                // Single-cell tile (cx,cy) vs the source footprint — shared with PowerGridSystem/BuildingVisualizer.
+                if (!PowerCoverageMath.FootprintWithinRadius(gridX, gridY, maxX, maxY, cx, cy, cx, cy, radius)) continue;
+                SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), PowerCoverageColor);
+                _powerCoverageCells.Add(new Vector2Int(cx, cy));
+            }
+        }
+
+        /// <summary>Clears the power-coverage highlight, restoring each cell to its normal colour.</summary>
+        public void ClearPowerCoverage()
+        {
+            foreach (var c in _powerCoverageCells)
+                RestoreCell(c.x, c.y);
+            _powerCoverageCells.Clear();
+        }
+
+        // ---- Field tile colour ----
+
+        /// <summary>How far the field tile is tinted from the base tile colour toward the field
+        /// colour (0 = plain tile, 1 = full field colour). Kept low so the wire-mesh overlay is the
+        /// dominant visual and the tile only hints at the field type.</summary>
+        private const float FieldTileTintStrength = 0.22f;
+
+        /// <summary>
+        /// Paints a cell with a muted hint of the field's identity colour.
         /// This sits below tutorial and ghost layers in RestoreCell priority.
         /// </summary>
         public void SetFieldTileColor(int x, int y, Color color)
         {
             if (!IsInBounds(x, y)) return;
-            _fieldTileColors[new Vector2Int(x, y)] = color;
+            _fieldTileColors[new Vector2Int(x, y)] = color;   // store RAW; tint+lerp applied in RestoreCell
             RestoreCell(x, y);
+        }
+
+        public void ClearFieldTileColor(int x, int y)
+        {
+            if (_fieldTileColors.Remove(new Vector2Int(x, y)))
+                RestoreCell(x, y);
         }
 
         // ---- Tutorial highlight ----
@@ -313,8 +434,8 @@ namespace MobileIdleBuilder
                 color = tutorialHighlightColor;
             else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y))
                 color = occupiedColor;
-            else if (_fieldTileColors.TryGetValue(key, out var fieldColor))
-                color = fieldColor;
+            else if (_fieldTileColors.TryGetValue(key, out var fieldColorRaw))
+                color = Color.Lerp(tileColor, fieldColorRaw * _worldFieldTint, FieldTileTintStrength);
             else
                 color = tileColor;
             SetColor(tile.GetComponent<MeshRenderer>(), color);

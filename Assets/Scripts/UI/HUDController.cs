@@ -22,6 +22,22 @@ namespace MobileIdleBuilder
         private HUDStatusBarController              _statusBar;
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
+        private PrestigeShopSubController           _prestigeShop;
+        private ManagersSubController               _managers;
+        private MegastructureSubController          _megastructure;
+        private DailyEventsSubController            _daily;
+        private RewardedAdsSubController            _rewards;
+        private IdleReturnSubController             _idleReturn;
+        private GameUpdateNoticeSubController       _gameUpdate;
+        private HUDPremiumShopSubController         _shop;
+        private HUDSettingsSubController            _settings;
+        private SitesSubController                  _sites;
+        private WorldsSubController                 _worlds;
+
+        // ---- Power-connection overlay toggle ----
+        private Button                              _btnPowerToggle;
+        private PowerConnectionOverlayController    _powerOverlay;
+        private bool                                _powerConnectionsShown;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -35,13 +51,19 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay;
+                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
                            _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+        // Research timer UI (live countdown + skip on the in-progress card)
+        private Label      _researchCountdownLabel;
+        private Button     _researchSkipBtn;
+        private bool       _researchSkipConfirming;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
         private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
         private Button     _btnEnterPVP;
 
@@ -51,11 +73,23 @@ namespace MobileIdleBuilder
         private bool          _drawerOpen;
 
         // ---- Placement controls ----
-        private Button _btnRotateOutput;
-        private Button _btnFlipBuilding;
+        private Button        _btnRotateOutput;
+        private Button        _btnFlipBuilding;
+        private VisualElement _placementConfirmPopup;
+        private VisualElement _placementBar;
+        private Button        _btnConfirmPlace;
+        private Button        _btnCancelCandidate;
+        private Button        _btnRotateCandidate;
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private VisualElement _conveyorBar;
+        private Label         _conveyorLabel;
+        private Button        _btnConveyorRotate;
+        private Button        _btnConveyorConfirm;
+        private Button        _btnConveyorCancelCandidate;
+        private Button        _btnConveyorNewStart;
+        private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
@@ -64,6 +98,7 @@ namespace MobileIdleBuilder
         public event System.Action OnDrawerOpened;
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
+        public event System.Action OnConveyorPlaced;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -73,6 +108,22 @@ namespace MobileIdleBuilder
         // ---- Tooltip ----
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
+
+        // ---- Achievements category tabs ----
+        private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
+        private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
+        private Label  _achResetLabel;
+        private Button _achClaimAllBtn;
+
+        // ---- Achievements gate ----
+        private Button    _btnAchievements;
+        private Label     _achievementsLockedHint;
+        private bool      _achievementsUnlocked;
+
+        // ---- Megastructure gate (nav button hidden until megastructure_theory is researched) ----
+        private Button    _btnMegastructure;
+        private Coroutine _achievementsHintPulse;
+        private Button    _achievementsHintPulseTarget;
 
 
         // ============================================================
@@ -84,9 +135,21 @@ namespace MobileIdleBuilder
             if (deconstructController == null)
                 deconstructController = FindAnyObjectByType<DeconstructController>();
 
-            _statusBar = GetComponent<HUDStatusBarController>();
-            _inspector = GetComponent<HUDBuildingInspectorSubController>();
-            _banner    = GetComponent<HUDBannerController>();
+            _statusBar    = GetComponent<HUDStatusBarController>();
+            _inspector    = GetComponent<HUDBuildingInspectorSubController>();
+            _banner       = GetComponent<HUDBannerController>();
+            _prestigeShop = GetComponent<PrestigeShopSubController>();
+            _managers     = GetComponent<ManagersSubController>();
+            _megastructure = GetComponent<MegastructureSubController>();
+            _daily        = GetComponent<DailyEventsSubController>();
+            // Added in code (not the scene) so the Free Rewards panel works without manual wiring.
+            _rewards      = GetComponent<RewardedAdsSubController>() ?? gameObject.AddComponent<RewardedAdsSubController>();
+            _idleReturn   = GetComponent<IdleReturnSubController>();
+            _gameUpdate   = GetComponent<GameUpdateNoticeSubController>() ?? gameObject.AddComponent<GameUpdateNoticeSubController>();
+            _shop         = GetComponent<HUDPremiumShopSubController>();
+            _settings     = GetComponent<HUDSettingsSubController>();
+            _sites        = GetComponent<SitesSubController>();
+            _worlds       = GetComponent<WorldsSubController>();
         }
 
         void OnEnable()
@@ -115,17 +178,36 @@ namespace MobileIdleBuilder
                 };
             }
 
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+
             QueryElements(root);
             _statusBar?.Init(root);
-            _inspector?.Init(root, placementController);
+            _inspector?.Init(root, placementController, this);
             _banner?.Init(root);
+            _prestigeShop?.Init(root, this);
+            _managers?.Init(root, this);
+            _megastructure?.Init(root, this);
+            _daily?.Init(root, this);
+            _rewards?.Init(root, this);
+            _idleReturn?.Init(root, this);
+            _gameUpdate?.Init(root, this);
+            _shop?.Initialize(root);
+            _settings?.Initialize(root);
+            _sites?.Init(root, this);
+            _worlds?.Init(root, this);
             BindButtons(root);
+            ApplyAchievementsGate();
+            ApplyMegastructureGate();
+            ApplyFeatureFlagGates(root);
+            _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_placementConfirmPopup, false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
-            SetElementVisible(root.Q("notification-banner"),   false);
+            // notification-banner starts hidden via CSS translate (no .hidden class needed)
             SetElementVisible(root.Q("tutorial-hint-banner"),  false);
             SetElementVisible(root.Q("field-proximity-banner"), false);
             SetElementVisible(_outputSelector, false);
@@ -137,10 +219,19 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
                 placementController.OnBuildingPlaced         += OnBuildingPlaced;
+                placementController.OnCandidateChanged       += OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = IsPointerOverPlacementUI;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      += OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     += OnConveyorStartChanged;
+                conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
@@ -157,15 +248,26 @@ namespace MobileIdleBuilder
 
         void OnDisable()
         {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+
             if (placementController != null)
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
                 placementController.OnBuildingPlaced         -= OnBuildingPlaced;
+                placementController.OnCandidateChanged       -= OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = null;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      -= OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     -= OnConveyorStartChanged;
+                conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = null;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
@@ -191,7 +293,7 @@ namespace MobileIdleBuilder
             _em             = world.EntityManager;
             _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
             _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
-            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
+            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerGridState>());
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
@@ -201,12 +303,31 @@ namespace MobileIdleBuilder
 
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
+            _prestigeShop?.SetECSContext(_em);
+            _sites?.SetECSContext(_em);
+            _worlds?.SetECSContext(_em);
         }
 
         void Update()
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+            UpdatePlacementConfirmPopup();
+
+            // One-shot: detect first prestige in the same session and re-apply the gate
+            if (!_achievementsUnlocked)
+            {
+                bool firstRunNow = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+                if (firstRunNow)
+                {
+                    GameLogger.Info($"[HUD] Achievements gate flipped — showing unlock hint. _banner={_banner != null}");
+                    _achievementsUnlocked = true;
+                    ApplyAchievementsGate();
+                    achievementService?.InitPostPrestige();
+                    ShowTutorialHint("🏆 Achievements unlocked! Open the drawer and tap Achievements to get started.");
+                    StartAchievementsHintPulse();
+                }
+            }
         }
 
         // ============================================================
@@ -225,15 +346,24 @@ namespace MobileIdleBuilder
             _codexPanel        = root.Q("codex-panel");
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
+            _managersPanel     = root.Q("managers-panel");
+            _megastructurePanel = root.Q("megastructure-panel");
+            _dailyPanel        = root.Q("daily-panel");
+            _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
+            _shopPanel         = root.Q("shop-panel");
+            _settingsPanel     = root.Q("settings-panel");
+            _sitesPanel        = root.Q("sites-panel");
+            _worldsPanel       = root.Q("worlds-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel
+                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
             // Panel content
@@ -244,6 +374,19 @@ namespace MobileIdleBuilder
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievementsList    = root.Q<ScrollView>("achievements-list");
             _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
+
+            // Achievements category tabs
+            _achTabDaily       = root.Q<Button>("ach-tab-daily");
+            _achTabWeekly      = root.Q<Button>("ach-tab-weekly");
+            _achTabMonthly     = root.Q<Button>("ach-tab-monthly");
+            _achTabProgression = root.Q<Button>("ach-tab-progression");
+            _achResetLabel     = root.Q<Label>("ach-reset-label");
+            _achClaimAllBtn    = root.Q<Button>("ach-claim-all-btn");
+
+            // Achievements gate
+            _btnAchievements        = root.Q<Button>("btn-achievements");
+            _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
+            _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
             _pvpStateLabel     = root.Q<Label>("pvp-state-label");
             _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
@@ -256,6 +399,11 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _placementConfirmPopup = root.Q("placement-confirm-popup");
+            _placementBar          = root.Q("placement-bar");
+            _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
+            _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
+            _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
@@ -264,7 +412,14 @@ namespace MobileIdleBuilder
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
             // Conveyor placement
-            _conveyorOverlay = root.Q("conveyor-overlay");
+            _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorBar                = root.Q("conveyor-bar");
+            _conveyorLabel              = root.Q<Label>("conveyor-label");
+            _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
+            _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
+            _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
+            _btnConveyorNewStart        = root.Q<Button>("btn-conveyor-new-start");
+            _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
@@ -289,12 +444,43 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-codex").clicked        += () => TryOpenPanel(OpenCodexPanel);
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
+            root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
+            root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
+            var btnDaily = root.Q<Button>("btn-daily");
+            if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
+            // Free Rewards (rewarded ads) — nav button hidden by ApplyFeatureFlagGates when ads.enabled is off.
+            var btnRewards = root.Q<Button>("btn-rewards");
+            if (btnRewards != null)
+                btnRewards.clicked += () => TryOpenPanel(OpenRewardsPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
+
+            // Achievement category tabs
+            if (_achTabDaily       != null) _achTabDaily.clicked       += () => SwitchAchCategory(AchievementCategory.Daily);
+            if (_achTabWeekly      != null) _achTabWeekly.clicked      += () => SwitchAchCategory(AchievementCategory.Weekly);
+            if (_achTabMonthly     != null) _achTabMonthly.clicked     += () => SwitchAchCategory(AchievementCategory.Monthly);
+            if (_achTabProgression != null) _achTabProgression.clicked += () => SwitchAchCategory(AchievementCategory.Progression);
+            if (_achClaimAllBtn    != null) _achClaimAllBtn.clicked    += () =>
+            {
+                achievementService?.ClaimAllRewards();
+                BuildAchievementsList();
+            };
+            root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
+            root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
+            root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
+            root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
+
+            // Power-connection overlay toggle (⚡ button). Restores its persisted on/off state.
+            _btnPowerToggle = root.Q<Button>("btn-power-toggle");
+            if (_btnPowerToggle != null)
+            {
+                _powerConnectionsShown = SettingsService.Instance?.Current?.showPowerConnections ?? false;
+                ApplyPowerConnectionState();
+                _btnPowerToggle.clicked += TogglePowerConnections;
+            }
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -302,9 +488,17 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-codex").clicked        += () => SetElementVisible(_codexPanel,        false);
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
+            root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
+            root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
+            var btnCloseDaily = root.Q<Button>("btn-close-daily");
+            if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
+            var btnCloseRewards = root.Q<Button>("btn-close-rewards");
+            if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
+            root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
+            root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
 
             // PVP actions (queried after _btnEnterPVP is set in QueryElements)
             if (_btnEnterPVP != null)
@@ -330,10 +524,28 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnConfirmPlace != null)
+                _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
+            if (_btnCancelCandidate != null)
+                _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
+            if (_btnRotateCandidate != null)
+                _btnRotateCandidate.clicked += () => placementController?.Rotate();
 
-            // Conveyor cancel (button inside the conveyor overlay)
+            // Conveyor "Finished" (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
                 conveyorController?.CancelConveyorMode());
+
+            // Conveyor candidate controls + Create/Destroy toggle
+            if (_btnConveyorRotate != null)
+                _btnConveyorRotate.clicked += () => conveyorController?.RotatePath();
+            if (_btnConveyorConfirm != null)
+                _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
+            if (_btnConveyorCancelCandidate != null)
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+            if (_btnConveyorNewStart != null)
+                _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
+            if (_btnConveyorMode != null)
+                _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
             // Deconstruct cancel
             root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -377,8 +589,73 @@ namespace MobileIdleBuilder
         private void OpenCodexPanel()
         {
             CloseAllPanels();
-            // Content is populated externally as codex entries are discovered
+            BuildCodexList();
             SetElementVisible(_codexPanel, true);
+        }
+
+        /// <summary>
+        /// Populates the codex with an entry (tile icon + name + lore) for every item whose
+        /// crafting recipe the player has discovered, using the same known-recipe gate as the
+        /// recipe list. Rebuilt each time the panel opens.
+        /// </summary>
+        private void BuildCodexList()
+        {
+            if (_codexList == null) return;
+            _codexList.Clear();
+
+            var recipes = RecipeDatabase.Instance?.Recipes;
+            if (recipes == null) return;
+
+            var seen = new HashSet<int>();
+            int shown = 0;
+            foreach (var recipe in recipes)
+            {
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)) continue;
+
+                var item = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                if (item == null || !seen.Add(item.itemId)) continue;
+
+                var row = new VisualElement();
+                row.AddToClassList("codex-row");
+
+                var icon = MakeItemIcon(item.icon, "codex-icon");
+                if (icon != null) row.Add(icon);
+
+                var infoCol = new VisualElement();
+                infoCol.AddToClassList("codex-info");
+
+                var name = new Label(item.displayName ?? item.symbol ?? item.id);
+                name.AddToClassList("codex-name");
+                infoCol.Add(name);
+
+                if (!string.IsNullOrEmpty(item.codexEntry))
+                {
+                    var entry = new Label(item.codexEntry);
+                    entry.AddToClassList("codex-entry");
+                    infoCol.Add(entry);
+                }
+
+                row.Add(infoCol);
+                _codexList.Add(row);
+                shown++;
+            }
+
+            if (shown == 0)
+                _codexList.Add(new Label("Craft items to fill your codex."));
+        }
+
+        /// <summary>
+        /// Builds a background-image VisualElement for an item's tile sprite, or null when the
+        /// item has no icon yet (callers skip adding it so nothing breaks). Shared by the recipe
+        /// list, ingredient chips, codex, and the building inspector's recipe picker.
+        /// </summary>
+        internal static VisualElement MakeItemIcon(Sprite icon, string ussClass)
+        {
+            if (icon == null) return null;
+            var el = new VisualElement();
+            el.AddToClassList(ussClass);
+            el.style.backgroundImage = new StyleBackground(icon);
+            return el;
         }
 
         private void OpenResearchPanel()
@@ -386,13 +663,58 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
+
+            // Drive the live research countdown while the panel is open (paused when it closes).
+            if (_researchTicker == null)
+                _researchTicker = _researchList.schedule.Execute(UpdateResearchCountdown).Every(1000);
+            else
+                _researchTicker.Resume();
+
             OnResearchPanelOpened?.Invoke();
+        }
+
+        // Updates just the active card's countdown + skip cost each second, so an open inline
+        // skip confirm is not blown away by a full rebuild.
+        private void UpdateResearchCountdown()
+        {
+            if (_researchPanel == null || _researchPanel.ClassListContains("hidden"))
+            {
+                _researchTicker?.Pause();
+                return;
+            }
+            if (researchService == null || !researchService.HasActiveResearch) return;
+
+            double rem = researchService.ActiveRemainingSeconds;
+            if (_researchCountdownLabel != null)
+                _researchCountdownLabel.text = $"⏳ {FormatResearchTimer(rem)}";
+
+            if (_researchSkipBtn != null && !_researchSkipConfirming)
+            {
+                long cost     = researchService.ActiveSkipCost;
+                long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.SetEnabled(crystals >= cost);
+            }
+        }
+
+        public static string FormatResearchTimer(double seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = System.TimeSpan.FromSeconds(System.Math.Ceiling(seconds));
+            if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes:D2}m {ts.Seconds:D2}s";
+            if (ts.TotalMinutes >= 1) return $"{ts.Minutes}m {ts.Seconds:D2}s";
+            return $"{ts.Seconds}s";
         }
 
         private void BuildResearchList()
         {
             if (_researchList == null) return;
             _researchList.Clear();
+
+            // Reset per-build references for the active-research card (reassigned below if present).
+            _researchCountdownLabel = null;
+            _researchSkipBtn        = null;
+            _researchSkipConfirming = false;
 
             if (researchService == null || researchService.AllResearch == null ||
                 researchService.AllResearch.Count == 0)
@@ -406,88 +728,143 @@ namespace MobileIdleBuilder
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
-            // Collect research IDs gated by the current tutorial step.
-            System.Collections.Generic.HashSet<string> tutorialLockedResearch = null;
-            var flow = TutorialFlowSO.Current;
-            if (flow != null && _ecsReady && !_tutorialQuery.IsEmpty)
-            {
-                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
-                if (tutState.IsActive && tutState.CurrentStepIndex < flow.steps.Length)
-                {
-                    var ids = flow.steps[tutState.CurrentStepIndex].lockedResearchIds;
-                    if (ids != null && ids.Length > 0)
-                        tutorialLockedResearch = new System.Collections.Generic.HashSet<string>(ids);
-                }
-            }
+            bool tutorialActive = false;
+            if (_ecsReady && !_tutorialQuery.IsEmpty)
+                tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
 
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
 
-                bool unlocked        = researchService.IsUnlocked(research.id);
-                bool tutorialGated   = tutorialLockedResearch != null &&
-                                       tutorialLockedResearch.Contains(research.id);
-                bool canPurchase     = !unlocked && !tutorialGated && researchService.CanPurchase(research);
+                bool unlocked   = researchService.IsUnlocked(research.id);
+                bool prereqsMet = research.prerequisites == null || research.prerequisites.Length == 0 ||
+                                  System.Array.TrueForAll(research.prerequisites,
+                                      p => p == null || researchService.IsUnlocked(p.id));
+
+                // During the tutorial, only show research that is already unlocked
+                // or whose prerequisites are all satisfied (the immediate frontier).
+                if (tutorialActive && !unlocked && !prereqsMet) continue;
+
+                bool canPurchase = !unlocked && prereqsMet && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
-                card.AddToClassList("building-card");
+                card.AddToClassList("research-card");
                 if (unlocked) card.AddToClassList("research-card--unlocked");
 
-                // Name row
+                // Name
                 var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
-                nameLabel.AddToClassList("building-card-name");
+                nameLabel.AddToClassList("research-card-name");
                 card.Add(nameLabel);
 
-                // Description
+                // Description (wrapping)
                 if (!string.IsNullOrEmpty(research.description))
                 {
                     var descLabel = new Label(research.description);
-                    descLabel.AddToClassList("building-card-recipe");
+                    descLabel.AddToClassList("research-card-desc");
                     card.Add(descLabel);
                 }
 
+                bool isActive    = researchService.HasActiveResearch &&
+                                   researchService.ActiveResearchId == research.id;
+                bool labBusy     = researchService.HasActiveResearch && !isActive;
+
+                if (isActive) card.AddToClassList("research-card--in-progress");
+
                 if (!unlocked)
                 {
-                    // Cost
-                    bool affordable = currentEntropy >= research.costBaseCurrency;
-                    var costLabel = new Label($"◈ {research.costBaseCurrency:N0}");
-                    costLabel.AddToClassList("building-card-recipe");
-                    if (!affordable)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
-                    card.Add(costLabel);
+                    var footer = new VisualElement();
+                    footer.AddToClassList("research-card-footer");
 
-                    // Prerequisites (if locked)
-                    if (research.prerequisites != null && research.prerequisites.Length > 0)
+                    if (!prereqsMet)
                     {
-                        bool prereqsMet = canPurchase || unlocked;
-                        if (!prereqsMet)
+                        // Show what's blocking this research
+                        var prereqNames = string.Join(", ",
+                            System.Array.ConvertAll(research.prerequisites,
+                                p => p != null ? p.displayName : "?"));
+                        var prereqLabel = new Label($"Requires: {prereqNames}");
+                        prereqLabel.AddToClassList("research-card-prereq");
+                        footer.Add(prereqLabel);
+                    }
+                    else if (isActive)
+                    {
+                        // In-progress: live countdown + skip-for-crystals
+                        _researchCountdownLabel = new Label($"⏳ {FormatResearchTimer(researchService.ActiveRemainingSeconds)}");
+                        _researchCountdownLabel.AddToClassList("research-card-cost");
+                        footer.Add(_researchCountdownLabel);
+                        BuildResearchSkipUi(footer, research);
+                    }
+                    else
+                    {
+                        // Cost + effective research time (after the Research Overdrive discount),
+                        // stacked so the Start button stays on the right.
+                        var info = new VisualElement();
+                        info.AddToClassList("research-card-info");
+
+                        bool affordable = currentEntropy >= research.costBaseCurrency;
+                        var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
+                        costLabel.AddToClassList("research-card-cost");
+                        if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
+                        info.Add(costLabel);
+
+                        int effSecs    = researchService.EffectiveDurationSeconds(research);
+                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        timeLabel.AddToClassList("research-card-time");
+                        info.Add(timeLabel);
+
+                        footer.Add(info);
+
+                        // Start button (disabled while the lab is busy with another research)
+                        var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
+                        startBtn.AddToClassList("craft-btn");
+                        startBtn.SetEnabled(!labBusy && canPurchase);
+
+                        var captured = research;
+                        startBtn.clicked += () =>
                         {
-                            var prereqNames = string.Join(", ",
-                                System.Array.ConvertAll(research.prerequisites,
-                                    p => p != null ? p.displayName : "?"));
-                            var prereqLabel = new Label($"Requires: {prereqNames}");
-                            prereqLabel.AddToClassList("building-card-recipe");
-                            prereqLabel.style.color = new UnityEngine.Color(0.6f, 0.6f, 0.6f);
-                            card.Add(prereqLabel);
-                        }
+                            researchService.Purchase(captured);
+                            BuildResearchList();
+                        };
+                        footer.Add(startBtn);
                     }
 
-                    // Purchase button
-                    var purchaseBtn = new Button { text = "Research" };
-                    purchaseBtn.AddToClassList("craft-btn");
-                    purchaseBtn.SetEnabled(canPurchase);
-
-                    var captured = research;
-                    purchaseBtn.clicked += () =>
-                    {
-                        researchService.Purchase(captured);
-                        BuildResearchList(); // refresh after purchase
-                    };
-                    card.Add(purchaseBtn);
+                    card.Add(footer);
                 }
 
                 _researchList.Add(card);
             }
+        }
+
+        // Skip button for the in-progress research. First tap reveals a Confirm/Cancel row so
+        // spending crystals is always a deliberate two-tap action (no generic confirm modal exists).
+        private void BuildResearchSkipUi(VisualElement footer, ResearchSO research)
+        {
+            long cost     = researchService.ActiveSkipCost;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+
+            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn.AddToClassList("craft-btn");
+            _researchSkipBtn.SetEnabled(crystals >= cost);
+            _researchSkipBtn.clicked += () =>
+            {
+                _researchSkipConfirming = true;
+                footer.Remove(_researchSkipBtn);
+
+                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                confirm.AddToClassList("craft-btn");
+                confirm.clicked += () =>
+                {
+                    researchService.SkipActive(); // completion fires OnResearchUnlocked → rebuild
+                    BuildResearchList();
+                };
+
+                var cancel = new Button { text = "✕" };
+                cancel.AddToClassList("craft-btn");
+                cancel.clicked += () => BuildResearchList();
+
+                footer.Add(confirm);
+                footer.Add(cancel);
+            };
+            footer.Add(_researchSkipBtn);
         }
 
         private void OnResearchUnlocked(ResearchSO research)
@@ -503,25 +880,154 @@ namespace MobileIdleBuilder
             // Refresh recipe panel — newly learned recipes will appear
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
                 BuildRecipeList();
+
+            // One-shot Quantum Domains introduction when its gate research is unlocked.
+            _sites?.NotifyResearchUnlocked(research);
+
+            // Reveal the megastructure nav button when its gating research lands.
+            ApplyMegastructureGate();
         }
 
         private void OpenUpgradesPanel()
         {
             CloseAllPanels();
-            // Content is populated when SpecialUpgradeSO data is wired in
+            _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenManagersPanel()
+        {
+            CloseAllPanels();
+            _managers?.Refresh();
+            SetElementVisible(_managersPanel, true);
+        }
+
+        private void OpenMegastructurePanel()
+        {
+            CloseAllPanels();
+            _megastructure?.Refresh();
+            SetElementVisible(_megastructurePanel, true);
+        }
+
+        /// <summary>Shows the megastructure nav button only once its gating research is unlocked.</summary>
+        private void ApplyMegastructureGate()
+        {
+            if (_btnMegastructure == null) return;
+            bool unlocked = MegastructureService.Instance?.IsUnlocked() ?? false;
+            SetElementVisible(_btnMegastructure, unlocked);
+        }
+
+        /// <summary>
+        /// Hides nav buttons for features turned off by remote feature flags. Flags resolve from the
+        /// cache at this point (last session's values); a change takes effect on the next launch.
+        /// </summary>
+        private void ApplyFeatureFlagGates(VisualElement root)
+        {
+            if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
+            if (!FeatureFlags.DailyEventsEnabled) SetElementVisible(root.Q<Button>("btn-daily"), false);
+            if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
+        }
+
+        private void OpenSitesPanel()
+        {
+            CloseAllPanels();
+            _sites?.ClearNavHighlight();
+            _sites?.Refresh();
+            SetElementVisible(_sitesPanel, true);
+        }
+
+        private void OpenWorldsPanel()
+        {
+            CloseAllPanels();
+            _worlds?.Refresh();
+            SetElementVisible(_worldsPanel, true);
+        }
+
+        private void OpenDailyPanel()
+        {
+            CloseAllPanels();
+            _daily?.Refresh();
+            SetElementVisible(_dailyPanel, true);
+        }
+
+        private void OpenRewardsPanel()
+        {
+            CloseAllPanels();
+            _rewards?.Refresh();
+            SetElementVisible(_rewardsPanel, true);
+        }
+
+        private void OpenShopPanel()
+        {
+            CloseAllPanels();
+            _shop?.Open();
+        }
+
+        private void OpenSettingsPanel()
+        {
+            CloseAllPanels();
+            _settings?.Open();
+        }
+
+        private void ApplyAchievementsGate()
+        {
+            bool unlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            if (_btnAchievements != null)
+                _btnAchievements.SetEnabled(unlocked);
+            SetElementVisible(_achievementsLockedHint, !unlocked);
         }
 
         private void OpenAchievementsPanel()
         {
+            DismissAchievementsHint();
             CloseAllPanels();
+            _achActiveCategory = AchievementCategory.Daily;
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
         }
 
+        private void StartAchievementsHintPulse() =>
+            SwapAchievementsHintPulse("btn-drawer-handle");
+
+        private void SwapAchievementsHintPulse(string buttonId)
+        {
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+            var root = GetComponent<UIDocument>()?.rootVisualElement;
+            var btn  = root?.Q<Button>(buttonId);
+            if (btn == null) return;
+            _achievementsHintPulseTarget = btn;
+            _achievementsHintPulse       = StartCoroutine(PulseAchievementsHint(btn));
+        }
+
+        private void DismissAchievementsHint()
+        {
+            HideTutorialHint();
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+        }
+
+        private IEnumerator PulseAchievementsHint(Button btn)
+        {
+            while (true)
+            {
+                btn.AddToClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+                btn.RemoveFromClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+            }
+        }
+
+        private void SwitchAchCategory(AchievementCategory category)
+        {
+            _achActiveCategory = category;
+            BuildAchievementsList();
+        }
+
         private void OnAchievementUnlocked(AchievementSO _)
         {
-            // Refresh the title counter whenever a new achievement completes
             if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
                 BuildAchievementsList();
         }
@@ -684,6 +1190,8 @@ namespace MobileIdleBuilder
         {
             _recipeList.Clear();
 
+            var inventoryCounts = craftService?.GetInventoryCounts() ?? new Dictionary<int, int>();
+
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
@@ -711,11 +1219,14 @@ namespace MobileIdleBuilder
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
 
+                var outputItem = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                var outputIcon = MakeItemIcon(outputItem?.icon, "item-icon");
+                if (outputIcon != null) info.Add(outputIcon);
+
                 var nameLabel = new Label(recipe.name);
                 nameLabel.AddToClassList("recipe-name");
 
-                var inputsLabel = new Label(BuildInputsText(recipe));
-                inputsLabel.AddToClassList("recipe-inputs");
+                var inputsContainer = BuildIngredientsUI(recipe, inventoryCounts);
 
                 if (recipe.requiresBuilding)
                 {
@@ -732,11 +1243,11 @@ namespace MobileIdleBuilder
                 }
 
                 info.Add(nameLabel);
-                info.Add(inputsLabel);
+                info.Add(inputsContainer);
 
                 var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
-                craftBtn.SetEnabled(!isLocked);
+                craftBtn.SetEnabled(!isLocked && canCraft);
                 var captured = recipe;
                 if (!isLocked)
                     craftBtn.clicked += () => OnCraftPressed(captured);
@@ -825,15 +1336,20 @@ namespace MobileIdleBuilder
                     : "No recipe");
                 recipeLabel.AddToClassList("building-card-recipe");
 
-                int cost = entry.building?.entropyCost ?? 0;
+                int rawCost = entry.building?.entropyCost ?? 0;
+                float reduction = !_prestigeQuery.IsEmpty
+                    ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                    : 0f;
+                int cost = rawCost > 0 ? (int)(rawCost * (1f - reduction)) : 0;
                 bool canAfford = currentEntropy >= cost;
 
                 if (cost > 0)
                 {
                     var costLabel = new Label($"◈ {cost:N0}");
                     costLabel.AddToClassList("building-card-recipe");
-                    if (!canAfford)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
+                    costLabel.AddToClassList(canAfford
+                        ? "building-card-recipe--affordable"
+                        : "building-card-recipe--unaffordable");
                     card.Add(costLabel);
                 }
 
@@ -857,12 +1373,19 @@ namespace MobileIdleBuilder
 
         private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
         {
-            int cost = entry.building?.entropyCost ?? 0;
-            if (cost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+            int rawCost = entry.building?.entropyCost ?? 0;
+            if (rawCost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+
+            float reduction = !_prestigeQuery.IsEmpty
+                ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                : 0f;
+            int cost = (int)(rawCost * (1f - reduction));
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.BaseCurrency = System.Math.Max(0, progress.BaseCurrency - cost);
+            long actual = System.Math.Min(cost, progress.BaseCurrency);
+            progress.BaseCurrency      -= actual;
+            progress.TotalEntropySpent += actual;
             _em.SetComponentData(entity, progress);
         }
 
@@ -875,10 +1398,22 @@ namespace MobileIdleBuilder
             if (_achievementsList == null) return;
             _achievementsList.Clear();
 
+            // Update category tab highlights
+            UpdateAchievementTabHighlights();
+
+            // Update reset countdown
+            if (_achResetLabel != null)
+            {
+                _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                    ? ""
+                    : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
+            }
+
             var all = achievementService?.GetAll();
             if (all == null || all.Count == 0)
             {
                 _achievementsList.Add(new Label("No achievements defined."));
+                if (_achievementsTitle != null) _achievementsTitle.text = "Achievements (0 / 0)";
                 return;
             }
 
@@ -888,53 +1423,116 @@ namespace MobileIdleBuilder
 
             foreach (var achievement in all)
             {
-                bool isDone   = achievementService.IsCompleted(achievement.id);
-                bool isHidden = achievement.isHidden && !isDone;
+                if (achievement == null || achievement.category != _achActiveCategory) continue;
+
+                bool isDone      = achievementService.IsCompleted(achievement.id);
+                bool isClaimable = achievementService.IsClaimable(achievement.id);
+                bool isHidden    = achievement.isHidden && !isDone;
 
                 var row = new VisualElement();
-                row.AddToClassList("achievement-row");
-                if (isDone) row.AddToClassList("achievement-row--completed");
+                row.AddToClassList("ach-card");
+                if (isDone && !isClaimable) row.AddToClassList("ach-card--completed");
+                else if (isClaimable)       row.AddToClassList("ach-card--claimable");
 
-                // Check / lock indicator
+                var innerRow = new VisualElement();
+                innerRow.AddToClassList("ach-card-row");
+
                 var checkLabel = new Label(isDone ? "✓" : "○");
-                checkLabel.AddToClassList("achievement-row__check");
+                checkLabel.AddToClassList("ach-card-check");
+                if (isDone) checkLabel.AddToClassList("ach-card-check--done");
 
-                // Body
                 var body = new VisualElement();
-                body.AddToClassList("achievement-row__body");
+                body.AddToClassList("ach-card-body");
 
                 var nameLabel = new Label(isHidden ? "???" : achievement.displayName);
-                nameLabel.AddToClassList("achievement-row__name");
+                nameLabel.AddToClassList("ach-card-name");
 
                 var descLabel = new Label(isHidden ? "Complete a hidden objective to reveal." : achievement.description);
-                descLabel.AddToClassList("achievement-row__description");
+                descLabel.AddToClassList("ach-card-desc");
 
                 body.Add(nameLabel);
                 body.Add(descLabel);
 
-                // Progress (only for quantity > 1 and not hidden)
-                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                // Currency reward hint
+                if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
                 {
-                    int progress = achievementService.GetProgress(achievement.id);
-                    var progLabel = new Label($"{progress} / {achievement.triggerQuantity}");
-                    progLabel.AddToClassList("achievement-row__progress");
-                    body.Add(progLabel);
-                }
-
-                // Rewards (only if not hidden)
-                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
-                {
-                    var rewardNames = string.Join(", ", System.Array.ConvertAll(
-                        achievement.rewards, r => r != null ? r.displayName : "?"));
-                    var rewardLabel = new Label($"Reward: {rewardNames}");
-                    rewardLabel.AddToClassList("achievement-row__rewards");
+                    var parts = new System.Collections.Generic.List<string>();
+                    if (achievement.paidCurrencyReward    > 0) parts.Add($"◆ {achievement.paidCurrencyReward}");
+                    if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
+                    var rewardLabel = new Label(string.Join("  ", parts));
+                    rewardLabel.AddToClassList("ach-card-reward");
                     body.Add(rewardLabel);
                 }
 
-                row.Add(checkLabel);
-                row.Add(body);
+                // Cosmetic rewards (legacy)
+                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
+                {
+                    var cosmeticNames = string.Join(", ", System.Array.ConvertAll(
+                        achievement.rewards, r => r != null ? r.displayName : "?"));
+                    var cosmeticLabel = new Label($"Unlocks: {cosmeticNames}");
+                    cosmeticLabel.AddToClassList("ach-card-desc");
+                    body.Add(cosmeticLabel);
+                }
+
+                innerRow.Add(checkLabel);
+                innerRow.Add(body);
+
+                // Claim button
+                if (isClaimable)
+                {
+                    var claimBtn = new Button { text = "Claim" };
+                    claimBtn.AddToClassList("ach-claim-btn");
+                    string capturedId = achievement.id;
+                    claimBtn.clicked += () =>
+                    {
+                        achievementService?.ClaimReward(capturedId);
+                        BuildAchievementsList();
+                    };
+                    innerRow.Add(claimBtn);
+                }
+
+                row.Add(innerRow);
+
+                // Progress bar (in-progress achievements with quantity > 1)
+                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                {
+                    int progress = achievementService.GetProgress(achievement.id);
+                    float ratio  = Mathf.Clamp01((float)progress / achievement.triggerQuantity);
+
+                    var barWrap = new VisualElement();
+                    barWrap.AddToClassList("ach-progress-bar");
+                    var fill = new VisualElement();
+                    fill.AddToClassList("ach-progress-fill");
+                    fill.style.width = new StyleLength(new Length(ratio * 100f, LengthUnit.Percent));
+                    barWrap.Add(fill);
+                    row.Add(barWrap);
+
+                    var progLabel = new Label($"{progress:N0} / {achievement.triggerQuantity:N0}");
+                    progLabel.AddToClassList("ach-card-desc");
+                    row.Add(progLabel);
+                }
+
                 _achievementsList.Add(row);
             }
+
+            // Claim All button visibility
+            bool anyClaimable = achievementService?.ClaimableCount > 0;
+            SetElementVisible(_achClaimAllBtn, anyClaimable);
+        }
+
+        private void UpdateAchievementTabHighlights()
+        {
+            AchievementTabActive(_achTabDaily,       _achActiveCategory == AchievementCategory.Daily);
+            AchievementTabActive(_achTabWeekly,      _achActiveCategory == AchievementCategory.Weekly);
+            AchievementTabActive(_achTabMonthly,     _achActiveCategory == AchievementCategory.Monthly);
+            AchievementTabActive(_achTabProgression, _achActiveCategory == AchievementCategory.Progression);
+        }
+
+        private static void AchievementTabActive(Button tab, bool active)
+        {
+            if (tab == null) return;
+            if (active) tab.AddToClassList("achievements-tab--active");
+            else        tab.RemoveFromClassList("achievements-tab--active");
         }
 
         // ============================================================
@@ -944,6 +1542,7 @@ namespace MobileIdleBuilder
         private void OnPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_placementOverlay, isPlacing);
+            if (!isPlacing) SetElementVisible(_placementConfirmPopup, false);
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
@@ -952,19 +1551,143 @@ namespace MobileIdleBuilder
 
             if (isPlacing && _placementLabel != null)
             {
-                bool isField = placementController?.RequiresOutputDirection ?? false;
-                _placementLabel.text = isField
-                    ? "Tap a field tile to place  ·  R rotate  ·  Esc cancel"
-                    : canRotate
-                        ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
-                        : "Tap an empty tile to place  ·  Esc to cancel";
+                string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
+                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  ✓ to place{rotateHint}";
             }
+        }
+
+        // ============================================================
+        // Placement confirm popup (world-anchored ✓ / ✕ at the candidate cell)
+        // ============================================================
+
+        private void OnCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_placementConfirmPopup, hasCandidate);
+            // Surface the rotate (↻) action on the confirm popup itself for rotatable buildings,
+            // so the player can re-orient in-context next to ✓/✕ instead of reaching for the bottom bar.
+            SetElementVisible(_btnRotateCandidate,
+                hasCandidate && (placementController?.CanRotate ?? false));
+            if (hasCandidate) UpdatePlacementConfirmPopup();
+        }
+
+        private void UpdatePlacementConfirmPopup()
+        {
+            if (_placementConfirmPopup == null || placementController == null) return;
+            if (!placementController.HasCandidate) return;
+
+            var panel = _placementConfirmPopup.panel;
+            var cam   = Camera.main;
+            if (panel == null || cam == null) return;
+
+            Vector2 panelPoint = RuntimePanelUtils.CameraTransformWorldToPanel(
+                panel, placementController.CandidateWorldPosition, cam);
+
+            float w = _placementConfirmPopup.resolvedStyle.width;
+            float h = _placementConfirmPopup.resolvedStyle.height;
+            if (float.IsNaN(w)) w = 0f;
+            if (float.IsNaN(h)) h = 0f;
+
+            // Centre horizontally over the cell and float above it.
+            _placementConfirmPopup.style.left = panelPoint.x - w * 0.5f;
+            _placementConfirmPopup.style.top  = panelPoint.y - h - 24f;
+
+            _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
+        }
+
+        /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
+        /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
+        private bool IsPointerOverPlacementUI(Vector2 screenPos)
+            => ScreenPointInElement(_placementConfirmPopup, screenPos)
+            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
+
+        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
+        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
+        private bool IsPointerOverConveyorUI(Vector2 screenPos)
+        {
+            // Develop-tier dump of the bar geometry vs the converted pointer position.
+            // Gated on VerboseLogging so it only logs during the press, not every hover frame.
+            bool r = ScreenPointInElement(_conveyorBar, screenPos);
+            if (UIInputBlocker.VerboseLogging)
+            {
+                var panel = _conveyorBar?.panel;
+                Vector2 pp = panel != null ? RuntimePanelUtils.ScreenToPanel(panel, screenPos) : Vector2.zero;
+                GameLogger.Develop($"[Conveyor] barCheck bar={(_conveyorBar == null ? "null" : _conveyorBar.name)} hidden={(_conveyorBar?.ClassListContains("hidden"))} panelNull={panel == null} worldBound={_conveyorBar?.worldBound} panelPos={pp} -> {r}");
+            }
+            return r;  // the bar strip, NOT the full-screen overlay
+        }
+
+        private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
+        {
+            if (el == null || el.ClassListContains("hidden")) return false;
+            var panel = el.panel;
+            if (panel == null) return false;
+            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
+            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
+            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
+            // panel and never registers as "over UI", leaking taps to the grid behind it.
+            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
+            return el.worldBound.Contains(panelPos);
         }
 
         private void OnConveyorPlacingChanged(bool isPlacing)
         {
             SetElementVisible(_conveyorOverlay, isPlacing);
+
+            if (isPlacing)
+            {
+                // Mode always re-enters in Create with no pending start or candidate.
+                OnConveyorModeChanged(false);
+                OnConveyorCandidateChanged(false);
+                OnConveyorStartChanged(false);
+            }
         }
+
+        /// <summary>Updates the Create/Destroy toggle look and the bar's instructional text.</summary>
+        private void OnConveyorModeChanged(bool isDestroy)
+        {
+            if (_btnConveyorMode != null)
+            {
+                _btnConveyorMode.text = isDestroy ? "Destroy" : "Create";
+                if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
+                else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
+            }
+
+            if (_conveyorLabel != null)
+                _conveyorLabel.text = isDestroy
+                    ? "Tap a belt to remove"
+                    : "Tap a start, then an end";
+
+            // Switching mode always clears any pending candidate.
+            if (isDestroy) OnConveyorCandidateChanged(false);
+        }
+
+        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
+        private void OnConveyorCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_btnConveyorRotate,          hasCandidate);
+            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
+
+            // The label is a short instruction only — it must not repeat the button names.
+            if (_conveyorLabel != null && !IsDestroyModeActive())
+                _conveyorLabel.text = hasCandidate
+                    ? "Place the belt, or adjust it"
+                    : "Tap a start, then an end";
+        }
+
+        /// <summary>Shows the "start from a new cell" reset button whenever a start anchor is pending
+        /// (e.g. after auto-chaining), so the player can begin a fresh run without leaving build mode.</summary>
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            SetElementVisible(_btnConveyorNewStart, hasStart && !IsDestroyModeActive());
+        }
+
+        private bool IsDestroyModeActive() =>
+            conveyorController != null && conveyorController.IsDestroyMode;
+
+        /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
+        private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
@@ -1051,13 +1774,74 @@ namespace MobileIdleBuilder
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
 
         // ============================================================
+        // Power-connection overlay toggle (⚡ top-bar button)
+        // ============================================================
+
+        private void TogglePowerConnections()
+        {
+            _powerConnectionsShown = !_powerConnectionsShown;
+            ApplyPowerConnectionState();
+            SettingsService.Instance?.SetShowPowerConnections(_powerConnectionsShown);
+        }
+
+        /// <summary>Syncs the button's on/off look and the map overlay to the current toggle state.</summary>
+        private void ApplyPowerConnectionState()
+        {
+            EnsurePowerOverlay()?.SetVisible(_powerConnectionsShown);
+
+            if (_btnPowerToggle == null) return;
+            if (_powerConnectionsShown) _btnPowerToggle.AddToClassList("power-toggle-btn--active");
+            else                        _btnPowerToggle.RemoveFromClassList("power-toggle-btn--active");
+        }
+
+        /// <summary>
+        /// Finds the map power-connection overlay, creating a runtime one if the scene has none (self-wires
+        /// to the GridRenderer via FindAnyObjectByType), so no manual scene wiring is required.
+        /// </summary>
+        private PowerConnectionOverlayController EnsurePowerOverlay()
+        {
+            if (_powerOverlay != null) return _powerOverlay;
+            _powerOverlay = FindAnyObjectByType<PowerConnectionOverlayController>();
+            if (_powerOverlay == null)
+                _powerOverlay = new GameObject("PowerConnectionOverlay").AddComponent<PowerConnectionOverlayController>();
+            return _powerOverlay;
+        }
+
+        // ============================================================
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
         // ============================================================
 
-        public void ShowBuildingInspector(Entity entity, string buildingName) =>
+        public void ShowBuildingInspector(Entity entity, string buildingName)
+        {
+            GameLogger.Develop($"[HUD] ShowBuildingInspector called: building='{buildingName}' inspector={((_inspector == null) ? "NULL" : "ok")}");
             _inspector?.ShowBuildingInspector(entity, buildingName);
+        }
 
         public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
+
+        // Idle-return modal pass-through (delegated to IdleReturnSubController)
+        public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
+
+        /// <summary>
+        /// Shows the game-data update notice once if the remote <c>gamedata.updatedUtc</c> stamp is
+        /// newer than the saved marker, then records the marker so it fires once per published stamp.
+        /// Called by ECSLoadBridge after the save is applied. No-op (silent) on any blank/stale stamp.
+        /// </summary>
+        public void MaybeShowGameUpdateNotice()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
+                return;
+
+            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save != null)
+            {
+                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+                SaveManager.Instance.SaveLocal();
+            }
+        }
 
         private void PositionTooltip(VisualElement anchor)
         {
@@ -1108,6 +1892,9 @@ namespace MobileIdleBuilder
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);
             OnDrawerOpened?.Invoke();
+            // Hint active: btn-achievements is now visible — pulse it instead of the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-achievements");
         }
 
         private void CloseDrawer()
@@ -1116,9 +1903,17 @@ namespace MobileIdleBuilder
             _drawerOpen = false;
             _drawerPanel.RemoveFromClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, false);
+            // Hint still active but drawer hidden: swap back to pulsing the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-drawer-handle");
         }
 
-        private void CancelActiveModes()
+        /// <summary>
+        /// Cancels any active building-placement, conveyor, or deconstruct mode (and their
+        /// overlays). Public so sub-controllers (e.g. site travel) can clear placement before
+        /// an action that swaps the grid out from under it.
+        /// </summary>
+        public void CancelActiveModes()
         {
             placementController?.CancelPlacement();
             conveyorController?.CancelConveyorMode();
@@ -1131,9 +1926,19 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Calculates how much prestige currency a prestige would award.
-        /// Must stay in sync with the rate constant in <see cref="PrestigeSystem"/>.
+        /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth) => (long)(netWorth * 1f);
+        internal static long CalculatePrestigePreview(float netWorth)
+        {
+            var cfg    = GameBootstrap.Instance?.gameConfig;
+            float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
+            float pscale = cfg != null ? cfg.prestigeCurrencyScale : 50f;
+            if (pbase <= 0f || netWorth <= 0f) return 0L;
+            long earned = (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(netWorth / pbase) * pscale));
+            float gainBonus = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.PrestigeGainMultiplier) ?? 0f;
+            if (gainBonus > 0f) earned = (long)(earned * (1f + gainBonus));
+            return earned;
+        }
 
         internal static void SetElementVisible(VisualElement el, bool visible)
         {
@@ -1152,6 +1957,44 @@ namespace MobileIdleBuilder
                 return $"{i.quantity}× {sym}";
             });
             return string.Join("  +  ", parts);
+        }
+
+        internal static VisualElement BuildIngredientsUI(
+            RecipeJson recipe,
+            Dictionary<int, int> inventoryCounts)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("recipe-inputs-row");
+
+            if (recipe.inputs == null || recipe.inputs.Count == 0)
+                return row;
+
+            bool first = true;
+            foreach (var input in recipe.inputs)
+            {
+                if (!first)
+                {
+                    var sep = new Label("+");
+                    sep.AddToClassList("recipe-input-sep");
+                    row.Add(sep);
+                }
+                first = false;
+
+                var item   = ItemDatabase.Instance?.Get(input.id);
+                string sym = item?.symbol ?? item?.displayName ?? input.id;
+
+                int itemId = ItemDatabase.Instance?.GetItemId(input.id) ?? -1;
+                int count  = (itemId >= 0 && inventoryCounts.TryGetValue(itemId, out int c)) ? c : 0;
+
+                var inputIcon = MakeItemIcon(item?.icon, "recipe-input-icon");
+                if (inputIcon != null) row.Add(inputIcon);
+
+                var lbl = new Label($"{count}/{input.quantity} {sym}");
+                lbl.AddToClassList(count >= input.quantity ? "recipe-input-met" : "recipe-input-missing");
+                row.Add(lbl);
+            }
+
+            return row;
         }
     }
 }
