@@ -23,6 +23,9 @@ namespace MobileIdleBuilder
 
         private Toggle _toggleNotifications;
 
+        private Slider _sliderPanSensitivity;
+        private Toggle _toggleInvertTilt;
+
         private Button _btnClose;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
@@ -45,6 +48,8 @@ namespace MobileIdleBuilder
             if (_btnQualityMedium    != null) _btnQualityMedium.clicked        -= OnQualityMedium;
             if (_btnQualityHigh      != null) _btnQualityHigh.clicked          -= OnQualityHigh;
             if (_toggleNotifications != null) _toggleNotifications.UnregisterValueChangedCallback(OnNotificationsChanged);
+            if (_sliderPanSensitivity != null) _sliderPanSensitivity.UnregisterValueChangedCallback(OnPanSensitivityChanged);
+            if (_toggleInvertTilt    != null) _toggleInvertTilt.UnregisterValueChangedCallback(OnInvertTiltChanged);
         }
 
         private void OnDisable() => Cleanup();
@@ -73,6 +78,8 @@ namespace MobileIdleBuilder
             _btnQualityMedium     = root.Q<Button>("btn-quality-medium");
             _btnQualityHigh       = root.Q<Button>("btn-quality-high");
             _toggleNotifications  = root.Q<Toggle>("toggle-notifications");
+            _sliderPanSensitivity = root.Q<Slider>("slider-pan-sensitivity");
+            _toggleInvertTilt     = root.Q<Toggle>("toggle-invert-tilt");
         }
 
         private void BindControls()
@@ -85,6 +92,8 @@ namespace MobileIdleBuilder
             if (_btnQualityMedium    != null) _btnQualityMedium.clicked        += OnQualityMedium;
             if (_btnQualityHigh      != null) _btnQualityHigh.clicked          += OnQualityHigh;
             if (_toggleNotifications != null) _toggleNotifications.RegisterValueChangedCallback(OnNotificationsChanged);
+            if (_sliderPanSensitivity != null) _sliderPanSensitivity.RegisterValueChangedCallback(OnPanSensitivityChanged);
+            if (_toggleInvertTilt    != null) _toggleInvertTilt.RegisterValueChangedCallback(OnInvertTiltChanged);
         }
 
         private void SyncFromSettings()
@@ -98,6 +107,11 @@ namespace MobileIdleBuilder
 
             if (_toggleNotifications != null)
                 _toggleNotifications.SetValueWithoutNotify(s.notificationsEnabled);
+
+            if (_sliderPanSensitivity != null)
+                _sliderPanSensitivity.SetValueWithoutNotify(s.panSensitivity);
+            if (_toggleInvertTilt != null)
+                _toggleInvertTilt.SetValueWithoutNotify(s.invertTilt);
 
             ApplyQualityButtonStyles(s.graphicsQuality);
         }
@@ -137,5 +151,11 @@ namespace MobileIdleBuilder
 
         private void OnNotificationsChanged(ChangeEvent<bool> evt)
             => SettingsService.Instance?.SetNotifications(evt.newValue);
+
+        private void OnPanSensitivityChanged(ChangeEvent<float> evt)
+            => SettingsService.Instance?.SetPanSensitivity(evt.newValue);
+
+        private void OnInvertTiltChanged(ChangeEvent<bool> evt)
+            => SettingsService.Instance?.SetInvertTilt(evt.newValue);
     }
 }
