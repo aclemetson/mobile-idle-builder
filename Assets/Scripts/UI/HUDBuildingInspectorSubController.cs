@@ -28,6 +28,7 @@ namespace MobileIdleBuilder
 
         private EntityManager              _em;
         private EntityQuery                _playerQuery;
+        private EntityQuery                _inventoryQuery;
         private bool                       _ecsReady;
         private BuildingPlacementController _placement;
         private HUDController              _hud;
@@ -158,8 +159,11 @@ namespace MobileIdleBuilder
 
         public void SetECSContext(EntityManager em)
         {
-            _em          = em;
-            _playerQuery = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _em             = em;
+            _playerQuery    = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _inventoryQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInventoryTag>(),
+                ComponentType.ReadWrite<InventorySlot>());
             _ecsReady    = true;
         }
 
@@ -256,6 +260,8 @@ namespace MobileIdleBuilder
                 {
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                    var captured = _inspectorEntity;
+                    AddEmptyBufferButton("Empty output → inventory", () => EmptyOutputToInventory(captured));
                 }
             }
 
@@ -267,6 +273,8 @@ namespace MobileIdleBuilder
                     AddInspectorRow(_inspectorStatic, "—— Input Buffer ——");
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                    var captured = _inspectorEntity;
+                    AddEmptyBufferButton("Empty input → inventory", () => EmptyInputToInventory(captured));
                 }
             }
 
@@ -317,11 +325,12 @@ namespace MobileIdleBuilder
                             btn.AddToClassList("craft-btn");
                             var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                             if (icon != null) btn.Insert(0, icon);
-                            btn.clicked += () =>
+                            // Tap manipulator so the recipe choice survives the ScrollView touch-scroll.
+                            btn.AddManipulator(new TapGestureManipulator(() =>
                             {
                                 SetBuildingRecipe(_inspectorEntity, captured);
                                 RefreshInspectorContent();
-                            };
+                            }));
                             _inspectorRecipes?.Add(btn);
                         }
                     }
@@ -790,11 +799,11 @@ namespace MobileIdleBuilder
                 btn.AddToClassList("craft-btn");
                 var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                 if (icon != null) btn.Insert(0, icon);
-                btn.clicked += () =>
+                btn.AddManipulator(new TapGestureManipulator(() =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
-                };
+                }));
                 _inspectorRecipes?.Add(btn);
             }
         }
@@ -871,6 +880,50 @@ namespace MobileIdleBuilder
             var lbl = new Label(text);
             lbl.AddToClassList("recipe-inputs");
             target?.Add(lbl);
+        }
+
+        // ── Empty buffer into player inventory ────────────────────────────────
+
+        private void AddEmptyBufferButton(string text, System.Action onEmpty)
+        {
+            var btn = new Button { text = text };
+            btn.AddToClassList("craft-btn");
+            btn.AddManipulator(new TapGestureManipulator(onEmpty));
+            _inspectorStatic.Add(btn);
+        }
+
+        private void EmptyOutputToInventory(Entity building)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
+            if (!_em.HasBuffer<BuildingOutputSlot>(building)) return;
+
+            var outBuf = _em.GetBuffer<BuildingOutputSlot>(building);
+            if (outBuf.Length == 0) return;
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            for (int i = 0; i < outBuf.Length; i++)
+                if (outBuf[i].Quantity > 0)
+                    SlotBufferUtils.AddToInventory(ref inv, outBuf[i].ItemID, outBuf[i].Quantity);
+            outBuf.Clear();
+
+            RefreshInspectorContent();
+        }
+
+        private void EmptyInputToInventory(Entity building)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
+            if (!_em.HasBuffer<BuildingInputSlot>(building)) return;
+
+            var inBuf = _em.GetBuffer<BuildingInputSlot>(building);
+            if (inBuf.Length == 0) return;
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            for (int i = 0; i < inBuf.Length; i++)
+                if (inBuf[i].Quantity > 0)
+                    SlotBufferUtils.AddToInventory(ref inv, inBuf[i].ItemID, inBuf[i].Quantity);
+            inBuf.Clear();
+
+            RefreshInspectorContent();
         }
 
         private static string ItemName(int itemID)
