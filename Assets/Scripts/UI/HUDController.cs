@@ -65,6 +65,12 @@ namespace MobileIdleBuilder
         private bool       _researchSkipConfirming;
         private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
         private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
+
+        // Live affordability refresh: automation can raise entropy past a building's cost while
+        // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
+        // panel-open. Rows captured in BuildBuildingsList; re-evaluated in Update.
+        private readonly List<(Button btn, Label costLabel, int cost)> _buildingAffordRows = new();
+        private long _lastAffordEntropy = long.MinValue;
         private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
@@ -99,6 +105,7 @@ namespace MobileIdleBuilder
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
         public event System.Action OnConveyorPlaced;
+        public event System.Action OnBuildingRecipeSet;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -313,6 +320,7 @@ namespace MobileIdleBuilder
             _statusBar?.Tick();
             _inspector?.Tick();
             UpdatePlacementConfirmPopup();
+            RefreshBuildingAffordabilityIfChanged();
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -1245,12 +1253,22 @@ namespace MobileIdleBuilder
                 info.Add(nameLabel);
                 info.Add(inputsContainer);
 
+                // Item-creation timer: how long this recipe takes to craft.
+                if (recipe.base_craft_time > 0f)
+                {
+                    var timeLabel = new Label($"Craft time: {recipe.base_craft_time:0.#}s");
+                    timeLabel.style.fontSize = 11;
+                    timeLabel.style.opacity  = 0.7f;
+                    info.Add(timeLabel);
+                }
+
                 var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
                 craftBtn.SetEnabled(!isLocked && canCraft);
                 var captured = recipe;
                 if (!isLocked)
-                    craftBtn.clicked += () => OnCraftPressed(captured);
+                    // Tap manipulator (not .clicked) so the tap survives the ScrollView's touch-scroll.
+                    craftBtn.AddManipulator(new TapGestureManipulator(() => OnCraftPressed(captured)));
 
                 row.Add(info);
                 row.Add(craftBtn);
@@ -1281,6 +1299,8 @@ namespace MobileIdleBuilder
         private void BuildBuildingsList()
         {
             _buildingsList.Clear();
+            _buildingAffordRows.Clear();
+            _lastAffordEntropy = long.MinValue; // force a re-evaluate next Update
 
             long currentEntropy = 0;
             if (_ecsReady && !_progressQuery.IsEmpty)
@@ -1301,11 +1321,11 @@ namespace MobileIdleBuilder
 
                 var placeBtn = new Button { text = "Place" };
                 placeBtn.AddToClassList("craft-btn");
-                placeBtn.clicked += () =>
+                placeBtn.AddManipulator(new TapGestureManipulator(() =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     conveyorController.BeginConveyorMode();
-                };
+                }));
 
                 conveyorCard.Add(nameLabel);
                 conveyorCard.Add(descLabel);
@@ -1343,9 +1363,10 @@ namespace MobileIdleBuilder
                 int cost = rawCost > 0 ? (int)(rawCost * (1f - reduction)) : 0;
                 bool canAfford = currentEntropy >= cost;
 
+                Label costLabel = null;
                 if (cost > 0)
                 {
-                    var costLabel = new Label($"◈ {cost:N0}");
+                    costLabel = new Label($"◈ {cost:N0}");
                     costLabel.AddToClassList("building-card-recipe");
                     costLabel.AddToClassList(canAfford
                         ? "building-card-recipe--affordable"
@@ -1357,17 +1378,45 @@ namespace MobileIdleBuilder
                 placeBtn.AddToClassList("craft-btn");
                 placeBtn.SetEnabled(canAfford);
 
+                // Track cost rows so Update() can re-enable them the moment entropy catches up.
+                if (cost > 0)
+                    _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
                 var captured = entry;
-                placeBtn.clicked += () =>
+                placeBtn.AddManipulator(new TapGestureManipulator(() =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     placementController.BeginPlacement(captured);
-                };
+                }));
 
                 card.Add(nameLabel);
                 card.Add(recipeLabel);
                 card.Add(placeBtn);
                 _buildingsList.Add(card);
+            }
+        }
+
+        /// <summary>
+        /// Re-evaluates entropy affordability for the open Build panel whenever the player's
+        /// entropy changes, so a button that was unaffordable at open becomes clickable the
+        /// instant automation earns enough — no need to close and reopen the panel.
+        /// </summary>
+        private void RefreshBuildingAffordabilityIfChanged()
+        {
+            if (_buildingsPanel == null || _buildingsPanel.ClassListContains("hidden")) return;
+            if (!_ecsReady || _progressQuery.IsEmpty || _buildingAffordRows.Count == 0) return;
+
+            long entropy = _em.GetComponentData<PlayerProgressData>(
+                _progressQuery.GetSingletonEntity()).BaseCurrency;
+            if (entropy == _lastAffordEntropy) return;
+            _lastAffordEntropy = entropy;
+
+            foreach (var (btn, costLabel, cost) in _buildingAffordRows)
+            {
+                bool afford = entropy >= cost;
+                btn.SetEnabled(afford);
+                costLabel.EnableInClassList("building-card-recipe--affordable", afford);
+                costLabel.EnableInClassList("building-card-recipe--unaffordable", !afford);
             }
         }
 
@@ -1688,6 +1737,10 @@ namespace MobileIdleBuilder
 
         /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
         private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
+
+        /// <summary>Raised by the building inspector when the player sets a building's recipe.
+        /// Drives the tutorial's "set the Combiner to Proton" step.</summary>
+        public void NotifyBuildingRecipeSet() => OnBuildingRecipeSet?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {

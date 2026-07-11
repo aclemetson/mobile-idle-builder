@@ -25,9 +25,12 @@ namespace MobileIdleBuilder
 
         private Entity _inspectorEntity      = Entity.Null;
         private float  _inspectorRefreshTimer;
+        // Live craft-progress bar fill (recreated each rebuild; updated per-frame in Tick).
+        private VisualElement _craftProgressFill;
 
         private EntityManager              _em;
         private EntityQuery                _playerQuery;
+        private EntityQuery                _inventoryQuery;
         private bool                       _ecsReady;
         private BuildingPlacementController _placement;
         private HUDController              _hud;
@@ -158,14 +161,18 @@ namespace MobileIdleBuilder
 
         public void SetECSContext(EntityManager em)
         {
-            _em          = em;
-            _playerQuery = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _em             = em;
+            _playerQuery    = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _inventoryQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInventoryTag>(),
+                ComponentType.ReadWrite<InventorySlot>());
             _ecsReady    = true;
         }
 
         public void Tick()
         {
             if (_inspectorEntity == Entity.Null) return;
+            UpdateCraftProgressBar(); // smooth per-frame fill between the 0.5s full rebuilds
             _inspectorRefreshTimer += Time.deltaTime;
             if (_inspectorRefreshTimer < 0.5f) return;
             _inspectorRefreshTimer = 0f;
@@ -200,6 +207,7 @@ namespace MobileIdleBuilder
             _inspectorStatic.Clear();
             _inspectorRecipes.Clear();
             _inspectorUpgrades.Clear();
+            _craftProgressFill = null; // dropped by the Clear() above; re-created if this building crafts
             // Clear any radius visual from a previously-selected generator; re-shown below if this one is a source.
             ClearSelectedPowerVisual();
 
@@ -234,6 +242,17 @@ namespace MobileIdleBuilder
             if (buildingCellX >= 0)
                 AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
 
+            // Crafter creation timer: live progress toward the next output cycle.
+            if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+            {
+                var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+                if (rp.CraftTime > 0f)
+                {
+                    AddInspectorRow(_inspectorStatic, "—— Crafting ——");
+                    _craftProgressFill = AddCraftProgressBar(_inspectorStatic, rp);
+                }
+            }
+
             if (_em.HasComponent<CollectorData>(_inspectorEntity))
             {
                 var col    = _em.GetComponentData<CollectorData>(_inspectorEntity);
@@ -256,6 +275,8 @@ namespace MobileIdleBuilder
                 {
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                    var captured = _inspectorEntity;
+                    AddEmptyBufferButton("Empty output → inventory", () => EmptyOutputToInventory(captured));
                 }
             }
 
@@ -267,6 +288,8 @@ namespace MobileIdleBuilder
                     AddInspectorRow(_inspectorStatic, "—— Input Buffer ——");
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                    var captured = _inspectorEntity;
+                    AddEmptyBufferButton("Empty input → inventory", () => EmptyInputToInventory(captured));
                 }
             }
 
@@ -317,11 +340,12 @@ namespace MobileIdleBuilder
                             btn.AddToClassList("craft-btn");
                             var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                             if (icon != null) btn.Insert(0, icon);
-                            btn.clicked += () =>
+                            // Tap manipulator so the recipe choice survives the ScrollView touch-scroll.
+                            btn.AddManipulator(new TapGestureManipulator(() =>
                             {
                                 SetBuildingRecipe(_inspectorEntity, captured);
                                 RefreshInspectorContent();
-                            };
+                            }));
                             _inspectorRecipes?.Add(btn);
                         }
                     }
@@ -790,11 +814,11 @@ namespace MobileIdleBuilder
                 btn.AddToClassList("craft-btn");
                 var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                 if (icon != null) btn.Insert(0, icon);
-                btn.clicked += () =>
+                btn.AddManipulator(new TapGestureManipulator(() =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
-                };
+                }));
                 _inspectorRecipes?.Add(btn);
             }
         }
@@ -864,6 +888,9 @@ namespace MobileIdleBuilder
                     ItemID   = recipe.outputItem.itemId,
                     Quantity = recipe.outputQuantity
                 });
+
+            // Drives the tutorial's "set the Combiner to Proton" step (combiner_recipe_set).
+            _hud?.NotifyBuildingRecipeSet();
         }
 
         private static void AddInspectorRow(VisualElement target, string text)
@@ -871,6 +898,85 @@ namespace MobileIdleBuilder
             var lbl = new Label(text);
             lbl.AddToClassList("recipe-inputs");
             target?.Add(lbl);
+        }
+
+        // ── Craft progress bar ────────────────────────────────────────────────
+
+        private static float CraftFraction(RecipeProcessData rp)
+            => rp.CraftTime > 0f ? Mathf.Clamp01(rp.Progress / rp.CraftTime) : 0f;
+
+        private VisualElement AddCraftProgressBar(VisualElement parent, RecipeProcessData rp)
+        {
+            var bar = new VisualElement();
+            bar.style.height              = 10;
+            bar.style.marginTop           = 2;
+            bar.style.marginBottom        = 4;
+            bar.style.backgroundColor     = new Color(0f, 0f, 0f, 0.35f);
+            bar.style.borderTopLeftRadius = 3; bar.style.borderTopRightRadius = 3;
+            bar.style.borderBottomLeftRadius = 3; bar.style.borderBottomRightRadius = 3;
+            bar.style.overflow            = Overflow.Hidden;
+
+            var fill = new VisualElement();
+            fill.style.height          = Length.Percent(100);
+            fill.style.backgroundColor = new Color(0.30f, 0.80f, 1.00f); // crest blue
+            fill.style.width           = Length.Percent(CraftFraction(rp) * 100f);
+            bar.Add(fill);
+
+            parent.Add(bar);
+            return fill;
+        }
+
+        private void UpdateCraftProgressBar()
+        {
+            if (_craftProgressFill == null || !_ecsReady) return;
+            if (_inspectorEntity == Entity.Null || !_em.Exists(_inspectorEntity)) return;
+            if (!_em.HasComponent<RecipeProcessData>(_inspectorEntity)) return;
+            var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+            _craftProgressFill.style.width = Length.Percent(CraftFraction(rp) * 100f);
+        }
+
+        // ── Empty buffer into player inventory ────────────────────────────────
+
+        private void AddEmptyBufferButton(string text, System.Action onEmpty)
+        {
+            var btn = new Button { text = text };
+            btn.AddToClassList("craft-btn");
+            btn.AddManipulator(new TapGestureManipulator(onEmpty));
+            _inspectorStatic.Add(btn);
+        }
+
+        private void EmptyOutputToInventory(Entity building)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
+            if (!_em.HasBuffer<BuildingOutputSlot>(building)) return;
+
+            var outBuf = _em.GetBuffer<BuildingOutputSlot>(building);
+            if (outBuf.Length == 0) return;
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            for (int i = 0; i < outBuf.Length; i++)
+                if (outBuf[i].Quantity > 0)
+                    SlotBufferUtils.AddToInventory(ref inv, outBuf[i].ItemID, outBuf[i].Quantity);
+            outBuf.Clear();
+
+            RefreshInspectorContent();
+        }
+
+        private void EmptyInputToInventory(Entity building)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
+            if (!_em.HasBuffer<BuildingInputSlot>(building)) return;
+
+            var inBuf = _em.GetBuffer<BuildingInputSlot>(building);
+            if (inBuf.Length == 0) return;
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            for (int i = 0; i < inBuf.Length; i++)
+                if (inBuf[i].Quantity > 0)
+                    SlotBufferUtils.AddToInventory(ref inv, inBuf[i].ItemID, inBuf[i].Quantity);
+            inBuf.Clear();
+
+            RefreshInspectorContent();
         }
 
         private static string ItemName(int itemID)

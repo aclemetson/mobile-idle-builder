@@ -47,6 +47,11 @@ namespace MobileIdleBuilder
         public TutorialOnEnter onEnter;
         /// <summary>Research IDs whose purchase button is disabled while this step is active. Prevents early purchase before the tutorial is ready.</summary>
         public string[] lockedResearchIds;
+        /// <summary>Marks a substep of a larger beat. Within a contiguous run of substeps,
+        /// TutorialSystem skips forward when a LATER substep's advance condition is already
+        /// satisfied (handles e.g. protons consumed into hydrogen before the check runs).
+        /// A non-substep ("major") step bounds the run and is never auto-skipped this way.</summary>
+        public bool isSubstep;
     }
 
     /// <summary>Defines when a tutorial step is considered complete.</summary>
@@ -64,6 +69,9 @@ namespace MobileIdleBuilder
         public string             researchId;
         /// <summary>BuildingMin / PrestigeRunMin: threshold count.</summary>
         public int                minCount;
+        /// <summary>BuildingMin only: BuildingData.BuildingType to filter on, resolved from the
+        /// JSON building_id at import time. -1 = count all buildings (no filter).</summary>
+        public int                buildingType = -1;
     }
 
     [Serializable]

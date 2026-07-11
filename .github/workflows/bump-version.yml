@@ -1,46 +1,87 @@
 name: Bump Version
 
-# When a release/** branch is merged into develop, bump the minor version and
-# reset patch (e.g. 0.2.7 -> 0.3.0). AndroidBundleVersionCode is intentionally
-# left untouched: it must stay globally monotonic for Google Play, and is owned
-# by the local pre-commit hook + the version-code guard, not by semantic bumps.
+# When a release/** branch is CREATED, stamp its version into ProjectSettings from the
+# branch name (release/0.4 -> 0.4.0, release/0.4.1 -> 0.4.1) and commit it to that branch.
+# The stamp then flows into develop through the normal release PR.
+#
+# The version a release ships is therefore the version in its branch name. The previous
+# design bumped develop *after* the release PR merged, which meant a branch named
+# release/0.4 actually shipped the version minted by release/0.3 -- release 0.3 went to
+# the stores as 0.2.199.
+#
+# Why `create` and not `pull_request`:
+#   * We never push to develop. It is protected (PR + 1 review) and carries the "Unity
+#     Tests" ruleset; both are bypassable only by a repository admin, and GITHUB_TOKEN is
+#     not one -- no `permissions:` grant can change that. The old workflow pushed straight
+#     to develop and was rejected with GH013.
+#   * A push made with GITHUB_TOKEN does not trigger workflows. Bumping *after* the release
+#     PR exists would move the PR head to a commit that "Unity Tests" never runs on, and
+#     the required check would hang as "Expected" forever. Stamping at branch creation puts
+#     the commit in place before the PR is opened, so pr-tests runs on a head that already
+#     contains it.
+#
+# For the same reason the commit message must NOT carry [skip ci]: GitHub honours that
+# marker on the PR head commit too, which would skip pr-tests and block the release PR.
+#
+# AndroidBundleVersionCode is intentionally left untouched: it must stay globally monotonic
+# for Google Play, and is owned by the local pre-commit hook + the version-code guard, not
+# by semantic bumps.
 on:
-  pull_request:
-    types: [closed]
-    branches: [develop]
+  create:
 
 concurrency:
-  group: bump-version
-  cancel-in-progress: true
+  group: bump-version-${{ github.event.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write   # needed to commit the version bump back to develop
+  contents: write   # commit the version stamp back to the release branch
 
 jobs:
   bump-version:
-    name: Bump Minor Version
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    name: Stamp Release Version
+    if: github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/')
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.base_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.ref }}
 
-      - name: Bump minor, reset patch
+      - name: Stamp version from branch name
+        env:
+          BRANCH: ${{ github.event.ref }}
         run: |
+          RAW="${BRANCH#release/}"
+
+          if [[ "$RAW" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            NEW_VER="$RAW.0"
+          elif [[ "$RAW" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            NEW_VER="$RAW"
+          else
+            echo "::error::Cannot derive a version from branch '$BRANCH'. Expected release/X.Y or release/X.Y.Z."
+            exit 1
+          fi
+
           CURRENT=$(grep -oP 'bundleVersion: \K[0-9]+\.[0-9]+\.[0-9]+' ProjectSettings/ProjectSettings.asset)
-          IFS='.' read -r major minor patch <<< "$CURRENT"
-          NEW_VER="$major.$((minor + 1)).0"
-          echo "Bumping $CURRENT -> $NEW_VER"
+          echo "Branch $BRANCH -> version $NEW_VER (currently $CURRENT)"
+
+          if [ "$CURRENT" = "$NEW_VER" ]; then
+            echo "Already stamped; nothing to do."
+            echo "CHANGED=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
           sed -i "s/bundleVersion: $CURRENT/bundleVersion: $NEW_VER/" ProjectSettings/ProjectSettings.asset
           echo "NEW_VER=$NEW_VER" >> "$GITHUB_ENV"
+          echo "CHANGED=true" >> "$GITHUB_ENV"
 
       - name: Commit and push
+        if: env.CHANGED == 'true'
+        env:
+          BRANCH: ${{ github.event.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ProjectSettings/ProjectSettings.asset
-          git commit -m "chore: bump version to ${NEW_VER} [skip ci]"
-          git push origin ${{ github.base_ref }}
+          git commit -m "chore: set version to ${NEW_VER} for ${BRANCH}"
+          git push origin "HEAD:${BRANCH}"

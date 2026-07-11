@@ -33,6 +33,8 @@ namespace MobileIdleBuilder
         public void SetGraphicsQuality(int quality)  { _current.graphicsQuality     = quality; Apply(); Save(); }
         public void SetNotifications(bool enabled)   { _current.notificationsEnabled = enabled; Save(); }
         public void SetShowPowerConnections(bool on) { _current.showPowerConnections = on; Save(); }
+        public void SetPanSensitivity(float v)       { _current.panSensitivity = v; Save(); }
+        public void SetInvertTilt(bool on)           { _current.invertTilt = on; Save(); }
 
         // ── Internal ──────────────────────────────────────────────────────
 

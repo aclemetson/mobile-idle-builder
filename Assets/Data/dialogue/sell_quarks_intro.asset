@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Deposit all of them. Notice how much more entropy quarks generate compared
-      to electrons. Organized matter will generate more still.
+    text: Deposit all of them. Raw matter yields little on its own - but bind these
+      quarks into protons and atoms, and the Demon pays far more. That is the path
+      ahead.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

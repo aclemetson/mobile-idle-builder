@@ -340,6 +340,15 @@
                     <ui:Label text="Push Notifications" class="settings-label" />
                     <ui:Toggle name="toggle-notifications" value="true" class="settings-toggle" />
                 </ui:VisualElement>
+                <ui:Label text="CAMERA" class="drawer-section-title" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Pan Sensitivity" class="settings-label" />
+                    <ui:Slider name="slider-pan-sensitivity" low-value="0.5" high-value="2" value="1" class="settings-slider" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Invert Tilt" class="settings-label" />
+                    <ui:Toggle name="toggle-invert-tilt" value="false" class="settings-toggle" />
+                </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>
 
