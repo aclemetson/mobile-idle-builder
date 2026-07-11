@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Quarks carry more energy potential than leptons. The Demon will extract
-      more entropy from them. Bring them in.
+    text: Quarks are raw particles, like your electrons - the Demon values them the
+      same for now. The real yield comes from organizing them. Bring them in.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: maxwells_demon

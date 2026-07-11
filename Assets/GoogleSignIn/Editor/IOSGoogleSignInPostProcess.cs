@@ -8,29 +8,21 @@ using UnityEngine;
 namespace MobileIdleBuilder.Editor
 {
     /// <summary>
-    /// Wires the GoogleSignIn iOS SDK into the Unity-generated Xcode project:
-    ///   1. Writes a Podfile (CocoaPods) so the native GoogleSignIn.mm bridge has
-    ///      the GID* symbols to link against. scripts/archive-upload-ios.sh detects
-    ///      the Podfile, runs `pod install`, and archives the .xcworkspace.
-    ///   2. Injects the GIDClientID + reversed-client-ID URL scheme into Info.plist
-    ///      so the SDK can start the OAuth flow and receive its redirect.
+    /// Injects the GIDClientID + reversed-client-ID URL scheme into Info.plist so the
+    /// GoogleSignIn SDK can start the OAuth flow and receive its redirect.
+    ///
+    /// The GoogleSignIn CocoaPod itself is NOT declared here -- it comes from
+    /// GoogleSignInDependencies.xml, which the Mobile Dependency Resolver (EDM4U) turns
+    /// into the Podfile at PostProcessBuild order 40, alongside every other package's
+    /// pods. This class used to overwrite that Podfile with a GoogleSignIn-only one,
+    /// which silently deleted LevelPlay's IronSource pods; IOSPodfileVerifier now guards
+    /// against that. scripts/archive-upload-ios.sh runs `pod install` on the macOS runner
+    /// and archives the resulting .xcworkspace.
     ///
     /// Android is unaffected (it uses the native-googlesignin .aar, not this pod).
     /// </summary>
     public static class IOSGoogleSignInPostProcess
     {
-        // The GoogleSignIn pod compiles into the UnityFramework target, which is
-        // where Assets/Plugins/iOS/GoogleSignIn/GoogleSignIn.mm lives. Static
-        // linkage avoids embedding a nested dynamic framework inside UnityFramework.
-        const string k_Podfile =
-@"platform :ios, '15.0'
-use_frameworks! :linkage => :static
-
-target 'UnityFramework' do
-  pod 'GoogleSignIn', '~> 8.0'
-end
-";
-
         // iOS OAuth client ID (Google Cloud Console credential type 'iOS', bound to
         // this app's bundle id, same project as the web client below). The reversed
         // form of this value is registered as a URL scheme further down. Note: the
@@ -52,15 +44,7 @@ end
             if (target != BuildTarget.iOS)
                 return;
 
-            WritePodfile(pathToBuiltProject);
             PatchInfoPlist(pathToBuiltProject);
-        }
-
-        static void WritePodfile(string projectPath)
-        {
-            string podfilePath = Path.Combine(projectPath, "Podfile");
-            File.WriteAllText(podfilePath, k_Podfile);
-            Debug.Log($"[IOSGoogleSignInPostProcess] Wrote Podfile -> {podfilePath}");
         }
 
         static void PatchInfoPlist(string projectPath)

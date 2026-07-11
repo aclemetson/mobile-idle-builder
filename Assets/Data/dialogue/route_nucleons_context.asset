@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Two output ports \u2014 one for protons, one for neutrons. Connect both
-      to Maxwell's Demon. They sell for 3 entropy each."
+    text: Run a conveyor from the Combiner's proton output to Maxwell's Demon. Protons
+      sell for 3 entropy each - triple what a raw quark brings.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

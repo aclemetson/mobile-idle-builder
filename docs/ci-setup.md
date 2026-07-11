@@ -11,7 +11,7 @@ The pipeline maps each branch to a Google Play track:
 | Any PR (`develop` / `main` / `release/**`) | `pr-tests.yml` | edit + play mode tests (+ version-code guard on release PRs) |
 | PR merged **into** `release/**` | `release-internal.yml` | `.aab` → Google Play **internal** |
 | Push to `develop` (i.e. a `release/**` merged down) | `release-ios.yml` | `.ipa` → **TestFlight** |
-| `release/**` merged into `develop` | `bump-version.yml` | bump minor version on `develop` |
+| `release/**` branch **created** | `bump-version.yml` | stamp version from the branch name onto that branch |
 | Manual (`workflow_dispatch`) | `prod-release.yml` | `.aab` → Google Play **production** (draft) — *future, parked* |
 
 iOS builds far less often than Android on purpose: Android ships to its internal track on
@@ -27,14 +27,38 @@ Builds and tests run on the self-hosted Windows runner (zero cloud minutes). Onl
 lightweight version-code guard and the Play upload run on `ubuntu-latest` (the
 `r0adkll/upload-google-play` action is Linux/Docker only).
 
-### Release Branch → Develop: Automatic Version Bump
+### Release Branch Created: Automatic Version Stamp
 
-When a `release/**` branch is merged into `develop`, `bump-version.yml`:
+When a `release/**` branch is **created**, `bump-version.yml` derives the version from the
+branch name and commits it to that branch as `github-actions[bot]`:
 
-1. Increments the **minor** version and resets the **patch** to `0` (e.g. `0.1.43` → `0.2.0`)
-2. Commits the change back to `develop` as `github-actions[bot]` with `[skip ci]`
+| Branch | `bundleVersion` |
+|--------|-----------------|
+| `release/0.4` | `0.4.0` |
+| `release/0.4.1` | `0.4.1` |
+
+Anything else (`release/foo`) fails the workflow rather than guessing. The stamp reaches
+`develop` through the normal release PR — nothing ever pushes to `develop` directly.
 
 It intentionally does **not** touch `AndroidBundleVersionCode` — see below.
+
+Two constraints pin this design; both are easy to regress:
+
+- **Never push to `develop`.** It is protected (PR + 1 review) *and* carries the "Unity
+  Tests" ruleset. Both are bypassable only by a **repository admin**, and
+  `github-actions[bot]` is not one — no `permissions:` grant changes that, because that
+  key controls API scope, not rule bypass. The workflow originally bumped `develop` after
+  the release PR merged and was rejected with `GH013: Repository rule violations`.
+- **Stamp at branch creation, not on the release PR.** A push made with `GITHUB_TOKEN`
+  does not trigger workflows. Committing the bump once the PR exists would move the PR head
+  to a commit that "Unity Tests" never runs on, leaving the required check stuck on
+  *Expected* forever. For the same reason the commit message must **not** carry `[skip ci]`
+  — GitHub honours that marker on a PR head commit and would skip `pr-tests`.
+
+Because the stamp now lands *before* the release ships, a release branch carries its own
+version. Under the old post-merge design the bump minted the *next* version, so the branch
+named `release/0.4` would have shipped the version created when `release/0.3` merged —
+release 0.3 in fact went to the stores as `0.2.199`.
 
 ## Version Code Rules
 
@@ -170,6 +194,35 @@ small, it splits the work, following GameCI's recommended iOS flow:
 > Cost note: macOS minutes bill at a **10x** multiplier. Triggering only on `develop`
 > keeps this to ~once per release. The Library cache + the Ubuntu/macOS split keep each
 > run modest, but this lane is not $0 like Android.
+
+### CocoaPods: who owns the Podfile
+
+**The Mobile Dependency Resolver (EDM4U) owns the Podfile. Never write it yourself.**
+
+EDM4U collects every `<iosPod>` across the `*Dependencies.xml` files and generates the
+Podfile at `PostProcessBuild` order **40**. `archive-upload-ios.sh` then runs `pod install`
+on the macOS runner and archives the `.xcworkspace`. Today that means three pods:
+
+| Pod | Declared in |
+|-----|-------------|
+| `GoogleSignIn` | `Assets/GoogleSignIn/Editor/GoogleSignInDependencies.xml` |
+| `IronSourceSDK` | `Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml` |
+| `IronSourceUnityAdsAdapter` | `Assets/LevelPlay/Editor/ISUnityAdsAdapterDependencies.xml` |
+
+EDM4U already emits `platform :ios` (from the PlayerSettings deployment target) and
+`use_frameworks! :linkage => :static` — its default since 1.2.170 — so a hand-written
+Podfile adds nothing and can only lose pods.
+
+`IOSGoogleSignInPostProcess` used to overwrite the generated Podfile with a
+GoogleSignIn-only one at order 100. That silently deleted both IronSource pods and the
+archive died on the macOS runner half an hour later with `'IronSource/LPMAdInfo.h' file not
+found`. If you must modify the Podfile, **append** to it between orders **40 and 50** (the
+window EDM4U documents), after generation and before `pod install`.
+
+`IOSPodfileVerifier` (order 45) now guards this: it re-reads the `<iosPod>` entries from the
+`*Dependencies.xml` files and fails the build if any of them is absent from the generated
+Podfile, so a dropped pod fails the cheap Ubuntu job with the pod named instead of the 10x
+macOS one.
 
 ### Build number
 

@@ -32,6 +32,14 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres = new();
 
+        // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
+        // but not merged with) points at a neighbour that also has a belt — they look aligned but
+        // items do not flow across. Rebuilt in RefreshAll alongside the belts.
+        private readonly List<GameObject> _gapMarkers = new();
+        private Material _gapMaterial;
+        private bool     _ownsGapMaterial;
+        private static readonly Color GapColor = new Color(0.95f, 0.25f, 0.20f);
+
         // Transient single-cell placement preview (not tracked in _spawnedBelts so it never
         // collides with the real Refresh map). Lives only while a single candidate is pending.
         private GameObject _previewBelt;
@@ -80,10 +88,12 @@ namespace MobileIdleBuilder
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
+            ClearGapMarkers();
             ClearSinglePreview();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
             if (_ownsChannelMaterial && _channelMaterial != null) Destroy(_channelMaterial);
+            if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
         }
 
         // ----------------------------------------------------------------
@@ -250,6 +260,92 @@ namespace MobileIdleBuilder
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             _spawnedBelts.Clear();
             Refresh();
+            RefreshGapMarkers();
+        }
+
+        // ----------------------------------------------------------------
+        // "Not connected" seam markers
+        // ----------------------------------------------------------------
+
+        private void ClearGapMarkers()
+        {
+            foreach (var go in _gapMarkers) if (go) Destroy(go);
+            _gapMarkers.Clear();
+        }
+
+        /// <summary>
+        /// Rebuilds the red seam markers. A belt whose forward output is intentionally blocked
+        /// (drawn up to, but not merged onto, an existing belt) is flagged when the cell it points
+        /// at also contains a belt — so the player sees the two are aligned but NOT connected.
+        /// </summary>
+        private void RefreshGapMarkers()
+        {
+            ClearGapMarkers();
+            if (!_queriesReady || _segmentQuery.IsEmpty) return;
+
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+
+            var em       = world.EntityManager;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            float cs     = gridRenderer.CellSize;
+
+            var allCells = new HashSet<(int, int)>(entities.Length);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                allCells.Add((seg.Cell.x, seg.Cell.y));
+            }
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (!seg.OutputBlocked) continue;                 // only intentional dead-ends
+                int2 nc = Adjacent(seg.Cell, seg.ExitDir);
+                if (allCells.Contains((nc.x, nc.y)))              // …that point at another belt
+                    _gapMarkers.Add(SpawnGapMarker(seg.Cell.x, seg.Cell.y, seg.ExitDir, cs));
+            }
+
+            entities.Dispose();
+        }
+
+        private GameObject SpawnGapMarker(int x, int y, int exitDir, float cs)
+        {
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = $"ConveyorGap_{x}_{y}";
+            if (marker.TryGetComponent<Collider>(out var col)) Destroy(col);
+
+            marker.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+            // Sit on the shared edge between this cell and the neighbour it fails to connect to.
+            marker.transform.localPosition =
+                new Vector3(x * cs, 0.06f, y * cs) + DirOffset(exitDir, cs * 0.5f);
+
+            // Thin across the flow direction, long along the shared edge.
+            bool alongX = exitDir == (int)OutputDirection.East || exitDir == (int)OutputDirection.West;
+            float thin = cs * 0.08f, longSide = cs * 0.55f, h = 0.08f;
+            marker.transform.localScale = alongX
+                ? new Vector3(thin, h, longSide)
+                : new Vector3(longSide, h, thin);
+
+            var mr = marker.GetComponent<MeshRenderer>();
+            mr.sharedMaterial    = GetGapMaterial();
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+            return marker;
+        }
+
+        private Material GetGapMaterial()
+        {
+            if (_gapMaterial != null) return _gapMaterial;
+
+            // URP Unlit so the marker never renders magenta on Android (CLAUDE.md rule).
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            _gapMaterial     = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            _ownsGapMaterial = true;
+            if (_gapMaterial.HasProperty("_BaseColor")) _gapMaterial.SetColor("_BaseColor", GapColor);
+            if (_gapMaterial.HasProperty("_Color"))     _gapMaterial.SetColor("_Color", GapColor);
+            _gapMaterial.color = GapColor;
+            return _gapMaterial;
         }
 
         /// <summary>Returns the edge directions (0..3) from which conveyor flow enters this cell.</summary>

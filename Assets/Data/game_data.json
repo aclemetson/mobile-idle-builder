@@ -11174,7 +11174,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Quarks carry more energy potential than leptons. The Demon will extract more entropy from them. Bring them in.",
+          "text": "Quarks are raw particles, like your electrons - the Demon values them the same for now. The real yield comes from organizing them. Bring them in.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "maxwells_demon",
@@ -11187,7 +11187,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Deposit all of them. Notice how much more entropy quarks generate compared to electrons. Organized matter will generate more still.",
+          "text": "Deposit all of them. Raw matter yields little on its own - but bind these quarks into protons and atoms, and the Demon pays far more. That is the path ahead.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11453,7 +11453,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Open the conveyor tool, then tap the tile beside the Harvester's output to set the start. Tap the tile in front of the Demon's input and I will route the belt for you. Tap the check to place it, then Finished when you are done.",
+          "text": "The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Open the conveyor tool, then tap the tile beside the Harvester's output to set the start. Tap the tile in front of the Demon's input and I will route the belt for you. Tap the check to place it, then Done when you are finished.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11466,7 +11466,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Open the build menu and place a building on an open grid tile. It will begin production immediately.",
+          "text": "Open the Build menu and place a Harvester on the lepton field. It will collect electrons automatically - you will need a steady supply of them for hydrogen later.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -11633,7 +11633,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "The Combiner can run both recipes at once. Enable Proton — 2 Up, 1 Down — and Neutron — 1 Up, 2 Down — simultaneously. With equal quark input, they balance each other naturally. No surplus accumulates.",
+          "text": "Open the Combiner and set its recipe to Proton - two Up Quarks and one Down Quark each. A proton is the nucleus of hydrogen, so protons are what we want flowing next.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11646,7 +11646,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Two output ports — one for protons, one for neutrons. Connect both to Maxwell's Demon. They sell for 3 entropy each.",
+          "text": "Run a conveyor from the Combiner's proton output to Maxwell's Demon. Protons sell for 3 entropy each - triple what a raw quark brings.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11659,7 +11659,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Protons and neutrons selling automatically alongside electrons. Your factory has two income streams now. Every quark from every field finds a buyer.",
+          "text": "Protons selling automatically alongside your electrons. The quark Harvester feeds the Combiner, the Combiner feeds the Demon - income with no tapping required.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -11706,7 +11706,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Re-route the proton output from the Demon to the Atom Generator's proton input. Do the same for the electron Harvester output. Neutrons continue to sell — they are not needed for hydrogen.",
+          "text": "Re-route the proton belt from the Demon to the Atom Generator's proton input, then route your electron Harvester into its electron input. Protons plus electrons become hydrogen.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12572,6 +12572,7 @@
     {
       "id": "gather_for_hydrogen",
       "hint": "Collect 4 Up Quarks, 2 Down Quarks, and 2 Electrons to craft Hydrogen atoms.",
+      "is_substep": true,
       "advance_condition": {
         "type": "InventoryMin",
         "items": [
@@ -12591,6 +12592,7 @@
     {
       "id": "craft_protons_for_hydrogen",
       "hint": "Craft 2 Protons to use in Hydrogen synthesis.",
+      "is_substep": true,
       "advance_condition": {
         "type": "InventoryMin",
         "items": [{ "item_id": 4, "quantity": 2 }]
@@ -12604,6 +12606,7 @@
     {
       "id": "craft_hydrogen",
       "hint": "Combine a Proton and an Electron to craft 2 Hydrogen atoms.",
+      "is_substep": true,
       "advance_condition": {
         "type": "InventoryMin",
         "items": [{ "item_id": 6, "quantity": 2 }]
@@ -12691,7 +12694,7 @@
     },
     {
       "id": "place_first_building",
-      "hint": "Place a Harvester on the quark or lepton field to begin automatic collection.",
+      "hint": "Place a Harvester on the lepton field to begin collecting electrons automatically.",
       "advance_condition": { "type": "BuildingMin", "min_count": 2 },
       "on_enter": {
         "dialogue_id": "place_building_context",
@@ -12765,14 +12768,14 @@
     },
     {
       "id": "configure_sfc_recipes",
-      "hint": "Open the Combiner's recipe panel and enable both the Proton and Neutron recipes.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "combiner_both_recipes_enabled" },
+      "hint": "Open the Combiner and set its recipe to Proton.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "combiner_recipe_set" },
       "on_enter": { "dialogue_id": "configure_sfc_context" }
     },
     {
       "id": "route_nucleons_to_demon",
-      "hint": "Connect both Combiner output ports (proton and neutron) to Maxwell's Demon.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "sfc_outputs_connected" },
+      "hint": "Connect the Combiner's proton output to Maxwell's Demon.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_nucleons_context",
         "pulse_button_id": "btn-conveyors"
@@ -12802,8 +12805,8 @@
     },
     {
       "id": "connect_atom_gen_inputs",
-      "hint": "Re-route the proton conveyor and electron Harvester to the Atom Generator's inputs.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "atom_gen_inputs_connected" },
+      "hint": "Re-route the proton belt into the Atom Generator, and feed it electrons from your Harvester.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "connect_atom_gen_context",
         "pulse_button_id": "btn-conveyors"
@@ -12812,7 +12815,7 @@
     {
       "id": "route_hydrogen_to_demon",
       "hint": "Connect the Atom Generator's output to Maxwell's Demon.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "atom_gen_output_connected" },
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_hydrogen_context",
         "pulse_button_id": "btn-conveyors"
