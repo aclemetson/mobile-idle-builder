@@ -25,6 +25,8 @@ namespace MobileIdleBuilder
 
         private Entity _inspectorEntity      = Entity.Null;
         private float  _inspectorRefreshTimer;
+        // Live craft-progress bar fill (recreated each rebuild; updated per-frame in Tick).
+        private VisualElement _craftProgressFill;
 
         private EntityManager              _em;
         private EntityQuery                _playerQuery;
@@ -170,6 +172,7 @@ namespace MobileIdleBuilder
         public void Tick()
         {
             if (_inspectorEntity == Entity.Null) return;
+            UpdateCraftProgressBar(); // smooth per-frame fill between the 0.5s full rebuilds
             _inspectorRefreshTimer += Time.deltaTime;
             if (_inspectorRefreshTimer < 0.5f) return;
             _inspectorRefreshTimer = 0f;
@@ -204,6 +207,7 @@ namespace MobileIdleBuilder
             _inspectorStatic.Clear();
             _inspectorRecipes.Clear();
             _inspectorUpgrades.Clear();
+            _craftProgressFill = null; // dropped by the Clear() above; re-created if this building crafts
             // Clear any radius visual from a previously-selected generator; re-shown below if this one is a source.
             ClearSelectedPowerVisual();
 
@@ -237,6 +241,17 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorStatic, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
             if (buildingCellX >= 0)
                 AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
+
+            // Crafter creation timer: live progress toward the next output cycle.
+            if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+            {
+                var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+                if (rp.CraftTime > 0f)
+                {
+                    AddInspectorRow(_inspectorStatic, "—— Crafting ——");
+                    _craftProgressFill = AddCraftProgressBar(_inspectorStatic, rp);
+                }
+            }
 
             if (_em.HasComponent<CollectorData>(_inspectorEntity))
             {
@@ -883,6 +898,41 @@ namespace MobileIdleBuilder
             var lbl = new Label(text);
             lbl.AddToClassList("recipe-inputs");
             target?.Add(lbl);
+        }
+
+        // ── Craft progress bar ────────────────────────────────────────────────
+
+        private static float CraftFraction(RecipeProcessData rp)
+            => rp.CraftTime > 0f ? Mathf.Clamp01(rp.Progress / rp.CraftTime) : 0f;
+
+        private VisualElement AddCraftProgressBar(VisualElement parent, RecipeProcessData rp)
+        {
+            var bar = new VisualElement();
+            bar.style.height              = 10;
+            bar.style.marginTop           = 2;
+            bar.style.marginBottom        = 4;
+            bar.style.backgroundColor     = new Color(0f, 0f, 0f, 0.35f);
+            bar.style.borderTopLeftRadius = 3; bar.style.borderTopRightRadius = 3;
+            bar.style.borderBottomLeftRadius = 3; bar.style.borderBottomRightRadius = 3;
+            bar.style.overflow            = Overflow.Hidden;
+
+            var fill = new VisualElement();
+            fill.style.height          = Length.Percent(100);
+            fill.style.backgroundColor = new Color(0.30f, 0.80f, 1.00f); // crest blue
+            fill.style.width           = Length.Percent(CraftFraction(rp) * 100f);
+            bar.Add(fill);
+
+            parent.Add(bar);
+            return fill;
+        }
+
+        private void UpdateCraftProgressBar()
+        {
+            if (_craftProgressFill == null || !_ecsReady) return;
+            if (_inspectorEntity == Entity.Null || !_em.Exists(_inspectorEntity)) return;
+            if (!_em.HasComponent<RecipeProcessData>(_inspectorEntity)) return;
+            var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+            _craftProgressFill.style.width = Length.Percent(CraftFraction(rp) * 100f);
         }
 
         // ── Empty buffer into player inventory ────────────────────────────────
