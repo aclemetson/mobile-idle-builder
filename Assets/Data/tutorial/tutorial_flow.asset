@@ -22,6 +22,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: recombination_i
       skipToId: collect_quarks_for_nucleons
@@ -36,6 +37,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: collect_first_electron
     hintText: Tap the electron field to collect 5 electrons.
     advanceCondition:
@@ -47,6 +49,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -69,6 +72,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: direct_to_maxwells_demon
     hintText: Tap Maxwell's Demon to sell your electrons.
     advanceCondition:
@@ -78,6 +82,7 @@ MonoBehaviour:
       uiEventId: demon_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -100,6 +105,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: sell_electrons_in_demon
     hintText: Drag your electrons to the right side to sell them.
     advanceCondition:
@@ -111,6 +117,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -125,6 +132,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: close_demon_panel
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -134,6 +142,7 @@ MonoBehaviour:
       uiEventId: demon_closed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -148,6 +157,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: explain_quark_field
     hintText: 
     advanceCondition:
@@ -157,6 +167,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -171,6 +182,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: collect_quarks
     hintText: Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.
     advanceCondition:
@@ -184,6 +196,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -206,6 +219,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: direct_to_maxwells_demon_quarks
     hintText: Bring your quarks to Maxwell's Demon to convert them to entropy.
     advanceCondition:
@@ -215,6 +229,7 @@ MonoBehaviour:
       uiEventId: demon_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -237,6 +252,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: sell_quarks_in_demon
     hintText: Drag your quarks to the right side to sell them.
     advanceCondition:
@@ -250,6 +266,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -264,6 +281,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: close_demon_panel_quarks
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -273,6 +291,7 @@ MonoBehaviour:
       uiEventId: demon_closed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -287,6 +306,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: open_research_drawer
     hintText: Open the menu on the left to find the Research panel.
     advanceCondition:
@@ -296,6 +316,7 @@ MonoBehaviour:
       uiEventId: drawer_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -326,6 +347,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_recombination_i
     hintText: Purchase Recombination I to unlock nucleon synthesis.
     advanceCondition:
@@ -335,6 +357,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: recombination_i
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -365,6 +388,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: recombination_unlocked
     hintText: 
     advanceCondition:
@@ -374,6 +398,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -388,6 +413,7 @@ MonoBehaviour:
       buildingInteractionGate: 1
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: collect_quarks_for_nucleons
     hintText: "Collect 8 Up Quarks and 8 Down Quarks \u2014 you'll need them to synthesize
       2 Protons and 2 Neutrons."
@@ -402,6 +428,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -425,6 +452,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: open_recipe_panel_for_nucleons
     hintText: Open the Build menu to craft nucleons from quarks.
     advanceCondition:
@@ -434,6 +462,7 @@ MonoBehaviour:
       uiEventId: recipe_panel_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -453,6 +482,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: craft_two_protons
     hintText: Craft 2 Protons. Each requires 2 Up Quarks + 1 Down Quark.
     advanceCondition:
@@ -464,6 +494,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -479,6 +510,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: craft_two_neutrons
     hintText: Now craft 2 Neutrons. Each requires 1 Up Quark + 2 Down Quarks.
     advanceCondition:
@@ -490,6 +522,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -505,6 +538,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: direct_to_demon_for_nucleons
     hintText: Tap Maxwell's Demon to sell your Protons and Neutrons for entropy.
     advanceCondition:
@@ -514,6 +548,7 @@ MonoBehaviour:
       uiEventId: demon_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -541,6 +576,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: sell_protons_and_neutrons
     hintText: Deposit your Protons and Neutrons into the Demon.
     advanceCondition:
@@ -554,6 +590,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -569,6 +606,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: close_demon_after_nucleons
     hintText: Close Maxwell's Demon.
     advanceCondition:
@@ -578,6 +616,7 @@ MonoBehaviour:
       uiEventId: demon_closed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -593,6 +632,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds:
     - hydrogen_synthesis
+    isSubstep: 0
   - id: buy_hydrogen_synthesis
     hintText: Purchase Hydrogen Synthesis in the Research panel to unlock atomic
       assembly.
@@ -603,6 +643,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: hydrogen_synthesis
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -633,6 +674,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: gather_for_hydrogen
     hintText: Collect 4 Up Quarks, 2 Down Quarks, and 2 Electrons to craft Hydrogen
       atoms.
@@ -649,6 +691,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -667,6 +710,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 1
   - id: craft_protons_for_hydrogen
     hintText: Craft 2 Protons to use in Hydrogen synthesis.
     advanceCondition:
@@ -678,6 +722,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -692,6 +737,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 1
   - id: craft_hydrogen
     hintText: Combine a Proton and an Electron to craft 2 Hydrogen atoms.
     advanceCondition:
@@ -703,6 +749,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -717,6 +764,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 1
   - id: hydrogen_crafted
     hintText: 
     advanceCondition:
@@ -726,6 +774,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -740,6 +789,7 @@ MonoBehaviour:
       buildingInteractionGate: 1
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: direct_to_demon_for_hydrogen
     hintText: Bring your Hydrogen atoms to Maxwell's Demon.
     advanceCondition:
@@ -749,6 +799,7 @@ MonoBehaviour:
       uiEventId: demon_opened
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -775,6 +826,7 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: sell_hydrogen_in_demon
     hintText: Deposit your Hydrogen atoms to earn entropy.
     advanceCondition:
@@ -786,6 +838,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -800,6 +853,7 @@ MonoBehaviour:
       buildingInteractionGate: 2
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: close_demon_after_hydrogen
     hintText: Close Maxwell's Demon when ready.
     advanceCondition:
@@ -809,6 +863,7 @@ MonoBehaviour:
       uiEventId: demon_closed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -823,6 +878,7 @@ MonoBehaviour:
       buildingInteractionGate: 2
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: intro_automation_i
     hintText: 
     advanceCondition:
@@ -832,6 +888,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -846,6 +903,7 @@ MonoBehaviour:
       buildingInteractionGate: 1
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_automation_i
     hintText: Purchase Automation I in the Research panel to unlock the Harvester.
     advanceCondition:
@@ -855,6 +913,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: automation_i
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -881,8 +940,10 @@ MonoBehaviour:
         icon: "\u26A0"
         modifier: warning
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_first_building
-    hintText: Place a Harvester on the quark or lepton field to begin automatic collection.
+    hintText: Place a Harvester on the lepton field to begin collecting electrons
+      automatically.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -890,6 +951,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 2
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -904,6 +966,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_conveyor
     hintText: Tap a start tile by the Harvester, then the tile in front of Maxwell's
       Demon, and place the belt.
@@ -914,6 +977,7 @@ MonoBehaviour:
       uiEventId: conveyor_placed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -928,6 +992,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: automation_started
     hintText: Your factory is running. Watch it produce particles automatically.
     advanceCondition:
@@ -937,6 +1002,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -951,6 +1017,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: intro_sfc
     hintText: Save up entropy to place the Strong Force Combiner.
     advanceCondition:
@@ -960,6 +1027,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -974,6 +1042,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_sfc
     hintText: Open the Build menu and place a Strong Force Combiner on the grid.
     advanceCondition:
@@ -983,6 +1052,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 2
     skipCondition:
       researchId: 
       skipToId: 
@@ -997,6 +1067,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_generator
     hintText: Place a Basic Generator within range of the Strong Force Combiner to
       power it.
@@ -1007,6 +1078,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 3
     skipCondition:
       researchId: 
       skipToId: 
@@ -1021,6 +1093,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: link_generator
     hintText: The Combiner powers on automatically while a generator is in range.
       Keep generators close to the buildings they power.
@@ -1031,6 +1104,7 @@ MonoBehaviour:
       uiEventId: consumer_powered
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1045,6 +1119,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_quark_harvester
     hintText: Place a second Harvester on the quark field to supply the Combiner.
     advanceCondition:
@@ -1054,6 +1129,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 2
+      buildingType: 1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1068,6 +1144,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: route_quarks_to_sfc
     hintText: Tap a start tile by the quark Harvester, then the tile in front of
       the Combiner's input, and place the belt.
@@ -1078,6 +1155,7 @@ MonoBehaviour:
       uiEventId: conveyor_placed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1092,16 +1170,17 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: configure_sfc_recipes
-    hintText: Open the Combiner's recipe panel and enable both the Proton and Neutron
-      recipes.
+    hintText: Open the Combiner and set its recipe to Proton.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: combiner_both_recipes_enabled
+      uiEventId: combiner_recipe_set
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1116,16 +1195,17 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: route_nucleons_to_demon
-    hintText: Connect both Combiner output ports (proton and neutron) to Maxwell's
-      Demon.
+    hintText: Connect the Combiner's proton output to Maxwell's Demon.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: sfc_outputs_connected
+      uiEventId: conveyor_placed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1140,6 +1220,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: nucleon_loop_complete
     hintText: Your nucleon pipeline is running automatically.
     advanceCondition:
@@ -1149,6 +1230,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1163,6 +1245,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: intro_atom_gen
     hintText: Save up entropy to place the Atom Generator.
     advanceCondition:
@@ -1172,6 +1255,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1186,6 +1270,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_atom_generator
     hintText: Open the Build menu and place an Atom Generator.
     advanceCondition:
@@ -1195,6 +1280,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 4
     skipCondition:
       researchId: 
       skipToId: 
@@ -1209,16 +1295,18 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: connect_atom_gen_inputs
-    hintText: Re-route the proton conveyor and electron Harvester to the Atom Generator's
-      inputs.
+    hintText: Re-route the proton belt into the Atom Generator, and feed it electrons
+      from your Harvester.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: atom_gen_inputs_connected
+      uiEventId: conveyor_placed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1233,15 +1321,17 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: route_hydrogen_to_demon
     hintText: Connect the Atom Generator's output to Maxwell's Demon.
     advanceCondition:
       type: 3
       anyOf: 0
       items: []
-      uiEventId: atom_gen_output_connected
+      uiEventId: conveyor_placed
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1256,6 +1346,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: hydrogen_loop_complete
     hintText: Your factory is producing hydrogen automatically.
     advanceCondition:
@@ -1265,6 +1356,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1279,6 +1371,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: intro_building_upgrades
     hintText: "Tap the Atom Generator \u2014 we will upgrade it now."
     advanceCondition:
@@ -1288,6 +1381,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1302,6 +1396,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: upgrade_atom_generator_speed
     hintText: Purchase Speed Upgrade L2 on the Atom Generator (1,000 entropy).
     advanceCondition:
@@ -1311,6 +1406,7 @@ MonoBehaviour:
       uiEventId: atom_generator_speed_upgraded
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1325,6 +1421,7 @@ MonoBehaviour:
       buildingInteractionGate: 3
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: upgrade_context
     hintText: "Your Atom Generator is now running at 2\xD7 speed."
     advanceCondition:
@@ -1334,6 +1431,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1348,6 +1446,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: post_tutorial_intro
     hintText: Your hydrogen loop is running. Save up 500 entropy to research Atomic
       Assembly.
@@ -1358,6 +1457,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1372,6 +1472,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_atomic_assembly
     hintText: Purchase Atomic Assembly in the Research panel to unlock heavier elements.
     advanceCondition:
@@ -1381,6 +1482,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: atomic_assembly
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1395,6 +1497,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: atomic_assembly_unlocked
     hintText: 
     advanceCondition:
@@ -1404,6 +1507,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1418,6 +1522,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: craft_first_helium
     hintText: "Craft Helium-4 in your Atom Generator \u2014 2 protons, 2 neutrons,
       2 electrons."
@@ -1430,6 +1535,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1444,6 +1550,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: first_element_context
     hintText: 
     advanceCondition:
@@ -1453,6 +1560,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1467,6 +1575,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_heavy_elements
     hintText: Save 3,000 entropy and purchase Heavy Elements to unlock Uranium synthesis.
     advanceCondition:
@@ -1476,6 +1585,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: heavy_elements
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1490,6 +1600,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: heavy_elements_unlocked
     hintText: 
     advanceCondition:
@@ -1499,6 +1610,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1513,6 +1625,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: craft_first_uranium
     hintText: "Craft Uranium in the Atom Generator. Costs 1,190 eV \u2014 upgrade
       generators first if needed."
@@ -1525,6 +1638,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1539,6 +1653,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: uranium_crafted
     hintText: 
     advanceCondition:
@@ -1548,6 +1663,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1562,6 +1678,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_isotope_engineering
     hintText: Save 1,500 entropy and purchase Isotope Engineering to unlock the Isotopic
       Manipulator.
@@ -1572,6 +1689,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: isotopes
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1586,6 +1704,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: isotopes_unlocked
     hintText: 
     advanceCondition:
@@ -1595,6 +1714,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1609,6 +1729,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_isotopic_manipulator
     hintText: Place an Isotopic Manipulator and connect it to power, neutrons, and
       base elements.
@@ -1619,6 +1740,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 5
     skipCondition:
       researchId: 
       skipToId: 
@@ -1633,6 +1755,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: craft_first_isotope
     hintText: "Craft Deuterium in the Isotopic Manipulator \u2014 1 Hydrogen + 1
       Neutron."
@@ -1645,6 +1768,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1659,6 +1783,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: isotope_crafted
     hintText: 
     advanceCondition:
@@ -1668,6 +1793,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1682,6 +1808,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_radioactive_isotopes
     hintText: "Save 5,000 entropy and purchase Radioactive Isotopes \u2014 requires
       Isotope Engineering and Heavy Elements."
@@ -1692,6 +1819,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: radioactive_isotopes
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1706,6 +1834,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: radioactive_isotopes_unlocked
     hintText: 
     advanceCondition:
@@ -1715,6 +1844,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1729,6 +1859,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_radioactive_containment
     hintText: "Place a Radioactive Containment structure \u2014 2\xD72 footprint,
       draws 30 eV \u2014 to safely house the Isotopic Manipulator."
@@ -1739,6 +1870,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 6
     skipCondition:
       researchId: 
       skipToId: 
@@ -1753,6 +1885,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: craft_uranium_235
     hintText: "Craft Uranium-235 in the Containment building's Isotopic Manipulator
       \u2014 removes 3 neutrons from Uranium, emitting an Alpha particle."
@@ -1765,6 +1898,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1779,6 +1913,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: uranium_235_crafted
     hintText: 
     advanceCondition:
@@ -1788,6 +1923,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1802,6 +1938,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: collect_alpha_particle
     hintText: Collect the Alpha particle emitted from your Containment building.
     advanceCondition:
@@ -1813,6 +1950,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1827,6 +1965,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: particles_loop_complete
     hintText: 
     advanceCondition:
@@ -1836,6 +1975,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1850,6 +1990,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: intro_nuclear_reactors
     hintText: Building atoms one nucleon at a time is slow. There is a faster way.
     advanceCondition:
@@ -1859,6 +2000,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1873,6 +2015,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_fusion_i
     hintText: Purchase Stellar Fusion in the Research panel to unlock the Fusion
       Reactor.
@@ -1883,6 +2026,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: fusion_i
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1897,6 +2041,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_fusion_reactor
     hintText: Open the Build menu and place a Fusion Reactor.
     advanceCondition:
@@ -1906,6 +2051,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 11
     skipCondition:
       researchId: 
       skipToId: 
@@ -1920,6 +2066,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: fusion_explained
     hintText: 
     advanceCondition:
@@ -1929,6 +2076,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1943,6 +2091,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_fissile_extraction
     hintText: Purchase Fissile Extraction to open uranium and plutonium fields.
     advanceCondition:
@@ -1952,6 +2101,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: fissile_extraction
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1966,6 +2116,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: buy_fission_i
     hintText: Purchase Nuclear Fission to unlock the Fission Reactor.
     advanceCondition:
@@ -1975,6 +2126,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: fission_i
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1989,6 +2141,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: place_fission_reactor
     hintText: Open the Build menu and place a Fission Reactor.
     advanceCondition:
@@ -1998,6 +2151,7 @@ MonoBehaviour:
       uiEventId: 
       researchId: 
       minCount: 1
+      buildingType: 12
     skipCondition:
       researchId: 
       skipToId: 
@@ -2012,6 +2166,7 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0
   - id: reactors_complete
     hintText: 
     advanceCondition:
@@ -2021,6 +2176,7 @@ MonoBehaviour:
       uiEventId: dialogue_complete
       researchId: 
       minCount: 0
+      buildingType: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -2035,3 +2191,4 @@ MonoBehaviour:
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
+    isSubstep: 0

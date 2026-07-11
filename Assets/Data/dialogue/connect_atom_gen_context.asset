@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Re-route the proton output from the Demon to the Atom Generator's proton
-      input. Do the same for the electron Harvester output. Neutrons continue to
-      sell \u2014 they are not needed for hydrogen."
+    text: Re-route the proton belt from the Demon to the Atom Generator's proton
+      input, then route your electron Harvester into its electron input. Protons
+      plus electrons become hydrogen.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

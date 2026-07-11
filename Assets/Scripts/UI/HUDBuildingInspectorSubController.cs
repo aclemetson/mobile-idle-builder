@@ -864,6 +864,9 @@ namespace MobileIdleBuilder
                     ItemID   = recipe.outputItem.itemId,
                     Quantity = recipe.outputQuantity
                 });
+
+            // Drives the tutorial's "set the Combiner to Proton" step (combiner_recipe_set).
+            _hud?.NotifyBuildingRecipeSet();
         }
 
         private static void AddInspectorRow(VisualElement target, string text)

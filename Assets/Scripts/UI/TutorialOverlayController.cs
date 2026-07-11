@@ -27,6 +27,10 @@ namespace MobileIdleBuilder
         private Button _pulsingButton;
         private Coroutine _pulseRoutine;
 
+        // Hint text held back while a step's dialogue is on screen, revealed when the
+        // dialogue closes so the hint bar and dialogue panel never stack at the bottom.
+        private string _pendingHintText;
+
         private EntityQuery _tutorialQuery;
         private bool        _queryReady;
         private EntityQuery _powerGridQuery;
@@ -50,6 +54,7 @@ namespace MobileIdleBuilder
                 hudController.OnResearchPanelOpened += OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
                 hudController.OnConveyorPlaced      += OnConveyorPlacedHandler;
+                hudController.OnBuildingRecipeSet   += OnBuildingRecipeSetHandler;
             }
 
             if (maxwellsDemon == null)
@@ -90,6 +95,7 @@ namespace MobileIdleBuilder
                 hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
                 hudController.OnConveyorPlaced      -= OnConveyorPlacedHandler;
+                hudController.OnBuildingRecipeSet   -= OnBuildingRecipeSetHandler;
             }
 
             if (maxwellsDemon != null)
@@ -156,6 +162,7 @@ namespace MobileIdleBuilder
             StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
+            _pendingHintText = null;
 
             // Checkpoint: persist the new step immediately rather than waiting for auto-save.
             SaveManager.Instance?.SaveLocal();
@@ -176,8 +183,16 @@ namespace MobileIdleBuilder
                     hudController?.ShowNotification("→", step.hintText);
             }
 
+            // Defer the hint bar when this step also plays a dialogue, so the dialogue
+            // panel and the bottom hint bar don't cover each other. The hint is revealed
+            // by OnDialogueComplete once the dialogue box closes.
             if (!string.IsNullOrEmpty(step.hintText))
-                hudController?.ShowTutorialHint(step.hintText);
+            {
+                if (step.onEnter?.dialogue != null)
+                    _pendingHintText = step.hintText;
+                else
+                    hudController?.ShowTutorialHint(step.hintText);
+            }
 
             ApplyOnEnterActions(step.onEnter);
         }
@@ -254,7 +269,20 @@ namespace MobileIdleBuilder
 
         // ── Dialogue event handlers ───────────────────────────────────────────
 
-        private void OnDialogueComplete() => TryAdvanceOnUiEvent("dialogue_complete");
+        private void OnDialogueComplete()
+        {
+            int stepBefore = _lastStepIndex;
+            TryAdvanceOnUiEvent("dialogue_complete");
+
+            // If the dialogue was contextual (this step advances on something other than
+            // dialogue_complete), the step index is unchanged. Now that the dialogue box
+            // has closed, reveal the hint we deferred in OnStepChanged.
+            if (_lastStepIndex == stepBefore && !string.IsNullOrEmpty(_pendingHintText))
+            {
+                hudController?.ShowTutorialHint(_pendingHintText);
+                _pendingHintText = null;
+            }
+        }
 
         private void OnHighlightRequested(string target)
         {
@@ -304,6 +332,7 @@ namespace MobileIdleBuilder
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
         private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
+        private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
 
         /// <summary>
         /// Called by the building upgrade UI when the player purchases a speed upgrade on the

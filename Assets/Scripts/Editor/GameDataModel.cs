@@ -465,6 +465,11 @@ namespace MobileIdleBuilder.Editor
         public TutorialSkipJson       skip_condition;
         public TutorialOnEnterJson    on_enter             = new();
         public string[]               locked_research_ids  = new string[0];
+        /// <summary>Marks a step as a substep of a larger beat. Within a contiguous run of
+        /// substeps, TutorialSystem may skip forward when a LATER substep's advance condition
+        /// is already satisfied (e.g. protons already consumed into hydrogen). Non-substep
+        /// ("major") steps bound the run and are never auto-skipped.</summary>
+        public bool                   is_substep           = false;
 
         public void Initialize()
         {
@@ -485,6 +490,9 @@ namespace MobileIdleBuilder.Editor
         public string   ui_event_id  = "";
         public string   research_id  = "";
         public int      min_count    = 0;
+        /// <summary>BuildingMin only: restrict the count to buildings of this building id
+        /// (e.g. "strong_force_combiner"). Empty = count all buildings.</summary>
+        public string   building_id  = "";
     }
 
     [Serializable]

@@ -209,7 +209,7 @@ namespace MobileIdleBuilder.Editor
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
-            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
+            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, researchLookup);
@@ -780,7 +780,8 @@ namespace MobileIdleBuilder.Editor
         }
 
         private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
-            Dictionary<string, DialogueSO> dialogueLookup)
+            Dictionary<string, DialogueSO> dialogueLookup,
+            Dictionary<string, BuildingSO> buildingLookup)
         {
             if (steps == null || steps.Count == 0) return;
 
@@ -794,8 +795,9 @@ namespace MobileIdleBuilder.Editor
                 var s = realSteps[i];
                 var def = new TutorialStepDef
                 {
-                    id       = s.id,
-                    hintText = s.hint,
+                    id        = s.id,
+                    hintText  = s.hint,
+                    isSubstep = s.is_substep,
                 };
 
                 // Advance condition
@@ -803,14 +805,27 @@ namespace MobileIdleBuilder.Editor
                 {
                     def.advanceCondition = new TutorialConditionDef
                     {
-                        anyOf      = s.advance_condition.any_of,
-                        uiEventId  = s.advance_condition.ui_event_id  ?? "",
-                        researchId = s.advance_condition.research_id  ?? "",
-                        minCount   = s.advance_condition.min_count,
+                        anyOf        = s.advance_condition.any_of,
+                        uiEventId    = s.advance_condition.ui_event_id  ?? "",
+                        researchId   = s.advance_condition.research_id  ?? "",
+                        minCount     = s.advance_condition.min_count,
+                        buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,
                             $"TutorialStep '{s.id}'.advance_condition.type", out var ct))
                         def.advanceCondition.type = ct;
+
+                    // Resolve BuildingMin's building_id string to the int BuildingType so the
+                    // ECS system can filter the count. Empty/unknown id leaves buildingType at
+                    // -1 (count all buildings).
+                    if (!string.IsNullOrEmpty(s.advance_condition.building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.building_id, out var bso))
+                            def.advanceCondition.buildingType = bso.buildingId;
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.building_id '{s.advance_condition.building_id}' not found.");
+                    }
 
                     if (s.advance_condition.items != null && s.advance_condition.items.Count > 0)
                     {

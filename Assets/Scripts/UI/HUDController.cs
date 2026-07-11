@@ -99,6 +99,7 @@ namespace MobileIdleBuilder
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
         public event System.Action OnConveyorPlaced;
+        public event System.Action OnBuildingRecipeSet;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -1688,6 +1689,10 @@ namespace MobileIdleBuilder
 
         /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
         private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
+
+        /// <summary>Raised by the building inspector when the player sets a building's recipe.
+        /// Drives the tutorial's "set the Combiner to Proton" step.</summary>
+        public void NotifyBuildingRecipeSet() => OnBuildingRecipeSet?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
