@@ -1252,6 +1252,15 @@ namespace MobileIdleBuilder
                 info.Add(nameLabel);
                 info.Add(inputsContainer);
 
+                // Item-creation timer: how long this recipe takes to craft.
+                if (recipe.base_craft_time > 0f)
+                {
+                    var timeLabel = new Label($"Craft time: {recipe.base_craft_time:0.#}s");
+                    timeLabel.style.fontSize = 11;
+                    timeLabel.style.opacity  = 0.7f;
+                    info.Add(timeLabel);
+                }
+
                 var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
                 craftBtn.AddToClassList("craft-btn");
                 craftBtn.SetEnabled(!isLocked && canCraft);
