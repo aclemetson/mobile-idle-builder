@@ -59,10 +59,12 @@ namespace MobileIdleBuilder.Tests
             return so;
         }
 
-        private static TutorialStepDef InventoryMinStep(string id, int itemId, int qty, bool anyOf = false)
+        private static TutorialStepDef InventoryMinStep(string id, int itemId, int qty,
+            bool anyOf = false, bool isSubstep = false)
             => new TutorialStepDef
             {
                 id = id,
+                isSubstep = isSubstep,
                 advanceCondition = new TutorialConditionDef
                 {
                     type  = ConditionType.InventoryMin,
@@ -104,6 +106,22 @@ namespace MobileIdleBuilder.Tests
                     { type = ConditionType.BuildingMin, minCount = minCount },
                 onEnter = new TutorialOnEnter()
             };
+
+        private static TutorialStepDef BuildingMinTypeStep(string id, int minCount, int buildingType)
+            => new TutorialStepDef
+            {
+                id = id,
+                advanceCondition = new TutorialConditionDef
+                    { type = ConditionType.BuildingMin, minCount = minCount, buildingType = buildingType },
+                onEnter = new TutorialOnEnter()
+            };
+
+        private Entity CreateBuilding(int buildingType)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new BuildingData { BuildingType = buildingType });
+            return e;
+        }
 
         private static TutorialStepDef PrestigeAvailableStep(string id)
             => new TutorialStepDef
@@ -345,6 +363,40 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, GetStepIndex());
         }
 
+        [Test]
+        public void BuildingMin_TypeFilter_WrongTypeDoesNotAdvance()
+        {
+            // The step needs a specific building type (e.g. Strong Force Combiner). A building
+            // of a different type must NOT satisfy it — this is what stops place_sfc and friends
+            // from auto-advancing on any pre-existing building.
+            MakeFlow(
+                BuildingMinTypeStep("place_sfc", minCount: 1, buildingType: 5),
+                PrestigeAvailableStep("next")
+            );
+            SetStepIndex(0);
+            CreateBuilding(buildingType: 3); // different type
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex(), "A different building type must not satisfy a type-filtered BuildingMin");
+        }
+
+        [Test]
+        public void BuildingMin_TypeFilter_MatchingTypeAdvances()
+        {
+            MakeFlow(
+                BuildingMinTypeStep("place_sfc", minCount: 1, buildingType: 5),
+                PrestigeAvailableStep("next")
+            );
+            SetStepIndex(0);
+            CreateBuilding(buildingType: 3); // decoy of a different type
+            CreateBuilding(buildingType: 5); // the required type
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex(), "A matching building type must satisfy a type-filtered BuildingMin");
+        }
+
         // ── PrestigeAvailable ─────────────────────────────────────────────────
 
         [Test]
@@ -570,6 +622,66 @@ namespace MobileIdleBuilder.Tests
 
             _world.Update();
             Assert.AreEqual(1, GetStepIndex(), "Step 1 (UiEvent: dialogue_complete) must not advance from ECS");
+        }
+
+        // ── Smart progression: forward substep skip ──────────────────────────
+
+        [Test]
+        public void ForwardSubstepSkip_SkipsCurrentWhenLaterSubstepSatisfied()
+        {
+            // Mirrors the hydrogen chain: craft_protons_for_hydrogen (proton>=2) then
+            // craft_hydrogen (hydrogen>=2). The protons were already consumed into hydrogen,
+            // so the proton step's own condition can never read >=2 — but craft_hydrogen is
+            // satisfied, so the proton substep must be skipped rather than soft-locking.
+            MakeFlow(
+                InventoryMinStep("craft_protons_for_hydrogen", itemId: 4, qty: 2, isSubstep: true),
+                InventoryMinStep("craft_hydrogen",             itemId: 6, qty: 2, isSubstep: true),
+                BuildingMinStep("hydrogen_crafted", minCount: 1) // major boundary (non-substep)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 6, qty: 2); // 2 hydrogen, 0 protons
+
+            _world.Update(); // skips the proton substep (later substep satisfied)
+            Assert.AreEqual(1, GetStepIndex(), "Proton substep should be skipped when hydrogen already exists");
+
+            _world.Update(); // craft_hydrogen advances on its own satisfied condition
+            Assert.AreEqual(2, GetStepIndex(), "Should cascade to the satisfied substep and past it");
+        }
+
+        [Test]
+        public void ForwardSubstepSkip_DoesNotCrossMajorStep()
+        {
+            // A satisfied substep sits AFTER a non-substep (major) step. The forward scan must
+            // stop at the major step and NOT skip the current substep.
+            MakeFlow(
+                InventoryMinStep("gather", itemId: 4, qty: 2, isSubstep: true),
+                UiEventStep("major_dialogue", "dialogue_complete"),          // non-substep boundary
+                InventoryMinStep("later_substep", itemId: 6, qty: 2, isSubstep: true)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 6, qty: 2); // later substep IS satisfied, but behind a major step
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex(),
+                "Must not skip across a major step even if a later substep is satisfied");
+        }
+
+        [Test]
+        public void ForwardSubstepSkip_NonSubstepStepIsNotForceSkipped()
+        {
+            // The current step is NOT a substep, so even though a later substep is satisfied,
+            // it must hold on its own (unmet) condition.
+            MakeFlow(
+                InventoryMinStep("major_craft", itemId: 4, qty: 2, isSubstep: false),
+                InventoryMinStep("later_substep", itemId: 6, qty: 2, isSubstep: true)
+            );
+            SetStepIndex(0);
+            AddToInventory(itemId: 6, qty: 2); // later substep satisfied, current not
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex(), "Non-substep steps must not be forward-skipped");
         }
 
         // ── Completion ────────────────────────────────────────────────────────

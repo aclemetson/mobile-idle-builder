@@ -73,6 +73,20 @@ namespace MobileIdleBuilder
 
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>(true); // read-only
 
+            // Smart progression: if this is a substep and a LATER substep in the same
+            // contiguous run already has its advance condition satisfied, this substep is
+            // moot — e.g. the protons it asked for were already consumed into hydrogen, so
+            // its own InventoryMin will never read high enough. Skip it. The run is bounded
+            // by the first non-substep ("major") step, which is never auto-skipped this way.
+            // Advancing one index per frame cascades forward until the satisfied substep is
+            // reached and advances on its own condition.
+            if (step.isSubstep && LaterSubstepSatisfied(flow, tutorial.CurrentStepIndex, inventory, ref state))
+            {
+                tutorial.CurrentStepIndex++;
+                SystemAPI.SetSingleton(tutorial);
+                return;
+            }
+
             // Diagnostic: log inventory count changes for InventoryMin steps.
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.InventoryMin
                 && step.advanceCondition.items != null && step.advanceCondition.items.Count > 0)
@@ -103,6 +117,25 @@ namespace MobileIdleBuilder
                 ? flow.steps[tutorial.CurrentStepIndex].id
                 : "(complete)";
             GameLogger.Debug($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
+        }
+
+        /// <summary>
+        /// True if any later substep in the contiguous run beginning after <paramref name="startIndex"/>
+        /// already has its advance condition satisfied. The scan stops at the first non-substep
+        /// ("major") step so a run of substeps never lets the tutorial jump past a major beat.
+        /// UiEvent conditions never count as satisfied here (they only advance via explicit UI calls),
+        /// so forward-skip fires only on state-derived conditions like InventoryMin/InventoryZero.
+        /// </summary>
+        private bool LaterSubstepSatisfied(TutorialFlowSO flow, int startIndex,
+            DynamicBuffer<InventorySlot> inv, ref SystemState state)
+        {
+            for (int j = startIndex + 1; j < flow.steps.Length; j++)
+            {
+                var later = flow.steps[j];
+                if (later == null || !later.isSubstep) break; // major step bounds the run
+                if (EvaluateCondition(later.advanceCondition, inv, ref state)) return true;
+            }
+            return false;
         }
 
         // ── Condition evaluator ───────────────────────────────────────────────
@@ -147,8 +180,12 @@ namespace MobileIdleBuilder
 
                 case ConditionType.BuildingMin:
                     int buildingCount = 0;
-                    foreach (var _ in SystemAPI.Query<RefRO<BuildingData>>())
-                        buildingCount++;
+                    foreach (var bd in SystemAPI.Query<RefRO<BuildingData>>())
+                    {
+                        // buildingType < 0 = count all; otherwise only matching building types.
+                        if (c.buildingType < 0 || bd.ValueRO.BuildingType == c.buildingType)
+                            buildingCount++;
+                    }
                     return buildingCount >= c.minCount;
 
                 case ConditionType.PrestigeRunMin:
