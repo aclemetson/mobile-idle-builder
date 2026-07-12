@@ -129,10 +129,22 @@ namespace MobileIdleBuilder
                         ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                         : 1f;
                     outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
+                    // Optional buffer: only entities built with the current archetype carry it, and a
+                    // missing one must never stop production — so probe rather than widen the query.
+                    bool logCrafts = SystemAPI.HasBuffer<CraftedOutputEvent>(entity);
+                    var crafted = logCrafts
+                        ? SystemAPI.GetBuffer<CraftedOutputEvent>(entity)
+                        : default;
+
                     for (int i = 0; i < outputs.Length; i++)
                     {
                         int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
                         SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
+
+                        // Record the craft where it happens. Diffing output-buffer totals downstream
+                        // loses any craft a conveyor drains before the bridge samples it.
+                        if (logCrafts && qty > 0)
+                            crafted.Add(new CraftedOutputEvent { ItemID = outputs[i].ItemID, Quantity = qty });
                     }
                 }
 

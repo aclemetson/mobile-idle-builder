@@ -56,7 +56,8 @@ namespace MobileIdleBuilder
                 typeof(PlacedPortData),
                 typeof(BuildingOutputSlot),
                 typeof(BuildingInputSlot),
-                typeof(BuildingInventoryConfig)
+                typeof(BuildingInventoryConfig),
+                typeof(CraftedOutputEvent)   // drained each frame by ProductionAchievementBridge
             );
 
             var entity = _em.CreateEntity(archetype);

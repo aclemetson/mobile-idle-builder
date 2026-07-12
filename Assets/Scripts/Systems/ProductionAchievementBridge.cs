@@ -4,82 +4,57 @@ using Unity.Entities;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Non-Burst managed system that detects when automated production completes a cycle
-    /// and notifies AchievementService. Runs after ProductionSystem so output buffer
-    /// changes are already committed when we sample them.
+    /// Drains the <see cref="CraftedOutputEvent"/> buffer that ProductionSystem fills on each recipe
+    /// completion, and reports every craft to AchievementService and TierProgress.
     ///
-    /// Strategy: each frame, compare current BuildingOutputSlot totals to the previous
-    /// frame's snapshot. An increase means at least one recipe cycle deposited output.
-    /// Collector buildings (no RecipeProcessData) are excluded from the query.
+    /// This used to infer crafts by diffing BuildingOutputSlot totals frame to frame, which was wrong twice
+    /// over. It lost crafts: ConveyorSystem and this system are both only UpdateAfter(ProductionSystem) with
+    /// no ordering between them, so any craft a belt drained before the sample simply never counted — and a
+    /// hungry belt is the steady state of a working factory. And it could not say WHICH item was made (a
+    /// total is just a number), so it reported an empty item id, which meant automated production credited
+    /// only the wildcard craft achievements and never an item-specific one.
     ///
-    /// Totals are tracked twice, deliberately: in aggregate per building (what the craft
-    /// achievements consume, unchanged) and per item (what tier progression needs — it has to know
-    /// WHICH item was produced to read its tier).
+    /// Reading the recorded events instead is exact — real item, real quantity, no ordering assumptions.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(ProductionSystem))]
     public partial class ProductionAchievementBridge : SystemBase
     {
-        readonly Dictionary<Entity, int>          _prevOutputTotal = new();
-        readonly Dictionary<(Entity, int), int>   _prevByItem      = new();
-
-        // Reused across frames so the per-frame path allocates nothing when nothing is produced.
-        readonly List<int> _producedItemIds = new();
+        // Reused across frames: the common case (nothing crafted) then allocates nothing.
+        readonly List<CraftedOutputEvent> _drained = new();
 
         protected override void OnUpdate()
         {
-            var toRemove = new List<Entity>();
-            foreach (var key in _prevOutputTotal.Keys)
-            {
-                if (!EntityManager.Exists(key))
-                    toRemove.Add(key);
-            }
-            foreach (var e in toRemove)
-            {
-                _prevOutputTotal.Remove(e);
-                PurgeItemEntries(e);
-            }
-
-            _producedItemIds.Clear();
-            var produced = _producedItemIds;
-            var prevByItem = _prevByItem;
+            _drained.Clear();
+            var drained = _drained;
 
             Entities
                 .WithAll<RecipeProcessData>()
                 .WithoutBurst()
-                .ForEach((Entity entity, in DynamicBuffer<BuildingOutputSlot> outputSlots) =>
+                .ForEach((ref DynamicBuffer<CraftedOutputEvent> crafted) =>
                 {
-                    int total = 0;
-                    for (int i = 0; i < outputSlots.Length; i++)
-                    {
-                        var slot = outputSlots[i];
-                        total += slot.Quantity;
+                    if (crafted.Length == 0) return;
 
-                        var key = (entity, slot.ItemID);
-                        if (prevByItem.TryGetValue(key, out int prevQty) && slot.Quantity > prevQty)
-                            produced.Add(slot.ItemID);
-                        prevByItem[key] = slot.Quantity;
-                    }
+                    for (int i = 0; i < crafted.Length; i++)
+                        if (crafted[i].Quantity > 0)
+                            drained.Add(crafted[i]);
 
-                    if (_prevOutputTotal.TryGetValue(entity, out int prev) && total > prev)
-                        AchievementService.Instance?.NotifyCraft("", total - prev);
-
-                    _prevOutputTotal[entity] = total;
+                    crafted.Clear();
                 }).Run();
 
-            // Deferred until after the ForEach: TierProgress touches the PlayerProgressData singleton,
-            // and writing a singleton from inside an in-flight Entities.ForEach trips ECS safety checks.
-            for (int i = 0; i < _producedItemIds.Count; i++)
-                TierProgress.NotifyItemProduced(_producedItemIds[i]);
-        }
+            // Notified only after the ForEach completes: TierProgress writes the PlayerProgressData
+            // singleton, and a structural/singleton write from inside an in-flight ForEach trips ECS
+            // safety checks.
+            for (int i = 0; i < _drained.Count; i++)
+            {
+                var evt = _drained[i];
 
-        void PurgeItemEntries(Entity dead)
-        {
-            var stale = new List<(Entity, int)>();
-            foreach (var key in _prevByItem.Keys)
-                if (key.Item1 == dead) stale.Add(key);
-            foreach (var key in stale)
-                _prevByItem.Remove(key);
+                // Achievements match on the item's string id. An unknown item still counts toward the
+                // wildcard ("any craft") achievements, so fall back to "" rather than dropping the craft.
+                string itemId = ItemDatabase.GetStatic(evt.ItemID)?.id ?? "";
+                AchievementService.Instance?.NotifyCraft(itemId, evt.Quantity);
+                TierProgress.NotifyItemProduced(evt.ItemID);
+            }
         }
     }
 }
