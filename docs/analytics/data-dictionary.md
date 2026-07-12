@@ -52,6 +52,13 @@ parameter value** (no avg/sum of a number). So:
   are *session*-relative, not lifetime. A run that spans an app restart will under-report. Acceptable for
   dev/playtest balancing; revisit if lifetime playtime becomes a needed metric.
 - **`building_count`** excludes the permanent Entropy Sink fixture (matches how PrestigeSystem treats it).
-- **`tier_reached`** has no caller in gameplay yet, so tier funnels currently come from
-  `player_snapshot.highest_tier`. The discrete event will populate automatically once a `NotifyTierReached`
-  caller is wired.
+- **`tier_reached` / `highest_tier`** are driven by `TierProgress.NotifyItemProduced`, called from both
+  production paths (manual crafts in `ManualCraftService`, automated recipe output in
+  `ProductionAchievementBridge`). "Tier reached" means *produced*: the highest `ItemSO.tier` the player has
+  actually made this run. Collectors are not a source — they only yield tier-1 items, which is the floor.
+  Tier resets to 1 on prestige (`PrestigeSystem`), so `tier_reached` re-fires as a run climbs back up;
+  count it per `run_count` rather than per player.
+
+  Data before this hook existed is unusable for tier analysis: nothing advanced `CurrentTier`, so
+  `tier_reached` never fired and `highest_tier` was a constant `1` on every snapshot and prestige event.
+  Segment tier funnels by `collection_phase` to exclude those older windows.
