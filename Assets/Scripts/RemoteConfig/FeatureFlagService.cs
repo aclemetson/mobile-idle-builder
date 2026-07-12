@@ -30,7 +30,7 @@ namespace MobileIdleBuilder
     {
         protected override bool PersistAcrossScenes => true;
 
-        const string FileName = "feature_flags.json";
+        internal const string FileName = "feature_flags.json";
 
         string _filePath;
         readonly Dictionary<string, string> _values = new();

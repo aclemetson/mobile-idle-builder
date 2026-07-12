@@ -1055,6 +1055,48 @@ namespace MobileIdleBuilder.Dev
                     return "Deleting cloud + local save. Reloading...";
                 });
 
+            _registry.Register("clear all save", "Full fresh-install reset: cloud + local + settings + recipe knowledge + all PlayerPrefs",
+                _ =>
+                {
+                    var sm = SaveManager.Instance;
+                    if (sm == null)
+                    {
+                        // SaveManager not ready yet (running before GameScene initializes).
+                        // Wipe everything local now and defer the cloud delete to next boot.
+                        var wiped = SaveWipe.WipeEverything(scheduleCloudWipe: true);
+                        SceneLoader.GoTo("GameScene");
+                        return $"SaveManager not ready — wiped {DescribeWipe(wiped)}; cloud wipe deferred to next GameScene load.";
+                    }
+
+                    GameLogger.Info("[DevConsole] clear all save — starting coroutine");
+                    StartCoroutine(sm.DeleteCloudSave(success =>
+                    {
+                        if (!success)
+                            AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
+
+                        GridSaveService.Instance?.ClearGrid();
+                        var wiped = SaveWipe.WipeEverything(scheduleCloudWipe: !success);
+
+                        // Everything below survives the scene reload (persistent singletons), so it has
+                        // to be reset in memory too — otherwise it writes the old run straight back out
+                        // over the files we just deleted.
+                        sm.ResetToFreshSave();
+                        PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                        AchievementService.Instance?.ResetInMemory();
+                        RecipeKnowledgeService.Instance?.ResetInMemory();
+                        SettingsService.Instance?.ResetToDefaults();
+
+                        AppendLog($"Wiped {DescribeWipe(wiped)} + all PlayerPrefs" +
+                                  (success ? " + cloud save." : " (cloud wipe pending)."));
+
+                        // Blur the input field before transitioning so UI Toolkit's keyboard-poll
+                        // timer is cancelled before LoadSceneAsync runs.
+                        _inputField?.Blur();
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    }));
+                    return "Full reset: deleting cloud + local + settings + prefs. Reloading...";
+                });
+
             _registry.Register("reload", "Reload the active scene",
                 _ =>
                 {
@@ -1166,6 +1208,12 @@ namespace MobileIdleBuilder.Dev
         }
 
         // ── Building spawn helpers ────────────────────────────────────────────
+
+        /// <summary>Names the files a wipe actually removed, so the console says what it did.</summary>
+        private static string DescribeWipe(List<string> deleted) =>
+            deleted == null || deleted.Count == 0
+                ? "no local files (none were present)"
+                : string.Join(", ", deleted);
 
         private static string ListBuildings()
         {

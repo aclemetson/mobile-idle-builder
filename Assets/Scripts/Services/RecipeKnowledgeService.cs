@@ -36,7 +36,7 @@ namespace MobileIdleBuilder
         internal static IRecipeKnowledgeService OverrideForTests;
         internal static IRecipeKnowledgeService Current => OverrideForTests ?? Instance;
 
-        const string FileName = "recipe_knowledge.json";
+        internal const string FileName = "recipe_knowledge.json";
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
 
@@ -53,6 +53,18 @@ namespace MobileIdleBuilder
         }
 
         void Start()
+        {
+            Load();
+            SyncWithRecipeDatabase();
+        }
+
+        /// <summary>
+        /// Re-reads knowledge from disk, falling back to the default asset when the file is gone.
+        /// This service survives scene loads, so a save wipe must reset it explicitly — otherwise it
+        /// keeps the old run's unlocks in memory and writes them straight back out on the next
+        /// MarkKnown(), resurrecting the file the wipe just deleted.
+        /// </summary>
+        public void ResetInMemory()
         {
             Load();
             SyncWithRecipeDatabase();
