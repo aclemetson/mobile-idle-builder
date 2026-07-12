@@ -196,7 +196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingAuthoring
   building: {fileID: 11400000, guid: 4627c4887e022a84781725d823f1b2a0, type: 2}
-  gridPosition: {x: 10, y: 10}
+  gridPosition: {x: 9, y: 9}
   rotation: 0
   flipped: 0
   recipe: {fileID: 0}
