@@ -90,6 +90,8 @@ namespace MobileIdleBuilder
                 // Local inventory buffers (required for conveyor connectivity)
                 AddBuffer<BuildingInputSlot>(entity);
                 AddBuffer<BuildingOutputSlot>(entity);
+                // Crafts are recorded here by ProductionSystem and drained by ProductionAchievementBridge.
+                AddBuffer<CraftedOutputEvent>(entity);
                 AddComponent(entity, new BuildingInventoryConfig
                 {
                     OutputCapacity = BuildingSO.OutputCapacityForLevel(so, 1),

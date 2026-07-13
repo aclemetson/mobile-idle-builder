@@ -22,6 +22,16 @@ This guide covers manual verification of every dev-console testing feature. Work
   ```
   Expected: `Save cleared. Reloading...` — scene reloads, tutorial starts at step 0
 
+  `clear save` deletes only `save.json`, and `clear cloud save` adds the cloud key. Neither touches
+  the sidecar files, so recipe knowledge, settings and cached flags carry over into the "clean" run.
+  To reproduce a genuine first-ever launch, use:
+  ```
+  clear all save
+  ```
+  which additionally deletes `recipe_knowledge.json`, `settings.json`, `feature_flags.json` and ALL
+  PlayerPrefs. It clears cached sign-in too, so expect to be signed out / land on a new anonymous
+  player.
+
 - [ ] **Confirm fresh state.** After reload, open console and run:
   ```
   show progress
@@ -48,6 +58,7 @@ This guide covers manual verification of every dev-console testing feature. Work
   - `show progress`
   - `save`
   - `clear save`
+  - `clear all save`
 
 ### 1.3 Unknown Command
 

@@ -91,6 +91,7 @@ namespace MobileIdleBuilder
                 SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
 
             AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
+            TierProgress.NotifyItemProduced(outputId);
             return true;
         }
 

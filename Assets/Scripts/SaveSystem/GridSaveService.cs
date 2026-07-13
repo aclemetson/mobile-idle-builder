@@ -69,8 +69,9 @@ namespace MobileIdleBuilder
                     fh = fp.Height;
                 }
 
-                // Preserve entropy sinks (Maxwell's Demon) — they're baked/auto-placed and
-                // cannot be recreated through the normal LoadGrid path.
+                // Preserve entropy sinks (Maxwell's Demon) — they're baked from the SubScene, and
+                // LoadGrid deliberately refuses to re-place them, so destroying one here would
+                // leave the grid with no Demon at all.
                 if (_em.HasComponent<EntropySinkTag>(e))
                 {
                     GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
@@ -120,6 +121,21 @@ namespace MobileIdleBuilder
 
             return total;
         }
+
+        // ── Restore eligibility ───────────────────────────────────────────
+
+        /// <summary>
+        /// True if a saved building entry may be re-placed on load.
+        ///
+        /// The entropy sink (Maxwell's Demon) is baked from the SubScene on every launch, so it must
+        /// never be restored from save data: the save's entry records whatever cell the bake used when
+        /// it was written, and re-placing it stands a SECOND Demon up alongside the baked one — at a
+        /// different cell the moment the bake moves. It is still WRITTEN to the save (FlushToSave), both
+        /// because its entry mirrors the live baked entity and because IdleGraphAnalyzer needs it to
+        /// mark the chains that end at the Demon for offline earnings.
+        /// </summary>
+        internal static bool IsRestorable(BuildingSO building) =>
+            building != null && !building.isEntropySink;
 
         // ── Multi-grid migration ──────────────────────────────────────────
 
@@ -182,6 +198,9 @@ namespace MobileIdleBuilder
             grid.blockedOutputs = null;
 
             // --- Buildings ---
+            // The entropy sink IS persisted (its entry mirrors the live baked entity, and the idle
+            // graph needs it to mark chains that end at the Demon) but it is never restored — see
+            // the isEntropySink skip in LoadGrid.
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
             foreach (var e in entities)
             {
@@ -315,6 +334,13 @@ namespace MobileIdleBuilder
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
                     {
                         GameLogger.Warning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
+                        continue;
+                    }
+
+                    if (!IsRestorable(entry.building))
+                    {
+                        GameLogger.Debug($"[GridSaveService] Skipped entropy-sink entry at " +
+                                         $"({bsd.position[0]},{bsd.position[1]}) — the Demon is baked, not restored.");
                         continue;
                     }
 

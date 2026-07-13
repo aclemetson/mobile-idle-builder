@@ -40,15 +40,38 @@ Analytics** (`com.unity.services.analytics`), the same ecosystem as Auth / Cloud
 Custom events must also be registered as schemas in the UGS dashboard (snake_case). Every event additionally
 carries `player_id` + `collection_phase`.
 
-| Event | Params | Tap |
+Types below are the UGS schema types to register (`Int` covers C# `int` and `long`; `Float` covers `float`).
+**The schema must match these names and types exactly** — the dashboard rejects an event whose name is not
+registered, and marks it *invalid* when a param's type disagrees. Both failures look identical from inside the
+game: the SDK reports success and nothing appears in the dashboard.
+
+Every event also carries `player_id` (String) + `collection_phase` (String).
+
+| Event | Params (type) | Tap |
 |---|---|---|
-| `prestige_completed` | run_count, networth_before, prestige_currency_earned, playtime_run_sec, building_count, highest_tier | `PrestigeSystem.OnUpdate` (values captured pre-reset) |
-| `building_placed` | building_id, building_count_after | `AchievementService.NotifyBuildingPlaced` |
-| `research_completed` | research_id, entropy_spent_total | `AchievementService.NotifyResearchCompleted` |
-| `tier_reached` | tier | `AchievementService.NotifyTierReached` (no caller yet — fires when one is added) |
-| `megastructure_stage` | stage | `MegastructureService.Deduct` on stage completion |
-| `game_update_notice` | data_version | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
-| `player_snapshot` | networth, base_currency, entropy_per_sec, prestige_currency, paid_currency, prestige_count, building_count, highest_tier, megastructure_stage, research_unlocked_count, playtime_total_sec, field_collections, field_cooldown_sec, power_nodes_total, power_nodes_linked | snapshot loop (5 min) + each prestige |
+| `prestige_completed` | run_count (Int), networth_before (Float), prestige_currency_earned (Int), playtime_run_sec (Int), building_count (Int), highest_tier (Int) | `PrestigeSystem.OnUpdate` (values captured pre-reset) |
+| `building_placed` | building_id (String), building_count_after (Int) | `AchievementService.NotifyBuildingPlaced` |
+| `research_completed` | research_id (String), entropy_spent_total (Int) | `AchievementService.NotifyResearchCompleted` |
+| `tier_reached` | tier (Int) | `AchievementService.NotifyTierReached`, driven by `TierProgress.NotifyItemProduced` from both production paths (manual craft + automated recipe output) |
+| `megastructure_stage` | stage (Int) | `MegastructureService.Deduct` on stage completion |
+| `game_update_notice` | data_version (Int) | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
+| `player_snapshot` | networth (Float), base_currency (Int), entropy_per_sec (Float), prestige_currency (Int), paid_currency (Int), prestige_count (Int), building_count (Int), highest_tier (Int), megastructure_stage (Int), research_unlocked_count (Int), playtime_total_sec (Int), field_collections (Int), field_cooldown_sec (Float), power_nodes_total (Int), power_nodes_linked (Int) | snapshot loop (5 min) + each prestige |
+
+### Nothing arriving in the dashboard?
+
+Work the gating chain in order — every link fails silently, and the game logs nothing on the last three:
+
+1. **`analytics.enabled` is false by default.** `TelemetryService.StartIfEnabled` no-ops and logs
+   `[Telemetry] Disabled (analytics.enabled=false)`. Set the Remote Config key for the environment under test.
+   `analytics fire` in the dev console bypasses the flag, so use it to isolate this link.
+2. **Schemas not registered** in Analytics → Event Manager, or a name/type mismatch against the table above.
+   Unregistered events are rejected outright; mismatched params count as *invalid*. The Event Manager's
+   "valid / invalid received (last 24h)" counters are the only place this is visible.
+3. **Environment mismatch.** The editor and dev builds report to `development`; a `production` dashboard view
+   will read empty no matter what the game does.
+4. **Not signed in / UGS not initialized.** Collection starts from `SaveManager.InitialCloudReconcile`, after
+   UGS init + auth. If auth fails, `StartDataCollection` throws and is swallowed with a
+   `[Telemetry] StartDataCollection failed` warning.
 
 `field_collections` (Integer) = session-cumulative manual field taps that yielded an item, bumped via
 `TelemetryService.NotifyFieldCollected` from `ManualFieldCollector`. `field_cooldown_sec` (Float) = the current

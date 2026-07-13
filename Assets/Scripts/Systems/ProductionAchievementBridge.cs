@@ -4,45 +4,57 @@ using Unity.Entities;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Non-Burst managed system that detects when automated production completes a cycle
-    /// and notifies AchievementService. Runs after ProductionSystem so output buffer
-    /// changes are already committed when we sample them.
+    /// Drains the <see cref="CraftedOutputEvent"/> buffer that ProductionSystem fills on each recipe
+    /// completion, and reports every craft to AchievementService and TierProgress.
     ///
-    /// Strategy: each frame, compare current BuildingOutputSlot totals to the previous
-    /// frame's snapshot. An increase means at least one recipe cycle deposited output.
-    /// Collector buildings (no RecipeProcessData) are excluded from the query.
+    /// This used to infer crafts by diffing BuildingOutputSlot totals frame to frame, which was wrong twice
+    /// over. It lost crafts: ConveyorSystem and this system are both only UpdateAfter(ProductionSystem) with
+    /// no ordering between them, so any craft a belt drained before the sample simply never counted — and a
+    /// hungry belt is the steady state of a working factory. And it could not say WHICH item was made (a
+    /// total is just a number), so it reported an empty item id, which meant automated production credited
+    /// only the wildcard craft achievements and never an item-specific one.
+    ///
+    /// Reading the recorded events instead is exact — real item, real quantity, no ordering assumptions.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(ProductionSystem))]
     public partial class ProductionAchievementBridge : SystemBase
     {
-        readonly Dictionary<Entity, int> _prevOutputTotal = new();
+        // Reused across frames: the common case (nothing crafted) then allocates nothing.
+        readonly List<CraftedOutputEvent> _drained = new();
 
         protected override void OnUpdate()
         {
-            var toRemove = new List<Entity>();
-            foreach (var key in _prevOutputTotal.Keys)
-            {
-                if (!EntityManager.Exists(key))
-                    toRemove.Add(key);
-            }
-            foreach (var e in toRemove)
-                _prevOutputTotal.Remove(e);
+            _drained.Clear();
+            var drained = _drained;
 
             Entities
                 .WithAll<RecipeProcessData>()
                 .WithoutBurst()
-                .ForEach((Entity entity, in DynamicBuffer<BuildingOutputSlot> outputSlots) =>
+                .ForEach((ref DynamicBuffer<CraftedOutputEvent> crafted) =>
                 {
-                    int total = 0;
-                    for (int i = 0; i < outputSlots.Length; i++)
-                        total += outputSlots[i].Quantity;
+                    if (crafted.Length == 0) return;
 
-                    if (_prevOutputTotal.TryGetValue(entity, out int prev) && total > prev)
-                        AchievementService.Instance?.NotifyCraft("", total - prev);
+                    for (int i = 0; i < crafted.Length; i++)
+                        if (crafted[i].Quantity > 0)
+                            drained.Add(crafted[i]);
 
-                    _prevOutputTotal[entity] = total;
+                    crafted.Clear();
                 }).Run();
+
+            // Notified only after the ForEach completes: TierProgress writes the PlayerProgressData
+            // singleton, and a structural/singleton write from inside an in-flight ForEach trips ECS
+            // safety checks.
+            for (int i = 0; i < _drained.Count; i++)
+            {
+                var evt = _drained[i];
+
+                // Achievements match on the item's string id. An unknown item still counts toward the
+                // wildcard ("any craft") achievements, so fall back to "" rather than dropping the craft.
+                string itemId = ItemDatabase.GetStatic(evt.ItemID)?.id ?? "";
+                AchievementService.Instance?.NotifyCraft(itemId, evt.Quantity);
+                TierProgress.NotifyItemProduced(evt.ItemID);
+            }
         }
     }
 }
