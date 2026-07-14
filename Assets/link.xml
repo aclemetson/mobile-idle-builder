@@ -2,8 +2,17 @@
   <!-- Preserve Google Sign-In plugin from IL2CPP managed stripping -->
   <assembly fullname="Google.SignIn" preserve="all"/>
 
-  <!-- Preserve UGS assemblies used via async/reflection paths -->
+  <!-- Preserve UGS assemblies used via async/reflection paths.
+       Analytics serialises arbitrary event parameters (IDictionary<string, object>) inside an async
+       upload task, so it is the most reflection-dependent of these and the most fragile under IL2CPP
+       managed stripping. Omitting it is invisible in every way that matters: RecordEvent enqueues and
+       returns true, Flush starts the upload and returns, and the upload then throws on a Task nobody
+       awaits -- an unobserved Task exception, which Unity does not log. The client reports success and
+       nothing reaches the dashboard. That is exactly what happened when analytics was added without
+       being listed here: the editor (Mono, no stripping) worked while every device build silently
+       dropped every event. -->
   <assembly fullname="Unity.Services.Core" preserve="all"/>
   <assembly fullname="Unity.Services.Authentication" preserve="all"/>
   <assembly fullname="Unity.Services.CloudSave" preserve="all"/>
+  <assembly fullname="Unity.Services.Analytics" preserve="all"/>
 </linker>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Entities;
 using UnityEngine;
 
@@ -80,6 +81,26 @@ namespace MobileIdleBuilder
             if (Instance != null) return;
             new GameObject(nameof(TelemetryService)).AddComponent<TelemetryService>();
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // The UGS upload runs on a Task nobody awaits, so a failure inside it — a type stripped by
+        // IL2CPP, a network fault — surfaces as an *unobserved* Task exception, which Unity does not
+        // log. That is precisely how a device build could accept every event, flush cleanly, report
+        // success, deliver nothing, and leave an empty logcat. Never diagnose this pipeline blind again.
+        //
+        // Global (not analytics-specific) because the handler is: it fires on GC finalisation of any
+        // faulted Task, so it can lag the fault and may surface unrelated ones. Dev builds only.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void SurfaceUnobservedTaskExceptions()
+        {
+            TaskScheduler.UnobservedTaskException += (_, e) =>
+            {
+                GameLogger.Error($"[Telemetry] Unobserved background task exception (this is where a silent " +
+                                 $"analytics upload failure would appear): {e.Exception}");
+                e.SetObserved();
+            };
+        }
+#endif
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
 

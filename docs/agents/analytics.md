@@ -84,6 +84,26 @@ after a **5s timeout**, so on a slow network it can fire before telemetry starts
 calculation, or a load-time modal lands in the startup window and depends on the buffer. Anything driven by
 player input after load does not.
 
+### IL2CPP stripping (`Assets/link.xml`) — device-only, and completely silent
+
+**Android/iOS are IL2CPP with managed stripping; the editor is Mono with none.** UGS Analytics serialises
+arbitrary event parameters (`IDictionary<string, object>`) inside its async upload, making it the most
+reflection-dependent UGS assembly we use — and the stripper will happily remove what it needs.
+
+`Assets/link.xml` preserves the UGS assemblies from the stripper. **`Unity.Services.Analytics` must stay in
+it.** It was omitted when analytics was first added (PR #95), and the result was a perfect silent failure that
+took a long debugging session to find:
+
+- `RecordEvent` returns **true** — it only enqueues; nothing is serialised yet.
+- `Flush()` returns **ok** — it only *starts* the upload and returns.
+- The upload then throws on a `Task` **nobody awaits**. An unobserved Task exception is **not logged by Unity**.
+- Result: `analytics status` reports every event accepted, the flush clean, and **logcat is empty**. The editor
+  works perfectly the whole time. Every device build drops every event.
+
+The lesson generalises: **"no exception in logcat" is not evidence that a background upload succeeded.**
+`TelemetryService.SurfaceUnobservedTaskExceptions` (dev builds) now hooks `TaskScheduler.UnobservedTaskException`
+so this class of failure prints instead of vanishing. If you add another UGS package, add it to `link.xml`.
+
 ### Nothing arriving in the dashboard?
 
 **Start with `analytics status` in the dev console.** It reports the whole client-side chain in one line —
