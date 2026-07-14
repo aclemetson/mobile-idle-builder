@@ -3,14 +3,17 @@
   <assembly fullname="Google.SignIn" preserve="all"/>
 
   <!-- Preserve UGS assemblies used via async/reflection paths.
-       Analytics serialises arbitrary event parameters (IDictionary<string, object>) inside an async
-       upload task, so it is the most reflection-dependent of these and the most fragile under IL2CPP
-       managed stripping. Omitting it is invisible in every way that matters: RecordEvent enqueues and
-       returns true, Flush starts the upload and returns, and the upload then throws on a Task nobody
-       awaits -- an unobserved Task exception, which Unity does not log. The client reports success and
-       nothing reaches the dashboard. That is exactly what happened when analytics was added without
-       being listed here: the editor (Mono, no stripping) worked while every device build silently
-       dropped every event. -->
+
+       Analytics serialises arbitrary event parameters inside an async upload task, making it the most
+       reflection-dependent of these and the most fragile under IL2CPP managed stripping. Omitting it is
+       invisible at every layer the client can see: RecordEvent only enqueues and returns true, Flush only
+       starts the upload and returns ok, and the upload then throws on a Task nobody awaits. Unity does not
+       log unobserved Task exceptions, so the game reports success, logcat stays empty, and nothing reaches
+       the dashboard. That is exactly what happened when analytics was added without being listed here: the
+       editor (Mono, no stripping) worked throughout while every device build silently dropped every event.
+
+       NOTE: an XML comment may not contain a double hyphen. Use the word, not the punctuation. A stray one
+       here crashes UnityLinker with "Fatal error in Unity CIL Linker" and fails the Android build. -->
   <assembly fullname="Unity.Services.Core" preserve="all"/>
   <assembly fullname="Unity.Services.Authentication" preserve="all"/>
   <assembly fullname="Unity.Services.CloudSave" preserve="all"/>
