@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Entities;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace MobileIdleBuilder
 {
@@ -135,6 +136,9 @@ namespace MobileIdleBuilder
             _runStartTime     = _sessionStartTime;
 
             StartCoroutine(SnapshotLoop());
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            StartCoroutine(ProbeCollectEndpoint());
+#endif
 
             GameLogger.Info($"[Telemetry] Collection started (phase='{_phase}', player='{_playerId}'). {_sink.Describe()}");
             if (!started)
@@ -511,6 +515,7 @@ namespace MobileIdleBuilder
             _sessionStartTime = Time.realtimeSinceStartup;
             _runStartTime     = _sessionStartTime;
             StartCoroutine(SnapshotLoop());
+            StartCoroutine(ProbeCollectEndpoint());
 
             GameLogger.Info($"[Telemetry] DEV force-start (phase='{_phase}'). {_sink.Describe()}");
             if (!started)
@@ -550,8 +555,56 @@ namespace MobileIdleBuilder
             return $"Accepted by backend: {sent} event(s). Refused: {failed}. Flush: {(flushed ? "ok" : "FAILED")}.\n" +
                    $"{_sink.Describe()}\n" +
                    $"phase='{_phase}', player='{_playerId}'\n" +
-                   "Note: 'accepted' only means the SDK took it. It still won't appear in the dashboard " +
-                   "unless the event schema is registered in Event Manager for this environment.";
+                   "Note: 'accepted' only means the SDK took it — it says nothing about delivery. Run " +
+                   "'analytics status' for the collect-endpoint probe: if that host is blocked (DNS/Pi-hole/" +
+                   "router), events are accepted here and silently never arrive. It also won't appear unless " +
+                   "the event schema is registered in Event Manager for this environment.";
+        }
+
+        // Where the UGS Analytics SDK posts events. Cloud Save / Auth / Remote Config use a DIFFERENT host
+        // (services.api.unity.com), which is exactly why all three can work perfectly while analytics is
+        // dead on the same device: a DNS blocklist that catches "analytics.*" leaves them untouched.
+        const string CollectEndpoint = "https://collect.analytics.unity3d.com";
+
+        enum Reach { Unknown, Ok, Unreachable }
+        Reach  _endpointReach  = Reach.Unknown;
+        string _endpointDetail = "not probed";
+
+        /// <summary>
+        /// Dev-only reachability probe for the analytics collect endpoint.
+        ///
+        /// Deliberately NOT player-facing. A player behind a DNS-level blocker is not experiencing a bug —
+        /// the game is unaffected, only our telemetry is — and many block trackers on purpose. Warning them
+        /// would be noise they cannot act on.
+        ///
+        /// It exists because this failure is otherwise invisible *to us*: the DNS lookup fails inside the
+        /// SDK's async upload, the exception is swallowed, every event still reports "accepted", and the
+        /// dashboard stays empty forever with no client-side symptom. That cost a full debugging cycle to
+        /// find once. 'analytics status' should simply say so.
+        /// </summary>
+        IEnumerator ProbeCollectEndpoint()
+        {
+            using var req = UnityWebRequest.Head(CollectEndpoint);
+            req.timeout = 10;
+            yield return req.SendWebRequest();
+
+            // Any HTTP answer — 404 and 405 included — means DNS and TLS worked, which is all we're asking.
+            // Only a connection-level failure (overwhelmingly an unresolvable/blocked host) is a finding.
+            if (req.result == UnityWebRequest.Result.ConnectionError)
+            {
+                _endpointReach  = Reach.Unreachable;
+                _endpointDetail = req.error;
+                GameLogger.Warning(
+                    $"[Telemetry] Analytics endpoint UNREACHABLE ({CollectEndpoint}): {req.error}. Events will " +
+                    "be accepted locally and never arrive. This is a network/DNS block (Pi-hole, AdGuard, " +
+                    "NextDNS, router or ISP filtering), not a game bug — other UGS services use a different " +
+                    "host and keep working. Retest on cellular to confirm.");
+            }
+            else
+            {
+                _endpointReach  = Reach.Ok;
+                _endpointDetail = $"HTTP {req.responseCode}";
+            }
         }
 
         public string DevStatus()
@@ -564,7 +617,17 @@ namespace MobileIdleBuilder
             else
                 head = $"NOT collecting (analytics.enabled={FeatureFlags.AnalyticsEnabled}). 'analytics fire' will force-start.";
 
+            // 'accepted' only ever meant the SDK took the event. This line is the one that says whether it
+            // could possibly have left the device.
+            string reach = _endpointReach switch
+            {
+                Reach.Ok          => $"reachable ({_endpointDetail})",
+                Reach.Unreachable => $"UNREACHABLE ({_endpointDetail}) — DNS/network block; events cannot arrive",
+                _                 => $"{_endpointDetail}",
+            };
+
             return $"{head}\n{_sink.Describe()}\n" +
+                   $"collect endpoint: {reach}\n" +
                    $"this session: {_eventsSent} event(s) accepted, {_eventsFailed} refused, " +
                    $"{_pendingEvents} awaiting upload";
         }

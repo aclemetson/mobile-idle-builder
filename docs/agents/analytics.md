@@ -104,6 +104,33 @@ The lesson generalises: **"no exception in logcat" is not evidence that a backgr
 `TelemetryService.SurfaceUnobservedTaskExceptions` (dev builds) now hooks `TaskScheduler.UnobservedTaskException`
 so this class of failure prints instead of vanishing. If you add another UGS package, add it to `link.xml`.
 
+### The collect endpoint is a *different host* — and gets DNS-blocked
+
+**This is the one that will fool you, because every other UGS service keeps working.**
+
+| Service | Host |
+|---|---|
+| Analytics events | `collect.analytics.unity3d.com` |
+| Cloud Save / Auth / Remote Config | `services.api.unity.com` |
+
+A DNS blocklist that catches `analytics.*` (Pi-hole, AdGuard, NextDNS, router or ISP filtering — the
+default content of every tracker blocklist) kills analytics **while leaving Cloud Save, Auth and Remote
+Config untouched**. The game looks completely healthy. Observed for real: a dev phone resolved
+`services.api.unity.com` fine and returned `unknown host` for `collect.analytics.unity3d.com`, while the
+editor on a PC with a different resolver worked perfectly the whole time.
+
+It is invisible from inside the game by default: the DNS failure happens inside the SDK's async upload, is
+swallowed, and every event still reports **accepted**. Event Manager shows neither *valid* nor *invalid* —
+nothing ever arrived to be judged. **Neither-valid-nor-invalid is the fingerprint of a network block**;
+a schema problem shows up as *invalid*.
+
+`TelemetryService.ProbeCollectEndpoint` (dev builds) now probes that host on start and reports it in
+`analytics status` as `collect endpoint: reachable / UNREACHABLE`. It is deliberately **not** player-facing:
+a player behind a blocker has no bug to fix, the game is unaffected, and many block trackers on purpose.
+
+To confirm a suspected block, resolve the host from the device and from another network:
+`adb shell ping -c 1 collect.analytics.unity3d.com` — or just retest on cellular.
+
 ### Nothing arriving in the dashboard?
 
 **Start with `analytics status` in the dev console.** It reports the whole client-side chain in one line —
