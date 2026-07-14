@@ -47,25 +47,37 @@ Custom event **parameters can only be used as dimensions/filters — you cannot 
   - `building_placed` → building-type distribution.
 - Pure client-side (Chart.js + PapaParse from CDN). No keys, no data leaves your browser.
 
-## Smoke-testing all 6 events in the editor
+## Smoke-testing every event (editor or device)
 
-Three events (`tier_reached`, `megastructure_stage`, `prestige_completed`) are hard or impossible to
+Several events (`tier_reached`, `megastructure_stage`, `prestige_completed`) are hard or impossible to
 trigger by normal play, so use the dev console (backtick `` ` `` to open, or shake on device):
 
-1. Register all 6 event schemas in the UGS dashboard first (see above / `docs/agents/analytics.md`) —
-   unregistered events are rejected as **invalid**.
+1. **Register every event schema in the UGS dashboard first** (see above / `docs/agents/analytics.md`).
+   This is the step that most often gets missed, and it is invisible from inside the game: an unregistered
+   event is dropped server-side while the client still reports it as sent.
 2. Enter Play mode and let GameScene load (the ECS world must exist for snapshots).
 3. Open the dev console and run **`analytics fire`**. It force-starts collection (so you don't even need
-   `analytics.enabled` set for the smoke test), sends one of each of the 6 events with sample data, and
-   **flushes** so they upload immediately instead of waiting for the batch interval.
-4. Run **`analytics status`** to confirm it's collecting and see the active phase.
+   `analytics.enabled` set for the smoke test), sends one of each event with sample data, **flushes** so they
+   upload immediately, and then reports what actually happened:
+
+   ```
+   Accepted by backend: 7 event(s). Refused: 0. Flush: ok.
+   UGS Analytics — services=Initialized, signedIn=True, environment=development
+   phase='initial_test', player='4enx…'
+   ```
+
+   `Refused: 0` with `services=Initialized, signedIn=True` means the events left the device — from there on,
+   any problem is dashboard-side (schema or environment). A non-zero **Refused** count, or `signedIn=False`,
+   means the client never got them out, and the `[Telemetry] …` warnings in the log say why.
+4. Run **`analytics status`** any time for the same state plus the session's running accepted/refused counts.
 5. In the dashboard (**development** environment) → **Analytics → Event Manager**, watch each event's
    "valid received (last 24h)" count rise. Any **invalid** count = a name/type mismatch in the schema.
 6. Then chart via Data Explorer, or export CSV and open `dashboard.html`.
 
-> The editor uses the `development` environment, so smoke-test data lands there, not in `production`.
-> Real (non-forced) collection still requires `analytics.enabled = true` — `analytics fire` only bypasses
-> the flag for this manual test.
+> Editor and `DEV_ENVIRONMENT` device builds use the `development` environment, so smoke-test data lands
+> there, not in `production`. Real (non-forced) collection still requires `analytics.enabled = true` —
+> `analytics fire` only bypasses the flag for this manual test.
+> Ingestion is not instant: give the Event Manager counters a few minutes before concluding anything.
 
 ## Notes
 - Custom events must be registered as schemas in the UGS dashboard before they show up (snake_case names +

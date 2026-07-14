@@ -975,28 +975,15 @@ namespace MobileIdleBuilder.Dev
                     return t == null ? "Error: TelemetryService not found." : t.DevStatus();
                 });
 
-            _registry.Register("analytics fire", "Fire all 6 telemetry events with sample data and flush to UGS",
+            _registry.Register("analytics fire", "Fire every telemetry event with sample data, flush, and report what the backend accepted",
                 _ =>
                 {
                     var t = TelemetryService.Instance;
                     if (t == null) return "Error: TelemetryService not found.";
 
-                    // Force-start with the live UGS sink so this works even if analytics.enabled is off.
-                    // (If the flag already started collection, this is a no-op.)
-                    t.DevForceStart();
-
-                    t.RecordBuildingPlaced("dev_test_building");
-                    t.RecordResearch("dev_test_research");
-                    t.RecordTier(3);
-                    t.RecordMegastructureStage(1);
-                    // Sends prestige_completed AND an internal player_snapshot:
-                    t.RecordPrestige(runCount: 1, netWorthBefore: 12345f, prestigeCurrencyEarned: 42,
-                                     buildingCount: 7, highestTier: 3);
-                    t.CaptureSnapshot();   // explicit snapshot in case the prestige one couldn't read ECS
-                    t.Flush();             // push immediately instead of waiting for the batch interval
-
-                    return "Fired: building_placed, research_completed, tier_reached, megastructure_stage, " +
-                           "prestige_completed, player_snapshot. Flushed. Check Event Manager (dev env) shortly.";
+                    // DevFireAll force-starts (so this works even if analytics.enabled is off), sends one
+                    // of each event, flushes, and reports real delivery counts — see TelemetryService.
+                    return t.DevFireAll();
                 });
 
             // ── save / reload ─────────────────────────────────────────────────
