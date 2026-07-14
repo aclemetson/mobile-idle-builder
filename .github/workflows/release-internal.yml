@@ -55,13 +55,28 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
           [System.IO.File]::WriteAllBytes("secrets\user.keystore", $bytes)
 
+      # NOTE: "shell: powershell" does NOT propagate a nested process's exit code, so
+      # build-android.ps1 exiting non-zero is silently ignored unless $LASTEXITCODE is
+      # checked here. Without these guards a hard Unity failure (e.g. UnityLinker choking
+      # on link.xml) sails through this step and surfaces three steps later as a baffling
+      # "Missing an argument for parameter 'AabPath'" from the signer. Fail where it broke.
       - name: Build AAB
         shell: powershell
         env:
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
-        run: powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1 -ExecuteMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopment
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\build-android.ps1 -ExecuteMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopment
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Unity build failed (exit $LASTEXITCODE). See the build-log artifact."
+            exit $LASTEXITCODE
+          }
+          # Belt and braces: Unity can report success and still produce nothing.
+          if (-not (Get-ChildItem build\Android\*.aab -ErrorAction SilentlyContinue)) {
+            Write-Host "::error::Build reported success but produced no .aab in build\Android."
+            exit 1
+          }
 
       - name: Sign AAB
         shell: powershell
@@ -72,6 +87,10 @@ jobs:
         run: |
           $aab = (Get-ChildItem build\Android\*.aab | Select-Object -First 1).FullName
           powershell -ExecutionPolicy Bypass -File .\scripts\sign-aab.ps1 -AabPath $aab
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Signing failed (exit $LASTEXITCODE)."
+            exit $LASTEXITCODE
+          }
 
       - name: Remove keystore
         if: always()
