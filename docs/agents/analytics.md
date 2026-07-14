@@ -26,9 +26,11 @@ Analytics** (`com.unity.services.analytics`), the same ecosystem as Auth / Cloud
   export is free. (Automated Snowflake "Data Access" raw streaming is the paid add-on — not used.)
 
 ### Key files
-- `Assets/Scripts/Analytics/IAnalyticsSink.cs` — backend abstraction.
+- `Assets/Scripts/Analytics/IAnalyticsSink.cs` — backend abstraction. Calls return `bool` (accepted or not) and
+  `Describe()` reports backend state; implementations must not throw, but must not hide failure either.
 - `Assets/Scripts/Analytics/UnityAnalyticsSink.cs` — live UGS sink (`#if ANALYTICS`).
-- `Assets/Scripts/Analytics/TelemetryService.cs` — singleton: `StartIfEnabled`, `Record*`, snapshot loop.
+- `Assets/Scripts/Analytics/TelemetryService.cs` — singleton: `StartIfEnabled`, `Record*` (all funnelled through
+  `Emit`, which counts accepted/refused), snapshot loop, lifecycle flush.
 - Flags: `analytics.enabled` / `analytics.phase` in `FeatureFlags.cs`.
 - Taps: `SaveManager.InitialCloudReconcile` (start), `AchievementService.Notify{BuildingPlaced,
   ResearchCompleted,TierReached}`, `PrestigeSystem.OnUpdate` (rich pre-reset event), `MegastructureService.Deduct`.
@@ -59,19 +61,34 @@ Every event also carries `player_id` (String) + `collection_phase` (String).
 
 ### Nothing arriving in the dashboard?
 
-Work the gating chain in order — every link fails silently, and the game logs nothing on the last three:
+**Start with `analytics status` in the dev console.** It reports the whole client-side chain in one line —
+collecting or not, the phase, the UGS `services=` / `signedIn=` state, the environment the events are being
+sent to, and how many events the backend has *accepted vs refused* this session. Everything below the client
+boundary is silent by design, so let the counters tell you which half of the pipe is broken:
 
-1. **`analytics.enabled` is false by default.** `TelemetryService.StartIfEnabled` no-ops and logs
+- **Accepted > 0 but nothing in the dashboard** ⇒ the events left the device and were dropped server-side.
+  That is a **schema problem** (link 2) or an **environment problem** (link 3), not a game problem.
+- **Refused > 0** ⇒ the SDK itself rejected the call; the `[Telemetry] event '<name>' was NOT accepted`
+  warning and the sink's own exception message name the cause (link 1 / link 4).
+
+1. **`analytics.enabled` is false by default.** `TelemetryService.StartIfEnabled` stays inert and logs
    `[Telemetry] Disabled (analytics.enabled=false)`. Set the Remote Config key for the environment under test.
-   `analytics fire` in the dev console bypasses the flag, so use it to isolate this link.
+   `analytics fire` bypasses the flag, so use it to isolate this link.
 2. **Schemas not registered** in Analytics → Event Manager, or a name/type mismatch against the table above.
    Unregistered events are rejected outright; mismatched params count as *invalid*. The Event Manager's
-   "valid / invalid received (last 24h)" counters are the only place this is visible.
-3. **Environment mismatch.** The editor and dev builds report to `development`; a `production` dashboard view
-   will read empty no matter what the game does.
+   "valid / invalid received (last 24h)" counters are the only place this is visible. Note the client cannot
+   see this at all — `analytics fire` reporting "accepted" says only that the *SDK* took the event.
+3. **Environment mismatch.** Editor + `DEV_ENVIRONMENT` builds report to `development` (see `UgsEnvironment`);
+   a `production` dashboard view will read empty no matter what the game does. `analytics status` prints the
+   environment actually in use.
 4. **Not signed in / UGS not initialized.** Collection starts from `SaveManager.InitialCloudReconcile`, after
-   UGS init + auth. If auth fails, `StartDataCollection` throws and is swallowed with a
-   `[Telemetry] StartDataCollection failed` warning.
+   UGS init + auth. If auth fails, `StartDataCollection` returns false and logs
+   `[Telemetry] Backend refused StartCollection — events will NOT reach the dashboard`.
+
+**Buffering:** UGS batches events in memory and uploads on its own cadence. `TelemetryService` flushes on
+`OnApplicationPause(true)` and `OnApplicationQuit` (the same boundaries `SaveManager` saves at), so a
+backgrounded or killed app doesn't lose the tail of the session. Anything recorded and *not* flushed is still
+subject to that upload delay before it appears — don't read an empty dashboard in the first minute as a failure.
 
 `field_collections` (Integer) = session-cumulative manual field taps that yielded an item, bumped via
 `TelemetryService.NotifyFieldCollected` from `ManualFieldCollector`. `field_cooldown_sec` (Float) = the current
@@ -97,10 +114,18 @@ Two paths, split by what Data Explorer v2 can do:
 The metric→balancing-lever map is in `docs/analytics/data-dictionary.md`; that doc also flags which metrics
 are Data-Explorer-native vs CSV-only.
 
-## Editor smoke test
-Dev console (`DevConsoleController`, `#if UNITY_EDITOR || DEVELOPMENT_BUILD`) has **`analytics fire`** — force-starts
-collection (`TelemetryService.DevForceStart`, ignores the flag), sends all 6 events with sample data, and `Flush()`es
-so they upload immediately. **`analytics status`** reports collecting/phase. See `docs/analytics/README.md`.
+## Editor / device smoke test
+Dev console (`DevConsoleController`, `#if UNITY_EDITOR || DEVELOPMENT_BUILD`):
+
+- **`analytics fire`** (`TelemetryService.DevFireAll`) — force-starts collection (ignores the flag), sends one of
+  every event with sample data, `Flush()`es so they upload immediately, and reports **how many the backend
+  accepted vs refused** plus the backend's own state. It reports counters, not a canned string: an earlier
+  version printed "Fired: ..." unconditionally, which made a fully broken pipeline look identical to a healthy one.
+- **`analytics status`** (`TelemetryService.DevStatus`) — collecting?, phase, player, UGS state, environment, and
+  the session's accepted/refused counts.
+
+"Accepted" means the SDK took the event, **not** that it will appear in the dashboard — an unregistered schema is
+dropped server-side and the client never learns about it. See `docs/analytics/README.md`.
 
 ## Out of scope (v1)
 - GDPR/consent gating + sampling/batching (needed before store-scale release).

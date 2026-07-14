@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -17,18 +18,42 @@ namespace MobileIdleBuilder.Tests
         {
             public int StartCount;
             public int FlushCount;
+
+            /// <summary>Set false to simulate a backend that refuses everything (UGS down, not signed in).</summary>
+            public bool Accept = true;
+
             public readonly List<(string name, IDictionary<string, object> p)> Events = new();
 
-            public void StartCollection() => StartCount++;
+            public bool StartCollection()
+            {
+                StartCount++;
+                return Accept;
+            }
 
-            public void RecordEvent(string eventName, IDictionary<string, object> parameters)
-                => Events.Add((eventName, new Dictionary<string, object>(parameters)));
+            public bool RecordEvent(string eventName, IDictionary<string, object> parameters)
+            {
+                if (!Accept) return false;
+                Events.Add((eventName, new Dictionary<string, object>(parameters)));
+                return true;
+            }
 
-            public void Flush() => FlushCount++;
+            public bool Flush()
+            {
+                FlushCount++;
+                return Accept;
+            }
+
+            public string Describe() => "recording sink (test)";
 
             public IDictionary<string, object> First(string name) =>
                 Events.Find(e => e.name == name).p;
         }
+
+        // Unity's lifecycle callbacks are private by convention; drive them the way the engine would.
+        static void InvokePrivate(object target, string method, params object[] args) =>
+            target.GetType()
+                  .GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)
+                  .Invoke(target, args);
 
         TelemetryService _svc;
 
@@ -127,8 +152,76 @@ namespace MobileIdleBuilder.Tests
             _svc.RecordTier(2);                     // events now flow
             Assert.IsNotNull(sink.First("tier_reached"));
 
-            _svc.Flush();
+            Assert.IsTrue(_svc.Flush());
             Assert.AreEqual(1, sink.FlushCount);
+        }
+
+        // ── Delivery: flush on background / quit ──────────────────────────────
+        // UGS batches events in memory, so an event recorded seconds before the OS kills a
+        // backgrounded app never uploads unless we flush at the lifecycle boundary.
+
+        [Test]
+        public void OnApplicationPause_Backgrounded_FlushesBufferedEvents()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            InvokePrivate(_svc, "OnApplicationPause", true);
+
+            Assert.AreEqual(1, sink.FlushCount, "backgrounding must flush buffered events");
+        }
+
+        [Test]
+        public void OnApplicationPause_Resumed_DoesNotFlush()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+
+            InvokePrivate(_svc, "OnApplicationPause", false);
+
+            Assert.AreEqual(0, sink.FlushCount, "returning to the foreground is not an upload boundary");
+        }
+
+        [Test]
+        public void OnApplicationQuit_FlushesBufferedEvents()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            InvokePrivate(_svc, "OnApplicationQuit");
+
+            Assert.AreEqual(1, sink.FlushCount);
+        }
+
+        [Test]
+        public void Flush_WhenNotCollecting_ReturnsFalse_AndDoesNotTouchSink()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);          // collection NOT started
+
+            Assert.IsFalse(_svc.Flush());
+            Assert.AreEqual(0, sink.FlushCount);
+        }
+
+        // ── Delivery: a refusing backend must be visible, not silent ──────────
+
+        [Test]
+        public void DevStatus_ReportsRefusedEvents_WhenBackendRejectsThem()
+        {
+            var sink = new RecordingSink { Accept = false };   // UGS down / not signed in
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+
+            _svc.RecordTier(1);
+            _svc.RecordResearch("r");
+
+            Assert.IsEmpty(sink.Events, "a refusing backend records nothing");
+
+            string status = _svc.DevStatus();
+            StringAssert.Contains("0 event(s) accepted", status);
+            StringAssert.Contains("2 refused", status,
+                "a broken pipeline must be visible in 'analytics status', not silently look healthy");
         }
     }
 }

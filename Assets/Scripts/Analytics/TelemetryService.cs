@@ -35,6 +35,12 @@ namespace MobileIdleBuilder
         // Session-cumulative count of manual field taps that collected an item (snapshot dimension).
         int    _fieldCollections;
 
+        // Delivery counters. The sink swallows backend exceptions by contract, so without these a
+        // failing pipeline is indistinguishable from a healthy one from inside the game (the bug that
+        // made "analytics fire" report success while nothing reached the dashboard). Surfaced by DevStatus.
+        int    _eventsSent;
+        int    _eventsFailed;
+
         // Run-length / playtime tracking (realtimeSinceStartup is monotonic and pause-independent).
         float _sessionStartTime;
         float _runStartTime;
@@ -74,14 +80,19 @@ namespace MobileIdleBuilder
             // SaveManager has already synced this to the UGS PlayerId during reconcile.
             _playerId = SaveManager.Instance?.Current?.playerId ?? "";
 
-            _sink.StartCollection();
+            bool started = _sink.StartCollection();
+            // Collect even if the backend refused: the Record* calls then fail loudly and are counted,
+            // which is diagnosable. Staying inert would reproduce the original silent-failure bug.
             _collecting = true;
 
             _sessionStartTime = Time.realtimeSinceStartup;
             _runStartTime     = _sessionStartTime;
 
             StartCoroutine(SnapshotLoop());
-            GameLogger.Info($"[Telemetry] Collection started (phase='{_phase}', player='{_playerId}').");
+
+            GameLogger.Info($"[Telemetry] Collection started (phase='{_phase}', player='{_playerId}'). {_sink.Describe()}");
+            if (!started)
+                GameLogger.Warning("[Telemetry] Backend refused StartCollection — events will NOT reach the dashboard.");
         }
 
         IEnumerator SnapshotLoop()
@@ -93,6 +104,16 @@ namespace MobileIdleBuilder
                 CaptureSnapshot();
             }
         }
+
+        // UGS batches events in memory and uploads on its own cadence, so anything recorded since the
+        // last upload is lost when Android kills a backgrounded app or the player quits. Flush at the
+        // same two moments SaveManager persists the save.
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) Flush();
+        }
+
+        void OnApplicationQuit() => Flush();
 
         // ── Event API (called from gameplay taps; all no-op unless collecting) ─
 
@@ -110,7 +131,7 @@ namespace MobileIdleBuilder
             p["playtime_run_sec"]         = (long)(now - _runStartTime);
             p["building_count"]           = buildingCount;
             p["highest_tier"]             = highestTier;
-            _sink.RecordEvent("prestige_completed", p);
+            Emit("prestige_completed", p);
 
             _runStartTime = now;     // the next run's clock starts at the prestige boundary
             CaptureSnapshot();       // bookend the run with a fresh state sample
@@ -124,7 +145,7 @@ namespace MobileIdleBuilder
             var p = NewParams();
             p["building_id"]          = buildingId ?? "";
             p["building_count_after"] = QueryBuildingCount();
-            _sink.RecordEvent("building_placed", p);
+            Emit("building_placed", p);
         }
 
         /// <summary>A research project completed. Cumulative entropy spent is read live from ECS.</summary>
@@ -136,7 +157,7 @@ namespace MobileIdleBuilder
             var p = NewParams();
             p["research_id"]          = researchId ?? "";
             p["entropy_spent_total"]  = entropySpent;
-            _sink.RecordEvent("research_completed", p);
+            Emit("research_completed", p);
         }
 
         /// <summary>The player reached a new tier (absolute tier number).</summary>
@@ -145,7 +166,7 @@ namespace MobileIdleBuilder
             if (!_collecting) return;
             var p = NewParams();
             p["tier"] = tier;
-            _sink.RecordEvent("tier_reached", p);
+            Emit("tier_reached", p);
         }
 
         /// <summary>A megastructure stage was completed (pass the new completed-stage count).</summary>
@@ -154,7 +175,7 @@ namespace MobileIdleBuilder
             if (!_collecting) return;
             var p = NewParams();
             p["stage"] = stage;
-            _sink.RecordEvent("megastructure_stage", p);
+            Emit("megastructure_stage", p);
         }
 
         /// <summary>
@@ -167,7 +188,7 @@ namespace MobileIdleBuilder
             if (!_collecting) return;
             var p = NewParams();
             p["data_version"] = dataVersion;
-            _sink.RecordEvent("game_update_notice", p);
+            Emit("game_update_notice", p);
         }
 
         /// <summary>
@@ -224,13 +245,39 @@ namespace MobileIdleBuilder
             ReadPowerNodeCounts(out int powerNodesTotal, out int powerNodesLinked);
             p["power_nodes_total"]       = powerNodesTotal;
             p["power_nodes_linked"]      = powerNodesLinked;
-            _sink.RecordEvent("player_snapshot", p);
+            Emit("player_snapshot", p);
         }
 
-        /// <summary>Force-upload buffered events now (events are otherwise batched on an interval).</summary>
-        public void Flush() => _sink.Flush();
+        /// <summary>
+        /// Force-upload buffered events now (events are otherwise batched on an interval). Returns
+        /// false if not collecting or the backend refused.
+        /// </summary>
+        public bool Flush()
+        {
+            if (!_collecting) return false;
+
+            bool ok = _sink.Flush();
+            if (!ok) GameLogger.Warning("[Telemetry] Flush failed — buffered events may be lost.");
+            return ok;
+        }
 
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        // Single funnel for every event: counts what actually reached the backend so a broken pipeline
+        // is visible ('analytics status') instead of silently looking like success.
+        bool Emit(string eventName, IDictionary<string, object> p)
+        {
+            if (_sink.RecordEvent(eventName, p))
+            {
+                _eventsSent++;
+                GameLogger.Debug($"[Telemetry] sent '{eventName}'");
+                return true;
+            }
+
+            _eventsFailed++;
+            GameLogger.Warning($"[Telemetry] event '{eventName}' was NOT accepted by the backend.");
+            return false;
+        }
 
         IDictionary<string, object> NewParams() => new Dictionary<string, object>
         {
@@ -318,20 +365,71 @@ namespace MobileIdleBuilder
         /// </summary>
         public void DevForceStart()
         {
-            if (_collecting) return;
+            if (_collecting)
+            {
+                // Not silent: an already-collecting service is the normal case when analytics.enabled
+                // is on, and a silent early return here is why 'analytics fire' could log nothing at all.
+                GameLogger.Info($"[Telemetry] DEV force-start skipped — already collecting (phase='{_phase}').");
+                return;
+            }
+
             _phase    = string.IsNullOrEmpty(FeatureFlags.AnalyticsPhase) ? "editor-test" : FeatureFlags.AnalyticsPhase;
             _playerId = SaveManager.Instance?.Current?.playerId ?? "";
-            _sink.StartCollection();
+            bool started = _sink.StartCollection();
             _collecting = true;
             _sessionStartTime = Time.realtimeSinceStartup;
             _runStartTime     = _sessionStartTime;
             StartCoroutine(SnapshotLoop());
-            GameLogger.Info($"[Telemetry] DEV force-start (phase='{_phase}').");
+
+            GameLogger.Info($"[Telemetry] DEV force-start (phase='{_phase}'). {_sink.Describe()}");
+            if (!started)
+                GameLogger.Warning("[Telemetry] Backend refused StartCollection — events will NOT reach the dashboard.");
         }
 
-        public string DevStatus() => _collecting
-            ? $"collecting — phase='{_phase}', player='{_playerId}'"
-            : "not collecting (analytics.enabled=false). 'analytics fire' will force-start.";
+        /// <summary>
+        /// Dev-only: fire one of every event with sample data and flush immediately, then report what
+        /// actually happened — how many the backend accepted, how many it refused, whether the flush
+        /// succeeded, and the backend's own state. Deliberately reports counters rather than a canned
+        /// success string: the previous version returned "Fired ..." even when every call had failed.
+        /// </summary>
+        public string DevFireAll()
+        {
+            DevForceStart();
+
+            int sentBefore   = _eventsSent;
+            int failedBefore = _eventsFailed;
+
+            RecordBuildingPlaced("dev_test_building");
+            RecordResearch("dev_test_research");
+            RecordTier(3);
+            RecordMegastructureStage(1);
+            RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+            // Sends prestige_completed AND an internal player_snapshot:
+            RecordPrestige(runCount: 1, netWorthBefore: 12345f, prestigeCurrencyEarned: 42,
+                           buildingCount: 7, highestTier: 3);
+            CaptureSnapshot();   // explicit snapshot in case the prestige one couldn't read ECS
+
+            bool flushed = Flush();
+
+            int sent   = _eventsSent   - sentBefore;
+            int failed = _eventsFailed - failedBefore;
+
+            return $"Accepted by backend: {sent} event(s). Refused: {failed}. Flush: {(flushed ? "ok" : "FAILED")}.\n" +
+                   $"{_sink.Describe()}\n" +
+                   $"phase='{_phase}', player='{_playerId}'\n" +
+                   "Note: 'accepted' only means the SDK took it. It still won't appear in the dashboard " +
+                   "unless the event schema is registered in Event Manager for this environment.";
+        }
+
+        public string DevStatus()
+        {
+            string head = _collecting
+                ? $"collecting — phase='{_phase}', player='{_playerId}'"
+                : $"NOT collecting (analytics.enabled={FeatureFlags.AnalyticsEnabled}). 'analytics fire' will force-start.";
+
+            return $"{head}\n{_sink.Describe()}\n" +
+                   $"this session: {_eventsSent} event(s) accepted, {_eventsFailed} refused";
+        }
 #endif
 
 #if UNITY_EDITOR
