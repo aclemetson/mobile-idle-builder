@@ -22,6 +22,14 @@ Analytics** (`com.unity.services.analytics`), the same ecosystem as Auth / Cloud
   is stamped with `player_id` and `collection_phase` (`analytics.phase` flag) so collection windows stay
   segmentable. Flags are fetched once per launch ⇒ a toggle takes effect on the **next app start** (right
   granularity for phase boundaries). See `feature-flags.md`.
+- **The startup window (`_startDecided`):** UGS auth + the Remote Config fetch take **seconds** (~3.5s on a
+  real device), and gameplay is already running in that time — an **offline research completion resolves in
+  `ResearchService.Start()` on the first frame**. So `TelemetryService` has *three* states, not two:
+  collecting, disabled, and **not-yet-decided**. Events recorded before the flag resolves are **buffered**
+  (bounded at 64), then **drained** into the sink once collection starts, or **discarded unsent** if analytics
+  turns out to be disabled — buffering never leaks data for a player who isn't being collected from. Stamps are
+  applied at *drain* time in `Emit`, because a buffered event's player id and phase don't exist yet when it is
+  recorded. Treating "not decided" as "disabled" is what made every offline research completion invisible.
 - **Free tier:** UGS Analytics is free to 50k MAU with 13-month raw retention; dashboard/Data-Explorer CSV
   export is free. (Automated Snowflake "Data Access" raw streaming is the paid add-on — not used.)
 
@@ -59,6 +67,23 @@ Every event also carries `player_id` (String) + `collection_phase` (String).
 | `game_update_notice` | data_version (Int) | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
 | `player_snapshot` | networth (Float), base_currency (Int), entropy_per_sec (Float), prestige_currency (Int), paid_currency (Int), prestige_count (Int), building_count (Int), highest_tier (Int), megastructure_stage (Int), research_unlocked_count (Int), playtime_total_sec (Int), field_collections (Int), field_cooldown_sec (Float), power_nodes_total (Int), power_nodes_linked (Int) | snapshot loop (5 min) + each prestige |
 
+### Offline / deferred completions
+
+Timed things resolve **at load**, not while the player watches. Research is the one that matters today: the
+timer ticks offline (`activeResearchCompleteUtc`) and `ResearchService.Start()` → `ProcessActiveTimer()` →
+`CompleteResearch()` completes it on the first frame of the *next* launch, which is inside the startup window
+above. It reaches the dashboard via the pre-start buffer, not the live path.
+
+The other taps are safe by construction, and it's worth knowing *why* rather than re-deriving it: `ECSLoadBridge`
+waits for `SaveManager.CloudReconcileDone` before `ApplyLoadedSave()`, and `StartIfEnabled()` runs immediately
+after that flag is set — so production (`tier_reached`), placement, prestige, megastructure and snapshots all
+happen after collection is live. The one exception is `game_update_notice`: `ECSLoadBridge` gives up waiting
+after a **5s timeout**, so on a slow network it can fire before telemetry starts. The buffer covers that too.
+
+**When adding a tap, ask where it fires.** Anything reachable from a `Start()`/`Awake()`, an offline-progress
+calculation, or a load-time modal lands in the startup window and depends on the buffer. Anything driven by
+player input after load does not.
+
 ### Nothing arriving in the dashboard?
 
 **Start with `analytics status` in the dev console.** It reports the whole client-side chain in one line —
@@ -85,10 +110,26 @@ boundary is silent by design, so let the counters tell you which half of the pip
    UGS init + auth. If auth fails, `StartDataCollection` returns false and logs
    `[Telemetry] Backend refused StartCollection — events will NOT reach the dashboard`.
 
-**Buffering:** UGS batches events in memory and uploads on its own cadence. `TelemetryService` flushes on
-`OnApplicationPause(true)` and `OnApplicationQuit` (the same boundaries `SaveManager` saves at), so a
-backgrounded or killed app doesn't lose the tail of the session. Anything recorded and *not* flushed is still
-subject to that upload delay before it appears — don't read an empty dashboard in the first minute as a failure.
+**Buffering:** UGS batches events in memory and uploads on its own cadence (~1 min), so `Emit` returning
+"sent" means the SDK *took* the event, not that it left the device. `TelemetryService` therefore flushes at
+three lifecycle boundaries — `OnApplicationFocus(false)`, `OnApplicationPause(true)`, and
+`OnApplicationQuit` — all routed through `FlushIfPending`, which skips the flush when nothing has been
+recorded since the last one. Anything recorded and *not* flushed is still subject to the SDK's upload delay —
+don't read an empty dashboard in the first minute as a failure.
+
+Why all three boundaries: **no single one covers every platform.** Android fires focus-loss *then* pause when
+the app is backgrounded; the editor and standalone desktop fire only focus-loss (`OnApplicationPause` depends
+on the Run In Background setting). Hooking pause alone — the original implementation — meant an event recorded
+in the **editor** never uploaded at all until some later launch happened to drain the buffer, which reads
+exactly like a broken pipeline. `FlushIfPending` makes Android's double-fire collapse to one upload, and leaves
+the pending count set when a flush fails so the next boundary retries.
+
+**`OnApplicationQuit` is best-effort and delivery must not rest on it.** `AnalyticsService.Flush()` starts an
+async upload and returns immediately, so the process can die before the request completes — which is exactly
+what happens when you Stop play mode in the editor. What actually saves the tail of a session is that the **SDK
+persists its own buffer across sessions** and drains it on a later launch (observed: events recorded in a
+stopped editor session arrived after a subsequent launch). So a truncated flush *delays* events; it doesn't
+lose them. `analytics status` reports the pending count, which is the number at risk of that delay.
 
 `field_collections` (Integer) = session-cumulative manual field taps that yielded an item, bumped via
 `TelemetryService.NotifyFieldCollected` from `ManualFieldCollector`. `field_cooldown_sec` (Float) = the current
@@ -122,7 +163,7 @@ Dev console (`DevConsoleController`, `#if UNITY_EDITOR || DEVELOPMENT_BUILD`):
   accepted vs refused** plus the backend's own state. It reports counters, not a canned string: an earlier
   version printed "Fired: ..." unconditionally, which made a fully broken pipeline look identical to a healthy one.
 - **`analytics status`** (`TelemetryService.DevStatus`) — collecting?, phase, player, UGS state, environment, and
-  the session's accepted/refused counts.
+  the session's accepted / refused / awaiting-upload counts.
 
 "Accepted" means the SDK took the event, **not** that it will appear in the dashboard — an unregistered schema is
 dropped server-side and the client never learns about it. See `docs/analytics/README.md`.

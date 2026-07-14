@@ -72,13 +72,89 @@ namespace MobileIdleBuilder.Tests
         // ── Gating ────────────────────────────────────────────────────────────
 
         [Test]
-        public void Record_IsNoOp_WhenNotCollecting()
+        public void Record_SendsNothingToSink_BeforeCollectionStarts()
         {
             var sink = new RecordingSink();
             _svc.SetSinkForTesting(sink);              // collection NOT started
             _svc.RecordTier(3);
             _svc.RecordMegastructureStage(1);
-            Assert.IsEmpty(sink.Events, "no events should be recorded while collection is off");
+            Assert.IsEmpty(sink.Events, "nothing may reach the backend before the flag decision lands");
+        }
+
+        // ── Pre-start buffering ───────────────────────────────────────────────
+        // UGS auth + the Remote Config fetch take seconds, and gameplay is already running: an offline
+        // research completion resolves in ResearchService.Start() on the first frame, long before
+        // StartIfEnabled. Treating "not decided yet" as "disabled" silently dropped every one of them.
+
+        [Test]
+        public void EventRecordedBeforeStart_IsBuffered_NotDropped()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.RecordResearch("recombination_i");    // offline completion, during the startup window
+
+            Assert.IsEmpty(sink.Events, "must not reach the backend before the flag is resolved");
+            Assert.AreEqual(1, _svc.PreStartCount, "the event must be held, not dropped");
+        }
+
+        [Test]
+        public void BufferedEvent_IsDrainedAndStamped_WhenCollectionStarts()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.RecordResearch("recombination_i");    // buffered: no player id or phase exists yet
+
+            _svc.StartForTesting(sink, phase: "phase-x", playerId: "pid-9");
+
+            var p = sink.First("research_completed");
+            Assert.IsNotNull(p, "the offline research completion must reach the backend once collection starts");
+            Assert.AreEqual("recombination_i", p["research_id"], "the value captured at record time is preserved");
+            Assert.AreEqual("pid-9",   p["player_id"],        "stamps are applied at drain, when they are first known");
+            Assert.AreEqual("phase-x", p["collection_phase"]);
+            Assert.AreEqual(0, _svc.PreStartCount, "the buffer is emptied by the drain");
+        }
+
+        [Test]
+        public void BufferedEvents_AreDiscardedUnsent_WhenAnalyticsIsDisabled()
+        {
+            // analytics.enabled defaults false in an EditMode test (no FeatureFlagService).
+            Assert.IsFalse(FeatureFlags.AnalyticsEnabled, "guard: default must be off");
+
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.RecordResearch("recombination_i");
+            Assert.AreEqual(1, _svc.PreStartCount);
+
+            _svc.StartIfEnabled();                     // resolves the flag: disabled
+
+            Assert.IsEmpty(sink.Events, "buffering must never leak data for a player who isn't being collected from");
+            Assert.AreEqual(0, _svc.PreStartCount, "the buffer is discarded, not left to grow");
+        }
+
+        [Test]
+        public void Record_IsTrulyInert_OnceAnalyticsIsKnownDisabled()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.StartIfEnabled();                     // flag resolves to disabled
+            Assert.IsFalse(_svc.IsCollecting);
+
+            _svc.RecordTier(3);                        // taps after the decision must not buffer
+
+            Assert.IsEmpty(sink.Events);
+            Assert.AreEqual(0, _svc.PreStartCount, "a disabled session must not accumulate events in memory");
+        }
+
+        [Test]
+        public void PreStartBuffer_IsBounded()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+
+            for (int i = 0; i < 200; i++) _svc.RecordTier(i);
+
+            Assert.AreEqual(64, _svc.PreStartCount,
+                "a launch that never reaches StartIfEnabled must not grow the buffer without bound");
         }
 
         [Test]
@@ -193,6 +269,77 @@ namespace MobileIdleBuilder.Tests
             InvokePrivate(_svc, "OnApplicationQuit");
 
             Assert.AreEqual(1, sink.FlushCount);
+        }
+
+        [Test]
+        public void OnApplicationFocus_Lost_FlushesBufferedEvents()
+        {
+            // The editor and standalone desktop fire focus-loss and NOT pause, so hooking pause alone
+            // left editor-recorded events stranded in the SDK buffer until a later launch uploaded them.
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            InvokePrivate(_svc, "OnApplicationFocus", false);
+
+            Assert.AreEqual(1, sink.FlushCount, "losing focus must flush buffered events");
+        }
+
+        [Test]
+        public void OnApplicationFocus_Gained_DoesNotFlush()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            InvokePrivate(_svc, "OnApplicationFocus", true);
+
+            Assert.AreEqual(0, sink.FlushCount, "regaining focus is not an upload boundary");
+        }
+
+        [Test]
+        public void FocusLossThenPause_FlushesOnce()
+        {
+            // Android fires both when the app is backgrounded. The pending-event guard must collapse
+            // them into a single upload rather than making a second, empty network call.
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            InvokePrivate(_svc, "OnApplicationFocus", false);
+            InvokePrivate(_svc, "OnApplicationPause", true);
+
+            Assert.AreEqual(1, sink.FlushCount, "the Android focus-then-pause pair must produce one upload");
+        }
+
+        [Test]
+        public void Boundary_WithNothingRecorded_DoesNotFlush()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");   // collecting, but nothing recorded
+
+            InvokePrivate(_svc, "OnApplicationFocus", false);
+            InvokePrivate(_svc, "OnApplicationPause", true);
+            InvokePrivate(_svc, "OnApplicationQuit");
+
+            Assert.AreEqual(0, sink.FlushCount, "a session that recorded nothing must not hit the network");
+        }
+
+        [Test]
+        public void FailedFlush_LeavesEventsPending_AndRetriesAtNextBoundary()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordTier(4);
+
+            sink.Accept = false;                                  // backend refuses the upload
+            InvokePrivate(_svc, "OnApplicationFocus", false);
+            Assert.AreEqual(1, sink.FlushCount, "the failing flush is still attempted");
+
+            sink.Accept = true;                                   // backend recovers
+            InvokePrivate(_svc, "OnApplicationPause", true);
+            Assert.AreEqual(2, sink.FlushCount,
+                "a failed flush must leave the events pending so the next boundary retries them");
         }
 
         [Test]
