@@ -6,6 +6,26 @@ the "why" behind each field — read it before re-tuning the economy so you chan
 All events also carry `player_id` (UGS player id) and `collection_phase` (the `analytics.phase` flag value,
 so data from different collection windows stays separable).
 
+## ⚠ This data is a sample, not a census
+
+Analytics events post to `collect.analytics.unity3d.com`. **Any player running a DNS-level tracker blocker —
+a VPN that filters trackers, Pi-hole, AdGuard, NextDNS, ISP filtering — sends us nothing, and we cannot
+detect that they exist.** We can't report "I can't report" over the channel that's blocked. Every
+client-side analytics system has this hole; it is not a bug and there is no fix.
+
+Two consequences for anyone drawing conclusions from these numbers:
+
+- **The population is self-selected.** It under-represents privacy-conscious players. For tuning economy
+  curves this bias is almost certainly negligible — the blocked cohort has no reason to play differently —
+  but do not treat counts here as *how many players did X*, only as *how many reporting players did X*.
+- **Blocking is often intermittent, and those events arrive late.** The SDK persists its buffer and uploads
+  when a network finally resolves the host, so a player who toggles a VPN can dump hours-old events from
+  several sessions at once. Timestamps are correct, but **a spike in received volume is not necessarily a
+  spike in activity** — check before reading one as a behavioural signal.
+
+If a *device under test* reports nothing, that's not this: run `analytics status` in the dev console and read
+the `collect endpoint:` line. See `docs/agents/analytics.md`.
+
 ## Metric → decision map
 
 | Metric | Source event/field | Question it answers | Scale lever it informs |
