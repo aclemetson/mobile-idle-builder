@@ -72,6 +72,8 @@ namespace MobileIdleBuilder
             // Listen for the rest of the gesture on the panel root, in the trickle-down (capture)
             // phase, so we still see the pointer-up after the ScrollView captures the pointer.
             _root = target.panel?.visualTree;
+            GameLogger.Develop($"[Tap] down on '{Describe()}' pointer={_pointerId} pos={_startPos} " +
+                               $"enabled={target?.enabledInHierarchy} rootFound={_root != null}");
             if (_root != null)
             {
                 _root.RegisterCallback<PointerMoveEvent>(OnRootMove,     TrickleDown.TrickleDown);
@@ -84,18 +86,34 @@ namespace MobileIdleBuilder
         {
             if (!_tracking || evt.pointerId != _pointerId) return;
             // Moving past the threshold means this is a scroll/drag, not a tap.
-            if (Distance(evt.position, _startPos) > _moveThreshold)
+            float dist = Distance(evt.position, _startPos);
+            if (dist > _moveThreshold)
+            {
+                GameLogger.Develop($"[Tap] '{Describe()}' became scroll (moved {dist:0}px > {_moveThreshold:0})");
                 StopTracking();
+            }
         }
 
         private void OnRootUp(PointerUpEvent evt)
         {
             if (!_tracking || evt.pointerId != _pointerId) return;
 
-            bool isTap = Distance(evt.position, _startPos) <= _moveThreshold
-                         && (target?.enabledInHierarchy ?? false);
+            float dist    = Distance(evt.position, _startPos);
+            bool  enabled = target?.enabledInHierarchy ?? false;
+            bool  isTap   = dist <= _moveThreshold && enabled;
+            GameLogger.Develop($"[Tap] '{Describe()}' up dist={dist:0} threshold={_moveThreshold:0} " +
+                               $"enabled={enabled} -> isTap={isTap}");
             StopTracking();
             if (isTap) _onTap?.Invoke();
+        }
+
+        // Best-effort label for the tapped element, for debugging which button fired.
+        private string Describe()
+        {
+            if (target == null) return "<null>";
+            if (!string.IsNullOrEmpty(target.name)) return target.name;
+            if (target is TextElement te && !string.IsNullOrEmpty(te.text)) return te.text;
+            return target.GetType().Name;
         }
 
         private void OnRootCancel(PointerCancelEvent evt)

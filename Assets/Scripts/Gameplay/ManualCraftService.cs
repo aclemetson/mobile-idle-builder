@@ -57,14 +57,24 @@ namespace MobileIdleBuilder
         public bool CanCraft(RecipeJson recipe)
         {
             EnsureBound();
-            if (!IsReady || _inventoryQuery.IsEmpty) return false;
+            if (!IsReady || _inventoryQuery.IsEmpty)
+            {
+                GameLogger.Develop($"[Craft] CanCraft '{recipe?.id}' -> false (IsReady={IsReady} " +
+                                   $"inventoryEmpty={(IsReady ? _inventoryQuery.IsEmpty.ToString() : "n/a")})");
+                return false;
+            }
 
             var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
             foreach (var input in recipe.inputs)
             {
                 int itemId = ItemDatabase.Instance.GetItemId(input.id);
-                if (itemId < 0 || SlotBufferUtils.CountInInventory(buffer, itemId) < input.quantity)
+                int have   = itemId < 0 ? 0 : SlotBufferUtils.CountInInventory(buffer, itemId);
+                if (itemId < 0 || have < input.quantity)
+                {
+                    GameLogger.Develop($"[Craft] CanCraft '{recipe?.id}' -> false (input '{input.id}' " +
+                                       $"itemId={itemId} have={have} need={input.quantity})");
                     return false;
+                }
             }
             return true;
         }

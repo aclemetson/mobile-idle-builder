@@ -1278,14 +1278,20 @@ namespace MobileIdleBuilder
 
         private void OnCraftPressed(RecipeJson recipe)
         {
+            GameLogger.Develop($"[Craft] OnCraftPressed '{recipe?.id}' requiresBuilding={recipe?.requiresBuilding} " +
+                               $"craftServiceNull={craftService == null} canCraft={craftService?.CanCraft(recipe)}");
             if (recipe.requiresBuilding)
             {
-                if (!craftService.TriggerBuildingCraft(recipe))
+                bool triggered = craftService.TriggerBuildingCraft(recipe);
+                GameLogger.Develop($"[Craft] TriggerBuildingCraft '{recipe?.id}' -> {triggered}");
+                if (!triggered)
                     InventoryPopupController.NotifyWarning("No eligible building");
             }
             else
             {
-                if (!craftService.TryCraft(recipe))
+                bool crafted = craftService.TryCraft(recipe);
+                GameLogger.Develop($"[Craft] TryCraft '{recipe?.id}' -> {crafted}");
+                if (!crafted)
                     InventoryPopupController.NotifyWarning("Not enough materials");
                 else
                     BuildRecipeList();
