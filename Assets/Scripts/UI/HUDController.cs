@@ -374,6 +374,22 @@ namespace MobileIdleBuilder
                 _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
+            // TEMP DIAGNOSTIC: log what element each pointer-down actually resolves to, so we can
+            // see whether a tap on a recipe craft button reaches the Button, the ScrollView, or
+            // something overlapping it. Registered once on the panel root, trickle-down so it runs
+            // before anything can stop propagation.
+            root.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                var tgt    = evt.target as VisualElement;
+                var pos    = new Vector2(evt.position.x, evt.position.y);
+                var picked = root.panel?.Pick(pos);
+                string tgtCls    = tgt    != null ? string.Join(",", tgt.GetClasses())    : "";
+                string pickedCls = picked != null ? string.Join(",", picked.GetClasses()) : "";
+                GameLogger.Develop($"[TapDiag] down pos={pos} " +
+                    $"target={tgt?.GetType().Name}:'{tgt?.name}' [{tgtCls}] enabled={tgt?.enabledInHierarchy} | " +
+                    $"picked={picked?.GetType().Name}:'{picked?.name}' [{pickedCls}] pm={picked?.pickingMode} enabled={picked?.enabledInHierarchy}");
+            }, TrickleDown.TrickleDown);
+
             // Panel content
             _recipeList       = root.Q<ScrollView>("recipe-list");
             _buildingsList    = root.Q<ScrollView>("buildings-list");
