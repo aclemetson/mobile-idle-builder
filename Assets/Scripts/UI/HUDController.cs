@@ -1203,6 +1203,11 @@ namespace MobileIdleBuilder
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
+            var invSb = new System.Text.StringBuilder();
+            foreach (var kv in inventoryCounts) invSb.Append($"{kv.Key}:{kv.Value} ");
+            GameLogger.Develop($"[Craft] BuildRecipeList: {recipes.Count} recipes, craftServiceNull={craftService == null} " +
+                               $"researchServiceNull={researchService == null} inv=[{invSb.ToString().TrimEnd()}]");
+
             if (recipes.Count == 0)
             {
                 _recipeList.Add(new Label("No recipes available."));
@@ -1218,6 +1223,9 @@ namespace MobileIdleBuilder
                 bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
                 bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
                 bool canCraft = !isLocked && (craftService?.CanCraft(recipe) ?? false);
+
+                GameLogger.Develop($"[Craft] row '{recipe.id}' isLocked={isLocked} canCraft={canCraft} " +
+                                   $"requiresBuilding={recipe.requiresBuilding} reqRes='{recipe.requires_research}'");
 
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
