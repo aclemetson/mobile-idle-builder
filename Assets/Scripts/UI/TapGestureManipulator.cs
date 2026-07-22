@@ -100,7 +100,9 @@ namespace MobileIdleBuilder
             _tracking  = true;
             _pointerId = evt.pointerId;
             _startPos  = evt.position;
-            GameLogger.Develop($"[Tap] down on '{Describe()}' pointer={_pointerId} pos={_startPos}");
+            GameLogger.Develop($"[Tap] down on '{Describe()}' pointer={_pointerId} pos={_startPos} " +
+                               $"timeScale={UnityEngine.Time.timeScale} frame={UnityEngine.Time.frameCount} " +
+                               $"rt={UnityEngine.Time.realtimeSinceStartup:0.0}");
             // Deliberately no pointer capture — the ScrollView must stay free to scroll.
         }
 
@@ -120,7 +122,8 @@ namespace MobileIdleBuilder
         private void OnRootUp(PointerUpEvent evt)
         {
             GameLogger.Develop($"[TapEvt] UP p={evt.pointerId} myPointer={_pointerId} tracking={_tracking} " +
-                               $"pos=({evt.position.x:0},{evt.position.y:0})");
+                               $"pos=({evt.position.x:0},{evt.position.y:0}) frame={UnityEngine.Time.frameCount} " +
+                               $"rt={UnityEngine.Time.realtimeSinceStartup:0.0}");
             if (!_tracking || evt.pointerId != _pointerId) return;
 
             float dist    = Distance(evt.position, _startPos);
