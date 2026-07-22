@@ -100,10 +100,18 @@ namespace MobileIdleBuilder
             _tracking  = true;
             _pointerId = evt.pointerId;
             _startPos  = evt.position;
+
+            // Capture the pointer onto our button, exactly like the built-in Clickable does (and why
+            // the header close button works while these did not). Without capture the ScrollView
+            // hijacks the pointer stream on the slightest movement and the button's up is lost /
+            // arrives seconds late. We release the capture the moment the gesture becomes a real
+            // scroll (below), so dragging the list still scrolls.
+            target.CapturePointer(evt.pointerId);
+
+            var cap = target.panel?.GetCapturingElement(evt.pointerId) as VisualElement;
             GameLogger.Develop($"[Tap] down on '{Describe()}' pointer={_pointerId} pos={_startPos} " +
                                $"timeScale={UnityEngine.Time.timeScale} frame={UnityEngine.Time.frameCount} " +
-                               $"rt={UnityEngine.Time.realtimeSinceStartup:0.0}");
-            // Deliberately no pointer capture — the ScrollView must stay free to scroll.
+                               $"rt={UnityEngine.Time.realtimeSinceStartup:0.0} captured={cap?.GetType().Name}:'{cap?.name}'");
         }
 
         private void OnRootMove(PointerMoveEvent evt)
@@ -116,6 +124,9 @@ namespace MobileIdleBuilder
             {
                 GameLogger.Develop($"[Tap] '{Describe()}' became scroll (moved {dist:0}px > {_moveThreshold:0})");
                 _tracking = false;
+                // Hand the gesture back so the ScrollView can take over the drag.
+                if (target.HasPointerCapture(evt.pointerId))
+                    target.ReleasePointer(evt.pointerId);
             }
         }
 
