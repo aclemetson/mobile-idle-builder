@@ -109,6 +109,7 @@ namespace MobileIdleBuilder
             if (!_tracking || evt.pointerId != _pointerId) return;
             // Moving past the threshold means this is a scroll/drag, not a tap.
             float dist = Distance(evt.position, _startPos);
+            GameLogger.Develop($"[TapEvt] move p={evt.pointerId} pos=({evt.position.x:0},{evt.position.y:0}) dist={dist:0}");
             if (dist > _moveThreshold)
             {
                 GameLogger.Develop($"[Tap] '{Describe()}' became scroll (moved {dist:0}px > {_moveThreshold:0})");
@@ -118,6 +119,8 @@ namespace MobileIdleBuilder
 
         private void OnRootUp(PointerUpEvent evt)
         {
+            GameLogger.Develop($"[TapEvt] UP p={evt.pointerId} myPointer={_pointerId} tracking={_tracking} " +
+                               $"pos=({evt.position.x:0},{evt.position.y:0})");
             if (!_tracking || evt.pointerId != _pointerId) return;
 
             float dist    = Distance(evt.position, _startPos);
@@ -131,6 +134,7 @@ namespace MobileIdleBuilder
 
         private void OnRootCancel(PointerCancelEvent evt)
         {
+            GameLogger.Develop($"[TapEvt] CANCEL p={evt.pointerId} myPointer={_pointerId} tracking={_tracking}");
             if (evt.pointerId == _pointerId) _tracking = false;
         }
 
