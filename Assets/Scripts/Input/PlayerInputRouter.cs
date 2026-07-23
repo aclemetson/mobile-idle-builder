@@ -72,7 +72,14 @@ namespace MobileIdleBuilder
             Vector2 screenPos = InputUtils.GetPointerPosition();
             // Block the tap if the press started on UI (handles click-through when panels
             // close on the same frame as the release) or if UI still covers the release pos.
-            if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
+            if (_pressWasOnUI || IsPointerOverUI(screenPos))
+            {
+                // A UI Toolkit ScrollView eats the pointer-up for buttons inside it, so those taps
+                // never fire through UITK on touch. Drive them from this reliable Input-System tap
+                // instead: hit-test the panel and invoke the button under the finger.
+                UIInputBlocker.TryHandleUITap(_pressWasOnUI ? _pressStart : screenPos);
+                return;
+            }
 
             // Building inspector — tapping a placed building opens it
             bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);

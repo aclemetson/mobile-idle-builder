@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -50,6 +51,14 @@ namespace MobileIdleBuilder
         private static readonly List<UIDocument> s_documents = new();
         private static readonly HashSet<object>  s_modals    = new();
 
+        // Buttons that must be driven by an Input-System tap instead of UI Toolkit pointer events.
+        // A UI Toolkit ScrollView captures touch for scroll recognition and drops/defers the
+        // pointer-up for buttons inside it, so Button.clicked / pointer-event manipulators never
+        // fire on device. PlayerInputRouter detects the tap via the Input System (the same reliable
+        // path the grid uses) and routes it here; we hit-test the panel and invoke the button under
+        // the finger. Registered by TapGestureManipulator on attach; cleared on detach.
+        private static readonly Dictionary<VisualElement, Action> s_tapHandlers = new();
+
         public static void Register(UIDocument document)
         {
             if (document != null && !s_documents.Contains(document))
@@ -70,6 +79,55 @@ namespace MobileIdleBuilder
             if (owner == null) return;
             if (active) s_modals.Add(owner);
             else        s_modals.Remove(owner);
+        }
+
+        // ── Input-System-driven UI taps ──────────────────────────────────────────
+
+        /// <summary>Registers an action to fire when a confirmed Input-System tap lands on this element.</summary>
+        public static void RegisterTap(VisualElement element, Action onTap)
+        {
+            if (element != null && onTap != null) s_tapHandlers[element] = onTap;
+        }
+
+        /// <summary>Removes a tap handler registered via <see cref="RegisterTap"/>.</summary>
+        public static void UnregisterTap(VisualElement element)
+        {
+            if (element != null) s_tapHandlers.Remove(element);
+        }
+
+        /// <summary>
+        /// Routes a confirmed Input-System tap (screen-space, bottom-left origin) to the registered
+        /// button under the finger, bypassing UI Toolkit's touch pipeline. Returns true if a handler
+        /// was found and invoked (or found-but-disabled), so the caller knows the tap was consumed by
+        /// UI. Uses the same panel hit-test and coordinate convention as <see cref="IsPointerOverUI"/>.
+        /// </summary>
+        public static bool TryHandleUITap(Vector2 screenPos)
+        {
+            if (s_tapHandlers.Count == 0) return false;
+
+            for (int i = 0; i < s_documents.Count; i++)
+            {
+                var doc   = s_documents[i];
+                var panel = doc != null ? doc.rootVisualElement?.panel : null;
+                if (panel == null) continue;
+                if (AlreadyTested(panel, i)) continue;
+
+                Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+                Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
+
+                var picked = panel.Pick(panelPos);
+                for (var e = picked; e != null; e = e.parent)
+                {
+                    if (!s_tapHandlers.TryGetValue(e, out var action)) continue;
+                    if (e.enabledInHierarchy)
+                    {
+                        GameLogger.Develop($"[Tap] Input-System tap -> invoking '{e.name}'");
+                        action.Invoke();
+                    }
+                    return true; // consumed: found the target (invoked, or skipped because disabled)
+                }
+            }
+            return false;
         }
 
         /// <summary>
