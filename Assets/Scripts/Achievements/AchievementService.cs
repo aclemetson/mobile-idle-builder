@@ -15,6 +15,11 @@ namespace MobileIdleBuilder
     ///   Complete() fires OnAchievementUnlocked + adds to unclaimedAchievements →
     ///   Player calls ClaimReward() → currencies credited, OnRewardClaimed fires.
     ///
+    /// The whole feature is dormant until the player's first prestige: Evaluate() returns
+    /// early while tutorial.hasCompletedFirstRun is false, so nothing accrues, completes,
+    /// or reaches save. HUDController flips the gate and calls InitPostPrestige() when the
+    /// first prestige lands mid-session.
+    ///
     /// Period reset:
     ///   On Start(), CheckPeriodResets() compares current UTC date to stored reset
     ///   timestamps. If a period has expired the completed set and progress for that
@@ -38,13 +43,21 @@ namespace MobileIdleBuilder
         readonly HashSet<string>         _completed   = new();
         readonly HashSet<string>         _unclaimed   = new();
 
+        bool _initialized;
+
+        /// <summary>
+        /// Achievements stay entirely dormant until the player's first prestige: no progress
+        /// accrues, nothing completes, and no toast fires. Gating only the menu is not enough —
+        /// progress recorded during the tutorial would pop a "🏆 Achievement unlocked" toast over
+        /// the tutorial and write itself to save before the feature is meant to exist.
+        /// </summary>
+        static bool AchievementsUnlocked =>
+            SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+
         void Start()
         {
-            if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
-                return;
-
-            LoadFromSave();
-            CheckPeriodResets();
+            if (!AchievementsUnlocked) return;
+            Initialize();
         }
 
         /// <summary>
@@ -52,9 +65,18 @@ namespace MobileIdleBuilder
         /// <see cref="Start"/> returned early before the flag was set, so this
         /// replicates the deferred initialization in the same session.
         /// </summary>
-        public void InitPostPrestige()
+        public void InitPostPrestige() => Initialize();
+
+        /// <summary>
+        /// Loads saved state and applies period resets, exactly once per session. Guarded by an
+        /// explicit flag rather than "is there any state yet?" — a freshly unlocked player has no
+        /// completions and no progress, so a count-based guard cannot tell "not yet initialized"
+        /// from "initialized and empty" and would skip <see cref="CheckPeriodResets"/>.
+        /// </summary>
+        void Initialize()
         {
-            if (_completed.Count > 0 || _progress.Count > 0) return; // already initialized
+            if (_initialized) return;
+            _initialized = true;
             LoadFromSave();
             CheckPeriodResets();
         }
@@ -239,6 +261,9 @@ namespace MobileIdleBuilder
         void Evaluate(AchievementTrigger trigger, string targetId, int delta, bool absolute = false)
         {
             if (database == null) return;
+            // Single funnel for every Notify*() call, so this one check keeps the whole feature
+            // dormant pre-prestige. CheckCategoryComplete is only reached from here.
+            if (!AchievementsUnlocked) return;
 
             bool dirty = false;
             // Track every category that had at least one completion this call
@@ -461,6 +486,8 @@ namespace MobileIdleBuilder
             _completed.Clear();
             _progress.Clear();
             _unclaimed.Clear();
+            // A cleared save is pre-prestige again, so the service must be re-initializable.
+            _initialized = false;
             GameLogger.Debug("[Achievements] In-memory state cleared by ResetInMemory().");
         }
     }
