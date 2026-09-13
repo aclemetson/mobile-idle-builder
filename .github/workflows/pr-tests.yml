@@ -2,7 +2,7 @@ name: PR Tests
 
 on:
   pull_request:
-    branches: [develop, main, 'release/**']
+    branches: [develop, main, 'release/**', 'integration/**']
 
 concurrency:
   group: pr-tests-${{ github.event.pull_request.number }}
