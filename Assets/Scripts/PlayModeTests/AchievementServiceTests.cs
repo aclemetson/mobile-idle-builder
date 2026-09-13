@@ -72,6 +72,10 @@ namespace MobileIdleBuilder.PlayModeTests
             _saveManagerGO = new GameObject("SaveManager");
             { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
 
+            // Achievements are dormant until the first prestige, so every accrual test below needs
+            // the unlocked state. Set before RunStart, which gates on this flag.
+            SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = true;
+
             _achievementGO = new GameObject("AchievementService");
             var svc = _achievementGO.AddComponent<AchievementService>();
             RunAwake(svc);
