@@ -14,8 +14,8 @@ namespace MobileIdleBuilder
     ///
     /// Taps fire on RELEASE (not press) so swipes never accidentally trigger gameplay.
     ///
-    /// Scene setup: attach to any GameObject, wire placementController, buildingInspector,
-    /// gridRenderer, and hudDocument. CharacterMover is no longer needed.
+    /// Scene setup: attach to any GameObject, wire placementController, buildingInspector and
+    /// gridRenderer. CharacterMover is no longer needed.
     /// </summary>
     [DefaultExecutionOrder(-10)]
     public class PlayerInputRouter : MonoBehaviour
@@ -26,12 +26,12 @@ namespace MobileIdleBuilder
         [SerializeField] private BuildingInspectorController  buildingInspector;
         private ManualFieldCollector         fieldCollector;
         [SerializeField] private GridRenderer                 gridRenderer;
-        [SerializeField] private UIDocument                   hudDocument;
         [SerializeField] private Transform                    tapAnchor;
 
         private Vector2 _pressStart;
         private float   _dragAccum;
         private bool    _pressWasOnUI;
+        private bool    _warnedMissingCollectorWiring;
 
         void Awake()
         {
@@ -87,15 +87,14 @@ namespace MobileIdleBuilder
             if (fieldCollector != null && gridRenderer != null)
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
-                {
-                    GameLogger.Develop($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
-                    GameLogger.Develop($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
-                }
             }
-            else
+            else if (!_warnedMissingCollectorWiring)
             {
-                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
+                // One-shot: this is a wiring fault, so it is the same message every tap forever.
+                // Left un-gated it was a release-tier Warning firing on every single tap.
+                _warnedMissingCollectorWiring = true;
+                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}. Further occurrences suppressed.");
             }
 
             if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))

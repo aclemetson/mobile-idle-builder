@@ -1653,16 +1653,7 @@ namespace MobileIdleBuilder
         /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
         private bool IsPointerOverConveyorUI(Vector2 screenPos)
         {
-            // Develop-tier dump of the bar geometry vs the converted pointer position.
-            // Gated on VerboseLogging so it only logs during the press, not every hover frame.
-            bool r = ScreenPointInElement(_conveyorBar, screenPos);
-            if (UIInputBlocker.VerboseLogging)
-            {
-                var panel = _conveyorBar?.panel;
-                Vector2 pp = panel != null ? RuntimePanelUtils.ScreenToPanel(panel, screenPos) : Vector2.zero;
-                GameLogger.Develop($"[Conveyor] barCheck bar={(_conveyorBar == null ? "null" : _conveyorBar.name)} hidden={(_conveyorBar?.ClassListContains("hidden"))} panelNull={panel == null} worldBound={_conveyorBar?.worldBound} panelPos={pp} -> {r}");
-            }
-            return r;  // the bar strip, NOT the full-screen overlay
+            return ScreenPointInElement(_conveyorBar, screenPos);  // the bar strip, NOT the full-screen overlay
         }
 
         private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
