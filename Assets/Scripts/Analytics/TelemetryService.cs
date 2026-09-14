@@ -595,10 +595,12 @@ namespace MobileIdleBuilder
                 _endpointReach  = Reach.Unreachable;
                 _endpointDetail = req.error;
                 GameLogger.Warning(
-                    $"[Telemetry] Analytics endpoint UNREACHABLE ({CollectEndpoint}): {req.error}. Events will " +
-                    "be accepted locally and never arrive. This is a network/DNS block (Pi-hole, AdGuard, " +
-                    "NextDNS, router or ISP filtering), not a game bug — other UGS services use a different " +
-                    "host and keep working. Retest on cellular to confirm.");
+                    $"[Telemetry] Analytics endpoint UNREACHABLE ({CollectEndpoint}): {req.error}. Events are " +
+                    "still recorded and will upload once a network resolves this host — the SDK persists its " +
+                    "buffer across sessions — but nothing arrives until then. This is a DNS block, not a game " +
+                    "bug: other UGS services use a different host and keep working. Most likely cause on a dev " +
+                    "device is YOUR OWN VPN (many filter tracker domains by default); also Pi-hole, AdGuard, " +
+                    "NextDNS, router or ISP filtering. Turn the VPN off, or retest on cellular.");
             }
             else
             {

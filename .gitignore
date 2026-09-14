@@ -96,6 +96,9 @@ InitTestScene*.unity*
 # Test run output
 /TestResults/
 
+# Local scratch/sandbox docs — never commit
+/docs/tmp/
+
 # Unity editor scene dependency cache — auto-generated
 /[Aa]ssets/SceneDependencyCache/
 
