@@ -19,6 +19,14 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery   _prestigeQuery;
         private bool          _ecsReady;
+        private bool          _subscribed;
+
+        void OnDisable()
+        {
+            if (_subscribed && PersistentUpgradeService.Instance != null)
+                PersistentUpgradeService.Instance.OnUpgradePurchased -= Refresh;
+            _subscribed = false;
+        }
 
         public void Init(VisualElement root, HUDController hud)
         {
@@ -51,6 +59,11 @@ namespace MobileIdleBuilder
                 _list.Add(new Label("Prestige upgrades not available."));
                 return;
             }
+
+            // Subscribe lazily so the panel live-refreshes while open. OnUpgradePurchased already
+            // existed and had no listeners at all, so a purchase made anywhere other than this
+            // panel left its levels and ✦ affordability stale until it was reopened.
+            if (!_subscribed) { svc.OnUpgradePurchased += Refresh; _subscribed = true; }
 
             foreach (var def in PersistentUpgradeService.All)
             {
