@@ -71,6 +71,15 @@ namespace MobileIdleBuilder
         // panel-open. Rows captured in BuildBuildingsList; re-evaluated in Update.
         private readonly List<(Button btn, Label costLabel, int cost)> _buildingAffordRows = new();
         private long _lastAffordEntropy = long.MinValue;
+
+        // Same problem in the Research panel, which had no live refresh at all: a Start button that
+        // was unaffordable at panel-open stayed dead until the panel was reopened. Rows captured in
+        // BuildResearchList; re-evaluated by the 1 Hz research ticker. The research is stored rather
+        // than a precomputed bool because CanPurchase() is the authority on unlocked + prereqs +
+        // affordability, and labBusy is tracked too so buttons revive when the lab frees up.
+        private readonly List<(Button btn, Label costLabel, ResearchSO research)> _researchAffordRows = new();
+        private long _lastResearchAffordEntropy = long.MinValue;
+        private bool _lastResearchAffordLabBusy;
         private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
@@ -690,6 +699,12 @@ namespace MobileIdleBuilder
                 _researchTicker?.Pause();
                 return;
             }
+
+            // MUST run before the HasActiveResearch guard below: "no research running" is exactly
+            // the state where Start buttons matter, so a refresh placed after that early return
+            // would never fire in the case it exists to fix.
+            RefreshResearchAffordability();
+
             if (researchService == null || !researchService.HasActiveResearch) return;
 
             double rem = researchService.ActiveRemainingSeconds;
@@ -702,6 +717,45 @@ namespace MobileIdleBuilder
                 long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
                 _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
                 _researchSkipBtn.SetEnabled(crystals >= cost);
+            }
+        }
+
+        /// <summary>
+        /// Re-evaluates Start-button state for the open Research panel. Without this a Start button
+        /// that was unaffordable when the panel opened stayed dead forever, because BuildResearchList
+        /// only runs on open / purchase / skip / cancel / research-unlock — never on an entropy
+        /// change — so automation earning the cost had no visible effect until the panel was reopened.
+        ///
+        /// Driven by the existing 1 Hz research ticker rather than Update(): it is already scoped to
+        /// the open panel and already live-refreshes the Skip button the same way.
+        /// </summary>
+        private void RefreshResearchAffordability()
+        {
+            if (researchService == null || _researchAffordRows.Count == 0) return;
+            if (!_ecsReady || _progressQuery.IsEmpty) return;
+
+            long entropy = _em.GetComponentData<PlayerProgressData>(
+                _progressQuery.GetSingletonEntity()).BaseCurrency;
+            bool labBusy = researchService.HasActiveResearch;
+
+            // labBusy is part of the key, not just entropy: when a research finishes the lab frees
+            // up and every other Start button becomes live again at unchanged entropy.
+            if (entropy == _lastResearchAffordEntropy && labBusy == _lastResearchAffordLabBusy) return;
+            _lastResearchAffordEntropy = entropy;
+            _lastResearchAffordLabBusy = labBusy;
+
+            foreach (var (btn, costLabel, research) in _researchAffordRows)
+            {
+                if (btn == null || research == null) continue;
+
+                // CanPurchase is the authority — it covers already-unlocked, prerequisites and
+                // affordability together, so this cannot drift from what Purchase() will accept.
+                btn.SetEnabled(!labBusy && researchService.CanPurchase(research));
+                btn.text = labBusy ? "Lab busy" : "Start";
+
+                // Research cost has only an --unaffordable class; there is no --affordable pair.
+                costLabel?.EnableInClassList("research-card-cost--unaffordable",
+                                             entropy < research.costBaseCurrency);
             }
         }
 
@@ -723,6 +777,12 @@ namespace MobileIdleBuilder
             _researchCountdownLabel = null;
             _researchSkipBtn        = null;
             _researchSkipConfirming = false;
+
+            // The rows about to be discarded must not be refreshed after their elements are gone,
+            // and the entropy cache is reset so the next tick re-evaluates rather than short-circuiting
+            // on an unchanged value (same reason BuildBuildingsList resets _lastAffordEntropy).
+            _researchAffordRows.Clear();
+            _lastResearchAffordEntropy = long.MinValue;
 
             if (researchService == null || researchService.AllResearch == null ||
                 researchService.AllResearch.Count == 0)
@@ -825,6 +885,9 @@ namespace MobileIdleBuilder
                         var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
                         startBtn.AddToClassList("craft-btn");
                         startBtn.SetEnabled(!labBusy && canPurchase);
+
+                        // Track for the live affordability refresh (see RefreshResearchAffordability).
+                        _researchAffordRows.Add((startBtn, costLabel, research));
 
                         var captured = research;
                         startBtn.clicked += () =>
