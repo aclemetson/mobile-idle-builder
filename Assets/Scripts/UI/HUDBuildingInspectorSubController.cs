@@ -340,12 +340,13 @@ namespace MobileIdleBuilder
                             btn.AddToClassList("craft-btn");
                             var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                             if (icon != null) btn.Insert(0, icon);
-                            // Tap manipulator so the recipe choice survives the ScrollView touch-scroll.
-                            btn.AddManipulator(new TapGestureManipulator(() =>
+                            // Routed from the list: a Button's own Clickable consumes the
+                            // pointer-down before any manipulator added later. See ListTapRouter.
+                            ListTapRouter.Register(_inspectorRecipes, btn, () =>
                             {
                                 SetBuildingRecipe(_inspectorEntity, captured);
                                 RefreshInspectorContent();
-                            }));
+                            });
                             _inspectorRecipes?.Add(btn);
                         }
                     }
@@ -814,11 +815,11 @@ namespace MobileIdleBuilder
                 btn.AddToClassList("craft-btn");
                 var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                 if (icon != null) btn.Insert(0, icon);
-                btn.AddManipulator(new TapGestureManipulator(() =>
+                ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
-                }));
+                });
                 _inspectorRecipes?.Add(btn);
             }
         }
@@ -941,7 +942,9 @@ namespace MobileIdleBuilder
         {
             var btn = new Button { text = text };
             btn.AddToClassList("craft-btn");
-            btn.AddManipulator(new TapGestureManipulator(onEmpty));
+            // _inspectorStatic is not a ScrollView, but the router is still required: the
+            // button's own Clickable consumes the pointer-down regardless of any ScrollView.
+            ListTapRouter.Register(_inspectorStatic, btn, onEmpty);
             _inspectorStatic.Add(btn);
         }
 

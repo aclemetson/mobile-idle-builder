@@ -1330,8 +1330,9 @@ namespace MobileIdleBuilder
                 craftBtn.SetEnabled(!isLocked && canCraft);
                 var captured = recipe;
                 if (!isLocked)
-                    // Tap manipulator (not .clicked) so the tap survives the ScrollView's touch-scroll.
-                    craftBtn.AddManipulator(new TapGestureManipulator(() => OnCraftPressed(captured)));
+                    // Routed from the list, not the button: a Button's own Clickable consumes the
+                    // pointer-down before any manipulator added later. See ListTapRouter.
+                    ListTapRouter.Register(_recipeList, craftBtn, () => OnCraftPressed(captured));
 
                 row.Add(info);
                 row.Add(craftBtn);
@@ -1384,11 +1385,11 @@ namespace MobileIdleBuilder
 
                 var placeBtn = new Button { text = "Place" };
                 placeBtn.AddToClassList("craft-btn");
-                placeBtn.AddManipulator(new TapGestureManipulator(() =>
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     conveyorController.BeginConveyorMode();
-                }));
+                });
 
                 conveyorCard.Add(nameLabel);
                 conveyorCard.Add(descLabel);
@@ -1446,11 +1447,11 @@ namespace MobileIdleBuilder
                     _buildingAffordRows.Add((placeBtn, costLabel, cost));
 
                 var captured = entry;
-                placeBtn.AddManipulator(new TapGestureManipulator(() =>
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     placementController.BeginPlacement(captured);
-                }));
+                });
 
                 card.Add(nameLabel);
                 card.Add(recipeLabel);
