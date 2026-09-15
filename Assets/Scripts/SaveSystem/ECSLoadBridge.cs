@@ -156,6 +156,14 @@ namespace MobileIdleBuilder
             IsLoaded = true;
             GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
 
+            // Session login tick. This is the only point that is both once-per-session and late
+            // enough to count: SaveManager.Current is final (cloud reconcile awaited above), and
+            // DailyEventService.Start()/EnsureToday() has already rolled today's challenges — its
+            // Accumulate() bails while _todaysChallengeIds is empty, so an earlier hook would
+            // silently drop dc_login. Idempotent: the challenge caps at its target and completed
+            // achievements are skipped, and pre-first-prestige the achievement half is dormant.
+            AchievementService.Instance?.NotifyLogin();
+
             if (_pendingIdleResult != null)
             {
                 FindAnyObjectByType<HUDController>()?.ShowIdleReturn(_pendingIdleResult);

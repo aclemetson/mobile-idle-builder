@@ -2,7 +2,7 @@
 
 Layered, token-efficient context for AI coding sessions on this repo. Read this file + `architecture.md` first (always), then ONLY the deep-dive docs the routing table names for your task. Do not re-explore the codebase for facts these docs already state. CLAUDE.md (auto-loaded) holds the workflow rules and recurring pitfalls — it is not duplicated here.
 
-> Verified against: `3c264f2`, 2026-07-06.
+> Verified against: `6c38e7e`, 2026-09-13.
 
 ## Routing table
 
@@ -35,7 +35,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-megastructure.md` — Dyson Sphere endgame project | done (branch `feature/megastructure`) | M |
 | `tasks/feature-power-draw.md` — proximity eV power grid (makes PowerDiscount live) | done (feature/power-draw) | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
-| `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–4 + full Biology B1–B4 done (PRs #119–125+); next P5 worlds UI, P6 re-tier | XL (5 phases + deferred re-tier) |
+| `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 
