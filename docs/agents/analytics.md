@@ -113,11 +113,22 @@ so this class of failure prints instead of vanishing. If you add another UGS pac
 | Analytics events | `collect.analytics.unity3d.com` |
 | Cloud Save / Auth / Remote Config | `services.api.unity.com` |
 
-A DNS blocklist that catches `analytics.*` (Pi-hole, AdGuard, NextDNS, router or ISP filtering — the
-default content of every tracker blocklist) kills analytics **while leaving Cloud Save, Auth and Remote
-Config untouched**. The game looks completely healthy. Observed for real: a dev phone resolved
+A DNS blocklist that catches `analytics.*` kills analytics **while leaving Cloud Save, Auth and Remote Config
+untouched**. The game looks completely healthy. Observed for real: a dev phone resolved
 `services.api.unity.com` fine and returned `unknown host` for `collect.analytics.unity3d.com`, while the
 editor on a PC with a different resolver worked perfectly the whole time.
+
+**Check the VPN first.** The actual culprit was a VPN on the dev phone — most filter tracker domains by
+default, and `analytics.*` is on every such list. It is by far the likeliest cause on a developer's own
+device, ahead of Pi-hole, AdGuard, NextDNS, or router/ISP filtering. Turning it off fixed everything
+instantly.
+
+**It self-heals, so don't build a retry.** The UGS SDK persists its event buffer to disk and drains it once
+a network resolves the host. When the VPN went off, events recorded across *three separate sessions hours
+earlier* all uploaded at once. Blocked events are delayed, not lost, and any queue/retry logic we added
+would only duplicate this badly. (Same mechanism observed when a stopped editor session's events arrived on
+a later launch.) The exception is a player who blocks *permanently* — see the sampling-bias note in
+`docs/analytics/data-dictionary.md`.
 
 It is invisible from inside the game by default: the DNS failure happens inside the SDK's async upload, is
 swallowed, and every event still reports **accepted**. Event Manager shows neither *valid* nor *invalid* —
