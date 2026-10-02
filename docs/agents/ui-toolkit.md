@@ -21,8 +21,16 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
   - **Trap:** a new sub-controller class does nothing until the component is added to the HUD GameObject in `GameScene.unity`. `[RequireComponent]` does not retro-add it to an existing scene object — this is a manual Unity Editor step; flag it to the user in your final report.
 - Lifecycle calls made by HUDController on each sub-controller: `Init(VisualElement root, HUDController hud)` (query elements by name, e.g., `root.Q("upgrades-panel")`) then `SetECSContext(EntityManager em)` once ECS is ready, then `Refresh()` when the panel opens. Copy `Assets/Scripts/UI/PrestigeShopSubController.cs` — it is the cleanest reference (panel + currency label + ScrollView list rebuilt in `Refresh()`).
 - `SitesSubController.cs` is a second clean reference (sites-panel): list rebuilt in `Refresh()`, a pure `ClassifyRow(isActive, isUnlocked, canAfford)` helper drives each row's action (Active/Travel/Unlock/Locked), and the Travel handler calls `HUDController.CancelActiveModes()` before `SiteService.SwitchTo` so placement overlays clear before the grid swaps.
-- Drawer nav buttons are wired in HUDController around `HUDController.cs:347-369` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
+- Drawer nav buttons are wired in HUDController around `HUDController.cs:454-491` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
 - Building rows/list items are built **in C#** (`new VisualElement()` + `AddToClassList`), not via UXML templates, in sub-controllers — follow that style.
+
+## Building inspector: no layout bounce
+
+`HUDBuildingInspectorSubController` clears and rebuilds `inspector-static` / `inspector-recipes` / `inspector-upgrades` every 0.5s. Anything whose row count changed between rebuilds shifted the scrolls below and moved buttons out from under the finger (0.4 checklist item 21). Rules for this panel:
+
+- **Reserve, don't add/remove.** Buffer sections list one row per recipe-expected item (`StableBufferRows`, ×0 when absent); the Empty buttons are always present and `SetEnabled(false)` when empty; the input section shows whenever the building *can* hold inputs (`ShowInputBufferSection`). Maxed upgrade rows keep their description + footer with a disabled "Maxed" button (`AddUpgradeRow`). Manager rows are one same-shaped row per hired manager in catalogue order; assign/unassign only flips the button text.
+- **Backstop:** `inspector-static` gets a `min-height` high-water mark per inspected entity (`OnStaticGeometryChanged`), reset on entity change / hide.
+- All inspector buttons route through `ListTapRouter` (not `.clicked`): the ScrollView eats a Button's own Clickable on touch, and the 0.5s rebuild would drop a held press.
 
 ## Power readout & coverage (proximity power feature)
 

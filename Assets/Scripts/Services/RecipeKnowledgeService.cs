@@ -82,6 +82,42 @@ namespace MobileIdleBuilder
             return entry != null && entry.previous_research;
         }
 
+        /// <summary>
+        /// Number of codex entries the player has unlocked — i.e. the count of DISTINCT output
+        /// items across all known recipes, which is exactly the row count
+        /// <c>HUDController.BuildCodexList</c> renders.
+        ///
+        /// Deliberately not a known-recipe count: several recipes can produce the same item, so
+        /// counting recipes would over-report and let "Unlock 10 codex entries" complete while the
+        /// panel still shows fewer than 10 rows.
+        ///
+        /// Note this is the *implemented* codex ("items whose recipe you know"), which diverges from
+        /// the originally designed one ("items you have crafted") — <c>SaveData.codex</c> and
+        /// <c>ItemSO.codexUnlocked</c> are both dead and never written. The panel is the source of
+        /// truth, so the achievement matches the panel.
+        ///
+        /// Takes its inputs explicitly so the counting rule is unit-testable without the
+        /// RecipeDatabase / RecipeKnowledgeService singletons.
+        /// </summary>
+        internal static int CountCodexEntries(IReadOnlyList<RecipeJson> recipes,
+                                              IRecipeKnowledgeService knowledge)
+        {
+            if (recipes == null || knowledge == null) return 0;
+
+            var seen = new HashSet<int>();
+            foreach (var recipe in recipes)
+            {
+                if (recipe == null || !knowledge.IsKnown(recipe.id)) continue;
+                var item = recipe.output != null ? ItemDatabase.GetStatic(recipe.output.id) : null;
+                if (item != null) seen.Add(item.itemId);
+            }
+            return seen.Count;
+        }
+
+        /// <summary>Live-database overload of <see cref="CountCodexEntries"/>.</summary>
+        public static int CountCodexEntries() =>
+            CountCodexEntries(RecipeDatabase.Instance?.Recipes, Current);
+
         // ── Mutation ─────────────────────────────────────────────────────────
 
         /// <summary>Marks a recipe as known (previous_research=true) and saves.</summary>

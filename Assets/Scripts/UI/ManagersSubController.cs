@@ -15,6 +15,14 @@ namespace MobileIdleBuilder
         private Label         _currencyLabel;
         private ScrollView    _list;
         private HUDController _hud;
+        private bool          _subscribed;
+
+        void OnDisable()
+        {
+            if (_subscribed && ManagerService.Instance != null)
+                ManagerService.Instance.OnChanged -= Refresh;
+            _subscribed = false;
+        }
 
         public void Init(VisualElement root, HUDController hud)
         {
@@ -36,6 +44,11 @@ namespace MobileIdleBuilder
                 _list.Add(new Label("Managers not available."));
                 return;
             }
+
+            // Subscribe lazily so the panel live-refreshes while open. ManagerService.OnChanged
+            // already existed and fired in five places, but nothing was listening — so hiring or
+            // star-upgrading elsewhere left this panel showing stale ✦ affordability until reopened.
+            if (!_subscribed) { svc.OnChanged += Refresh; _subscribed = true; }
 
             long held = svc.HeldPrestige();
             if (_currencyLabel != null)

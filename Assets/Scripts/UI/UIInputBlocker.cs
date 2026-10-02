@@ -43,10 +43,6 @@ namespace MobileIdleBuilder
             "dev-console",        // dev console overlay (separate panel)
         };
 
-        // When true, IsPointerOverUI emits per-panel hit-test details at GameLogger.Develop tier.
-        // Callers flip it on around a single check (e.g. a press) so the dump isn't per-frame spam.
-        public static bool VerboseLogging;
-
         private static readonly List<UIDocument> s_documents = new();
         private static readonly HashSet<object>  s_modals    = new();
 
@@ -111,14 +107,6 @@ namespace MobileIdleBuilder
 
                 // Fallback: resolved-bounds tree-walk (belt-and-suspenders).
                 bool walkBlocked = HitTestBlocking(panel.visualTree, panelPos);
-
-                if (VerboseLogging)
-                {
-                    string pickDesc = picked == null
-                        ? "null"
-                        : $"{picked.GetType().Name}:'{picked.name}' classes=[{string.Join(",", picked.GetClasses())}] pm={picked.pickingMode}";
-                    GameLogger.Develop($"[UIBlock] doc#{i} '{(doc != null ? doc.gameObject.name : "?")}' screen={screenPos} panelPos={panelPos} picked={pickDesc} blockingPick={blockingPick} walk={walkBlocked}");
-                }
 
                 if (blockingPick || walkBlocked)
                     return true;

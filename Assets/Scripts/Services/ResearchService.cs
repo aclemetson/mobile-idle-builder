@@ -239,6 +239,12 @@ namespace MobileIdleBuilder
             OnResearchUnlocked?.Invoke(research);
 
             AchievementService.Instance?.NotifyResearchCompleted(research.id);
+
+            // Research is the only thing that unlocks codex entries (it is what marks recipes
+            // known, just above), so this is the one place the total can change. NotifyCodexUnlocked
+            // takes an absolute total rather than a delta, so recount instead of incrementing —
+            // Evaluate does Max(current, total), making it safe to call with an unchanged value.
+            AchievementService.Instance?.NotifyCodexUnlocked(RecipeKnowledgeService.CountCodexEntries());
         }
 
         /// <summary>Loads the persisted active-timer state into the cached fields (no completion).</summary>
