@@ -10,8 +10,11 @@ if (-not $ResultsPath) { $ResultsPath = "TestResults\$TestPlatform.xml" }
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 
+# Same override as build-android.ps1 / sign-aab.ps1, so CI tests and builds use the same editor.
+if ($env:UNITY_PATH -and -not $PSBoundParameters.ContainsKey('UnityPath')) { $UnityPath = $env:UNITY_PATH }
+
 if (-not (Test-Path $UnityPath)) {
-    Write-Error "Unity not found at: $UnityPath`nOverride with: .\scripts\test-local.ps1 -UnityPath 'C:\path\to\Unity.exe'"
+    Write-Error "Unity not found at: $UnityPath`nOverride with -UnityPath or the UNITY_PATH env var."
     exit 1
 }
 

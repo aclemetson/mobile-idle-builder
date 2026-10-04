@@ -55,6 +55,12 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
           [System.IO.File]::WriteAllBytes("secrets\user.keystore", $bytes)
 
+      # Bring back the warm Library/ from the last build (checkout's git clean deletes it).
+      # Turns a 70-100 min cold IL2CPP build into an incremental one. See the script header.
+      - name: Restore Library
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Restore -Name internal
+
       # NOTE: "shell: powershell" does NOT propagate a nested process's exit code, so
       # build-android.ps1 exiting non-zero is silently ignored unless $LASTEXITCODE is
       # checked here. Without these guards a hard Unity failure (e.g. UnityLinker choking
@@ -96,6 +102,12 @@ jobs:
         if: always()
         shell: powershell
         run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
+
+      # always(): even a timed-out build leaves useful compiled output, so the retry resumes.
+      - name: Save Library
+        if: always()
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name internal
 
       - uses: actions/upload-artifact@v4
         if: always()
