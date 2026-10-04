@@ -820,9 +820,9 @@ namespace MobileIdleBuilder
                 if (unlocked) card.AddToClassList("research-card--unlocked");
 
                 // Name
-                var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
+                var nameLabel = new Label(research.displayName);
                 nameLabel.AddToClassList("research-card-name");
-                card.Add(nameLabel);
+                card.Add(unlocked ? GlyphIcon.TitleRow(GlyphIcon.Kind.Check, nameLabel) : nameLabel);
 
                 // Description (wrapping)
                 if (!string.IsNullOrEmpty(research.description))
@@ -928,8 +928,9 @@ namespace MobileIdleBuilder
                     BuildResearchList();
                 };
 
-                var cancel = new Button { text = "✕" };
+                var cancel = new Button();
                 cancel.AddToClassList("craft-btn");
+                GlyphIcon.SetOn(cancel, GlyphIcon.Kind.Close);
                 cancel.clicked += () => BuildResearchList();
 
                 footer.Add(confirm);
@@ -1550,8 +1551,9 @@ namespace MobileIdleBuilder
                 var innerRow = new VisualElement();
                 innerRow.AddToClassList("ach-card-row");
 
-                var checkLabel = new Label(isDone ? "✓" : "○");
+                var checkLabel = new Label(isDone ? "" : "○");
                 checkLabel.AddToClassList("ach-card-check");
+                if (isDone) GlyphIcon.SetOn(checkLabel, GlyphIcon.Kind.Check);
                 if (isDone) checkLabel.AddToClassList("ach-card-check--done");
 
                 var body = new VisualElement();
@@ -1665,7 +1667,7 @@ namespace MobileIdleBuilder
             if (isPlacing && _placementLabel != null)
             {
                 string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
-                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  ✓ to place{rotateHint}";
+                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
             }
         }
 

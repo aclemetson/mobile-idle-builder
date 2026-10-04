@@ -32,6 +32,10 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - **Backstop:** `inspector-static` gets a `min-height` high-water mark per inspected entity (`OnStaticGeometryChanged`), reset on entity change / hide.
 - All inspector buttons route through `ListTapRouter` (not `.clicked`): the ScrollView eats a Button's own Clickable on touch, and the 0.5s rebuild would drop a held press.
 
+## Tutorial hint banner (minimizable)
+
+`tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. Covered by `TutorialHintMinimizeTests` (runs against the real UXML).
+
 ## Power readout & coverage (proximity power feature)
 
 - **Top-bar power label** (`power-label` in `GameHUD.uxml:26`): `HUDStatusBarController.RefreshPowerLabel` reads the `PowerGridState` singleton and shows `⚡ draw / supply eV`. On a brownout (`Draw > Supply`) or any unpowered consumer it prefixes `⚠`, appends `(N unpowered)`, and toggles the `power-brownout` USS class (`GameHUD.uss`, red via `--color-danger`). The status bar's power query is `PowerGridState` (not `PowerNodeData`).
@@ -76,6 +80,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 ## Styling
 
 - `Assets/UI/tokens.uss` — design tokens (colors/spacing/typography vars). `Assets/UI/components.uss` — shared classes. `Assets/UI/GameHUD.uss` — HUD layout. Panel-specific: `AchievementsMenu.uss`, `PremiumShop.uss`.
+- **Icons: never use the `✕ ✓ ↻ ⇄` text glyphs.** The Android default font lacks them and they render blank on device (#165). Use `GlyphIcon` (`Assets/Scripts/UI/GlyphIcon.cs`), which is vector-drawn and strokes with the inherited text `color`. In UXML, use `<ui:Button text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>` (`icon` = `Close|Check|Rotate|Flip`). In code, use `GlyphIcon.SetOn(host, kind)` / `ClearFrom(host)` / `TitleRow(kind, label)`. Size it per context with `.<host-class> > .glyph-icon` rules in `components.uss`. `GlyphIconTests` fails if any GameHUD text uses those glyphs. Other symbols (`▶ ○ ⚙ ⚡ ◆ ◈`, emoji in notification banners) are still unverified on device.
 - Reuse existing classes (e.g., `upgrade-row`, `upgrade-row--locked`, `slide-panel`) before writing new USS. Grep `GameHUD.uss`/`components.uss` for a class before inventing one.
 
 ## Checklist: adding a new panel

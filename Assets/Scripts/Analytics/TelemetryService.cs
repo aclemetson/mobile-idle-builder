@@ -53,6 +53,11 @@ namespace MobileIdleBuilder
         // Session-cumulative count of manual field taps that collected an item (snapshot dimension).
         int    _fieldCollections;
 
+        // Dev-console use (see RecordDevConsoleUsed). The session flag covers the gap before the sticky
+        // SaveData.devConsoleUsed write is flushed; the event-sent guard keeps it to one event per session.
+        bool   _devConsoleUsedThisSession;
+        bool   _devConsoleEventSent;
+
         // Delivery counters. The sink swallows backend exceptions by contract, so without these a
         // failing pipeline is indistinguishable from a healthy one from inside the game (the bug that
         // made "analytics fire" report success while nothing reached the dashboard). Surfaced by DevStatus.
@@ -261,6 +266,23 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// A dev-console command ran. Alpha builds ship the console (DEVELOPMENT_BUILD), so this marks the
+        /// player's data as possibly cheated: the event fires once per session, and the sticky
+        /// <c>SaveData.devConsoleUsed</c> flag is stamped on every <c>player_snapshot</c> from then on.
+        /// Pass only the command name, never its arguments.
+        /// </summary>
+        public void RecordDevConsoleUsed(string command)
+        {
+            _devConsoleUsedThisSession = true;
+            if (!ShouldRecord || _devConsoleEventSent) return;
+
+            _devConsoleEventSent = true;
+            var p = NewParams();
+            p["command"] = command ?? "";
+            Emit("dev_console_used", p);
+        }
+
+        /// <summary>
         /// Bumps the session field-collection counter (one manual field tap that yielded an item).
         /// Surfaced as the <c>field_collections</c> snapshot dimension — no per-tap event is emitted.
         /// </summary>
@@ -314,6 +336,7 @@ namespace MobileIdleBuilder
             ReadPowerNodeCounts(out int powerNodesTotal, out int powerNodesLinked);
             p["power_nodes_total"]       = powerNodesTotal;
             p["power_nodes_linked"]      = powerNodesLinked;
+            p["dev_console_used"]        = _devConsoleUsedThisSession || (save?.devConsoleUsed ?? false);
             Emit("player_snapshot", p);
         }
 
