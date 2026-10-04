@@ -18,7 +18,7 @@
 .\scripts\test-local.ps1 -TestPlatform playmode
 ```
 
-- Default Unity path: `C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe` (override with `-UnityPath`).
+- Default Unity path: `C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe` (override with `-UnityPath`, or the `UNITY_PATH` env var when `-UnityPath` is not passed).
 - The script kills orphaned batchmode Unity processes, refuses to run if the editor has the project open, runs `-batchmode -nographics -runTests -testResults TestResults\<platform>.xml`, waits up to 30 min, parses the NUnit XML, exit code 0 = all pass.
 - **Never** add `-quit` to a `-runTests` invocation (kills Unity before results are written). **No results XML = the run did not happen** — check `TestResults\unity-<platform>.log`, do not assume pass (CLAUDE.md rules).
 - CLAUDE.md mandates the FULL suite (both platforms) before commit. The `commit-unity` skill wraps test → commit → push → PR.

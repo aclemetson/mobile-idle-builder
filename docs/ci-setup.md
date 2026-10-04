@@ -99,6 +99,26 @@ The build and test jobs run on your local machine to avoid consuming GitHub Acti
    C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe
    ```
    To set permanently: System → Advanced system settings → Environment Variables → add `UNITY_PATH`.
+   Restart the runner service afterwards (services only read env vars at start).
+   `build-android.ps1`, `sign-aab.ps1` and `test-local.ps1` all honour it.
+
+   Gotcha: newer Unity Hub versions install as `...\Editor\6000.3.6f1-x86_64\`. Either rename
+   the folder to the plain version (then re-add it in Hub via **Locate**) or set `UNITY_PATH`.
+   A build log whose "Register platform support module" lines list only `WindowsStandalone`
+   means CI is running an editor without Android support ("build target was unsupported").
+7. Add Windows Defender exclusions for `C:\actions-runner\_work` and the Unity editor folder.
+   IL2CPP writes thousands of object files; real-time scanning each one slows builds 2-3x.
+
+### Warm Library between Android builds
+
+A cold Android build is ~11 min of asset import plus 60-90 min of IL2CPP C++ compile on this
+machine. Unity caches both in `Library/`, but every checkout's `git clean -ffdx` deletes it (and
+`pr-tests.yml` shares the same workspace). So the release workflows run
+`scripts/ci-library-stash.ps1`: **Save** (`if: always()`) moves `Library/` to
+`<RUNNER_WORKSPACE>\_library-stash\<internal|prod>` after the build, and **Restore** moves it
+back before the next one. Same-volume moves are instant. Expect the first build after a fresh
+runner (or a deleted stash) to be slow; `build-android.ps1` allows 150 min for that. Delete the
+stash folder to force a cold build.
 
 ## 2. PR Tests
 
