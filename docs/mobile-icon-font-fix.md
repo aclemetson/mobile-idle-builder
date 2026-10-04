@@ -1,5 +1,11 @@
 # Mobile button icons (X / check / rotate) render blank — fix + Editor steps
 
+> **Status (2026-10-04): fixed with Option B, using vector icons instead of image files.** `GlyphIcon`
+> (`Assets/Scripts/UI/GlyphIcon.cs`) draws close/check/rotate/flip with `Painter2D`, and every `✕ ✓ ↻ ⇄`
+> in the runtime HUD now uses it. No font asset or Editor steps are needed. A device check is still
+> pending (#171). Option A below is kept for reference, in case other symbols (`▶ ○ ⚙ ⚡ ◆ ◈`, banner
+> emoji) also turn out to be missing on device.
+
 ## Symptom
 On Android, glyph buttons show blank/tofu instead of their icon: the close `✕`
 (U+2715) on every panel, plus `✓` (U+2713), `↻` (U+21BB) and `⇄` (U+21C4) on the

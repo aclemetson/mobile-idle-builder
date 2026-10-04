@@ -370,5 +370,44 @@ namespace MobileIdleBuilder.Tests
             StringAssert.Contains("2 refused", status,
                 "a broken pipeline must be visible in 'analytics status', not silently look healthy");
         }
+
+        // ── Dev console (alpha builds ship it; its use must be filterable) ────
+
+        [Test]
+        public void RecordDevConsoleUsed_EmitsOncePerSession_WithCommandAndStamps()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "alpha-1", playerId: "pid-dev");
+
+            _svc.RecordDevConsoleUsed("currency");
+            _svc.RecordDevConsoleUsed("unlockall");
+
+            var events = sink.Events.FindAll(e => e.name == "dev_console_used");
+            Assert.AreEqual(1, events.Count, "one event per session is enough to flag the player");
+            Assert.AreEqual("currency", events[0].p["command"], "the first command is the one reported");
+            Assert.AreEqual("pid-dev",  events[0].p["player_id"]);
+            Assert.AreEqual("alpha-1",  events[0].p["collection_phase"]);
+        }
+
+        [Test]
+        public void RecordDevConsoleUsed_IsBuffered_BeforeCollectionStarts()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.RecordDevConsoleUsed("currency");     // a dev command in the startup window
+
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+
+            Assert.IsNotNull(sink.First("dev_console_used"), "an early console command must not slip past the filter");
+        }
+
+        [Test]
+        public void SaveData_DevConsoleUsed_DefaultsFalse_AndRoundTripsThroughJson()
+        {
+            Assert.IsFalse(new SaveData().devConsoleUsed, "a clean save must not be flagged");
+
+            var json = JsonUtility.ToJson(new SaveData { devConsoleUsed = true });
+            Assert.IsTrue(JsonUtility.FromJson<SaveData>(json).devConsoleUsed, "the flag is sticky across saves");
+        }
     }
 }

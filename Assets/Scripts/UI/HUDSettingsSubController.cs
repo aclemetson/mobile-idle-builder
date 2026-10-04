@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -26,6 +27,9 @@ namespace MobileIdleBuilder
         private Slider _sliderPanSensitivity;
         private Toggle _toggleInvertTilt;
 
+        private Button _btnSendFeedback;
+        private Button _btnPrivacyPolicy;
+
         private Button _btnClose;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
@@ -50,6 +54,8 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.UnregisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.UnregisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.UnregisterValueChangedCallback(OnInvertTiltChanged);
+            if (_btnSendFeedback     != null) _btnSendFeedback.clicked         -= OnSendFeedback;
+            if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        -= OnPrivacyPolicy;
         }
 
         private void OnDisable() => Cleanup();
@@ -80,6 +86,8 @@ namespace MobileIdleBuilder
             _toggleNotifications  = root.Q<Toggle>("toggle-notifications");
             _sliderPanSensitivity = root.Q<Slider>("slider-pan-sensitivity");
             _toggleInvertTilt     = root.Q<Toggle>("toggle-invert-tilt");
+            _btnSendFeedback      = root.Q<Button>("btn-send-feedback");
+            _btnPrivacyPolicy     = root.Q<Button>("btn-privacy-policy");
         }
 
         private void BindControls()
@@ -94,6 +102,8 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.RegisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.RegisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.RegisterValueChangedCallback(OnInvertTiltChanged);
+            if (_btnSendFeedback     != null) _btnSendFeedback.clicked         += OnSendFeedback;
+            if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        += OnPrivacyPolicy;
         }
 
         private void SyncFromSettings()
@@ -157,5 +167,31 @@ namespace MobileIdleBuilder
 
         private void OnInvertTiltChanged(ChangeEvent<bool> evt)
             => SettingsService.Instance?.SetInvertTilt(evt.newValue);
+
+        // ── Support links ─────────────────────────────────────────────────────
+
+        private void OnSendFeedback()
+        {
+            string playerId = SaveManager.Instance?.Current?.playerId;
+            string device   = $"{SystemInfo.deviceModel} / {SystemInfo.operatingSystem}";
+            Application.OpenURL(BuildFeedbackMailto(FeatureFlags.FeedbackEmail, Application.version, playerId, device));
+        }
+
+        private void OnPrivacyPolicy() => Application.OpenURL(FeatureFlags.PrivacyPolicyUrl);
+
+        /// <summary>
+        /// Builds the Send Feedback <c>mailto:</c> link. The body is prefilled with the build version,
+        /// player id and device so a tester's report can be traced to their save and analytics.
+        /// </summary>
+        public static string BuildFeedbackMailto(string email, string version, string playerId, string device)
+        {
+            string subject = $"Feedback {version}";
+            string body    = "Describe the issue or idea:\n\n\n" +
+                             "----\n" +
+                             $"Version: {version}\n" +
+                             $"Player ID: {(string.IsNullOrEmpty(playerId) ? "unknown" : playerId)}\n" +
+                             $"Device: {device}\n";
+            return $"mailto:{email}?subject={Uri.EscapeDataString(subject)}&body={Uri.EscapeDataString(body)}";
+        }
     }
 }

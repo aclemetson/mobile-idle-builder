@@ -85,7 +85,7 @@
         <ui:VisualElement name="recipe-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Recipes" class="panel-title" />
-                <ui:Button name="btn-close-recipes" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-recipes" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="recipe-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -97,7 +97,7 @@
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Builder" class="panel-title" />
                 <ui:Button name="btn-deconstruct" text="Deconstruct" class="craft-btn" />
-                <ui:Button name="btn-close-buildings" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-buildings" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="buildings-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -108,7 +108,7 @@
         <ui:VisualElement name="codex-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Codex" class="panel-title" />
-                <ui:Button name="btn-close-codex" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-codex" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="codex-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -119,7 +119,7 @@
         <ui:VisualElement name="research-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Research" class="panel-title" />
-                <ui:Button name="btn-close-research" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-research" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="research-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -130,7 +130,7 @@
         <ui:VisualElement name="upgrades-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Prestige Shop" class="panel-title" />
-                <ui:Button name="btn-close-upgrades" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-upgrades" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="prestige-shop-balance" class="prestige-shop-balance">
                 <ui:Label name="prestige-shop-currency" text="✦ 0" class="prestige-shop-currency-label" />
@@ -144,7 +144,7 @@
         <ui:VisualElement name="managers-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Managers" class="panel-title" />
-                <ui:Button name="btn-close-managers" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-managers" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="managers-balance" class="prestige-shop-balance">
                 <ui:Label name="managers-currency" text="✦ 0" class="prestige-shop-currency-label" />
@@ -158,7 +158,7 @@
         <ui:VisualElement name="daily-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Daily Rewards" class="panel-title" />
-                <ui:Button name="btn-close-daily" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-daily" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="daily-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -175,7 +175,7 @@
         <ui:VisualElement name="rewards-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Free Rewards" class="panel-title" />
-                <ui:Button name="btn-close-rewards" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-rewards" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="rewards-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -189,7 +189,7 @@
         <ui:VisualElement name="achievements-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label name="achievements-title" text="Achievements (0)" class="panel-title" />
-                <ui:Button name="btn-close-achievements" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-achievements" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <!-- Category tabs -->
             <ui:VisualElement name="achievements-tabs" class="achievements-tabs">
@@ -209,7 +209,7 @@
         <ui:VisualElement name="prestige-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Prestige" class="panel-title" />
-                <ui:Button name="btn-close-prestige" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-prestige" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="prestige-content" class="recipe-list">
                 <ui:Label name="prestige-summary"  text="Net worth: —"      class="recipe-name" />
@@ -222,7 +222,7 @@
         <ui:VisualElement name="megastructure-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label name="megastructure-title" text="Dyson Sphere" class="panel-title" />
-                <ui:Button name="btn-close-megastructure" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-megastructure" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:Label name="megastructure-progress" text="Stage 0 / 5" class="megastructure-progress-label" />
             <ui:ScrollView name="megastructure-list" class="recipe-list"
@@ -234,7 +234,7 @@
         <ui:VisualElement name="sites-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Quantum Domains" class="panel-title" />
-                <ui:Button name="btn-close-sites" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-sites" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="sites-balance" class="prestige-shop-balance">
                 <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
@@ -248,7 +248,7 @@
         <ui:VisualElement name="worlds-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Worlds" class="panel-title" />
-                <ui:Button name="btn-close-worlds" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-worlds" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="worlds-balance" class="prestige-shop-balance">
                 <ui:Label name="worlds-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
@@ -262,7 +262,7 @@
         <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Weekly Competition" class="panel-title" />
-                <ui:Button name="btn-close-pvp" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-pvp" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
             <!-- Status section -->
@@ -289,7 +289,7 @@
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Premium Shop" class="panel-title" />
                 <ui:Label name="shop-crystal-balance" text="◆ 0" class="shop-crystal-balance" />
-                <ui:Button name="btn-close-shop" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-shop" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="shop-tabs" class="shop-tabs">
                 <ui:Button name="shop-tab-speedups"  text="⚡ Speed"    class="shop-tab shop-tab--active" />
@@ -308,7 +308,7 @@
         <ui:VisualElement name="settings-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Settings" class="panel-title" />
-                <ui:Button name="btn-close-settings" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-settings" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:ScrollView class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -349,25 +349,28 @@
                     <ui:Label text="Invert Tilt" class="settings-label" />
                     <ui:Toggle name="toggle-invert-tilt" value="false" class="settings-toggle" />
                 </ui:VisualElement>
+                <ui:Label text="SUPPORT" class="drawer-section-title" />
+                <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
+                <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="placement-overlay" class="placement-overlay hidden">
             <ui:VisualElement name="placement-bar" class="placement-bar">
-                <ui:Label name="placement-label" text="Tap a tile to position  ·  drag to pan  ·  ✓ to place"
+                <ui:Label name="placement-label" text="Tap a tile to position  ·  drag to pan  ·  confirm to place"
                           class="placement-label" />
-                <ui:Button name="btn-rotate-output" text="↻ Rotate" class="rotate-output-btn hidden" />
-                <ui:Button name="btn-flip-building" text="⇄ Flip"   class="rotate-output-btn hidden" />
+                <ui:Button name="btn-rotate-output" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Rotate" /><ui:Label text="Rotate" picking-mode="Ignore" class="glyph-label" /></ui:Button>
+                <ui:Button name="btn-flip-building" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Flip" /><ui:Label text="Flip" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ PLACEMENT CONFIRM POPUP (world-anchored above the candidate cell) ═══ -->
         <ui:VisualElement name="placement-confirm-popup" class="placement-confirm-popup hidden" picking-mode="Ignore">
-            <ui:Button name="btn-cancel-candidate" text="✕" class="placement-confirm-btn placement-confirm-btn--cancel" />
-            <ui:Button name="btn-rotate-candidate" text="↻" class="placement-confirm-btn placement-confirm-btn--rotate hidden" />
-            <ui:Button name="btn-confirm-place"    text="✓" class="placement-confirm-btn placement-confirm-btn--confirm" />
+            <ui:Button name="btn-cancel-candidate" text="" class="placement-confirm-btn placement-confirm-btn--cancel glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+            <ui:Button name="btn-rotate-candidate" text="" class="placement-confirm-btn placement-confirm-btn--rotate hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Rotate" /></ui:Button>
+            <ui:Button name="btn-confirm-place"    text="" class="placement-confirm-btn placement-confirm-btn--confirm glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
         </ui:VisualElement>
 
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
@@ -375,9 +378,9 @@
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
                 <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
                           class="placement-label" />
-                <ui:Button name="btn-conveyor-rotate" text="↻" tooltip="Bend route" class="conveyor-icon-btn hidden" />
-                <ui:Button name="btn-conveyor-confirm" text="✓" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden" />
-                <ui:Button name="btn-conveyor-cancel-candidate" text="✕" tooltip="Clear" class="conveyor-icon-btn hidden" />
+                <ui:Button name="btn-conveyor-rotate" text="" tooltip="Bend route" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Rotate" /></ui:Button>
+                <ui:Button name="btn-conveyor-confirm" text="" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
+                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Clear" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
                 <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Start from a new cell" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
@@ -414,7 +417,7 @@
         <ui:VisualElement name="building-inspector-panel" class="output-selector hidden">
             <ui:VisualElement class="panel-header">
                 <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
-                <ui:Button name="btn-close-inspector" text="✕" class="close-btn" />
+                <ui:Button name="btn-close-inspector" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="inspector-static" class="inspector-static" />
             <ui:ScrollView name="inspector-recipes" class="inspector-scroll inspector-scroll--recipes"
@@ -431,7 +434,7 @@
             <Style src="Components/MaxwellsDemonPanel.uss" />
             <ui:VisualElement class="demon-panel__header">
                 <ui:Label text="Maxwell's Demon" class="demon-panel__title" />
-                <ui:Button name="btn-demon-close" text="✕" class="close-btn" />
+                <ui:Button name="btn-demon-close" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement class="demon-panel__body">
                 <!-- Left: player inventory -->

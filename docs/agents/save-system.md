@@ -16,6 +16,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `idleSnapshot` + `idleCollectionApplied` | active site's offline-earnings chain snapshot + double-apply guard timestamp |
 | `siteSnapshots` (List<IdleCollectionSnapshot>) | per-site offline snapshots, index = site index. Mirrors `idleSnapshot` at the active index; inactive sites keep producing from their stored entries. Populated by `GridSaveService.MirrorActiveSiteSnapshot` on every flush/load. Run state — cleared on prestige by `PrestigeSaveWatcher.ResetSitesForPrestige` |
 | `unlockedRecipes / unlockedResearch / codex` | knowledge; `unlockedResearch` is per-run (cleared by PrestigeSystem) |
+| `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |
 | `speedBoostExpiryUtc` | ISO 8601; empty = no boost. THE pattern to copy for any timed effect |

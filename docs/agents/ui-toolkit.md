@@ -80,6 +80,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 ## Styling
 
 - `Assets/UI/tokens.uss` — design tokens (colors/spacing/typography vars). `Assets/UI/components.uss` — shared classes. `Assets/UI/GameHUD.uss` — HUD layout. Panel-specific: `AchievementsMenu.uss`, `PremiumShop.uss`.
+- **Icons: never use the `✕ ✓ ↻ ⇄` text glyphs.** The Android default font lacks them and they render blank on device (#165). Use `GlyphIcon` (`Assets/Scripts/UI/GlyphIcon.cs`), which is vector-drawn and strokes with the inherited text `color`. In UXML, use `<ui:Button text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>` (`icon` = `Close|Check|Rotate|Flip`). In code, use `GlyphIcon.SetOn(host, kind)` / `ClearFrom(host)` / `TitleRow(kind, label)`. Size it per context with `.<host-class> > .glyph-icon` rules in `components.uss`. `GlyphIconTests` fails if any GameHUD text uses those glyphs. Other symbols (`▶ ○ ⚙ ⚡ ◆ ◈`, emoji in notification banners) are still unverified on device.
 - Reuse existing classes (e.g., `upgrade-row`, `upgrade-row--locked`, `slide-panel`) before writing new USS. Grep `GameHUD.uss`/`components.uss` for a class before inventing one.
 
 ## Checklist: adding a new panel

@@ -53,6 +53,8 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `gamedata.noticeTitle` | string | `"Game Updated"` | Title shown on the update-notice modal. |
 | `gamedata.noticeMessage` | string | (generic) | Body text shown on the update-notice modal. |
 | `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
+| `links.feedbackEmail` | string | `"aclemetson12492@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
+| `links.privacyPolicyUrl` | string | GitHub Pages `privacy-policy.html` URL | Opened by Settings > Support > **Privacy Policy**. Source is `docs/privacy-policy.html`, served from `develop:/docs`. Read at tap time. |
 
 ## Game-data overrides
 

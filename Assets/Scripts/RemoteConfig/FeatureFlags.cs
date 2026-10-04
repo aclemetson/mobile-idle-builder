@@ -39,6 +39,8 @@ namespace MobileIdleBuilder
         public const string GameDataNoticeTitleKey = "gamedata.noticeTitle";
         public const string GameDataNoticeMessageKey = "gamedata.noticeMessage";
         public const string GameDataOverridesKey   = "gamedata.overrides";
+        public const string FeedbackEmailKey       = "links.feedbackEmail";
+        public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
@@ -62,6 +64,9 @@ namespace MobileIdleBuilder
         // Curated scalar overrides applied onto the baked ScriptableObjects at boot (config/items/research).
         // JSON blob; default empty => no overrides, the build runs its baked baseline. See GameDataOverrides.
         public const string GameDataOverridesDefault = "{}";
+        // Settings > Support links. Remote so the inbox / policy host can move without a release.
+        public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
+        public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
 
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
@@ -81,6 +86,8 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataNoticeTitleKey,   FlagType.String),
             new FlagDef(GameDataNoticeMessageKey, FlagType.String),
             new FlagDef(GameDataOverridesKey,     FlagType.String),
+            new FlagDef(FeedbackEmailKey,         FlagType.String),
+            new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
@@ -99,6 +106,8 @@ namespace MobileIdleBuilder
         public static string GameDataNoticeTitle  => GetString(GameDataNoticeTitleKey,  GameDataNoticeTitleDefault);
         public static string GameDataNoticeMessage => GetString(GameDataNoticeMessageKey, GameDataNoticeMessageDefault);
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
+        public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
+        public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
 
         static bool GetBool(string key, bool fallback)
         {
