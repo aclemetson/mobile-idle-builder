@@ -47,6 +47,12 @@ the `collect endpoint:` line. See `docs/agents/analytics.md`.
 | Field cooldown reached | `player_snapshot.field_cooldown_sec` | How far have players driven the tap cooldown down via research + Quick Hands? Is the floor too easy/hard to hit? | `FieldSO.tapCooldownSeconds`, research `field_cooldown_mult`, Quick Hands per-level reduction |
 | Power grid connectivity | `player_snapshot.power_nodes_total` vs `power_nodes_linked` | What fraction of placed power buildings are stranded (not chained to a generator)? A large gap means link ranges are too tight or relays are hard to wire in. | `link_radius_tiles` per power building (generator / relay) + per-upgrade-level scaling |
 
+## Excluding dev-console sessions
+
+Alpha builds include the dev console. Before reading any balance metric, drop every `player_id` that has a
+`dev_console_used` event (param `command`) or a `player_snapshot` where `dev_console_used = true`. The snapshot
+flag is sticky per save, so one cheated session marks that player for good.
+
 ## Where to view each metric
 
 UGS Data Explorer v2 can only **count events** broken down by a **dimension**; it **cannot aggregate a

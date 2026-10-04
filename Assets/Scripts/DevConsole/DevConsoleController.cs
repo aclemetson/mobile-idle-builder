@@ -287,11 +287,12 @@ namespace MobileIdleBuilder.Dev
             _inputField.SetValueWithoutNotify(string.Empty);
 
             var result = _registry.Execute(input);
+            bool isError = !string.IsNullOrEmpty(result)
+                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
             if (!string.IsNullOrEmpty(result))
-            {
-                bool isError = result.StartsWith("Error") || result.StartsWith("Unknown");
                 AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
-            }
+
+            if (!isError) MarkDevConsoleUsed(input);
 
             // Don't re-focus if a scene transition is already underway — keeping the input
             // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
@@ -306,6 +307,19 @@ namespace MobileIdleBuilder.Dev
             {
                 _inputField.Blur();
             }
+        }
+
+        // Alpha builds ship the console, so a command that ran taints this save's balancing data:
+        // set the sticky save flag (stamped on telemetry snapshots) and emit the once-per-session event.
+        // Only the command name is reported, never its arguments.
+        private static void MarkDevConsoleUsed(string input)
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save != null) save.devConsoleUsed = true;
+
+            int space = input.IndexOf(' ');
+            string command = (space < 0 ? input : input.Substring(0, space)).ToLowerInvariant();
+            TelemetryService.Instance?.RecordDevConsoleUsed(command);
         }
 
         // ── Log ───────────────────────────────────────────────────────────────
