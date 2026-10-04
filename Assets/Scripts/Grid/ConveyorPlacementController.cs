@@ -244,14 +244,8 @@ namespace MobileIdleBuilder
                 _dragAccum   = 0f;
                 _pressActive = true;
 
-                // Develop-tier trace of why a press over the conveyor bar is/ isn't treated as UI.
-                // VerboseLogging stays true across BOTH checks so the bar-check + UIBlock detail
-                // log only on the press (not every hover frame).
-                UIInputBlocker.VerboseLogging = true;
                 bool overBlocker  = UIInputBlocker.IsPointerOverUI(_pressPos);
                 bool overConveyor = IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false;
-                UIInputBlocker.VerboseLogging = false;
-                GameLogger.Develop($"[Conveyor] PRESS at {_pressPos} screen={Screen.width}x{Screen.height} mode={_mode} hasStart={_hasStart} hasCandidate={HasCandidate} overBlocker={overBlocker} overConveyor={overConveyor} -> pressOverUI={(overBlocker || overConveyor)}");
 
                 _pressOverUI = overBlocker || overConveyor;
             }

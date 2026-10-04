@@ -27,6 +27,8 @@ namespace MobileIdleBuilder
         private float  _inspectorRefreshTimer;
         // Live craft-progress bar fill (recreated each rebuild; updated per-frame in Tick).
         private VisualElement _craftProgressFill;
+        // Tallest height the static block has reached for the current entity (see OnStaticGeometryChanged).
+        private float _staticReservedHeight;
 
         private EntityManager              _em;
         private EntityQuery                _playerQuery;
@@ -157,6 +159,7 @@ namespace MobileIdleBuilder
             _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
             _placement              = placement;
             _hud                   = hud;
+            _inspectorStatic?.RegisterCallback<GeometryChangedEvent>(OnStaticGeometryChanged);
         }
 
         public void SetECSContext(EntityManager em)
@@ -183,6 +186,7 @@ namespace MobileIdleBuilder
         {
             GameLogger.Develop($"[InspectorUI] ShowBuildingInspector: '{buildingName}' ecsReady={_ecsReady} panel={((_buildingInspectorPanel == null) ? "NULL" : "ok")}");
             if (!_ecsReady) return;
+            if (entity != _inspectorEntity) ResetStaticReservedHeight();
             _inspectorEntity = entity;
             if (_inspectorBuildingName != null) _inspectorBuildingName.text = buildingName;
             RefreshInspectorContent();
@@ -194,6 +198,7 @@ namespace MobileIdleBuilder
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
+            ResetStaticReservedHeight();
             ClearSelectedPowerVisual();
             SetPowerCardCompact(false);
         }
@@ -263,33 +268,37 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
             }
 
+            // Buffer sections keep a stable shape across the 0.5s rebuilds: one row per item the recipe
+            // expects (shown at ×0 when absent) and an always-present Empty button that is merely
+            // disabled when there is nothing to empty. Adding/removing rows as items flow in and out
+            // shifted the scrolls below and moved buttons out from under the finger.
             if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
             {
-                var buf = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                var buf      = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                var contents = new List<(int itemId, int quantity)>(buf.Length);
+                for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
+
                 AddInspectorRow(_inspectorStatic, "—— Output Buffer ——");
-                if (buf.Length == 0)
-                {
-                    AddInspectorRow(_inspectorStatic, "  (empty)");
-                }
-                else
-                {
-                    for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
-                    var captured = _inspectorEntity;
-                    AddEmptyBufferButton("Empty output → inventory", () => EmptyOutputToInventory(captured));
-                }
+                AddBufferRows(StableBufferRows(RecipeOutputIds(_inspectorEntity), contents));
+                var captured = _inspectorEntity;
+                AddEmptyBufferButton("Empty output → inventory", contents.Count > 0,
+                                     () => EmptyOutputToInventory(captured));
             }
 
             if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
             {
-                var buf = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
-                if (buf.Length > 0)
+                var buf      = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
+                var expected = RecipeInputIds(_inspectorEntity);
+                if (ShowInputBufferSection(buf.Length, expected.Count, _em.HasComponent<EntropySinkTag>(_inspectorEntity)))
                 {
+                    var contents = new List<(int itemId, int quantity)>(buf.Length);
+                    for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
+
                     AddInspectorRow(_inspectorStatic, "—— Input Buffer ——");
-                    for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                    AddBufferRows(StableBufferRows(expected, contents));
                     var captured = _inspectorEntity;
-                    AddEmptyBufferButton("Empty input → inventory", () => EmptyInputToInventory(captured));
+                    AddEmptyBufferButton("Empty input → inventory", contents.Count > 0,
+                                         () => EmptyInputToInventory(captured));
                 }
             }
 
@@ -340,12 +349,13 @@ namespace MobileIdleBuilder
                             btn.AddToClassList("craft-btn");
                             var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                             if (icon != null) btn.Insert(0, icon);
-                            // Tap manipulator so the recipe choice survives the ScrollView touch-scroll.
-                            btn.AddManipulator(new TapGestureManipulator(() =>
+                            // Routed from the list: a Button's own Clickable consumes the
+                            // pointer-down before any manipulator added later. See ListTapRouter.
+                            ListTapRouter.Register(_inspectorRecipes, btn, () =>
                             {
                                 SetBuildingRecipe(_inspectorEntity, captured);
                                 RefreshInspectorContent();
-                            }));
+                            });
                             _inspectorRecipes?.Add(btn);
                         }
                     }
@@ -374,49 +384,42 @@ namespace MobileIdleBuilder
             AddInspectorRow(_inspectorUpgrades, "—— Manager ——");
 
             var current = svc.GetManagerAtBuilding(siteIndex, posKey);
-            if (current != null)
+
+            // One same-shaped row per manager, in catalogue order, whether or not it is on THIS
+            // building: assigning/unassigning only flips the button text. Previously the assigned
+            // manager moved into a differently-sized row at the top and its Assign button vanished,
+            // reshuffling every row below the tap.
+            bool anyRow = false;
+            foreach (var mgr in svc.AllManagers)
             {
+                if (mgr == null) continue;
+                bool isHere = current != null && mgr.id == current.id;
+                if (!isHere && !svc.IsHired(mgr.id)) continue;
+                anyRow = true;
+
                 var row = new VisualElement();
                 row.AddToClassList("upgrade-row");
 
-                int   stars    = svc.GetStars(current.id);
-                float effValue = svc.EffectiveBonusValue(current.id);
-                var name = new Label($"{current.displayName} {stars}★  ({ManagerBonusText(current.bonusType, effValue)})");
+                int   stars    = svc.GetStars(mgr.id);
+                float effValue = svc.EffectiveBonusValue(mgr.id);
+                var name = new Label($"{mgr.displayName} {stars}★  ({ManagerBonusText(mgr.bonusType, effValue)})");
                 name.AddToClassList("upgrade-row-name");
                 row.Add(name);
 
-                var unassign = new Button { text = "Unassign" };
-                unassign.AddToClassList("craft-btn");
-                var capturedId = current.id;
-                unassign.clicked += () =>
+                var btn = new Button { text = isHere ? "Unassign" : "Assign" };
+                btn.AddToClassList("craft-btn");
+                var capturedId = mgr.id;
+                ListTapRouter.Register(_inspectorUpgrades, btn, () =>
                 {
-                    svc.Unassign(capturedId);
+                    if (isHere) svc.Unassign(capturedId);
+                    else        svc.Assign(capturedId, siteIndex, posKey);
                     RefreshInspectorContent();
-                };
-                row.Add(unassign);
+                });
+                row.Add(btn);
                 _inspectorUpgrades?.Add(row);
             }
 
-            // Offer each hired manager not already on THIS building.
-            bool anyOffer = false;
-            foreach (var mgr in svc.AllManagers)
-            {
-                if (mgr == null || !svc.IsHired(mgr.id)) continue;
-                if (current != null && mgr.id == current.id) continue;
-                anyOffer = true;
-
-                var btn = new Button { text = $"Assign {mgr.displayName}" };
-                btn.AddToClassList("craft-btn");
-                var capturedId = mgr.id;
-                btn.clicked += () =>
-                {
-                    svc.Assign(capturedId, siteIndex, posKey);
-                    RefreshInspectorContent();
-                };
-                _inspectorUpgrades?.Add(btn);
-            }
-
-            if (current == null && !anyOffer)
+            if (!anyRow)
                 AddInspectorRow(_inspectorUpgrades, "  (hire a manager in the Managers panel)");
         }
 
@@ -490,14 +493,41 @@ namespace MobileIdleBuilder
             bool isMaxed      = currentLevel >= maxLevel;
             var  next         = isMaxed ? (BuildingUpgradeLevel?)null : so.NextSpeedUpgrade(currentLevel);
 
+            string descText = null;
+            if (next.HasValue)
+            {
+                if (so.isPowerSource)
+                    descText = next.Value.outputEV > 0f
+                        ? $"→ {next.Value.outputEV:0.#} eV  ·  {next.Value.influenceRadiusTiles:0.#} tiles"
+                        : $"→ {next.Value.influenceRadiusTiles:0.#} tiles coverage";
+                else
+                    descText = $"{next.Value.outputRate:F1}× production speed";
+            }
+
+            int capturedNextLevel = currentLevel + 1;
+            // Power sources upgrade coverage/output, not craft speed — label it accordingly.
+            AddUpgradeRow(so.isPowerSource ? "Coverage Upgrade" : "Speed Upgrade",
+                          currentLevel, maxLevel, isMaxed, descText, next?.costBaseCurrency ?? 0,
+                          () => OnSpeedUpgradeBought(entity, so, capturedNextLevel));
+        }
+
+        /// <summary>
+        /// Builds one upgrade row. A row with no next level (maxed, or a data gap) keeps its description
+        /// line and footer, with the button disabled, so buying the last level doesn't collapse the row
+        /// and pull the rows below it up under the finger. <paramref name="nextDesc"/> null = no next level.
+        /// </summary>
+        private void AddUpgradeRow(string title, int currentLevel, int maxLevel, bool isMaxed,
+                                   string nextDesc, int nextCost, System.Action onBuy)
+        {
+            bool canUpgrade = !isMaxed && nextDesc != null;
+
             var row = new VisualElement();
             row.AddToClassList("upgrade-row");
             if (isMaxed) row.AddToClassList("upgrade-row--maxed");
 
             var header = new VisualElement();
             header.AddToClassList("upgrade-row-header");
-            // Power sources upgrade coverage/output, not craft speed — label it accordingly.
-            var nameLabel  = new Label(so.isPowerSource ? "Coverage Upgrade" : "Speed Upgrade");
+            var nameLabel  = new Label(title);
             nameLabel.AddToClassList("upgrade-row-name");
             var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
             levelLabel.AddToClassList("upgrade-row-level");
@@ -505,41 +535,29 @@ namespace MobileIdleBuilder
             header.Add(levelLabel);
             row.Add(header);
 
-            if (!isMaxed && next.HasValue)
-            {
-                string descText;
-                if (so.isPowerSource)
-                    descText = next.Value.outputEV > 0f
-                        ? $"→ {next.Value.outputEV:0.#} eV  ·  {next.Value.influenceRadiusTiles:0.#} tiles"
-                        : $"→ {next.Value.influenceRadiusTiles:0.#} tiles coverage";
-                else
-                    descText = $"{next.Value.outputRate:F1}× production speed";
-                var desc = new Label(descText);
-                desc.AddToClassList("upgrade-row-desc");
-                row.Add(desc);
+            var desc = new Label(canUpgrade ? nextDesc : "Maximum level reached");
+            desc.AddToClassList("upgrade-row-desc");
+            row.Add(desc);
 
-                long balance = GetBaseCurrency();
-                bool canAfford = balance >= next.Value.costBaseCurrency;
+            bool canAfford = canUpgrade && GetBaseCurrency() >= nextCost;
 
-                var footer = new VisualElement();
-                footer.AddToClassList("upgrade-row-footer");
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
 
-                var costLabel = new Label($"{next.Value.costBaseCurrency:N0} e");
-                costLabel.AddToClassList("upgrade-row-cost");
-                if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
-                footer.Add(costLabel);
+            var costLabel = new Label(canUpgrade ? $"{nextCost:N0} e" : "—");
+            costLabel.AddToClassList("upgrade-row-cost");
+            if (canUpgrade && !canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+            footer.Add(costLabel);
 
-                var btn = new Button { text = "Upgrade" };
-                btn.AddToClassList("craft-btn");
-                btn.SetEnabled(canAfford);
-                int capturedNextLevel = currentLevel + 1;
-                var capturedSO        = so;
-                btn.clicked += () => OnSpeedUpgradeBought(entity, capturedSO, capturedNextLevel);
-                footer.Add(btn);
+            var btn = new Button { text = canUpgrade ? "Upgrade" : "Maxed" };
+            btn.AddToClassList("craft-btn");
+            btn.SetEnabled(canAfford);
+            // Routed from the scroll: on touch the ScrollView swallows a Button's own Clickable, and the
+            // 0.5s rebuild would drop a press held across it. See ListTapRouter.
+            ListTapRouter.Register(_inspectorUpgrades, btn, onBuy);
+            footer.Add(btn);
 
-                row.Add(footer);
-            }
-
+            row.Add(footer);
             _inspectorUpgrades?.Add(row);
         }
 
@@ -576,49 +594,11 @@ namespace MobileIdleBuilder
             bool isMaxed      = currentLevel >= maxLevel;
             var  next         = isMaxed ? (BuildingStorageUpgradeLevel?)null : so.NextStorageUpgrade(currentLevel);
 
-            var row = new VisualElement();
-            row.AddToClassList("upgrade-row");
-            if (isMaxed) row.AddToClassList("upgrade-row--maxed");
-
-            var header = new VisualElement();
-            header.AddToClassList("upgrade-row-header");
-            var nameLabel  = new Label("Storage Upgrade");
-            nameLabel.AddToClassList("upgrade-row-name");
-            var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
-            levelLabel.AddToClassList("upgrade-row-level");
-            header.Add(nameLabel);
-            header.Add(levelLabel);
-            row.Add(header);
-
-            if (!isMaxed && next.HasValue)
-            {
-                var desc = new Label($"{next.Value.maxOutputItems} item output buffer");
-                desc.AddToClassList("upgrade-row-desc");
-                row.Add(desc);
-
-                long balance   = GetBaseCurrency();
-                bool canAfford = balance >= next.Value.costBaseCurrency;
-
-                var footer = new VisualElement();
-                footer.AddToClassList("upgrade-row-footer");
-
-                var costLabel = new Label($"{next.Value.costBaseCurrency:N0} e");
-                costLabel.AddToClassList("upgrade-row-cost");
-                if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
-                footer.Add(costLabel);
-
-                var btn = new Button { text = "Upgrade" };
-                btn.AddToClassList("craft-btn");
-                btn.SetEnabled(canAfford);
-                int capturedNextLevel = currentLevel + 1;
-                var capturedSO        = so;
-                btn.clicked += () => OnStorageUpgradeBought(entity, capturedSO, capturedNextLevel);
-                footer.Add(btn);
-
-                row.Add(footer);
-            }
-
-            _inspectorUpgrades?.Add(row);
+            int capturedNextLevel = currentLevel + 1;
+            AddUpgradeRow("Storage Upgrade", currentLevel, maxLevel, isMaxed,
+                          next.HasValue ? $"{next.Value.maxOutputItems} item output buffer" : null,
+                          next?.costBaseCurrency ?? 0,
+                          () => OnStorageUpgradeBought(entity, so, capturedNextLevel));
         }
 
         private void OnSpeedUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
@@ -696,49 +676,11 @@ namespace MobileIdleBuilder
             bool isMaxed      = currentLevel >= maxLevel;
             var  next         = isMaxed ? (BuildingInputUpgradeLevel?)null : so.NextInputUpgrade(currentLevel);
 
-            var row = new VisualElement();
-            row.AddToClassList("upgrade-row");
-            if (isMaxed) row.AddToClassList("upgrade-row--maxed");
-
-            var header = new VisualElement();
-            header.AddToClassList("upgrade-row-header");
-            var nameLabel  = new Label("Input Upgrade");
-            nameLabel.AddToClassList("upgrade-row-name");
-            var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
-            levelLabel.AddToClassList("upgrade-row-level");
-            header.Add(nameLabel);
-            header.Add(levelLabel);
-            row.Add(header);
-
-            if (!isMaxed && next.HasValue)
-            {
-                var desc = new Label($"{next.Value.maxInputItems} item input buffer");
-                desc.AddToClassList("upgrade-row-desc");
-                row.Add(desc);
-
-                long balance   = GetBaseCurrency();
-                bool canAfford = balance >= next.Value.costBaseCurrency;
-
-                var footer = new VisualElement();
-                footer.AddToClassList("upgrade-row-footer");
-
-                var costLabel = new Label($"{next.Value.costBaseCurrency:N0} e");
-                costLabel.AddToClassList("upgrade-row-cost");
-                if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
-                footer.Add(costLabel);
-
-                var btn = new Button { text = "Upgrade" };
-                btn.AddToClassList("craft-btn");
-                btn.SetEnabled(canAfford);
-                int capturedNextLevel = currentLevel + 1;
-                var capturedSO        = so;
-                btn.clicked += () => OnInputUpgradeBought(entity, capturedSO, capturedNextLevel);
-                footer.Add(btn);
-
-                row.Add(footer);
-            }
-
-            _inspectorUpgrades?.Add(row);
+            int capturedNextLevel = currentLevel + 1;
+            AddUpgradeRow("Input Upgrade", currentLevel, maxLevel, isMaxed,
+                          next.HasValue ? $"{next.Value.maxInputItems} item input buffer" : null,
+                          next?.costBaseCurrency ?? 0,
+                          () => OnInputUpgradeBought(entity, so, capturedNextLevel));
         }
 
         private void OnInputUpgradeBought(Entity entity, BuildingSO so, int nextLevel)
@@ -814,11 +756,11 @@ namespace MobileIdleBuilder
                 btn.AddToClassList("craft-btn");
                 var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
                 if (icon != null) btn.Insert(0, icon);
-                btn.AddManipulator(new TapGestureManipulator(() =>
+                ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
-                }));
+                });
                 _inspectorRecipes?.Add(btn);
             }
         }
@@ -900,6 +842,96 @@ namespace MobileIdleBuilder
             target?.Add(lbl);
         }
 
+        // ── Stable buffer rows ────────────────────────────────────────────────
+
+        private void AddBufferRows(List<(int itemId, int quantity)> rows)
+        {
+            if (rows.Count == 0)
+            {
+                AddInspectorRow(_inspectorStatic, "  (empty)");
+                return;
+            }
+            foreach (var (itemId, quantity) in rows)
+                AddInspectorRow(_inspectorStatic, $"  {ItemName(itemId)}  ×  {quantity}");
+        }
+
+        /// <summary>
+        /// Rows for a building buffer whose count doesn't change as items flow: every expected item id
+        /// first (in recipe order, quantity 0 when absent), then any unexpected items the buffer holds
+        /// (e.g. leftovers from a previous recipe). Duplicate ids are merged into one row.
+        /// </summary>
+        internal static List<(int itemId, int quantity)> StableBufferRows(
+            IReadOnlyList<int> expectedItemIds, IReadOnlyList<(int itemId, int quantity)> contents)
+        {
+            var rows = new List<(int itemId, int quantity)>();
+            if (expectedItemIds != null)
+                foreach (var id in expectedItemIds)
+                    if (IndexOfItem(rows, id) < 0) rows.Add((id, 0));
+
+            if (contents != null)
+                foreach (var (id, qty) in contents)
+                {
+                    int i = IndexOfItem(rows, id);
+                    if (i >= 0) rows[i] = (id, rows[i].quantity + qty);
+                    else        rows.Add((id, qty));
+                }
+            return rows;
+        }
+
+        private static int IndexOfItem(List<(int itemId, int quantity)> rows, int itemId)
+        {
+            for (int i = 0; i < rows.Count; i++)
+                if (rows[i].itemId == itemId) return i;
+            return -1;
+        }
+
+        /// <summary>
+        /// The input buffer section is shown whenever the building can hold inputs at all (a recipe with
+        /// inputs, or a sink), not only while items happen to be sitting in it.
+        /// </summary>
+        internal static bool ShowInputBufferSection(int bufferLength, int recipeInputCount, bool isSink)
+            => bufferLength > 0 || recipeInputCount > 0 || isSink;
+
+        private List<int> RecipeInputIds(Entity entity)
+        {
+            var ids = new List<int>();
+            if (!_em.HasBuffer<RecipeInputSlot>(entity)) return ids;
+            var buf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+            for (int i = 0; i < buf.Length; i++) ids.Add(buf[i].ItemID);
+            return ids;
+        }
+
+        private List<int> RecipeOutputIds(Entity entity)
+        {
+            var ids = new List<int>();
+            if (!_em.HasBuffer<RecipeOutputSlot>(entity)) return ids;
+            var buf = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+            for (int i = 0; i < buf.Length; i++) ids.Add(buf[i].ItemID);
+            return ids;
+        }
+
+        // ── Reserved height for the static block ─────────────────────────────
+
+        /// <summary>
+        /// Backstop for anything whose row count still varies (wrapping status text, a sink's input
+        /// list): the static block never shrinks below the tallest height it has reached for the
+        /// building currently inspected, so the scrolls beneath it don't jump back up.
+        /// </summary>
+        private void OnStaticGeometryChanged(GeometryChangedEvent evt)
+        {
+            if (_inspectorEntity == Entity.Null) return;
+            float h = evt.newRect.height;
+            if (h <= _staticReservedHeight + 0.5f) return;
+            _staticReservedHeight = h;
+            _inspectorStatic.style.minHeight = h;
+        }
+
+        private void ResetStaticReservedHeight()
+        {
+            _staticReservedHeight = 0f;
+            if (_inspectorStatic != null) _inspectorStatic.style.minHeight = StyleKeyword.Null;
+        }
+
         // ── Craft progress bar ────────────────────────────────────────────────
 
         private static float CraftFraction(RecipeProcessData rp)
@@ -937,11 +969,16 @@ namespace MobileIdleBuilder
 
         // ── Empty buffer into player inventory ────────────────────────────────
 
-        private void AddEmptyBufferButton(string text, System.Action onEmpty)
+        private void AddEmptyBufferButton(string text, bool hasContents, System.Action onEmpty)
         {
             var btn = new Button { text = text };
             btn.AddToClassList("craft-btn");
-            btn.AddManipulator(new TapGestureManipulator(onEmpty));
+            // Disabled rather than omitted so the layout doesn't change as the buffer fills/drains;
+            // ListTapRouter swallows taps on a disabled button.
+            btn.SetEnabled(hasContents);
+            // _inspectorStatic is not a ScrollView, but the router is still required: the
+            // button's own Clickable consumes the pointer-down regardless of any ScrollView.
+            ListTapRouter.Register(_inspectorStatic, btn, onEmpty);
             _inspectorStatic.Add(btn);
         }
 

@@ -621,7 +621,9 @@ MonoBehaviour:
   minPitch: 10
   maxPitch: 90
   rotateSpeedTouch: 0.2
+  rotateSpeedTwist: 1
   rotateSpeedMouse: 0.2
+  panInertiaDamping: 6
   gridRenderer: {fileID: 1750057541}
 --- !u!1 &410087039
 GameObject:
