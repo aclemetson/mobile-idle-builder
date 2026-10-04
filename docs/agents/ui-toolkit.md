@@ -32,6 +32,10 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - **Backstop:** `inspector-static` gets a `min-height` high-water mark per inspected entity (`OnStaticGeometryChanged`), reset on entity change / hide.
 - All inspector buttons route through `ListTapRouter` (not `.clicked`): the ScrollView eats a Button's own Clickable on touch, and the 0.5s rebuild would drop a held press.
 
+## Tutorial hint banner (minimizable)
+
+`tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. Covered by `TutorialHintMinimizeTests` (runs against the real UXML).
+
 ## Power readout & coverage (proximity power feature)
 
 - **Top-bar power label** (`power-label` in `GameHUD.uxml:26`): `HUDStatusBarController.RefreshPowerLabel` reads the `PowerGridState` singleton and shows `⚡ draw / supply eV`. On a brownout (`Draw > Supply`) or any unpowered consumer it prefixes `⚠`, appends `(N unpowered)`, and toggles the `power-brownout` USS class (`GameHUD.uss`, red via `--color-danger`). The status bar's power query is `PowerGridState` (not `PowerNodeData`).
