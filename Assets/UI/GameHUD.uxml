@@ -349,6 +349,9 @@
                     <ui:Label text="Invert Tilt" class="settings-label" />
                     <ui:Toggle name="toggle-invert-tilt" value="false" class="settings-toggle" />
                 </ui:VisualElement>
+                <ui:Label text="SUPPORT" class="drawer-section-title" />
+                <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
+                <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
