@@ -128,7 +128,17 @@ namespace MobileIdleBuilder
 
             bool isLast = _current == null || _lineIndex >= _current.lines.Length - 1;
             if (_nextBtn != null)
-                _nextBtn.text = isLast ? "✓" : "▶";
+            {
+                if (isLast)
+                {
+                    GlyphIcon.SetOn(_nextBtn, GlyphIcon.Kind.Check);
+                }
+                else
+                {
+                    GlyphIcon.ClearFrom(_nextBtn);
+                    _nextBtn.text = "▶";
+                }
+            }
 
             // Pause / unpause game time based on line directive
             Time.timeScale = line.pauseGame ? 0f : 1f;
