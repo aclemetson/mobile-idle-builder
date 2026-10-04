@@ -436,3 +436,53 @@
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
+
+/* ================================================================
+   GlyphIcon
+   Vector icons (close / check / rotate / flip) drawn by GlyphIcon.cs in
+   place of the ✕ ✓ ↻ ⇄ text glyphs, which the Android default font
+   lacks (#165). The icon strokes with the inherited text color.
+   ================================================================ */
+
+.glyph-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* A button/label whose only content is a GlyphIcon: center it. */
+.glyph-host {
+    justify-content: center;
+    align-items: center;
+}
+
+/* Icon followed by a text label inside one button (e.g. Rotate / Flip). */
+.glyph-host--row {
+    flex-direction: row;
+}
+
+.glyph-host--row > .glyph-icon {
+    margin-right: 6px;
+}
+
+.glyph-label {
+    padding: 0;
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.close-btn > .glyph-icon             { width: 16px; height: 16px; }
+.placement-confirm-btn > .glyph-icon { width: 26px; height: 26px; }
+.conveyor-icon-btn > .glyph-icon     { width: 16px; height: 16px; }
+.rotate-output-btn > .glyph-icon     { width: 13px; height: 13px; }
+.craft-btn > .glyph-icon             { width: 14px; height: 14px; }
+.ach-card-check > .glyph-icon        { width: 14px; height: 14px; }
+.dialogue-next-btn > .glyph-icon     { width: 16px; height: 16px; }
+.glyph-title-row > .glyph-icon       { width: 14px; height: 14px; margin-right: 6px; }
+
+/* Leading icon + title label on one line (research card, megastructure history). */
+.glyph-title-row {
+    flex-direction: row;
+    align-items: center;
+}
