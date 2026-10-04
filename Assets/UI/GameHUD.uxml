@@ -492,7 +492,13 @@
         <!-- ═══ TUTORIAL HINT BANNER (persistent, cleared on step change) ═══ -->
         <ui:VisualElement name="tutorial-hint-banner" class="tutorial-hint-banner hidden">
             <ui:Label name="tutorial-hint-banner__message" text="" class="tutorial-hint-banner__message" />
+            <!-- Minimize icon is a drawn bar, not a glyph: Android's font lacks most symbols. -->
+            <ui:Button name="tutorial-hint-banner__minimize" text="" class="tutorial-hint-banner__minimize">
+                <ui:VisualElement class="tutorial-hint-banner__minimize-bar" picking-mode="Ignore" />
+            </ui:Button>
         </ui:VisualElement>
+        <!-- Shown in place of the hint banner while it is minimized (HUDBannerController). -->
+        <ui:Button name="tutorial-hint-restore" text="Show hint" class="tutorial-hint-restore hidden" />
 
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
         <ui:Instance template="NotificationBanner" name="notification-instance" />
