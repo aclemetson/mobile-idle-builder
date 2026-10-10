@@ -15,10 +15,6 @@ namespace MobileIdleBuilder
         {
             var root    = GetComponent<UIDocument>().rootVisualElement;
             var content = root.Q("splash-content");
-            var versionLabel = root.Q<Label>("splash-version");
-
-            if (versionLabel != null)
-                versionLabel.text = $"v{Application.version}";
 
             // Background is immediately visible; only text fades in
             float elapsed = 0f;
@@ -26,13 +22,11 @@ namespace MobileIdleBuilder
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / fadeInDuration);
-                if (content      != null) content.style.opacity      = t;
-                if (versionLabel != null) versionLabel.style.opacity  = t;
+                if (content != null) content.style.opacity = t;
                 yield return null;
             }
 
-            if (content      != null) content.style.opacity      = 1f;
-            if (versionLabel != null) versionLabel.style.opacity  = 1f;
+            if (content != null) content.style.opacity = 1f;
 
             // Hold for the remainder of totalDuration, then hand off to SceneLoader
             float holdTime = totalDuration - fadeInDuration;
@@ -55,14 +49,12 @@ namespace MobileIdleBuilder
             GameLogger.Info("[Maintenance] Active — showing maintenance screen, not loading GameScene.");
 
             var content = root.Q("splash-content");
-            var version = root.Q<Label>("splash-version");
             var panel   = root.Q("maintenance-panel");
             var message = root.Q<Label>("maintenance-message");
             var time    = root.Q<Label>("maintenance-time");
             var retry   = root.Q<Button>("btn-maintenance-retry");
 
             if (content != null) content.style.display = DisplayStyle.None;
-            if (version != null) version.style.display = DisplayStyle.None;
 
             if (message != null) message.text = FeatureFlags.MaintenanceMessage;
             if (time != null)

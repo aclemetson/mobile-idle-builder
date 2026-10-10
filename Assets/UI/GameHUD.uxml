@@ -352,6 +352,8 @@
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
                 <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
+                <ui:Label text="ABOUT" class="drawer-section-title" />
+                <ui:Label name="settings-version" text="" class="settings-version" />
             </ui:ScrollView>
         </ui:VisualElement>
 

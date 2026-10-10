@@ -25,6 +25,9 @@ namespace MobileIdleBuilder
                 var root = doc.rootVisualElement;
                 _progressBar  = root?.Q<ProgressBar>("progress-bar");
                 _percentLabel = root?.Q<Label>("percent-label");
+
+                var versionLabel = root?.Q<Label>("loading-version");
+                if (versionLabel != null) versionLabel.text = VersionLabel.Format();
             }
 
             if (string.IsNullOrEmpty(SceneLoader.TargetScene))
