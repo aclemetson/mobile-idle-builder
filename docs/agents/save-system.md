@@ -52,6 +52,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 - `GridSaveService.RebuildIdleSnapshot()` (end of `FlushToSave()`/`LoadGrid()`) walks the saved grid, computes producer→sink chains via `IdleGraphAnalyzer.BuildSnapshot`, baking in `prestigeSpeedMultiplier × boost` at `GridSaveService.cs:335`.
 - `RebuildIdleSnapshot()` also mirrors the active snapshot into `save.siteSnapshots[activeSiteIndex]` (`MirrorActiveSiteSnapshot`).
 - On next launch `OfflineCollectionService.CalculateAndApply()` pays out: elapsed seconds capped by `GetEffectiveIdleCap()` (config base + `IdleTimeCap` upgrade), rate scaled by `IdleCollectionRate` upgrade; `idleCollectionApplied` timestamp prevents double-apply. It iterates **all** `siteSnapshots` (every unlocked site earns for the offline window), falling back to the lone `idleSnapshot` on legacy/single-site saves.
+- `CalculateAndApply` only credits `SaveData.currentRun`. On cold boot that is enough (the save is copied into ECS afterwards). On **resume from background** (`SaveManager.OnReturnFromBackground`) ECS is already live, so the payout is also written through via `ECSLoadBridge.AddEntropy` / `AddInventoryItems`; without that the next `FlushToSave` overwrites it with the stale ECS total (#185). Any new mid-session payout path must do the same (see `AdService.ApplyCollectionResult`).
 
 ## Research timer (`ResearchService`)
 
