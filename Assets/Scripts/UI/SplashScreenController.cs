@@ -11,6 +11,17 @@ namespace MobileIdleBuilder
         [SerializeField] private float fadeInDuration = 0.5f;
         [SerializeField] private float maintenanceTimeoutSeconds = 4f;
 
+        private void Awake()
+        {
+            // SplashScene shares gamePanelSettings with LoadingScreen and GameScene, whose UIScaler
+            // components set its scale at runtime. Without this the splash (and its maintenance
+            // overlay) rendered at the asset's saved 1x on a fresh launch but at the scaled size
+            // after a mid-session maintenance kick-out (#195).
+            var doc = GetComponent<UIDocument>();
+            if (doc != null && doc.panelSettings != null)
+                doc.panelSettings.scale = UIScaler.ComputeScale(Screen.width);
+        }
+
         private IEnumerator Start()
         {
             var root    = GetComponent<UIDocument>().rootVisualElement;
