@@ -695,17 +695,41 @@
     border-color: var(--color-border);
 }
 
+/* Column 1: name + description. Takes the leftover width and wraps instead of pushing
+   the cost and Place columns (#189). */
+.building-card-info {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: var(--spacing-sm);
+}
+
 .building-card-name {
     color: var(--color-text-primary);
     font-size: var(--font-size-md);
     -unity-font-style: bold;
-    flex-grow: 1;
+    white-space: normal;
 }
 
 .building-card-recipe {
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
-    flex-grow: 1;
+    white-space: normal;
+}
+
+/* Column 2: fixed width so every row's cost lines up. */
+.building-card-cost {
+    width: 96px;
+    flex-shrink: 0;
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-right;
+    margin-right: var(--spacing-sm);
+}
+
+/* Column 3: the Place button never shrinks or moves. */
+.building-card-place {
+    flex-shrink: 0;
 }
 
 .building-card-recipe--affordable {
