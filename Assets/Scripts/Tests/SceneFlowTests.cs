@@ -19,7 +19,7 @@ namespace MobileIdleBuilder.Tests
         // ================================================================
 
         [Test]
-        public void SplashScreenController_DefaultTotalDuration_IsTwo()
+        public void SplashScreenController_DefaultMinimumDuration_IsOneAndAQuarter()
         {
             var go = new GameObject("Splash");
             go.AddComponent<UIDocument>(); // required by RequireComponent
@@ -28,7 +28,8 @@ namespace MobileIdleBuilder.Tests
             var field = typeof(SplashScreenController)
                 .GetField("totalDuration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             Assert.IsNotNull(field, "totalDuration field must exist");
-            Assert.AreEqual(2f, (float)field.GetValue(ctrl), 0.001f);
+            // A minimum: the maintenance gate runs in parallel and can extend it (#190).
+            Assert.AreEqual(1.25f, (float)field.GetValue(ctrl), 0.001f);
 
             Object.DestroyImmediate(go);
         }
