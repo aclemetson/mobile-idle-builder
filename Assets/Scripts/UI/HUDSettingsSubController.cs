@@ -29,6 +29,7 @@ namespace MobileIdleBuilder
 
         private Button _btnSendFeedback;
         private Button _btnPrivacyPolicy;
+        private Label  _versionLabel;
 
         private Button _btnClose;
 
@@ -88,6 +89,9 @@ namespace MobileIdleBuilder
             _toggleInvertTilt     = root.Q<Toggle>("toggle-invert-tilt");
             _btnSendFeedback      = root.Q<Button>("btn-send-feedback");
             _btnPrivacyPolicy     = root.Q<Button>("btn-privacy-policy");
+            _versionLabel         = root.Q<Label>("settings-version");
+
+            if (_versionLabel != null) _versionLabel.text = VersionLabel.Format();
         }
 
         private void BindControls()

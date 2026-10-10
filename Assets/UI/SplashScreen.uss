@@ -40,15 +40,6 @@
     letter-spacing: 2px;
 }
 
-.splash-version {
-    position: absolute;
-    bottom: var(--spacing-md);
-    right: var(--spacing-md);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    opacity: 0;   /* faded in by SplashScreenController */
-}
-
 /* ---- Maintenance overlay (shown in place of splash-content when under maintenance) ---- */
 
 .maintenance-panel {
