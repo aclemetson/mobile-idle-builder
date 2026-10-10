@@ -406,7 +406,11 @@ namespace MobileIdleBuilder
                 }
             }
 
-            ConfirmPlacement(x, y, _pending.defaultRecipe);
+            // Off-field buildings with exactly one usable recipe start producing right away (#186).
+            var recipe = _pending.defaultRecipe;
+            if (recipe == null && field == null)
+                recipe = RecipeAvailability.SoleAvailable(_pending.building);
+            ConfirmPlacement(x, y, recipe);
         }
 
         /// <summary>Draws the ghost (and port arrows / power coverage) at a cell without locking it in.</summary>
