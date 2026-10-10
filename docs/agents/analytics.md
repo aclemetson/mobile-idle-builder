@@ -65,7 +65,7 @@ Every event also carries `player_id` (String) + `collection_phase` (String).
 | `tier_reached` | tier (Int) | `AchievementService.NotifyTierReached`, driven by `TierProgress.NotifyItemProduced` from both production paths (manual craft + automated recipe output) |
 | `megastructure_stage` | stage (Int) | `MegastructureService.Deduct` on stage completion |
 | `game_update_notice` | data_version (Int) | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
-| `player_snapshot` | networth (Float), base_currency (Int), entropy_per_sec (Float), prestige_currency (Int), paid_currency (Int), prestige_count (Int), building_count (Int), highest_tier (Int), megastructure_stage (Int), research_unlocked_count (Int), playtime_total_sec (Int), field_collections (Int), field_cooldown_sec (Float), power_nodes_total (Int), power_nodes_linked (Int), dev_console_used (Boolean) | snapshot loop (5 min) + each prestige |
+| `player_snapshot` | networth (Float), base_currency (Int), entropy_per_sec (Float), prestige_currency (Int), paid_currency (Int), prestige_count (Int), building_count (Int), highest_tier (Int), megastructure_stage (Int), research_unlocked_count (Int), playtime_total_sec (Int), field_collections (Int), field_cooldown_sec (Float), power_nodes_total (Int), power_nodes_linked (Int), dev_console_used (Boolean) | snapshot loop (5 min of real time, `WaitForSecondsRealtime`, so dialogue pauses don't stall it) + each prestige |
 | `dev_console_used` | command (String) | `DevConsoleController.SubmitCommand` on a successful command; once per session (command name only, no args) |
 
 ### Dev console in alpha builds (#169)
