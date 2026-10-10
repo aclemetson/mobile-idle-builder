@@ -339,6 +339,29 @@ namespace MobileIdleBuilder
                     foreach (var r in buildingSO.supportedRecipes)
                         if (IsRecipeAvailable(r)) available.Add(r);
 
+                    // Exactly one usable recipe and none set yet: assign it instead of leaving the
+                    // building idle at "No recipe" with no chooser to fix it (#186).
+                    if (available.Count == 1
+                        && _em.HasComponent<RecipeProcessData>(_inspectorEntity)
+                        && _em.GetComponentData<RecipeProcessData>(_inspectorEntity).RecipeID < 0)
+                    {
+                        SetBuildingRecipe(_inspectorEntity, available[0]);
+                        // Re-render with the recipe applied; the RecipeID check keeps this from recursing.
+                        if (_em.GetComponentData<RecipeProcessData>(_inspectorEntity).RecipeID >= 0)
+                        {
+                            RefreshInspectorContent();
+                            return;
+                        }
+                    }
+
+                    if (available.Count == 0 && buildingSO.supportedRecipes.Length > 0)
+                    {
+                        AddInspectorRow(_inspectorRecipes, "No recipes unlocked yet.");
+                        var gate = FirstGatingResearch(buildingSO);
+                        if (gate != null)
+                            AddInspectorRow(_inspectorRecipes, $"Research {gate.displayName} to unlock one.");
+                    }
+
                     if (available.Count > 1)
                     {
                         AddInspectorRow(_inspectorRecipes, "—— Set Recipe ——");
@@ -576,12 +599,13 @@ namespace MobileIdleBuilder
         /// knownFromStart (or with no required research) are always available; a missing research
         /// service is treated as "nothing unlocked" so gated recipes stay hidden.
         /// </summary>
-        private static bool IsRecipeAvailable(RecipeSO r)
+        private static bool IsRecipeAvailable(RecipeSO r) => RecipeAvailability.IsAvailable(r);
+
+        private static ResearchSO FirstGatingResearch(BuildingSO so)
         {
-            if (r == null) return false;
-            if (r.knownFromStart || r.requiredResearch == null) return true;
-            var svc = ResearchService.Instance;
-            return svc != null && svc.IsUnlocked(r.requiredResearch.id);
+            foreach (var r in so.supportedRecipes)
+                if (r != null && r.requiredResearch != null) return r.requiredResearch;
+            return null;
         }
 
         private void AddStorageUpgradeSection(Entity entity, BuildingSO so, BuildingData bd)
