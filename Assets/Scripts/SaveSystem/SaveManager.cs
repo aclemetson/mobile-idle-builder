@@ -148,6 +148,12 @@ namespace MobileIdleBuilder
 
             if (result == null) return;
 
+            // CalculateAndApply only credits SaveData. ECS is already live here (unlike the cold-boot
+            // path, which copies save -> ECS afterwards), so the payout must be written through too,
+            // or the next FlushToSave overwrites the save with the stale ECS total and it is lost.
+            ECSLoadBridge.Instance.AddEntropy(result.EntropyEarned);
+            ECSLoadBridge.Instance.AddInventoryItems(result.ItemsEarned);
+
             // Persist earned resources and the updated idleCollectionApplied stamp.
             // Skip ECS/grid flushes — only currentRun (currency, inventory) changed.
             SaveLocal(skipECSFlush: true, skipGridFlush: true);
