@@ -7,7 +7,9 @@ namespace MobileIdleBuilder
     [RequireComponent(typeof(UIDocument))]
     public class SplashScreenController : MonoBehaviour
     {
-        [SerializeField] private float totalDuration  = 2f;
+        // Minimum time the splash stays up. The maintenance gate runs in parallel, so the splash
+        // ends at max(totalDuration, gate finished) instead of totalDuration + gate (#190).
+        [SerializeField] private float totalDuration  = 1.25f;
         [SerializeField] private float fadeInDuration = 0.5f;
         [SerializeField] private float maintenanceTimeoutSeconds = 4f;
 
@@ -26,6 +28,12 @@ namespace MobileIdleBuilder
         {
             var root    = GetComponent<UIDocument>().rootVisualElement;
             var content = root.Q("splash-content");
+            float started = Time.realtimeSinceStartup;
+
+            // Maintenance gate: never load GameScene while maintenance is enabled and reachable.
+            // Fail-open inside the gate keeps offline players from being locked out. Started now so
+            // UGS init + Remote Config fetch overlap the splash instead of following it.
+            var maintTask = MaintenanceGate.IsUnderMaintenanceAsync(maintenanceTimeoutSeconds);
 
             // Background is immediately visible; only text fades in
             float elapsed = 0f;
@@ -39,15 +47,10 @@ namespace MobileIdleBuilder
 
             if (content != null) content.style.opacity = 1f;
 
-            // Hold for the remainder of totalDuration, then hand off to SceneLoader
-            float holdTime = totalDuration - fadeInDuration;
-            if (holdTime > 0f)
-                yield return new WaitForSeconds(holdTime);
-
-            // Maintenance gate: never load GameScene while maintenance is enabled and reachable.
-            // Fail-open inside the gate keeps offline players from being locked out.
-            var maintTask = MaintenanceGate.IsUnderMaintenanceAsync(maintenanceTimeoutSeconds);
-            yield return new WaitUntil(() => maintTask.IsCompleted);
+            // Hand off once both the minimum splash time has passed and the gate has answered.
+            yield return new WaitUntil(() =>
+                maintTask.IsCompleted && Time.realtimeSinceStartup - started >= totalDuration);
+            GameLogger.Info($"[Splash] Leaving after {Time.realtimeSinceStartup - started:F2}s");
 
             if (maintTask.Result)
                 ShowMaintenance(root);
