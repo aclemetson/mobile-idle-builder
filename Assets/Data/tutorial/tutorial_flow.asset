@@ -1018,6 +1018,32 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+  - id: place_quark_harvester
+    hintText: Place a Harvester on each quark field. Set one to Up Quarks and the
+      other to Down Quarks.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 3
+      buildingType: 1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: a4d074a0ff7fd374282d2b5741853fac, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-build
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
   - id: intro_sfc
     hintText: Save up entropy to place the Strong Force Combiner.
     advanceCondition:
@@ -1120,34 +1146,9 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-  - id: place_quark_harvester
-    hintText: Place a second Harvester on the quark field to supply the Combiner.
-    advanceCondition:
-      type: 5
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: 
-      minCount: 2
-      buildingType: 1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: a4d074a0ff7fd374282d2b5741853fac, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-build
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
   - id: route_quarks_to_sfc
-    hintText: Tap a start tile by the quark Harvester, then the tile in front of
-      the Combiner's input, and place the belt.
+    hintText: Tap a start tile by a quark Harvester, then the tile in front of the
+      Combiner's input, and place the belt. Do this for both quark Harvesters.
     advanceCondition:
       type: 3
       anyOf: 0

@@ -21,6 +21,14 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
+    text: It keeps working while you are away, too. Close the game and your automated
+      buildings still earn entropy at 20% of their normal rate, for up to 2 hours.
+      You will be able to raise both limits later.
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
     text: "As production scales, entropy accumulates. But there is a ceiling on each
       run. When your net worth approaches the prestige threshold, you will have extracted
       most of this run's value \u2014 and it will be time to reset."

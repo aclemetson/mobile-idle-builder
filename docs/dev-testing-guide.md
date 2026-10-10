@@ -294,14 +294,19 @@ From step 31 onward, grid presets have not yet been captured from a playthrough.
   - Entropy: **12**
   - Grid: **No buildings placed by the skip** — grid is empty (buildings must be placed manually)
 
-### 7.2 SFC Phase
+### 7.2 Quark Harvesters + SFC Phase
+
+- [ ] `tutorial skip place_quark_harvester`
+  - Expected: `Skipped to 'place_quark_harvester' [33]. Entropy: 375e.` Only the electron Harvester is placed.
+  - In-game: Hint bar shows **"Place a Harvester on each quark field. Set one to Up Quarks and the other to Down Quarks."**
+  - Placing the 2nd quark Harvester (3 Harvesters total) advances to `intro_sfc`
 
 - [ ] `tutorial skip intro_sfc`
-  - Expected: `Skipped to 'intro_sfc' [33]. Entropy: 50e. 3 research node(s) unlocked. (grid preset not yet captured...)`
+  - Expected: `Skipped to 'intro_sfc' [34]. Entropy: 50e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Hint bar shows **"Save up entropy to place the Strong Force Combiner."**
 
 - [ ] `tutorial skip place_sfc`
-  - Expected: `Skipped to 'place_sfc' [34]. Entropy: 200e. 3 research node(s) unlocked. (grid preset not yet captured...)`
+  - Expected: `Skipped to 'place_sfc' [35]. Entropy: 200e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Entropy: **200** (enough to buy the 200e SFC); build menu shows SFC available
 
 ### 7.3 Nucleon Loop Complete

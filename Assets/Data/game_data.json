@@ -11487,6 +11487,14 @@
         },
         {
           "speaker_name": "The Architect",
+          "text": "It keeps working while you are away, too. Close the game and your automated buildings still earn entropy at 20% of their normal rate, for up to 2 hours. You will be able to raise both limits later.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
           "text": "As production scales, entropy accumulates. But there is a ceiling on each run. When your net worth approaches the prestige threshold, you will have extracted most of this run's value — and it will be time to reset.",
           "portrait_path": "TODO",
           "pause_game": false,
@@ -11555,7 +11563,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Your electron pipeline is running. You already have Recombination I — the Strong Force Combiner is available to place. Keep accumulating entropy and we will put those quarks to work.",
+          "text": "Your quark Harvesters are running. You already have Recombination I — the Strong Force Combiner fuses quarks into protons. Keep accumulating entropy and we will put those quarks to work.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11607,7 +11615,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "The Combiner is powered but has nothing to process. Place a second Harvester on the quark field — it produces Up Quarks and Down Quarks in equal measure.",
+          "text": "Electrons are only part of the story. Place a Harvester on each quark field. A quark field holds both Up and Down Quarks, so when you place each Harvester, choose what it collects: one for Up Quarks, one for Down Quarks.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11620,7 +11628,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Connect the quark Harvester to the Combiner with a conveyor: tap the tile beside the Harvester's output, then the tile in front of the Combiner's input. Quarks will flow in continuously.",
+          "text": "Connect your quark Harvesters to the Combiner with conveyors: tap the tile beside a Harvester's output, then the tile in front of the Combiner's input. Quarks will flow in continuously.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12717,7 +12725,17 @@
       "on_enter": { "dialogue_id": "automation_context" }
     },
     {
-      "_comment": "--- PHASE 6 CONT: NUCLEON PIPELINE (steps 33-41) ---",
+      "_comment": "Quark harvesters come before the Combiner (#192). min_count 3 = the electron Harvester + one per quark field.",
+      "id": "place_quark_harvester",
+      "hint": "Place a Harvester on each quark field. Set one to Up Quarks and the other to Down Quarks.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "harvester", "min_count": 3 },
+      "on_enter": {
+        "dialogue_id": "place_quark_harvester_context",
+        "pulse_button_id": "btn-build"
+      }
+    },
+    {
+      "_comment": "--- PHASE 6 CONT: NUCLEON PIPELINE (steps 34-41) ---",
       "id": "intro_sfc",
       "hint": "Save up entropy to place the Strong Force Combiner.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
@@ -12749,17 +12767,8 @@
       "on_enter": { "dialogue_id": "link_generator_context" }
     },
     {
-      "id": "place_quark_harvester",
-      "hint": "Place a second Harvester on the quark field to supply the Combiner.",
-      "advance_condition": { "type": "BuildingMin", "building_id": "harvester", "min_count": 2 },
-      "on_enter": {
-        "dialogue_id": "place_quark_harvester_context",
-        "pulse_button_id": "btn-build"
-      }
-    },
-    {
       "id": "route_quarks_to_sfc",
-      "hint": "Tap a start tile by the quark Harvester, then the tile in front of the Combiner's input, and place the belt.",
+      "hint": "Tap a start tile by a quark Harvester, then the tile in front of the Combiner's input, and place the belt. Do this for both quark Harvesters.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_quarks_context",
