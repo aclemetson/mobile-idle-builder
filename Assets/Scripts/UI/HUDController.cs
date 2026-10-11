@@ -356,6 +356,9 @@ namespace MobileIdleBuilder
             // HUD chrome
             _drawerPanel    = root.Q("left-drawer");
             _drawerBackdrop = root.Q("drawer-backdrop");
+            // Closed drawer is hidden, not just slid off-screen, so its ScrollView scroller
+            // can never peek in at the left edge (#196). See OpenDrawer / CloseDrawer.
+            if (_drawerPanel != null) _drawerPanel.style.visibility = Visibility.Hidden;
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -2000,6 +2003,9 @@ namespace MobileIdleBuilder
             CancelActiveModes();
         }
 
+        // Matches .left-drawer transition-duration (0.2s) in GameHUD.uss, plus a frame of slack.
+        private const long DrawerSlideMs = 250;
+
         private void ToggleDrawer()
         {
             if (_drawerOpen) CloseDrawer();
@@ -2010,6 +2016,7 @@ namespace MobileIdleBuilder
         {
             if (_drawerPanel == null) return;
             _drawerOpen = true;
+            _drawerPanel.style.visibility = Visibility.Visible;
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);
             OnDrawerOpened?.Invoke();
@@ -2023,6 +2030,11 @@ namespace MobileIdleBuilder
             if (_drawerPanel == null) return;
             _drawerOpen = false;
             _drawerPanel.RemoveFromClassList("left-drawer--open");
+            // Hide once the 0.2 s slide-out transition has finished (unless reopened meanwhile).
+            _drawerPanel.schedule.Execute(() =>
+            {
+                if (!_drawerOpen) _drawerPanel.style.visibility = Visibility.Hidden;
+            }).StartingIn(DrawerSlideMs);
             SetElementVisible(_drawerBackdrop, false);
             // Hint still active but drawer hidden: swap back to pulsing the drawer handle
             if (_achievementsHintPulse != null)

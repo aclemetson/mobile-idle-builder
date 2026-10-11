@@ -75,6 +75,19 @@ namespace MobileIdleBuilder
         private bool     _isMouseOrbiting;
         private Vector3  _panVelocity;   // world units/sec, drives inertial glide after a pan release
 
+        // ── Background / resume (#222) ───────────────────────────────────────
+        // Longest frame the inertial glide integrates. The first frame after a resume can report
+        // the whole time spent in background, which would otherwise fling the camera.
+        internal const float MaxGlideDelta = 0.1f;
+        // Frames after a resume during which input is ignored, so stale touch positions from
+        // the gesture that backgrounded the app (e.g. swipe-home) cannot produce a drag.
+        internal const int ResumeGuardFrames = 2;
+
+        private bool    _suspended;
+        private Vector3 _suspendPivot;
+        private float   _suspendYaw, _suspendPitch, _suspendDistance, _suspendFov;
+        private int     _resumeGuard;
+
         public void SetPanLocked(bool locked) => _panLocked = locked;
 
         // ── Lifecycle ────────────────────────────────────────────────────────
@@ -102,8 +115,63 @@ namespace MobileIdleBuilder
             ApplyRig();
         }
 
+        void OnApplicationPause(bool paused) { if (paused) Suspend(); else Resume(); }
+        void OnApplicationFocus(bool focused) { if (focused) Resume(); else Suspend(); }
+
+        /// <summary>
+        /// Called when the app loses focus or is backgrounded (both events fire; idempotent).
+        /// Remembers where the camera was left and drops any in-flight gesture or glide: the
+        /// release of a gesture that backgrounds the app (swipe-home) never reaches us.
+        /// </summary>
+        internal void Suspend()
+        {
+            if (_suspended) return;
+            _suspended       = true;
+            _suspendPivot    = _pivot;
+            _suspendYaw      = _yaw;
+            _suspendPitch    = _pitch;
+            _suspendDistance = _distance;
+            _suspendFov      = _cam != null ? _cam.fieldOfView : 0f;
+            ResetGesture();
+        }
+
+        /// <summary>Puts the camera back where it was left and briefly ignores input.</summary>
+        internal void Resume()
+        {
+            if (!_suspended) return;
+            _suspended = false;
+            _pivot     = _suspendPivot;
+            _yaw       = _suspendYaw;
+            _pitch     = _suspendPitch;
+            _distance  = _suspendDistance;
+            if (_cam != null && _suspendFov > 0f) _cam.fieldOfView = _suspendFov;
+            ResetGesture();
+            _resumeGuard = ResumeGuardFrames;
+            if (_cam != null) ApplyRig();
+        }
+
+        private void ResetGesture()
+        {
+            _isPanActive     = false;
+            _isMouseOrbiting = false;
+            _dragAccum       = 0f;
+            _panVelocity     = Vector3.zero;
+        }
+
+        internal Vector3 Pivot       => _pivot;
+        internal Vector3 PanVelocity => _panVelocity;
+        internal bool    IsSuspended => _suspended;
+
         void LateUpdate()
         {
+            if (_resumeGuard > 0)
+            {
+                _resumeGuard--;
+                ResetGesture();
+                ApplyRig();
+                return;
+            }
+
             HandleSwipePan();
             HandleZoom();
             HandleMouseOrbit();
@@ -113,8 +181,9 @@ namespace MobileIdleBuilder
             // panning, locked, or following a tutorial pan.
             if (!_isPanActive && !_panLocked && !_panTarget.HasValue && _panVelocity.sqrMagnitude > 1e-4f)
             {
-                _pivot       = ClampPivot(_pivot + _panVelocity * Time.unscaledDeltaTime);
-                _panVelocity = DecayVelocity(_panVelocity, panInertiaDamping, Time.unscaledDeltaTime);
+                float dt     = GlideDelta(Time.unscaledDeltaTime);
+                _pivot       = ClampPivot(_pivot + _panVelocity * dt);
+                _panVelocity = DecayVelocity(_panVelocity, panInertiaDamping, dt);
                 if (_panVelocity.sqrMagnitude < 1e-4f) _panVelocity = Vector3.zero;
             }
 
@@ -291,6 +360,13 @@ namespace MobileIdleBuilder
         /// </summary>
         public static Vector3 DecayVelocity(Vector3 velocity, float damping, float dt)
             => Vector3.Lerp(velocity, Vector3.zero, Mathf.Clamp01(damping * dt));
+
+        /// <summary>
+        /// Frame delta used by the inertial glide, capped at <see cref="MaxGlideDelta"/> so a
+        /// long hitch (e.g. the first frame after resuming from background) cannot fling the
+        /// camera. Pure function (unit-tested).
+        /// </summary>
+        public static float GlideDelta(float dt) => Mathf.Clamp(dt, 0f, MaxGlideDelta);
 
         /// <summary>
         /// Recomputes the camera transform from the orbit rig so it always looks at the pivot.

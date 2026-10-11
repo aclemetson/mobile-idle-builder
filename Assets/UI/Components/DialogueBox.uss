@@ -5,15 +5,20 @@
    ================================================================ */
 
 
+/* Inset from the sides and rounded: Android does not report a curved display's rounded
+   corners as unsafe area, so an edge-to-edge box had its bottom corners clipped (#188). */
 .dialogue-box {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 56px;   /* anchored above the 56px bottom nav bar */
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    bottom: 64px;   /* anchored above the 56px bottom nav bar, plus room for the display curve */
     height: 30%;
     background-color: rgba(10, 14, 26, 0.96);
+    border-width: 1px;
+    border-color: var(--color-border);
     border-top-width: 2px;
     border-top-color: var(--color-primary);
+    border-radius: 12px;   /* matches .slide-panel corners */
     padding: var(--spacing-md);
     flex-direction: column;
     justify-content: space-between;

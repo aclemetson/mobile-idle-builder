@@ -108,5 +108,73 @@ namespace MobileIdleBuilder.Tests
             Vector3 r = CameraController.DecayVelocity(new Vector3(5, 0, 5), 100f, 1f);
             Assert.AreEqual(Vector3.zero, r);
         }
+
+        // ── Background / resume (#222) ───────────────────────────────────────
+
+        [Test]
+        public void GlideDelta_NormalFrame_IsUnchanged()
+        {
+            Assert.AreEqual(0.016f, CameraController.GlideDelta(0.016f), 1e-6f);
+        }
+
+        [Test]
+        public void GlideDelta_LongResumeFrame_IsCapped()
+        {
+            // First frame after a minute in background must not integrate a minute of glide.
+            Assert.AreEqual(CameraController.MaxGlideDelta, CameraController.GlideDelta(60f), 1e-6f);
+        }
+
+        [Test]
+        public void SuspendResume_RestoresPivot_AndDropsGlide()
+        {
+            var go  = new GameObject("cam");
+            var cam = go.AddComponent<CameraController>();
+            try
+            {
+                SetField(cam, "_pivot", new Vector3(3f, 0f, 7f));
+                SetField(cam, "_panVelocity", new Vector3(50f, 0f, 0f));
+                SetField(cam, "_isPanActive", true);
+
+                cam.Suspend();
+                Assert.IsTrue(cam.IsSuspended);
+                Assert.AreEqual(Vector3.zero, cam.PanVelocity, "suspend must drop the glide");
+
+                // Simulate a stale drag moving the camera while unfocused.
+                SetField(cam, "_pivot", new Vector3(40f, 0f, 40f));
+
+                cam.Resume();
+                Assert.IsFalse(cam.IsSuspended);
+                Assert.AreEqual(new Vector3(3f, 0f, 7f), cam.Pivot, "resume returns to where it was left");
+                Assert.AreEqual(Vector3.zero, cam.PanVelocity);
+                Assert.IsFalse(cam.IsPanning);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
+        public void Suspend_IsIdempotent_FocusAndPauseBothFire()
+        {
+            var go  = new GameObject("cam");
+            var cam = go.AddComponent<CameraController>();
+            try
+            {
+                SetField(cam, "_pivot", new Vector3(1f, 0f, 2f));
+                cam.Suspend();                               // focus lost
+                SetField(cam, "_pivot", new Vector3(9f, 0f, 9f));
+                cam.Suspend();                               // pause: must not overwrite the snapshot
+                cam.Resume();
+                cam.Resume();                                // second resume is a no-op
+                Assert.AreEqual(new Vector3(1f, 0f, 2f), cam.Pivot);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        private static void SetField(object target, string name, object value)
+        {
+            var f = target.GetType().GetField(name,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(f, $"field {name} not found");
+            f.SetValue(target, value);
+        }
     }
 }

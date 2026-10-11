@@ -136,7 +136,7 @@ namespace MobileIdleBuilder
             if (cooldown != null && cooldown.IsOnCooldown)
                 return false;
 
-            if (!CollectOne(field))
+            if (!CollectOne(field, instance.transform.position))
                 return false;
 
             // Tap juice: bounce the wire-mesh and birth a particle burst from the tile.
@@ -147,7 +147,7 @@ namespace MobileIdleBuilder
             return true;
         }
 
-        private bool CollectOne(FieldSO field)
+        private bool CollectOne(FieldSO field, Vector3 popupPosition)
         {
             var item = PickWeightedItem(field);
             if (item == null) return false;
@@ -157,7 +157,8 @@ namespace MobileIdleBuilder
             var buffer = _em.GetBuffer<InventorySlot>(entity);
             AddToBuffer(ref buffer, item.itemId, 1);
 
-            InventoryPopupController.Notify(item.displayName, 1);
+            // Pop the "+1" over the tapped field, in the field's colour (#198).
+            InventoryPopupController.NotifyAt(item.displayName, 1, popupPosition, field.fieldColor);
             TelemetryService.Instance?.NotifyFieldCollected();
             return true;
         }
