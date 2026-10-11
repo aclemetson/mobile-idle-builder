@@ -1375,27 +1375,15 @@ namespace MobileIdleBuilder
             // ---- Conveyor Belt entry (always first, always free) ----
             if (conveyorController != null)
             {
-                var conveyorCard = new VisualElement();
-                conveyorCard.AddToClassList("building-card");
-
-                var nameLabel = new Label("Conveyor Belt");
-                nameLabel.AddToClassList("building-card-name");
-
-                var descLabel = new Label("Draw paths to move items between buildings");
-                descLabel.AddToClassList("building-card-recipe");
-
                 var placeBtn = new Button { text = "Place" };
-                placeBtn.AddToClassList("craft-btn");
                 ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     conveyorController.BeginConveyorMode();
                 });
 
-                conveyorCard.Add(nameLabel);
-                conveyorCard.Add(descLabel);
-                conveyorCard.Add(placeBtn);
-                _buildingsList.Add(conveyorCard);
+                _buildingsList.Add(MakeBuildingCard("Conveyor Belt",
+                    "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
             }
 
             if (placementController == null) return;
@@ -1410,16 +1398,9 @@ namespace MobileIdleBuilder
                         continue;
                 }
 
-                var card = new VisualElement();
-                card.AddToClassList("building-card");
-
-                var nameLabel = new Label(entry.building?.displayName ?? "Building");
-                nameLabel.AddToClassList("building-card-name");
-
-                var recipeLabel = new Label(entry.defaultRecipe != null
+                string detail = entry.defaultRecipe != null
                     ? $"Produces: {entry.defaultRecipe.displayName}"
-                    : "No recipe");
-                recipeLabel.AddToClassList("building-card-recipe");
+                    : bso?.description ?? "";
 
                 int rawCost = entry.building?.entropyCost ?? 0;
                 float reduction = !_prestigeQuery.IsEmpty
@@ -1428,19 +1409,9 @@ namespace MobileIdleBuilder
                 int cost = rawCost > 0 ? (int)(rawCost * (1f - reduction)) : 0;
                 bool canAfford = currentEntropy >= cost;
 
-                Label costLabel = null;
-                if (cost > 0)
-                {
-                    costLabel = new Label($"◈ {cost:N0}");
-                    costLabel.AddToClassList("building-card-recipe");
-                    costLabel.AddToClassList(canAfford
-                        ? "building-card-recipe--affordable"
-                        : "building-card-recipe--unaffordable");
-                    card.Add(costLabel);
-                }
+                var costLabel = MakeCostLabel(cost, canAfford);
 
                 var placeBtn = new Button { text = "Place" };
-                placeBtn.AddToClassList("craft-btn");
                 placeBtn.SetEnabled(canAfford);
 
                 // Track cost rows so Update() can re-enable them the moment entropy catches up.
@@ -1454,11 +1425,51 @@ namespace MobileIdleBuilder
                     placementController.BeginPlacement(captured);
                 });
 
-                card.Add(nameLabel);
-                card.Add(recipeLabel);
-                card.Add(placeBtn);
-                _buildingsList.Add(card);
+                _buildingsList.Add(MakeBuildingCard(entry.building?.displayName ?? "Building",
+                    detail, costLabel, placeBtn));
             }
+        }
+
+        // Every build-menu row has the same three columns so rows line up whatever the text
+        // length: [name + wrapping detail] [fixed-width cost] [Place button that never shrinks].
+        private static VisualElement MakeBuildingCard(string name, string detail, Label costLabel, Button placeBtn)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("building-card");
+
+            var info = new VisualElement();
+            info.AddToClassList("building-card-info");
+            var nameLabel = new Label(name);
+            nameLabel.AddToClassList("building-card-name");
+            info.Add(nameLabel);
+            if (!string.IsNullOrEmpty(detail))
+            {
+                var detailLabel = new Label(detail);
+                detailLabel.AddToClassList("building-card-recipe");
+                info.Add(detailLabel);
+            }
+
+            placeBtn.AddToClassList("craft-btn");
+            placeBtn.AddToClassList("building-card-place");
+
+            card.Add(info);
+            card.Add(costLabel);
+            card.Add(placeBtn);
+            return card;
+        }
+
+        // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
+        // cost column blank (#197).
+        internal static string FormatBuildCost(int cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
+
+        private static Label MakeCostLabel(int cost, bool canAfford)
+        {
+            var costLabel = new Label(FormatBuildCost(cost));
+            costLabel.AddToClassList("building-card-cost");
+            costLabel.AddToClassList(canAfford
+                ? "building-card-recipe--affordable"
+                : "building-card-recipe--unaffordable");
+            return costLabel;
         }
 
         /// <summary>

@@ -157,11 +157,13 @@ namespace MobileIdleBuilder
 
         IEnumerator SnapshotLoop()
         {
-            var wait = new WaitForSeconds(SnapshotIntervalSeconds);
+            // Real time, not scaled: dialogue sets Time.timeScale = 0, which froze a scaled wait for
+            // the whole tutorial conversation and skipped snapshots (#191). A fresh instruction each
+            // pass so the wait always restarts from now.
             while (_collecting)
             {
-                yield return wait;
-                CaptureSnapshot();
+                yield return new WaitForSecondsRealtime(SnapshotIntervalSeconds);
+                if (_collecting) CaptureSnapshot();
             }
         }
 

@@ -28,11 +28,11 @@ namespace MobileIdleBuilder.Dev
             { "place_first_building",         112 },   // after -25e; enough for 100e Harvester
             { "place_conveyor",                12 },   // after -100e Harvester
             { "automation_started",            12 },
-            { "intro_sfc",                     50 },   // idle income accumulated
+            { "place_quark_harvester",        375 },   // two more Harvesters: 150e + 225e (1.5x purchase scaling)
+            { "intro_sfc",                     50 },   // after -375e; idle income accumulated
             { "place_sfc",                    200 },   // enough for 200e SFC
             { "place_generator",                0 },   // after -200e; need to idle for Generator
             { "link_generator",               150 },   // enough for 150e Generator
-            { "place_quark_harvester",          0 },   // after -150e; need to idle for 2nd Harvester
             { "route_quarks_to_sfc",           50 },
             { "configure_sfc_recipes",         50 },
             { "route_nucleons_to_demon",        50 },
@@ -105,11 +105,11 @@ namespace MobileIdleBuilder.Dev
             { "intro_dialogue",                   0f },
             { "place_conveyor",                 100f },   // automation just started
             { "automation_started",             200f },
+            { "place_quark_harvester",          250f },
             { "intro_sfc",                      300f },
             { "place_sfc",                      500f },
             { "place_generator",                700f },
             { "link_generator",               1_000f },
-            { "place_quark_harvester",        1_500f },
             { "route_quarks_to_sfc",          2_000f },
             { "configure_sfc_recipes",        2_500f },
             { "route_nucleons_to_demon",      3_000f },
@@ -189,8 +189,9 @@ namespace MobileIdleBuilder.Dev
         static readonly Dictionary<string, FieldSaveData[]> s_FieldTable = new()
         {
             { "place_conveyor",     k_PlaceConveyor_Fields },
-            { "automation_started", k_PlaceConveyor_Fields },
-            { "intro_sfc",          k_PlaceConveyor_Fields },
+            { "automation_started",    k_PlaceConveyor_Fields },
+            { "place_quark_harvester", k_PlaceConveyor_Fields },
+            { "intro_sfc",             k_PlaceConveyor_Fields },
         };
 
         public static FieldSaveData[] GetFields(string stepId)
@@ -198,8 +199,8 @@ namespace MobileIdleBuilder.Dev
             return s_FieldTable.TryGetValue(stepId, out var fields) ? fields : null;
         }
 
-        // ── Step 31: place_conveyor
-        // State: Harvester placed on a field, Maxwell's Demon present; player must draw conveyor.
+        // ── Step 34: intro_sfc (also the source of the electron-only layout below)
+        // State: electron Harvester + one Harvester per quark field (Up / Down recipes), Maxwell's Demon present.
         // Maxwell's Demon (buildingId=7) is intentionally excluded — it is an entropy sink that
         // ClearGrid preserves in place. Including it here would cause LoadGrid to attempt a duplicate.
         static readonly BuildingSaveData[] k_PlaceConveyor_Buildings = new[]
@@ -209,6 +210,14 @@ namespace MobileIdleBuilder.Dev
             new BuildingSaveData { buildingId = 1, recipeId =  2, position = new[] {  4,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (quark)
         };
         static readonly ConveyorSaveData[] k_PlaceConveyor_Conveyors = new ConveyorSaveData[0];
+
+        // ── Steps 31-33: place_conveyor .. place_quark_harvester
+        // Only the electron Harvester exists yet: the quark Harvesters are placed at step 33 (#192),
+        // so a preset that already had them would auto-complete that step on skip.
+        static readonly BuildingSaveData[] k_ElectronHarvester_Buildings = new[]
+        {
+            k_PlaceConveyor_Buildings[0],
+        };
 
         // ── Step 34: place_sfc
         // State: Harvester + Demon connected via conveyor; player places SFC.
@@ -249,13 +258,13 @@ namespace MobileIdleBuilder.Dev
         // Steps not listed here will use the nearest preceding defined checkpoint.
         static readonly Dictionary<string, (BuildingSaveData[] buildings, ConveyorSaveData[] conveyors)> s_GridTable = new()
         {
-            { "place_conveyor",               (k_PlaceConveyor_Buildings,  k_PlaceConveyor_Conveyors) },
-            { "automation_started",           (k_PlaceConveyor_Buildings,  k_PlaceConveyor_Conveyors) },
+            { "place_conveyor",               (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
+            { "automation_started",           (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
+            { "place_quark_harvester",        (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
             { "intro_sfc",                    (k_PlaceConveyor_Buildings,  k_PlaceConveyor_Conveyors) },
             { "place_sfc",                    (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "place_generator",              (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "link_generator",               (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
-            { "place_quark_harvester",        (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "route_quarks_to_sfc",          (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "configure_sfc_recipes",        (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "route_nucleons_to_demon",      (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
