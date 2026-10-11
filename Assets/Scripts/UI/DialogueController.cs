@@ -79,8 +79,20 @@ namespace MobileIdleBuilder
 
             _current   = dialogue;
             _lineIndex = 0;
+            // Pause is decided once for the whole sequence so paging through it never starts and
+            // stops the world (#235). SetBoxVisible(false) restores time when it closes.
+            Time.timeScale = PausesGame(dialogue) ? 0f : 1f;
             ShowLine(_lineIndex);
             SetBoxVisible(true);
+        }
+
+        /// <summary>True when any line of <paramref name="dialogue"/> asks to pause: the whole sequence pauses.</summary>
+        internal static bool PausesGame(DialogueSO dialogue)
+        {
+            if (dialogue?.lines == null) return false;
+            foreach (var line in dialogue.lines)
+                if (line.pauseGame) return true;
+            return false;
         }
 
         /// <summary>Hides the dialogue box immediately.</summary>
@@ -139,9 +151,6 @@ namespace MobileIdleBuilder
                     _nextBtn.text = "▶";
                 }
             }
-
-            // Pause / unpause game time based on line directive
-            Time.timeScale = line.pauseGame ? 0f : 1f;
 
             // Broadcast highlight target (empty string = clear)
             OnHighlightRequested?.Invoke(line.highlightTarget ?? "");
