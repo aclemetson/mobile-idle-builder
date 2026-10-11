@@ -57,6 +57,8 @@ namespace MobileIdleBuilder
         private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
         void Awake()  => BuildGrid();
+        void OnEnable()  => GridOccupancy.ConveyorCellChanged += RestoreCell;
+        void OnDisable() => GridOccupancy.ConveyorCellChanged -= RestoreCell;
         void Start()
         {
             // Skip if CameraController is driving the camera (it initialises its own position)
