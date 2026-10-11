@@ -222,7 +222,9 @@ namespace MobileIdleBuilder
         ResearchUnlocked,   // A specific research ID appears in SaveManager.unlockedResearch
         BuildingMin,        // At least minCount BuildingData entities exist
         PrestigeRunMin,     // PrestigeData.RunCount >= minCount
-        PrestigeAvailable   // PlayerProgressData.PrestigeAvailable == true
+        PrestigeAvailable,  // PlayerProgressData.PrestigeAvailable == true
+        ConveyorLinked,     // At least minCount source buildings have a belt from an output into the target's input
+        BuildingUpgradeMin  // A building of the target type has a speed upgrade level >= minLevel
     }
 
     /// <summary>How TutorialOverlayController highlights a world target when a step activates.</summary>

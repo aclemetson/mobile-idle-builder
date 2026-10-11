@@ -493,6 +493,10 @@ namespace MobileIdleBuilder.Editor
         /// <summary>BuildingMin only: restrict the count to buildings of this building id
         /// (e.g. "strong_force_combiner"). Empty = count all buildings.</summary>
         public string   building_id  = "";
+        /// <summary>ConveyorLinked only: source building id. Empty = any building.</summary>
+        public string   from_building_id = "";
+        /// <summary>BuildingUpgradeMin only: speed upgrade level to reach.</summary>
+        public int      min_level    = 0;
     }
 
     [Serializable]

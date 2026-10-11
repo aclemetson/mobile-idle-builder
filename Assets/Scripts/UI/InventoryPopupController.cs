@@ -118,6 +118,13 @@ namespace MobileIdleBuilder
 
         private IEnumerator ShowPopup(string text, Color color, Vector3 basePosition)
         {
+            // TEMP (#238): identify the message that flashes at the bottom edge. Info so it survives
+            // the release build; the viewport position shows whether it spawned off-screen. Remove
+            // with #238.
+            var cam = Camera.main;
+            GameLogger.Info($"[TransientUI] popup '{text}' world={basePosition} " +
+                            $"viewport={(cam != null ? cam.WorldToViewportPoint(basePosition).ToString() : "n/a")}");
+
             // Build the label
             var go  = new GameObject("InventoryPopup");
             var tmp = go.AddComponent<TextMeshPro>();
