@@ -12,20 +12,20 @@ namespace MobileIdleBuilder.UI
     /// portrait screen (#188). The panel-units-per-pixel ratio is re-measured each frame so a
     /// scale change (UIScaler) or the first real layout re-applies the insets.
     ///
-    /// When the document has a top bar, a "safe-area-top-fill" strip is painted behind the
-    /// status-bar inset in the top bar's colour, so the bar reads as reaching the screen edge
-    /// instead of floating below a see-through gap.
+    /// When the document has a top bar, the top, left and right insets are painted in the top
+    /// bar's colour ("safe-area-fill" strips): the status bar reads as part of the top bar (#188)
+    /// and, in landscape, the camera-cutout side is framed off as unusable instead of showing a
+    /// blank gap (#228). The bottom (gesture bar) inset is left see-through.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class SafeAreaAdapter : MonoBehaviour
     {
-        internal const string TopFillName  = "safe-area-top-fill";
-        internal const string TopFillClass = "safe-area-top-fill";
+        internal const string FillClass = "safe-area-fill";
 
         UIDocument    _doc;
         Rect          _lastSafeArea;
         float         _lastScale = -1f;
-        VisualElement _topFill;
+        VisualElement _fillTop, _fillLeft, _fillRight;
 
         void Awake()
         {
@@ -56,26 +56,43 @@ namespace MobileIdleBuilder.UI
             root.style.paddingTop    = inset.top;
             root.style.paddingBottom = inset.bottom;
 
-            ApplyTopFill(root, inset.top);
+            ApplyFills(root, inset);
         }
 
-        void ApplyTopFill(VisualElement root, float topInset)
+        void ApplyFills(VisualElement root, (float left, float right, float top, float bottom) inset)
         {
-            if (root.Q("top-bar") == null) return; // only documents with a top bar get the strip
+            if (root.Q("top-bar") == null) return; // only documents with a top bar get the frame
 
-            if (_topFill == null)
+            if (_fillTop == null)
             {
-                _topFill = new VisualElement { name = TopFillName, pickingMode = PickingMode.Ignore };
-                _topFill.AddToClassList(TopFillClass);
-                _topFill.style.position = Position.Absolute;
-                _topFill.style.left     = 0;
-                _topFill.style.right    = 0;
-                _topFill.style.top      = 0;
-                root.Insert(0, _topFill); // behind everything else in the root
+                _fillTop   = CreateFill(root, "safe-area-fill-top");
+                _fillLeft  = CreateFill(root, "safe-area-fill-left");
+                _fillRight = CreateFill(root, "safe-area-fill-right");
+
+                _fillTop.style.left   = 0; _fillTop.style.right   = 0; _fillTop.style.top   = 0;
+                _fillLeft.style.left  = 0; _fillLeft.style.top    = 0; _fillLeft.style.bottom  = 0;
+                _fillRight.style.right = 0; _fillRight.style.top  = 0; _fillRight.style.bottom = 0;
             }
-            _topFill.style.height  = topInset;
-            _topFill.style.display = topInset > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+
+            _fillTop.style.height  = inset.top;
+            _fillLeft.style.width  = inset.left;
+            _fillRight.style.width = inset.right;
+            SetShown(_fillTop,   inset.top   > 0f);
+            SetShown(_fillLeft,  inset.left  > 0f);
+            SetShown(_fillRight, inset.right > 0f);
         }
+
+        static VisualElement CreateFill(VisualElement root, string name)
+        {
+            var fill = new VisualElement { name = name, pickingMode = PickingMode.Ignore };
+            fill.AddToClassList(FillClass);
+            fill.style.position = Position.Absolute;
+            root.Insert(0, fill); // behind everything else in the root
+            return fill;
+        }
+
+        static void SetShown(VisualElement e, bool shown)
+            => e.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
 
         /// <summary>
         /// Panel units per screen pixel, measured from the laid-out panel so it is right for any

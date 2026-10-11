@@ -23,10 +23,10 @@
     min-height: 52px;
 }
 
-/* Painted behind the status-bar safe-area inset (created by SafeAreaAdapter) so the top bar
-   reaches the screen edge instead of floating below a see-through gap (#188).
+/* Painted behind the top / left / right safe-area insets (created by SafeAreaAdapter): the top
+   bar reaches the screen edge (#188) and the landscape camera-cutout side is framed off (#228).
    Keep in sync with .top-bar background-color. */
-.safe-area-top-fill {
+.safe-area-fill {
     background-color: rgba(10, 14, 26, 0.88);
 }
 

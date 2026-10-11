@@ -104,11 +104,7 @@ namespace MobileIdleBuilder
                         // sits in front of the input port — regardless of the belt's exit direction.
                         canAdvance = false;
                         if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity destBldg, out _))
-                        {
-                            var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(destBldg);
-                            var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(destBldg);
-                            canAdvance = SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity;
-                        }
+                            canAdvance = DecideDeposit(e, destBldg, item.ItemID) != InputDecision.Wait;
                     }
 
                     if (!canAdvance)
@@ -129,6 +125,7 @@ namespace MobileIdleBuilder
             // no branch starves.
             // ----------------------------------------------------------------
             var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
+            var overflows         = new List<(Entity from, int itemID)>();
             var mergeTargets      = new HashSet<Entity>();
 
             for (int i = 0; i < segEntities.Length; i++)
@@ -153,11 +150,12 @@ namespace MobileIdleBuilder
                     // in whichever adjacent direction it sits (independent of the belt's exit dir).
                     if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity bldg, out int deliverDir))
                     {
-                        var inputBuf  = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
-                        var invConfig = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg);
-                        if (SlotBufferUtils.TotalInInputBuffer(inputBuf) < invConfig.InputCapacity)
-                            buildingDeposits.Add((e, bldg, item.ItemID, deliverDir));
-                        // else: input full — item waits
+                        switch (DecideDeposit(e, bldg, item.ItemID))
+                        {
+                            case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
+                            case InputDecision.Overflow: overflows.Add((e, item.ItemID));                          break;
+                            // Wait: input full (for this item) or item unused -- it waits on the belt
+                        }
                     }
                     // No adjacent input port: item waits at tail
                 }
@@ -176,6 +174,20 @@ namespace MobileIdleBuilder
                     var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
                     BuildingInputFX.Instance.Trigger(seg.Cell, deliverDir, itemID);
                 }
+            }
+
+            // Jam overflow (#200): the front item was blocking an item the building needs, so it
+            // goes to the player's inventory instead and the belt keeps flowing.
+            if (overflows.Count > 0 && SystemAPI.TryGetSingletonEntity<PlayerInventoryTag>(out Entity invEntity))
+            {
+                foreach (var (from, itemID) in overflows)
+                {
+                    if (!EntityManager.HasComponent<ConveyorItemData>(from)) continue;
+                    var inv = EntityManager.GetBuffer<InventorySlot>(invEntity);
+                    SlotBufferUtils.AddToInventory(ref inv, itemID, 1);
+                    EntityManager.RemoveComponent<ConveyorItemData>(from);
+                }
+                if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sent to inventory");
             }
 
             foreach (var target in mergeTargets)
@@ -335,6 +347,52 @@ namespace MobileIdleBuilder
         /// Facing equals <c>dir</c>. Lets a belt feed an input regardless of its own exit direction,
         /// as long as the tail rests on the cell in front of the input. Returns the first match.
         /// </summary>
+        // How far upstream (in segments) a jammed tail looks for an item the building is short of.
+        private const int JamLookback = 32;
+
+        /// <summary>
+        /// What the input of <paramref name="bldg"/> does with <paramref name="itemID"/> waiting on
+        /// <paramref name="tail"/>. See <see cref="InputAcceptance"/> for the rules (#200).
+        /// </summary>
+        private InputDecision DecideDeposit(Entity tail, Entity bldg, int itemID)
+        {
+            var inputBuf = EntityManager.GetBuffer<BuildingInputSlot>(bldg, isReadOnly: true);
+            int cap      = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg).InputCapacity;
+            int count    = SlotBufferUtils.CountInInputBuffer(inputBuf, itemID);
+
+            bool recipeSet = EntityManager.HasComponent<RecipeProcessData>(bldg)
+                          && EntityManager.HasBuffer<RecipeInputSlot>(bldg)
+                          && EntityManager.GetComponentData<RecipeProcessData>(bldg).RecipeID >= 0;
+            if (!recipeSet)
+                return InputAcceptance.Decide(count, cap, recipeSet: false, recipeUsesItem: false, neededItemBehind: false);
+
+            var  recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
+            bool uses         = InputAcceptance.RecipeUses(recipeInputs, itemID);
+            if (uses && count < cap) return InputDecision.Accept; // common case: skip the belt walk
+
+            return InputAcceptance.Decide(count, cap, recipeSet: true, uses,
+                NeededItemBehind(tail, recipeInputs, inputBuf));
+        }
+
+        /// <summary>
+        /// Walks the belt upstream from <paramref name="tail"/> (primary inbound chain, up to
+        /// <see cref="JamLookback"/> segments) looking for an item the building is short of.
+        /// </summary>
+        private bool NeededItemBehind(Entity tail, DynamicBuffer<RecipeInputSlot> recipeInputs,
+                                      DynamicBuffer<BuildingInputSlot> inputBuf)
+        {
+            Entity cur = EntityManager.GetComponentData<ConveyorSegmentData>(tail).PrevSegment;
+            for (int n = 0; n < JamLookback && cur != Entity.Null && EntityManager.Exists(cur); n++)
+            {
+                if (EntityManager.HasComponent<ConveyorItemData>(cur)
+                    && InputAcceptance.IsShortOf(recipeInputs, inputBuf,
+                           EntityManager.GetComponentData<ConveyorItemData>(cur).ItemID))
+                    return true;
+                cur = EntityManager.GetComponentData<ConveyorSegmentData>(cur).PrevSegment;
+            }
+            return false;
+        }
+
         private bool TryFindInputBuilding(int2 segCell, NativeHashMap<int2, Entity> buildingMap,
                                           out Entity building, out int deliverDir)
         {
