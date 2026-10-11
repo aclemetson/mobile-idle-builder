@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Unity.Entities;
+using UnityEngine;
 
 namespace MobileIdleBuilder
 {
@@ -194,9 +196,77 @@ namespace MobileIdleBuilder
                 case ConditionType.PrestigeAvailable:
                     return SystemAPI.GetSingleton<PlayerProgressData>().PrestigeAvailable;
 
+                case ConditionType.ConveyorLinked:
+                    return CountConveyorLinks(c, ref state) >= System.Math.Max(1, c.minCount);
+
+                case ConditionType.BuildingUpgradeMin:
+                    foreach (var (bd, e) in SystemAPI.Query<RefRO<BuildingData>>().WithEntityAccess())
+                        if (MatchesTarget(c, bd.ValueRO, e, ref state) && bd.ValueRO.UpgradeLevel >= c.minLevel)
+                            return true;
+                    return false;
+
                 default:
                     return false;
             }
+        }
+
+        // ── Belt links ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// True when <paramref name="e"/> is the condition's target building: Maxwell's Demon by its
+        /// EntropySinkTag, anything else by BuildingType (-1 = any building).
+        /// </summary>
+        private bool MatchesTarget(TutorialConditionDef c, BuildingData bd, Entity e, ref SystemState state)
+        {
+            if (c.buildingIsEntropySink) return SystemAPI.HasComponent<EntropySinkTag>(e);
+            return c.buildingType < 0 || bd.BuildingType == c.buildingType;
+        }
+
+        /// <summary>
+        /// Number of distinct source buildings whose output belt currently ends in front of an input
+        /// of a target building (#233). Read from the live belts, so the order the player built them
+        /// in doesn't matter. Port fronts follow ConveyorSystem (see TutorialRouteGuide).
+        /// </summary>
+        private int CountConveyorLinks(TutorialConditionDef c, ref SystemState state)
+        {
+            var sourceFronts = new List<(int, Vector2Int)>();
+            var inputFronts  = new HashSet<Vector2Int>();
+
+            foreach (var (bd, ports, e) in SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<PlacedPortData>>()
+                                                     .WithEntityAccess())
+            {
+                bool isTarget = MatchesTarget(c, bd.ValueRO, e, ref state);
+                bool isSource = !isTarget && !SystemAPI.HasComponent<EntropySinkTag>(e)
+                             && (c.fromBuildingType < 0 || bd.ValueRO.BuildingType == c.fromBuildingType);
+                if (!isTarget && !isSource) continue;
+
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    var p      = ports[i];
+                    var cell   = new Vector2Int(p.CellX, p.CellY);
+                    var facing = (OutputDirection)p.Facing;
+                    if (isTarget && p.PortType == (int)PortType.Input)
+                        inputFronts.Add(TutorialRouteGuide.InputFront(cell, facing));
+                    else if (isSource && p.PortType == (int)PortType.Output)
+                        sourceFronts.Add((e.Index, TutorialRouteGuide.OutputFront(cell, facing)));
+                }
+            }
+            if (sourceFronts.Count == 0 || inputFronts.Count == 0) return 0;
+
+            var belts = new Dictionary<Vector2Int, Vector2Int?>();
+            foreach (var seg in SystemAPI.Query<RefRO<ConveyorSegmentData>>())
+            {
+                var s = seg.ValueRO;
+                Vector2Int? next = null;
+                if (s.NextSegment != Entity.Null && SystemAPI.HasComponent<ConveyorSegmentData>(s.NextSegment))
+                {
+                    var n = SystemAPI.GetComponent<ConveyorSegmentData>(s.NextSegment).Cell;
+                    next = new Vector2Int(n.x, n.y);
+                }
+                belts[new Vector2Int(s.Cell.x, s.Cell.y)] = next;
+            }
+
+            return TutorialRouteGuide.CountLinkedSources(sourceFronts, inputFronts, belts);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

@@ -809,6 +809,7 @@ namespace MobileIdleBuilder.Editor
                         uiEventId    = s.advance_condition.ui_event_id  ?? "",
                         researchId   = s.advance_condition.research_id  ?? "",
                         minCount     = s.advance_condition.min_count,
+                        minLevel     = s.advance_condition.min_level,
                         buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,
@@ -821,10 +822,23 @@ namespace MobileIdleBuilder.Editor
                     if (!string.IsNullOrEmpty(s.advance_condition.building_id))
                     {
                         if (buildingLookup.TryGetValue(s.advance_condition.building_id, out var bso))
-                            def.advanceCondition.buildingType = bso.buildingId;
+                        {
+                            def.advanceCondition.buildingType          = bso.buildingId;
+                            def.advanceCondition.buildingIsEntropySink = bso.isEntropySink;
+                        }
                         else
                             GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
                                 $"advance_condition.building_id '{s.advance_condition.building_id}' not found.");
+                    }
+
+                    // ConveyorLinked's source building (empty = any building).
+                    if (!string.IsNullOrEmpty(s.advance_condition.from_building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.from_building_id, out var fso))
+                            def.advanceCondition.fromBuildingType = fso.buildingId;
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.from_building_id '{s.advance_condition.from_building_id}' not found.");
                     }
 
                     if (s.advance_condition.items != null && s.advance_condition.items.Count > 0)

@@ -12712,7 +12712,7 @@
     {
       "id": "place_conveyor",
       "hint": "Open the menu, tap Builder, then Place on Conveyor Belt. Tap the glowing tile in front of the Harvester, then the glowing tile in front of Maxwell's Demon, and confirm.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "harvester", "building_id": "maxwells_demon", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_conveyor_context",
         "pulse_button_id": "btn-place-conveyor",
@@ -12773,7 +12773,7 @@
     {
       "id": "route_quarks_to_sfc",
       "hint": "Place a Conveyor Belt from the glowing tile in front of a quark Harvester to the glowing tile below the Combiner. Do this for both quark Harvesters.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "harvester", "building_id": "strong_force_combiner", "min_count": 2 },
       "on_enter": {
         "dialogue_id": "route_quarks_context",
         "pulse_button_id": "btn-place-conveyor",
@@ -12790,7 +12790,7 @@
     {
       "id": "route_nucleons_to_demon",
       "hint": "Place a Conveyor Belt from the glowing tile above the Combiner to the glowing tile in front of Maxwell's Demon.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "maxwells_demon", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "route_nucleons_context",
         "pulse_button_id": "btn-place-conveyor",
@@ -12823,7 +12823,7 @@
     {
       "id": "connect_atom_gen_inputs",
       "hint": "Re-route the proton belt into the Atom Generator, and feed it electrons from your Harvester.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
+      "advance_condition": { "type": "ConveyorLinked", "building_id": "atomic_assembler", "min_count": 2 },
       "on_enter": {
         "dialogue_id": "connect_atom_gen_context",
         "pulse_button_id": "btn-place-conveyor"
@@ -12832,7 +12832,7 @@
     {
       "id": "route_hydrogen_to_demon",
       "hint": "Place a Conveyor Belt from the glowing tile in front of the Atom Generator's output to the glowing tile in front of Maxwell's Demon.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "atomic_assembler", "building_id": "maxwells_demon", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "route_hydrogen_context",
         "pulse_button_id": "btn-place-conveyor",
@@ -12860,12 +12860,11 @@
     },
     {
       "id": "upgrade_atom_generator_speed",
-      "hint": "Purchase Speed Upgrade L2 on the Atom Generator (1,000 entropy).",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "atom_generator_speed_upgraded" },
+      "hint": "Earn 1,000 entropy: collect from your buildings, set better recipes and sell at Maxwell's Demon. Then open the Atom Generator and buy Speed Upgrade L2.",
+      "advance_condition": { "type": "BuildingUpgradeMin", "building_id": "atomic_assembler", "min_level": 2 },
       "on_enter": {
         "highlight_target": "atomic_assembler",
-        "highlight_mode": "Full",
-        "building_interaction_gate": "AtomicAssemblerOnly"
+        "highlight_mode": "Full"
       }
     },
     {

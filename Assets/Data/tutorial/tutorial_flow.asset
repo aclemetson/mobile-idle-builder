@@ -23,6 +23,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: recombination_i
       skipToId: collect_quarks_for_nucleons
@@ -50,6 +53,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -83,6 +89,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -118,6 +127,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -143,6 +155,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -168,6 +183,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -197,6 +215,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -230,6 +251,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -267,6 +291,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -292,6 +319,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -317,6 +347,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -358,6 +391,9 @@ MonoBehaviour:
       researchId: recombination_i
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -399,6 +435,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -429,6 +468,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -463,6 +505,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -495,6 +540,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -523,6 +571,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -549,6 +600,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -591,6 +645,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -617,6 +674,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -644,6 +704,9 @@ MonoBehaviour:
       researchId: hydrogen_synthesis
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -692,6 +755,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -723,6 +789,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -750,6 +819,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -775,6 +847,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -800,6 +875,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -839,6 +917,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -864,6 +945,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -889,6 +973,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -914,6 +1001,9 @@ MonoBehaviour:
       researchId: automation_i
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -952,6 +1042,9 @@ MonoBehaviour:
       researchId: 
       minCount: 2
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -972,13 +1065,16 @@ MonoBehaviour:
       tile in front of the Harvester, then the glowing tile in front of Maxwell's
       Demon, and confirm.
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
+      fromBuildingType: 1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1004,6 +1100,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1030,6 +1129,9 @@ MonoBehaviour:
       researchId: 
       minCount: 3
       buildingType: 1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1055,6 +1157,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1081,6 +1186,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 2
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1107,6 +1215,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 3
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1133,6 +1244,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1152,13 +1266,16 @@ MonoBehaviour:
     hintText: Place a Conveyor Belt from the glowing tile in front of a quark Harvester
       to the glowing tile below the Combiner. Do this for both quark Harvesters.
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
+      minCount: 2
+      buildingType: 2
+      buildingIsEntropySink: 0
+      fromBuildingType: 1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1184,6 +1301,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1203,13 +1323,16 @@ MonoBehaviour:
     hintText: Place a Conveyor Belt from the glowing tile above the Combiner to the
       glowing tile in front of Maxwell's Demon.
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
+      fromBuildingType: 2
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1235,6 +1358,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1260,6 +1386,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1285,6 +1414,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1304,13 +1436,16 @@ MonoBehaviour:
     hintText: Re-route the proton belt into the Atom Generator, and feed it electrons
       from your Harvester.
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
+      minCount: 2
+      buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1330,13 +1465,16 @@ MonoBehaviour:
     hintText: Place a Conveyor Belt from the glowing tile in front of the Atom Generator's
       output to the glowing tile in front of Maxwell's Demon.
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
+      fromBuildingType: 4
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1362,6 +1500,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1387,6 +1528,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1403,15 +1547,20 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
   - id: upgrade_atom_generator_speed
-    hintText: Purchase Speed Upgrade L2 on the Atom Generator (1,000 entropy).
+    hintText: 'Earn 1,000 entropy: collect from your buildings, set better recipes
+      and sell at Maxwell''s Demon. Then open the Atom Generator and buy Speed Upgrade
+      L2.'
     advanceCondition:
-      type: 3
+      type: 9
       anyOf: 0
       items: []
-      uiEventId: atom_generator_speed_upgraded
+      uiEventId: 
       researchId: 
       minCount: 0
-      buildingType: -1
+      buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 2
     skipCondition:
       researchId: 
       skipToId: 
@@ -1423,7 +1572,7 @@ MonoBehaviour:
       collectionFilter: None
       pulseButtonId: 
       demonHighlightItemIds: 
-      buildingInteractionGate: 3
+      buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
@@ -1437,6 +1586,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1463,6 +1615,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1488,6 +1643,9 @@ MonoBehaviour:
       researchId: atomic_assembly
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1513,6 +1671,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1541,6 +1702,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1566,6 +1730,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1591,6 +1758,9 @@ MonoBehaviour:
       researchId: heavy_elements
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1616,6 +1786,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1644,6 +1817,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1669,6 +1845,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1695,6 +1874,9 @@ MonoBehaviour:
       researchId: isotopes
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1720,6 +1902,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1746,6 +1931,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 5
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1774,6 +1962,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1799,6 +1990,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1825,6 +2019,9 @@ MonoBehaviour:
       researchId: radioactive_isotopes
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1850,6 +2047,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1876,6 +2076,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 6
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1904,6 +2107,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1929,6 +2135,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1956,6 +2165,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -1981,6 +2193,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2006,6 +2221,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2032,6 +2250,9 @@ MonoBehaviour:
       researchId: fusion_i
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2057,6 +2278,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 11
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2082,6 +2306,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2107,6 +2334,9 @@ MonoBehaviour:
       researchId: fissile_extraction
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2132,6 +2362,9 @@ MonoBehaviour:
       researchId: fission_i
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2157,6 +2390,9 @@ MonoBehaviour:
       researchId: 
       minCount: 1
       buildingType: 12
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 
@@ -2182,6 +2418,9 @@ MonoBehaviour:
       researchId: 
       minCount: 0
       buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
     skipCondition:
       researchId: 
       skipToId: 

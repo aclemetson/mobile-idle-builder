@@ -67,8 +67,64 @@ namespace MobileIdleBuilder.Tests
 
             Assert.IsTrue(a.HasValue);
             Assert.AreEqual(4, a.Value.x, "inputs line up with the harvesters");
-            // Any row between them is equally short; the scan prefers the lowest, nearest the sources.
-            Assert.AreEqual(1, a.Value.y);
+            // Row 1 would put the inputs on the harvester fronts themselves (a one-tile "belt"), so
+            // the closest real route leaves one belt tile between them (#236).
+            Assert.AreEqual(2, a.Value.y);
+        }
+
+        [Test]
+        public void SuggestAnchor_EqualRoutes_PicksTheSpotBalancedBetweenSourceAndSink()
+        {
+            // One source below, the sink straight above: every row in between costs the same belt.
+            // The tie goes to the middle, not the spot hugging the source (#236).
+            var sources = new List<Vector2Int> { new(0, 0) };
+            var sinks   = new List<Vector2Int> { new(0, 8) };
+
+            var a = TutorialRouteGuide.SuggestAnchor(10, 10, Fp, In, Out, sources, sinks, _ => true, _ => true);
+
+            Assert.AreEqual(new Vector2Int(0, 4), a);
+        }
+
+        [Test]
+        public void SuggestAnchor_EachSourceNeedsItsOwnInput()
+        {
+            // Two sources side by side. With one belt per input, the closest spot puts the two inputs
+            // directly above them, one belt tile up (inputs at (2,1) and (3,1)).
+            var sources = new List<Vector2Int> { new(2, 0), new(3, 0) };
+            bool InBounds(Vector2Int c) => c.x >= 0 && c.y >= 0 && c.x < 10 && c.y < 10;
+            // The harvester fronts carry the start of each belt, so nothing can be built on them.
+            var a = TutorialRouteGuide.SuggestAnchor(10, 10, Fp, In, Out, sources,
+                new List<Vector2Int>(), c => InBounds(c) && !sources.Contains(c), InBounds);
+
+            Assert.AreEqual(new Vector2Int(2, 2), a);
+        }
+
+        // ── CountLinkedSources ───────────────────────────────────────────────
+
+        private static Dictionary<Vector2Int, Vector2Int?> Belt(params Vector2Int[] cells)
+        {
+            var d = new Dictionary<Vector2Int, Vector2Int?>();
+            for (int i = 0; i < cells.Length; i++)
+                d[cells[i]] = i + 1 < cells.Length ? cells[i + 1] : (Vector2Int?)null;
+            return d;
+        }
+
+        [Test]
+        public void CountLinkedSources_CountsABeltWhoseTailIsOnTheInputFront()
+        {
+            var fronts = new List<(int, Vector2Int)> { (1, new(1, 0)) };
+            var inputs = new HashSet<Vector2Int> { new(3, 0) };
+            Assert.AreEqual(1, TutorialRouteGuide.CountLinkedSources(fronts, inputs, Belt(new(1, 0), new(2, 0), new(3, 0))));
+            Assert.AreEqual(0, TutorialRouteGuide.CountLinkedSources(fronts, inputs, Belt(new(1, 0), new(2, 0))));
+        }
+
+        [Test]
+        public void CountLinkedSources_ALoopedBeltTerminates()
+        {
+            var belts = new Dictionary<Vector2Int, Vector2Int?>
+                { [new(0, 0)] = new Vector2Int(1, 0), [new(1, 0)] = new Vector2Int(0, 0) };
+            var fronts = new List<(int, Vector2Int)> { (1, new(0, 0)) };
+            Assert.AreEqual(0, TutorialRouteGuide.CountLinkedSources(fronts, new HashSet<Vector2Int> { new(5, 5) }, belts));
         }
 
         [Test]
