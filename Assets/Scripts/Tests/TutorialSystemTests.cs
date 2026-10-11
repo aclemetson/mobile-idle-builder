@@ -567,61 +567,217 @@ namespace MobileIdleBuilder.Tests
 
         // ── Building upgrade tutorial (steps 48–50) ──────────────────────────
 
-        [Test]
-        public void UpgradeTutorial_AllThreeSteps_HoldUntilUiEvents()
+        private const int AtomGenType = 4;
+
+        private static TutorialStepDef UpgradeStep(string id, int buildingType, int minLevel)
+            => new TutorialStepDef
+            {
+                id = id,
+                advanceCondition = new TutorialConditionDef
+                    { type = ConditionType.BuildingUpgradeMin, buildingType = buildingType, minLevel = minLevel },
+                onEnter = new TutorialOnEnter()
+            };
+
+        private Entity CreateBuildingAtLevel(int buildingType, int level)
         {
-            // Mirrors the real steps 48–50: all three are UiEvent gates — none auto-advance.
-            MakeFlow(
-                UiEventStep("intro_building_upgrades",     "dialogue_complete"),
-                UiEventStep("upgrade_atom_generator_speed","atom_generator_speed_upgraded"),
-                UiEventStep("upgrade_context",             "dialogue_complete")
-            );
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new BuildingData { BuildingType = buildingType, UpgradeLevel = level });
+            return e;
+        }
+
+        [Test]
+        public void UpgradeStep_HoldsAtLevelOne()
+        {
+            MakeFlow(UpgradeStep("upgrade_atom_generator_speed", AtomGenType, 2),
+                     UiEventStep("upgrade_context", "dialogue_complete"));
             SetStepIndex(0);
+            CreateBuildingAtLevel(AtomGenType, 1);
 
             _world.Update();
-            Assert.AreEqual(0, GetStepIndex(), "intro_building_upgrades must not advance from ECS");
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void UpgradeStep_AdvancesOnceTheAtomGeneratorReachesLevelTwo()
+        {
+            // #232: the step reads the building's level, so the purchase (or a save that already
+            // has it) advances without any UI event.
+            MakeFlow(UpgradeStep("upgrade_atom_generator_speed", AtomGenType, 2),
+                     UiEventStep("upgrade_context", "dialogue_complete"));
+            SetStepIndex(0);
+            var gen = CreateBuildingAtLevel(AtomGenType, 1);
+            _world.Update();
+
+            _em.SetComponentData(gen, new BuildingData { BuildingType = AtomGenType, UpgradeLevel = 2 });
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void UpgradeStep_OtherBuildingTypesDoNotCount()
+        {
+            MakeFlow(UpgradeStep("upgrade_atom_generator_speed", AtomGenType, 2),
+                     UiEventStep("upgrade_context", "dialogue_complete"));
+            SetStepIndex(0);
+            CreateBuildingAtLevel(buildingType: 1, level: 3);
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        // ── Belt links (ConveyorLinked, #233) ────────────────────────────────
+
+        private const int HarvesterType = 1, CombinerType = 2, DemonType = 7;
+
+        private static TutorialStepDef LinkStep(string id, int from, int to, int minCount, bool toSink = false)
+            => new TutorialStepDef
+            {
+                id = id,
+                advanceCondition = new TutorialConditionDef
+                {
+                    type = ConditionType.ConveyorLinked, fromBuildingType = from, buildingType = to,
+                    buildingIsEntropySink = toSink, minCount = minCount
+                },
+                onEnter = new TutorialOnEnter()
+            };
+
+        /// <summary>A 1x1 building at <paramref name="cell"/> with one port facing <paramref name="facing"/>.</summary>
+        private Entity CreatePortedBuilding(int type, Vector2Int cell, PortType port, OutputDirection facing)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new BuildingData { BuildingType = type, UpgradeLevel = 1 });
+            var ports = _em.AddBuffer<PlacedPortData>(e);
+            ports.Add(new PlacedPortData { PortType = (int)port, CellX = cell.x, CellY = cell.y, Facing = (int)facing });
+            return e;
+        }
+
+        /// <summary>A belt along <paramref name="cells"/>, each cell feeding the next.</summary>
+        private void CreateBelt(params Vector2Int[] cells)
+        {
+            var entities = new Entity[cells.Length];
+            for (int i = 0; i < cells.Length; i++) entities[i] = _em.CreateEntity();
+            for (int i = 0; i < cells.Length; i++)
+                _em.AddComponentData(entities[i], new ConveyorSegmentData
+                {
+                    Cell        = new Unity.Mathematics.int2(cells[i].x, cells[i].y),
+                    NextSegment = i + 1 < cells.Length ? entities[i + 1] : Entity.Null,
+                    IsChainHead = i == 0,
+                });
+        }
+
+        // Combiner output at (0,0) facing East: its belt starts on (1,0).
+        // Target input at (4,0) facing East (items travel East into it): its belt ends on (3,0).
+        private void CombinerAndTarget(int sourceType = CombinerType)
+        {
+            CreatePortedBuilding(sourceType, new Vector2Int(0, 0), PortType.Output, OutputDirection.East);
+            CreatePortedBuilding(DemonType, new Vector2Int(4, 0), PortType.Input, OutputDirection.East);
+        }
+
+        [Test]
+        public void ConveyorLinked_AdvancesWhenTheBeltReachesTheInput()
+        {
+            MakeFlow(LinkStep("route_nucleons_to_demon", CombinerType, DemonType, 1),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CombinerAndTarget();
+            _world.Update();
+            Assert.AreEqual(0, GetStepIndex(), "no belt yet");
+
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void ConveyorLinked_ALinkBuiltBeforeTheStepStillCounts()
+        {
+            // #233: the Combiner -> Demon belt was built while an earlier step was active.
+            MakeFlow(UiEventStep("configure_sfc_recipes", "combiner_recipe_set"),
+                     LinkStep("route_nucleons_to_demon", CombinerType, DemonType, 1),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CombinerAndTarget();
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
+            _world.Update();
+            Assert.AreEqual(0, GetStepIndex());
 
             SetStepIndex(1);
             _world.Update();
-            Assert.AreEqual(1, GetStepIndex(), "upgrade_atom_generator_speed must not advance from ECS");
 
-            SetStepIndex(2);
-            _world.Update();
-            Assert.AreEqual(2, GetStepIndex(), "upgrade_context must not advance from ECS");
+            Assert.AreEqual(2, GetStepIndex());
         }
 
         [Test]
-        public void UpgradeAtomGenerator_WaitsForSpecificEventId()
+        public void ConveyorLinked_ABeltThatStopsShortDoesNotCount()
         {
-            // The step uses "atom_generator_speed_upgraded", NOT the generic "dialogue_complete".
-            // Verifies the event ID is wired to the right string — a wrong ID would keep the
-            // tutorial stuck even after the upgrade UI calls the generic event.
-            var upgradeStep = UiEventStep("upgrade_atom_generator_speed", "atom_generator_speed_upgraded");
-            Assert.AreEqual("atom_generator_speed_upgraded",
-                upgradeStep.advanceCondition.uiEventId,
-                "upgrade_atom_generator_speed step must use 'atom_generator_speed_upgraded' event id");
-        }
-
-        [Test]
-        public void UpgradeTutorial_SequenceDoesNotSkipUpgradeGate()
-        {
-            // Even if an earlier step's inventory/auto condition is met, the upgrade gate
-            // (UiEvent) must not be bypassed by the ECS system.
-            MakeFlow(
-                InventoryMinStep("hydrogen_loop_complete", itemId: 6, qty: 1),
-                UiEventStep("intro_building_upgrades",     "dialogue_complete"),
-                UiEventStep("upgrade_atom_generator_speed","atom_generator_speed_upgraded"),
-                UiEventStep("upgrade_context",             "dialogue_complete"),
-                InventoryMinStep("post_tutorial",          itemId: 6, qty: 1)
-            );
+            MakeFlow(LinkStep("route_nucleons_to_demon", CombinerType, DemonType, 1),
+                     UiEventStep("next", "dialogue_complete"));
             SetStepIndex(0);
-            AddToInventory(itemId: 6, qty: 5); // hydrogen present — step 0 should advance
+            CombinerAndTarget();
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0));
 
             _world.Update();
-            Assert.AreEqual(1, GetStepIndex(), "Step 0 (InventoryMin) should advance");
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void ConveyorLinked_WrongSourceDoesNotCount()
+        {
+            MakeFlow(LinkStep("route_nucleons_to_demon", CombinerType, DemonType, 1),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CombinerAndTarget(sourceType: HarvesterType);
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
 
             _world.Update();
-            Assert.AreEqual(1, GetStepIndex(), "Step 1 (UiEvent: dialogue_complete) must not advance from ECS");
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void ConveyorLinked_NeedsMinCountDistinctSources()
+        {
+            // route_quarks_to_sfc: both quark Harvesters must feed the Combiner.
+            MakeFlow(LinkStep("route_quarks_to_sfc", HarvesterType, CombinerType, 2),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CreatePortedBuilding(HarvesterType, new Vector2Int(0, 0), PortType.Output, OutputDirection.East);
+            CreatePortedBuilding(HarvesterType, new Vector2Int(0, 2), PortType.Output, OutputDirection.East);
+            var sfc = CreatePortedBuilding(CombinerType, new Vector2Int(4, 0), PortType.Input, OutputDirection.East);
+            _em.GetBuffer<PlacedPortData>(sfc).Add(new PlacedPortData
+                { PortType = (int)PortType.Input, CellX = 4, CellY = 2, Facing = (int)OutputDirection.East });
+
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
+            _world.Update();
+            Assert.AreEqual(0, GetStepIndex(), "one of two quark belts");
+
+            CreateBelt(new Vector2Int(1, 2), new Vector2Int(2, 2), new Vector2Int(3, 2));
+            _world.Update();
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void ConveyorLinked_DemonIsMatchedByItsSinkTag()
+        {
+            MakeFlow(LinkStep("place_conveyor", HarvesterType, -1, 1, toSink: true),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CombinerAndTarget(sourceType: HarvesterType);
+            // Tag the target as the entropy sink (the 2nd building created).
+            var q = _em.CreateEntityQuery(typeof(BuildingData), typeof(PlacedPortData));
+            foreach (var e in q.ToEntityArray(Unity.Collections.Allocator.Temp))
+                if (_em.GetComponentData<BuildingData>(e).BuildingType == DemonType)
+                    _em.AddComponent<EntropySinkTag>(e);
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
         }
 
         // ── Smart progression: forward substep skip ──────────────────────────

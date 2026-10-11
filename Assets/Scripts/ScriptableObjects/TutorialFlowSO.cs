@@ -72,6 +72,14 @@ namespace MobileIdleBuilder
         /// <summary>BuildingMin only: BuildingData.BuildingType to filter on, resolved from the
         /// JSON building_id at import time. -1 = count all buildings (no filter).</summary>
         public int                buildingType = -1;
+        /// <summary>ConveyorLinked / BuildingUpgradeMin: the target is Maxwell's Demon, matched by its
+        /// EntropySinkTag rather than its BuildingType.</summary>
+        public bool               buildingIsEntropySink;
+        /// <summary>ConveyorLinked only: BuildingType of the source buildings, resolved from the JSON
+        /// from_building_id. -1 = any building. (buildingType is the destination.)</summary>
+        public int                fromBuildingType = -1;
+        /// <summary>BuildingUpgradeMin only: speed upgrade level (BuildingData.UpgradeLevel) to reach.</summary>
+        public int                minLevel;
     }
 
     [Serializable]

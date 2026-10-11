@@ -77,31 +77,82 @@ namespace MobileIdleBuilder
                                                 Func<Vector2Int, bool> isBeltFree)
         {
             Vector2Int? best = null;
-            int bestScore = int.MaxValue;
+            int bestScore = int.MaxValue, bestImbalance = int.MaxValue;
 
             for (int y = 0; y < gridHeight; y++)
             for (int x = 0; x < gridWidth; x++)
             {
                 var anchor = new Vector2Int(x, y);
                 if (!Fits(anchor, footprint, inputFronts, outputFronts, isBuildable, isBeltFree)) continue;
+                if (SharesBeltCell(anchor, inputFronts, sources) || SharesBeltCell(anchor, outputFronts, sinks)) continue;
 
-                int score = 0;
-                foreach (var src in sources)
-                    score += NearestDistance(src, anchor, inputFronts);
+                int fromSources = AssignedDistance(sources, anchor, inputFronts);
+                int toSink = 0;
                 if (sinks.Count > 0 && outputFronts.Count > 0)
                 {
-                    int toSink = int.MaxValue;
+                    toSink = int.MaxValue;
                     foreach (var o in outputFronts)
                     foreach (var sink in sinks)
                         toSink = Mathf.Min(toSink, Manhattan(anchor + o, sink));
-                    score += toSink;
                 }
 
-                if (score < bestScore) // scan order (y, then x) is the tie-break
+                // Least total belt first. Spots along a straight run cost the same, so the tie goes
+                // to the one balanced between the sources and the sink (#236), then scan order (y, x).
+                int score     = fromSources + toSink;
+                int imbalance = Mathf.Abs(fromSources / Mathf.Max(1, sources.Count) - toSink);
+                if (score < bestScore || (score == bestScore && imbalance < bestImbalance))
                 {
-                    bestScore = score;
-                    best      = anchor;
+                    bestScore     = score;
+                    bestImbalance = imbalance;
+                    best          = anchor;
                 }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// True when a port's belt cell would sit on one of <paramref name="ends"/> itself, i.e. the
+        /// "belt" between them is a single shared tile. Rejected so every suggested route is a real
+        /// belt with distinct glowing start and end tiles (#236).
+        /// </summary>
+        private static bool SharesBeltCell(Vector2Int anchor, IReadOnlyList<Vector2Int> fronts,
+                                           IReadOnlyList<Vector2Int> ends)
+        {
+            foreach (var f in fronts)
+            foreach (var e in ends)
+                if (anchor + f == e) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Total belt distance with each source feeding its own input (each input takes one belt), the
+        /// cheapest such assignment. With more sources than inputs, falls back to each source's nearest.
+        /// </summary>
+        private static int AssignedDistance(IReadOnlyList<Vector2Int> sources, Vector2Int anchor,
+                                            IReadOnlyList<Vector2Int> fronts)
+        {
+            if (sources.Count == 0 || fronts.Count == 0) return 0;
+            if (sources.Count > fronts.Count)
+            {
+                int sum = 0;
+                foreach (var s in sources) sum += NearestDistance(s, anchor, fronts);
+                return sum;
+            }
+            return BestAssignment(sources, 0, anchor, fronts, new bool[fronts.Count]);
+        }
+
+        private static int BestAssignment(IReadOnlyList<Vector2Int> sources, int i, Vector2Int anchor,
+                                          IReadOnlyList<Vector2Int> fronts, bool[] used)
+        {
+            if (i == sources.Count) return 0;
+            int best = int.MaxValue;
+            for (int f = 0; f < fronts.Count; f++)
+            {
+                if (used[f]) continue;
+                used[f] = true;
+                int d = Manhattan(sources[i], anchor + fronts[f]) + BestAssignment(sources, i + 1, anchor, fronts, used);
+                used[f] = false;
+                best = Mathf.Min(best, d);
             }
             return best;
         }
@@ -124,6 +175,40 @@ namespace MobileIdleBuilder
             int best = int.MaxValue;
             foreach (var f in fronts) best = Mathf.Min(best, Manhattan(from, anchor + f));
             return best == int.MaxValue ? 0 : best;
+        }
+
+        // ── Built links (ConveyorLinked tutorial condition, #233) ────────────
+
+        /// <summary>
+        /// Counts the distinct sources with a belt that starts on one of their output fronts and whose
+        /// chain ends (its tail) on one of <paramref name="inputFronts"/>, i.e. items really flow from
+        /// that source into the target. Reads the belts as they are now, so a link built before the
+        /// step began still counts.
+        /// </summary>
+        /// <param name="sourceFronts">(source id, output front cell) for every output port of every source.</param>
+        /// <param name="belts">Every belt cell mapped to the cell it feeds, or null at a tail.</param>
+        public static int CountLinkedSources(IReadOnlyList<(int source, Vector2Int front)> sourceFronts,
+                                             ICollection<Vector2Int> inputFronts,
+                                             IReadOnlyDictionary<Vector2Int, Vector2Int?> belts)
+        {
+            var linked = new HashSet<int>();
+            foreach (var (source, front) in sourceFronts)
+            {
+                if (linked.Contains(source) || !belts.ContainsKey(front)) continue;
+
+                var cur = front;
+                for (int n = 0; n <= belts.Count; n++) // bounded: a looped belt never reaches a tail
+                {
+                    var next = belts[cur];
+                    if (next == null || !belts.ContainsKey(next.Value))
+                    {
+                        if (inputFronts.Contains(cur)) linked.Add(source);
+                        break;
+                    }
+                    cur = next.Value;
+                }
+            }
+            return linked.Count;
         }
 
         private static bool IsEarlier(Vector2Int s, Vector2Int e, Vector2Int curS, Vector2Int curE)

@@ -340,14 +340,8 @@ namespace MobileIdleBuilder
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
         private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
         private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
-
-        /// <summary>
-        /// Called by the building upgrade UI when the player purchases a speed upgrade on the
-        /// Atom Generator (atomic_assembler). Advances the tutorial step waiting on
-        /// "atom_generator_speed_upgraded".
-        /// </summary>
-        public void NotifyAtomGeneratorSpeedUpgraded() =>
-            TryAdvanceOnUiEvent("atom_generator_speed_upgraded");
+        // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
+        // upgrade UI needs no tutorial hook.
 
         // ── Field lock states ─────────────────────────────────────────────────
 

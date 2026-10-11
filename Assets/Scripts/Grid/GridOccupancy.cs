@@ -29,11 +29,19 @@ namespace MobileIdleBuilder
         /// <summary>Used by BuildingVisualizer to register pre-baked buildings.</summary>
         public void Register(int x, int y) => _occupied.Add((x, y));
 
+        /// <summary>
+        /// Raised after a conveyor cell is registered or unregistered (place, delete, load) so
+        /// GridRenderer can recolour that tile. Buildings colour their own tiles; belts relied on an
+        /// unrelated repaint and so only sometimes showed the occupied colour (#237).
+        /// </summary>
+        public static event System.Action<int, int> ConveyorCellChanged;
+
         /// <summary>Marks a cell as occupied by a conveyor segment (tracked separately from buildings).</summary>
         public void RegisterConveyor(int x, int y)
         {
             _occupied.Add((x, y));
             _conveyorCells.Add((x, y));
+            ConveyorCellChanged?.Invoke(x, y);
         }
 
         /// <summary>Removes a conveyor cell from all occupancy tracking.</summary>
@@ -41,6 +49,7 @@ namespace MobileIdleBuilder
         {
             _occupied.Remove((x, y));
             _conveyorCells.Remove((x, y));
+            ConveyorCellChanged?.Invoke(x, y);
         }
 
         // ---- Multi-cell helpers ----
