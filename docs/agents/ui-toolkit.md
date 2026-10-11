@@ -92,7 +92,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 5. Tell the user to add the component to the HUD GameObject in GameScene (manual step).
 6. Use `ToastService` for transient feedback, not ad-hoc labels.
 7. Verify visibility: panel must not be clipped by a zero-height wrapper; check parent sizing classes (CLAUDE.md recurring bug).
-8. Mobile: respect safe area (`SafeAreaAdapter` exists); test portrait sizing.
+8. Mobile: respect safe area (`SafeAreaAdapter` exists; it pads the document root in panel px, never percent, since UI Toolkit resolves percent padding against WIDTH, and paints `safe-area-top-fill` behind the status bar when a `top-bar` exists). Android does not report rounded display corners as unsafe, so inset edge-to-edge bottom panels from the sides (see `.dialogue-box`); test portrait sizing.
 
 ## Pitfalls
 
