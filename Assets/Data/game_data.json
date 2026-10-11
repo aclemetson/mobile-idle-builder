@@ -12706,16 +12706,18 @@
       "advance_condition": { "type": "BuildingMin", "min_count": 2 },
       "on_enter": {
         "dialogue_id": "place_building_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-harvester"
       }
     },
     {
       "id": "place_conveyor",
-      "hint": "Tap a start tile by the Harvester, then the tile in front of Maxwell's Demon, and place the belt.",
+      "hint": "Open the menu, tap Builder, then Place on Conveyor Belt. Tap the glowing tile in front of the Harvester, then the glowing tile in front of Maxwell's Demon, and confirm.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "place_conveyor_context",
-        "pulse_button_id": "btn-conveyors"
+        "pulse_button_id": "btn-place-conveyor",
+        "highlight_target": "route:harvester>maxwells_demon",
+        "highlight_mode": "Full"
       }
     },
     {
@@ -12731,7 +12733,7 @@
       "advance_condition": { "type": "BuildingMin", "building_id": "harvester", "min_count": 3 },
       "on_enter": {
         "dialogue_id": "place_quark_harvester_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-harvester"
       }
     },
     {
@@ -12743,11 +12745,13 @@
     },
     {
       "id": "place_sfc",
-      "hint": "Open the Build menu and place a Strong Force Combiner on the grid.",
+      "hint": "Open the Build menu and place a Strong Force Combiner on the glowing tiles, between your quark Harvesters and Maxwell's Demon.",
       "advance_condition": { "type": "BuildingMin", "building_id": "strong_force_combiner", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_sfc_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-strong_force_combiner",
+        "highlight_target": "suggest:strong_force_combiner:harvester>maxwells_demon",
+        "highlight_mode": "Full"
       }
     },
     {
@@ -12756,7 +12760,7 @@
       "advance_condition": { "type": "BuildingMin", "building_id": "basic_generator", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_generator_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-basic_generator"
       }
     },
     {
@@ -12768,11 +12772,13 @@
     },
     {
       "id": "route_quarks_to_sfc",
-      "hint": "Tap a start tile by a quark Harvester, then the tile in front of the Combiner's input, and place the belt. Do this for both quark Harvesters.",
+      "hint": "Place a Conveyor Belt from the glowing tile in front of a quark Harvester to the glowing tile below the Combiner. Do this for both quark Harvesters.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_quarks_context",
-        "pulse_button_id": "btn-conveyors"
+        "pulse_button_id": "btn-place-conveyor",
+        "highlight_target": "route:harvester>strong_force_combiner",
+        "highlight_mode": "Full"
       }
     },
     {
@@ -12783,11 +12789,13 @@
     },
     {
       "id": "route_nucleons_to_demon",
-      "hint": "Connect the Combiner's proton output to Maxwell's Demon.",
+      "hint": "Place a Conveyor Belt from the glowing tile above the Combiner to the glowing tile in front of Maxwell's Demon.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_nucleons_context",
-        "pulse_button_id": "btn-conveyors"
+        "pulse_button_id": "btn-place-conveyor",
+        "highlight_target": "route:strong_force_combiner>maxwells_demon",
+        "highlight_mode": "Full"
       }
     },
     {
@@ -12809,7 +12817,7 @@
       "advance_condition": { "type": "BuildingMin", "building_id": "atomic_assembler", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_atom_gen_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-atomic_assembler"
       }
     },
     {
@@ -12818,16 +12826,18 @@
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "connect_atom_gen_context",
-        "pulse_button_id": "btn-conveyors"
+        "pulse_button_id": "btn-place-conveyor"
       }
     },
     {
       "id": "route_hydrogen_to_demon",
-      "hint": "Connect the Atom Generator's output to Maxwell's Demon.",
+      "hint": "Place a Conveyor Belt from the glowing tile in front of the Atom Generator's output to the glowing tile in front of Maxwell's Demon.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "conveyor_placed" },
       "on_enter": {
         "dialogue_id": "route_hydrogen_context",
-        "pulse_button_id": "btn-conveyors"
+        "pulse_button_id": "btn-place-conveyor",
+        "highlight_target": "route:atomic_assembler>maxwells_demon",
+        "highlight_mode": "Full"
       }
     },
     {
@@ -12965,7 +12975,7 @@
       "advance_condition": { "type": "BuildingMin", "building_id": "isotopic_manipulator", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_manipulator_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-isotopic_manipulator"
       }
     },
 
@@ -13010,7 +13020,7 @@
       "advance_condition": { "type": "BuildingMin", "building_id": "radioactive_containment", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_containment_context",
-        "pulse_button_id": "btn-build"
+        "pulse_button_id": "btn-place-radioactive_containment"
       }
     },
 
@@ -13064,7 +13074,7 @@
       "id": "place_fusion_reactor",
       "hint": "Open the Build menu and place a Fusion Reactor.",
       "advance_condition": { "type": "BuildingMin", "building_id": "fusion_reactor", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-build" }
+      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor" }
     },
     {
       "id": "fusion_explained",
@@ -13093,7 +13103,7 @@
       "id": "place_fission_reactor",
       "hint": "Open the Build menu and place a Fission Reactor.",
       "advance_condition": { "type": "BuildingMin", "building_id": "fission_reactor", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-build" }
+      "on_enter": { "pulse_button_id": "btn-place-fission_reactor" }
     },
     {
       "id": "reactors_complete",

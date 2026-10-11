@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -19,7 +20,13 @@ namespace MobileIdleBuilder
     ///
     /// Supported target IDs:
     ///   FieldInstance.Field.id — e.g. "electron_field", "quark_field"
-    ///   (ECS building IDs can be added to FindWorldPosition when needed)
+    ///   "maxwells_demon", "atomic_assembler" — placed buildings
+    ///   "route:&lt;from&gt;&gt;&lt;to&gt;" — the start and end tiles of the next belt to draw: the free
+    ///       cell in front of a &lt;from&gt; output and the free cell in front of a &lt;to&gt; input (#202)
+    ///   "suggest:&lt;building&gt;:&lt;from&gt;&gt;&lt;to&gt;" — where to place &lt;building&gt; so belts from
+    ///       &lt;from&gt; feed it and its output reaches &lt;to&gt; (#203)
+    ///   Building keys are BuildingSO ids (e.g. "harvester", "strong_force_combiner");
+    ///   "maxwells_demon" matches the entropy sink. Grid math lives in TutorialRouteGuide.
     ///
     /// Inspector wiring required:
     ///   cameraFollow  → CameraController on Main Camera
@@ -31,7 +38,7 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer     gridRenderer;
         [SerializeField] private Material         _highlightMaterial;  // URP Unlit Transparent — assign in Inspector
 
-        private TutorialTileHighlight _activeHighlight;
+        private readonly List<TutorialTileHighlight> _activeHighlights = new();
         private Coroutine             _searchRoutine;
 
         /// <summary>Everything ApplyHighlight needs: the anchor grid cell, footprint size, and camera target.</summary>
@@ -42,6 +49,9 @@ namespace MobileIdleBuilder
             public int     FootprintW;
             public int     FootprintH;
             public Vector3 CameraTarget; // world-space point to pan the camera to
+            public bool    HasSecond;    // route targets: a second 1x1 tile (the belt's end)
+            public int     SecondX;
+            public int     SecondZ;
         }
 
         // ── Public API ────────────────────────────────────────────────────────
@@ -122,7 +132,17 @@ namespace MobileIdleBuilder
 
             float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
             ClearVisual();
-            _activeHighlight = TutorialTileHighlight.Spawn(t.CameraTarget, cs, t.FootprintW, t.FootprintH, _highlightMaterial);
+
+            var firstCenter = new Vector3((t.AnchorX + (t.FootprintW - 1) * 0.5f) * cs, 0f,
+                                          (t.AnchorZ + (t.FootprintH - 1) * 0.5f) * cs);
+            _activeHighlights.Add(TutorialTileHighlight.Spawn(firstCenter, cs, t.FootprintW, t.FootprintH, _highlightMaterial));
+
+            if (t.HasSecond)
+            {
+                gridRenderer?.AddTutorialHighlightRect(t.SecondX, t.SecondZ);
+                _activeHighlights.Add(TutorialTileHighlight.Spawn(
+                    new Vector3(t.SecondX * cs, 0f, t.SecondZ * cs), cs, 1, 1, _highlightMaterial));
+            }
         }
 
         private WorldTarget? FindWorldTarget(string targetId)
@@ -150,8 +170,137 @@ namespace MobileIdleBuilder
             if (targetId == "atomic_assembler")
                 return FindPlacedBuildingTarget(4);
 
+            if (TutorialRouteGuide.TryParseRoute(targetId, out var from, out var to))
+                return FindRouteTarget(from, to);
+
+            if (TutorialRouteGuide.TryParseSuggest(targetId, out var building, out var sFrom, out var sTo))
+                return FindSuggestTarget(building, sFrom, sTo);
+
             return null;
         }
+
+        // ── Route / placement guidance (#202, #203) ───────────────────────────
+
+        /// <summary>Start tile = free cell in front of a &lt;from&gt; output; end = free cell in front of a &lt;to&gt; input.</summary>
+        private WorldTarget? FindRouteTarget(string from, string to)
+        {
+            var starts = new List<Vector2Int>();
+            var ends   = new List<Vector2Int>();
+            if (!GatherPortFronts(from, PortType.Output, starts) || !GatherPortFronts(to, PortType.Input, ends))
+                return null;
+
+            if (!TutorialRouteGuide.TryPickRoute(starts, ends, IsBeltFree, out var s, out var e))
+                return null;
+
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = s.x, AnchorZ = s.y, FootprintW = 1, FootprintH = 1,
+                HasSecond = true, SecondX = e.x, SecondZ = e.y,
+                CameraTarget = new Vector3((s.x + e.x) * 0.5f * cs, 0f, (s.y + e.y) * 0.5f * cs)
+            };
+        }
+
+        /// <summary>Footprint rect where &lt;building&gt; fits best between &lt;from&gt; outputs and &lt;to&gt; inputs.</summary>
+        private WorldTarget? FindSuggestTarget(string buildingKey, string from, string to)
+        {
+            var so = FindBuildingSO(buildingKey);
+            if (so == null || gridRenderer == null) return null;
+
+            var sources = new List<Vector2Int>();
+            var sinks   = new List<Vector2Int>();
+            if (!GatherPortFronts(from, PortType.Output, sources) || !GatherPortFronts(to, PortType.Input, sinks))
+                return null;
+            sources.RemoveAll(c => !IsBeltFree(c)); // already-routed outputs are not looking for a destination
+            sinks.RemoveAll(c => !IsBeltFree(c));
+
+            var fp           = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+            var inputFronts  = new List<Vector2Int>();
+            var outputFronts = new List<Vector2Int>();
+            if (so.ports != null)
+            {
+                foreach (var port in so.ports)
+                {
+                    var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
+                    if (port.portType == PortType.Input)       inputFronts.Add(TutorialRouteGuide.InputFront(cell, facing));
+                    else if (port.portType == PortType.Output) outputFronts.Add(TutorialRouteGuide.OutputFront(cell, facing));
+                }
+            }
+
+            var anchor = TutorialRouteGuide.SuggestAnchor(gridRenderer.Width, gridRenderer.Height, fp,
+                inputFronts, outputFronts, sources, sinks, IsBuildable, IsBeltFree);
+            if (anchor == null) return null;
+
+            var a = anchor.Value;
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = a.x, AnchorZ = a.y, FootprintW = fp.x, FootprintH = fp.y,
+                CameraTarget = new Vector3((a.x + (fp.x - 1) * 0.5f) * cs, 0f, (a.y + (fp.y - 1) * 0.5f) * cs)
+            };
+        }
+
+        /// <summary>
+        /// Adds the belt cell in front of every <paramref name="type"/> port on placed buildings matching
+        /// <paramref name="buildingKey"/>. Returns false when no such building is placed yet (keep searching).
+        /// </summary>
+        private bool GatherPortFronts(string buildingKey, PortType type, List<Vector2Int> result)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return false;
+            var em = world.EntityManager;
+
+            bool isDemon = buildingKey == "maxwells_demon";
+            int  typeId  = -1;
+            if (!isDemon)
+            {
+                var so = FindBuildingSO(buildingKey);
+                if (so == null) return false;
+                typeId = so.buildingId;
+            }
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                   ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            bool any = false;
+            foreach (var entity in entities)
+            {
+                bool match = isDemon
+                    ? em.HasComponent<EntropySinkTag>(entity)
+                    : em.GetComponentData<BuildingData>(entity).BuildingType == typeId;
+                if (!match) continue;
+                any = true;
+
+                var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    if (ports[i].PortType != (int)type) continue;
+                    var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
+                    var facing = (OutputDirection)ports[i].Facing;
+                    result.Add(type == PortType.Output
+                        ? TutorialRouteGuide.OutputFront(cell, facing)
+                        : TutorialRouteGuide.InputFront(cell, facing));
+                }
+            }
+            return any;
+        }
+
+        private static BuildingSO FindBuildingSO(string id)
+        {
+            var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            if (db == null || db.allBuildings == null) return null;
+            foreach (var b in db.allBuildings)
+                if (b != null && b.id == id) return b;
+            return null;
+        }
+
+        private float CellSize => gridRenderer != null ? gridRenderer.CellSize : 1f;
+
+        private bool IsBeltFree(Vector2Int c) =>
+            gridRenderer != null && gridRenderer.IsInBounds(c.x, c.y)
+            && (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(c.x, c.y));
+
+        private bool IsBuildable(Vector2Int c) => IsBeltFree(c) && FieldGenerator.GetFieldAt(c.x, c.y) == null;
 
         /// <summary>
         /// Returns the highlight target for the first entity with EntropySinkTag, including
@@ -245,11 +394,9 @@ namespace MobileIdleBuilder
 
         private void ClearVisual()
         {
-            if (_activeHighlight != null)
-            {
-                Destroy(_activeHighlight.gameObject);
-                _activeHighlight = null;
-            }
+            foreach (var h in _activeHighlights)
+                if (h != null) Destroy(h.gameObject);
+            _activeHighlights.Clear();
         }
 
         void OnDestroy() => ClearHighlight();

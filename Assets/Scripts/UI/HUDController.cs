@@ -1378,7 +1378,8 @@ namespace MobileIdleBuilder
             // ---- Conveyor Belt entry (always first, always free) ----
             if (conveyorController != null)
             {
-                var placeBtn = new Button { text = "Place" };
+                // Named so tutorial steps can point at it (TutorialPulseResolver).
+                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName("conveyor") };
                 ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
@@ -1415,6 +1416,7 @@ namespace MobileIdleBuilder
                 var costLabel = MakeCostLabel(cost, canAfford);
 
                 var placeBtn = new Button { text = "Place" };
+                if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
                 placeBtn.SetEnabled(canAfford);
 
                 // Track cost rows so Update() can re-enable them the moment entropy catches up.

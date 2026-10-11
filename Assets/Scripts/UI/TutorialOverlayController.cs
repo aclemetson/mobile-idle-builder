@@ -24,8 +24,12 @@ namespace MobileIdleBuilder
 
         private int    _lastStepIndex = -1;
         private bool   _wasActive;
-        private Button _pulsingButton;
-        private Coroutine _pulseRoutine;
+        private VisualElement _pulsingButton;
+        private Coroutine     _pulseRoutine;
+
+        // Pulses pause while the player is placing in the world (found at Start; no scene wiring).
+        private ConveyorPlacementController _conveyorController;
+        private BuildingPlacementController _placementController;
 
         // Hint text held back while a step's dialogue is on screen, revealed when the
         // dialogue closes so the hint bar and dialogue panel never stack at the bottom.
@@ -47,6 +51,9 @@ namespace MobileIdleBuilder
 
             if (hudController == null)
                 hudController = FindAnyObjectByType<HUDController>();
+
+            _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
+            _placementController = FindAnyObjectByType<BuildingPlacementController>();
 
             if (hudController != null)
             {
@@ -378,11 +385,9 @@ namespace MobileIdleBuilder
 
         private void StartPulseButton(string buttonId)
         {
-            if (uiDocument == null) return;
-            var btn = uiDocument.rootVisualElement.Q<Button>(buttonId);
-            if (btn == null) return;
-            _pulsingButton = btn;
-            _pulseRoutine  = StartCoroutine(PulseButton(btn));
+            if (uiDocument == null || string.IsNullOrEmpty(buttonId)) return;
+            StopPulseRoutine();
+            _pulseRoutine = StartCoroutine(PulseButton(buttonId));
         }
 
         private void StopPulseRoutine()
@@ -395,16 +400,32 @@ namespace MobileIdleBuilder
             }
         }
 
-        private IEnumerator PulseButton(Button btn)
+        /// <summary>
+        /// Pulses the next visible step towards <paramref name="buttonId"/> (drawer handle, then the
+        /// panel's button, then the target; see <see cref="TutorialPulseResolver"/>). Re-resolved each
+        /// cycle so the pulse follows the player. Paused while the player is placing a building or a
+        /// belt: the world highlight is the guide then, and the closed menu path would mislead (#202).
+        /// </summary>
+        private IEnumerator PulseButton(string buttonId)
         {
             while (true)
             {
-                btn.AddToClassList("panel-btn--highlight");
+                var el = IsPlacingInWorld()
+                    ? null
+                    : TutorialPulseResolver.Resolve(uiDocument.rootVisualElement, buttonId);
+
+                _pulsingButton = el;
+                el?.AddToClassList("panel-btn--highlight");
                 yield return new WaitForSecondsRealtime(0.7f);
-                btn.RemoveFromClassList("panel-btn--highlight");
+                el?.RemoveFromClassList("panel-btn--highlight");
+                _pulsingButton = null;
                 yield return new WaitForSecondsRealtime(0.7f);
             }
         }
+
+        private bool IsPlacingInWorld() =>
+            (_conveyorController != null && _conveyorController.IsPlacing)
+            || (_placementController != null && _placementController.IsPlacing);
 
     }
 }
