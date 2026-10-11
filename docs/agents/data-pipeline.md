@@ -86,7 +86,7 @@ Copy the `ResearchSO` handling end-to-end:
 `buildings[]` entries carry three parallel per-building upgrade arrays, all mapped by `GameDataImporter` to `BuildingSO` and bought in the inspector:
 - `upgrade_levels` → `upgradeLevels` (speed / power scaling)
 - `storage_upgrade_levels` → `storageUpgradeLevels` (output buffer capacity)
-- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity; `max_input_items` per tier)
+- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity **per item type**; `max_input_items` per tier; enforced by `InputAcceptance` in `ConveyorSystem`)
 
 The two capacity tracks are research-gated in the UI (`surplus_containment` for output, `feedstock_buffers` for input — see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
 

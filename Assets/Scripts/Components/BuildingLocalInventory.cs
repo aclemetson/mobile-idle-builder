@@ -31,6 +31,6 @@ namespace MobileIdleBuilder
     public struct BuildingInventoryConfig : IComponentData
     {
         public int OutputCapacity; // max total items in output buffer (default 20)
-        public int InputCapacity;  // max total items in input buffer  (default 20)
+        public int InputCapacity;  // max items PER ITEM TYPE in the input buffer (default 20); see InputAcceptance
     }
 }

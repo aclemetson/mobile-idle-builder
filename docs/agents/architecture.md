@@ -24,7 +24,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 |---|---|
 | `ProductionSystem.cs` | Per-building craft loop: check inputs (local `BuildingInputSlot` buffer, falls back to global inventory), advance `Progress += dt × BuildingData.ProductionSpeed`, consume inputs, deposit to `BuildingOutputSlot`. Burst-compiled `ISystem`. |
 | `CollectorSystem.cs` | Field harvesters: produce items at fixed rate, no inputs. |
-| `ConveyorSystem.cs` | Moves items building output slot → adjacent input slot, respecting ports/direction. |
+| `ConveyorSystem.cs` | Moves items building output slot → adjacent input slot, respecting ports/direction. Input hand-off rules live in `Components/InputAcceptance.cs`: the input cap is **per item type**, a set recipe refuses items it does not use, and a mixed belt whose front item is jamming a needed item overflows that front item to the global inventory (#200). |
 | `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's `link_radius_tiles` (range-limited connections, relayed through **Power Relay** buildings), computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
 | `EntropySinkSystem.cs` | Sink building consumes items → grants entropy (base currency). |
 | `NetWorthSystem.cs` | Aggregates net worth (inventory + currency + spent); drives prestige wall. |
