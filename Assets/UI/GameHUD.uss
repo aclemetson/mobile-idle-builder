@@ -23,6 +23,13 @@
     min-height: 52px;
 }
 
+/* Painted behind the status-bar safe-area inset (created by SafeAreaAdapter) so the top bar
+   reaches the screen edge instead of floating below a see-through gap (#188).
+   Keep in sync with .top-bar background-color. */
+.safe-area-top-fill {
+    background-color: rgba(10, 14, 26, 0.88);
+}
+
 /* Active-research strip directly under the top bar (toggled in HUDStatusBarController) */
 .research-status {
     flex-direction: row;
