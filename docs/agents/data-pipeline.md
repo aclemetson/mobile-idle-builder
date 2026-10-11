@@ -20,6 +20,7 @@ Separate file: `Assets/Data/achievements.json` → imported by `Assets/Scripts/E
 
 - **Cross-refs use the string `id`** of the target object (e.g., `"required_research": "megastructure_theory"`, `"output_item": "dyson_node"`). The importer resolves them to SO references.
 - **Exception:** `tutorial_steps` reference items by **numeric** `item_id`. The save file and ECS runtime also use numeric `itemId`/`recipeId`/`buildingId` (assigned on the SOs). So: JSON authoring = string ids; runtime/save = numeric ids.
+- **Tutorial `on_enter` guidance:** `pulse_button_id` names the button the step ultimately wants tapped; `TutorialPulseResolver` pulses the next visible step towards it (drawer handle, then the panel button, then the target). Build-menu Place buttons are `btn-place-<building id>` / `btn-place-conveyor`. `highlight_target` also accepts `route:<from>><to>` (start and end tiles of the next belt) and `suggest:<building>:<from>><to>` (where to place a building), with BuildingSO ids as keys; see `TutorialHighlighter` / `TutorialRouteGuide`.
 - Keys prefixed with `_` are documentation comments, ignored by the importer.
 - Asset paths use `"TODO"` when unknown — importer warns and leaves the field null (this is normal; many icons are TODO).
 - `null` and `[]` are equivalent for arrays.
@@ -86,7 +87,7 @@ Copy the `ResearchSO` handling end-to-end:
 `buildings[]` entries carry three parallel per-building upgrade arrays, all mapped by `GameDataImporter` to `BuildingSO` and bought in the inspector:
 - `upgrade_levels` → `upgradeLevels` (speed / power scaling)
 - `storage_upgrade_levels` → `storageUpgradeLevels` (output buffer capacity)
-- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity; `max_input_items` per tier)
+- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity **per item type**; `max_input_items` per tier; enforced by `InputAcceptance` in `ConveyorSystem`)
 
 The two capacity tracks are research-gated in the UI (`surplus_containment` for output, `feedstock_buffers` for input — see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
 

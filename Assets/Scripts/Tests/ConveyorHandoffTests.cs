@@ -158,5 +158,119 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, InputTotal(building), "A full input must not accept more");
             Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Item must wait on the belt while the input is full");
         }
+
+        // ── #200: per-item cap, recipe filter, jam overflow ──────────────────
+
+        private const int UpQuark   = 1;
+        private const int DownQuark = 2;
+
+        /// <summary>Gives the building a proton-like recipe: 2 up + 1 down.</summary>
+        private void SetProtonRecipe(Entity building)
+        {
+            _em.AddComponentData(building, new RecipeProcessData { RecipeID = 4, CraftTime = 1f });
+            var inputs = _em.AddBuffer<RecipeInputSlot>(building);
+            inputs.Add(new RecipeInputSlot { ItemID = UpQuark,   Quantity = 2 });
+            inputs.Add(new RecipeInputSlot { ItemID = DownQuark, Quantity = 1 });
+        }
+
+        private Entity CreateTail(int2 cell, int exitDir, int itemId, Entity prev)
+        {
+            var e = CreateLoadedTail(cell, exitDir);
+            _em.SetComponentData(e, new ConveyorItemData { ItemID = itemId, Progress = 1f });
+            var seg = _em.GetComponentData<ConveyorSegmentData>(e);
+            seg.PrevSegment = prev;
+            seg.IsChainHead = prev == Entity.Null;
+            _em.SetComponentData(e, seg);
+            return e;
+        }
+
+        /// <summary>Upstream segment carrying <paramref name="itemId"/>, mid-belt (not ready to move).</summary>
+        private Entity CreateUpstream(int2 cell, int itemId)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new ConveyorSegmentData
+            {
+                Cell = cell, EntryDir = East, ExitDir = East, TransportTime = 1f, IsChainHead = true
+            });
+            _em.AddComponentData(e, new ConveyorItemData { ItemID = itemId, Progress = 0.5f });
+            return e;
+        }
+
+        private Entity CreatePlayerInventory()
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponent<PlayerInventoryTag>(e);
+            _em.AddBuffer<InventorySlot>(e);
+            return e;
+        }
+
+        private int CountIn(Entity building, int itemId) =>
+            SlotBufferUtils.CountInInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), itemId);
+
+        [Test]
+        public void CapIsPerItem_FullOfOneItem_StillAcceptsAnother()
+        {
+            // Regression for #200: 30 down quarks used to fill the whole (total) buffer and lock the
+            // up-quark belt out, stalling the Combiner.
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(building);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
+            var tail = CreateTail(new int2(0, 0), East, UpQuark, Entity.Null);
+
+            Tick();
+
+            Assert.AreEqual(1, CountIn(building, UpQuark), "An up quark must enter even though downs are at their cap");
+            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail));
+        }
+
+        [Test]
+        public void RecipeSet_UnusedItem_WaitsOnBelt()
+        {
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(building);
+            var tail = CreateTail(new int2(0, 0), East, ItemId, Entity.Null); // ItemId 7: not in the recipe
+
+            Tick();
+
+            Assert.AreEqual(0, InputTotal(building), "The recipe does not use this item");
+            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Unused item stays on the belt");
+        }
+
+        [Test]
+        public void MixedBelt_FullItemJammingNeededItem_OverflowsToInventory()
+        {
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(building);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
+            var inventory = CreatePlayerInventory();
+
+            var upstream = CreateUpstream(new int2(-1, 0), UpQuark);          // the needed item, stuck behind
+            var tail     = CreateTail(new int2(0, 0), East, DownQuark, upstream); // full item at the front
+
+            Tick();
+
+            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail), "Jamming item must leave the belt");
+            Assert.AreEqual(30, CountIn(building, DownQuark), "Building buffer stays at its cap");
+            Assert.AreEqual(1, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark),
+                "Jamming item goes to the player's inventory, not lost");
+        }
+
+        [Test]
+        public void SingleItemBelt_AtCap_BacksUp_NoOverflow()
+        {
+            // Separate belts per input must keep normal back-pressure: nothing needed is behind.
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(building);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
+            var inventory = CreatePlayerInventory();
+
+            var upstream = CreateUpstream(new int2(-1, 0), DownQuark);
+            var tail     = CreateTail(new int2(0, 0), East, DownQuark, upstream);
+
+            Tick();
+
+            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Same-item belt just backs up");
+            Assert.AreEqual(0, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark));
+        }
     }
 }

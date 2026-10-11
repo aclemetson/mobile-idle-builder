@@ -412,6 +412,22 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>
+        /// Adds a rect to the active tutorial highlight without clearing it (e.g. a belt's start and
+        /// end tiles, #202).
+        /// </summary>
+        public void AddTutorialHighlightRect(int x, int y, int w = 1, int h = 1)
+        {
+            for (int dx = 0; dx < w; dx++)
+            for (int dy = 0; dy < h; dy++)
+            {
+                int cx = x + dx, cy = y + dy;
+                if (!IsInBounds(cx, cy)) continue;
+                SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), tutorialHighlightColor);
+                _tutorialHighlightCells.Add(new Vector2Int(cx, cy));
+            }
+        }
+
         /// <summary>Clears all tutorial highlight cells, restoring each to its normal colour.</summary>
         public void ClearTutorialHighlightCell()
         {

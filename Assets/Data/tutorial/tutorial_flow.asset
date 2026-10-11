@@ -961,15 +961,16 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-harvester
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
   - id: place_conveyor
-    hintText: Tap a start tile by the Harvester, then the tile in front of Maxwell's
-      Demon, and place the belt.
+    hintText: Open the menu, tap Builder, then Place on Conveyor Belt. Tap the glowing
+      tile in front of the Harvester, then the glowing tile in front of Maxwell's
+      Demon, and confirm.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -983,11 +984,11 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: bc8cb6d67f89ada48add3528f94d6466, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: route:harvester>maxwells_demon
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-conveyors
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1038,7 +1039,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-harvester
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1070,7 +1071,8 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
   - id: place_sfc
-    hintText: Open the Build menu and place a Strong Force Combiner on the grid.
+    hintText: Open the Build menu and place a Strong Force Combiner on the glowing
+      tiles, between your quark Harvesters and Maxwell's Demon.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -1084,11 +1086,11 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: e4a40939b3f9df4438fd568bc1a239b1, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: suggest:strong_force_combiner:harvester>maxwells_demon
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-strong_force_combiner
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1114,7 +1116,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-basic_generator
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1147,8 +1149,8 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
   - id: route_quarks_to_sfc
-    hintText: Tap a start tile by a quark Harvester, then the tile in front of the
-      Combiner's input, and place the belt. Do this for both quark Harvesters.
+    hintText: Place a Conveyor Belt from the glowing tile in front of a quark Harvester
+      to the glowing tile below the Combiner. Do this for both quark Harvesters.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1162,11 +1164,11 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 43acd5ec9b716a74db92600c1a747b49, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: route:harvester>strong_force_combiner
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-conveyors
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1198,7 +1200,8 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
   - id: route_nucleons_to_demon
-    hintText: Connect the Combiner's proton output to Maxwell's Demon.
+    hintText: Place a Conveyor Belt from the glowing tile above the Combiner to the
+      glowing tile in front of Maxwell's Demon.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1212,11 +1215,11 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 00cb0a4d452fb4e44a3c1077983150ec, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: route:strong_force_combiner>maxwells_demon
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-conveyors
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1291,7 +1294,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-atomic_assembler
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1317,14 +1320,15 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-conveyors
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
   - id: route_hydrogen_to_demon
-    hintText: Connect the Atom Generator's output to Maxwell's Demon.
+    hintText: Place a Conveyor Belt from the glowing tile in front of the Atom Generator's
+      output to the glowing tile in front of Maxwell's Demon.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1338,11 +1342,11 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 28ebb593c3bdb404c90017c274c7c017, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: route:atomic_assembler>maxwells_demon
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-conveyors
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1751,7 +1755,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-isotopic_manipulator
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -1881,7 +1885,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-radioactive_containment
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -2062,7 +2066,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-fusion_reactor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
@@ -2162,7 +2166,7 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-build
+      pulseButtonId: btn-place-fission_reactor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
