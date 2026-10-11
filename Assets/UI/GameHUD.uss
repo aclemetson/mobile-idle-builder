@@ -382,13 +382,13 @@
     margin-bottom: var(--spacing-xs);
 }
 
-/* Tutorial highlight — works on drawer-nav-btn via class addition */
+/* Tutorial highlight — works on drawer-nav-btn via class addition.
+   Colour only: no border-width or font-style change, so a pulsing button never changes
+   size and its neighbours never shift (#239). border-color only tints an existing border. */
 .panel-btn--highlight {
-    background-color: rgba(0, 229, 255, 0.20);
+    background-color: rgba(0, 229, 255, 0.32);
     border-color: var(--color-primary);
-    border-width: 2px;
     color: var(--color-primary);
-    -unity-font-style: bold;
 }
 
 /* ---- Research cards ---- */
