@@ -12847,32 +12847,7 @@
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
     },
 
-    { "_comment": "--- PHASE ⑦: BUILDING UPGRADES ---" },
-    {
-      "id": "intro_building_upgrades",
-      "hint": "Tap the Atom Generator — we will upgrade it now.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": {
-        "dialogue_id": "intro_upgrades_context",
-        "highlight_target": "atomic_assembler",
-        "highlight_mode": "VisualOnly"
-      }
-    },
-    {
-      "id": "upgrade_atom_generator_speed",
-      "hint": "Earn 1,000 entropy: collect from your buildings, set better recipes and sell at Maxwell's Demon. Then open the Atom Generator and buy Speed Upgrade L2.",
-      "advance_condition": { "type": "BuildingUpgradeMin", "building_id": "atomic_assembler", "min_level": 2 },
-      "on_enter": {
-        "highlight_target": "atomic_assembler",
-        "highlight_mode": "Full"
-      }
-    },
-    {
-      "id": "upgrade_context",
-      "hint": "Your Atom Generator is now running at 2× speed.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": { "dialogue_id": "upgrade_complete_context" }
-    },
+    { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
 
     { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
     {
