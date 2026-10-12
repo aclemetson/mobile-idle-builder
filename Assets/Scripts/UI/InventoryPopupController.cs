@@ -149,10 +149,6 @@ namespace MobileIdleBuilder
 
         private IEnumerator ShowPopup(string text, Color color, Vector3 basePosition)
         {
-            var cam = Camera.main; // TEMP (#238): world pop-ups are not UI Toolkit, so log them here
-            GameLogger.Info($"[TransientUI] popup '{text}' viewport=" +
-                            (cam != null ? cam.WorldToViewportPoint(basePosition).ToString() : "n/a"));
-
             // Build the label
             var go  = new GameObject("InventoryPopup");
             var tmp = go.AddComponent<TextMeshPro>();

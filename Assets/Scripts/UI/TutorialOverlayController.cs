@@ -35,6 +35,12 @@ namespace MobileIdleBuilder
         // dialogue closes so the hint bar and dialogue panel never stack at the bottom.
         private string _pendingHintText;
 
+        // A deferred hint waits this long after its dialogue closes. Acting on the hint often opens
+        // the next step's dialogue within a second, which hid a just-revealed hint again: the bar
+        // flashed up from the bottom edge and vanished before it could be read (#238).
+        internal const float HintRevealDelaySeconds = 2f;
+        private Coroutine _hintReveal;
+
         private EntityQuery _tutorialQuery;
         private bool        _queryReady;
         private EntityQuery _powerGridQuery;
@@ -170,6 +176,7 @@ namespace MobileIdleBuilder
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
             _pendingHintText = null;
+            CancelHintReveal();
 
             // Checkpoint: persist the new step immediately rather than waiting for auto-save.
             SaveManager.Instance?.SaveLocal();
@@ -212,7 +219,10 @@ namespace MobileIdleBuilder
 
             // Dialogue
             if (enter.dialogue != null)
+            {
+                CancelHintReveal();
                 dialogueController?.PlayDialogue(enter.dialogue);
+            }
 
             // World highlight
             switch (enter.highlightMode)
@@ -286,9 +296,27 @@ namespace MobileIdleBuilder
             // has closed, reveal the hint we deferred in OnStepChanged.
             if (_lastStepIndex == stepBefore && !string.IsNullOrEmpty(_pendingHintText))
             {
-                hudController?.ShowTutorialHint(_pendingHintText);
+                CancelHintReveal();
+                _hintReveal = StartCoroutine(RevealHintAfterDelay(_pendingHintText));
                 _pendingHintText = null;
             }
+        }
+
+        private IEnumerator RevealHintAfterDelay(string hint)
+        {
+            yield return new WaitForSecondsRealtime(HintRevealDelaySeconds);
+            _hintReveal = null;
+            // Another dialogue (the next step's, or a site/world one) may be up by now; its own
+            // completion reveals that step's hint instead.
+            if (dialogueController != null && dialogueController.IsPlaying) yield break;
+            hudController?.ShowTutorialHint(hint);
+        }
+
+        private void CancelHintReveal()
+        {
+            if (_hintReveal == null) return;
+            StopCoroutine(_hintReveal);
+            _hintReveal = null;
         }
 
         private void OnHighlightRequested(string target)
