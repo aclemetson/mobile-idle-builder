@@ -56,6 +56,21 @@ namespace MobileIdleBuilder
         static int     s_pointerId = -1;
         static Vector2 s_downPos;
         static bool    s_tracking;
+        static float   s_downTime;
+
+        // A release outside every registered container never reaches this router, so a gesture
+        // stops counting as in progress after this long rather than holding forever.
+        internal const float MaxGestureSeconds = 1f;
+
+        /// <summary>
+        /// True from a pointer-down inside a registered container until its release. Lists rebuilt on
+        /// a timer skip the rebuild while this is set: replacing the button under a finger mid-press
+        /// (or flipping it disabled as its buffer drains) dropped the tap.
+        /// </summary>
+        public static bool GestureInProgress => IsGestureInProgress(Time.unscaledTime);
+
+        internal static bool IsGestureInProgress(float now) =>
+            s_tracking && now - s_downTime < MaxGestureSeconds;
 
         /// <summary>
         /// Registers <paramref name="button"/> so a tap inside <paramref name="container"/> invokes
@@ -96,11 +111,15 @@ namespace MobileIdleBuilder
             s_pointerId = -1;
         }
 
-        static void OnContainerPointerDown(PointerDownEvent evt)
+        static void OnContainerPointerDown(PointerDownEvent evt) =>
+            BeginGesture(evt.pointerId, evt.position, Time.unscaledTime);
+
+        internal static void BeginGesture(int pointerId, Vector2 position, float now)
         {
             s_tracking  = true;
-            s_pointerId = evt.pointerId;
-            s_downPos   = evt.position;
+            s_pointerId = pointerId;
+            s_downPos   = position;
+            s_downTime  = now;
         }
 
         static void OnContainerPointerUp(PointerUpEvent evt)

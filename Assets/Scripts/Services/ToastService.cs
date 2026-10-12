@@ -7,8 +7,8 @@ namespace MobileIdleBuilder
     /// Singleton service for surfacing "locked action" feedback to the player.
     /// Auto-creates itself at startup — no manual scene placement required.
     ///
-    /// Feedback is delivered through InventoryPopupController.NotifyWarning so it
-    /// appears as amber floating text at the same anchor as "+1 Item" pickups.
+    /// Feedback is delivered through InventoryPopupController.NotifyWarning, which shows it
+    /// in the HUD's warning banner (#238).
     ///
     /// Two calling patterns:
     ///   1. ToastService.Instance?.Post("quark_field")

@@ -45,8 +45,9 @@ namespace MobileIdleBuilder
         [SerializeField] private float  popScale     = 1.3f;   // starting scale of the pop-in
         [SerializeField] private float  popFraction  = 0.12f;  // 0-1: fraction of duration spent popping in
 
-        private int      _activeCount;
-        private Material _outlineMaterial; // shared by every popup; created once
+        private int           _activeCount;
+        private Material      _outlineMaterial; // shared by every popup; created once
+        private HUDController _hud;             // warning banner; found on first warning
 
         // ----------------------------------------------------------------
         // Lifecycle
@@ -71,7 +72,7 @@ namespace MobileIdleBuilder
         {
             if (Instance == null) return;
             Instance.StartCoroutine(Instance.ShowPopup($"+{quantity} {itemName}", Instance.textColor,
-                Instance.anchor.position + Vector3.up * Instance.spawnHeight));
+                Instance.InView(Instance.anchor.position + Vector3.up * Instance.spawnHeight)));
         }
 
         /// <summary>
@@ -102,15 +103,45 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Shows an amber warning message above the player anchor.
-        /// Used to signal a blocked or invalid action without entering the inventory flow.
+        /// Signals a blocked or invalid action. Shown in the HUD's warning banner, which stays up long
+        /// enough to read: as world text over the player anchor it often spawned at the screen edge or
+        /// off-screen and was gone before it could be read (#238). Falls back to the amber world popup
+        /// when there is no HUD.
         /// </summary>
         public static void NotifyWarning(string message)
         {
             if (Instance == null) return;
+            if (Instance._hud == null) Instance._hud = FindAnyObjectByType<HUDController>();
+            if (Instance._hud != null)
+            {
+                Instance._hud.ShowNotification("!", message, "warning");
+                return;
+            }
             Instance.StartCoroutine(Instance.ShowPopup(message, Instance.warningColor,
-                Instance.anchor.position + Vector3.up * Instance.spawnHeight));
+                Instance.InView(Instance.anchor.position + Vector3.up * Instance.spawnHeight)));
         }
+
+        /// <summary>
+        /// Moves <paramref name="world"/> into the readable part of the main camera's view, at the same
+        /// depth, so a popup at the player anchor never spawns off-screen or half off an edge (#238).
+        /// </summary>
+        private Vector3 InView(Vector3 world)
+        {
+            var cam = Camera.main;
+            if (cam == null) return world;
+            var v = cam.WorldToViewportPoint(world);
+            if (v.z <= cam.nearClipPlane) v.z = OffscreenDepth; // behind the camera: use a fixed depth
+            return cam.ViewportToWorldPoint(ClampViewport(v));
+        }
+
+        private const float OffscreenDepth = 10f;
+
+        /// <summary>
+        /// Clamps a viewport point to the readable band: clear of the side edges, above the bottom bar
+        /// and low enough to rise <see cref="floatDistance"/> without leaving the top. Pure (unit-tested).
+        /// </summary>
+        internal static Vector3 ClampViewport(Vector3 v) =>
+            new(Mathf.Clamp(v.x, 0.15f, 0.85f), Mathf.Clamp(v.y, 0.2f, 0.7f), v.z);
 
         // ----------------------------------------------------------------
         // Internal coroutine
@@ -118,13 +149,6 @@ namespace MobileIdleBuilder
 
         private IEnumerator ShowPopup(string text, Color color, Vector3 basePosition)
         {
-            // TEMP (#238): identify the message that flashes at the bottom edge. Info so it survives
-            // the release build; the viewport position shows whether it spawned off-screen. Remove
-            // with #238.
-            var cam = Camera.main;
-            GameLogger.Info($"[TransientUI] popup '{text}' world={basePosition} " +
-                            $"viewport={(cam != null ? cam.WorldToViewportPoint(basePosition).ToString() : "n/a")}");
-
             // Build the label
             var go  = new GameObject("InventoryPopup");
             var tmp = go.AddComponent<TextMeshPro>();
