@@ -444,7 +444,6 @@ namespace MobileIdleBuilder
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
-            if (GetComponent<TransientUIWatcher>() == null) gameObject.AddComponent<TransientUIWatcher>(); // TEMP (#238)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");

@@ -38,6 +38,9 @@ namespace MobileIdleBuilder
         private DialogueSO _current;
         private int        _lineIndex;
 
+        /// <summary>True while a dialogue is on screen.</summary>
+        public bool IsPlaying => _current != null;
+
         void Start()
         {
             if (_uiDocument == null)
