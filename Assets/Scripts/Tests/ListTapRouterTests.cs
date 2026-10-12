@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace MobileIdleBuilder.Tests
@@ -132,6 +133,22 @@ namespace MobileIdleBuilder.Tests
         {
             Assert.DoesNotThrow(() => ListTapRouter.Register(_list, null, () => { }));
             Assert.DoesNotThrow(() => ListTapRouter.Register(_list, new Button(), null));
+        }
+
+        [Test]
+        public void GestureInProgress_FromPressUntilClearedOrTimedOut()
+        {
+            Assert.IsFalse(ListTapRouter.IsGestureInProgress(0f), "nothing pressed yet");
+
+            ListTapRouter.BeginGesture(1, Vector2.zero, 10f);
+            Assert.IsTrue(ListTapRouter.IsGestureInProgress(10.2f),
+                "a finger is down: timed list rebuilds must wait, or they replace the button under it");
+
+            Assert.IsFalse(ListTapRouter.IsGestureInProgress(10f + ListTapRouter.MaxGestureSeconds),
+                "a release that never reached the router must not hold rebuilds forever");
+
+            ListTapRouter.Clear();
+            Assert.IsFalse(ListTapRouter.IsGestureInProgress(10.2f));
         }
     }
 }

@@ -178,6 +178,9 @@ namespace MobileIdleBuilder
             UpdateCraftProgressBar(); // smooth per-frame fill between the 0.5s full rebuilds
             _inspectorRefreshTimer += Time.deltaTime;
             if (_inspectorRefreshTimer < 0.5f) return;
+            // Hold the rebuild while a finger is down: it replaces every button, so a tap that
+            // straddled it was lost (the "finicky" Empty output button). Runs on release instead.
+            if (ListTapRouter.GestureInProgress) return;
             _inspectorRefreshTimer = 0f;
             RefreshInspectorContent();
         }

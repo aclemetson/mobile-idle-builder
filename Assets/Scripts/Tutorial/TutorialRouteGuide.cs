@@ -83,8 +83,9 @@ namespace MobileIdleBuilder
             for (int x = 0; x < gridWidth; x++)
             {
                 var anchor = new Vector2Int(x, y);
+                // A port's belt cell may be a source's or sink's own belt cell: a one-tile belt is a real
+                // link, and it is how players naturally butt the Combiner against the Harvesters (#236).
                 if (!Fits(anchor, footprint, inputFronts, outputFronts, isBuildable, isBeltFree)) continue;
-                if (SharesBeltCell(anchor, inputFronts, sources) || SharesBeltCell(anchor, outputFronts, sinks)) continue;
 
                 int fromSources = AssignedDistance(sources, anchor, inputFronts);
                 int toSink = 0;
@@ -111,25 +112,11 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// True when a port's belt cell would sit on one of <paramref name="ends"/> itself, i.e. the
-        /// "belt" between them is a single shared tile. Rejected so every suggested route is a real
-        /// belt with distinct glowing start and end tiles (#236).
-        /// </summary>
-        private static bool SharesBeltCell(Vector2Int anchor, IReadOnlyList<Vector2Int> fronts,
-                                           IReadOnlyList<Vector2Int> ends)
-        {
-            foreach (var f in fronts)
-            foreach (var e in ends)
-                if (anchor + f == e) return true;
-            return false;
-        }
-
-        /// <summary>
         /// Total belt distance with each source feeding its own input (each input takes one belt), the
         /// cheapest such assignment. With more sources than inputs, falls back to each source's nearest.
         /// </summary>
-        private static int AssignedDistance(IReadOnlyList<Vector2Int> sources, Vector2Int anchor,
-                                            IReadOnlyList<Vector2Int> fronts)
+        internal static int AssignedDistance(IReadOnlyList<Vector2Int> sources, Vector2Int anchor,
+                                             IReadOnlyList<Vector2Int> fronts)
         {
             if (sources.Count == 0 || fronts.Count == 0) return 0;
             if (sources.Count > fronts.Count)

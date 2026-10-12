@@ -61,7 +61,6 @@ namespace MobileIdleBuilder
         public void ShowNotification(string icon, string message, string modifier = null)
         {
             if (_notificationBanner == null) return;
-            GameLogger.Info($"[TransientUI] notification '{icon} {message}'"); // TEMP (#238)
 
             if (_notificationIcon    != null) _notificationIcon.text    = icon;
             if (_notificationMessage != null) _notificationMessage.text = message;
@@ -116,13 +115,11 @@ namespace MobileIdleBuilder
                     accent.style.backgroundColor = new StyleColor(field.fieldColor);
             }
 
-            GameLogger.Info($"[TransientUI] field banner shown '{field.displayName}'"); // TEMP (#238)
             HUDController.SetElementVisible(_fieldBanner, true);
         }
 
         public void HideFieldBanner()
         {
-            GameLogger.Info("[TransientUI] field banner hidden"); // TEMP (#238)
             HUDController.SetElementVisible(_fieldBanner, false);
         }
 
