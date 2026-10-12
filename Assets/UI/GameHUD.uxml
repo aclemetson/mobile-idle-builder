@@ -503,10 +503,17 @@
         <ui:Button name="tutorial-hint-restore" text="Show hint" class="tutorial-hint-restore hidden" />
 
         <!-- ═══ NOTIFICATION BANNER (singleton, shown transiently) ═══ -->
-        <ui:Instance template="NotificationBanner" name="notification-instance" />
+        <!-- Instances are full-screen overlays like dialogue-instance. Left in the root's column
+             they were laid out below the grid area, so the banner sat off the bottom edge and only
+             flashed into view while sliding (#238), and tooltips landed far from their anchors. -->
+        <ui:Instance template="NotificationBanner" name="notification-instance"
+                     picking-mode="Ignore"
+                     style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;" />
 
         <!-- ═══ TOOLTIP POPUP (singleton, positioned in C#) ═══ -->
-        <ui:Instance template="TooltipPopup" name="tooltip-instance" />
+        <ui:Instance template="TooltipPopup" name="tooltip-instance"
+                     picking-mode="Ignore"
+                     style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;" />
 
         <!-- ═══ IDLE RETURN MODAL (shown once per session after offline time) ═══ -->
         <ui:VisualElement name="idle-return-modal" class="idle-return-modal hidden"
