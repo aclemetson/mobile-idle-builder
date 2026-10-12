@@ -67,9 +67,8 @@ namespace MobileIdleBuilder.Tests
 
             Assert.IsTrue(a.HasValue);
             Assert.AreEqual(4, a.Value.x, "inputs line up with the harvesters");
-            // Row 1 would put the inputs on the harvester fronts themselves (a one-tile "belt"), so
-            // the closest real route leaves one belt tile between them (#236).
-            Assert.AreEqual(2, a.Value.y);
+            // Row 1 puts each input's belt cell on a harvester's front: one belt tile per link (#236).
+            Assert.AreEqual(1, a.Value.y);
         }
 
         [Test]
@@ -86,17 +85,36 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void SuggestAnchor_EachSourceNeedsItsOwnInput()
+        public void AssignedDistance_EachSourceNeedsItsOwnInput()
         {
-            // Two sources side by side. With one belt per input, the closest spot puts the two inputs
-            // directly above them, one belt tile up (inputs at (2,1) and (3,1)).
-            var sources = new List<Vector2Int> { new(2, 0), new(3, 0) };
-            bool InBounds(Vector2Int c) => c.x >= 0 && c.y >= 0 && c.x < 10 && c.y < 10;
-            // The harvester fronts carry the start of each belt, so nothing can be built on them.
-            var a = TutorialRouteGuide.SuggestAnchor(10, 10, Fp, In, Out, sources,
-                new List<Vector2Int>(), c => InBounds(c) && !sources.Contains(c), InBounds);
+            // Two sources whose fronts are the same cell: only one belt fits on the input there, so
+            // the other is charged the step to the second input rather than sharing the first.
+            var sources = new List<Vector2Int> { new(2, 0), new(2, 0) };
+            Assert.AreEqual(1, TutorialRouteGuide.AssignedDistance(sources, new Vector2Int(2, 1), In));
+        }
 
-            Assert.AreEqual(new Vector2Int(2, 2), a);
+        [Test]
+        public void SuggestAnchor_DeviceLayout_ButtsTheCombinerAgainstTheHarvesters()
+        {
+            // The 0.4.37 device layout: quark Harvesters at (4,9) and (5,9) facing North, the
+            // electron Harvester's front already belted, Maxwell's Demon (3x3) at (9,9). The player
+            // placed the Combiner at (4,11), feeding it with one-tile belts on (4,10) and (5,10) (#236).
+            var occupied = new HashSet<Vector2Int> { new(4, 9), new(5, 9), new(6, 8), new(6, 9) };
+            for (int x = 9; x < 12; x++)
+            for (int y = 9; y < 12; y++)
+                occupied.Add(new Vector2Int(x, y));
+            bool Free(Vector2Int c) => c.x >= 0 && c.y >= 0 && c.x < 20 && c.y < 20 && !occupied.Contains(c);
+
+            var sources = new List<Vector2Int> { new(4, 10), new(5, 10) };
+            var sinks   = new List<Vector2Int>
+            {
+                new(9, 8), new(10, 8), new(11, 8), new(8, 9), new(8, 10), new(8, 11),
+                new(12, 9), new(12, 10), new(12, 11), new(9, 12), new(10, 12), new(11, 12)
+            };
+
+            var a = TutorialRouteGuide.SuggestAnchor(20, 20, Fp, In, Out, sources, sinks, Free, Free);
+
+            Assert.AreEqual(new Vector2Int(4, 11), a);
         }
 
         // ── CountLinkedSources ───────────────────────────────────────────────
