@@ -1010,3 +1010,17 @@
     color: rgb(255, 213, 79);
     -unity-font-style: bold;
 }
+
+/* ---- Confirm prompt (ConfirmPrompt.cs) ---- */
+.confirm-prompt__buttons {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 var(--spacing-md);
+}
+
+.confirm-prompt__btn {
+    flex-grow: 1;
+    min-height: 44px;
+    margin: 0 var(--spacing-xs);
+    -unity-text-align: middle-center;
+}
