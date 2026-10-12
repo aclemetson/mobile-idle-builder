@@ -33,6 +33,7 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - All inspector buttons route through `ListTapRouter` (not `.clicked`): the ScrollView eats a Button's own Clickable on touch, and the 0.5s rebuild would drop a held press. The rebuild also waits while `ListTapRouter.GestureInProgress` (finger down, capped at 1s), since replacing or disabling the button mid-press lost the tap.
 - Destructive actions ask first via `ConfirmPrompt.Show(title, message, confirmLabel, onConfirm, onCancel)` (static; `confirm-prompt` in `GameHUD.uxml`, initialised by `HUDController`). It sets `UIInputBlocker.SetModal` while open; world controllers also skip their tap handling while `ConfirmPrompt.IsOpen` so the target stays highlighted.
 - Blocked-action feedback (`InventoryPopupController.NotifyWarning`, so `ToastService` and the tutorial gates) shows in the HUD notification banner with the `warning` style, not as world text over the player anchor, which could spawn off-screen (#238).
+- A `<ui:Instance>` in `GameHUD.uxml` that holds an absolutely positioned overlay (dialogue, notification banner, tooltip) needs `picking-mode="Ignore"` and `style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;"`. Without it the TemplateContainer is laid out in the root's flex column below the grid area, so its overlay's `top`/`left` start from the bottom edge: the notification banner sat off screen and only flashed into view while sliding (#238). `HudOverlayInstanceTests` checks this.
 
 ## Tutorial hint banner (minimizable)
 
