@@ -250,8 +250,11 @@ namespace MobileIdleBuilder
             if (buildingCellX >= 0)
                 AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
 
-            // Crafter creation timer: live progress toward the next output cycle.
-            if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+            // Crafter creation timer: live progress toward the next output cycle. Harvesters run on
+            // their collector timer instead (RecipeProcessData never advances for them), so their bar
+            // is added in the Collector section below.
+            bool isCollector = _em.HasComponent<CollectorData>(_inspectorEntity);
+            if (!isCollector && _em.HasComponent<RecipeProcessData>(_inspectorEntity))
             {
                 var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
                 if (rp.CraftTime > 0f)
@@ -267,6 +270,7 @@ namespace MobileIdleBuilder
                 float rate = col.OutputRate > 0f ? col.OutputRate : 1f;
                 float next = Mathf.Max(0f, (1f / rate) - col.Timer);
                 AddInspectorRow(_inspectorStatic, "—— Collector ——");
+                _craftProgressFill = AddProgressBar(_inspectorStatic, CollectorFraction(col));
                 AddInspectorRow(_inspectorStatic, $"Output rate: {col.OutputRate:F1} /s");
                 AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
             }
@@ -964,7 +968,17 @@ namespace MobileIdleBuilder
         private static float CraftFraction(RecipeProcessData rp)
             => rp.CraftTime > 0f ? Mathf.Clamp01(rp.Progress / rp.CraftTime) : 0f;
 
+        /// <summary>A harvester's progress toward its next item: its timer counts up to 1 / OutputRate. Pure (unit-tested).</summary>
+        internal static float CollectorFraction(CollectorData c)
+        {
+            float rate = c.OutputRate > 0f ? c.OutputRate : 1f;
+            return Mathf.Clamp01(c.Timer * rate);
+        }
+
         private VisualElement AddCraftProgressBar(VisualElement parent, RecipeProcessData rp)
+            => AddProgressBar(parent, CraftFraction(rp));
+
+        private VisualElement AddProgressBar(VisualElement parent, float fraction)
         {
             var bar = new VisualElement();
             bar.style.height              = 10;
@@ -978,7 +992,7 @@ namespace MobileIdleBuilder
             var fill = new VisualElement();
             fill.style.height          = Length.Percent(100);
             fill.style.backgroundColor = new Color(0.30f, 0.80f, 1.00f); // crest blue
-            fill.style.width           = Length.Percent(CraftFraction(rp) * 100f);
+            fill.style.width           = Length.Percent(fraction * 100f);
             bar.Add(fill);
 
             parent.Add(bar);
@@ -989,9 +1003,13 @@ namespace MobileIdleBuilder
         {
             if (_craftProgressFill == null || !_ecsReady) return;
             if (_inspectorEntity == Entity.Null || !_em.Exists(_inspectorEntity)) return;
-            if (!_em.HasComponent<RecipeProcessData>(_inspectorEntity)) return;
-            var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
-            _craftProgressFill.style.width = Length.Percent(CraftFraction(rp) * 100f);
+            float fraction;
+            if (_em.HasComponent<CollectorData>(_inspectorEntity))
+                fraction = CollectorFraction(_em.GetComponentData<CollectorData>(_inspectorEntity));
+            else if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+                fraction = CraftFraction(_em.GetComponentData<RecipeProcessData>(_inspectorEntity));
+            else return;
+            _craftProgressFill.style.width = Length.Percent(fraction * 100f);
         }
 
         // ── Empty buffer into player inventory ────────────────────────────────

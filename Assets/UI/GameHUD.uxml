@@ -540,5 +540,21 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ CONFIRM PROMPT (destructive actions: remove a building or belt; ConfirmPrompt.cs) ═══ -->
+        <ui:VisualElement name="confirm-prompt" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 102;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="confirm-prompt__title" text="Remove?" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="confirm-prompt__message" text="" class="game-update-message" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
+                    <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>

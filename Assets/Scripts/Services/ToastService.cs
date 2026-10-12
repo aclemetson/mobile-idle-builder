@@ -66,6 +66,16 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// Like <see cref="Post(string)"/>, but shows <paramref name="fallback"/> when the step has no
+        /// message for <paramref name="triggerId"/>, so a blocked action is never silent.
+        /// </summary>
+        public void Post(string triggerId, string fallback)
+        {
+            if (IsLocked(triggerId)) Post(triggerId);
+            else if (!string.IsNullOrEmpty(fallback)) InventoryPopupController.NotifyWarning(fallback);
+        }
+
+        /// <summary>
         /// Looks up the current tutorial step's lockedMessages for a matching triggerId
         /// and shows the warning popup if found. Silent no-op if no match.
         /// </summary>
