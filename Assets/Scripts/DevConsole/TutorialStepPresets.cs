@@ -42,6 +42,9 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",        50 },
             { "route_hydrogen_to_demon",        50 },
             { "hydrogen_loop_complete",         50 },
+            { "buy_field_synthesis",          250 },   // enough for 250e Field Synthesis
+            { "place_quark_field_pair",       300 },   // after -250e; enough for the first 300e quark pair
+            { "field_pair_placed",             50 },
             { "post_tutorial_intro",          200 },
             { "buy_atomic_assembly",          500 },   // enough for 500e Atomic Assembly
             { "atomic_assembly_unlocked",      50 },
@@ -116,6 +119,9 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      7_000f },
             { "route_hydrogen_to_demon",      8_000f },
             { "hydrogen_loop_complete",      10_000f },
+            { "buy_field_synthesis",         12_000f },
+            { "place_quark_field_pair",      14_000f },
+            { "field_pair_placed",           16_000f },
             { "post_tutorial_intro",         20_000f },
             { "buy_atomic_assembly",         22_000f },
             { "atomic_assembly_unlocked",    24_000f },
@@ -268,6 +274,9 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "route_hydrogen_to_demon",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "hydrogen_loop_complete",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "buy_field_synthesis",          (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_quark_field_pair",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "field_pair_placed",            (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },

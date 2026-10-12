@@ -86,11 +86,21 @@ namespace MobileIdleBuilder
         public bool HasPortLayout =>
             IsPlacing && _pending.building?.ports != null && _pending.building.ports.Length > 0;
 
-        /// <summary>True when the rotate button / R key should be shown (port layout OR legacy field collector).</summary>
+        /// <summary>True when the rotate button / R key should be shown (port layout, legacy field collector, or a field pair).</summary>
         public bool CanRotate =>
-            IsPlacing && (HasPortLayout ||
+            IsPlacing && (HasPortLayout || IsPlacingFieldGroup ||
                           (_pending.building != null &&
                            _pending.building.placementRule == PlacementRule.MustBeOnField));
+
+        // ---- Field purchase state (Field Synthesis) ----
+        private FieldSO        _pendingField;
+        private FieldGenerator _fieldGenerator;
+
+        /// <summary>The field being bought and placed, or null while placing a building.</summary>
+        public FieldSO PendingField => IsPlacing ? _pendingField : null;
+
+        /// <summary>True while placing a multi-tile field purchase (a quark pair), which can turn 90°.</summary>
+        private bool IsPlacingFieldGroup => _pendingField != null && _pendingField.purchaseGroupSize > 1;
 
         /// <summary>True when the flip button / F key should be shown.</summary>
         public bool CanFlip => HasPortLayout;
@@ -107,7 +117,13 @@ namespace MobileIdleBuilder
 
         public void Rotate()
         {
-            if (HasPortLayout)
+            if (IsPlacing && IsPlacingFieldGroup)
+            {
+                // A pair only has two distinct orientations: side by side, or one above the other.
+                _rotation = (_rotation + 1) % 2;
+                RefreshCandidateGhost();
+            }
+            else if (HasPortLayout)
             {
                 _rotation = NextRotation(_rotation);
                 RefreshCandidateGhost();
@@ -217,9 +233,22 @@ namespace MobileIdleBuilder
         // Public API
         // ================================================================
 
-        public void BeginPlacement(BuildingEntry entry)
+        public void BeginPlacement(BuildingEntry entry) => BeginPlacementCore(entry, null);
+
+        /// <summary>
+        /// Starts placing a field bought with Field Synthesis. Same ghost, confirm popup and rotate
+        /// button as a building; confirming charges the price via <see cref="FieldPurchaseService"/>.
+        /// </summary>
+        public void BeginFieldPlacement(FieldSO field)
+        {
+            if (field == null) return;
+            BeginPlacementCore(default, field);
+        }
+
+        private void BeginPlacementCore(BuildingEntry entry, FieldSO field)
         {
             _pending           = entry;
+            _pendingField      = field;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             _outputDirection   = OutputDirection.North;
@@ -258,6 +287,7 @@ namespace MobileIdleBuilder
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             IsPlacing          = false;
+            _pendingField      = null;
             if (_hasCandidate) { _hasCandidate = false; OnCandidateChanged?.Invoke(false); }
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
@@ -383,6 +413,12 @@ namespace MobileIdleBuilder
             OnCandidateChanged?.Invoke(false);
             gridRenderer.HideGhost();
 
+            if (_pendingField != null)
+            {
+                ConfirmFieldPurchase(x, y);
+                return;
+            }
+
             // Field-collector output selector (multiple harvestable items on the field).
             var field = FieldGenerator.GetFieldAt(x, y);
             if (field != null && _pending.building != null && _pending.building.supportedRecipes != null)
@@ -507,6 +543,30 @@ namespace MobileIdleBuilder
             OnPlacingChanged?.Invoke(false);
         }
 
+        private void ConfirmFieldPurchase(int x, int y)
+        {
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            var cells = FootprintCells(x, y);
+            if (!FieldPurchaseService.TryPurchase(_pendingField, _fieldGenerator, cells))
+                InventoryPopupController.NotifyWarning("Not enough entropy");
+
+            _pendingField = null;
+            IsPlacing     = false;
+            cameraController?.SetPanLocked(false);
+            OnPlacingChanged?.Invoke(false);
+        }
+
+        /// <summary>Every cell the pending footprint covers when anchored at (x, y).</summary>
+        internal List<Vector2Int> FootprintCells(int x, int y)
+        {
+            var fp    = GetEffectiveFootprint();
+            var cells = new List<Vector2Int>(fp.x * fp.y);
+            for (int dx = 0; dx < fp.x; dx++)
+                for (int dy = 0; dy < fp.y; dy++)
+                    cells.Add(new Vector2Int(x + dx, y + dy));
+            return cells;
+        }
+
         // ---- Ghost port arrows ----
 
         private void RefreshGhostPortArrows(int anchorX, int anchorY, bool validPlacement)
@@ -622,6 +682,7 @@ namespace MobileIdleBuilder
 
         private Vector2Int GetBaseFootprint()
         {
+            if (_pendingField != null) return new Vector2Int(Mathf.Max(1, _pendingField.purchaseGroupSize), 1);
             if (_pending.building == null) return Vector2Int.one;
             var fp = _pending.building.footprint;
             return new Vector2Int(Mathf.Max(1, fp.x), Mathf.Max(1, fp.y));
@@ -635,6 +696,18 @@ namespace MobileIdleBuilder
 
         private bool IsCellValidForPending(int x, int y)
         {
+            if (_pendingField != null)
+            {
+                // A bought field needs bare ground: no building, belt or existing field.
+                foreach (var c in FootprintCells(x, y))
+                {
+                    if (!gridRenderer.IsInBounds(c.x, c.y)) return false;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return false;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return false;
+                }
+                return true;
+            }
+
             if (_pending.building == null)
             {
                 return gridRenderer.IsInBounds(x, y) &&

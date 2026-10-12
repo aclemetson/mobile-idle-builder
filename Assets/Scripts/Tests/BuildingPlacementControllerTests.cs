@@ -54,6 +54,51 @@ namespace MobileIdleBuilder.Tests
             return so;
         }
 
+        private static FieldSO FieldForSale(int groupSize)
+        {
+            var so = ScriptableObject.CreateInstance<FieldSO>();
+            so.id = "quark_field";
+            so.purchaseCostBase  = 300;
+            so.purchaseGroupSize = groupSize;
+            return so;
+        }
+
+        // ── Field purchase (Field Synthesis) ─────────────────────────────────
+
+        [Test]
+        public void BeginFieldPlacement_QuarkPair_CoversTwoCellsSideBySide_AndTurnsUpright()
+        {
+            _ctl.BeginFieldPlacement(FieldForSale(2));
+            Assert.IsTrue(_ctl.IsPlacing);
+            Assert.IsTrue(_ctl.CanRotate, "A pair must offer the rotate button");
+            Assert.IsFalse(_ctl.CanFlip);
+            CollectionAssert.AreEqual(new[] { new Vector2Int(4, 9), new Vector2Int(5, 9) }, _ctl.FootprintCells(4, 9));
+
+            _ctl.Rotate();
+            CollectionAssert.AreEqual(new[] { new Vector2Int(4, 9), new Vector2Int(4, 10) }, _ctl.FootprintCells(4, 9));
+
+            _ctl.Rotate();
+            CollectionAssert.AreEqual(new[] { new Vector2Int(4, 9), new Vector2Int(5, 9) }, _ctl.FootprintCells(4, 9),
+                "A pair has only two orientations");
+        }
+
+        [Test]
+        public void BeginFieldPlacement_SingleField_IsOneCell_AndNotRotatable()
+        {
+            _ctl.BeginFieldPlacement(FieldForSale(1));
+            Assert.IsFalse(_ctl.CanRotate);
+            CollectionAssert.AreEqual(new[] { new Vector2Int(3, 3) }, _ctl.FootprintCells(3, 3));
+        }
+
+        [Test]
+        public void BeginPlacement_AfterAFieldPlacement_ForgetsTheField()
+        {
+            _ctl.BeginFieldPlacement(FieldForSale(2));
+            _ctl.BeginPlacement(new BuildingPlacementController.BuildingEntry { building = PlainBuilding() });
+            Assert.IsNull(_ctl.PendingField);
+            CollectionAssert.AreEqual(new[] { new Vector2Int(3, 3) }, _ctl.FootprintCells(3, 3));
+        }
+
         // ── NextRotation (pure helper) ───────────────────────────────────────
 
         [Test]

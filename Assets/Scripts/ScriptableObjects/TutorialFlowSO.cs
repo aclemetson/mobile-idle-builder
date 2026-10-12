@@ -80,6 +80,8 @@ namespace MobileIdleBuilder
         public int                fromBuildingType = -1;
         /// <summary>BuildingUpgradeMin only: speed upgrade level (BuildingData.UpgradeLevel) to reach.</summary>
         public int                minLevel;
+        /// <summary>FieldPurchasedMin only: FieldSO id; minCount = purchases this run (a quark pair is one).</summary>
+        public string             fieldId;
     }
 
     [Serializable]

@@ -205,6 +205,10 @@ namespace MobileIdleBuilder
                             return true;
                     return false;
 
+                case ConditionType.FieldPurchasedMin:
+                    return FieldPurchaseService.PurchasedCount(SaveManager.Instance?.Current, c.fieldId)
+                           >= System.Math.Max(1, c.minCount);
+
                 default:
                     return false;
             }

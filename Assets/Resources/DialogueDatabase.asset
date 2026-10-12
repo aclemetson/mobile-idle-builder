@@ -105,6 +105,12 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 28ebb593c3bdb404c90017c274c7c017, type: 2}
   - id: hydrogen_loop_context
     dialogue: {fileID: 11400000, guid: d9491ee0112a898469c0c5d8eeaa347b, type: 2}
+  - id: intro_field_synthesis_context
+    dialogue: {fileID: 11400000, guid: 5830bb2efa4194a468c0bb4789f59cea, type: 2}
+  - id: field_synthesis_unlocked_context
+    dialogue: {fileID: 11400000, guid: 76b5f9be3c3e6234ca54201632110362, type: 2}
+  - id: field_pair_placed_context
+    dialogue: {fileID: 11400000, guid: 08a38c1e689b7204f99cdd0492f12120, type: 2}
   - id: intro_upgrades_context
     dialogue: {fileID: 11400000, guid: e3e62733b7f06bc4187f90c710833864, type: 2}
   - id: intro_quantum_domains

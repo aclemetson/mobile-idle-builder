@@ -16,7 +16,7 @@ namespace MobileIdleBuilder
     ///   panel open                     -> the target itself
     /// Re-resolved every pulse cycle, so the pulse follows the player along the path.
     ///
-    /// Build-menu Place buttons are named "btn-place-&lt;building id&gt;" (and "btn-place-conveyor");
+    /// Build-menu Place buttons are named "btn-place-&lt;building or field id&gt;" (and "btn-place-conveyor");
     /// they only exist once the Builder list has been built, so a missing one resolves to the
     /// Builder's own button.
     /// </summary>
@@ -48,7 +48,7 @@ namespace MobileIdleBuilder
             ["settings-panel"]      = "btn-settings", // top-bar button, not in the drawer
         };
 
-        /// <summary>Name of the Build-menu Place button for a building id (or "conveyor").</summary>
+        /// <summary>Name of the Build-menu Place button for a building id, a field id for sale, or "conveyor".</summary>
         public static string PlaceButtonName(string buildingId) => PlacePrefix + buildingId;
 
         /// <summary>

@@ -69,8 +69,9 @@ namespace MobileIdleBuilder
         // Live affordability refresh: automation can raise entropy past a building's cost while
         // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
         // panel-open. Rows captured in BuildBuildingsList; re-evaluated in Update.
-        private readonly List<(Button btn, Label costLabel, int cost)> _buildingAffordRows = new();
+        private readonly List<(Button btn, Label costLabel, long cost)> _buildingAffordRows = new();
         private long _lastAffordEntropy = long.MinValue;
+        private FieldGenerator _fieldGenerator; // source of the fields sold in the Build menu
 
         // Same problem in the Research panel, which had no live refresh at all: a Start button that
         // was unaffordable at panel-open stayed dead until the panel was reopened. Rows captured in
@@ -1393,6 +1394,8 @@ namespace MobileIdleBuilder
 
             if (placementController == null) return;
 
+            AddFieldPurchaseRows(currentEntropy);
+
             foreach (var entry in placementController.availableBuildings)
             {
                 // Skip buildings whose required research has not been purchased yet
@@ -1436,6 +1439,50 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>
+        /// Fields for sale after Field Synthesis (see <see cref="FieldPurchaseService"/>). Quark fields
+        /// sell as a pair. The price shown is the next one; it climbs steeply with every purchase.
+        /// </summary>
+        private void AddFieldPurchaseRows(long currentEntropy)
+        {
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            if (_fieldGenerator == null) return;
+
+            foreach (var field in _fieldGenerator.KnownFields)
+            {
+                if (!FieldPurchaseService.IsAvailable(field)) continue;
+
+                long cost      = FieldPurchaseService.NextPrice(field);
+                bool canAfford = currentEntropy >= cost;
+                var costLabel  = MakeCostLabel(cost, canAfford);
+
+                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName(field.id) };
+                placeBtn.SetEnabled(canAfford);
+                _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
+                var captured = field;
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    placementController.BeginFieldPlacement(captured);
+                });
+
+                _buildingsList.Add(MakeBuildingCard(FieldPurchaseName(field), FieldPurchaseDetail(field),
+                    costLabel, placeBtn));
+            }
+        }
+
+        internal static string FieldPurchaseName(FieldSO field)
+            => field.purchaseGroupSize > 1 ? $"{field.displayName} Pair" : field.displayName;
+
+        internal static string FieldPurchaseDetail(FieldSO field)
+        {
+            string what = field.purchaseGroupSize > 1
+                ? $"{field.purchaseGroupSize} fields side by side"
+                : "One field on an empty tile";
+            return $"{what}. Each one costs {field.purchaseCostMultiplier:0.#}x the last.";
+        }
+
         // Every build-menu row has the same three columns so rows line up whatever the text
         // length: [name + wrapping detail] [fixed-width cost] [Place button that never shrinks].
         private static VisualElement MakeBuildingCard(string name, string detail, Label costLabel, Button placeBtn)
@@ -1466,9 +1513,9 @@ namespace MobileIdleBuilder
 
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
         // cost column blank (#197).
-        internal static string FormatBuildCost(int cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
+        internal static string FormatBuildCost(long cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
 
-        private static Label MakeCostLabel(int cost, bool canAfford)
+        private static Label MakeCostLabel(long cost, bool canAfford)
         {
             var costLabel = new Label(FormatBuildCost(cost));
             costLabel.AddToClassList("building-card-cost");

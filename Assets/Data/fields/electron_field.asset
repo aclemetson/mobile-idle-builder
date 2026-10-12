@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: dd3f9758ae3f5034086cb81c351137c0, type: 2}
     weight: 1
   tapCooldownSeconds: 1.5
+  purchaseResearchId: field_synthesis
+  purchaseCostBase: 200
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.30588236, g: 0.8039216, b: 0.76862746, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: A region saturated with free leptons. Tap to collect an Electron, then

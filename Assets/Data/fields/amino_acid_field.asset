@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 5a7f8e0ea59460a46a008208dd7c527d, type: 2}
     weight: 1
   tapCooldownSeconds: 2.5
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.14901961, g: 0.6509804, b: 0.6039216, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: A primordial pool rich in free amino acids. Harvest them to feed the

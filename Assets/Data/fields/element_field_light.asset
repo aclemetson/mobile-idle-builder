@@ -25,6 +25,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
     weight: 1
   tapCooldownSeconds: 2
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.65882355, g: 0.85490197, b: 0.8627451, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A deposit rich in the light elements of organic chemistry \u2014 hydrogen,

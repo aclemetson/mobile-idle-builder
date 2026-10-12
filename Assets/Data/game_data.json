@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.3.15",
+    "version": "0.3.16",
     "description": "Single source of truth for all game ScriptableObjects. Run MobileIdleBuilder > Import Game Data in the Unity Editor to generate or update all assets.",
     "conventions": {
       "cross_refs": "Use the string 'id' of the target object. Importer resolves to SO reference.",
@@ -141,10 +141,31 @@
       "unlocks_recipes": [],
       "unlocks_buildings": ["harvester"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["surplus_containment"],
+      "unlocks_research": ["surplus_containment", "field_synthesis"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.5,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
+      "icon_path": "TODO"
+    },
+    {
+      "_comment": "Lets the player buy and place extra fields from the Build menu. Prices live on each field (purchase_cost_*), so this node gates no building.",
+      "id": "field_synthesis",
+      "display_name": "Field Synthesis",
+      "description": "Condense new quark and lepton fields onto empty tiles. Quark fields come in pairs. Each one costs ten times the last.",
+      "branch": "Engineering",
+      "prerequisites": ["automation_i"],
+      "depth_in_tree": 3,
+      "cost_base_currency": 250,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 20,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.25,
+      "codex_entry": "A field is only a region where the vacuum is unusually generous. Pump enough entropy into empty space and it learns to give up particles too, though every new field strains the vacuum more than the last.",
       "icon_path": "TODO"
     },
     {
@@ -10757,6 +10778,11 @@
       "tap_cooldown_seconds": 1.5,
       "field_color": "#FF6B35",
       "field_icon_path": "TODO",
+      "_note_purchase": "Bought from the Build menu after field_synthesis. Always placed as a pair (one Harvester per quark flavour). Price = base x multiplier^(pairs bought this run).",
+      "purchase_research": "field_synthesis",
+      "purchase_cost_base": 300,
+      "purchase_cost_multiplier": 10.0,
+      "purchase_group_size": 2,
       "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a particle, then wait out the field's recharge."
     },
     {
@@ -10769,6 +10795,10 @@
       "tap_cooldown_seconds": 1.5,
       "field_color": "#4ECDC4",
       "field_icon_path": "TODO",
+      "purchase_research": "field_synthesis",
+      "purchase_cost_base": 200,
+      "purchase_cost_multiplier": 10.0,
+      "purchase_group_size": 1,
       "codex_entry": "A region saturated with free leptons. Tap to collect an Electron, then wait out the field's recharge. Electrons are essential for completing any atom."
     },
     {
@@ -11748,7 +11778,62 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Every element above hydrogen is built the same way — more protons, more neutrons, more complexity. When you have enough entropy, research Atomic Assembly. The periodic table opens from there.",
+          "text": "Every element above hydrogen needs neutrons as well as protons, and both of your quark fields already feed the Combiner. Research Field Synthesis to condense new fields of your own.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "intro_field_synthesis_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Field Synthesis costs two hundred and fifty entropy. It lets you place new quark and lepton fields wherever there is empty space.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "field_synthesis_unlocked_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "The vacuum will give. Quark fields always form in pairs, one for each flavour you harvest. Open the Build menu and place a Quark Field Pair on two empty tiles.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Choose the spot well. Every field you place costs ten times the one before it.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "id": "field_pair_placed_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "A second pair. Put a Harvester on each, Up and Down, and feed them into a second Strong Force Combiner set to Neutron.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs, once Atomic Assembly teaches your Atom Generator to make it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12845,6 +12930,26 @@
       "hint": "Your factory is producing hydrogen automatically.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
+    },
+
+    { "_comment": "--- PHASE 6b: FIELD SYNTHESIS (more quark fields, so a second Combiner can make neutrons for helium) ---" },
+    {
+      "id": "buy_field_synthesis",
+      "hint": "Save up 250 entropy and research Field Synthesis.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "field_synthesis" },
+      "on_enter": { "dialogue_id": "intro_field_synthesis_context", "pulse_button_id": "btn-research" }
+    },
+    {
+      "id": "place_quark_field_pair",
+      "hint": "Open the Build menu and place a Quark Field Pair on two empty tiles.",
+      "advance_condition": { "type": "FieldPurchasedMin", "field_id": "quark_field", "min_count": 1 },
+      "on_enter": { "dialogue_id": "field_synthesis_unlocked_context", "pulse_button_id": "btn-place-quark_field" }
+    },
+    {
+      "id": "field_pair_placed",
+      "hint": "Harvest the new pair and set a second Combiner to Neutron.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "field_pair_placed_context" }
     },
 
     { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },

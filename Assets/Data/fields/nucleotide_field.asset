@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 146e721aeca4bb2409be60a74bd7b43f, type: 2}
     weight: 1
   tapCooldownSeconds: 3
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.7294118, g: 0.40784314, b: 0.78431374, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A vein laced with free nucleotides. Harvest them to spell out nucleic

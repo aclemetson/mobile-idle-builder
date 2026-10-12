@@ -225,7 +225,8 @@ namespace MobileIdleBuilder
         PrestigeRunMin,     // PrestigeData.RunCount >= minCount
         PrestigeAvailable,  // PlayerProgressData.PrestigeAvailable == true
         ConveyorLinked,     // At least minCount source buildings have a belt from an output into the target's input
-        BuildingUpgradeMin  // A building of the target type has a speed upgrade level >= minLevel
+        BuildingUpgradeMin, // A building of the target type has a speed upgrade level >= minLevel
+        FieldPurchasedMin   // At least minCount purchases of fieldId this run (FieldPurchaseService)
     }
 
     /// <summary>How TutorialOverlayController highlights a world target when a step activates.</summary>
