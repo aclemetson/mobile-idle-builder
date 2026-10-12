@@ -209,7 +209,10 @@ namespace MobileIdleBuilder
 
             var sources = new List<Vector2Int>();
             var sinks   = new List<Vector2Int>();
-            if (!GatherPortFronts(from, PortType.Output, sources) || !GatherPortFronts(to, PortType.Input, sinks))
+            // Only sources making something this building uses: the electron Harvester is a "harvester"
+            // too, and counting it as a third Combiner source pulled the glow a cell off (#236).
+            if (!GatherPortFronts(from, PortType.Output, sources, ConsumedItemIds(so)) ||
+                !GatherPortFronts(to, PortType.Input, sinks))
                 return null;
             sources.RemoveAll(c => !IsBeltFree(c)); // already-routed outputs are not looking for a destination
             sinks.RemoveAll(c => !IsBeltFree(c));
@@ -244,7 +247,8 @@ namespace MobileIdleBuilder
         /// Adds the belt cell in front of every <paramref name="type"/> port on placed buildings matching
         /// <paramref name="buildingKey"/>. Returns false when no such building is placed yet (keep searching).
         /// </summary>
-        private bool GatherPortFronts(string buildingKey, PortType type, List<Vector2Int> result)
+        private bool GatherPortFronts(string buildingKey, PortType type, List<Vector2Int> result,
+                                      HashSet<int> onlyProducing = null)
         {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated) return false;
@@ -270,6 +274,9 @@ namespace MobileIdleBuilder
                     : em.GetComponentData<BuildingData>(entity).BuildingType == typeId;
                 if (!match) continue;
                 any = true;
+                if (onlyProducing != null && onlyProducing.Count > 0 &&
+                    ProducedItemId(em, entity) is int produced && !onlyProducing.Contains(produced))
+                    continue;
 
                 var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
                 for (int i = 0; i < ports.Length; i++)
@@ -283,6 +290,41 @@ namespace MobileIdleBuilder
                 }
             }
             return any;
+        }
+
+        /// <summary>Item ids consumed by any of <paramref name="building"/>'s recipes.</summary>
+        private static HashSet<int> ConsumedItemIds(BuildingSO building)
+        {
+            var ids = new HashSet<int>();
+            if (building?.supportedRecipes == null) return ids;
+            foreach (var r in building.supportedRecipes)
+            {
+                if (r?.inputs == null) continue;
+                foreach (var input in r.inputs)
+                    if (input.item != null) ids.Add(input.item.itemId);
+            }
+            return ids;
+        }
+
+        /// <summary>The item a placed building's current recipe makes, or null when it has none or it is unknown.</summary>
+        private static int? ProducedItemId(EntityManager em, Entity entity)
+        {
+            if (!em.HasComponent<RecipeProcessData>(entity) || !em.HasComponent<BuildingData>(entity)) return null;
+            int recipeId = em.GetComponentData<RecipeProcessData>(entity).RecipeID;
+            var so = FindBuildingSO(em.GetComponentData<BuildingData>(entity).BuildingType);
+            if (so?.supportedRecipes == null) return null;
+            foreach (var r in so.supportedRecipes)
+                if (r != null && r.recipeId == recipeId && r.outputItem != null) return r.outputItem.itemId;
+            return null;
+        }
+
+        private static BuildingSO FindBuildingSO(int buildingId)
+        {
+            var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            if (db == null || db.allBuildings == null) return null;
+            foreach (var b in db.allBuildings)
+                if (b != null && b.buildingId == buildingId) return b;
+            return null;
         }
 
         private static BuildingSO FindBuildingSO(string id)

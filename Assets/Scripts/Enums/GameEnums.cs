@@ -155,6 +155,7 @@ namespace MobileIdleBuilder
         PrestigeGainMultiplier,   // % bonus to PC earned per prestige
         IdleTimeCap,              // additive seconds per level (+1800 = 30 min)
         IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
+        DemolishRefund,           // additive fraction of spent entropy refunded on removal (+0.10 = 10 %)
     }
 
     public enum AchievementTrigger
