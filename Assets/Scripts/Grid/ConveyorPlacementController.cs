@@ -127,7 +127,6 @@ namespace MobileIdleBuilder
         /// <summary>"Finished" button — exits conveyor mode entirely.</summary>
         public void CancelConveyorMode()
         {
-            ConfirmPrompt.Dismiss();
             ResetAll();
             IsPlacing = false;
             cameraController?.SetPanLocked(false);
@@ -229,9 +228,6 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // Waiting on "Remove belt tile?": keep the tile highlighted and ignore the grid.
-            if (ConfirmPrompt.IsOpen) return;
-
             TrackTap();
             RefreshHover();
         }
@@ -279,21 +275,13 @@ namespace MobileIdleBuilder
 
             if (_mode == Mode.Destroy)
             {
-                if (!IsConveyorCell(cell)) return;
-                ConfirmPrompt.Show("Remove belt tile?",
-                    "Removes this belt tile. Belts are free, so there is nothing to refund.",
-                    "Remove",
-                    () =>
-                    {
-                        if (conveyorPlacer.RemoveSegmentAt(cell.x, cell.y)) SaveManager.Instance?.SaveLocal();
-                        gridRenderer.ClearDeconstructHover();
-                        _hoverCell = new(-1, -1);
-                    },
-                    () =>
-                    {
-                        gridRenderer.ClearDeconstructHover();
-                        _hoverCell = new(-1, -1);
-                    });
+                // Belts are free to replace, so removal needs no confirmation (only buildings ask).
+                if (IsConveyorCell(cell) && conveyorPlacer.RemoveSegmentAt(cell.x, cell.y))
+                {
+                    gridRenderer.ClearDeconstructHover();
+                    _hoverCell = new(-1, -1);
+                    SaveManager.Instance?.SaveLocal();
+                }
                 return;
             }
 

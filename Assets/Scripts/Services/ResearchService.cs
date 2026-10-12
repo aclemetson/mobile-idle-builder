@@ -56,6 +56,11 @@ namespace MobileIdleBuilder
             if (save?.unlockedResearch != null)
                 foreach (var id in save.unlockedResearch) _unlockedIds.Add(id);
 
+            // Backfill: a recipe whose research was finished before the recipe was gated on it
+            // (helium..iron in recipes.json had no requires_research) was never marked known and
+            // stayed out of the Recipes panel. MarkKnown is idempotent, so this is cheap on load.
+            foreach (var id in _unlockedIds) MarkGatedRecipesKnown(id);
+
             // Restore an in-progress research timer; complete it immediately if it already elapsed
             // while the app was closed (offline completion, mirrors the speed-boost UtcNow pattern).
             RestoreActiveTimer(save);
@@ -226,14 +231,7 @@ namespace MobileIdleBuilder
             _activeCompleteUtc = default;
 
             // Mark any JSON recipes gated behind this research as "known" (persists across prestige)
-            if (RecipeDatabase.Instance != null)
-            {
-                foreach (var r in RecipeDatabase.Instance.Recipes)
-                {
-                    if (r.requires_research == research.id)
-                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
-                }
-            }
+            MarkGatedRecipesKnown(research.id);
 
             GameLogger.Info($"[ResearchService] Completed: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
@@ -245,6 +243,22 @@ namespace MobileIdleBuilder
             // takes an absolute total rather than a delta, so recount instead of incrementing —
             // Evaluate does Max(current, total), making it safe to call with an unchanged value.
             AchievementService.Instance?.NotifyCodexUnlocked(RecipeKnowledgeService.CountCodexEntries());
+        }
+
+        private static void MarkGatedRecipesKnown(string researchId)
+        {
+            var knowledge = RecipeKnowledgeService.Instance;
+            if (knowledge == null || RecipeDatabase.Instance?.Recipes == null) return;
+            foreach (var id in RecipesGatedBy(RecipeDatabase.Instance.Recipes, researchId))
+                knowledge.MarkKnown(id);
+        }
+
+        /// <summary>Ids of the JSON recipes that <paramref name="researchId"/> unlocks.</summary>
+        internal static IEnumerable<string> RecipesGatedBy(IEnumerable<RecipeJson> recipes, string researchId)
+        {
+            foreach (var r in recipes)
+                if (r != null && !string.IsNullOrEmpty(researchId) && r.requires_research == researchId)
+                    yield return r.id;
         }
 
         /// <summary>Loads the persisted active-timer state into the cached fields (no completion).</summary>
@@ -304,10 +318,7 @@ namespace MobileIdleBuilder
                 _activeCompleteUtc = default;
             }
 
-            if (RecipeDatabase.Instance != null)
-                foreach (var r in RecipeDatabase.Instance.Recipes)
-                    if (r.requires_research == researchId)
-                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
+            MarkGatedRecipesKnown(researchId);
 
             var so = FindResearch(researchId);
             if (so != null)

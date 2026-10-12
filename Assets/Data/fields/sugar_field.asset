@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 56d7d1047f99e5a439dfaf7f3de183d6, type: 2}
     weight: 1
   tapCooldownSeconds: 2.5
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.54509807, g: 0.7647059, b: 0.2901961, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A field thick with photosynthetic bloom, dense in sugars. Harvest

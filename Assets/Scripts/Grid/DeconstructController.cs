@@ -12,8 +12,8 @@ namespace MobileIdleBuilder
     ///
     /// Flow:
     ///   1. HUDController calls BeginDeconstructMode() from the Buildings panel.
-    ///   2. While IsDeconstructing, tapping any occupied cell asks to confirm (ConfirmPrompt), then
-    ///      destroys the building or conveyor segment there. Mode stays active for repeated removals.
+    ///   2. While IsDeconstructing, tapping a conveyor segment removes it; tapping a building asks to
+    ///      confirm (ConfirmPrompt), then destroys it. Mode stays active for repeated removals.
     ///      A removed building refunds part of the entropy spent on it (DemolishRefund); the grid's
     ///      only Maxwell's Demon cannot be removed.
     ///   3. CancelDeconstructMode() exits (cancel button or Escape).
@@ -217,12 +217,8 @@ namespace MobileIdleBuilder
             bldgEntities.Dispose();
 
             // ---- Conveyor segments (shared removal logic) ----
-            if (!IsConveyorAt(x, y)) return;
-            ConfirmPrompt.Show("Remove belt tile?",
-                "Removes this belt tile. Belts are free, so there is nothing to refund.",
-                "Remove",
-                () => RemoveConveyorAt(x, y),
-                ClearHover);
+            // Belts are free to replace, so they go without a confirmation (only buildings ask).
+            if (IsConveyorAt(x, y)) RemoveConveyorAt(x, y);
         }
 
         private void ConfirmBuildingRemoval(Entity e)

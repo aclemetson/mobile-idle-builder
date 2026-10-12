@@ -32,6 +32,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
+  - {fileID: 11400000, guid: 9ab356751cf66ae43bdbfc91ac9bdfb7, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.5
   codexEntry: Continuous field collection without manual input. A Harvester placed

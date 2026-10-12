@@ -321,12 +321,6 @@ From step 31 onward, grid presets have not yet been captured from a playthrough.
   - Expected: `Skipped to 'place_atom_generator' [43]. Entropy: 350e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Entropy: **350** (exact cost of Atom Generator); build menu shows Atom Generator available
 
-### 7.5 Building Upgrades
-
-- [ ] `tutorial skip upgrade_atom_generator_speed`
-  - Expected: `Skipped to 'upgrade_atom_generator_speed' [48]. Entropy: 1000e. 3 research node(s) unlocked. (grid preset not yet captured...)`
-  - In-game: Entropy: **1000** (needed for L2 speed upgrade); Atom Generator interaction is the only building gate
-
 ---
 
 ## Part 8 — tutorial skip: Post-Tutorial Research Gates (Steps 51–70)
@@ -580,7 +574,6 @@ These checks confirm that `tutorial skip` correctly persists state to SaveData s
 | `place_sfc` | 200 | Idle income; enough for SFC |
 | `nucleon_loop_complete` | 100 | Pipeline running |
 | `place_atom_generator` | 350 | Idle; exact Atom Gen cost |
-| `upgrade_atom_generator_speed` | 1000 | Idle; exact L2 speed cost |
 | `buy_atomic_assembly` | 500 | Idle; exact research cost |
 | `buy_heavy_elements` | 3000 | Idle; exact research cost |
 | `buy_isotope_engineering` | 1500 | Idle; exact research cost |

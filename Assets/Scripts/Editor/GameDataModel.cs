@@ -312,6 +312,10 @@ namespace MobileIdleBuilder.Editor
         public string             field_color   = "#FFFFFF";
         public string             field_icon_path = "TODO";
         public string             codex_entry   = "";
+        public string             purchase_research        = "";
+        public long               purchase_cost_base       = 0;
+        public float              purchase_cost_multiplier = 10f;
+        public int                purchase_group_size      = 1;
 
         public void Initialize() { drops ??= new List<FieldDropJson>(); }
     }
@@ -497,6 +501,8 @@ namespace MobileIdleBuilder.Editor
         public string   from_building_id = "";
         /// <summary>BuildingUpgradeMin only: speed upgrade level to reach.</summary>
         public int      min_level    = 0;
+        /// <summary>FieldPurchasedMin only: FieldSO id whose purchases are counted.</summary>
+        public string   field_id     = "";
     }
 
     [Serializable]

@@ -380,6 +380,15 @@ namespace MobileIdleBuilder
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
+        /// <summary>Removed tutorial step id -> the step a save on it resumes at.</summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, string> RetiredSteps = new()
+        {
+            // The 1,000 entropy Atom Generator speed upgrade stalled the early game.
+            { "intro_building_upgrades",      "post_tutorial_intro" },
+            { "upgrade_atom_generator_speed", "post_tutorial_intro" },
+            { "upgrade_context",              "post_tutorial_intro" },
+        };
+
         internal static int ResolveStepIndex(string stepId)
         {
             // Empty id is a legitimate fresh-game value — resolve to step 0 silently.
@@ -394,6 +403,12 @@ namespace MobileIdleBuilder
             }
             for (int i = 0; i < flow.steps.Length; i++)
                 if (flow.steps[i].id == stepId) return i;
+
+            // A save sitting on a step that was later removed resumes at the step that replaced it,
+            // instead of restarting the tutorial from step 0.
+            if (RetiredSteps.TryGetValue(stepId, out var successor))
+                for (int i = 0; i < flow.steps.Length; i++)
+                    if (flow.steps[i].id == successor) return i;
 
             GameLogger.Warning($"[Save] Saved tutorial step '{stepId}' not found in flow " +
                       $"({flow.steps.Length} steps) — defaulting to step 0 (id drift?).");
