@@ -570,6 +570,11 @@ namespace MobileIdleBuilder.Editor
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
+            so.purchaseResearchId     = data.purchase_research ?? "";
+            so.purchaseCostBase       = data.purchase_cost_base;
+            so.purchaseCostMultiplier = data.purchase_cost_multiplier;
+            so.purchaseGroupSize      = Mathf.Max(1, data.purchase_group_size);
+
             so.fieldType = FieldTypes.Normalize(data.field_type);
             if (ColorUtility.TryParseHtmlString(data.field_color, out var color))
                 so.fieldColor = color;
@@ -810,6 +815,7 @@ namespace MobileIdleBuilder.Editor
                         researchId   = s.advance_condition.research_id  ?? "",
                         minCount     = s.advance_condition.min_count,
                         minLevel     = s.advance_condition.min_level,
+                        fieldId      = s.advance_condition.field_id     ?? "",
                         buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,

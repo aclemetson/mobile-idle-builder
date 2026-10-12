@@ -104,6 +104,10 @@ namespace MobileIdleBuilder
         public int          activeWorldIndex        = 0;       // index into WorldDatabase of the active world; 0 = Physics. Keep consistent with activeSiteIndex via WorldLayout.
         public List<string> researchProgressKeys    = new();
         public List<float>  researchProgressValues  = new();
+        // Fields bought this run (FieldPurchaseService), parallel lists: FieldSO.id -> purchases.
+        // A quark pair counts once. Each purchase raises the next price; cleared with the run on prestige.
+        public List<string> fieldPurchaseIds        = new();
+        public List<int>    fieldPurchaseCounts     = new();
 
         /// <summary>
         /// The grid for the currently active site. Falls back to the legacy single 'grid'

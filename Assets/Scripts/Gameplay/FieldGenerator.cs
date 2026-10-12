@@ -246,6 +246,19 @@ namespace MobileIdleBuilder
             return lookup;
         }
 
+        /// <summary>Fields this generator knows (the default list plus site-introduced ones). The Build menu sells the ones with a price.</summary>
+        public IEnumerable<FieldSO> KnownFields => BuildFieldLookup().Values;
+
+        /// <summary>
+        /// Places one player-bought field (Field Synthesis). The caller has already checked the cell
+        /// is free; the field saves with the grid like any generated one.
+        /// </summary>
+        public void PlaceField(int x, int y, FieldSO fieldSO)
+        {
+            if (fieldSO == null || gridRenderer == null || _fieldMap.ContainsKey(new Vector2Int(x, y))) return;
+            OccupyAndSpawn(x, y, fieldSO);
+        }
+
         /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
         public void SpawnFromSave(List<FieldSaveData> savedFields)
         {

@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
     weight: 1
   tapCooldownSeconds: 3
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.49803922, g: 0.72156864, b: 0, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A seam of naturally fissile ore. Tap or harvest to extract uranium

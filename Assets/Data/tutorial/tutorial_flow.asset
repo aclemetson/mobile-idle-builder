@@ -26,6 +26,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: recombination_i
       skipToId: collect_quarks_for_nucleons
@@ -56,6 +57,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -92,6 +94,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -130,6 +133,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -158,6 +162,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -186,6 +191,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -218,6 +224,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -254,6 +261,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -294,6 +302,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -322,6 +331,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -350,6 +360,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -394,6 +405,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -438,6 +450,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -471,6 +484,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -508,6 +522,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -543,6 +558,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -574,6 +590,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -603,6 +620,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -648,6 +666,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -677,6 +696,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -707,6 +727,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -758,6 +779,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -792,6 +814,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -822,6 +845,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -850,6 +874,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -878,6 +903,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -920,6 +946,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -948,6 +975,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -976,6 +1004,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1004,6 +1033,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1045,6 +1075,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1075,6 +1106,7 @@ MonoBehaviour:
       buildingIsEntropySink: 1
       fromBuildingType: 1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1103,6 +1135,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1132,6 +1165,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1160,6 +1194,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1189,6 +1224,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1218,6 +1254,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1247,6 +1284,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1276,6 +1314,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: 1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1304,6 +1343,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1333,6 +1373,7 @@ MonoBehaviour:
       buildingIsEntropySink: 1
       fromBuildingType: 2
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1361,6 +1402,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1389,6 +1431,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1417,6 +1460,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1446,6 +1490,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1475,6 +1520,7 @@ MonoBehaviour:
       buildingIsEntropySink: 1
       fromBuildingType: 4
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1503,11 +1549,99 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: d9491ee0112a898469c0c5d8eeaa347b, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+  - id: buy_field_synthesis
+    hintText: Save up 250 entropy and research Field Synthesis.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: field_synthesis
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 5830bb2efa4194a468c0bb4789f59cea, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+  - id: place_quark_field_pair
+    hintText: Open the Build menu and place a Quark Field Pair on two empty tiles.
+    advanceCondition:
+      type: 10
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: quark_field
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 76b5f9be3c3e6234ca54201632110362, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-quark_field
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+  - id: field_pair_placed
+    hintText: Harvest the new pair and set a second Combiner to Neutron.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 08a38c1e689b7204f99cdd0492f12120, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
@@ -1532,6 +1666,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1560,6 +1695,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1588,6 +1724,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1619,6 +1756,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1647,6 +1785,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1675,6 +1814,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1703,6 +1843,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1734,6 +1875,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1762,6 +1904,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1791,6 +1934,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1819,6 +1963,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1848,6 +1993,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1879,6 +2025,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1907,6 +2054,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1936,6 +2084,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1964,6 +2113,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -1993,6 +2143,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2024,6 +2175,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2052,6 +2204,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2082,6 +2235,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2110,6 +2264,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2138,6 +2293,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2167,6 +2323,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2195,6 +2352,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2223,6 +2381,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2251,6 +2410,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2279,6 +2439,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2307,6 +2468,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
@@ -2335,6 +2497,7 @@ MonoBehaviour:
       buildingIsEntropySink: 0
       fromBuildingType: -1
       minLevel: 0
+      fieldId: 
     skipCondition:
       researchId: 
       skipToId: 
