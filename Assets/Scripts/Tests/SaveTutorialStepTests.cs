@@ -52,6 +52,26 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ResolveStepIndex_RemovedUpgradeStep_ResumesAtPostTutorialIntro()
+        {
+            MakeFlow("intro", "hydrogen_loop_complete", "post_tutorial_intro", "buy_atomic_assembly");
+            Assert.AreEqual(2, ECSLoadBridge.ResolveStepIndex("intro_building_upgrades"));
+            Assert.AreEqual(2, ECSLoadBridge.ResolveStepIndex("upgrade_atom_generator_speed"));
+            Assert.AreEqual(2, ECSLoadBridge.ResolveStepIndex("upgrade_context"));
+        }
+
+        [Test]
+        public void RetiredSteps_AreGoneFromTheFlow_AndPointAtLiveSteps()
+        {
+            var json = System.IO.File.ReadAllText("Assets/Data/game_data.json");
+            foreach (var kv in ECSLoadBridge.RetiredSteps)
+            {
+                StringAssert.DoesNotContain($"\"id\": \"{kv.Key}\"", json, $"{kv.Key} is still a step");
+                StringAssert.Contains($"\"id\": \"{kv.Value}\"", json, $"{kv.Value} is not a step");
+            }
+        }
+
+        [Test]
         public void ResolveStepIndex_NullFlow_NonEmptyId_ReturnsZeroAndWarns()
         {
             TutorialFlowSO.ClearCurrentForTesting();

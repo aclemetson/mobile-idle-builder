@@ -131,12 +131,13 @@
         { "id": "neutron", "quantity": 2 },
         { "id": "electron", "quantity": 2 }
       ],
-      "output": { "id": "helium", "quantity": 1 },
+      "output": { "id": "helium_4", "quantity": 1 },
       "base_craft_time": 4.0,
       "manual_craft_time": 4.0,
       "power_cost_ev": 20,
       "_comment_ev": "power_cost_ev = atomic_mass(4) × atomic_assembler_ev_per_mass_unit(5)",
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "alternate_recipe": {
         "id": "helium_fusion",
         "crafted_in": ["fusion_generator"],
@@ -172,6 +173,7 @@
       "manual_craft_time": 7.0,
       "power_cost_ev": 35,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "simplification": null,
       "codex": "A soft alkali metal and the lightest solid element. Critical in battery technology — the backbone of rechargeable batteries used in mobile devices."
     },
@@ -193,6 +195,7 @@
       "manual_craft_time": 12.0,
       "power_cost_ev": 60,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "simplification": null,
       "codex": "The basis of all organic chemistry. Carbon's ability to form four bonds makes it the backbone of life. Also exists as graphite, diamond, and graphene."
     },
@@ -214,6 +217,7 @@
       "manual_craft_time": 16.0,
       "power_cost_ev": 80,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "simplification": null,
       "codex": "The third most abundant element in the universe. Highly reactive, essential for combustion and respiration. Makes up 21% of Earth's atmosphere."
     },
@@ -235,6 +239,7 @@
       "manual_craft_time": 28.0,
       "power_cost_ev": 140,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "simplification": null,
       "codex": "A semiconductor at the heart of modern electronics. Silicon wafers are the foundation of processors, solar cells, and transistors."
     },
@@ -256,6 +261,7 @@
       "manual_craft_time": 56.0,
       "power_cost_ev": 280,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "simplification": null,
       "codex": "The most common element on Earth by mass. The endpoint of stellar fusion — stars cannot fuse elements heavier than iron without consuming more energy than they produce."
     },

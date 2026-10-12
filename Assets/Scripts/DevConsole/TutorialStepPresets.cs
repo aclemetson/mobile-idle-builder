@@ -42,9 +42,6 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",        50 },
             { "route_hydrogen_to_demon",        50 },
             { "hydrogen_loop_complete",         50 },
-            { "intro_building_upgrades",      1000 },  // enough for 1000e L2 speed upgrade
-            { "upgrade_atom_generator_speed", 1000 },
-            { "upgrade_context",              200 },
             { "post_tutorial_intro",          200 },
             { "buy_atomic_assembly",          500 },   // enough for 500e Atomic Assembly
             { "atomic_assembly_unlocked",      50 },
@@ -119,9 +116,6 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      7_000f },
             { "route_hydrogen_to_demon",      8_000f },
             { "hydrogen_loop_complete",      10_000f },
-            { "intro_building_upgrades",     12_000f },
-            { "upgrade_atom_generator_speed",15_000f },
-            { "upgrade_context",             18_000f },
             { "post_tutorial_intro",         20_000f },
             { "buy_atomic_assembly",         22_000f },
             { "atomic_assembly_unlocked",    24_000f },
@@ -239,8 +233,8 @@ namespace MobileIdleBuilder.Dev
         static readonly BuildingSaveData[] k_HydrogenLoop_Buildings    = null; // TODO
         static readonly ConveyorSaveData[] k_HydrogenLoop_Conveyors     = null;
 
-        // ── Step 48: upgrade_atom_generator_speed
-        // State: Full hydrogen loop; Atom Generator at level 1; player buys L2 speed upgrade.
+        // ── post_tutorial_intro onward (the upgrade_atom_generator_speed step was removed)
+        // State: Full hydrogen loop; Atom Generator at level 1.
         static readonly BuildingSaveData[] k_UpgradeSpeed_Buildings    = null; // TODO
         static readonly ConveyorSaveData[] k_UpgradeSpeed_Conveyors     = null;
 
@@ -274,9 +268,6 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "route_hydrogen_to_demon",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "hydrogen_loop_complete",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
-            { "intro_building_upgrades",      (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
-            { "upgrade_atom_generator_speed", (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "upgrade_context",              (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
