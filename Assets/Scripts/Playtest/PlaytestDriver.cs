@@ -116,6 +116,23 @@ namespace MobileIdleBuilder.Playtest
         public static Vector2 ToTopLeft(Vector2 inputSpace) =>
             new(inputSpace.x, Screen.height - inputSpace.y);
 
+        // ── Screenshots ───────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Captures the composited frame (3D + UI Toolkit HUD) at the end of the next rendered
+        /// frame. The callback receives null if the capture failed; the caller owns the texture.
+        /// </summary>
+        public void CaptureScreen(Action<Texture2D> onDone) => StartCoroutine(CaptureAtEndOfFrame(onDone));
+
+        private System.Collections.IEnumerator CaptureAtEndOfFrame(Action<Texture2D> onDone)
+        {
+            yield return new WaitForEndOfFrame();
+            Texture2D tex = null;
+            try { tex = ScreenCapture.CaptureScreenshotAsTexture(); }
+            catch (Exception e) { GameLogger.Warning($"[Playtest] Screen capture failed: {e.Message}"); }
+            onDone?.Invoke(tex);
+        }
+
         // ── Time scale ────────────────────────────────────────────────────────
 
         // No zero: a playtest pause would fight the dialogue pause over the same global.

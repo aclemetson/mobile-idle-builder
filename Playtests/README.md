@@ -30,30 +30,41 @@ Built-in MCP for Unity tools:
 | Need | Tool |
 |---|---|
 | Enter / exit Play Mode | `manage_editor` action `play` / `stop` |
-| Screenshot of what the player sees (HUD included) | `manage_scene` action `screenshot`, `capture_source: game_view`, `include_image: true` |
 | Errors and warnings | `read_console` |
+
+**Don't use the built-in screenshot (`manage_camera` / `manage_scene` screenshot) during Play Mode.**
+With the Editor in the background it falls back to a camera render without the HUD, and it
+steps the player loop, which logs "PlayerLoop internal function has been called recursively".
+Use `playtest_screenshot`.
 
 Project tools (`Assets/Scripts/Playtest/`):
 
 | Tool | Use |
 |---|---|
+| `playtest_screenshot` | What the player sees (3D + HUD), saved to `reports/screenshots/`; open the PNG with Read. Image px x `scale` = screen px |
 | `playtest_state` | JSON truth: entropy, tutorial step + hint, open panels, dialogue, placement modes, research, buildings (crafting / power), inventory |
 | `playtest_ui` | Visible buttons and text with screen rects. `list` (with `filter`, `interactive_only`) or `find` |
 | `playtest_input` | `tap`, `tap_element`, `tap_cell`, `drag`, `drag_cells`. Real Input System events through a virtual mouse. Returns a short state summary after `settle_ms` |
 | `playtest_control` | `status`, `time_scale`, `wait`, `console`, `list_fixtures`, `load_fixture`, `save_fixture`, `fresh_start` |
 
-Coordinates are Game View screenshot pixels with a top-left origin. `tap_cell` takes grid
-cells on the active site; it fails if the cell is off screen, so drag to pan first.
+Coordinates in `playtest_input` and `playtest_ui` are Game View screen pixels with a top-left
+origin. Screenshots are downscaled; multiply image pixels by the returned `scale`.
+`tap_cell` takes grid cells on the active site; it fails if the cell is off screen, so drag to
+pan first. `playtest_ui` doesn't detect one element covering another; a button under an open
+drawer can still be listed.
 
 ## The run loop
 
 1. Read this README and the brief. Note the start time; respect the brief's time box.
-2. `manage_editor` play. Then `playtest_control status` until `loaded` is true.
+2. `manage_editor` play. Entering Play Mode reloads the domain, so the next call can fail with
+   "disconnected"; retry it. Then `playtest_control wait` until `loaded` is true (10 to 20 s).
+   Never trigger a script recompile while playing: it breaks the ECS world (load hangs at 0%,
+   NullReferenceExceptions from EntityQuery). Stop, recompile, then play again.
 3. Set up as the brief says (`fresh_start`, `load_fixture`, or nothing). Setup may use the dev
    console. **After setup, play only through `playtest_input`.** If you have to cheat to get
    unstuck, that's a finding: log it as a softlock and say which command you used.
 4. Each turn:
-   - Take a screenshot and read `playtest_state`.
+   - Take `playtest_screenshot` (then Read the PNG) and read `playtest_state`.
    - Decide as the persona would, **from the screenshot first**. The state shows what's really
      happening; the screenshot shows what the player can tell. Gaps between the two are findings.
    - Act with one `playtest_input` call and check the returned summary.

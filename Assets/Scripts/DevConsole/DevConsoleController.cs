@@ -361,7 +361,12 @@ namespace MobileIdleBuilder.Dev
                 _logLabels.RemoveAt(0);
             }
 
-            _logView.schedule.Execute(() => _logView.ScrollTo(_logLabels[^1]));
+            // Runs a frame later: a scene reload in between (snapshot load) rebinds the UI and
+            // empties _logLabels, so scroll to this label only if it is still in the log.
+            _logView.schedule.Execute(() =>
+            {
+                if (label.parent == _logView) _logView.ScrollTo(label);
+            });
         }
 
         // ── Command registration ──────────────────────────────────────────────

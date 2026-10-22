@@ -12,9 +12,9 @@ using UnityEngine;
 namespace MobileIdleBuilder.Playtest.Editor
 {
     // MCP tools for the AI playtest harness (Playtests/README.md). They only act in Play Mode;
-    // enter it with manage_editor and take screenshots with manage_scene (capture_source
-    // game_view), which include the UI Toolkit HUD. Coordinates are Game View screenshot pixels
-    // (top-left origin).
+    // enter it with manage_editor. Use playtest_screenshot, not the built-in screenshot: in Play
+    // Mode with the Editor in the background, that falls back to a camera render without the HUD
+    // and steps the player loop. Coordinates are Game View screen pixels (top-left origin).
 
     [McpForUnityTool("playtest_state", Description =
         "Play Mode only. JSON snapshot of the running game: load status, entropy/net worth/prestige, " +
@@ -192,6 +192,49 @@ namespace MobileIdleBuilder.Playtest.Editor
 
         private static Vector2Int ReadCell(JObject p, string xKey, string yKey) =>
             new(p?[xKey]?.Value<int>() ?? 0, p?[yKey]?.Value<int>() ?? 0);
+    }
+
+    [McpForUnityTool("playtest_screenshot", Description =
+        "Play Mode only. Captures exactly what the player sees (3D scene + HUD) and saves a PNG under " +
+        "Playtests/reports/screenshots. Open it with the Read tool. The image is downscaled to max_resolution; " +
+        "multiply image pixel coordinates by 'scale' to get the screen pixels that playtest_input and playtest_ui use.")]
+    public static class PlaytestScreenshotTool
+    {
+        public class Parameters
+        {
+            [ToolParameter("Longest edge of the saved image in pixels.", Required = false, DefaultValue = "1280")]
+            public int max_resolution { get; set; }
+            [ToolParameter("Optional file name prefix, e.g. a finding id.", Required = false)]
+            public string label { get; set; }
+        }
+
+        public static async Task<object> HandleCommand(JObject @params)
+        {
+            if (!PlaytestToolUtil.RequirePlayMode(out var error)) return error;
+            if (EditorApplication.isPaused) EditorApplication.isPaused = false;
+            int maxRes = Mathf.Clamp(@params?["max_resolution"]?.Value<int>() ?? 1280, 256, 4096);
+
+            Texture2D full = null;
+            bool done = false;
+            PlaytestDriver.Ensure().CaptureScreen(tex => { full = tex; done = true; });
+            if (!await PlaytestToolUtil.WaitFor(() => done, 10f) || full == null)
+                return new ErrorResponse("Screen capture did not complete. Is the Game View visible (not minimized or behind another Editor tab)?");
+
+            var image = PlaytestToolUtil.Downscale(full, maxRes);
+            float scale = (float)full.width / image.width;
+            string label = PlaytestToolUtil.IsValidName(@params?["label"]?.ToString()?.ToLowerInvariant())
+                ? @params["label"].ToString().ToLowerInvariant() + "-" : "";
+            string dir  = Path.Combine(PlaytestToolUtil.ProjectRoot, "Playtests", "reports", "screenshots");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, $"{label}{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+            File.WriteAllBytes(path, image.EncodeToPNG());
+
+            var result = new { path, imageWidth = image.width, imageHeight = image.height,
+                               screenWidth = full.width, screenHeight = full.height, scale };
+            if (image != full) UnityEngine.Object.DestroyImmediate(image);
+            UnityEngine.Object.DestroyImmediate(full);
+            return new SuccessResponse("Screenshot saved; open it with the Read tool.", result);
+        }
     }
 
     [McpForUnityTool("playtest_control", Description =
@@ -380,11 +423,33 @@ namespace MobileIdleBuilder.Playtest.Editor
         public static bool OverUi(Vector2 screenTopLeft) =>
             UIInputBlocker.IsPointerOverUI(PlaytestDriver.ToInputSpace(screenTopLeft));
 
+        /// <summary>Returns <paramref name="source"/> itself when it already fits.</summary>
+        public static Texture2D Downscale(Texture2D source, int maxEdge)
+        {
+            int longest = Mathf.Max(source.width, source.height);
+            if (longest <= maxEdge) return source;
+            float f = (float)maxEdge / longest;
+            int w = Mathf.Max(1, Mathf.RoundToInt(source.width * f));
+            int h = Mathf.Max(1, Mathf.RoundToInt(source.height * f));
+
+            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+            var previous = RenderTexture.active;
+            Graphics.Blit(source, rt);
+            RenderTexture.active = rt;
+            var small = new Texture2D(w, h, TextureFormat.RGB24, false);
+            small.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            small.Apply();
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(rt);
+            return small;
+        }
+
         public static object Brief()
         {
             var s = PlaytestState.Capture();
             return new
             {
+                editorPaused = EditorApplication.isPaused,
                 s.loaded,
                 s.timeScale,
                 entropy       = s.economy?.entropy,
