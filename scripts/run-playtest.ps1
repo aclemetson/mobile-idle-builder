@@ -3,11 +3,12 @@
 # desktop session with a GPU (screenshots render the Game View). Not for CI or batchmode.
 #
 #   .\scripts\run-playtest.ps1 -Brief casual-idler
-#   .\scripts\run-playtest.ps1 -Brief whale-speedrun -McpPort 8080
+#   .\scripts\run-playtest.ps1 -Brief active-grinder -Minutes 20
 # Scenario briefs: stability-sweep, casual-idler, active-grinder, whale-speedrun.
 param(
     [Parameter(Mandatory = $true)][string]$Brief,
     [int]$McpPort = 8080,
+    [int]$Minutes = 0,
     [int]$MaxTurns = 3000
 )
 
@@ -41,15 +42,18 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
 $ReportDir = Join-Path $ProjectRoot "Playtests\reports"
 New-Item -ItemType Directory -Force $ReportDir | Out-Null
 
-$Prompt = "Run an AI playtest. Read Playtests/README.md, then follow the brief Playtests/briefs/$Brief.md exactly. " +
-          "Write the report to Playtests/reports/ using the README format. For timed briefs, always end the benchmark " +
-          "(playtest_benchmark end) even if the run is cut short. Always stop Play Mode before finishing."
+# The /playtest skill picks the driver and reviewer models itself; the orchestrator only routes,
+# so it runs on the cheapest model.
+$Prompt = "/playtest $Brief"
+if ($Minutes -gt 0) { $Prompt += " for $Minutes minutes" }
 
 Push-Location $ProjectRoot
 try {
     claude -p $Prompt `
+        --model haiku `
         --max-turns $MaxTurns `
-        --allowedTools "mcp__UnityMCP" "Read" "Glob" "Grep" "Write(Playtests/reports/**)" "Bash(git rev-parse:*)" "Bash(git branch:*)"
+        --allowedTools "mcp__UnityMCP" "Agent" "ToolSearch" "Read" "Glob" "Grep" "Write(Playtests/reports/**)" `
+            "Bash(git rev-parse:*)" "Bash(git branch:*)" "Bash(date:*)" "Bash(python scripts/benchmark-report.py:*)"
     exit $LASTEXITCODE
 } finally {
     Pop-Location

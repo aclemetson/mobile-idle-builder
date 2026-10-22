@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -82,13 +83,18 @@ namespace MobileIdleBuilder.Playtest.Editor
         "as to a finger. Waits until the gesture has finished plus settle_ms, then returns a short state summary. " +
         "action=tap (x,y) | tap_element (target = name or visible text, index) | tap_cell (cell_x, cell_y: grid " +
         "cell on the active site) | drag (x,y -> to_x,to_y; pans the camera, scrolls lists) | drag_cells " +
-        "(cell_x,cell_y -> to_cell_x,to_cell_y; e.g. painting conveyors). Coordinates are screenshot pixels, top-left origin.")]
+        "(cell_x,cell_y -> to_cell_x,to_cell_y; e.g. painting conveyors) | collect (target = field id such as " +
+        "quark_field or electron_field, count = taps: pans to the field if off screen, then taps its tiles in turn as " +
+        "each comes off cooldown, waiting out cooldowns; returns items gained and missed taps). Coordinates are " +
+        "screen pixels, top-left origin. The returned 'after' lists only fields that changed since the last call.")]
     public static class PlaytestInputTool
     {
         public class Parameters
         {
-            [ToolParameter("tap | tap_element | tap_cell | drag | drag_cells")]
+            [ToolParameter("tap | tap_element | tap_cell | drag | drag_cells | collect")]
             public string action { get; set; }
+            [ToolParameter("collect: number of taps (max 40).", Required = false, DefaultValue = "10")]
+            public int count { get; set; }
             [ToolParameter("Screen x in screenshot pixels.", Required = false)]
             public float x { get; set; }
             [ToolParameter("Screen y in screenshot pixels (top-left origin).", Required = false)]
@@ -122,6 +128,7 @@ namespace MobileIdleBuilder.Playtest.Editor
             if (driver.IsBusy) return new ErrorResponse("A previous gesture is still running; retry shortly.");
 
             string action = @params?["action"]?.ToString();
+            if (action == "collect") return await Collect(@params, driver);
             int frames    = Math.Max(2, @params?["frames"]?.Value<int>() ?? 20);
             int settleMs  = Mathf.Clamp(@params?["settle_ms"]?.Value<int>() ?? 400, 0, 10000);
             var done      = new TaskCompletionSource<bool>();
@@ -188,8 +195,92 @@ namespace MobileIdleBuilder.Playtest.Editor
             if (driver.TurnBased) await PlaytestToolUtil.RunGame(driver, driver.ActionSeconds);
             else if (settleMs > 0) await Task.Delay(Math.Min(settleMs, 10000));
 
-            return new SuccessResponse($"{action} done.", new { input = detail, after = PlaytestToolUtil.Brief() });
+            return new SuccessResponse($"{action} done.", new { input = detail, after = PlaytestToolUtil.BriefDelta() });
         }
+
+        // Collecting from a field is the most repeated thing a player does; one call here replaces
+        // a pan plus a tap per item. Taps are real input; only the pan is a camera move (the same
+        // place a swipe would leave it), counted as one action.
+        private static async Task<object> Collect(JObject @params, PlaytestDriver driver)
+        {
+            string target = @params?["target"]?.ToString();
+            int count     = Mathf.Clamp(@params?["count"]?.Value<int>() ?? 10, 1, 40);
+            var fields    = PlaytestState.Fields().FindAll(f => f.Field.id == target || f.Field.fieldType == target);
+            if (fields.Count == 0)
+                return new ErrorResponse($"No field '{target}' on this site.",
+                    new { available = PlaytestState.Fields().Select(f => f.Field.id).Distinct().ToArray() });
+
+            var grid = UnityEngine.Object.FindAnyObjectByType<GridRenderer>();
+            var cam  = UnityEngine.Object.FindAnyObjectByType<CameraController>();
+            bool OnScreen(FieldInstance f) => PlaytestToolUtil.CellToScreen(CellOf(f, grid), out _, out _);
+
+            // Fast-forward the macro's waits; player time is the same at any time scale.
+            float scaleBefore = driver.TimeScale;
+            driver.SetTimeScale(Mathf.Max(scaleBefore, 10f));
+            var start  = Time.realtimeSinceStartup;
+            var before = Inventory();
+            int taps = 0, hits = 0, missed = 0, cooldownWaits = 0;
+            bool panned = false;
+
+            try
+            {
+                if (!fields.TrueForAll(OnScreen) && cam != null)
+                {
+                    var centre = fields.Aggregate(Vector3.zero, (sum, f) => sum + f.transform.position) / fields.Count;
+                    cam.PanTo(centre);
+                    await PlaytestToolUtil.WaitFor(() => fields.TrueForAll(OnScreen), 3f);
+                    cam.ResumeFollow();
+                    panned = true;
+                    PlaytestBenchmark.Active?.CountAction();
+                    if (driver.TurnBased) await PlaytestToolUtil.RunGame(driver, driver.ActionSeconds);
+                }
+
+                int next = 0;
+                while (taps < count && Time.realtimeSinceStartup - start < PlaytestToolUtil.MaxWaitSeconds - 3f)
+                {
+                    if (!fields.Exists(OnScreen)) break;   // the tutorial moved the camera away
+                    var ready = fields.Where(f => PlaytestState.CooldownLeft(f) <= 0f && OnScreen(f)).ToList();
+                    if (ready.Count == 0)
+                    {
+                        float wait = fields.Min(f => PlaytestState.CooldownLeft(f)) + 0.05f;
+                        cooldownWaits++;
+                        if (driver.TurnBased) await PlaytestToolUtil.RunGame(driver, wait);
+                        else await Task.Delay(TimeSpan.FromSeconds(wait / driver.TimeScale));
+                        continue;
+                    }
+
+                    var field = ready[next++ % ready.Count];
+                    if (!PlaytestToolUtil.CellToScreen(CellOf(field, grid), out var p, out _)) break;
+                    bool tapped = false;
+                    driver.Tap(p, () => tapped = true);
+                    await PlaytestToolUtil.WaitFor(() => tapped, 5f);
+                    await PlaytestToolUtil.WaitFrames(2);
+                    taps++;
+                    if (PlaytestState.CooldownLeft(field) > 0f) hits++; else missed++;
+                    PlaytestBenchmark.Active?.CountAction();
+                    if (driver.TurnBased) await PlaytestToolUtil.RunGame(driver, driver.ActionSeconds);
+                }
+            }
+            finally
+            {
+                driver.SetTimeScale(scaleBefore);
+            }
+
+            var after  = Inventory();
+            var gained = after.Where(kv => kv.Value > (before.TryGetValue(kv.Key, out int b) ? b : 0))
+                              .ToDictionary(kv => kv.Key, kv => kv.Value - (before.TryGetValue(kv.Key, out int b) ? b : 0));
+            return new SuccessResponse(taps < count
+                    ? $"Collected with {taps} of {count} taps before the call limit; call again for the rest."
+                    : $"Collected with {taps} taps.",
+                new { taps, hits, missed, cooldownWaits, panned, gained, after = PlaytestToolUtil.BriefDelta() });
+        }
+
+        private static Vector2Int CellOf(FieldInstance f, GridRenderer grid) =>
+            grid != null ? GridRenderer.WorldToCell(f.transform.position, grid.CellSize) : Vector2Int.zero;
+
+        private static Dictionary<string, int> Inventory() =>
+            (PlaytestState.Capture().inventory ?? new List<PlaytestState.InventoryEntry>())
+                .GroupBy(i => i.id).ToDictionary(g => g.Key, g => g.Sum(i => i.quantity));
 
         private static Vector2 ReadPoint(JObject p, string xKey, string yKey) =>
             new(p?[xKey]?.Value<float>() ?? 0f, p?[yKey]?.Value<float>() ?? 0f);
@@ -206,7 +297,7 @@ namespace MobileIdleBuilder.Playtest.Editor
     {
         public class Parameters
         {
-            [ToolParameter("Longest edge of the saved image in pixels.", Required = false, DefaultValue = "1280")]
+            [ToolParameter("Longest edge of the saved image in pixels.", Required = false, DefaultValue = "800")]
             public int max_resolution { get; set; }
             [ToolParameter("Optional file name prefix, e.g. a finding id.", Required = false)]
             public string label { get; set; }
@@ -216,7 +307,7 @@ namespace MobileIdleBuilder.Playtest.Editor
         {
             if (!PlaytestToolUtil.RequirePlayMode(out var error)) return error;
             if (EditorApplication.isPaused) EditorApplication.isPaused = false;
-            int maxRes = Mathf.Clamp(@params?["max_resolution"]?.Value<int>() ?? 1280, 256, 4096);
+            int maxRes = Mathf.Clamp(@params?["max_resolution"]?.Value<int>() ?? 800, 256, 4096);
 
             Texture2D full = null;
             bool done = false;
@@ -289,7 +380,7 @@ namespace MobileIdleBuilder.Playtest.Editor
             switch (action)
             {
                 case "status":
-                    return new SuccessResponse("Status.", PlaytestToolUtil.Brief());
+                    return new SuccessResponse("Status.", PlaytestToolUtil.BriefFull());
 
                 case "time_scale":
                 {
@@ -306,7 +397,7 @@ namespace MobileIdleBuilder.Playtest.Editor
                     driver.SetTurnBased(mode == "turn_based");
                     if (@params?["action_seconds"] != null)
                         driver.ActionSeconds = Mathf.Clamp(@params["action_seconds"].Value<float>(), 0f, 60f);
-                    return new SuccessResponse($"Clock {mode}.", new { mode, driver.ActionSeconds, after = PlaytestToolUtil.Brief() });
+                    return new SuccessResponse($"Clock {mode}.", new { mode, driver.ActionSeconds, after = PlaytestToolUtil.BriefDelta() });
                 }
 
                 case "wait":
@@ -316,7 +407,7 @@ namespace MobileIdleBuilder.Playtest.Editor
                     {
                         float real = Mathf.Min(seconds, PlaytestToolUtil.MaxWaitSeconds);
                         await Task.Delay(TimeSpan.FromSeconds(real));
-                        return new SuccessResponse($"Waited {real}s.", PlaytestToolUtil.Brief());
+                        return new SuccessResponse($"Waited {real}s.", PlaytestToolUtil.BriefDelta());
                     }
                     double before = driver.PlayerSeconds;
                     bool finished = await PlaytestToolUtil.RunGame(driver, seconds);
@@ -324,7 +415,7 @@ namespace MobileIdleBuilder.Playtest.Editor
                     return new SuccessResponse(finished
                             ? $"Ran {ran:0}s of player time."
                             : $"Ran {ran:0}s of {seconds:0}s before the 25 s call limit; call wait again for the rest (or raise time_scale).",
-                        new { playerSecondsRan = Math.Round(ran, 1), finished, after = PlaytestToolUtil.Brief() });
+                        new { playerSecondsRan = Math.Round(ran, 1), finished, after = PlaytestToolUtil.BriefDelta() });
                 }
 
                 case "away":
@@ -407,14 +498,13 @@ namespace MobileIdleBuilder.Playtest.Editor
                     return new SuccessResponse($"{result} Still reloading; poll playtest_control status until loaded is true.",
                         new { reloading = true });
             }
-            return new SuccessResponse(result, new { after = PlaytestToolUtil.Brief() });
+            return new SuccessResponse(result, new { after = PlaytestToolUtil.BriefDelta() });
         }
     }
 
     [McpForUnityTool("playtest_benchmark", Description =
         "Play Mode only. Times a scenario run in PLAYER time (game time let through + absences, not agent time). " +
-        "action=start (scenario: brief name; notes) right after setup | mark (note: a moment worth timing that " +
-        "is not auto-detected) | status (totals + recent milestones) | end (outcome: reached_goal | time_box | " +
+        "action=start (scenario: brief name; notes) right after setup | mark (note: a moment worth timing) | note (note, severity S1-S3, screenshot path: a finding for the review pass) | status (totals + recent milestones) | end (outcome: reached_goal | time_box | " +
         "stuck | crashed; writes the summary). Auto-detected: tutorial steps, research started/done, first " +
         "building of each type, building totals, entropy and net worth by power of ten, tier, prestige, sites, " +
         "worlds, crystals spent, purchases, absences. Files: Playtests/benchmarks/<scenario>/<run>.jsonl + .json.")]
@@ -422,14 +512,18 @@ namespace MobileIdleBuilder.Playtest.Editor
     {
         public class Parameters
         {
-            [ToolParameter("start | mark | status | end")]
+            [ToolParameter("start | mark | note | status | end")]
             public string action { get; set; }
             [ToolParameter("start: scenario name (the brief's file name).", Required = false)]
             public string scenario { get; set; }
             [ToolParameter("start: free-text notes; mark: what happened.", Required = false)]
             public string notes { get; set; }
-            [ToolParameter("mark: short label for the moment.", Required = false)]
+            [ToolParameter("mark: short label for the moment; note: the finding.", Required = false)]
             public string note { get; set; }
+            [ToolParameter("note: S1 (blocks progress) | S2 (confusing, player may quit) | S3 (polish).", Required = false, DefaultValue = "S3")]
+            public string severity { get; set; }
+            [ToolParameter("note: path of the playtest_screenshot that shows it.", Required = false)]
+            public string screenshot { get; set; }
             [ToolParameter("end: reached_goal | time_box | stuck | crashed.", Required = false)]
             public string outcome { get; set; }
         }
@@ -479,6 +573,19 @@ namespace MobileIdleBuilder.Playtest.Editor
                     bench.Sample();
                     bench.Record("mark", note);
                     return new SuccessResponse($"Marked at {PlaytestBenchmark.FormatDuration(bench.PlayerSeconds)} player time.");
+                }
+
+                case "note":
+                {
+                    // A finding for the review pass: what was seen, how bad, and the screenshot that shows it.
+                    if (bench == null) return new ErrorResponse("No benchmark running; start one first.");
+                    string text = @params?["note"]?.ToString() ?? @params?["notes"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(text)) return new ErrorResponse("note needs 'note'.");
+                    string severity   = @params?["severity"]?.ToString() ?? "S3";
+                    string screenshot = @params?["screenshot"]?.ToString();
+                    bench.Sample();
+                    bench.Record("finding", $"[{severity}] {text}" + (string.IsNullOrEmpty(screenshot) ? "" : $" | {screenshot}"));
+                    return new SuccessResponse("Noted.");
                 }
 
                 case "status":
@@ -644,6 +751,31 @@ namespace MobileIdleBuilder.Playtest.Editor
             RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(rt);
             return small;
+        }
+
+        private static JObject s_LastBrief;
+
+        /// <summary>
+        /// The Brief fields that changed since the previous Brief/BriefDelta call, so a run of
+        /// actions doesn't repeat the same summary every turn. {"unchanged": true} when nothing did.
+        /// </summary>
+        public static JObject BriefDelta()
+        {
+            var full  = JObject.FromObject(Brief());
+            var delta = new JObject();
+            foreach (var prop in full.Properties())
+                if (s_LastBrief == null || !JToken.DeepEquals(prop.Value, s_LastBrief[prop.Name]))
+                    delta[prop.Name] = prop.Value;
+            s_LastBrief = full;
+            return delta.HasValues ? delta : new JObject { ["unchanged"] = true };
+        }
+
+        /// <summary>The full summary; also the new baseline for BriefDelta.</summary>
+        public static object BriefFull()
+        {
+            var full = JObject.FromObject(Brief());
+            s_LastBrief = full;
+            return full;
         }
 
         public static object Brief()

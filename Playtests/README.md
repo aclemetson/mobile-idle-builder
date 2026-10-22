@@ -16,7 +16,8 @@ Reports go to `reports/` (gitignored); benchmark timings go to `benchmarks/` (co
 | `first-session` | UX: first-time player through the tutorial | no |
 | `automation-loop` | UX: first production chain, power and belts | no |
 
-Run one with `/playtest <brief>` in Claude Code, or `scripts/run-playtest.ps1 -Brief <brief>`.
+Run one with `/playtest <brief>` in Claude Code (optionally `for 20 minutes`), or
+`scripts/run-playtest.ps1 -Brief <brief>`. The skill picks the models; you don't switch them.
 
 ## One-time setup
 
@@ -52,12 +53,17 @@ Project tools (`Assets/Scripts/Playtest/`):
 
 | Tool | Use |
 |---|---|
-| `playtest_screenshot` | What the player sees (3D + HUD), saved to `reports/screenshots/`; open the PNG with Read. Image px x `scale` = screen px |
+| `playtest_screenshot` | What the player sees (3D + HUD), saved to `reports/screenshots/` at 800 px (about 400 tokens); open the PNG with Read. Image px x `scale` = screen px |
 | `playtest_state` | JSON truth: entropy, tutorial step + hint, open panels, dialogue, placement modes, research, buildings (crafting / power), inventory |
 | `playtest_ui` | Visible buttons and text with screen rects. `list` (with `filter`, `interactive_only`) or `find` |
-| `playtest_input` | `tap`, `tap_element`, `tap_cell`, `drag`, `drag_cells`. Real Input System events through a virtual mouse. Returns a short state summary after `settle_ms` |
+| `playtest_input` | `tap`, `tap_element`, `tap_cell`, `drag`, `drag_cells`, `collect`. Real Input System events through a virtual mouse. Returns only the summary fields that changed since the last call |
+| `playtest_input collect` | `target` field id (`quark_field`, `electron_field`, ...), `count` taps. Pans to the field if needed, taps its tiles in turn as each comes off cooldown, waits out cooldowns. Returns items gained and missed taps. One call instead of a pan plus one call per item |
 | `playtest_control` | `status`, `time_scale`, `clock`, `wait`, `away`, `console`, `list_fixtures`, `load_fixture`, `save_fixture`, `fresh_start` (`scope` local, cloud or all) |
-| `playtest_benchmark` | `start`, `mark`, `status`, `end`: milestone timings in player time |
+| `playtest_benchmark` | `start`, `mark`, `note`, `status`, `end`: milestone timings in player time; `note` (with `severity` and `screenshot`) logs a finding for the review pass |
+
+`playtest_state` also lists every field tile (`grid.fields`: id, cell, `cooldownLeft`), so fields
+can be found without panning around. `playtest_control status` returns the full summary and resets
+the baseline the change-only summaries compare against.
 
 If a tool rejects a parameter as "Unexpected keyword argument", the MCP server still has the schema
 from before a code change. Restart the Claude Code session, or call the tool through
@@ -80,13 +86,13 @@ drawer can still be listed.
    console. **After setup, play only through `playtest_input`.** If you have to cheat to get
    unstuck, that's a finding: log it as a softlock and say which command you used.
 4. Each turn:
-   - Take `playtest_screenshot` (then Read the PNG) and read `playtest_state`.
+   - Read the state (change-only summaries, `playtest_state` when needed); take a
+     `playtest_screenshot` when the screen changes (see "Driver rules").
    - Decide as the persona would, **from the screenshot first**. The state shows what's really
      happening; the screenshot shows what the player can tell. Gaps between the two are findings.
    - Act with one `playtest_input` call and check the returned summary.
-5. Record a finding when it happens, with the screenshot path, the state values, and the steps
-   just taken.
-6. At the end: `manage_editor` stop, then write the report.
+5. Record a finding when it happens with `playtest_benchmark note` (severity, screenshot path).
+6. At the end: `playtest_benchmark end`, `manage_editor` stop. The reviewer writes the report.
 
 Tips:
 - Prefer `tap_element` (by name or visible text) for HUD buttons, and `tap` with
@@ -96,6 +102,35 @@ Tips:
 - If a tap did nothing, look again before retrying. "The button didn't respond" is a finding,
   not something to work around.
 - `read_console` after anything surprising; errors and warnings are findings too.
+
+## Driver rules (token budget)
+
+`/playtest` runs a cheap **driver** model to play the game and a stronger **reviewer** model to
+write the report (see `.claude/skills/playtest/SKILL.md` for which models run each scenario).
+Drivers keep context small:
+
+- **State first.** `playtest_state` and the change-only summaries are the main view. Take a
+  `playtest_screenshot` only when a new screen or panel appears, when the summary shows something
+  you can't place, or when something looks wrong. Never take two screenshots of an unchanged screen.
+- **Use `collect`** for every field-gathering step, and `tap_element` for HUD buttons. Use `tap`
+  with coordinates only when neither fits.
+- **Log findings as they happen** with `playtest_benchmark note`: one line, severity, and the
+  screenshot path. The reviewer only sees what you logged, plus the auto-detected milestones.
+- **Don't write prose.** No running commentary between tool calls; act, check the summary, move on.
+- **Stuck for 5 actions** with no state change: note it as S1/S2 with a screenshot, then try one
+  different approach. If that fails too, end the run with outcome `stuck`.
+- **Don't edit code or the project.** If Unity misbehaves (load hangs, exceptions in the console),
+  stop Play Mode, note it, and end with outcome `crashed`.
+
+## Reviewer rules
+
+- **Inputs:** the brief, the run's `.json`/`.jsonl`, the driver's notes, and at most 8 screenshots
+  (those cited by S1/S2 findings first).
+- **Verify before reporting.** Each finding needs evidence: a screenshot, an event, or a state value.
+  Downgrade or drop anything unsupported, and mark uncertain ones `[verify]`.
+- **Write `reports/<date>-<scenario>.md`** in the README format. For timed briefs, include the
+  `benchmark-report.py` table and the forced idle stretches (gaps between milestones where `mark`
+  says idle, or long `wait`s).
 
 ## Fixtures (checkpoints)
 

@@ -29,7 +29,6 @@ namespace MobileIdleBuilder.Playtest
         private static PlaytestDriver s_Instance;
 
         private Mouse         _mouse;
-        private InputSettings _originalInputSettings;
         private readonly Queue<Step> _steps = new();
         private Action _onGestureDone;
         private float  _timeScale = 1f;
@@ -69,19 +68,36 @@ namespace MobileIdleBuilder.Playtest
 
             // By default the editor holds pointer/keyboard events back while the Game View is
             // unfocused, and the agent's terminal always has focus. Route everything to the game
-            // for this session only; the original settings come back in OnDestroy.
-            _originalInputSettings = InputSystem.settings;
-            var settings = Instantiate(_originalInputSettings);
-            settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            // for this session only. Change the live settings object and restore its values in
+            // OnDestroy: assigning a runtime-created copy to InputSystem.settings leaves a dangling
+            // reference in the Input System's saved state if a domain reload happens mid-session,
+            // and its static constructor then throws until the Editor restarts.
+            try
+            {
+                var settings = InputSystem.settings;
+                _originalBackground = settings.backgroundBehavior;
+                settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
 #if UNITY_EDITOR
-            settings.editorInputBehaviorInPlayMode =
-                InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                _originalEditorBehavior = settings.editorInputBehaviorInPlayMode;
+                settings.editorInputBehaviorInPlayMode =
+                    InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
 #endif
-            InputSystem.settings = settings;
-
-            _mouse = InputSystem.AddDevice<Mouse>("PlaytestMouse");
-            GameLogger.Info("[Playtest] Driver started (virtual mouse added, input ignores focus).");
+                _settingsChanged = true;
+                _mouse = InputSystem.AddDevice<Mouse>("PlaytestMouse");
+                GameLogger.Info("[Playtest] Driver started (virtual mouse added, input ignores focus).");
+            }
+            catch (Exception e)
+            {
+                // Keep the clock and screenshots working even if input can't be set up.
+                GameLogger.Warning($"[Playtest] Input setup failed; taps will not work this session: {e.Message}");
+            }
         }
+
+        private bool _settingsChanged;
+        private InputSettings.BackgroundBehavior _originalBackground;
+#if UNITY_EDITOR
+        private InputSettings.EditorInputBehaviorInPlayMode _originalEditorBehavior;
+#endif
 
         void OnDestroy()
         {
@@ -89,7 +105,14 @@ namespace MobileIdleBuilder.Playtest
             PlaytestBenchmark.Stop();
             GameClock.DevReset();
             if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
-            if (_originalInputSettings != null) InputSystem.settings = _originalInputSettings;
+            if (_settingsChanged)
+            {
+                var settings = InputSystem.settings;
+                settings.backgroundBehavior = _originalBackground;
+#if UNITY_EDITOR
+                settings.editorInputBehaviorInPlayMode = _originalEditorBehavior;
+#endif
+            }
         }
 
         // ── Gestures ──────────────────────────────────────────────────────────
@@ -227,7 +250,15 @@ namespace MobileIdleBuilder.Playtest
 
             // One state event per frame: the Input System applies it at the start of the next
             // frame, so press, hold and release land on separate frames like a real touch.
-            if (_steps.Count > 0)
+            if (_steps.Count > 0 && _mouse == null)
+            {
+                // Input setup failed in Awake (logged); finish the gesture so callers don't hang.
+                _steps.Clear();
+                var failed = _onGestureDone;
+                _onGestureDone = null;
+                failed?.Invoke();
+            }
+            else if (_steps.Count > 0)
             {
                 var step = _steps.Dequeue();
                 _mouse.MakeCurrent();
