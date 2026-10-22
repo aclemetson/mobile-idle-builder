@@ -283,16 +283,8 @@ namespace MobileIdleBuilder.Dev
             var input = _inputField.value?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(input)) return;
 
-            AppendLog($"> {input}", "log-entry--info");
             _inputField.SetValueWithoutNotify(string.Empty);
-
-            var result = _registry.Execute(input);
-            bool isError = !string.IsNullOrEmpty(result)
-                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
-            if (!string.IsNullOrEmpty(result))
-                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
-
-            if (!isError) MarkDevConsoleUsed(input);
+            RunAndLog(input);
 
             // Don't re-focus if a scene transition is already underway — keeping the input
             // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
@@ -307,6 +299,33 @@ namespace MobileIdleBuilder.Dev
             {
                 _inputField.Blur();
             }
+        }
+
+        /// <summary>
+        /// Runs one command without the console UI open (the AI playtest tools drive the
+        /// console this way). Same logging and save tainting as a typed command. Returns
+        /// null when the console has not run Start() yet.
+        /// </summary>
+        public static string ExecuteCommand(string input)
+        {
+            var console = s_Instance;
+            if (console == null || console._registry == null) return null;
+            return console.RunAndLog(input?.Trim() ?? string.Empty);
+        }
+
+        private string RunAndLog(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            AppendLog($"> {input}", "log-entry--info");
+            var result = _registry.Execute(input);
+            bool isError = !string.IsNullOrEmpty(result)
+                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
+            if (!string.IsNullOrEmpty(result))
+                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
+
+            if (!isError) MarkDevConsoleUsed(input);
+            return result;
         }
 
         // Alpha builds ship the console, so a command that ran taints this save's balancing data:

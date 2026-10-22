@@ -124,3 +124,8 @@ InitTestScene*.unity*
 # Python bytecode cache (from scripts/*.py)
 __pycache__/
 *.pyc
+
+# AI playtest harness: MCP screenshots and per-run reports are generated output
+/[Aa]ssets/[Ss]creenshots/
+/[Aa]ssets/[Ss]creenshots.meta
+/Playtests/reports/
