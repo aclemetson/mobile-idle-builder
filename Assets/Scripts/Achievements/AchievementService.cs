@@ -127,7 +127,7 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
-            var now = DateTime.UtcNow;
+            var now = GameClock.UtcNow;
             bool dirty = false;
 
             // Daily — resets at 00:00 UTC each day
@@ -446,7 +446,7 @@ namespace MobileIdleBuilder
             if (!DateTime.TryParse(raw, null, System.Globalization.DateTimeStyles.RoundtripKind, out var resetAt))
                 return "";
 
-            var remaining = resetAt - DateTime.UtcNow;
+            var remaining = resetAt - GameClock.UtcNow;
             if (remaining <= TimeSpan.Zero) return "Resetting…";
 
             if (remaining.TotalDays >= 1)

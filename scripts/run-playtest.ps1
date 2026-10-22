@@ -2,12 +2,13 @@
 # Needs: the Unity Editor open on this project with the MCP for Unity server started, and a
 # desktop session with a GPU (screenshots render the Game View). Not for CI or batchmode.
 #
-#   .\scripts\run-playtest.ps1 -Brief first-session
-#   .\scripts\run-playtest.ps1 -Brief automation-loop -McpPort 8080
+#   .\scripts\run-playtest.ps1 -Brief casual-idler
+#   .\scripts\run-playtest.ps1 -Brief whale-speedrun -McpPort 8080
+# Scenario briefs: stability-sweep, casual-idler, active-grinder, whale-speedrun.
 param(
     [Parameter(Mandatory = $true)][string]$Brief,
     [int]$McpPort = 8080,
-    [int]$MaxTurns = 400
+    [int]$MaxTurns = 3000
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,7 +42,8 @@ $ReportDir = Join-Path $ProjectRoot "Playtests\reports"
 New-Item -ItemType Directory -Force $ReportDir | Out-Null
 
 $Prompt = "Run an AI playtest. Read Playtests/README.md, then follow the brief Playtests/briefs/$Brief.md exactly. " +
-          "Write the report to Playtests/reports/ using the README format. Always stop Play Mode before finishing."
+          "Write the report to Playtests/reports/ using the README format. For timed briefs, always end the benchmark " +
+          "(playtest_benchmark end) even if the run is cut short. Always stop Play Mode before finishing."
 
 Push-Location $ProjectRoot
 try {

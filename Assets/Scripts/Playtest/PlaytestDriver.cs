@@ -13,7 +13,10 @@ namespace MobileIdleBuilder.Playtest
     ///  - injects taps and drags through a virtual Input System mouse, so the HUD (via the
     ///    EventSystem) and world input (via InputUtils) see exactly what a player's finger does;
     ///  - keeps the game running and accepting that input while the Game View is unfocused;
-    ///  - holds a playtest time scale that survives dialogue pauses and scene loads.
+    ///  - owns Time.timeScale while it exists: the playtest speed, dialogue pauses, and the
+    ///    turn-based freeze that stops the game while the agent thinks;
+    ///  - keeps GameClock (research, cooldowns, boosts) in step with the game time it lets run,
+    ///    and feeds that player time to the active PlaytestBenchmark.
     /// All screen coordinates in this harness are pixels with a TOP-LEFT origin, matching the
     /// Game View screenshots; conversion to the Input System's bottom-left origin happens here.
     /// </summary>
@@ -31,9 +34,21 @@ namespace MobileIdleBuilder.Playtest
         private Action _onGestureDone;
         private float  _timeScale = 1f;
 
+        // Turn-based clock: the game only runs while _runRemaining (player seconds) is positive.
+        private bool   _turnBased;
+        private double _runRemaining;
+        private Action _onRunDone;
+        private DialogueController _dialogue;
+
         /// <summary>True while a queued tap/drag has not finished.</summary>
         public bool IsBusy => _steps.Count > 0;
         public float TimeScale => _timeScale;
+        public bool TurnBased => _turnBased;
+        /// <summary>Turn-based: player seconds each tap or drag costs (reaction + reading time).</summary>
+        public double ActionSeconds { get; set; } = 2.0;
+        public bool IsRunning => _runRemaining > 0;
+        /// <summary>Player seconds the game has run since the driver started (absences excluded).</summary>
+        public double PlayerSeconds { get; private set; }
 
         public static PlaytestDriver Instance => s_Instance;
 
@@ -71,6 +86,8 @@ namespace MobileIdleBuilder.Playtest
         void OnDestroy()
         {
             if (s_Instance == this) s_Instance = null;
+            PlaytestBenchmark.Stop();
+            GameClock.DevReset();
             if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
             if (_originalInputSettings != null) InputSystem.settings = _originalInputSettings;
         }
@@ -133,13 +150,81 @@ namespace MobileIdleBuilder.Playtest
             onDone?.Invoke(tex);
         }
 
-        // ── Time scale ────────────────────────────────────────────────────────
+        // ── Time ──────────────────────────────────────────────────────────────
 
-        // No zero: a playtest pause would fight the dialogue pause over the same global.
+        // Pausing is the turn-based clock's job (SetTurnBased), so the speed never goes to zero.
         public void SetTimeScale(float scale) => _timeScale = Mathf.Clamp(scale, MinTimeScale, MaxTimeScale);
+
+        /// <summary>
+        /// Turn-based: the game stands still (time scale 0, GameClock held) except while RunFor
+        /// lets it run, so the agent's thinking time costs the player nothing. Off: the game runs
+        /// continuously, as in a normal session.
+        /// </summary>
+        public void SetTurnBased(bool on)
+        {
+            _turnBased = on;
+            if (!on) FinishRun();
+        }
+
+        /// <summary>Lets <paramref name="playerSeconds"/> of game time pass, then calls back.</summary>
+        public void RunFor(double playerSeconds, Action onDone)
+        {
+            _runRemaining = Math.Max(_runRemaining, playerSeconds);
+            _onRunDone   += onDone;
+            if (_runRemaining <= 0) FinishRun();
+        }
+
+        /// <summary>Stops a RunFor early; the game freezes again on the next frame.</summary>
+        public void CancelRun() => FinishRun();
+
+        private void FinishRun()
+        {
+            _runRemaining = 0;
+            var done = _onRunDone;
+            _onRunDone = null;
+            done?.Invoke();
+        }
+
+        private bool  _frozen;
+        private float _nextDialogueLookup;
+
+        private bool DialoguePausing
+        {
+            get
+            {
+                if (_dialogue == null && Time.realtimeSinceStartup >= _nextDialogueLookup)
+                {
+                    _dialogue = FindAnyObjectByType<DialogueController>();
+                    _nextDialogueLookup = Time.realtimeSinceStartup + 1f;
+                }
+                return _dialogue != null && _dialogue.IsPausingGame;
+            }
+        }
+
+        private void AdvanceClocks()
+        {
+            // Player time this frame: none while frozen for the agent; real reading time while a
+            // dialogue pauses the game (the player is reading); otherwise scaled game time.
+            float  unscaled = Time.unscaledDeltaTime;
+            double played   = _frozen ? 0 : (Time.timeScale == 0f && DialoguePausing ? unscaled : Time.deltaTime);
+
+            // Wall-clock timers follow the game time actually let through, so they hold still
+            // while frozen and run N times faster at time scale N.
+            GameClock.DevShift(TimeSpan.FromSeconds(played - unscaled));
+            PlayerSeconds += played;
+            PlaytestBenchmark.Active?.Tick(played);
+
+            if (_runRemaining > 0)
+            {
+                _runRemaining -= played;
+                if (_runRemaining <= 0) FinishRun();
+            }
+        }
 
         void Update()
         {
+            AdvanceClocks();
+
             // One state event per frame: the Input System applies it at the start of the next
             // frame, so press, hold and release land on separate frames like a real touch.
             if (_steps.Count > 0)
@@ -161,10 +246,14 @@ namespace MobileIdleBuilder.Playtest
 
         void LateUpdate()
         {
-            // Dialogue pauses with timeScale 0 and SceneLoader resets it to 1; leave a pause
-            // alone, otherwise re-apply the playtest speed.
-            if (Time.timeScale != 0f && !Mathf.Approximately(Time.timeScale, _timeScale))
-                Time.timeScale = _timeScale;
+            // Dialogue and SceneLoader also write timeScale; the driver decides last each frame.
+            // Never freeze mid-load: loading waits on scaled time and would stall.
+            var bridge = ECSLoadBridge.Instance;
+            bool settled = bridge != null && bridge.IsLoaded && !SceneLoader.IsTransitioning;
+            _frozen = _turnBased && _runRemaining <= 0 && settled;
+
+            float target = _frozen || DialoguePausing ? 0f : _timeScale;
+            if (!Mathf.Approximately(Time.timeScale, target)) Time.timeScale = target;
         }
 
         private readonly struct Step

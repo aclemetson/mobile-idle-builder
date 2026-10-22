@@ -285,7 +285,7 @@ namespace MobileIdleBuilder
             if (string.IsNullOrEmpty(saved.cooldownEndUtc)) return;
             if (!DateTime.TryParse(saved.cooldownEndUtc, null, DateTimeStyles.RoundtripKind, out var endUtc))
                 return;
-            if (endUtc <= DateTime.UtcNow) return;
+            if (endUtc <= GameClock.UtcNow) return;
 
             var cd = GetFieldInstanceAt(saved.position[0], saved.position[1])?.Cooldown;
             cd?.RestoreCooldown(endUtc, saved.cooldownDurationSec);

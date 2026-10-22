@@ -1157,6 +1157,39 @@ namespace MobileIdleBuilder.Dev
 
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
+
+            // ── simulated spending and absence (AI playtest benchmarks) ──────
+            _registry.Register("iap grant <tier>", "Simulate buying crystal pack 1-4 ($0.99 / $4.99 / $9.99 / $19.99)",
+                args => IapGrant(args[0]));
+
+            _registry.Register("away <seconds>", "Simulate closing the app for <seconds> (offline earnings, timers)",
+                args =>
+                {
+                    if (!double.TryParse(args[0], out double seconds) || seconds <= 0)
+                        return "Error: <seconds> must be a positive number.";
+                    if (SaveManager.Instance == null || ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
+                        return "Error: game not loaded yet.";
+                    SaveManager.Instance.DevSimulateAway(seconds);
+                    Playtest.PlaytestBenchmark.Active?.AddAway(seconds);
+                    return $"Away for {Playtest.PlaytestBenchmark.FormatDuration(seconds)}.";
+                });
+        }
+
+        // Grants a crystal pack through the same award path as a completed store purchase, so
+        // crystalsPurchased stays a true audit of (simulated) spending.
+        private static string IapGrant(string tierArg)
+        {
+            var tiers = PremiumShopCalculator.CrystalPackTiers;
+            if (!int.TryParse(tierArg, out int tier) || tier < 1 || tier > tiers.Length)
+                return $"Error: <tier> must be 1-{tiers.Length}.";
+            var shop = PremiumShopService.Instance;
+            if (shop == null) return "Error: PremiumShopService not ready.";
+
+            var pack = tiers[tier - 1];
+            shop.AwardCrystals(pack.CrystalAmount);
+            double dollars = double.Parse(pack.DisplayPrice.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture);
+            Playtest.PlaytestBenchmark.Active?.AddPurchase(dollars, pack.CrystalAmount, pack.Name);
+            return $"Granted {pack.Name}: +{pack.CrystalAmount} crystals ({pack.DisplayPrice}).";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────

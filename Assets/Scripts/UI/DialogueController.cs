@@ -41,6 +41,9 @@ namespace MobileIdleBuilder
         /// <summary>True while a dialogue is on screen.</summary>
         public bool IsPlaying => _current != null;
 
+        /// <summary>True while the dialogue on screen holds Time.timeScale at 0.</summary>
+        public bool IsPausingGame => _current != null && PausesGame(_current);
+
         void Start()
         {
             if (_uiDocument == null)

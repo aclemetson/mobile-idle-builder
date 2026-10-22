@@ -78,7 +78,7 @@ namespace MobileIdleBuilder
                 return null;
             }
 
-            float elapsedSeconds = (float)(DateTime.UtcNow - saveTime.ToUniversalTime()).TotalSeconds;
+            float elapsedSeconds = (float)(GameClock.UtcNow - saveTime.ToUniversalTime()).TotalSeconds;
             GameLogger.Debug($"[Idle] Elapsed={elapsedSeconds:F0}s effectiveTimestamp={effectiveTimestamp}");
             if (elapsedSeconds < 30f)
             {
