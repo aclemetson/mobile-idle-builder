@@ -87,6 +87,7 @@ namespace MobileIdleBuilder
         private VisualElement _drawerPanel;
         private VisualElement _drawerBackdrop;
         private bool          _drawerOpen;
+        private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
 
         // ---- Placement controls ----
         private Button        _btnRotateOutput;
@@ -361,6 +362,7 @@ namespace MobileIdleBuilder
             // Closed drawer is hidden, not just slid off-screen, so its ScrollView scroller
             // can never peek in at the left edge (#196). See OpenDrawer / CloseDrawer.
             if (_drawerPanel != null) _drawerPanel.style.visibility = Visibility.Hidden;
+            _drawerTapGuard.Attach(_drawerPanel);
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -1880,6 +1882,7 @@ namespace MobileIdleBuilder
         public void HideFieldBanner()                => _banner?.HideFieldBanner();
         public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
         public void HideTutorialHint()               => _banner?.HideTutorialHint();
+        public void SetTutorialHintProgress(string progress) => _banner?.SetTutorialHintProgress(progress);
 
         // ============================================================
         // Output selector
@@ -2082,6 +2085,7 @@ namespace MobileIdleBuilder
         {
             if (_drawerPanel == null) return;
             _drawerOpen = true;
+            _drawerTapGuard.MarkOpened();
             _drawerPanel.style.visibility = Visibility.Visible;
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);

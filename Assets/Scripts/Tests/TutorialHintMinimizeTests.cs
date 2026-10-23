@@ -140,5 +140,32 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(RestoreVisible, "the pill must not outlive the hint");
             Assert.IsFalse(_banner.IsTutorialHintMinimized);
         }
+
+        [Test]
+        public void Progress_ShowsUnderHint_AndNullHidesIt()
+        {
+            var progress = _hint.Q<Label>("tutorial-hint-banner__progress");
+            Assert.IsNotNull(progress, "tutorial-hint-banner__progress missing from the hint banner");
+            _banner.ShowTutorialHint("Collect quarks");
+
+            _banner.SetTutorialHintProgress("Up Quark 1/4");
+            Assert.IsFalse(progress.ClassListContains("hidden"));
+            Assert.AreEqual("Up Quark 1/4", progress.text);
+
+            _banner.SetTutorialHintProgress(null);
+            Assert.IsTrue(progress.ClassListContains("hidden"));
+        }
+
+        [Test]
+        public void ProgressUpdate_DoesNotReExpandMinimizedHint()
+        {
+            _banner.ShowTutorialHint("Collect quarks");
+            _banner.MinimizeTutorialHint();
+
+            _banner.SetTutorialHintProgress("Up Quark 2/4");
+
+            Assert.IsFalse(HintVisible, "a count changing on every collect tap must not undo the player's minimize");
+            Assert.IsTrue(RestoreVisible);
+        }
     }
 }

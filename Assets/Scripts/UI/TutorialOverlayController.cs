@@ -45,6 +45,13 @@ namespace MobileIdleBuilder
         private bool        _queryReady;
         private EntityQuery _powerGridQuery;
         private bool        _powerQueryReady;
+        private EntityQuery _inventoryQuery;
+        private bool        _inventoryQueryReady;
+        private string      _lastHintProgress;
+        private float       _nextHintProgressAt;
+
+        // Collect taps are human-paced; refreshing the counts a few times a second avoids a string per frame.
+        private const float HintProgressInterval = 0.2f;
 
         void Start()
         {
@@ -90,6 +97,11 @@ namespace MobileIdleBuilder
                 _powerGridQuery = world.EntityManager.CreateEntityQuery(
                     ComponentType.ReadOnly<PowerGridState>());
                 _powerQueryReady = true;
+
+                _inventoryQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadOnly<InventorySlot>());
+                _inventoryQueryReady = true;
             }
         }
 
@@ -143,6 +155,8 @@ namespace MobileIdleBuilder
                 if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
                     hudController?.HideTutorialHint();
                 dialogueController?.HideDialogue();
+                _lastHintProgress = null;
+                hudController?.SetTutorialHintProgress(null);
                 return;
             }
 
@@ -161,11 +175,42 @@ namespace MobileIdleBuilder
                     return; // advanced — OnStepChanged already ran
             }
 
-            if (state.CurrentStepIndex == _lastStepIndex) return;
+            bool stepChanged = state.CurrentStepIndex != _lastStepIndex;
+            if (stepChanged)
+            {
+                int prevIdx = _lastStepIndex;
+                _lastStepIndex = state.CurrentStepIndex;
+                OnStepChanged(state.CurrentStepIndex, prevIdx);
+            }
 
-            int prevIdx = _lastStepIndex;
-            _lastStepIndex = state.CurrentStepIndex;
-            OnStepChanged(state.CurrentStepIndex, prevIdx);
+            if (stepChanged || Time.unscaledTime >= _nextHintProgressAt)
+            {
+                _nextHintProgressAt = Time.unscaledTime + HintProgressInterval;
+                RefreshHintProgress(state.CurrentStepIndex);
+            }
+        }
+
+        /// <summary>
+        /// Keeps the have/need line under the hint current for gather (InventoryMin) steps (#260). Pushed
+        /// to the banner only when the text changes; the banner keeps it hidden while the hint is.
+        /// </summary>
+        private void RefreshHintProgress(int stepIndex)
+        {
+            string progress = null;
+            var flow = TutorialFlowSO.Current;
+            if (flow != null && stepIndex < flow.steps.Length && _inventoryQueryReady
+                && _inventoryQuery.CalculateEntityCount() == 1)
+            {
+                var inv = _inventoryQuery.GetSingletonBuffer<InventorySlot>(true);
+                progress = TutorialHintProgress.Format(
+                    flow.steps[stepIndex].advanceCondition,
+                    id => SlotBufferUtils.CountInInventory(inv, id),
+                    id => ItemDatabase.GetStatic(id)?.displayName);
+            }
+
+            if (progress == _lastHintProgress) return;
+            _lastHintProgress = progress;
+            hudController?.SetTutorialHintProgress(progress);
         }
 
         // ── Step entry ────────────────────────────────────────────────────────
