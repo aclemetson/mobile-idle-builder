@@ -135,8 +135,9 @@ Drivers keep context small:
 - **Log findings as they happen** with `playtest_benchmark note`: one line, severity, and the
   screenshot path. The reviewer only sees what you logged, plus the auto-detected milestones.
 - **Don't write prose.** No running commentary between tool calls; act, check the summary, move on.
-- **Stuck for 5 actions** with no state change: note it as S1/S2 with a screenshot, then try one
-  different approach. If that fails too, end the run with outcome `stuck`.
+- **Stuck for 3 actions** with no state change: follow Part 2 of `player-actions.md` (look first,
+  then player fixes, harness fixes and finally cheats). Log each rung you used. End with outcome
+  `stuck` only when the last rung fails. Part 1 of that file lists every common player action.
 - **Don't edit code or the project.** If Unity misbehaves (load hangs, exceptions in the console),
   stop Play Mode, note it, and end with outcome `crashed`.
 - **Tutorial steps: read the walkthrough first.** `Playtests/tutorial-walkthrough.md` has each step's
