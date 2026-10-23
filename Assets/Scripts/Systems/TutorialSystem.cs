@@ -20,6 +20,13 @@ namespace MobileIdleBuilder
         private int _diagLastCount;
         private int _diagLastStep;
 
+        /// <summary>
+        /// Linked sources counted for the current step when it advances on ConveyorLinked, else -1. Lets
+        /// the overlay tell a belt that linked nothing apart from one that linked but the step wants more
+        /// (#255: a wrong belt left the step silently stuck).
+        /// </summary>
+        public static int CurrentStepConveyorLinks { get; private set; } = -1;
+
         public void OnCreate(ref SystemState state)
         {
             _diagLastCount = -1;
@@ -30,6 +37,7 @@ namespace MobileIdleBuilder
 
         public void OnUpdate(ref SystemState state)
         {
+            CurrentStepConveyorLinks = -1;
             var tutorial = SystemAPI.GetSingleton<TutorialStateData>();
             if (!tutorial.IsActive) return;
 
@@ -102,7 +110,12 @@ namespace MobileIdleBuilder
                 }
             }
 
-            if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
+            if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.ConveyorLinked)
+            {
+                CurrentStepConveyorLinks = CountConveyorLinks(step.advanceCondition, ref state);
+                if (CurrentStepConveyorLinks < System.Math.Max(1, step.advanceCondition.minCount)) return;
+            }
+            else if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
 
             // Side-effect: mark first run complete when the prestige-run condition triggers
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.PrestigeRunMin)

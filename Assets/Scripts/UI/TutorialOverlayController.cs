@@ -411,7 +411,55 @@ namespace MobileIdleBuilder
         private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
-        private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
+        private void OnConveyorPlacedHandler()
+        {
+            TryAdvanceOnUiEvent("conveyor_placed");
+            CheckBeltLinked();
+        }
+
+        // ── Belt feedback (#255) ──────────────────────────────────────────────
+
+        // One line in the notification banner, which does not wrap: keep it short.
+        internal const string UnlinkedBeltMessage = "Belt not linked. Draw it between the two glowing tiles.";
+
+        // The new belt reaches ECS and TutorialSystem a few frames after the chain is placed.
+        private const float BeltCheckDelaySeconds = 0.5f;
+        private Coroutine _beltCheck;
+
+        /// <summary>
+        /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
+        /// word why. Warn, and re-show the glowing route so the player can redraw it.
+        /// </summary>
+        private void CheckBeltLinked()
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            if (flow.steps[_lastStepIndex].advanceCondition?.type != ConditionType.ConveyorLinked) return;
+
+            if (_beltCheck != null) StopCoroutine(_beltCheck);
+            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(_lastStepIndex, TutorialSystem.CurrentStepConveyorLinks));
+        }
+
+        private IEnumerator WarnIfBeltUnlinked(int stepIndex, int linksBefore)
+        {
+            yield return new WaitForSecondsRealtime(BeltCheckDelaySeconds);
+            _beltCheck = null;
+
+            int linksAfter = TutorialSystem.CurrentStepConveyorLinks;
+            if (!IsBeltUnlinked(stepAdvanced: _lastStepIndex != stepIndex, linksBefore, linksAfter)) yield break;
+
+            InventoryPopupController.NotifyWarning(UnlinkedBeltMessage);
+            var enter = TutorialFlowSO.Current?.steps[stepIndex].onEnter;
+            if (enter != null && enter.highlightMode == HighlightMode.Full && !string.IsNullOrEmpty(enter.highlightTarget))
+                tutorialHighlighter?.ShowHighlight(enter.highlightTarget);
+        }
+
+        /// <summary>
+        /// True when a belt placed on a ConveyorLinked step linked nothing new: the step did not advance and
+        /// the link count did not rise. A count of -1 means the step is no longer being evaluated.
+        /// </summary>
+        internal static bool IsBeltUnlinked(bool stepAdvanced, int linksBefore, int linksAfter) =>
+            !stepAdvanced && linksAfter >= 0 && linksAfter <= Mathf.Max(0, linksBefore);
         private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
         // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
         // upgrade UI needs no tutorial hook.
