@@ -1,0 +1,47 @@
+{"type":"run_start","detail":"active-grinder","playerSeconds":0.0,"realSeconds":0.0,"actions":0,"dollars":0.0}
+{"type":"entropy","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"net_worth","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_first_electron","playerSeconds":4.9,"realSeconds":12.2,"actions":4,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon","playerSeconds":15.3,"realSeconds":19.3,"actions":10,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_electrons_in_demon","playerSeconds":15.3,"realSeconds":23.3,"actions":11,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel","playerSeconds":21.3,"realSeconds":43.4,"actions":15,"dollars":0.0}
+{"type":"tutorial_step","detail":"explain_quark_field","playerSeconds":24.9,"realSeconds":51.4,"actions":17,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks","playerSeconds":27.6,"realSeconds":56.4,"actions":19,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon_quarks","playerSeconds":50.3,"realSeconds":64.5,"actions":33,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_quarks_in_demon","playerSeconds":52.7,"realSeconds":70.5,"actions":35,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel_quarks","playerSeconds":55.8,"realSeconds":76.5,"actions":37,"dollars":0.0}
+{"type":"tutorial_step","detail":"open_research_drawer","playerSeconds":58.5,"realSeconds":81.5,"actions":39,"dollars":0.0}
+{"type":"tutorial_step","detail":"buy_recombination_i","playerSeconds":61.2,"realSeconds":87.6,"actions":41,"dollars":0.0}
+{"type":"research_started","detail":"recombination_i","playerSeconds":65.7,"realSeconds":99.6,"actions":44,"dollars":0.0}
+{"type":"tutorial_step","detail":"recombination_unlocked","playerSeconds":75.9,"realSeconds":111.6,"actions":44,"dollars":0.0}
+{"type":"research_done","detail":"recombination_i","playerSeconds":75.9,"realSeconds":111.7,"actions":44,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks_for_nucleons","playerSeconds":79.2,"realSeconds":118.7,"actions":46,"dollars":0.0}
+{"type":"research_started","detail":"hydrogen_synthesis","playerSeconds":80.2,"realSeconds":125.7,"actions":47,"dollars":0.0}
+{"type":"research_done","detail":"hydrogen_synthesis","playerSeconds":96.1,"realSeconds":134.7,"actions":57,"dollars":0.0}
+{"type":"tutorial_step","detail":"open_recipe_panel_for_nucleons","playerSeconds":109.4,"realSeconds":136.7,"actions":66,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_two_protons","playerSeconds":118.4,"realSeconds":147.8,"actions":72,"dollars":0.0}
+{"type":"tier","detail":"1","playerSeconds":121.5,"realSeconds":155.8,"actions":74,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_two_neutrons","playerSeconds":122.9,"realSeconds":158.8,"actions":75,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_demon_for_nucleons","playerSeconds":131.3,"realSeconds":178.9,"actions":80,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_protons_and_neutrons","playerSeconds":135.4,"realSeconds":186.9,"actions":83,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_after_nucleons","playerSeconds":138.3,"realSeconds":193.0,"actions":85,"dollars":0.0}
+{"type":"tutorial_step","detail":"gather_for_hydrogen","playerSeconds":141.3,"realSeconds":198.0,"actions":87,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_protons_for_hydrogen","playerSeconds":171.0,"realSeconds":233.1,"actions":106,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_hydrogen","playerSeconds":178.1,"realSeconds":246.2,"actions":111,"dollars":0.0}
+{"type":"tier","detail":"2","playerSeconds":181.1,"realSeconds":255.2,"actions":113,"dollars":0.0}
+{"type":"tutorial_step","detail":"hydrogen_crafted","playerSeconds":182.0,"realSeconds":256.2,"actions":114,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_demon_for_hydrogen","playerSeconds":183.5,"realSeconds":261.3,"actions":115,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_hydrogen_in_demon","playerSeconds":191.1,"realSeconds":276.3,"actions":120,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_after_hydrogen","playerSeconds":192.5,"realSeconds":279.3,"actions":121,"dollars":0.0}
+{"type":"tutorial_step","detail":"intro_automation_i","playerSeconds":194.7,"realSeconds":283.3,"actions":122,"dollars":0.0}
+{"type":"tutorial_step","detail":"buy_automation_i","playerSeconds":198.6,"realSeconds":289.4,"actions":125,"dollars":0.0}
+{"type":"research_started","detail":"automation_i","playerSeconds":207.4,"realSeconds":313.5,"actions":131,"dollars":0.0}
+{"type":"tutorial_step","detail":"place_first_building","playerSeconds":227.6,"realSeconds":329.5,"actions":141,"dollars":0.0}
+{"type":"research_done","detail":"automation_i","playerSeconds":227.6,"realSeconds":329.5,"actions":141,"dollars":0.0}
+{"type":"tutorial_step","detail":"place_conveyor","playerSeconds":238.7,"realSeconds":356.6,"actions":147,"dollars":0.0}
+{"type":"building_first","detail":"harvester","playerSeconds":238.7,"realSeconds":356.6,"actions":147,"dollars":0.0}
+{"type":"finding","detail":"[S1] S1 place_conveyor did not advance after a belt was drawn Harvester (6,8) -> Demon (9,9) via tiles (7,8) and (8,9), Create, check, Done. Tutorial stays on place_conveyor; Harvester sits crafting:false progress 0 with inputsSatisfied true; power null and top bar says \"No power\". Possible causes: belt end not the input tile, or Harvester needs power. [verify] | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\conveyor-after-create-20261022-170901-891.png","playerSeconds":262.4,"realSeconds":432.2,"actions":159,"dollars":0.0}
+{"type":"finding","detail":"[S1] S1 retry: second belt attempt (Builder > Place Conveyor, tap (7,8) then (8,9), check, Done) also left place_conveyor not advancing; Harvester on (6,8) still crafting:false progress 0 after 5s wait; power toggle tap changed nothing. Belt visually ends at the Demon's lower-left corner, so the end tile is likely not the Demon input tile. [verify] | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\conveyor-retry-20261022-170950-475.png","playerSeconds":275.0,"realSeconds":463.8,"actions":164,"dollars":0.0}
+{"type":"finding","detail":"[S3] S3 Demon \"Deposit All\" sells every inventory item, including raw quarks and electrons left over after the protons/neutrons/hydrogen step, so the next tutorial step (gather_for_hydrogen) asks for them again. The button label does not say so. Also: the first Deposit All during sell_electrons_in_demon was swallowed by a dialogue that opened on top of the panel; no visual cue.","playerSeconds":275.0,"realSeconds":467.3,"actions":164,"dollars":0.0}
+{"type":"finding","detail":"[S3] S3 Collect on electron_field during buy_automation_i returned 8 misses with no message; field is blocked by design (walkthrough), but the driver cannot tell it apart from a broken field. Costs 14s player time.","playerSeconds":275.0,"realSeconds":467.3,"actions":164,"dollars":0.0}
+{"type":"run_end","detail":"stuck","playerSeconds":275.0,"realSeconds":467.3,"actions":164,"dollars":0.0}

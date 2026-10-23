@@ -1,0 +1,548 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261022-184031",
+  "startedLocal": "2026-10-22T18:40:31",
+  "branch": "feature/playtest-scenarios",
+  "commit": "aac8e76",
+  "appVersion": "0.4.47",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": "RESTART run. Setup: fresh_start all (after pre_playtest backup), clock turn_based action_seconds 1.5. Start state: tutorialStep intro_dialogue, entropy 250, prestige 0 (pre-wipe save was at place_conveyor, entropy 1102; backed up by fresh_start).",
+  "outcome": "stuck",
+  "playerSeconds": 1745.3,
+  "actions": 306,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_first_electron",
+      "playerSeconds": 5.0,
+      "realSeconds": 17.2,
+      "actions": 4,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon",
+      "playerSeconds": 16.8,
+      "realSeconds": 28.3,
+      "actions": 11,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Collect of 5 taps on electron_field reported hits 5 but gained only 4 electrons; tutorial stayed at collect_first_electron until a 6th tap. Possibly first tap swallowed by dialogue close. Minor.",
+      "playerSeconds": 16.8,
+      "realSeconds": 30.1,
+      "actions": 11,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_electrons_in_demon",
+      "playerSeconds": 18.5,
+      "realSeconds": 34.3,
+      "actions": 13,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel",
+      "playerSeconds": 22.0,
+      "realSeconds": 42.3,
+      "actions": 15,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "explain_quark_field",
+      "playerSeconds": 24.5,
+      "realSeconds": 49.4,
+      "actions": 17,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks",
+      "playerSeconds": 27.6,
+      "realSeconds": 55.4,
+      "actions": 19,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon_quarks",
+      "playerSeconds": 49.3,
+      "realSeconds": 65.4,
+      "actions": 33,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_quarks_in_demon",
+      "playerSeconds": 52.7,
+      "realSeconds": 72.4,
+      "actions": 35,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel_quarks",
+      "playerSeconds": 55.6,
+      "realSeconds": 79.5,
+      "actions": 37,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_research_drawer",
+      "playerSeconds": 59.0,
+      "realSeconds": 87.5,
+      "actions": 39,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_recombination_i",
+      "playerSeconds": 61.4,
+      "realSeconds": 94.5,
+      "actions": 41,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "recombination_i",
+      "playerSeconds": 66.1,
+      "realSeconds": 112.6,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "recombination_unlocked",
+      "playerSeconds": 76.0,
+      "realSeconds": 119.6,
+      "actions": 50,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "recombination_i",
+      "playerSeconds": 76.0,
+      "realSeconds": 119.6,
+      "actions": 50,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks_for_nucleons",
+      "playerSeconds": 87.5,
+      "realSeconds": 138.7,
+      "actions": 58,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_recipe_panel_for_nucleons",
+      "playerSeconds": 159.2,
+      "realSeconds": 251.2,
+      "actions": 105,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_protons",
+      "playerSeconds": 163.8,
+      "realSeconds": 261.2,
+      "actions": 108,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "1",
+      "playerSeconds": 166.6,
+      "realSeconds": 270.3,
+      "actions": 110,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_neutrons",
+      "playerSeconds": 168.5,
+      "realSeconds": 272.3,
+      "actions": 111,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_nucleons",
+      "playerSeconds": 172.7,
+      "realSeconds": 283.3,
+      "actions": 114,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_protons_and_neutrons",
+      "playerSeconds": 176.9,
+      "realSeconds": 293.4,
+      "actions": 117,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_nucleons",
+      "playerSeconds": 180.0,
+      "realSeconds": 298.4,
+      "actions": 119,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_hydrogen_synthesis",
+      "playerSeconds": 184.2,
+      "realSeconds": 308.4,
+      "actions": 122,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 190.2,
+      "realSeconds": 325.5,
+      "actions": 126,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "gather_for_hydrogen",
+      "playerSeconds": 205.7,
+      "realSeconds": 361.7,
+      "actions": 129,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 205.7,
+      "realSeconds": 361.7,
+      "actions": 129,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_protons_for_hydrogen",
+      "playerSeconds": 241.7,
+      "realSeconds": 401.8,
+      "actions": 152,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Drawer handle tap (btn-drawer-handle) lands on the drawer's own menu rows when the drawer is already open: it opened Worlds and Daily panels by accident. Collect/tap while drawer open misses fields under it (about 9 of 10 missed). Use playtest_state openPanels to confirm drawer state before each field tap. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\worlds-panel-open-20261022-184306-523.png",
+      "playerSeconds": 243.2,
+      "realSeconds": 408.3,
+      "actions": 152,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Crystals went 0 -> 10 at about 4m (state economy.crystals), with no purchase. Appeared after the accidental Daily panel open, so probably a daily reward claimed by the open. Not spent. Source unclear; reviewer to verify. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\find-quark-field-20261022-184656-101.png",
+      "playerSeconds": 243.2,
+      "realSeconds": 408.4,
+      "actions": 152,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_hydrogen",
+      "playerSeconds": 249.8,
+      "realSeconds": 422.9,
+      "actions": 157,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "2",
+      "playerSeconds": 252.8,
+      "realSeconds": 430.9,
+      "actions": 159,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "hydrogen_crafted",
+      "playerSeconds": 253.7,
+      "realSeconds": 434.0,
+      "actions": 160,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_hydrogen",
+      "playerSeconds": 255.5,
+      "realSeconds": 438.0,
+      "actions": 161,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_hydrogen_in_demon",
+      "playerSeconds": 263.0,
+      "realSeconds": 454.0,
+      "actions": 166,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_hydrogen",
+      "playerSeconds": 265.1,
+      "realSeconds": 458.0,
+      "actions": 167,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_automation_i",
+      "playerSeconds": 266.4,
+      "realSeconds": 461.1,
+      "actions": 168,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_automation_i",
+      "playerSeconds": 270.9,
+      "realSeconds": 471.1,
+      "actions": 171,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "automation_i",
+      "playerSeconds": 278.7,
+      "realSeconds": 492.2,
+      "actions": 176,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_first_building",
+      "playerSeconds": 298.2,
+      "realSeconds": 515.3,
+      "actions": 177,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "automation_i",
+      "playerSeconds": 298.2,
+      "realSeconds": 515.3,
+      "actions": 177,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_conveyor",
+      "playerSeconds": 326.5,
+      "realSeconds": 644.8,
+      "actions": 195,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "harvester",
+      "playerSeconds": 326.5,
+      "realSeconds": 644.8,
+      "actions": 195,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "automation_started",
+      "playerSeconds": 337.3,
+      "realSeconds": 679.9,
+      "actions": 202,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_quark_harvester",
+      "playerSeconds": 343.4,
+      "realSeconds": 696.0,
+      "actions": 206,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Unity bridge disconnected once during a 25 s wait (7m 03s player time) and reconnected on the next call. Console: [Telemetry] unobserved background task exception (IOException Win32 995) at the same time, and [UGSCloudSave] PushAsync failed (no connection). Likely environment, reviewer to verify.",
+      "playerSeconds": 448.4,
+      "realSeconds": 837.4,
+      "actions": 225,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_sfc",
+      "playerSeconds": 625.4,
+      "realSeconds": 1014.3,
+      "actions": 248,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_sfc",
+      "playerSeconds": 626.9,
+      "realSeconds": 1022.3,
+      "actions": 249,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Research panel list does not scroll by playtest drag (tried 3 drags on the list, all startOverUi true, no movement). Purchasable Rapid Extraction I (cost 150) sits at y~3017, off the 2340 px screen. Could be harness-only; reviewer to verify whether the list scrolls for a real swipe. Research idle while this was unreachable. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\research-scroll-2-20261022-185842-678.png",
+      "playerSeconds": 936.3,
+      "realSeconds": 1103.5,
+      "actions": 255,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_generator",
+      "playerSeconds": 945.6,
+      "realSeconds": 1117.7,
+      "actions": 261,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "strong_force_combiner",
+      "playerSeconds": 945.6,
+      "realSeconds": 1117.7,
+      "actions": 261,
+      "dollars": 0.0
+    },
+    {
+      "type": "buildings_total",
+      "detail": "5",
+      "playerSeconds": 945.6,
+      "realSeconds": 1117.7,
+      "actions": 261,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "route_quarks_to_sfc",
+      "playerSeconds": 1199.7,
+      "realSeconds": 1169.9,
+      "actions": 270,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "basic_generator",
+      "playerSeconds": 1199.7,
+      "realSeconds": 1169.9,
+      "actions": 270,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "configure_sfc_recipes",
+      "playerSeconds": 1210.5,
+      "realSeconds": 1200.1,
+      "actions": 277,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "route_nucleons_to_demon",
+      "playerSeconds": 1218.2,
+      "realSeconds": 1209.1,
+      "actions": 282,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "nucleon_loop_complete",
+      "playerSeconds": 1229.8,
+      "realSeconds": 1232.2,
+      "actions": 290,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_atom_gen",
+      "playerSeconds": 1233.8,
+      "realSeconds": 1243.3,
+      "actions": 293,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_atom_generator",
+      "playerSeconds": 1298.2,
+      "realSeconds": 1256.3,
+      "actions": 295,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e3",
+      "playerSeconds": 1451.1,
+      "realSeconds": 1300.5,
+      "actions": 300,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S1] BLOCKER at tutorial step 44 place_atom_generator (building type atomic_assembler, shown as Atomic Assembler; tutorial text says Atom Generator). Its Place button (btn-place-atomic_assembler) is at y 2506, below the 2340 px screen, inside the Builder list. Builder list does not scroll with playtest drags (tried 4 drags over list rows and the panel edge). tap_element on the off-screen button does nothing (placingBuilding stays false). Entropy 360, cost 350 met, so only the scroll blocks it. Softlock for a player unless the list scrolls on a real swipe. Reviewer to verify on device. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\builder-atom-offscreen-20261022-190304-634.png",
+      "playerSeconds": 1745.3,
+      "realSeconds": 1359.8,
+      "actions": 306,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] [verify] Strong Force Combiner at (4,11) stayed inputsSatisfied false and crafting false for 10+ minutes of player time after the two quark belts were drawn (route_quarks_to_sfc advanced after one 2-tile belt). Quark Harvesters at (5,9) and (4,9) show progress 0. Could be the one belt not linking the second harvester. Screenshot route-quark-end shows the belt geometry. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\route-quark-end-20261022-190027-179.png",
+      "playerSeconds": 1745.3,
+      "realSeconds": 1363.7,
+      "actions": 306,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "stuck",
+      "playerSeconds": 1745.3,
+      "realSeconds": 1365.3,
+      "actions": 306,
+      "dollars": 0.0
+    }
+  ]
+}

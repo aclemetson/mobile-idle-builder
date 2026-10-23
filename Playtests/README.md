@@ -75,6 +75,23 @@ origin. Screenshots are downscaled; multiply image pixels by the returned `scale
 pan first. `playtest_ui` doesn't detect one element covering another; a button under an open
 drawer can still be listed.
 
+### Moving the camera
+
+The player moves the map by swiping. Testers do the same with `playtest_input drag` (`x`, `y` to
+`to_x`, `to_y`):
+
+- Start the drag on empty map, not on a panel, button or drawer. `CameraController` ignores a press
+  that starts over UI, so a drag that starts on a panel does nothing to the map.
+- Find the target with `playtest_state` (`grid.fields` gives each field's cell and `cooldownLeft`), then
+  drag until the cell's screen position is clear of open panels. Check with `playtest_ui` or a
+  screenshot, not by assumption.
+- Drag in several short moves rather than one long one, and check the state after each.
+- A locked camera ignores drags. A tutorial pan that is still moving the camera fights a drag, so wait
+  for it to settle first. If a drag moves nothing, check the lock and the start point before logging a
+  finding.
+- `collect` pans to its target on its own. If it misses every tap, pan with `drag` by hand and retry
+  before calling the field unreachable.
+
 ## The run loop
 
 1. Read this README and the brief. Note the start time; respect the brief's time box.
@@ -121,6 +138,17 @@ Drivers keep context small:
   different approach. If that fails too, end the run with outcome `stuck`.
 - **Don't edit code or the project.** If Unity misbehaves (load hangs, exceptions in the console),
   stop Play Mode, note it, and end with outcome `crashed`.
+- **Tutorial steps: read the walkthrough first.** `Playtests/tutorial-walkthrough.md` has each step's
+  hint, what advances it, what it blocks, and how to get each item. Read the step's section before
+  calling it stuck. Steps marked **[check stock]** block field collection, so they need the items
+  already in the inventory. Items that can be crafted by hand (`can_craft_manually`) come from the
+  recipe panel, not from a new building. Regenerate with `python scripts/generate-tutorial-walkthrough.py`
+  after changing the tutorial or game data.
+- **Conveyors: start on the output, end on the input.** A belt links a building only when it starts on
+  the glowing tile the source's output faces and ends on the glowing tile in front of the target's
+  input (`TutorialRouteGuide.cs`). Tap the start tile, then the end tile, then check and Done. Pick
+  tiles from the glowing guide, not by coordinates. After Done, read `playtest_state`: if the step
+  did not advance, the belt is wrong, so redraw it onto the glowing tiles before calling it a bug.
 
 ## Reviewer rules
 
@@ -168,7 +196,10 @@ Dialogue that pauses the game counts its real reading time as player time.
 
 ## Scenario runs (briefs 1-4)
 
-1. `manage_editor` play, then `playtest_control wait` until `loaded` is true.
+1. Open `Assets/Scenes/SplashScene.unity` with `manage_scene` (load) and confirm
+   `editor_state` reports `active_scene.name` as `SplashScene`. Every run starts from the splash
+   scene, never whatever scene was left open. Then `manage_editor` play, and `playtest_control wait`
+   until `loaded` is true.
 2. `playtest_control fresh_start` with `scope` `all`: deletes local and cloud saves, settings, recipe
    knowledge and prefs for a true first launch (it backs up your save first). `scope` `cloud` keeps
    recipe knowledge and settings, so recipes from earlier runs would show as known.

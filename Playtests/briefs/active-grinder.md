@@ -21,6 +21,9 @@ included), never buys anything.
 - **Optimize.** Use `playtest_state` to find idle buildings (`crafting: false`, `inputsSatisfied:
   false`, `power` not `ok`) and fix the cause. Upgrade the slowest link of the main chain first.
 - **Skip dialogue quickly** but follow the tutorial's goals.
+- **Navigate the map yourself.** Swipe the camera to reach fields and buildings (README "Moving the
+  camera"). Don't depend on the tutorial to pan there, and don't give up on a field until a manual
+  swipe has been tried.
 - `time_scale` up to 10 is fine during waits; player time is unaffected.
 
 **Goal.** First prestige completed. `playtest_benchmark end` with outcome `reached_goal`.

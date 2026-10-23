@@ -1,0 +1,316 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261022-161950",
+  "startedLocal": "2026-10-22T16:19:50",
+  "branch": "feature/playtest-scenarios",
+  "commit": "aac8e76",
+  "appVersion": "0.4.47",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": null,
+  "outcome": "time_box",
+  "playerSeconds": 250.7,
+  "actions": 145,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Start state (fresh_start all, clock turn_based 1.5s): entropy 250, tutorial intro_dialogue, inventory empty, 1 maxwells_demon, 3 fields (2 quark, 1 electron). Note: before fresh_start, the pre-existing save was already at craft_protons_for_hydrogen with entropy 148.",
+      "playerSeconds": 0.0,
+      "realSeconds": 3.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_first_electron",
+      "playerSeconds": 5.0,
+      "realSeconds": 13.3,
+      "actions": 4,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon",
+      "playerSeconds": 15.5,
+      "realSeconds": 20.4,
+      "actions": 10,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_electrons_in_demon",
+      "playerSeconds": 16.0,
+      "realSeconds": 22.4,
+      "actions": 11,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel",
+      "playerSeconds": 18.9,
+      "realSeconds": 33.5,
+      "actions": 13,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "explain_quark_field",
+      "playerSeconds": 23.3,
+      "realSeconds": 46.6,
+      "actions": 16,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks",
+      "playerSeconds": 26.2,
+      "realSeconds": 51.7,
+      "actions": 18,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon_quarks",
+      "playerSeconds": 45.1,
+      "realSeconds": 63.7,
+      "actions": 29,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_quarks_in_demon",
+      "playerSeconds": 47.0,
+      "realSeconds": 73.8,
+      "actions": 31,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel_quarks",
+      "playerSeconds": 50.3,
+      "realSeconds": 80.8,
+      "actions": 33,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_research_drawer",
+      "playerSeconds": 56.2,
+      "realSeconds": 97.0,
+      "actions": 37,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "recombination_i",
+      "playerSeconds": 61.0,
+      "realSeconds": 114.1,
+      "actions": 40,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "recombination_i",
+      "playerSeconds": 70.5,
+      "realSeconds": 126.1,
+      "actions": 41,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Tutorial stuck at open_research_drawer (hint still says open the menu) after Recombination I was bought from the research panel (opened via btn-drawer-handle). Research completed; step did not advance to recombination_unlocked. Possible missed drawer_opened event or the drawer opened from the demon-panel path.",
+      "playerSeconds": 75.2,
+      "realSeconds": 136.9,
+      "actions": 41,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "recombination_unlocked",
+      "playerSeconds": 76.0,
+      "realSeconds": 144.2,
+      "actions": 42,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks_for_nucleons",
+      "playerSeconds": 78.9,
+      "realSeconds": 150.3,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_recipe_panel_for_nucleons",
+      "playerSeconds": 134.0,
+      "realSeconds": 176.4,
+      "actions": 80,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_protons",
+      "playerSeconds": 143.2,
+      "realSeconds": 190.5,
+      "actions": 86,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "1",
+      "playerSeconds": 146.2,
+      "realSeconds": 200.6,
+      "actions": 88,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_neutrons",
+      "playerSeconds": 148.1,
+      "realSeconds": 209.6,
+      "actions": 89,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Craft 1 Proton by hand succeeded at craft_two_protons: inventory before 9 Up / 8 Down, after 7 Up / 7 Down / 1 Proton. Tutorial hint shows no progress issue. Note: the step is an earlier one than craft_protons_for_hydrogen (step 23).",
+      "playerSeconds": 149.2,
+      "realSeconds": 210.8,
+      "actions": 89,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_nucleons",
+      "playerSeconds": 152.4,
+      "realSeconds": 227.8,
+      "actions": 92,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_protons_and_neutrons",
+      "playerSeconds": 157.2,
+      "realSeconds": 241.8,
+      "actions": 95,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_nucleons",
+      "playerSeconds": 159.7,
+      "realSeconds": 249.9,
+      "actions": 96,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_hydrogen_synthesis",
+      "playerSeconds": 166.5,
+      "realSeconds": 264.0,
+      "actions": 101,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 172.5,
+      "realSeconds": 283.1,
+      "actions": 105,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "gather_for_hydrogen",
+      "playerSeconds": 187.2,
+      "realSeconds": 300.2,
+      "actions": 105,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 187.2,
+      "realSeconds": 300.2,
+      "actions": 105,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_protons_for_hydrogen",
+      "playerSeconds": 240.2,
+      "realSeconds": 360.6,
+      "actions": 138,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Inventory at craft_protons_for_hydrogen (step 23), reached via normal play (sold quarks and nucleons in demon, bought Hydrogen Synthesis, gathered quarks/electrons from fields): Up Quark 4, Down Quark 2, Electron 2, Proton 0, Neutron 0, Hydrogen 0; entropy 133; tutorial step craft_protons_for_hydrogen. Field collection was not blocked on this step.",
+      "playerSeconds": 241.7,
+      "realSeconds": 366.5,
+      "actions": 139,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_hydrogen",
+      "playerSeconds": 248.0,
+      "realSeconds": 380.7,
+      "actions": 144,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Hand-craft of 2 Protons from craft_protons_for_hydrogen succeeded. Before: Up 4, Down 2, Electron 2, Proton 0. After craft 1: Up 2, Down 1, Electron 2, Proton 1. After craft 2: Up 0, Down 0, Electron 2, Proton 2. Tutorial advanced to craft_hydrogen (step 24). Inventory is exactly enough; no shortfall.",
+      "playerSeconds": 249.2,
+      "realSeconds": 388.8,
+      "actions": 144,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] playtest_input collect on quark_field (and electron_field) missed every tap after a camera pan when the field sits beside the left drawer handle; collect reports misses but no hint. Manual tap at the tile worked. Also: the Demon panel close button was swallowed twice while the tutorial dialogue or left drawer was open; needed a second tap.",
+      "playerSeconds": 250.7,
+      "realSeconds": 394.4,
+      "actions": 145,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "time_box",
+      "playerSeconds": 250.7,
+      "realSeconds": 394.5,
+      "actions": 145,
+      "dollars": 0.0
+    }
+  ]
+}

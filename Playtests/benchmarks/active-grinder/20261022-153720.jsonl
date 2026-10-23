@@ -1,0 +1,13 @@
+{"type":"run_start","detail":"active-grinder","playerSeconds":0.0,"realSeconds":0.0,"actions":0,"dollars":0.0}
+{"type":"entropy","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"net_worth","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"tutorial_step","detail":"buy_hydrogen_synthesis","playerSeconds":3.0,"realSeconds":17.4,"actions":2,"dollars":0.0}
+{"type":"research_started","detail":"hydrogen_synthesis","playerSeconds":9.2,"realSeconds":36.4,"actions":7,"dollars":0.0}
+{"type":"tutorial_step","detail":"gather_for_hydrogen","playerSeconds":24.4,"realSeconds":52.6,"actions":16,"dollars":0.0}
+{"type":"research_done","detail":"hydrogen_synthesis","playerSeconds":24.4,"realSeconds":52.6,"actions":16,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_protons_for_hydrogen","playerSeconds":60.4,"realSeconds":98.8,"actions":40,"dollars":0.0}
+{"type":"finding","detail":"[S2] collect quark_field missed all 6 taps and left the left drawer open (drawer covered the field area after research panel close). Resume was clean once drawer closed by tapping map. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\collect-missed-20261022-153807-073.png","playerSeconds":63.8,"realSeconds":106.5,"actions":42,"dollars":0.0}
+{"type":"finding","detail":"[S1] Softlock at tutorial craft_protons_for_hydrogen: hint says craft 2 Protons, which needs Strong Force Combiner (200 entropy, shown red = unaffordable). Entropy 148 after Deposit All at demon; field collection is paused by the tutorial (\"Field collection is paused for this tutorial step\"), so no particles to deposit. Only entropy source left is demon deposit, which yields little. Not crystal-gated. Player cannot progress without a cheat. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\collect-miss-2-20261022-154013-301.png","playerSeconds":103.8,"realSeconds":179.3,"actions":68,"dollars":0.0}
+{"type":"finding","detail":"[S2] After collect/pan, the Maxwell's Demon went off screen; tap_cell 9,9 failed until a manual drag, and a drag at the wrong side made it worse. Pan confusion, not a bug proven.","playerSeconds":103.8,"realSeconds":179.4,"actions":68,"dollars":0.0}
+{"type":"finding","detail":"[S3] Research Start buttons for locked/unaffordable items are grey, but the cost is red; cost colour alone is not clearly 'can't afford' to a new player.","playerSeconds":103.8,"realSeconds":179.4,"actions":68,"dollars":0.0}
+{"type":"run_end","detail":"stuck","playerSeconds":103.8,"realSeconds":181.1,"actions":68,"dollars":0.0}
