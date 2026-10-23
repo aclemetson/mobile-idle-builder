@@ -331,6 +331,7 @@ namespace MobileIdleBuilder
             _inspector?.Tick();
             UpdatePlacementConfirmPopup();
             RefreshBuildingAffordabilityIfChanged();
+            RefreshBannerClearance();
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -2043,6 +2044,21 @@ namespace MobileIdleBuilder
                 return;
             }
             open();
+        }
+
+        /// <summary>
+        /// Keeps the tutorial hint clear of any open menu. The left drawer and every slide panel sit over the
+        /// banner's bottom bar, which hides their bottom rows (the Place buttons). Derived from what is on
+        /// screen each frame, so every open path is covered and no caller can leave the banner expanded.
+        /// </summary>
+        private void RefreshBannerClearance()
+        {
+            if (_banner == null || _allPanels == null) return;
+            bool menuOpen = _drawerOpen;
+            if (!menuOpen)
+                foreach (var panel in _allPanels)
+                    if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            _banner.SetMenuOpen(menuOpen);
         }
 
         private void CloseAllPanels()

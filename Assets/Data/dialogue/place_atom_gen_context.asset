@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Place the Atom Generator on the grid. It draws 5 eV of power \u2014 well
-      within your generator's current output. No new infrastructure needed."
+    text: Place the Atom Generator on the glowing tile. It draws 20 eV, and a generator
+      only powers buildings inside its influence circle, so the glow marks the spot
+      that is in range of your Basic Generator. Use the rotate button before you
+      confirm, so its output faces Maxwell's Demon.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

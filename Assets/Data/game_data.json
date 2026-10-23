@@ -11731,7 +11731,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Place the Atom Generator on the grid. It draws 5 eV of power — well within your generator's current output. No new infrastructure needed.",
+          "text": "Place the Atom Generator on the glowing tile. It draws 20 eV, and a generator only powers buildings inside its influence circle, so the glow marks the spot that is in range of your Basic Generator. Use the rotate button before you confirm, so its output faces Maxwell's Demon.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11744,7 +11744,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Re-route the proton belt from the Demon to the Atom Generator's proton input, then route your electron Harvester into its electron input. Protons plus electrons become hydrogen.",
+          "text": "Re-route the proton belt from the Combiner to the Atom Generator's proton input, then route your electron Harvester into its electron input. Protons plus electrons become hydrogen.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12898,11 +12898,13 @@
     },
     {
       "id": "place_atom_generator",
-      "hint": "Open the Build menu and place an Atom Generator.",
+      "hint": "Place an Atom Generator on the glowing tile, inside your Basic Generator's power range. Rotate it so its output faces Maxwell's Demon before you confirm.",
       "advance_condition": { "type": "BuildingMin", "building_id": "atomic_assembler", "min_count": 1 },
       "on_enter": {
         "dialogue_id": "place_atom_gen_context",
-        "pulse_button_id": "btn-place-atomic_assembler"
+        "pulse_button_id": "btn-place-atomic_assembler",
+        "highlight_target": "power:atomic_assembler",
+        "highlight_mode": "Full"
       }
     },
     {
