@@ -1,0 +1,21 @@
+{"type":"run_start","detail":"active-grinder","playerSeconds":0.0,"realSeconds":0.0,"actions":0,"dollars":0.0}
+{"type":"entropy","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"net_worth","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_first_electron","playerSeconds":5.2,"realSeconds":16.4,"actions":4,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon","playerSeconds":14.0,"realSeconds":21.5,"actions":9,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_electrons_in_demon","playerSeconds":17.2,"realSeconds":30.5,"actions":12,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel","playerSeconds":20.8,"realSeconds":40.6,"actions":14,"dollars":0.0}
+{"type":"tutorial_step","detail":"explain_quark_field","playerSeconds":25.5,"realSeconds":53.7,"actions":17,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks","playerSeconds":27.8,"realSeconds":58.7,"actions":19,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon_quarks","playerSeconds":51.2,"realSeconds":73.8,"actions":33,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_quarks_in_demon","playerSeconds":54.7,"realSeconds":80.9,"actions":36,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel_quarks","playerSeconds":57.6,"realSeconds":86.9,"actions":38,"dollars":0.0}
+{"type":"tutorial_step","detail":"open_research_drawer","playerSeconds":62.1,"realSeconds":98.0,"actions":41,"dollars":0.0}
+{"type":"tutorial_step","detail":"buy_recombination_i","playerSeconds":66.6,"realSeconds":106.1,"actions":44,"dollars":0.0}
+{"type":"research_started","detail":"recombination_i","playerSeconds":71.3,"realSeconds":119.1,"actions":47,"dollars":0.0}
+{"type":"tutorial_step","detail":"recombination_unlocked","playerSeconds":81.0,"realSeconds":131.2,"actions":48,"dollars":0.0}
+{"type":"research_done","detail":"recombination_i","playerSeconds":81.0,"realSeconds":131.2,"actions":48,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks_for_nucleons","playerSeconds":87.1,"realSeconds":139.3,"actions":50,"dollars":0.0}
+{"type":"finding","detail":"[S2] [verify] quark_field collect (count 16) panned the camera, missed all 16 taps, and left the Worlds panel open (likely a stray tap on the left drawer). Tutorial hint asked for 8 up + 8 down quarks; field was off screen after pan. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\worlds-panel-unexpected-20261022-142552-675.png","playerSeconds":114.1,"realSeconds":153.7,"actions":67,"dollars":0.0}
+{"type":"finding","detail":"[S2] Quark fields (4,9),(5,9) sit under the open left drawer; the drawer stays open, and taps/collect at those cells hit the drawer (Worlds/Achievements rows) instead of the field. Collect of 16 taps: 0 hits, reopened the drawer/Worlds panel. Tutorial step collect_quarks_for_nucleons (needs 8 up + 8 down) never completed. Drawer handle tap did not close it. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\stuck-quark-field-20261022-142638-610.png","playerSeconds":176.2,"realSeconds":201.2,"actions":107,"dollars":0.0}
+{"type":"run_end","detail":"stuck","playerSeconds":176.2,"realSeconds":201.3,"actions":107,"dollars":0.0}

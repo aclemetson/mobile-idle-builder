@@ -237,5 +237,62 @@ namespace MobileIdleBuilder
             building = rest.Substring(0, colon);
             return TryParseRoute("route:" + rest.Substring(colon + 1), out from, out to);
         }
+
+        /// <summary>
+        /// Parses "power:&lt;building&gt;" (e.g. "power:atomic_assembler"): where to place &lt;building&gt; so a
+        /// power source reaches its footprint.
+        /// </summary>
+        public static bool TryParsePower(string targetId, out string building)
+        {
+            building = null;
+            const string prefix = "power:";
+            if (targetId == null || !targetId.StartsWith(prefix, StringComparison.Ordinal)) return false;
+            building = targetId.Substring(prefix.Length);
+            return building.Length > 0;
+        }
+
+        /// <summary>
+        /// Nearest buildable anchor where a footprint is powered by one of <paramref name="sources"/>, using
+        /// <see cref="PowerCoverageMath.FootprintWithinRadius"/> (the rule the sim runs). Each source is its
+        /// footprint (min, max cells) and its influence radius. Returns null when no spot is in range.
+        /// </summary>
+        public static Vector2Int? SuggestPoweredAnchor(int gridWidth, int gridHeight, Vector2Int footprint,
+                                                       IReadOnlyList<(Vector2Int min, Vector2Int max, float radius)> sources,
+                                                       Func<Vector2Int, bool> isBuildable)
+        {
+            Vector2Int? best = null;
+            int bestDistance = int.MaxValue;
+
+            for (int y = 0; y < gridHeight; y++)
+            for (int x = 0; x < gridWidth; x++)
+            {
+                var anchor = new Vector2Int(x, y);
+                if (!FootprintBuildable(anchor, footprint, isBuildable)) continue;
+
+                int nearest = int.MaxValue;
+                foreach (var s in sources)
+                {
+                    if (!PowerCoverageMath.FootprintWithinRadius(s.min.x, s.min.y, s.max.x, s.max.y,
+                            anchor.x, anchor.y, anchor.x + footprint.x - 1, anchor.y + footprint.y - 1, s.radius))
+                        continue;
+                    nearest = Mathf.Min(nearest, Manhattan(anchor, s.min));
+                }
+                // Closest powered spot to a source wins; ties keep scan order (y, x) so the glow is stable.
+                if (nearest < bestDistance)
+                {
+                    bestDistance = nearest;
+                    best         = anchor;
+                }
+            }
+            return best;
+        }
+
+        private static bool FootprintBuildable(Vector2Int anchor, Vector2Int footprint, Func<Vector2Int, bool> isBuildable)
+        {
+            for (int dx = 0; dx < footprint.x; dx++)
+            for (int dy = 0; dy < footprint.y; dy++)
+                if (!isBuildable(anchor + new Vector2Int(dx, dy))) return false;
+            return true;
+        }
     }
 }

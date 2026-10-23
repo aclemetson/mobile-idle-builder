@@ -108,7 +108,7 @@ namespace MobileIdleBuilder
         {
             var save = SaveManager.Instance?.Current;
             if (save == null) return 0;
-            AdRewardCalculator.ApplyDailyReset(save, DateTime.UtcNow);
+            AdRewardCalculator.ApplyDailyReset(save, GameClock.UtcNow);
             return AdRewardCalculator.Remaining(save, p);
         }
 
@@ -160,7 +160,7 @@ namespace MobileIdleBuilder
 
             if (!FeatureFlags.AdsEnabled) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
 
-            AdRewardCalculator.ApplyDailyReset(save, DateTime.UtcNow);
+            AdRewardCalculator.ApplyDailyReset(save, GameClock.UtcNow);
             if (AdRewardCalculator.IsAtCap(save, p))
             {
                 Finish(onDone, Fail(p, AdShowOutcome.AtDailyCap, "Daily limit reached — come back tomorrow."));

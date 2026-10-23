@@ -1,0 +1,30 @@
+{"type":"run_start","detail":"active-grinder","playerSeconds":0.0,"realSeconds":0.0,"actions":0,"dollars":0.0}
+{"type":"entropy","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"net_worth","detail":"1e2","playerSeconds":0.0,"realSeconds":0.2,"actions":0,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_first_electron","playerSeconds":5.4,"realSeconds":16.3,"actions":4,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon","playerSeconds":33.8,"realSeconds":35.7,"actions":22,"dollars":0.0}
+{"type":"finding","detail":"[S3] collect quark_field x10 all missed during collect_first_electron step; game shows 'Collect electrons first!' toast, so the tap is gated but collect gives no hint why. Tool summary had panned:true. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\ag-quark-miss-20261022-143436-368.png","playerSeconds":33.8,"realSeconds":35.7,"actions":22,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_electrons_in_demon","playerSeconds":35.3,"realSeconds":41.4,"actions":23,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel","playerSeconds":39.0,"realSeconds":48.5,"actions":26,"dollars":0.0}
+{"type":"tutorial_step","detail":"explain_quark_field","playerSeconds":43.2,"realSeconds":60.5,"actions":29,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks","playerSeconds":47.9,"realSeconds":67.6,"actions":32,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_maxwells_demon_quarks","playerSeconds":63.2,"realSeconds":72.6,"actions":42,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_quarks_in_demon","playerSeconds":66.5,"realSeconds":78.6,"actions":44,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_panel_quarks","playerSeconds":69.5,"realSeconds":84.7,"actions":46,"dollars":0.0}
+{"type":"tutorial_step","detail":"open_research_drawer","playerSeconds":74.2,"realSeconds":97.7,"actions":49,"dollars":0.0}
+{"type":"tutorial_step","detail":"buy_recombination_i","playerSeconds":77.0,"realSeconds":102.8,"actions":51,"dollars":0.0}
+{"type":"research_started","detail":"recombination_i","playerSeconds":83.2,"realSeconds":123.9,"actions":55,"dollars":0.0}
+{"type":"finding","detail":"[S3] Research panel did not open on first btn-research tap (drawer still animating / highlight only); needed a second tap. Quark taps gated during collect_first_electron ('Collect electrons first!'). | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\ag-research-20261022-143601-048.png","playerSeconds":84.3,"realSeconds":127.9,"actions":55,"dollars":0.0}
+{"type":"tutorial_step","detail":"recombination_unlocked","playerSeconds":93.1,"realSeconds":138.9,"actions":55,"dollars":0.0}
+{"type":"research_done","detail":"recombination_i","playerSeconds":93.1,"realSeconds":138.9,"actions":55,"dollars":0.0}
+{"type":"tutorial_step","detail":"collect_quarks_for_nucleons","playerSeconds":109.7,"realSeconds":159.0,"actions":57,"dollars":0.0}
+{"type":"tutorial_step","detail":"open_recipe_panel_for_nucleons","playerSeconds":160.9,"realSeconds":178.2,"actions":89,"dollars":0.0}
+{"type":"finding","detail":"[S2] collect electron_field x10 missed all taps: electron field is off screen after quark collect (panned:true); hint banner says 'Focus on quarks for now' so the electron field is hidden from the player. Driver had to swipe; collect does not pan back to it. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\ag-electron-miss-20261022-143657-639.png","playerSeconds":161.1,"realSeconds":178.3,"actions":89,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_two_protons","playerSeconds":164.3,"realSeconds":190.2,"actions":92,"dollars":0.0}
+{"type":"tier","detail":"1","playerSeconds":168.0,"realSeconds":197.3,"actions":94,"dollars":0.0}
+{"type":"tutorial_step","detail":"craft_two_neutrons","playerSeconds":169.4,"realSeconds":200.3,"actions":95,"dollars":0.0}
+{"type":"tutorial_step","detail":"direct_to_demon_for_nucleons","playerSeconds":174.1,"realSeconds":210.4,"actions":98,"dollars":0.0}
+{"type":"tutorial_step","detail":"sell_protons_and_neutrons","playerSeconds":177.8,"realSeconds":218.4,"actions":101,"dollars":0.0}
+{"type":"tutorial_step","detail":"close_demon_after_nucleons","playerSeconds":181.0,"realSeconds":223.4,"actions":103,"dollars":0.0}
+{"type":"finding","detail":"[S2] Proton + neutron sale gave only +19 entropy (165 to 184) for 2 protons and 2 neutrons; prestige wall is 50000, so the first-prestige goal is far off in player time. Demon panel stayed open until dialogue was cleared.","playerSeconds":183.7,"realSeconds":229.4,"actions":104,"dollars":0.0}
+{"type":"run_end","detail":"time_box","playerSeconds":183.7,"realSeconds":230.7,"actions":104,"dollars":0.0}

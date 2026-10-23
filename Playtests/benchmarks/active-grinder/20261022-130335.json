@@ -1,0 +1,276 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261022-130335",
+  "startedLocal": "2026-10-22T13:03:35",
+  "branch": "feature/playtest-scenarios",
+  "commit": "901ed0d",
+  "appVersion": "0.4.46",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": "First run; 20 min agent-time box requested by user; track forced idle stretches",
+  "outcome": "time_box",
+  "playerSeconds": 160.1,
+  "actions": 92,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_first_electron",
+      "playerSeconds": 5.2,
+      "realSeconds": 18.3,
+      "actions": 4,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon",
+      "playerSeconds": 18.1,
+      "realSeconds": 110.0,
+      "actions": 12,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_electrons_in_demon",
+      "playerSeconds": 20.8,
+      "realSeconds": 113.0,
+      "actions": 13,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel",
+      "playerSeconds": 24.5,
+      "realSeconds": 137.2,
+      "actions": 15,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "explain_quark_field",
+      "playerSeconds": 27.4,
+      "realSeconds": 144.3,
+      "actions": 17,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks",
+      "playerSeconds": 30.2,
+      "realSeconds": 154.3,
+      "actions": 19,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon_quarks",
+      "playerSeconds": 45.6,
+      "realSeconds": 189.6,
+      "actions": 29,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_quarks_in_demon",
+      "playerSeconds": 48.6,
+      "realSeconds": 199.7,
+      "actions": 31,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel_quarks",
+      "playerSeconds": 51.1,
+      "realSeconds": 202.7,
+      "actions": 33,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_research_drawer",
+      "playerSeconds": 54.3,
+      "realSeconds": 210.8,
+      "actions": 35,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_recombination_i",
+      "playerSeconds": 57.4,
+      "realSeconds": 217.8,
+      "actions": 37,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "recombination_i",
+      "playerSeconds": 63.6,
+      "realSeconds": 233.9,
+      "actions": 41,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "recombination_unlocked",
+      "playerSeconds": 72.8,
+      "realSeconds": 258.5,
+      "actions": 42,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "recombination_i",
+      "playerSeconds": 72.8,
+      "realSeconds": 258.5,
+      "actions": 42,
+      "dollars": 0.0
+    },
+    {
+      "type": "mark",
+      "detail": "idle 7s: waiting on Recombination I research timer (tutorial step buy_recombination_i)",
+      "playerSeconds": 72.8,
+      "realSeconds": 258.5,
+      "actions": 42,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks_for_nucleons",
+      "playerSeconds": 74.4,
+      "realSeconds": 268.1,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_recipe_panel_for_nucleons",
+      "playerSeconds": 106.3,
+      "realSeconds": 361.8,
+      "actions": 65,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_protons",
+      "playerSeconds": 111.9,
+      "realSeconds": 373.9,
+      "actions": 69,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "1",
+      "playerSeconds": 115.8,
+      "realSeconds": 385.0,
+      "actions": 71,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_neutrons",
+      "playerSeconds": 116.5,
+      "realSeconds": 386.0,
+      "actions": 72,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_nucleons",
+      "playerSeconds": 121.6,
+      "realSeconds": 396.1,
+      "actions": 75,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_protons_and_neutrons",
+      "playerSeconds": 125.9,
+      "realSeconds": 412.2,
+      "actions": 78,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_nucleons",
+      "playerSeconds": 130.3,
+      "realSeconds": 417.2,
+      "actions": 81,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_hydrogen_synthesis",
+      "playerSeconds": 133.9,
+      "realSeconds": 428.3,
+      "actions": 83,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 139.1,
+      "realSeconds": 444.4,
+      "actions": 87,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "gather_for_hydrogen",
+      "playerSeconds": 154.1,
+      "realSeconds": 470.4,
+      "actions": 88,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 154.1,
+      "realSeconds": 470.4,
+      "actions": 88,
+      "dollars": 0.0
+    },
+    {
+      "type": "mark",
+      "detail": "idle 12s: waiting on Hydrogen Synthesis research (15s); fields off screen after camera snap-back",
+      "playerSeconds": 154.1,
+      "realSeconds": 470.4,
+      "actions": 88,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "time_box",
+      "playerSeconds": 160.1,
+      "realSeconds": 503.7,
+      "actions": 92,
+      "dollars": 0.0
+    }
+  ]
+}

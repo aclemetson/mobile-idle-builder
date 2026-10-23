@@ -200,5 +200,56 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("maxwells_demon", t);
             Assert.IsFalse(TutorialRouteGuide.TryParseSuggest("suggest:combiner", out _, out _, out _));
         }
+
+        [Test]
+        public void TryParsePower_ReadsBuilding()
+        {
+            Assert.IsTrue(TutorialRouteGuide.TryParsePower("power:atomic_assembler", out var b));
+            Assert.AreEqual("atomic_assembler", b);
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("power:", out _));
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("route:harvester>maxwells_demon", out _));
+        }
+
+        // ── Powered placement ────────────────────────────────────────────────
+
+        static bool AllBuildable(Vector2Int c, Vector2Int blocked) => c != blocked && c.x >= 0 && c.y >= 0;
+
+        [Test]
+        public void SuggestPoweredAnchor_PicksNearestSpotInsideInfluence()
+        {
+            // Generator at (1,1), influence 2 tiles. Four cells are one step away; the scan (y, x) meets (1,0) first.
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)));
+
+            Assert.AreEqual(new Vector2Int(1, 0), spot);
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NeverReturnsAnUnpoweredSpot()
+        {
+            // Generator at (1,1) with 2 tiles of influence: (9,9) is far outside, so the suggestion stays near it.
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)));
+
+            Assert.IsNotNull(spot);
+            Assert.IsTrue(PowerCoverageMath.FootprintWithinRadius(1, 1, 1, 1,
+                spot.Value.x, spot.Value.y, spot.Value.x, spot.Value.y, 2f));
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NoSource_ReturnsNull()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)>();
+            Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => true));
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NothingBuildableInRange_ReturnsNull()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => false));
+        }
     }
 }

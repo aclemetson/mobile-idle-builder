@@ -92,7 +92,7 @@ namespace MobileIdleBuilder
                 // Write departure time to PlayerPrefs immediately — this is the most
                 // reliable record because PlayerPrefs.Save() is OS-managed and
                 // survives even if the process is killed before the JSON file flushes.
-                PlayerPrefs.SetString(BackgroundTimestampKey, DateTime.UtcNow.ToString("o"));
+                PlayerPrefs.SetString(BackgroundTimestampKey, GameClock.UtcNow.ToString("o"));
                 PlayerPrefs.Save();
                 SaveLocal();
                 PushToCloudBestEffort();
@@ -297,6 +297,20 @@ namespace MobileIdleBuilder
             _current  = data;
             IsNewGame = false;
             _local.Save(_current);
+        }
+
+        /// <summary>
+        /// Dev-only: the player closes the app for <paramref name="seconds"/> and comes back. Runs
+        /// the real background and resume handlers with GameClock moved forward in between, so
+        /// offline earnings (idle cap included), research timers, cooldowns and boosts all behave
+        /// as after a real absence, and the welcome-back modal shows.
+        /// </summary>
+        public void DevSimulateAway(double seconds)
+        {
+            if (seconds <= 0) return;
+            OnApplicationPause(true);
+            GameClock.DevShift(TimeSpan.FromSeconds(seconds));
+            OnApplicationPause(false);
         }
 #endif
 

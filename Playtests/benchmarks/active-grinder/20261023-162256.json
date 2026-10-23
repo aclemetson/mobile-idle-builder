@@ -1,0 +1,396 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261023-162256",
+  "startedLocal": "2026-10-23T16:22:56",
+  "branch": "feature/playtest-scenarios",
+  "commit": "aac8e76",
+  "appVersion": "0.4.47",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": null,
+  "outcome": "stuck",
+  "playerSeconds": 344.9,
+  "actions": 205,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_first_electron",
+      "playerSeconds": 5.2,
+      "realSeconds": 14.2,
+      "actions": 4,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon",
+      "playerSeconds": 16.8,
+      "realSeconds": 28.3,
+      "actions": 11,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_electrons_in_demon",
+      "playerSeconds": 18.4,
+      "realSeconds": 35.4,
+      "actions": 13,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel",
+      "playerSeconds": 21.9,
+      "realSeconds": 46.4,
+      "actions": 15,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "explain_quark_field",
+      "playerSeconds": 25.1,
+      "realSeconds": 54.5,
+      "actions": 17,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks",
+      "playerSeconds": 28.2,
+      "realSeconds": 60.5,
+      "actions": 19,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon_quarks",
+      "playerSeconds": 50.5,
+      "realSeconds": 69.5,
+      "actions": 33,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_quarks_in_demon",
+      "playerSeconds": 52.6,
+      "realSeconds": 77.6,
+      "actions": 35,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel_quarks",
+      "playerSeconds": 55.7,
+      "realSeconds": 85.6,
+      "actions": 37,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_research_drawer",
+      "playerSeconds": 58.2,
+      "realSeconds": 92.6,
+      "actions": 39,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_recombination_i",
+      "playerSeconds": 61.5,
+      "realSeconds": 100.7,
+      "actions": 41,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "recombination_i",
+      "playerSeconds": 66.1,
+      "realSeconds": 116.7,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "recombination_unlocked",
+      "playerSeconds": 76.2,
+      "realSeconds": 128.8,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "recombination_i",
+      "playerSeconds": 76.2,
+      "realSeconds": 128.8,
+      "actions": 44,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks_for_nucleons",
+      "playerSeconds": 79.7,
+      "realSeconds": 136.8,
+      "actions": 46,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 81.1,
+      "realSeconds": 146.8,
+      "actions": 47,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 96.8,
+      "realSeconds": 155.9,
+      "actions": 57,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] collect quark_field x20 after closing Research: all 20 taps missed, camera panned, and Worlds panel opened (no tap on it intended). Check whether the collect pan or tap hit a HUD button. | Playtests/reports/screenshots/collect-missed-worlds-20261023-162538-113.png",
+      "playerSeconds": 116.4,
+      "realSeconds": 166.5,
+      "actions": 69,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_recipe_panel_for_nucleons",
+      "playerSeconds": 174.9,
+      "realSeconds": 252.3,
+      "actions": 108,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Left drawer handle (btn-drawer-handle, x 8-96 y 1166-1294) overlaps quark field cell (4,9); tapping it opens the drawer, and the open drawer covers the field. Field collection via collect/tap_cell fails until the map is panned right. Also collect quark_field returns all misses when field is under the handle. | Playtests/reports/screenshots/drawer-covers-quark-20261023-162613-350.png",
+      "playerSeconds": 177.1,
+      "realSeconds": 258.9,
+      "actions": 109,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_protons",
+      "playerSeconds": 180.1,
+      "realSeconds": 265.3,
+      "actions": 112,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "1",
+      "playerSeconds": 183.5,
+      "realSeconds": 277.4,
+      "actions": 114,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_neutrons",
+      "playerSeconds": 184.7,
+      "realSeconds": 282.4,
+      "actions": 115,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_nucleons",
+      "playerSeconds": 189.3,
+      "realSeconds": 292.4,
+      "actions": 118,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_protons_and_neutrons",
+      "playerSeconds": 194.3,
+      "realSeconds": 301.5,
+      "actions": 121,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_nucleons",
+      "playerSeconds": 197.1,
+      "realSeconds": 307.5,
+      "actions": 123,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "gather_for_hydrogen",
+      "playerSeconds": 200.6,
+      "realSeconds": 313.5,
+      "actions": 125,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_protons_for_hydrogen",
+      "playerSeconds": 233.5,
+      "realSeconds": 360.7,
+      "actions": 147,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_hydrogen",
+      "playerSeconds": 244.5,
+      "realSeconds": 378.8,
+      "actions": 154,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "2",
+      "playerSeconds": 247.2,
+      "realSeconds": 385.8,
+      "actions": 156,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "hydrogen_crafted",
+      "playerSeconds": 248.5,
+      "realSeconds": 388.8,
+      "actions": 157,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_hydrogen",
+      "playerSeconds": 250.2,
+      "realSeconds": 392.8,
+      "actions": 158,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_hydrogen_in_demon",
+      "playerSeconds": 257.2,
+      "realSeconds": 407.9,
+      "actions": 163,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_hydrogen",
+      "playerSeconds": 259.4,
+      "realSeconds": 411.9,
+      "actions": 164,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_automation_i",
+      "playerSeconds": 260.4,
+      "realSeconds": 414.9,
+      "actions": 165,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_automation_i",
+      "playerSeconds": 265.6,
+      "realSeconds": 424.0,
+      "actions": 168,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "automation_i",
+      "playerSeconds": 271.6,
+      "realSeconds": 440.0,
+      "actions": 172,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_first_building",
+      "playerSeconds": 290.9,
+      "realSeconds": 462.1,
+      "actions": 173,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "automation_i",
+      "playerSeconds": 290.9,
+      "realSeconds": 462.1,
+      "actions": 173,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_conveyor",
+      "playerSeconds": 317.1,
+      "realSeconds": 550.4,
+      "actions": 189,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "harvester",
+      "playerSeconds": 317.1,
+      "realSeconds": 550.4,
+      "actions": 189,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S1] place_conveyor does not advance. Two belt attempts from the Harvester's front tile (6,9) to the demon-side glow tile (col 8 row 9, and col 7 row 9): belt visibly placed (after-done screenshot), but tutorialStep stays place_conveyor after Check and Done. Conveyor not counted in state buildings. Link condition unclear; softlock for this run. | Playtests/reports/screenshots/after-done-20261023-163335-174.png",
+      "playerSeconds": 344.9,
+      "realSeconds": 665.7,
+      "actions": 205,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Lepton field (6,8) is off screen in placement mode: tap_cell reports off screen even after pans; must drag the map so the bottom-left light-blue tile is visible, then tap screen coordinates. Also a tap_cell on a non-field tile (9,8) opened a placement candidate with invalid confirm. | Playtests/reports/screenshots/find-lepton-2-20261023-163150-176.png",
+      "playerSeconds": 344.9,
+      "realSeconds": 665.7,
+      "actions": 205,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "stuck",
+      "playerSeconds": 344.9,
+      "realSeconds": 667.4,
+      "actions": 205,
+      "dollars": 0.0
+    }
+  ]
+}

@@ -46,7 +46,7 @@
 
 ## AI playtests (exploratory, not a gate)
 
-`Playtests/README.md` covers agent-driven play sessions in the Editor via MCP for Unity: briefs, fixtures and reports. The runtime side is `Assets/Scripts/Playtest/` (editor and dev builds only): `PlaytestDriver` injects taps and drags through a virtual Input System mouse, `PlaytestState` and `PlaytestUi` read game and HUD state. MCP tools live in `Assets/Scripts/Playtest/Editor/` (its asmdef compiles only when `com.coplaydev.unity-mcp` is installed). Findings that matter should become regression tests here.
+`Playtests/README.md` covers agent-driven play sessions in the Editor via MCP for Unity: briefs, fixtures and reports. The runtime side is `Assets/Scripts/Playtest/` (editor and dev builds only): `PlaytestDriver` injects taps and drags through a virtual Input System mouse, `PlaytestState` and `PlaytestUi` read game and HUD state. MCP tools live in `Assets/Scripts/Playtest/Editor/` (its asmdef compiles only when `com.coplaydev.unity-mcp` is installed). Findings that matter should become regression tests here. Scenario briefs `stability-sweep`, `casual-idler`, `active-grinder` and `whale-speedrun` run from a full wipe; the timed ones record milestone timings in player time to `Playtests/benchmarks/` (compare with `python scripts/benchmark-report.py`). `PlaytestBenchmarkTests` covers milestone detection and `GameClock`.
 
 ## Gotchas
 

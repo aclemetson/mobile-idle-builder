@@ -1,0 +1,484 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261023-114230",
+  "startedLocal": "2026-10-23T11:42:30",
+  "branch": "feature/playtest-scenarios",
+  "commit": "aac8e76",
+  "appVersion": "0.4.47",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": null,
+  "outcome": "stuck",
+  "playerSeconds": 1298.4,
+  "actions": 271,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Starting state after fresh_start all: tutorial step intro_dialogue (0 of 79), entropy 250, prestige runs 0 (prestige wall 50000, not available), crystals 0. Setup: fresh_start all, clock turn_based 1.5 s, benchmark started on branch feature/playtest-scenarios commit aac8e76, app 0.4.47.",
+      "playerSeconds": 0.0,
+      "realSeconds": 3.9,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_first_electron",
+      "playerSeconds": 4.5,
+      "realSeconds": 20.4,
+      "actions": 3,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon",
+      "playerSeconds": 16.8,
+      "realSeconds": 30.5,
+      "actions": 11,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_electrons_in_demon",
+      "playerSeconds": 18.5,
+      "realSeconds": 36.5,
+      "actions": 13,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel",
+      "playerSeconds": 22.0,
+      "realSeconds": 44.6,
+      "actions": 15,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "explain_quark_field",
+      "playerSeconds": 24.7,
+      "realSeconds": 51.6,
+      "actions": 17,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks",
+      "playerSeconds": 27.8,
+      "realSeconds": 57.7,
+      "actions": 19,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_maxwells_demon_quarks",
+      "playerSeconds": 46.3,
+      "realSeconds": 63.8,
+      "actions": 30,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_quarks_in_demon",
+      "playerSeconds": 48.1,
+      "realSeconds": 69.8,
+      "actions": 32,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_panel_quarks",
+      "playerSeconds": 50.9,
+      "realSeconds": 76.8,
+      "actions": 34,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_research_drawer",
+      "playerSeconds": 56.0,
+      "realSeconds": 90.9,
+      "actions": 37,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_recombination_i",
+      "playerSeconds": 58.4,
+      "realSeconds": 98.0,
+      "actions": 38,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "recombination_i",
+      "playerSeconds": 65.0,
+      "realSeconds": 123.1,
+      "actions": 43,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "recombination_unlocked",
+      "playerSeconds": 74.9,
+      "realSeconds": 135.1,
+      "actions": 43,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "recombination_i",
+      "playerSeconds": 74.9,
+      "realSeconds": 135.1,
+      "actions": 43,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "collect_quarks_for_nucleons",
+      "playerSeconds": 78.0,
+      "realSeconds": 140.2,
+      "actions": 45,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "open_recipe_panel_for_nucleons",
+      "playerSeconds": 199.0,
+      "realSeconds": 209.6,
+      "actions": 122,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Left drawer re-opens after playtest_input collect on quark_field and the drawer handle tap (btn-drawer-handle) did not close it; the drawer covers the field area. Had to close by tapping the map at (800,1000) and pan with drag. Also collect with panned:false missed 19 of 20 taps while drawer open. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\collect-quark-missed-20261023-114504-680.png",
+      "playerSeconds": 202.1,
+      "realSeconds": 213.1,
+      "actions": 124,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_protons",
+      "playerSeconds": 205.8,
+      "realSeconds": 220.7,
+      "actions": 127,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "1",
+      "playerSeconds": 208.5,
+      "realSeconds": 227.7,
+      "actions": 129,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_two_neutrons",
+      "playerSeconds": 209.7,
+      "realSeconds": 232.8,
+      "actions": 130,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_nucleons",
+      "playerSeconds": 214.9,
+      "realSeconds": 241.8,
+      "actions": 133,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_protons_and_neutrons",
+      "playerSeconds": 219.3,
+      "realSeconds": 251.9,
+      "actions": 136,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_nucleons",
+      "playerSeconds": 221.6,
+      "realSeconds": 258.0,
+      "actions": 138,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_hydrogen_synthesis",
+      "playerSeconds": 225.6,
+      "realSeconds": 266.0,
+      "actions": 140,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 231.3,
+      "realSeconds": 282.1,
+      "actions": 144,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "gather_for_hydrogen",
+      "playerSeconds": 246.4,
+      "realSeconds": 303.2,
+      "actions": 145,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "hydrogen_synthesis",
+      "playerSeconds": 246.4,
+      "realSeconds": 303.2,
+      "actions": 145,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_protons_for_hydrogen",
+      "playerSeconds": 269.7,
+      "realSeconds": 317.3,
+      "actions": 159,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "craft_hydrogen",
+      "playerSeconds": 276.6,
+      "realSeconds": 331.4,
+      "actions": 164,
+      "dollars": 0.0
+    },
+    {
+      "type": "tier",
+      "detail": "2",
+      "playerSeconds": 279.6,
+      "realSeconds": 340.4,
+      "actions": 166,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "hydrogen_crafted",
+      "playerSeconds": 281.5,
+      "realSeconds": 342.5,
+      "actions": 167,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "direct_to_demon_for_hydrogen",
+      "playerSeconds": 282.6,
+      "realSeconds": 345.5,
+      "actions": 168,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "sell_hydrogen_in_demon",
+      "playerSeconds": 287.3,
+      "realSeconds": 352.5,
+      "actions": 171,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "close_demon_after_hydrogen",
+      "playerSeconds": 288.7,
+      "realSeconds": 355.5,
+      "actions": 172,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_automation_i",
+      "playerSeconds": 290.1,
+      "realSeconds": 358.6,
+      "actions": 173,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "buy_automation_i",
+      "playerSeconds": 295.3,
+      "realSeconds": 367.6,
+      "actions": 176,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_started",
+      "detail": "automation_i",
+      "playerSeconds": 301.1,
+      "realSeconds": 380.7,
+      "actions": 180,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_first_building",
+      "playerSeconds": 320.7,
+      "realSeconds": 402.8,
+      "actions": 181,
+      "dollars": 0.0
+    },
+    {
+      "type": "research_done",
+      "detail": "automation_i",
+      "playerSeconds": 320.7,
+      "realSeconds": 402.8,
+      "actions": 181,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Builder list opened at step place_first_building: the tutorial hint banner stays expanded (full text, not collapsed to the Show hint pill) and covers the bottom of the list, including the Maxwell's Demon Place row. The banner only collapsed to Show hint in an earlier step after a collect. Atomic Assembler Place button is below the visible list at this point. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\builder-list-harvester-20261023-114928-668.png",
+      "playerSeconds": 328.1,
+      "realSeconds": 424.4,
+      "actions": 184,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_conveyor",
+      "playerSeconds": 336.0,
+      "realSeconds": 462.2,
+      "actions": 190,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "harvester",
+      "playerSeconds": 336.0,
+      "realSeconds": 462.2,
+      "actions": 190,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "automation_started",
+      "playerSeconds": 349.5,
+      "realSeconds": 526.6,
+      "actions": 199,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_quark_harvester",
+      "playerSeconds": 355.3,
+      "realSeconds": 536.7,
+      "actions": 203,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "intro_sfc",
+      "playerSeconds": 662.1,
+      "realSeconds": 676.5,
+      "actions": 219,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_sfc",
+      "playerSeconds": 664.1,
+      "realSeconds": 680.5,
+      "actions": 221,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "place_generator",
+      "playerSeconds": 999.5,
+      "realSeconds": 760.0,
+      "actions": 230,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "strong_force_combiner",
+      "playerSeconds": 999.5,
+      "realSeconds": 760.0,
+      "actions": 230,
+      "dollars": 0.0
+    },
+    {
+      "type": "buildings_total",
+      "detail": "5",
+      "playerSeconds": 999.5,
+      "realSeconds": 760.0,
+      "actions": 230,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "route_quarks_to_sfc",
+      "playerSeconds": 1240.3,
+      "realSeconds": 807.3,
+      "actions": 237,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "basic_generator",
+      "playerSeconds": 1240.3,
+      "realSeconds": 807.3,
+      "actions": 237,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S1] route_quarks_to_sfc (step 39) does not advance. Tried 4 belt attempts with the glowing tiles read from screen: (4,11)->(4,7) and (5,11)->(5,7) then (4,10)->(4,6) and a second Done; belts draw as routed loops around the harvesters, but tutorial still says link at least 2 conveyors into Strong Force Combiner. State: SFC at (4,8) powered ok, harvesters (4,9),(5,9),(6,8), generator (3,10). Glow tile coordinates were inferred from screen pixels, not read from the game, so the glow mapping may be off by one row. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\after-done-belts-state-20261023-115736-638.png",
+      "playerSeconds": 1287.3,
+      "realSeconds": 915.7,
+      "actions": 264,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Not reached: Atom Generator checks (steps 43-45: power status, glowing-tile placement, rotate-to-demon, Builder label, connect_atom_gen_inputs belts). Blocked at route_quarks_to_sfc (step 39). Builder label for the Atomic Assembler row is only seen as btn-place-atomic_assembler (below the visible list, disabled until researched); its display name not confirmed on screen. Also the Create button in conveyor mode is unclear: tapping it after end did not commit or advance anything.",
+      "playerSeconds": 1298.4,
+      "realSeconds": 932.2,
+      "actions": 271,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "stuck",
+      "playerSeconds": 1298.4,
+      "realSeconds": 933.7,
+      "actions": 271,
+      "dollars": 0.0
+    }
+  ]
+}

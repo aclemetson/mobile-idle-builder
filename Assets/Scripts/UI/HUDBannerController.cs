@@ -24,6 +24,8 @@ namespace MobileIdleBuilder
         private string        _tutorialHintText;
         private bool          _tutorialHintShown;
         private bool          _tutorialHintMinimized;
+        private bool          _menuOpen;             // the left drawer is open: the hint must not cover its rows
+        private bool          _autoMinimized;        // the menu, not the player, collapsed the hint
 
         /// <summary>True while a hint is active but collapsed to the "Show hint" pill.</summary>
         public bool IsTutorialHintMinimized => _tutorialHintShown && _tutorialHintMinimized;
@@ -132,7 +134,11 @@ namespace MobileIdleBuilder
         /// </summary>
         public void ShowTutorialHint(string message)
         {
-            if (message != _tutorialHintText) _tutorialHintMinimized = false;
+            if (message != _tutorialHintText)
+            {
+                _tutorialHintMinimized = _menuOpen;
+                _autoMinimized         = _menuOpen;
+            }
             _tutorialHintText  = message;
             _tutorialHintShown = true;
             if (_tutorialHintMessage != null) _tutorialHintMessage.text = message;
@@ -154,6 +160,28 @@ namespace MobileIdleBuilder
         public void RestoreTutorialHint()
         {
             _tutorialHintMinimized = false;
+            _autoMinimized         = false;
+            ApplyTutorialHintVisibility();
+        }
+
+        /// <summary>
+        /// Collapses the hint to its "Show hint" pill (bottom-right) while the left drawer is open, because
+        /// the full-width banner sits on the drawer's bottom rows and hides their Place buttons. Expands it
+        /// again when the drawer closes, unless the player had already minimized it.
+        /// </summary>
+        public void SetMenuOpen(bool open)
+        {
+            _menuOpen = open;
+            if (open && _tutorialHintShown && !_tutorialHintMinimized)
+            {
+                _tutorialHintMinimized = true;
+                _autoMinimized         = true;
+            }
+            else if (!open && _autoMinimized)
+            {
+                _tutorialHintMinimized = false;
+                _autoMinimized         = false;
+            }
             ApplyTutorialHintVisibility();
         }
 

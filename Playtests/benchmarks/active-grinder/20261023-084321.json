@@ -1,0 +1,148 @@
+{
+  "scenario": "active-grinder",
+  "runId": "20261023-084321",
+  "startedLocal": "2026-10-23T08:43:21",
+  "branch": "feature/playtest-scenarios",
+  "commit": "aac8e76",
+  "appVersion": "0.4.47",
+  "screen": "1080x2340",
+  "clock": "turn_based",
+  "actionSeconds": 1.5,
+  "timeScale": 1.0,
+  "notes": "Continue run resuming from previous run 20261022-184031 (no fresh_start/load). Start: tutorial step place_atom_generator (index 43 of 79), entropy ~360 per brief (observed 1825 at start, see note), prestige 0, net worth ~1184 per brief.",
+  "outcome": "stuck",
+  "playerSeconds": 97.8,
+  "actions": 65,
+  "dollarsSpent": 0.0,
+  "crystalsBought": 0,
+  "milestones": [
+    {
+      "type": "run_start",
+      "detail": "active-grinder",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.0,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e2",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "entropy",
+      "detail": "1e3",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "net_worth",
+      "detail": "1e3",
+      "playerSeconds": 0.0,
+      "realSeconds": 0.2,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Continue-run baseline mismatch: brief says entropy ~360 / net worth ~1184, actual on resume is entropy 1825, net worth 4090 (idle-return modal showed 13h39m away, +1440 entropy from Down Quarks, capped at 2h). Start-of-run numbers in the benchmark note are the observed values.",
+      "playerSeconds": 0.0,
+      "realSeconds": 4.3,
+      "actions": 0,
+      "dollars": 0.0
+    },
+    {
+      "type": "tutorial_step",
+      "detail": "connect_atom_gen_inputs",
+      "playerSeconds": 14.0,
+      "realSeconds": 60.4,
+      "actions": 10,
+      "dollars": 0.0
+    },
+    {
+      "type": "building_first",
+      "detail": "atomic_assembler",
+      "playerSeconds": 14.0,
+      "realSeconds": 60.4,
+      "actions": 10,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] place_atom_generator: Atom Generator placed at cell (9,7) shows power \"unpowered\" and HUD power label turns red \"(1 unpowered)\" right after placement, though the step text says it draws 5 eV \"well within your generator's output, no new infrastructure needed\". Basic generator at (6,11) is power null. Likely link radius out of range; the player is not told why. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\connect-atom-inputs-20261023-084431-719.png",
+      "playerSeconds": 18.1,
+      "realSeconds": 92.0,
+      "actions": 12,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Atom Generator inspector (cell 9,7): \"Status: UNPOWERED (no generator in range)\", Draw 20 eV. Step text says 5 eV. Brief-level expectation: no new infra needed, but the only generator (basic, cell 6,11, supply 50) is out of link range. Player has no hint about link range or how to fix it. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\assembler-inspector-20261023-084506-684.png",
+      "playerSeconds": 21.1,
+      "realSeconds": 110.5,
+      "actions": 14,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Spent 400 entropy on Basic Generator Coverage Upgrade (Lv1->2, supply 50->100) to try to power the Atom Generator at (9,7). Assembler still UNPOWERED afterwards. Generator link range is 4 tiles and the assembler is ~4-5 tiles away; coverage upgrade did not fix it. Coverage upgrade text does not say what it covers, so the spend was a wrong guess. Relocating the assembler next. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\generator-inspector-20261023-084528-638.png",
+      "playerSeconds": 28.6,
+      "realSeconds": 142.4,
+      "actions": 19,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Builder list: the tutorial hint banner (bottom, ~y 2130-2340) overlaps the Atom Generator Place button; taps on Place at y 2150 hit the banner instead, so the placement mode did not start. playtest_ui reports Place as enabled and in-panel, so the overlap is only visible in the screenshot. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\replace-attempt-20261023-084644-826.png",
+      "playerSeconds": 54.2,
+      "realSeconds": 208.4,
+      "actions": 36,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S2] Recovery: deconstructed the unpowered Atom Generator (refund ~175), re-placed at (8,8) which is within 4-tile link range of the basic generator; status now \"ok\". Entropy 1273 -> 923 for the second placement. Total cost to get a powered Atom Generator about 750 entropy plus the coverage upgrade. The tutorial never says a generator's link range matters. Also: the step text says 5 eV, the inspector says Draw 20 eV.",
+      "playerSeconds": 64.7,
+      "realSeconds": 258.5,
+      "actions": 43,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S1] connect_atom_gen_inputs [verify]: could not draw a proton belt from the Demon to the Atom Generator. Conveyor mode: tapping a start cell (8,9) (green, directly above the Atom Generator at (8,8)) then an end cell (7,8) (yellow arrow pointing into the Generator) produced no belt; the overlay stayed on \"Tap a start, then an end\". \"Create\" toggles to Destroy mode (\"Tap a belt to remove\") instead of committing. drag_cells from (8,9) to (7,8) also produced no belt. The glowing guide tiles were not clearly distinguishable from the grid in screenshots. Tutorial step stays connect_atom_gen_inputs; entropy 923. | E:\\Programming\\unity\\mobile-idle-builder\\Playtests\\reports\\screenshots\\end-tap-20261023-085002-304.png",
+      "playerSeconds": 97.8,
+      "realSeconds": 416.3,
+      "actions": 65,
+      "dollars": 0.0
+    },
+    {
+      "type": "finding",
+      "detail": "[S3] Console on stop: telemetry logs an unobserved background task exception (IOException 995, Win32 aborted I/O, Path E:\\...\\[Unknown]); IAP service logs \"Connect called without a callback\" warnings. Not gameplay-blocking.",
+      "playerSeconds": 97.8,
+      "realSeconds": 420.2,
+      "actions": 65,
+      "dollars": 0.0
+    },
+    {
+      "type": "run_end",
+      "detail": "stuck",
+      "playerSeconds": 97.8,
+      "realSeconds": 420.3,
+      "actions": 65,
+      "dollars": 0.0
+    }
+  ]
+}

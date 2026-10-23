@@ -25,6 +25,8 @@ namespace MobileIdleBuilder
     ///       cell in front of a &lt;from&gt; output and the free cell in front of a &lt;to&gt; input (#202)
     ///   "suggest:&lt;building&gt;:&lt;from&gt;&gt;&lt;to&gt;" — where to place &lt;building&gt; so belts from
     ///       &lt;from&gt; feed it and its output reaches &lt;to&gt; (#203)
+    ///   "power:&lt;building&gt;" — the nearest free spot where &lt;building&gt; is inside a placed generator's
+    ///       influence circle (PowerCoverageMath), so it gets power
     ///   Building keys are BuildingSO ids (e.g. "harvester", "strong_force_combiner");
     ///   "maxwells_demon" matches the entropy sink. Grid math lives in TutorialRouteGuide.
     ///
@@ -176,7 +178,69 @@ namespace MobileIdleBuilder
             if (TutorialRouteGuide.TryParseSuggest(targetId, out var building, out var sFrom, out var sTo))
                 return FindSuggestTarget(building, sFrom, sTo);
 
+            if (TutorialRouteGuide.TryParsePower(targetId, out var powered))
+                return FindPoweredTarget(powered);
+
             return null;
+        }
+
+        // ── Power placement guidance ──────────────────────────────────────────
+
+        /// <summary>
+        /// Nearest free spot where <paramref name="buildingKey"/> is inside a placed power source's influence
+        /// circle, so the grid links it. Retries until a generator is placed (returns null until then).
+        /// </summary>
+        private WorldTarget? FindPoweredTarget(string buildingKey)
+        {
+            var so = FindBuildingSO(buildingKey);
+            if (so == null || gridRenderer == null) return null;
+
+            var sources = GatherPowerSources();
+            if (sources.Count == 0) return null;
+
+            var fp = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+            var a  = TutorialRouteGuide.SuggestPoweredAnchor(gridRenderer.Width, gridRenderer.Height, fp,
+                sources, IsBuildable);
+            if (a == null) return null;
+
+            var anchor = a.Value;
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = anchor.x, AnchorZ = anchor.y, FootprintW = fp.x, FootprintH = fp.y,
+                CameraTarget = new Vector3((anchor.x + (fp.x - 1) * 0.5f) * cs, 0f, (anchor.y + (fp.y - 1) * 0.5f) * cs)
+            };
+        }
+
+        /// <summary>Footprint and influence radius of every placed generator (a power node with MaxEV above zero).</summary>
+        private static List<(Vector2Int min, Vector2Int max, float radius)> GatherPowerSources()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)>();
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return sources;
+            var em = world.EntityManager;
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>(),
+                                                   ComponentType.ReadOnly<GridPosition>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var node = em.GetComponentData<PowerNodeData>(entity);
+                if (node.MaxEV <= 0f) continue;
+
+                var  pos = em.GetComponentData<GridPosition>(entity).Cell;
+                int  w = 1, h = 1;
+                if (em.HasComponent<BuildingFootprint>(entity))
+                {
+                    var fp = em.GetComponentData<BuildingFootprint>(entity);
+                    w = fp.Width;
+                    h = fp.Height;
+                }
+                sources.Add((new Vector2Int(pos.x, pos.y),
+                             new Vector2Int(pos.x + w - 1, pos.y + h - 1),
+                             node.InfluenceRadius));
+            }
+            return sources;
         }
 
         // ── Route / placement guidance (#202, #203) ───────────────────────────

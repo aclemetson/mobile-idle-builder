@@ -36,14 +36,14 @@ namespace MobileIdleBuilder
         /// <summary>The full cooldown length used when the wheel started (for resuming the fill fraction).</summary>
         public float DurationSec => _durationSec;
 
-        public bool IsReady => _durationSec <= 0f || DateTime.UtcNow >= _endUtc;
+        public bool IsReady => _durationSec <= 0f || GameClock.UtcNow >= _endUtc;
         public bool IsOnCooldown => !IsReady;
 
         /// <summary>Begins a fresh cooldown of <paramref name="durationSeconds"/> seconds from now.</summary>
         public void StartCooldown(float durationSeconds)
         {
             _durationSec = Mathf.Max(0f, durationSeconds);
-            _endUtc      = DateTime.UtcNow.AddSeconds(_durationSec);
+            _endUtc      = GameClock.UtcNow.AddSeconds(_durationSec);
         }
 
         /// <summary>Restores a cooldown loaded from save. Caller should only pass a still-future end time.</summary>
@@ -56,7 +56,7 @@ namespace MobileIdleBuilder
         private float RemainingFraction()
         {
             if (_durationSec <= 0f) return 0f;
-            double remaining = (_endUtc - DateTime.UtcNow).TotalSeconds;
+            double remaining = (_endUtc - GameClock.UtcNow).TotalSeconds;
             return Mathf.Clamp01((float)(remaining / _durationSec));
         }
 

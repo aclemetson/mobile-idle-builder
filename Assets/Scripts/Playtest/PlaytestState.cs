@@ -88,6 +88,14 @@ namespace MobileIdleBuilder.Playtest
             public float  cellSize;
             public int    buildingCount;
             public List<BuildingEntry> buildings = new();
+            public List<FieldEntry> fields = new();
+        }
+
+        [Serializable] public sealed class FieldEntry
+        {
+            public string id;            // FieldSO id, e.g. quark_field (paired tiles share it)
+            public int    x, y;
+            public float  cooldownLeft;  // seconds of game time; 0 = ready to tap
         }
 
         [Serializable] public sealed class BuildingEntry
@@ -271,7 +279,31 @@ namespace MobileIdleBuilder.Playtest
                 }
                 g.buildings.Add(entry);
             }
+
+            foreach (var field in Fields())
+            {
+                var cell = renderer != null
+                    ? GridRenderer.WorldToCell(field.transform.position, renderer.CellSize)
+                    : Vector2Int.zero;
+                g.fields.Add(new FieldEntry { id = field.Field.id, x = cell.x, y = cell.y, cooldownLeft = CooldownLeft(field) });
+            }
             return g;
+        }
+
+        /// <summary>Every field tile on the active site that has a FieldSO.</summary>
+        public static List<FieldInstance> Fields()
+        {
+            var list = new List<FieldInstance>();
+            foreach (var f in UnityEngine.Object.FindObjectsByType<FieldInstance>(FindObjectsSortMode.None))
+                if (f != null && f.Field != null) list.Add(f);
+            return list;
+        }
+
+        public static float CooldownLeft(FieldInstance field)
+        {
+            var cd = field.Cooldown;
+            if (cd == null || cd.IsReady) return 0f;
+            return Mathf.Round((float)(cd.EndUtc - GameClock.UtcNow).TotalSeconds * 10f) / 10f;
         }
 
         private static Power CapturePower(EntityManager em)
