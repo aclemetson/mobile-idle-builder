@@ -44,6 +44,10 @@
 | UI panel | `HUDControllerTests.cs` pattern for wiring; manual visibility check in editor (tests can't catch clipping) |
 | Timed/reset logic | Copy `AchievementResetTests.cs` — inject timestamps, never sleep |
 
+## AI playtests (exploratory, not a gate)
+
+`Playtests/README.md` covers agent-driven play sessions in the Editor via MCP for Unity: briefs, fixtures and reports. The runtime side is `Assets/Scripts/Playtest/` (editor and dev builds only): `PlaytestDriver` injects taps and drags through a virtual Input System mouse, `PlaytestState` and `PlaytestUi` read game and HUD state. MCP tools live in `Assets/Scripts/Playtest/Editor/` (its asmdef compiles only when `com.coplaydev.unity-mcp` is installed). Findings that matter should become regression tests here.
+
 ## Gotchas
 
 - `SingletonMonoBehaviour` logs an error on duplicate instances, which NUnit treats as failure — tests use the established setup/teardown patterns in existing service tests; copy them rather than instantiating singletons ad-hoc.
