@@ -212,7 +212,10 @@ namespace MobileIdleBuilder.Playtest.Editor
 
             var grid = UnityEngine.Object.FindAnyObjectByType<GridRenderer>();
             var cam  = UnityEngine.Object.FindAnyObjectByType<CameraController>();
-            bool OnScreen(FieldInstance f) => PlaytestToolUtil.CellToScreen(CellOf(f, grid), out _, out _);
+            // Tappable = on screen and not under HUD chrome. A cell under the drawer handle or an open panel
+            // counted as on screen, so collect skipped the pan and tapped the UI instead (#261: it opened Worlds).
+            bool OnScreen(FieldInstance f) =>
+                PlaytestToolUtil.CellToScreen(CellOf(f, grid), out var sp, out _) && !PlaytestToolUtil.OverUi(sp);
 
             // Fast-forward the macro's waits; player time is the same at any time scale.
             float scaleBefore = driver.TimeScale;
@@ -220,7 +223,7 @@ namespace MobileIdleBuilder.Playtest.Editor
             var start  = Time.realtimeSinceStartup;
             var before = Inventory();
             int taps = 0, hits = 0, missed = 0, cooldownWaits = 0;
-            bool panned = false;
+            bool panned = false, blocked = false;
 
             try
             {
@@ -238,7 +241,7 @@ namespace MobileIdleBuilder.Playtest.Editor
                 int next = 0;
                 while (taps < count && Time.realtimeSinceStartup - start < PlaytestToolUtil.MaxWaitSeconds - 3f)
                 {
-                    if (!fields.Exists(OnScreen)) break;   // the tutorial moved the camera away
+                    if (!fields.Exists(OnScreen)) { blocked = true; break; }   // camera moved away, or UI covers it
                     var ready = fields.Where(f => PlaytestState.CooldownLeft(f) <= 0f && OnScreen(f)).ToList();
                     if (ready.Count == 0)
                     {
@@ -269,10 +272,14 @@ namespace MobileIdleBuilder.Playtest.Editor
             var after  = Inventory();
             var gained = after.Where(kv => kv.Value > (before.TryGetValue(kv.Key, out int b) ? b : 0))
                               .ToDictionary(kv => kv.Key, kv => kv.Value - (before.TryGetValue(kv.Key, out int b) ? b : 0));
-            return new SuccessResponse(taps < count
+            string message = blocked
+                ? $"Stopped after {taps} taps: no '{target}' tile is on screen clear of UI. Close open panels or the " +
+                  "drawer, or drag the map, then call again. Not a game bug by itself."
+                : taps < count
                     ? $"Collected with {taps} of {count} taps before the call limit; call again for the rest."
-                    : $"Collected with {taps} taps.",
-                new { taps, hits, missed, cooldownWaits, panned, gained, after = PlaytestToolUtil.BriefDelta() });
+                    : $"Collected with {taps} taps.";
+            return new SuccessResponse(message,
+                new { taps, hits, missed, cooldownWaits, panned, blocked, gained, after = PlaytestToolUtil.BriefDelta() });
         }
 
         private static Vector2Int CellOf(FieldInstance f, GridRenderer grid) =>

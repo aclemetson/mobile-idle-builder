@@ -89,8 +89,9 @@ The player moves the map by swiping. Testers do the same with `playtest_input dr
 - A locked camera ignores drags. A tutorial pan that is still moving the camera fights a drag, so wait
   for it to settle first. If a drag moves nothing, check the lock and the start point before logging a
   finding.
-- `collect` pans to its target on its own. If it misses every tap, pan with `drag` by hand and retry
-  before calling the field unreachable.
+- `collect` pans to its target on its own and never taps a tile that HUD chrome covers (drawer handle,
+  open drawer or panel). If it returns `blocked: true`, close what is open or `drag` the map, then
+  retry before calling the field unreachable. If it misses every tap, pan by hand and retry too.
 
 ## The run loop
 

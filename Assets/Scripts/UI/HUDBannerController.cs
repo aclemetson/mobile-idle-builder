@@ -20,6 +20,7 @@ namespace MobileIdleBuilder
 
         private VisualElement _tutorialHintBanner;
         private Label         _tutorialHintMessage;
+        private Label         _tutorialHintProgress;
         private Button        _tutorialHintRestore;
         private string        _tutorialHintText;
         private bool          _tutorialHintShown;
@@ -41,7 +42,8 @@ namespace MobileIdleBuilder
             _notificationMessage = root.Q<Label>("notification-banner__message");
 
             _tutorialHintBanner  = root.Q("tutorial-hint-banner");
-            _tutorialHintMessage = root.Q<Label>("tutorial-hint-banner__message");
+            _tutorialHintMessage  = root.Q<Label>("tutorial-hint-banner__message");
+            _tutorialHintProgress = root.Q<Label>("tutorial-hint-banner__progress");
             _tutorialHintRestore = root.Q<Button>("tutorial-hint-restore");
 
             var minimize = root.Q<Button>("tutorial-hint-banner__minimize");
@@ -149,6 +151,18 @@ namespace MobileIdleBuilder
         {
             _tutorialHintShown = false;
             ApplyTutorialHintVisibility();
+        }
+
+        /// <summary>
+        /// Sets the small have/need line under the hint (null or empty hides it). Unlike a new hint text,
+        /// this never re-expands a minimized hint: it changes on every collect tap.
+        /// </summary>
+        public void SetTutorialHintProgress(string progress)
+        {
+            if (_tutorialHintProgress == null) return;
+            bool show = !string.IsNullOrEmpty(progress);
+            _tutorialHintProgress.text = show ? progress : "";
+            HUDController.SetElementVisible(_tutorialHintProgress, show);
         }
 
         public void MinimizeTutorialHint()

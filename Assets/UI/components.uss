@@ -308,11 +308,26 @@
     flex-direction: row;
 }
 
+.tutorial-hint-banner__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: column;
+}
+
 .tutorial-hint-banner__message {
     flex-grow: 1;
     flex-shrink: 1;
     color: var(--color-primary);
     font-size: var(--font-size-md);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* Have/need counts for gather steps (#260), under the hint text. */
+.tutorial-hint-banner__progress {
+    margin-top: 4px;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
     -unity-text-align: middle-center;
     white-space: normal;
 }
