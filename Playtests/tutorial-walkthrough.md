@@ -317,7 +317,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Dialogue** (`place_conveyor_context.asset`):
   - The Architect: The Harvester collects into its output buffer. A conveyor carries those particles to Maxwell's Demon automatically. Open the conveyor tool, then tap the tile beside the Harvester's output to set the start. Tap the tile in front of the Demon's input and I will route the belt for you. Tap the check to place it, then Done when you are finished.
 - **Tap:** pulses button `btn-place-conveyor`; highlights `route:harvester>maxwells_demon` (Full)
-- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. If the step does not advance after Done, the belt is wrong: remove it and redraw it onto the glowing tiles.
+- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
 
 ### 33. `automation_started`
 
@@ -373,7 +373,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Dialogue** (`route_quarks_context.asset`):
   - The Architect: Connect your quark Harvesters to the Combiner with conveyors: tap the tile beside a Harvester's output, then the tile in front of the Combiner's input. Quarks will flow in continuously.
 - **Tap:** pulses button `btn-place-conveyor`; highlights `route:harvester>strong_force_combiner` (Full)
-- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. If the step does not advance after Done, the belt is wrong: remove it and redraw it onto the glowing tiles.
+- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
 
 ### 40. `configure_sfc_recipes`
 
@@ -389,7 +389,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Dialogue** (`route_nucleons_context.asset`):
   - The Architect: Run a conveyor from the Combiner's proton output to Maxwell's Demon. Protons sell for 3 entropy each - triple what a raw quark brings.
 - **Tap:** pulses button `btn-place-conveyor`; highlights `route:strong_force_combiner>maxwells_demon` (Full)
-- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. If the step does not advance after Done, the belt is wrong: remove it and redraw it onto the glowing tiles.
+- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
 
 ### 42. `nucleon_loop_complete`
 
@@ -421,7 +421,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Dialogue** (`connect_atom_gen_context.asset`):
   - The Architect: Re-route the proton belt from the Combiner to the Atom Generator's proton input, then route your electron Harvester into its electron input. Protons plus electrons become hydrogen.
 - **Tap:** pulses button `btn-place-conveyor`
-- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. If the step does not advance after Done, the belt is wrong: remove it and redraw it onto the glowing tiles.
+- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
 
 ### 46. `route_hydrogen_to_demon`
 
@@ -430,7 +430,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Dialogue** (`route_hydrogen_context.asset`):
   - The Architect: Connect the Atom Generator's output to Maxwell's Demon. Hydrogen sells for 5 entropy. A raw proton and electron would have sold for 4 — assembly adds one entropy per cycle, and that margin compounds as you scale.
 - **Tap:** pulses button `btn-place-conveyor`; highlights `route:atomic_assembler>maxwells_demon` (Full)
-- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. If the step does not advance after Done, the belt is wrong: remove it and redraw it onto the glowing tiles.
+- **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
 
 ### 47. `hydrogen_loop_complete`
 

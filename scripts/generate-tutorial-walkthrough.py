@@ -170,8 +170,9 @@ def main():
         "ends on the glowing tile in front of the target's input. Tap the start tile, then the end "
         "tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. "
         "Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner "
-        "did not link in playtest. If the step does not advance after Done, the belt is wrong: remove "
-        "it and redraw it onto the glowing tiles."
+        "did not link in playtest. A belt that links nothing shows the warning \"Belt not linked\" about "
+        "half a second after check, and the camera returns to the glowing tiles: the belt is wrong. "
+        "Extend it from its end onto the glowing tile, or remove it and redraw it."
     )
 
     warnings = []
