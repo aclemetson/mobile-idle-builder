@@ -51,5 +51,5 @@
 ## Gotchas
 
 - `SingletonMonoBehaviour` logs an error on duplicate instances, which NUnit treats as failure — tests use the established setup/teardown patterns in existing service tests; copy them rather than instantiating singletons ad-hoc.
-- PlayMode tests back up and restore the real save file — copy the backup/restore fixture from `SaveSystemTests.cs`, don't write your own.
+- Tests never touch the real save. A namespace-less `[SetUpFixture]` in each test assembly (`TestSaveDirectory.cs`) points `LocalSaveService.SaveDirectoryOverride` at a temp folder for the whole run, so `save.json` and every sidecar file (settings, recipe knowledge, cached flags) resolve there. Before this, `SaveWipeTests` overwrote and deleted the real files and a prestige test wrote through a leaked `SaveManager`, so every run reset Play Mode progress. Build save paths from `LocalSaveService.SaveDirectory`, never `Application.persistentDataPath`; `SaveWipeTests.TestRun_IsRedirectedAwayFromTheRealSaveFolder` fails if the redirect stops running. The per-fixture backup/restore in `SaveSystemTests.cs` still isolates fixtures from each other inside the temp folder.
 - Tests run against **generated SO assets** — if you changed `game_data.json` and didn't re-import, tests validate stale data.
