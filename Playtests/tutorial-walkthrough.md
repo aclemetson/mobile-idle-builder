@@ -308,7 +308,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Advances when:** have at least 2 x any building
 - **Dialogue** (`place_building_context.asset`):
   - The Architect: Open the Build menu and place a Harvester on the lepton field. It will collect electrons automatically - you will need a steady supply of them for hydrogen later.
-- **Tap:** pulses button `btn-place-harvester`
+- **Tap:** pulses button `btn-place-harvester`; highlights `electron_field` (Full)
 
 ### 32. `place_conveyor`
 
