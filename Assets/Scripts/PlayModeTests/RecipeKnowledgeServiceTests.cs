@@ -27,7 +27,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
-            _filePath = Path.Combine(Application.persistentDataPath, KnowledgeFile);
+            _filePath = Path.Combine(LocalSaveService.SaveDirectory, KnowledgeFile);
             _backup   = File.Exists(_filePath) ? File.ReadAllText(_filePath) : null;
             if (File.Exists(_filePath)) File.Delete(_filePath);
         }

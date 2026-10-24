@@ -34,7 +34,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | Class | Role |
 |---|---|
 | `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. 60s autosave; `SaveLocal()` + best-effort cloud push (`PushToCloudBestEffort`) on both background (`OnApplicationPause(true)`) and quit (`OnApplicationQuit`) — fire-and-forget Task, not the `SaveToCloud` coroutine, since the player loop is suspended once backgrounded; honors the `CloudSaveEnabled` kill-switch. Cloud reconcile: newest `lastSaved` timestamp wins, loser kept as 24h backup. |
-| `LocalSaveService` | JSON file read/write. |
+| `LocalSaveService` | JSON file read/write. `LocalSaveService.SaveDirectory` is the one folder for `save.json` and every sidecar file (`SettingsService`, `RecipeKnowledgeService`, `FeatureFlagService`, `SaveWipe` resolve paths from it); tests redirect it to a temp folder (see `testing.md`). |
 | `UGSCloudSaveService` + `AuthSessionPolicy` | UGS Cloud Save; Google sign-in with 30/90-day re-auth policy; anonymous fallback. |
 | `PrestigeSaveWatcher` | Clears idle snapshot when `PrestigeData.RunCount` changes (prevents double-earning). |
 | `GridSaveService` | Building/conveyor/field persistence + idle snapshot rebuild (below). |

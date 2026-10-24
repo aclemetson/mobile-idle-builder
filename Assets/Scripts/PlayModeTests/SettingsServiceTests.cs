@@ -21,7 +21,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
-            _settingsPath = Path.Combine(Application.persistentDataPath, "settings.json");
+            _settingsPath = Path.Combine(LocalSaveService.SaveDirectory, "settings.json");
             _backup       = File.Exists(_settingsPath) ? File.ReadAllText(_settingsPath) : null;
             if (File.Exists(_settingsPath)) File.Delete(_settingsPath);
         }

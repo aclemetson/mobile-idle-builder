@@ -17,7 +17,7 @@ namespace MobileIdleBuilder.PlayModeTests
     public class SaveWipeTests
     {
         static string PathTo(string fileName) =>
-            Path.Combine(Application.persistentDataPath, fileName);
+            Path.Combine(LocalSaveService.SaveDirectory, fileName);
 
         static readonly string[] AllFiles =
         {
@@ -51,6 +51,12 @@ namespace MobileIdleBuilder.PlayModeTests
             PlayerPrefs.DeleteKey(SaveManager.k_WipePending);
             PlayerPrefs.Save();
         }
+
+        // This fixture writes and deletes every save file, so it must only ever see the test folder.
+        [Test]
+        public void TestRun_IsRedirectedAwayFromTheRealSaveFolder() =>
+            Assert.AreNotEqual(Application.persistentDataPath, LocalSaveService.SaveDirectory,
+                "PlayModeTestsSaveDirectory did not run: tests would overwrite the real save.json");
 
         [Test]
         public void WipeEverything_DeletesSaveAndEverySidecarFile()
