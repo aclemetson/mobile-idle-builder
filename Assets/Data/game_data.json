@@ -12791,7 +12791,10 @@
       "advance_condition": { "type": "BuildingMin", "min_count": 2 },
       "on_enter": {
         "dialogue_id": "place_building_context",
-        "pulse_button_id": "btn-place-harvester"
+        "pulse_button_id": "btn-place-harvester",
+        "_comment": "Full: pan to the lepton field. The camera was left on the Demon by steps 26-28 and the field could sit off screen (#258).",
+        "highlight_target": "electron_field",
+        "highlight_mode": "Full"
       }
     },
     {
