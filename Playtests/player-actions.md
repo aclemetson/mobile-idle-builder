@@ -174,7 +174,7 @@ with `playtest_benchmark note`:
 | Fix | When |
 |---|---|
 | `playtest_control status` | The change-only summaries look wrong; this resets their baseline |
-| Stop and replay Play Mode (`manage_editor` stop, then play, then `wait` for `loaded`) | The UI is in a state no tap clears. Note: today a new Play Mode session may reload from the start of the tutorial (save not persisting), so check the step afterwards |
+| Stop and replay Play Mode (`manage_editor` stop, then play, then `wait` for `loaded`) | The UI is in a state no tap clears. The save reloads where it left off; check the tutorial step afterwards. If it went back to the intro, something wiped the save (before #265, every test run did): log it as S1 |
 | `load_fixture` for the nearest checkpoint | Only if the brief allows fixtures |
 
 ### Rung 3: Cheats (dev console; each one is a softlock finding)
