@@ -34,6 +34,29 @@ namespace MobileIdleBuilder
         internal static IEnumerable<KeyValuePair<Vector2Int, FieldSO>> GetAllFields() => _fieldMap;
 
         /// <summary>
+        /// Every live field instance on the active site. FieldGenerator is the only creator of
+        /// FieldInstance, so this is complete. Use it instead of FindObjectsByType&lt;FieldInstance&gt;;
+        /// it always reflects the current site (ClearAllFields / site switch empties it), so callers
+        /// should iterate it fresh rather than caching a copy. Returned as the concrete
+        /// ValueCollection so a foreach does not box the enumerator (no per-frame allocation).
+        /// Entries can be Unity-null for a frame while a destroyed field is pending removal, so skip nulls.
+        /// </summary>
+        public static Dictionary<Vector2Int, FieldInstance>.ValueCollection AllInstances => _instanceMap.Values;
+
+        /// <summary>Test seam: register / clear field instances without a GridRenderer or scene.</summary>
+        internal static void RegisterInstanceForTests(Vector2Int cell, FieldInstance instance)
+        {
+            _instanceMap[cell] = instance;
+            _fieldMap[cell]    = instance != null ? instance.Field : null;
+        }
+
+        internal static void ClearRegistryForTests()
+        {
+            _instanceMap.Clear();
+            _fieldMap.Clear();
+        }
+
+        /// <summary>
         /// The Android-safe additive particle material assigned in the Inspector. Exposed so the
         /// collector's emission aperture can reuse the same shipped material/variant as the fields.
         /// </summary>

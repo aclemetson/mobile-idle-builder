@@ -149,11 +149,10 @@ namespace MobileIdleBuilder
 
         private WorldTarget? FindWorldTarget(string targetId)
         {
-            // Scene-based field instances
-            var fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var f in fields)
+            // Field instances on the active site (FieldGenerator's registry; no scene scan)
+            foreach (var f in FieldGenerator.AllInstances)
             {
-                if (f.Field == null || f.Field.id != targetId) continue;
+                if (f == null || f.Field == null || f.Field.id != targetId) continue;
 
                 float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
                 int   ax = Mathf.RoundToInt(f.transform.position.x / cs);
