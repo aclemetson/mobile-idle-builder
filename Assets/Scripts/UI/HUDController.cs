@@ -89,6 +89,14 @@ namespace MobileIdleBuilder
         private bool          _drawerOpen;
         private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
 
+        // ---- Back button (#205) ----
+        // Mode flags mirror the controllers' OnPlacingChanged / OnConveyorPlacingChanged /
+        // OnDeconstructingChanged events. _modeEndedFrame lets the back handler yield on the frame a
+        // controller cancelled its mode on the same Escape press, so one press never closes two layers.
+        private bool _placingMode, _conveyorMode, _deconstructMode;
+        private int  _modeEndedFrame = -1;
+        private DialogueController _dialogue;
+
         // ---- Placement controls ----
         private Button        _btnRotateOutput;
         private Button        _btnFlipBuilding;
@@ -330,6 +338,7 @@ namespace MobileIdleBuilder
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+            HandleBackButton();
             UpdatePlacementConfirmPopup();
             RefreshBuildingAffordabilityIfChanged();
             RefreshBannerClearance();
@@ -1723,8 +1732,15 @@ namespace MobileIdleBuilder
 
         private void OnPlacingChanged(bool isPlacing)
         {
+            TrackMode(ref _placingMode, isPlacing);
             SetElementVisible(_placementOverlay, isPlacing);
-            if (!isPlacing) SetElementVisible(_placementConfirmPopup, false);
+            if (!isPlacing)
+            {
+                SetElementVisible(_placementConfirmPopup, false);
+                // The output selector only exists inside placement; a cancel from Escape/back used to
+                // leave it on screen.
+                SetElementVisible(_outputSelector, false);
+            }
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
@@ -1805,6 +1821,7 @@ namespace MobileIdleBuilder
 
         private void OnConveyorPlacingChanged(bool isPlacing)
         {
+            TrackMode(ref _conveyorMode, isPlacing);
             SetElementVisible(_conveyorOverlay, isPlacing);
 
             if (isPlacing)
@@ -1868,7 +1885,61 @@ namespace MobileIdleBuilder
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
+            TrackMode(ref _deconstructMode, isDeconstructing);
             SetElementVisible(_deconstructOverlay, isDeconstructing);
+        }
+
+        // ============================================================
+        // Back button (#205)
+        // ============================================================
+
+        private void TrackMode(ref bool flag, bool active)
+        {
+            if (flag && !active) _modeEndedFrame = Time.frameCount;
+            flag = active;
+        }
+
+        /// <summary>
+        /// Android back / Escape closes the top-most UI layer, one per press. Order and rules live in
+        /// <see cref="BackNavigation"/>; this only reads the live state and applies the result.
+        /// </summary>
+        private void HandleBackButton()
+        {
+            if (!InputUtils.WasBackPressed()) return;
+
+            if (_dialogue == null) _dialogue = FindAnyObjectByType<DialogueController>();
+
+            bool panelOpen = false;
+            if (_allPanels != null)
+                foreach (var p in _allPanels)
+                    if (p != null && !p.ClassListContains("hidden")) { panelOpen = true; break; }
+
+            var state = new BackNavigation.State
+            {
+                ModeActiveOrJustEnded = _placingMode || _conveyorMode || _deconstructMode
+                                        || _modeEndedFrame == Time.frameCount,
+                DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
+                ConfirmOpen      = ConfirmPrompt.IsOpen,
+                IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
+                UpdateNoticeOpen = _gameUpdate != null && _gameUpdate.IsOpen,
+                InspectorOpen    = _inspector != null && _inspector.IsOpen,
+                PanelOpen        = panelOpen,
+                DrawerOpen       = _drawerOpen,
+            };
+
+            switch (BackNavigation.TopLayer(state))
+            {
+                case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
+                case BackNavigation.Layer.IdleReturn:    _idleReturn.Close();            break;
+                case BackNavigation.Layer.UpdateNotice:  _gameUpdate.Close();            break;
+                case BackNavigation.Layer.Inspector:     _inspector.HideBuildingInspector(); break;
+                case BackNavigation.Layer.Panel:
+                    foreach (var p in _allPanels)
+                        if (p != null) SetElementVisible(p, false);   // same as each panel's close button
+                    break;
+                case BackNavigation.Layer.Drawer:        CloseDrawer();                  break;
+                // YieldToMode / SwallowDialogue / None: nothing to do here.
+            }
         }
 
         // ============================================================

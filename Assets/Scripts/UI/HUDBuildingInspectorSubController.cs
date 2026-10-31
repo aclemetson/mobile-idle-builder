@@ -197,6 +197,9 @@ namespace MobileIdleBuilder
             GameLogger.Develop($"[InspectorUI] Panel shown — entity={entity}");
         }
 
+        /// <summary>True while a building is selected in the inspector.</summary>
+        public bool IsOpen => _inspectorEntity != Entity.Null;
+
         public void HideBuildingInspector()
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);

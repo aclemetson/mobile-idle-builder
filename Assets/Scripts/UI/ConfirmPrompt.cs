@@ -61,6 +61,9 @@ namespace MobileIdleBuilder
         /// <summary>Closes without running either callback (e.g. the mode that asked was cancelled).</summary>
         public static void Dismiss() => Close();
 
+        /// <summary>Back button: same as tapping Cancel (runs the cancel callback).</summary>
+        public static void CancelFromBack() { if (IsOpen) Cancel(); }
+
         static void Confirm()
         {
             var action = s_onConfirm;
