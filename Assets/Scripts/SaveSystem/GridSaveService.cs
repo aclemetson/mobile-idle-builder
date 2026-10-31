@@ -137,6 +137,29 @@ namespace MobileIdleBuilder
         internal static bool IsRestorable(BuildingSO building) =>
             building != null && !building.isEntropySink;
 
+        /// <summary>
+        /// A saved building that no longer fits anywhere near its old anchor (its footprint grew) is
+        /// dropped and its placement cost returned, so the player loses nothing. Every LoadGrid caller
+        /// runs after ECSLoadBridge.ApplyLoadedSave has copied the currency into ECS (SaveApplied is only
+        /// raised after LoadGrid), and the next flush writes ECS back over the save, so the refund must
+        /// land in ECS. The save gets it too, in case the app closes before that flush.
+        /// </summary>
+        private void RefundUnplaceable(SaveData save, BuildingSO building, Vector2Int anchor)
+        {
+            long refund = building.entropyCost;
+            GameLogger.Warning($"[GridSaveService] {building.id} at ({anchor.x},{anchor.y}) no longer fits " +
+                               $"its {building.footprint.x}x{building.footprint.y} footprint; removed and refunded {refund}e.");
+
+            if (save?.currentRun != null)
+                save.currentRun.baseCurrency += refund;
+
+            using var q = _em.CreateEntityQuery(typeof(PlayerProgressData));
+            if (q.CalculateEntityCount() != 1) return;
+            var p = q.GetSingleton<PlayerProgressData>();
+            p.BaseCurrency += refund;
+            q.SetSingleton(p);
+        }
+
         // ── Multi-grid migration ──────────────────────────────────────────
 
         /// <summary>
@@ -329,6 +352,28 @@ namespace MobileIdleBuilder
             // --- Restore buildings ---
             if (hasBuildings && buildingPlacer != null)
             {
+                // Cells already claimed, so a building whose footprint grew since the save (#275: the
+                // Atom Generator went 1x1 -> 2x1) can't land on a neighbour. Belts, fields and the baked
+                // Demon are known up front; restored buildings add theirs as they go.
+                var claimed = new HashSet<Vector2Int>();
+                if (grid.conveyors != null)
+                    foreach (var csd in grid.conveyors)
+                        for (int i = 0; csd.cells != null && i + 1 < csd.cells.Length; i += 2)
+                            claimed.Add(new Vector2Int(csd.cells[i], csd.cells[i + 1]));
+                var fieldCells = new HashSet<Vector2Int>();
+                if (grid.fields != null)
+                    foreach (var f in grid.fields)
+                        if (f.position != null && f.position.Length >= 2)
+                            fieldCells.Add(new Vector2Int(f.position[0], f.position[1]));
+                foreach (var bsd in grid.buildings)
+                    if (buildingLookup.TryGetValue(bsd.buildingId, out var sinkEntry) && !IsRestorable(sinkEntry.building))
+                        foreach (var c in FootprintFit.Cells(new Vector2Int(bsd.position[0], bsd.position[1]),
+                                                             sinkEntry.building.footprint, bsd.rotation))
+                            claimed.Add(c);
+                bool InBounds(Vector2Int c) => c.x >= 0 && c.y >= 0
+                    && (grid.size == null || grid.size.x <= 0 || c.x < grid.size.x)
+                    && (grid.size == null || grid.size.y <= 0 || c.y < grid.size.y);
+
                 foreach (var bsd in grid.buildings)
                 {
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
@@ -352,8 +397,26 @@ namespace MobileIdleBuilder
 
                     int? outputDir = bsd.outputDirection >= 0 ? (int?)bsd.outputDirection : null;
 
+                    var anchor = new Vector2Int(bsd.position[0], bsd.position[1]);
+                    bool collector = entry.building.placementRule == PlacementRule.MustBeOnField;
+                    if (!collector)
+                    {
+                        if (!FootprintFit.TryFit(anchor, entry.building.footprint, bsd.rotation,
+                                c => InBounds(c) && !claimed.Contains(c) && !fieldCells.Contains(c), out var fitted))
+                        {
+                            RefundUnplaceable(save, entry.building, anchor);
+                            continue;
+                        }
+                        if (fitted != anchor)
+                            GameLogger.Info($"[GridSaveService] {entry.building.id} at ({anchor.x},{anchor.y}) " +
+                                            $"no longer fits its footprint; restored at ({fitted.x},{fitted.y}).");
+                        anchor = fitted;
+                    }
+                    foreach (var c in FootprintFit.Cells(anchor, entry.building.footprint, bsd.rotation))
+                        claimed.Add(c);
+
                     buildingPlacer.PlaceBuilding(
-                        bsd.position[0], bsd.position[1],
+                        anchor.x, anchor.y,
                         entry.building, recipe,
                         outputDir, bsd.rotation, bsd.flipped,
                         speedLevel:   Mathf.Max(1, bsd.level),

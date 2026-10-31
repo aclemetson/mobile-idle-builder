@@ -33,5 +33,24 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Recipe_UnusedItem_JammingNeededItem_Overflows()
             => Assert.AreEqual(InputDecision.Overflow, InputAcceptance.Decide(0, 30, true, false, true));
+
+        // ── Tail input priority (#275) ────────────────────────────────────────
+
+        [Test]
+        public void TailPriority_BuildingBesideTail_BeatsDemonBesideTail()
+            => Assert.Less(TailInputPriority.Rank(false, false), TailInputPriority.Rank(false, true),
+                "A proton belt ending beside both the Demon and the Atom Generator must feed the Atom Generator");
+
+        [Test]
+        public void TailPriority_BuildingBeside_BeatsDemonTheBeltPointsAt()
+            => Assert.Less(TailInputPriority.Rank(false, false), TailInputPriority.Rank(true, true),
+                "A cut belt re-aims at the Demon, so pointing at it must not beat a building that needs the item");
+
+        [Test]
+        public void TailPriority_WithinAKind_PointedInputFirst()
+        {
+            Assert.Less(TailInputPriority.Rank(true, false), TailInputPriority.Rank(false, false));
+            Assert.Less(TailInputPriority.Rank(true, true),  TailInputPriority.Rank(false, true));
+        }
     }
 }

@@ -17,7 +17,8 @@ MonoBehaviour:
     text: "Your Fusion Reactor fuses two light nuclei into a heavier one \u2014 four
       hydrogen into helium, three helium into carbon, and onward up the ladder. Feed
       it light atoms and it climbs toward iron far faster than the Assembler ever
-      could."
+      could. Three Helium-4 make one Carbon, worth 160 entropy: sixteen times the
+      helium it came from."
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

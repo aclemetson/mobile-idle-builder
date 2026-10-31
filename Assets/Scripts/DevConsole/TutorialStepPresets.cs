@@ -45,15 +45,17 @@ namespace MobileIdleBuilder.Dev
             { "buy_field_synthesis",          250 },   // enough for 250e Field Synthesis
             { "place_quark_field_pair",       300 },   // after -250e; enough for the first 300e quark pair
             { "field_pair_placed",             50 },
+            { "place_neutron_harvesters",     850 },   // two more Harvesters: 337e + 506e
+            { "place_neutron_combiner",       300 },   // after -843e; enough for the second 300e Combiner
+            { "route_quarks_to_neutron_combiner", 0 },
             { "post_tutorial_intro",          200 },
             { "buy_atomic_assembly",          500 },   // enough for 500e Atomic Assembly
             { "atomic_assembly_unlocked",      50 },
-            { "buy_heavy_elements",          3000 },   // enough for 3000e Heavy Elements
-            { "heavy_elements_unlocked",       50 },
-            { "buy_isotope_engineering",     1500 },   // enough for 1500e Isotope Engineering
-            { "isotopes_unlocked",             50 },
-            { "buy_radioactive_isotopes",    5000 },   // enough for 5000e Radioactive Isotopes
-            { "radioactive_isotopes_unlocked", 50 },
+            { "first_element_context",       2550 },   // craft_first_helium rewards 2,500e
+            { "buy_fusion_i",                4000 },   // enough for 4000e Stellar Fusion
+            { "place_fusion_reactor",        1500 },   // after -4000e; enough for the 1500e Fusion Reactor
+            { "power_for_fusion",             225 },   // after -1500e; enough for the second 225e Basic Generator
+            { "fusion_explained",              50 },
         };
 
         /// <summary>
@@ -127,22 +129,11 @@ namespace MobileIdleBuilder.Dev
             { "atomic_assembly_unlocked",    24_000f },
             { "craft_first_helium",          26_000f },
             { "first_element_context",       28_000f },
-            { "buy_heavy_elements",          30_000f },
-            { "heavy_elements_unlocked",     32_000f },
-            { "craft_first_uranium",         35_000f },
-            { "uranium_crafted",             38_000f },
-            { "buy_isotope_engineering",     40_000f },
-            { "isotopes_unlocked",           42_000f },
-            { "place_isotopic_manipulator",  44_000f },
-            { "craft_first_isotope",         45_000f },
-            { "isotope_crafted",             46_000f },
-            { "buy_radioactive_isotopes",    47_000f },
-            { "radioactive_isotopes_unlocked",48_000f },
-            { "place_radioactive_containment",49_000f },
-            { "craft_uranium_235",           50_000f },
-            { "uranium_235_crafted",         51_000f },
-            { "collect_alpha_particle",      52_000f },
-            { "particles_loop_complete",     55_000f },
+            { "intro_nuclear_reactors",      30_000f },
+            { "place_fusion_reactor",        35_000f },
+            { "route_helium_to_reactor",     38_000f },
+            { "craft_first_carbon",          40_000f },
+            { "tutorial_complete",           45_000f },
         };
 
         /// <summary>
@@ -205,11 +196,20 @@ namespace MobileIdleBuilder.Dev
         // ClearGrid preserves in place. Including it here would cause LoadGrid to attempt a duplicate.
         static readonly BuildingSaveData[] k_PlaceConveyor_Buildings = new[]
         {
-            new BuildingSaveData { buildingId = 1, recipeId =  3, position = new[] {  6, 10 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (electron)
-            new BuildingSaveData { buildingId = 1, recipeId =  1, position = new[] {  5,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (quark)
-            new BuildingSaveData { buildingId = 1, recipeId =  2, position = new[] {  4,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = -1 }, // Harvester (quark)
+            // A Harvester's output port exists only when it has an outputDirection (BuildingPlacer), so -1
+            // left skipped-to Harvesters unable to feed any belt. Electron faces East toward the Demon;
+            // the quark pair faces South, onto free tiles a belt can start from.
+            new BuildingSaveData { buildingId = 1, recipeId =  3, position = new[] {  6, 10 }, level = 1, rotation = 0, flipped = false, outputDirection = 1 }, // Harvester (electron)
+            new BuildingSaveData { buildingId = 1, recipeId =  1, position = new[] {  5,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = 2 }, // Harvester (quark)
+            new BuildingSaveData { buildingId = 1, recipeId =  2, position = new[] {  4,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = 2 }, // Harvester (quark)
         };
         static readonly ConveyorSaveData[] k_PlaceConveyor_Conveyors = new ConveyorSaveData[0];
+        // From automation_started on, the electron belt place_conveyor built: Harvester (6,10) East
+        // -> (7,10) -> (8,10), the tile in front of the Demon's west-edge input at (9,10).
+        static readonly ConveyorSaveData[] k_ElectronBelt_Conveyors = new[]
+        {
+            new ConveyorSaveData { cells = new[] { 7, 10, 8, 10 } },
+        };
 
         // ── Steps 31-33: place_conveyor .. place_quark_harvester
         // Only the electron Harvester exists yet: the quark Harvesters are placed at step 33 (#192),
@@ -244,24 +244,14 @@ namespace MobileIdleBuilder.Dev
         static readonly BuildingSaveData[] k_UpgradeSpeed_Buildings    = null; // TODO
         static readonly ConveyorSaveData[] k_UpgradeSpeed_Conveyors     = null;
 
-        // ── Step 61: place_isotopic_manipulator
-        // State: Full hydrogen loop + Atom Generator L2; player places Isotopic Manipulator.
-        static readonly BuildingSaveData[] k_PlaceManip_Buildings      = null; // TODO
-        static readonly ConveyorSaveData[] k_PlaceManip_Conveyors       = null;
-
-        // ── Step 66: place_radioactive_containment
-        // State: Full loop + Manipulator; player places Radioactive Containment.
-        static readonly BuildingSaveData[] k_PlaceContain_Buildings    = null; // TODO
-        static readonly ConveyorSaveData[] k_PlaceContain_Conveyors     = null;
-
         // Lookup table: stepId → (buildings, conveyors) pair
         // Steps not listed here will use the nearest preceding defined checkpoint.
         static readonly Dictionary<string, (BuildingSaveData[] buildings, ConveyorSaveData[] conveyors)> s_GridTable = new()
         {
             { "place_conveyor",               (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
-            { "automation_started",           (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
-            { "place_quark_harvester",        (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
-            { "intro_sfc",                    (k_PlaceConveyor_Buildings,  k_PlaceConveyor_Conveyors) },
+            { "automation_started",           (k_ElectronHarvester_Buildings, k_ElectronBelt_Conveyors) },
+            { "place_quark_harvester",        (k_ElectronHarvester_Buildings, k_ElectronBelt_Conveyors) },
+            { "intro_sfc",                    (k_PlaceConveyor_Buildings,  k_ElectronBelt_Conveyors) },
             { "place_sfc",                    (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "place_generator",              (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
             { "link_generator",               (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
@@ -277,27 +267,16 @@ namespace MobileIdleBuilder.Dev
             { "buy_field_synthesis",          (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "place_quark_field_pair",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "field_pair_placed",            (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_neutron_harvesters",     (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_neutron_combiner",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "set_neutron_recipe",           (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "route_quarks_to_neutron_combiner", (k_HydrogenLoop_Buildings, k_HydrogenLoop_Conveyors) },
+            { "route_neutrons_to_atom_gen",   (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "craft_first_helium",           (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "first_element_context",        (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "buy_heavy_elements",           (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "heavy_elements_unlocked",      (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "craft_first_uranium",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "uranium_crafted",              (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "buy_isotope_engineering",      (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "isotopes_unlocked",            (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "place_isotopic_manipulator",   (k_PlaceManip_Buildings,     k_PlaceManip_Conveyors) },
-            { "craft_first_isotope",          (k_PlaceManip_Buildings,     k_PlaceManip_Conveyors) },
-            { "isotope_crafted",              (k_PlaceManip_Buildings,     k_PlaceManip_Conveyors) },
-            { "buy_radioactive_isotopes",     (k_PlaceManip_Buildings,     k_PlaceManip_Conveyors) },
-            { "radioactive_isotopes_unlocked",(k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
-            { "place_radioactive_containment",(k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
-            { "craft_uranium_235",            (k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
-            { "uranium_235_crafted",          (k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
-            { "collect_alpha_particle",       (k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
-            { "particles_loop_complete",      (k_PlaceContain_Buildings,   k_PlaceContain_Conveyors) },
         };
 
         /// <summary>

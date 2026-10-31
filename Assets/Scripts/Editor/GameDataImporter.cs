@@ -803,6 +803,7 @@ namespace MobileIdleBuilder.Editor
                     id        = s.id,
                     hintText  = s.hint,
                     isSubstep = s.is_substep,
+                    rewardEntropy = s.reward_entropy,
                 };
 
                 // Advance condition
@@ -816,11 +817,17 @@ namespace MobileIdleBuilder.Editor
                         minCount     = s.advance_condition.min_count,
                         minLevel     = s.advance_condition.min_level,
                         fieldId      = s.advance_condition.field_id     ?? "",
+                        recipeId     = s.advance_condition.recipe_id,
                         buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,
                             $"TutorialStep '{s.id}'.advance_condition.type", out var ct))
                         def.advanceCondition.type = ct;
+
+                    // UiEvent steps advance in TutorialOverlayController, which never pays the reward.
+                    if (s.reward_entropy > 0 && def.advanceCondition.type == ConditionType.UiEvent)
+                        GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': reward_entropy " +
+                            "is ignored on a UiEvent step; put it on a state-driven step.");
 
                     // Resolve BuildingMin's building_id string to the int BuildingType so the
                     // ECS system can filter the count. Empty/unknown id leaves buildingType at

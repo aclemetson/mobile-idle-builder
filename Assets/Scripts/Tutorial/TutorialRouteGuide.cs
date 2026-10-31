@@ -258,10 +258,14 @@ namespace MobileIdleBuilder
         /// </summary>
         public static Vector2Int? SuggestPoweredAnchor(int gridWidth, int gridHeight, Vector2Int footprint,
                                                        IReadOnlyList<(Vector2Int min, Vector2Int max, float radius)> sources,
-                                                       Func<Vector2Int, bool> isBuildable)
+                                                       Func<Vector2Int, bool> isBuildable,
+                                                       IReadOnlyList<Vector2Int> portFrontOffsets = null,
+                                                       Func<Vector2Int, bool> isPortFrontOk = null)
         {
-            Vector2Int? best = null;
-            int bestDistance = int.MaxValue;
+            // Spots whose every port front passes isPortFrontOk (free for a belt, not beside the Demon,
+            // #275) beat the plain nearest spot, which is kept as the fallback when none qualifies.
+            Vector2Int? best = null, bestOpen = null;
+            int bestDistance = int.MaxValue, bestOpenDistance = int.MaxValue;
 
             for (int y = 0; y < gridHeight; y++)
             for (int x = 0; x < gridWidth; x++)
@@ -283,8 +287,21 @@ namespace MobileIdleBuilder
                     bestDistance = nearest;
                     best         = anchor;
                 }
+                if (nearest < bestOpenDistance && portFrontOffsets != null && isPortFrontOk != null
+                    && AllFrontsOk(anchor, portFrontOffsets, isPortFrontOk))
+                {
+                    bestOpenDistance = nearest;
+                    bestOpen         = anchor;
+                }
             }
-            return best;
+            return bestOpen ?? best;
+        }
+
+        private static bool AllFrontsOk(Vector2Int anchor, IReadOnlyList<Vector2Int> offsets, Func<Vector2Int, bool> ok)
+        {
+            foreach (var o in offsets)
+                if (!ok(anchor + o)) return false;
+            return true;
         }
 
         private static bool FootprintBuildable(Vector2Int anchor, Vector2Int footprint, Func<Vector2Int, bool> isBuildable)

@@ -20,7 +20,7 @@ namespace MobileIdleBuilder
     ///
     /// Supported target IDs:
     ///   FieldInstance.Field.id — e.g. "electron_field", "quark_field"
-    ///   "maxwells_demon", "atomic_assembler" — placed buildings
+    ///   "maxwells_demon" or any BuildingSO id ("atomic_assembler", "fusion_reactor") — placed buildings
     ///   "route:&lt;from&gt;&gt;&lt;to&gt;" — the start and end tiles of the next belt to draw: the free
     ///       cell in front of a &lt;from&gt; output and the free cell in front of a &lt;to&gt; input (#202)
     ///   "suggest:&lt;building&gt;:&lt;from&gt;&gt;&lt;to&gt;" — where to place &lt;building&gt; so belts from
@@ -169,9 +169,6 @@ namespace MobileIdleBuilder
             if (targetId == "maxwells_demon")
                 return FindEntropySinkTarget();
 
-            if (targetId == "atomic_assembler")
-                return FindPlacedBuildingTarget(4);
-
             if (TutorialRouteGuide.TryParseRoute(targetId, out var from, out var to))
                 return FindRouteTarget(from, to);
 
@@ -180,6 +177,12 @@ namespace MobileIdleBuilder
 
             if (TutorialRouteGuide.TryParsePower(targetId, out var powered))
                 return FindPoweredTarget(powered);
+
+            // Any other placed building by BuildingSO id ("atomic_assembler", "fusion_reactor", ...).
+            // Only "atomic_assembler" used to resolve, so other ids timed out with no highlight.
+            var placed = FindBuildingSO(targetId);
+            if (placed != null)
+                return FindPlacedBuildingTarget(placed.buildingId);
 
             return null;
         }
@@ -199,8 +202,26 @@ namespace MobileIdleBuilder
             if (sources.Count == 0) return null;
 
             var fp = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+
+            // Keep every belt tile in front of its ports free and off the Demon's edge (#275): the Demon
+            // has an input on every edge tile, so a belt ending there could sell what it carries, and a
+            // boxed-in Atom Generator had no side left for the neutron line.
+            var frontOffsets = new List<Vector2Int>();
+            if (so.ports != null)
+                foreach (var port in so.ports)
+                {
+                    var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
+                    frontOffsets.Add(port.portType == PortType.Input
+                        ? TutorialRouteGuide.InputFront(cell, facing)
+                        : TutorialRouteGuide.OutputFront(cell, facing));
+                }
+            var demon = FindEntropySinkTarget();
+            bool BesideDemon(Vector2Int c) => demon is WorldTarget d
+                && c.x >= d.AnchorX - 1 && c.x <= d.AnchorX + d.FootprintW
+                && c.y >= d.AnchorZ - 1 && c.y <= d.AnchorZ + d.FootprintH;
+
             var a  = TutorialRouteGuide.SuggestPoweredAnchor(gridRenderer.Width, gridRenderer.Height, fp,
-                sources, IsBuildable);
+                sources, IsBuildable, frontOffsets, c => IsBeltFree(c) && !BesideDemon(c));
             if (a == null) return null;
 
             var anchor = a.Value;

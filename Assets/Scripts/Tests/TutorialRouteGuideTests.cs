@@ -251,5 +251,30 @@ namespace MobileIdleBuilder.Tests
             var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
             Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => false));
         }
+
+        [Test]
+        public void SuggestPoweredAnchor_PrefersSpotWhosePortFrontsAreOpen()
+        {
+            // Without the check (1,0) wins. Its output front (one tile below) is off the grid, so the
+            // suggestion moves to the nearest spot where every port front is usable (#275).
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var fronts  = new List<Vector2Int> { new(0, -1) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), fronts, c => c.y >= 0 && c != new Vector2Int(1, 1));
+
+            Assert.IsNotNull(spot);
+            Assert.AreNotEqual(new Vector2Int(1, 0), spot);
+            Assert.GreaterOrEqual(spot.Value.y - 1, 0);
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NoOpenSpot_FallsBackToNearest()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), new List<Vector2Int> { new(0, -1) }, _ => false);
+
+            Assert.AreEqual(new Vector2Int(1, 0), spot);
+        }
     }
 }

@@ -474,6 +474,8 @@ namespace MobileIdleBuilder.Editor
         /// is already satisfied (e.g. protons already consumed into hydrogen). Non-substep
         /// ("major") steps bound the run and are never auto-skipped.</summary>
         public bool                   is_substep           = false;
+        /// <summary>Entropy granted once when this step advances. 0 = none.</summary>
+        public long                   reward_entropy       = 0;
 
         public void Initialize()
         {
@@ -503,6 +505,8 @@ namespace MobileIdleBuilder.Editor
         public int      min_level    = 0;
         /// <summary>FieldPurchasedMin only: FieldSO id whose purchases are counted.</summary>
         public string   field_id     = "";
+        /// <summary>BuildingRecipeSet only: recipe_id the building_id building must be set to.</summary>
+        public int      recipe_id    = -1;
     }
 
     [Serializable]
