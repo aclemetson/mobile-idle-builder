@@ -103,7 +103,7 @@ namespace MobileIdleBuilder
                         // Tail: clear if an accepting building input is in any adjacent cell that
                         // sits in front of the input port — regardless of the belt's exit direction.
                         canAdvance = false;
-                        if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity destBldg, out _))
+                        if (TryFindInputBuilding(seg.Cell, seg.ExitDir, buildingMap, out Entity destBldg, out _))
                             canAdvance = DecideDeposit(e, destBldg, item.ItemID) != InputDecision.Wait;
                     }
 
@@ -148,7 +148,7 @@ namespace MobileIdleBuilder
                 {
                     // Tail segment — deposit into a building input whose port faces this cell,
                     // in whichever adjacent direction it sits (independent of the belt's exit dir).
-                    if (TryFindInputBuilding(seg.Cell, buildingMap, out Entity bldg, out int deliverDir))
+                    if (TryFindInputBuilding(seg.Cell, seg.ExitDir, buildingMap, out Entity bldg, out int deliverDir))
                     {
                         switch (DecideDeposit(e, bldg, item.ItemID))
                         {
@@ -393,11 +393,14 @@ namespace MobileIdleBuilder
             return false;
         }
 
-        private bool TryFindInputBuilding(int2 segCell, NativeHashMap<int2, Entity> buildingMap,
+        // Order (the tile's own exit first, then N/E/S/W) is shared with ConveyorVisualizer via
+        // TailDelivery so the drawn tail always points where items really go (#223).
+        private bool TryFindInputBuilding(int2 segCell, int exitDir, NativeHashMap<int2, Entity> buildingMap,
                                           out Entity building, out int deliverDir)
         {
-            for (int dir = 0; dir < 4; dir++)
+            for (int i = 0; i < 4; i++)
             {
+                int dir = TailDelivery.DirAt(exitDir, i);
                 int2 candidate = AdjacentCell(segCell, dir);
                 if (!buildingMap.TryGetValue(candidate, out Entity cand)) continue;
                 if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;

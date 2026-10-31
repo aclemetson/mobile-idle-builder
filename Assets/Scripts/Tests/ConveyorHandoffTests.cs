@@ -128,6 +128,24 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail));
         }
 
+        // ── #223: two inputs touch the tail; the one it points at wins ───────
+
+        [Test]
+        public void TailBetweenTwoInputs_FeedsTheOneItPointsAt()
+        {
+            // Tail at (0,0) points East at building A. Building B sits North of the tail with an input
+            // facing it too. The old scan went North-first and fed B, so the belt delivered somewhere
+            // other than where it is drawn pointing. The tail's own exit must be tried first.
+            var ahead = CreateBuildingWithInput(new int2(1, 0), East);
+            var side  = CreateBuildingWithInput(new int2(0, 1), North);
+            CreateLoadedTail(new int2(0, 0), East);
+
+            Tick();
+
+            Assert.AreEqual(1, InputTotal(ahead), "The input the tail points at must get the item");
+            Assert.AreEqual(0, InputTotal(side),  "The side input is only a fallback");
+        }
+
         // ── Negative: input faces away from the belt ─────────────────────────
 
         [Test]
