@@ -137,6 +137,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void CountLinkedSources_BeltPassingASecondSource_CountsOnlyTheOneItStartsAt()
+        {
+            // Two quark Harvesters side by side; one belt starts at the first and runs past the second.
+            // Only a head pulls building output, so the second Harvester never feeds it (#275).
+            var fronts = new List<(int, Vector2Int)> { (1, new(0, 0)), (2, new(1, 0)) };
+            var inputs = new HashSet<Vector2Int> { new(3, 0) };
+            Assert.AreEqual(1, TutorialRouteGuide.CountLinkedSources(fronts, inputs,
+                Belt(new(0, 0), new(1, 0), new(2, 0), new(3, 0))));
+        }
+
+        [Test]
         public void CountLinkedSources_ALoopedBeltTerminates()
         {
             var belts = new Dictionary<Vector2Int, Vector2Int?>

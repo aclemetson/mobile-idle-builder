@@ -17,7 +17,7 @@
 // 12. nuclear          periodic table (118) + nuclear buildings/particles/research (design)
 // 13. worlds           Track/World layer (Physics/Chemistry/Biology) + Chemistry fields/buildings/recipes/research
 //                        Phases 1-3 + 4a shipped (Chemistry C1 playable); C2-C4 + Biology are design
-// 14. tutorial_timing  current 79-step tutorial: player directions + time model + AI-measured medians
+// 14. tutorial_timing  current 69-step tutorial (ends at first Carbon): player directions + time model + AI-measured medians
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -1565,8 +1565,8 @@ worlds: {
 },
 
 // ─────────────────────────────────────── TUTORIAL TIMING ──
-// Current 79-step flow (game_data.json tutorial_steps, Playtests/tutorial-walkthrough.md),
-// verified 2026-10-28 against 9940d5e. Per step:
+// Current 69-step flow, ending at the first Carbon from fusion (#275; game_data.json tutorial_steps,
+// Playtests/tutorial-walkthrough.md), verified 2026-10-31. Per step:
 //   dir   what the player does          read  seconds reading dialogue/hint (15 chars/s + 1 s per line)
 //   act   seconds tapping/building/research timers (not waiting for entropy)
 //   cost  entropy spent at the step     gain  one-off entropy from a manual sale
@@ -1575,7 +1575,6 @@ worlds: {
 // The renderer simulates the entropy balance from starting_entropy (250): wait = (cost - balance) / rate.
 tutorial_timing: {
   starting_entropy: 250,
-  detour_note: 'Uranium needs 146 Neutrons but the Atom Generator holds 30 per item (base_max_input_items_per_slot). Input upgrades are gated by feedstock_buffers. [verify in Editor]',
   phases: [
     { label:'① Learning the Loop', color:'#1a5c8a', rate:0, steps:[
       { num:1,  id:'intro_dialogue',               read:36, act:0,  meas:5.1,  n:10, dir:'Read The Architect\'s 4-line welcome; tap to advance each line.' },
@@ -1615,11 +1614,11 @@ tutorial_timing: {
       { num:29, id:'intro_automation_i',           read:26, act:0,  meas:4.9,  n:4,  dir:'Read 3 lines introducing Automation I.' },
       { num:30, id:'buy_automation_i',             read:6,  act:26, cost:25, meas:26.4, n:4, gate:true, dir:'Open Research, buy Automation I (25e), wait 20 s.' },
       { num:31, id:'place_first_building',         read:12, act:15, cost:100, meas:20.8, n:4, dir:'Open Builder, pick Harvester (100e), place it on the Lepton Field (the camera pans there), confirm.' },
-      { num:32, id:'place_conveyor',               read:24, act:20, meas:12.2, n:2,  dir:'Menu, Builder, Conveyor Belt. Tap the glowing tile at the Harvester\'s output, then the glowing tile at the Demon\'s input, then the check and Done. Belts are free.' },
+      { num:32, id:'place_conveyor',               read:24, act:20, gain:375, meas:12.2, n:2,  dir:'Menu, Builder, Conveyor Belt. Tap the glowing tile at the Harvester\'s output, then the glowing tile at the Demon\'s input, then the check and Done. Belts are free.' },
       { num:33, id:'automation_started',           read:37, act:0,  rate:0.8, meas:5.9, n:2, milestone:true, dir:'Read 3 lines (offline earnings, prestige ceiling). Electron income starts at about 0.8 e/s.' },
     ]},
     { label:'⑤ Nucleon Pipeline', color:'#8a4a00', rate:0.8, steps:[
-      { num:34, id:'place_quark_harvester',        read:16, act:30, cost:375, meas:294.4, n:2, dir:'Save 375e, then place a Harvester on each quark field (150e + 225e). Set one to Up Quarks and one to Down Quarks.' },
+      { num:34, id:'place_quark_harvester',        read:16, act:30, cost:375, gain:350, meas:294.4, n:2, dir:'Save 375e, then place a Harvester on each quark field (150e + 225e). Set one to Up Quarks and one to Down Quarks.' },
       { num:35, id:'intro_sfc',                    read:13, act:0,  meas:1.8,  n:2,  dir:'Read 1 line.' },
       { num:36, id:'place_sfc',                    read:10, act:15, cost:200, meas:327.1, n:2, dir:'Save 200e; place the Strong Force Combiner on the suggested glowing tiles between the quark Harvesters and the Demon.' },
       { num:37, id:'place_generator',              read:11, act:10, cost:150, meas:247.5, n:2, dir:'Save 150e; place a Basic Generator within 2 tiles of the Combiner.' },
@@ -1639,56 +1638,39 @@ tutorial_timing: {
     { label:'⑥b Field Synthesis', color:'#8a4a00', rate:2.5, steps:[
       { num:48, id:'buy_field_synthesis',          read:10, act:28, cost:250, gate:true, dir:'Save 250e; Research, Field Synthesis; wait 20 s.' },
       { num:49, id:'place_quark_field_pair',       read:18, act:15, cost:300, dir:'Save 300e; Builder, Quark Field Pair; place it on two empty tiles.' },
-      { num:50, id:'field_pair_placed',            read:22, act:0,  dir:'Read 2 lines. They ask for a neutron line, but the step doesn\'t wait for it.' },
+      { num:50, id:'field_pair_placed',            read:22, act:0,  dir:'Read 2 lines about the neutron line.' },
+    ]},
+    { label:'⑦ Neutron Line', color:'#1a6e40', rate:2.5, steps:[
+      { num:51, id:'place_neutron_harvesters',     read:8,  act:30, cost:843, dir:'Save 843e; place a Harvester on each new quark field (337e + 506e), one Up and one Down.' },
+      { num:52, id:'place_neutron_combiner',       read:8,  act:15, cost:300, dir:'Save 300e; place a second Combiner on the glowing tiles, in power range.' },
+      { num:53, id:'set_neutron_recipe',           read:6,  act:8,  dir:'Tap the new Combiner and set its recipe to Neutron.' },
+      { num:54, id:'route_quarks_to_neutron_combiner', read:10, act:35, dir:'Belt each new Harvester into the second Combiner (one belt per Harvester).' },
+      { num:55, id:'route_neutrons_to_atom_gen',   read:10, act:20, dir:'Belt the neutron Combiner into a free Atom Generator intake.' },
     ]},
     { label:'⑧ Atomic Assembly', color:'#1a5c8a', rate:2.5, steps:[
-      { num:51, id:'post_tutorial_intro',          read:23, act:0,  dir:'Read 2 lines.' },
-      { num:52, id:'buy_atomic_assembly',          read:15, act:38, cost:500, gate:true, dir:'Save 500e; Research, Atomic Assembly; wait 30 s.' },
-      { num:53, id:'atomic_assembly_unlocked',     read:25, act:0,  dir:'Read 2 lines.' },
-      { num:54, id:'craft_first_helium',           read:3,  act:135, cost:1145, rate:3, warn:'The hint names only the Atom Generator. The neutron line it needs (about 1,145e) is only described in step 50.', dir:'Build the neutron line first: Harvesters on the new pair (338e + 506e), a 2nd Combiner (300e) set to Neutron, and belts into it and on to the Atom Generator. Then set the Atom Generator to Helium-4 (4 s craft).' },
-      { num:55, id:'first_element_context',        read:26, act:0,  milestone:true, dir:'Read 2 lines.' },
+      { num:56, id:'post_tutorial_intro',          read:23, act:0,  dir:'Read 2 lines.' },
+      { num:57, id:'buy_atomic_assembly',          read:15, act:38, cost:500, gate:true, dir:'Save 500e; Research, Atomic Assembly; wait 30 s.' },
+      { num:58, id:'atomic_assembly_unlocked',     read:25, act:0,  dir:'Read 2 lines.' },
+      { num:59, id:'craft_first_helium',           read:6,  act:20, gain:2500, milestone:true, dir:'Tap the Atom Generator and set it to Helium-4. The first Helium pays a 2,500e research grant.' },
+      { num:60, id:'first_element_context',        read:26, act:0,  dir:'Read 2 lines.' },
     ]},
-    { label:'⑨ Heavy Elements', color:'#8a4a00', rate:3, steps:[
-      { num:56, id:'buy_heavy_elements',           read:26, act:128, cost:3000, gate:true, dir:'Save 3,000e; Research, Heavy Elements; wait 2 min.' },
-      { num:57, id:'heavy_elements_unlocked',      read:12, act:0,  dir:'Read 1 line.' },
-      { num:58, id:'craft_first_uranium',          read:3,  act:650, detour:[ { cost:3000, act:608 }, { cost:10000, act:1808 }, { cost:3500, act:20 } ], warn:'Likely blocker: 146 Neutrons vs a 30-per-item input buffer. With the detour on, this step adds Molecular Synthesis (3,000e, 10 min), Feedstock Buffers (10,000e, 30 min) and Input upgrades L2 + L3 (700e + 2,800e).', dir:'Set the Atom Generator to Uranium (92 P, 146 N, 92 E; 238 s craft). Wait about 5 min for 146 Neutrons at 0.5/s, then the craft.' },
-      { num:59, id:'uranium_crafted',              read:28, act:0,  milestone:true, dir:'Read 2 lines.' },
-    ]},
-    { label:'⑩ Isotopes', color:'#1a6e40', rate:3, steps:[
-      { num:60, id:'buy_isotope_engineering',      read:29, act:128, cost:1500, gate:true, dir:'Save 1,500e; Research, Isotope Engineering; wait 2 min.' },
-      { num:61, id:'isotopes_unlocked',            read:12, act:0,  dir:'Read 1 line.' },
-      { num:62, id:'place_isotopic_manipulator',   read:16, act:25, cost:1725, warn:'Draw becomes 65 eV against 50 eV of supply. Cost includes a 2nd Basic Generator (225e) to avoid a brownout.', dir:'Save 1,500e; place an Isotopic Manipulator, plus a 2nd Basic Generator in range.' },
-      { num:63, id:'craft_first_isotope',          read:3,  act:76, dir:'Belt Hydrogen and Neutrons into the Manipulator and set it to Deuterium (8 s at 0.5 speed, about 16 s).' },
-      { num:64, id:'isotope_crafted',              read:28, act:0,  milestone:true, dir:'Read 2 lines.' },
-    ]},
-    { label:'⑪ Radioactive Isotopes', color:'#8a4a00', rate:3, steps:[
-      { num:65, id:'buy_radioactive_isotopes',     read:30, act:608, cost:5000, gate:true, dir:'Save 5,000e; Research, Radioactive Isotopes; wait 10 min.' },
-      { num:66, id:'radioactive_isotopes_unlocked', read:15, act:0, dir:'Read 1 line.' },
-      { num:67, id:'place_radioactive_containment', read:17, act:20, cost:2500, dir:'Save 2,500e; place Radioactive Containment (2×2, draws 30 eV).' },
-      { num:68, id:'craft_uranium_235',            read:3,  act:638, dir:'Craft a fresh Uranium (about 5 min of Neutron fill + 238 s), route it to the Manipulator in Containment, set Uranium-235 (48 s).' },
-      { num:69, id:'uranium_235_crafted',          read:27, act:0,  dir:'Read 2 lines.' },
-      { num:70, id:'collect_alpha_particle',       read:3,  act:10, dir:'Tap to collect the emitted Alpha particle.' },
-      { num:71, id:'particles_loop_complete',      read:30, act:0,  milestone:true, dir:'Read 2 lines.' },
-    ]},
-    { label:'⑫ Nuclear Reactors', color:'#1a6e40', rate:3, steps:[
-      { num:72, id:'intro_nuclear_reactors',       read:15, act:0,  dir:'Read 1 line.' },
-      { num:73, id:'buy_fusion_i',                 read:3,  act:188, cost:4000, gate:true, dir:'Save 4,000e; Research, Stellar Fusion; wait 3 min.' },
-      { num:74, id:'place_fusion_reactor',         read:3,  act:20, cost:1500, dir:'Save 1,500e; place a Fusion Reactor.' },
-      { num:75, id:'fusion_explained',             read:16, act:0,  dir:'Read 1 line.' },
-      { num:76, id:'buy_fissile_extraction',       read:14, act:908, cost:30000, gate:true, dir:'Save 30,000e; Research, Fissile Extraction; wait 15 min.' },
-      { num:77, id:'buy_fission_i',                read:3,  act:1808, cost:80000, gate:true, dir:'Save 80,000e; Research, Nuclear Fission; wait 30 min.' },
-      { num:78, id:'place_fission_reactor',        read:3,  act:20, cost:5000, dir:'Save 5,000e; place a Fission Reactor.' },
-      { num:79, id:'reactors_complete',            read:13, act:0,  milestone:true, dir:'Read 1 line. Tutorial complete.' },
+    { label:'⑨ Fusion and Carbon', color:'#8a4a00', rate:2.5, steps:[
+      { num:61, id:'intro_nuclear_reactors',       read:15, act:0,  dir:'Read 1 line.' },
+      { num:62, id:'buy_fusion_i',                 read:6,  act:188, cost:4000, gate:true, dir:'Save 4,000e; Research, Stellar Fusion; wait 3 min.' },
+      { num:63, id:'place_fusion_reactor',         read:8,  act:20, cost:1500, dir:'Save 1,500e; place a Fusion Reactor on the glowing tile.' },
+      { num:64, id:'power_for_fusion',             read:10, act:15, cost:225, dir:'Save 225e; place a second Basic Generator (draw is now 80 eV against 50).' },
+      { num:65, id:'fusion_explained',             read:18, act:0,  dir:'Read 1 line.' },
+      { num:66, id:'route_helium_to_reactor',      read:12, act:35, dir:'Remove the Atom Generator to Demon belt, then belt the Atom Generator into the Reactor.' },
+      { num:67, id:'craft_first_carbon',           read:6,  act:20, rate:13, milestone:true, dir:'Tap the Reactor and set Fuse Carbon. One Carbon per 12 s (0.25 Helium/s).' },
+      { num:68, id:'route_carbon_to_demon',        read:8,  act:20, dir:'Belt the Reactor into the Demon. Each Carbon sells for 160e (about 13 e/s).' },
+      { num:69, id:'tutorial_complete',            read:20, act:0,  milestone:true, dir:'Read 2 lines. Tutorial complete.' },
     ]},
   ],
   findings: [
-    'Steps 34–37 are three entropy waits (about 14 min measured) on 0.8 e/s of electron income. They are most of the first 25 minutes.',
-    'Step 54: the hint names only the Atom Generator, but Helium-4 needs a neutron line (about 1,145e) that only step 50\'s dialogue mentions.',
-    'Helium-4 earns the same 2.5 e/s as Hydrogen. Both are capped by one Up Quark Harvester (0.5 Protons/s), so the switch gives no income reward.',
-    'Step 58: Uranium needs 146 Neutrons and the Atom Generator holds 30 per item. If confirmed, the step hides about 16,500e and 40 min of research. [verify]',
-    'Step 62: the Isotopic Manipulator takes draw to 65 eV against one generator\'s 50 eV, and no step mentions it.',
-    'Stale numbers in the text: Helium "twenty entropy" (data 10), Uranium "1,000 entropy" and "1,190 eV" (data 64e; static 20 eV draw), U-235 "3,000 entropy" (data 128 base).',
-    'Steps 76–77 (30,000e + 80,000e) are the largest wall: hours of baseline income. Use the income multiplier to see the effect of upgrades.',
+    'Steps 34-37 were three entropy waits (about 14 min measured on 0.8 e/s). place_conveyor (+375e) and place_quark_harvester (+350e) now pay for those buildings (#274); measure again.',
+    'Helium-4 earns the same 2.5 e/s as Hydrogen; the neutron line pays off through Fusion (Carbon, 160e), not Helium sales (#270).',
+    'Stellar Fusion (4,000e) is the largest wait after the first Helium. The 2,500e Helium grant covers most of it.',
+    'Hidden costs to watch: the second Basic Generator at step 64 (80 eV draw vs 50) and the neutron line (about 1,140e) at steps 51-52.',
   ],
 },
 

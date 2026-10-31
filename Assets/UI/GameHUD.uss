@@ -556,6 +556,13 @@
     padding: var(--spacing-sm);
 }
 
+/* While a menu is open the tutorial hint collapses to the "Show hint" pill in the bottom-right
+   corner (.tutorial-hint-restore, 44px tall + 4px off the edge), which sat on the last row's Place
+   button. Room at the end of every list lets that row scroll clear of it (#275 playtest). */
+.recipe-list > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    padding-bottom: 56px;
+}
+
 /* The building inspector is the primary building UI and needs room for a long
    recipe list plus upgrades, so anchor it top-and-bottom into a tall panel
    (overriding the short bottom-anchored popup sizing it inherits from

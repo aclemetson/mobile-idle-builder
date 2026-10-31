@@ -27,11 +27,11 @@ namespace MobileIdleBuilder.Dev
             { "buy_automation_i",             137 },   // enough to afford 25e purchase
             { "place_first_building",         112 },   // after -25e; enough for 100e Harvester
             { "place_conveyor",                12 },   // after -100e Harvester
-            { "automation_started",            12 },
+            { "automation_started",          387 },   // 12 + place_conveyor reward 375 (#274)
             { "place_quark_harvester",        375 },   // two more Harvesters: 150e + 225e (1.5x purchase scaling)
-            { "intro_sfc",                     50 },   // after -375e; idle income accumulated
-            { "place_sfc",                    200 },   // enough for 200e SFC
-            { "place_generator",                0 },   // after -200e; need to idle for Generator
+            { "intro_sfc",                   350 },   // after -375e Harvesters; place_quark_harvester reward 350 (#274)
+            { "place_sfc",                   350 },   // Combiner 200e + Generator 150e, both covered by the reward
+            { "place_generator",             150 },   // after -200e Combiner
             { "link_generator",               150 },   // enough for 150e Generator
             { "route_quarks_to_sfc",           50 },
             { "configure_sfc_recipes",         50 },

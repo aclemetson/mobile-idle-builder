@@ -170,7 +170,9 @@ namespace MobileIdleBuilder
         /// Counts the distinct sources with a belt that starts on one of their output fronts and whose
         /// chain ends (its tail) on one of <paramref name="inputFronts"/>, i.e. items really flow from
         /// that source into the target. Reads the belts as they are now, so a link built before the
-        /// step began still counts.
+        /// step began still counts. The front must be a chain head: ConveyorSystem only pulls building
+        /// output onto a head, so a belt that merely passes in front of a second source never carries
+        /// its items (#275 playtest: one belt past both quark Harvesters passed the step, then jammed).
         /// </summary>
         /// <param name="sourceFronts">(source id, output front cell) for every output port of every source.</param>
         /// <param name="belts">Every belt cell mapped to the cell it feeds, or null at a tail.</param>
@@ -178,10 +180,14 @@ namespace MobileIdleBuilder
                                              ICollection<Vector2Int> inputFronts,
                                              IReadOnlyDictionary<Vector2Int, Vector2Int?> belts)
         {
+            var fed = new HashSet<Vector2Int>();
+            foreach (var next in belts.Values)
+                if (next != null) fed.Add(next.Value);
+
             var linked = new HashSet<int>();
             foreach (var (source, front) in sourceFronts)
             {
-                if (linked.Contains(source) || !belts.ContainsKey(front)) continue;
+                if (linked.Contains(source) || !belts.ContainsKey(front) || fed.Contains(front)) continue;
 
                 var cur = front;
                 for (int n = 0; n <= belts.Count; n++) // bounded: a looped belt never reaches a tail

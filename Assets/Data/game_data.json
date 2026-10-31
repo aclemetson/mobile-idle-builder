@@ -12818,7 +12818,9 @@
       }
     },
     {
+      "_comment": "reward_entropy covers the two quark Harvesters (150e + 225e): steps 34-37 used to be ~14 min of waiting on 0.8 e/s (#274).",
       "id": "place_conveyor",
+      "reward_entropy": 375,
       "hint": "Open the menu, tap Builder, then Place on Conveyor Belt. Tap the glowing tile in front of the Harvester, then the glowing tile in front of Maxwell's Demon, and confirm.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "harvester", "building_id": "maxwells_demon", "min_count": 1 },
       "on_enter": {
@@ -12830,13 +12832,14 @@
     },
     {
       "id": "automation_started",
-      "hint": "Your factory is running. Watch it produce particles automatically.",
+      "hint": "Your factory is running, and the Architect sent 375 entropy for your next Harvesters.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "automation_context" }
     },
     {
-      "_comment": "Quark harvesters come before the Combiner (#192). min_count 3 = the electron Harvester + one per quark field.",
+      "_comment": "Quark harvesters come before the Combiner (#192). min_count 3 = the electron Harvester + one per quark field. reward_entropy covers the Combiner + Basic Generator (200e + 150e) (#274).",
       "id": "place_quark_harvester",
+      "reward_entropy": 350,
       "hint": "Place a Harvester on each quark field. Set one to Up Quarks and the other to Down Quarks.",
       "advance_condition": { "type": "BuildingMin", "building_id": "harvester", "min_count": 3 },
       "on_enter": {
@@ -12847,7 +12850,7 @@
     {
       "_comment": "--- PHASE 6 CONT: NUCLEON PIPELINE (steps 34-41) ---",
       "id": "intro_sfc",
-      "hint": "Save up entropy to place the Strong Force Combiner.",
+      "hint": "The Architect sent 350 entropy: enough for a Strong Force Combiner and a generator to power it.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "intro_sfc_context" }
     },

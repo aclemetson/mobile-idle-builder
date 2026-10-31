@@ -321,7 +321,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 33. `automation_started`
 
-- **Hint:** Your factory is running. Watch it produce particles automatically.
+- **Hint:** Your factory is running, and the Architect sent 375 entropy for your next Harvesters.
 - **Advances when:** UI event `dialogue_complete`
 - **Dialogue** (`automation_context.asset`):
   - The Architect: Your factory is running. Buildings produce at their rated output continuously — no manual input required.
@@ -338,7 +338,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 35. `intro_sfc`
 
-- **Hint:** Save up entropy to place the Strong Force Combiner.
+- **Hint:** The Architect sent 350 entropy: enough for a Strong Force Combiner and a generator to power it.
 - **Advances when:** UI event `dialogue_complete`
 - **Dialogue** (`intro_sfc_context.asset`):
   - The Architect: Your quark Harvesters are running. You already have Recombination I — the Strong Force Combiner fuses quarks into protons. Keep accumulating entropy and we will put those quarks to work.

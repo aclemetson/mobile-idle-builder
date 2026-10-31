@@ -1185,9 +1185,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-    rewardEntropy: 0
+    rewardEntropy: 375
   - id: automation_started
-    hintText: Your factory is running. Watch it produce particles automatically.
+    hintText: Your factory is running, and the Architect sent 375 entropy for your
+      next Harvesters.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1248,9 +1249,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-    rewardEntropy: 0
+    rewardEntropy: 350
   - id: intro_sfc
-    hintText: Save up entropy to place the Strong Force Combiner.
+    hintText: 'The Architect sent 350 entropy: enough for a Strong Force Combiner
+      and a generator to power it.'
     advanceCondition:
       type: 3
       anyOf: 0
