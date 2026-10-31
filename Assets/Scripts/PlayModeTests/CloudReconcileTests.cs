@@ -50,12 +50,13 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             public SaveData ToReturn;
             public bool Available = true;
+            public bool FailPushes;
             public int PushCount;
             public SaveData LastPushed;
             public bool IsAvailable => Available;
             public Task InitializeAsync()                     => Task.CompletedTask;
             public Task<SaveData> FetchAsync(string playerId) => Task.FromResult(ToReturn);
-            public Task PushAsync(SaveData data)              { PushCount++; LastPushed = data; return Task.CompletedTask; }
+            public Task<bool> PushAsync(SaveData data)        { PushCount++; LastPushed = data; return Task.FromResult(Available && !FailPushes); }
             public Task DeleteAsync()                         => Task.CompletedTask;
         }
 
@@ -114,6 +115,83 @@ namespace MobileIdleBuilder.PlayModeTests
             InvokePrivate(sm, "OnApplicationQuit");
 
             Assert.AreEqual(0, cloud.PushCount, "Must not push when cloud is unavailable (local stays source of truth)");
+        }
+
+        // ── Autosave cloud throttling (#280) ──────────────────────────────────
+
+        [Test]
+        public void AutoSave_PushesOnlyWhenStateChangedAndIntervalElapsed()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            float now = 1000f;
+            sm.RealtimeNow = () => now;
+
+            Pump(sm.AutoSaveTick());                       // t=1000
+            Assert.AreEqual(1, cloud.PushCount, "First autosave pushes");
+
+            sm.Current.prestigeCount++;
+            now += 60f;                                    // t=1060: 60s after the last push started
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(1, cloud.PushCount, "Changed, but within the push interval: local save only");
+
+            now += 240f;                                   // t=1300: 300s after the last push started
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "Changed and interval elapsed: push");
+
+            now += 1000f;                                  // long after, but nothing changed since
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "Nothing changed: no push even after the interval");
+        }
+
+        [Test]
+        public void AutoSave_AlwaysWritesLocally()
+        {
+            var sm = NewSaveManager();
+            sm.SetCloudServiceForTesting(new FakeCloud());
+            sm.RealtimeNow = () => 0f;
+
+            Pump(sm.AutoSaveTick());
+            sm.Current.prestigeCount = 7;
+            Pump(sm.AutoSaveTick());   // throttled for the cloud...
+
+            var onDisk = JsonUtility.FromJson<SaveData>(File.ReadAllText(_savePath));
+            Assert.AreEqual(7, onDisk.prestigeCount, "...but the local file is still written every autosave");
+        }
+
+        [Test]
+        public void AutoSave_FailedPush_IsRetriedEvenIfUnchanged()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            float now = 0f;
+            sm.RealtimeNow = () => now;
+
+            cloud.Available = true;
+            cloud.FailPushes = true;
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(1, cloud.PushCount);
+
+            cloud.FailPushes = false;
+            now += 300f;
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "A failed push must not mark the content as uploaded");
+        }
+
+        [Test]
+        public void SaveToCloud_ExplicitSave_AlwaysPushes()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            sm.RealtimeNow = () => 0f;
+
+            Pump(sm.SaveToCloud());
+            Pump(sm.SaveToCloud());
+
+            Assert.AreEqual(2, cloud.PushCount, "Explicit saves (e.g. maintenance) are never throttled");
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
