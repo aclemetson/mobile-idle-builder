@@ -1,0 +1,902 @@
+{
+    "playerId": "uid_832f1d3dd25a44c1a6c416e25d43bf17",
+    "lastSaved": "2026-10-31T20:58:10.3206790Z",
+    "prestigeCount": 0,
+    "prestigeCurrency": 0,
+    "prestigeCurrencySpent": 0,
+    "prestigeSpeedMultiplier": 1.0,
+    "prestigeOutputMultiplier": 1.0,
+    "prestigeCostReduction": 0.0,
+    "permanentUpgrades": [],
+    "unlockedSites": [],
+    "unlockedWorlds": [],
+    "domainsIntroSeen": false,
+    "worldsIntroSeen": [],
+    "lastSeenGameDataUtc": "",
+    "devConsoleUsed": true,
+    "idleSnapshot": {
+        "chains": [
+            {
+                "itemId": 4,
+                "itemsPerSecond": 0.5,
+                "endsAtEntropySink": false,
+                "baseSellValue": 3.0
+            },
+            {
+                "itemId": 5,
+                "itemsPerSecond": 0.5,
+                "endsAtEntropySink": false,
+                "baseSellValue": 3.0
+            },
+            {
+                "itemId": 2,
+                "itemsPerSecond": 0.5,
+                "endsAtEntropySink": false,
+                "baseSellValue": 1.0
+            }
+        ],
+        "snapshotTimestampUtc": "2026-10-31T20:58:10.3125834Z"
+    },
+    "siteSnapshots": [
+        {
+            "chains": [
+                {
+                    "itemId": 4,
+                    "itemsPerSecond": 0.5,
+                    "endsAtEntropySink": false,
+                    "baseSellValue": 3.0
+                },
+                {
+                    "itemId": 5,
+                    "itemsPerSecond": 0.5,
+                    "endsAtEntropySink": false,
+                    "baseSellValue": 3.0
+                },
+                {
+                    "itemId": 2,
+                    "itemsPerSecond": 0.5,
+                    "endsAtEntropySink": false,
+                    "baseSellValue": 1.0
+                }
+            ],
+            "snapshotTimestampUtc": "2026-10-31T20:58:10.3125834Z"
+        }
+    ],
+    "idleCollectionApplied": "",
+    "unlockedRecipes": [],
+    "unlockedResearch": [
+        "recombination_i",
+        "hydrogen_synthesis",
+        "automation_i",
+        "field_synthesis",
+        "atomic_assembly"
+    ],
+    "activeResearchId": "",
+    "activeResearchCompleteUtc": "",
+    "codex": [],
+    "paidCurrency": 0,
+    "crystalsPurchased": 0,
+    "lastKnownNetWorth": 5859.0,
+    "speedBoostExpiryUtc": "",
+    "achievements": [],
+    "achievementProgress": [],
+    "unclaimedAchievements": [],
+    "dailyResetUtc": "",
+    "weeklyResetUtc": "",
+    "monthlyResetUtc": "",
+    "loginStreakIndex": 0,
+    "lastLoginRewardUtc": "",
+    "dailyChallengeResetUtc": "2026-11-01T00:00:00.0000000Z",
+    "dailyChallengeIds": [
+        "dc_spend_500",
+        "dc_login",
+        "dc_craft_50"
+    ],
+    "dailyChallengeProgress": [
+        {
+            "id": "dc_login",
+            "count": 1
+        },
+        {
+            "id": "dc_spend_500",
+            "count": 500
+        },
+        {
+            "id": "dc_craft_50",
+            "count": 50
+        }
+    ],
+    "dailyChallengesClaimed": [],
+    "adWatchCounts": [],
+    "adWatchResetUtc": "",
+    "adsIdleBoostExpiryUtc": "",
+    "hiredManagers": [],
+    "managerAssignments": [],
+    "managerStars": [],
+    "megastructureStage": 0,
+    "megastructureContribKeys": [],
+    "megastructureContribValues": [],
+    "tutorial": {
+        "currentStepId": "buy_fusion_i",
+        "isActive": true,
+        "hasCompletedFirstRun": false
+    },
+    "pvpRun": {
+        "state": "Available",
+        "runStartUtc": "",
+        "runEndUtc": "",
+        "submittedScore": 0
+    },
+    "currentRun": {
+        "baseCurrency": 3084,
+        "totalEntropySpent": 2775,
+        "baseNetWorth": 0.0,
+        "inventoryKeys": [],
+        "inventoryValues": [],
+        "nonPersistentUpgrades": [],
+        "grid": {
+            "size": {
+                "x": 0,
+                "y": 0
+            },
+            "expansions": [],
+            "buildings": [
+                {
+                    "buildingId": 7,
+                    "recipeId": -1,
+                    "position": [
+                        9,
+                        9
+                    ],
+                    "level": 1,
+                    "storageLevel": 0,
+                    "inputLevel": 0,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 2,
+                    "recipeId": 4,
+                    "position": [
+                        4,
+                        11
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 4,
+                    "recipeId": 7,
+                    "position": [
+                        3,
+                        13
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 2,
+                    "recipeId": 5,
+                    "position": [
+                        7,
+                        3
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 2,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 3,
+                    "recipeId": -1,
+                    "position": [
+                        3,
+                        11
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 3,
+                    "recipeId": -1,
+                    "position": [
+                        6,
+                        3
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": -1
+                },
+                {
+                    "buildingId": 1,
+                    "recipeId": 3,
+                    "position": [
+                        6,
+                        8
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": 0
+                },
+                {
+                    "buildingId": 1,
+                    "recipeId": 1,
+                    "position": [
+                        4,
+                        9
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": 0
+                },
+                {
+                    "buildingId": 1,
+                    "recipeId": 2,
+                    "position": [
+                        5,
+                        9
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": 0
+                },
+                {
+                    "buildingId": 1,
+                    "recipeId": 1,
+                    "position": [
+                        7,
+                        6
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": 2
+                },
+                {
+                    "buildingId": 1,
+                    "recipeId": 2,
+                    "position": [
+                        8,
+                        6
+                    ],
+                    "level": 1,
+                    "storageLevel": 1,
+                    "inputLevel": 1,
+                    "rotation": 0,
+                    "flipped": false,
+                    "outputDirection": 2
+                }
+            ],
+            "conveyors": [
+                {
+                    "cells": [
+                        8,
+                        10
+                    ],
+                    "singleDir": 1
+                },
+                {
+                    "cells": [
+                        3,
+                        12,
+                        2,
+                        12,
+                        2,
+                        11,
+                        2,
+                        10,
+                        2,
+                        9,
+                        2,
+                        8,
+                        2,
+                        7,
+                        3,
+                        7,
+                        4,
+                        7,
+                        5,
+                        7,
+                        6,
+                        7,
+                        7,
+                        7,
+                        8,
+                        7,
+                        9,
+                        7,
+                        9,
+                        8
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        8,
+                        5,
+                        8,
+                        4
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        4,
+                        12,
+                        5,
+                        12,
+                        6,
+                        12,
+                        6,
+                        13,
+                        5,
+                        13
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        5,
+                        10
+                    ],
+                    "singleDir": 0
+                },
+                {
+                    "cells": [
+                        8,
+                        2,
+                        7,
+                        2,
+                        6,
+                        2,
+                        5,
+                        2,
+                        4,
+                        2,
+                        3,
+                        2,
+                        2,
+                        2,
+                        1,
+                        2,
+                        1,
+                        3,
+                        1,
+                        4,
+                        1,
+                        5,
+                        1,
+                        6,
+                        1,
+                        7,
+                        1,
+                        8,
+                        1,
+                        9,
+                        1,
+                        10,
+                        1,
+                        11,
+                        1,
+                        12,
+                        1,
+                        13,
+                        2,
+                        13
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        7,
+                        5,
+                        7,
+                        4
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        6,
+                        9,
+                        7,
+                        9,
+                        7,
+                        10,
+                        7,
+                        11,
+                        7,
+                        12,
+                        7,
+                        13,
+                        7,
+                        14,
+                        7,
+                        15,
+                        6,
+                        15,
+                        5,
+                        15,
+                        4,
+                        15,
+                        4,
+                        14
+                    ],
+                    "singleDir": -1
+                },
+                {
+                    "cells": [
+                        4,
+                        10
+                    ],
+                    "singleDir": 0
+                }
+            ],
+            "fields": [
+                {
+                    "fieldId": "quark_field",
+                    "position": [
+                        4,
+                        9
+                    ],
+                    "cooldownEndUtc": "",
+                    "cooldownDurationSec": 0.0
+                },
+                {
+                    "fieldId": "quark_field",
+                    "position": [
+                        5,
+                        9
+                    ],
+                    "cooldownEndUtc": "",
+                    "cooldownDurationSec": 0.0
+                },
+                {
+                    "fieldId": "electron_field",
+                    "position": [
+                        6,
+                        8
+                    ],
+                    "cooldownEndUtc": "",
+                    "cooldownDurationSec": 0.0
+                },
+                {
+                    "fieldId": "quark_field",
+                    "position": [
+                        7,
+                        6
+                    ],
+                    "cooldownEndUtc": "",
+                    "cooldownDurationSec": 0.0
+                },
+                {
+                    "fieldId": "quark_field",
+                    "position": [
+                        8,
+                        6
+                    ],
+                    "cooldownEndUtc": "",
+                    "cooldownDurationSec": 0.0
+                }
+            ],
+            "blockedOutputs": []
+        },
+        "grids": [
+            {
+                "size": {
+                    "x": 0,
+                    "y": 0
+                },
+                "expansions": [],
+                "buildings": [
+                    {
+                        "buildingId": 7,
+                        "recipeId": -1,
+                        "position": [
+                            9,
+                            9
+                        ],
+                        "level": 1,
+                        "storageLevel": 0,
+                        "inputLevel": 0,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 2,
+                        "recipeId": 4,
+                        "position": [
+                            4,
+                            11
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 4,
+                        "recipeId": 7,
+                        "position": [
+                            3,
+                            13
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 2,
+                        "recipeId": 5,
+                        "position": [
+                            7,
+                            3
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 2,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 3,
+                        "recipeId": -1,
+                        "position": [
+                            3,
+                            11
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 3,
+                        "recipeId": -1,
+                        "position": [
+                            6,
+                            3
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": -1
+                    },
+                    {
+                        "buildingId": 1,
+                        "recipeId": 3,
+                        "position": [
+                            6,
+                            8
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": 0
+                    },
+                    {
+                        "buildingId": 1,
+                        "recipeId": 1,
+                        "position": [
+                            4,
+                            9
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": 0
+                    },
+                    {
+                        "buildingId": 1,
+                        "recipeId": 2,
+                        "position": [
+                            5,
+                            9
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": 0
+                    },
+                    {
+                        "buildingId": 1,
+                        "recipeId": 1,
+                        "position": [
+                            7,
+                            6
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": 2
+                    },
+                    {
+                        "buildingId": 1,
+                        "recipeId": 2,
+                        "position": [
+                            8,
+                            6
+                        ],
+                        "level": 1,
+                        "storageLevel": 1,
+                        "inputLevel": 1,
+                        "rotation": 0,
+                        "flipped": false,
+                        "outputDirection": 2
+                    }
+                ],
+                "conveyors": [
+                    {
+                        "cells": [
+                            8,
+                            10
+                        ],
+                        "singleDir": 1
+                    },
+                    {
+                        "cells": [
+                            3,
+                            12,
+                            2,
+                            12,
+                            2,
+                            11,
+                            2,
+                            10,
+                            2,
+                            9,
+                            2,
+                            8,
+                            2,
+                            7,
+                            3,
+                            7,
+                            4,
+                            7,
+                            5,
+                            7,
+                            6,
+                            7,
+                            7,
+                            7,
+                            8,
+                            7,
+                            9,
+                            7,
+                            9,
+                            8
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            8,
+                            5,
+                            8,
+                            4
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            4,
+                            12,
+                            5,
+                            12,
+                            6,
+                            12,
+                            6,
+                            13,
+                            5,
+                            13
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            5,
+                            10
+                        ],
+                        "singleDir": 0
+                    },
+                    {
+                        "cells": [
+                            8,
+                            2,
+                            7,
+                            2,
+                            6,
+                            2,
+                            5,
+                            2,
+                            4,
+                            2,
+                            3,
+                            2,
+                            2,
+                            2,
+                            1,
+                            2,
+                            1,
+                            3,
+                            1,
+                            4,
+                            1,
+                            5,
+                            1,
+                            6,
+                            1,
+                            7,
+                            1,
+                            8,
+                            1,
+                            9,
+                            1,
+                            10,
+                            1,
+                            11,
+                            1,
+                            12,
+                            1,
+                            13,
+                            2,
+                            13
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            7,
+                            5,
+                            7,
+                            4
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            6,
+                            9,
+                            7,
+                            9,
+                            7,
+                            10,
+                            7,
+                            11,
+                            7,
+                            12,
+                            7,
+                            13,
+                            7,
+                            14,
+                            7,
+                            15,
+                            6,
+                            15,
+                            5,
+                            15,
+                            4,
+                            15,
+                            4,
+                            14
+                        ],
+                        "singleDir": -1
+                    },
+                    {
+                        "cells": [
+                            4,
+                            10
+                        ],
+                        "singleDir": 0
+                    }
+                ],
+                "fields": [
+                    {
+                        "fieldId": "quark_field",
+                        "position": [
+                            4,
+                            9
+                        ],
+                        "cooldownEndUtc": "",
+                        "cooldownDurationSec": 0.0
+                    },
+                    {
+                        "fieldId": "quark_field",
+                        "position": [
+                            5,
+                            9
+                        ],
+                        "cooldownEndUtc": "",
+                        "cooldownDurationSec": 0.0
+                    },
+                    {
+                        "fieldId": "electron_field",
+                        "position": [
+                            6,
+                            8
+                        ],
+                        "cooldownEndUtc": "",
+                        "cooldownDurationSec": 0.0
+                    },
+                    {
+                        "fieldId": "quark_field",
+                        "position": [
+                            7,
+                            6
+                        ],
+                        "cooldownEndUtc": "",
+                        "cooldownDurationSec": 0.0
+                    },
+                    {
+                        "fieldId": "quark_field",
+                        "position": [
+                            8,
+                            6
+                        ],
+                        "cooldownEndUtc": "",
+                        "cooldownDurationSec": 0.0
+                    }
+                ],
+                "blockedOutputs": []
+            }
+        ],
+        "activeSiteIndex": 0,
+        "activeWorldIndex": 0,
+        "researchProgressKeys": [],
+        "researchProgressValues": [],
+        "fieldPurchaseIds": [
+            "quark_field"
+        ],
+        "fieldPurchaseCounts": [
+            1
+        ]
+    }
+}

@@ -51,7 +51,7 @@ namespace MobileIdleBuilder.Dev
             { "post_tutorial_intro",          200 },
             { "buy_atomic_assembly",          500 },   // enough for 500e Atomic Assembly
             { "atomic_assembly_unlocked",      50 },
-            { "first_element_context",       2550 },   // craft_first_helium rewards 2,500e
+            { "first_element_context",       5050 },   // craft_first_helium rewards 5,000e
             { "buy_fusion_i",                4000 },   // enough for 4000e Stellar Fusion
             { "place_fusion_reactor",        1500 },   // after -4000e; enough for the 1500e Fusion Reactor
             { "power_for_fusion",             225 },   // after -1500e; enough for the second 225e Basic Generator

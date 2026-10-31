@@ -12050,7 +12050,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Heavier elements are worth more, but building them one nucleon at a time is slow. I have sent you 2,500 entropy toward Stellar Fusion: the stars build carbon from helium, and so will you.",
+          "text": "Heavier elements are worth more, but building them one nucleon at a time is slow. I have sent you 5,000 entropy toward Stellar Fusion and your first reactor: the stars build carbon from helium, and so will you.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -13040,14 +13040,14 @@
 
     { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
     {
-      "_comment": "ItemCraftedMin, not InventoryMin: the Atom Generator's belt carries Helium to the Demon, which sells it before it can reach the inventory. The reward covers most of Stellar Fusion (4,000e) so the tutorial fits 45-60 min without cheapening the research for everyone (#275).",
+      "_comment": "ItemCraftedMin, not InventoryMin: the Atom Generator's belt carries Helium to the Demon, which sells it before it can reach the inventory. The reward covers Stellar Fusion (4,000e) and most of the Fusion Reactor (1,500e): the 2,500e it was left ~21 min of forced idle in the 2026-10-31 active-grinder run. It keeps the tutorial fits 45-60 min without cheapening the research for everyone (#275).",
       "id": "craft_first_helium",
       "hint": "Tap the Atom Generator and set its recipe to Helium-4: 2 protons, 2 neutrons, 2 electrons.",
       "advance_condition": {
         "type": "ItemCraftedMin",
         "items": [{ "item_id": 7, "quantity": 1 }]
       },
-      "reward_entropy": 2500,
+      "reward_entropy": 5000,
       "on_enter": { "highlight_target": "atomic_assembler", "highlight_mode": "VisualOnly" }
     },
     {

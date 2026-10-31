@@ -1651,7 +1651,7 @@ tutorial_timing: {
       { num:56, id:'post_tutorial_intro',          read:23, act:0,  dir:'Read 2 lines.' },
       { num:57, id:'buy_atomic_assembly',          read:15, act:38, cost:500, gate:true, dir:'Save 500e; Research, Atomic Assembly; wait 30 s.' },
       { num:58, id:'atomic_assembly_unlocked',     read:25, act:0,  dir:'Read 2 lines.' },
-      { num:59, id:'craft_first_helium',           read:6,  act:20, gain:2500, milestone:true, dir:'Tap the Atom Generator and set it to Helium-4. The first Helium pays a 2,500e research grant.' },
+      { num:59, id:'craft_first_helium',           read:6,  act:20, gain:5000, milestone:true, dir:'Tap the Atom Generator and set it to Helium-4. The first Helium pays a 5,000e research grant.' },
       { num:60, id:'first_element_context',        read:26, act:0,  dir:'Read 2 lines.' },
     ]},
     { label:'⑨ Fusion and Carbon', color:'#8a4a00', rate:2.5, steps:[
@@ -1669,7 +1669,7 @@ tutorial_timing: {
   findings: [
     'Steps 34-37 were three entropy waits (about 14 min measured on 0.8 e/s). place_conveyor (+375e) and place_quark_harvester (+350e) now pay for those buildings (#274); measure again.',
     'Helium-4 earns the same 2.5 e/s as Hydrogen; the neutron line pays off through Fusion (Carbon, 160e), not Helium sales (#270).',
-    'Stellar Fusion (4,000e) is the largest wait after the first Helium. The 2,500e Helium grant covers most of it.',
+    'Stellar Fusion (4,000e) is the largest wait after the first Helium. The 5,000e Helium grant covers it and most of the Fusion Reactor; at the old 2,500e the 2026-10-31 active-grinder run idled about 21 min here and finished in 70.5 min.',
     'Hidden costs to watch: the second Basic Generator at step 64 (80 eV draw vs 50) and the neutron line (about 1,140e) at steps 51-52.',
   ],
 },

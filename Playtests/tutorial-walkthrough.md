@@ -534,7 +534,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Advances when:** UI event `dialogue_complete`
 - **Dialogue** (`first_element_crafted_context.asset`):
   - The Architect: Helium-4. The second element. Formed in the first three minutes after the Big Bang through primordial nucleosynthesis — you have just replicated one of the universe's oldest reactions.
-  - The Architect: Heavier elements are worth more, but building them one nucleon at a time is slow. I have sent you 2,500 entropy toward Stellar Fusion: the stars build carbon from helium, and so will you.
+  - The Architect: Heavier elements are worth more, but building them one nucleon at a time is slow. I have sent you 5,000 entropy toward Stellar Fusion and your first reactor: the stars build carbon from helium, and so will you.
 
 ### 61. `intro_nuclear_reactors`
 

@@ -2043,7 +2043,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-    rewardEntropy: 2500
+    rewardEntropy: 5000
   - id: first_element_context
     hintText: 
     advanceCondition:
