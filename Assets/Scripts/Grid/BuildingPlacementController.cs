@@ -387,6 +387,11 @@ namespace MobileIdleBuilder
                 _hasCandidate = true;
                 OnCandidateChanged?.Invoke(true);
             }
+
+            // ✓ is disabled on an invalid cell; say why, once per tap.
+            string reason = BlockMessage(BlockAt(cell.x, cell.y), _pending.building?.displayName, _pendingField != null);
+            if (reason != null)
+                InventoryPopupController.NotifyWarning(reason);
         }
 
         /// <summary>Drops the pending candidate and returns to positioning (called by the popup's ✕).</summary>
@@ -694,24 +699,28 @@ namespace MobileIdleBuilder
             return PortUtils.RotatedFootprint(GetBaseFootprint(), _rotation);
         }
 
-        private bool IsCellValidForPending(int x, int y)
+        private bool IsCellValidForPending(int x, int y) => BlockAt(x, y) == PlacementBlock.None;
+
+        /// <summary>Why the pending placement can't go at (x, y), or None when it can.</summary>
+        private PlacementBlock BlockAt(int x, int y)
         {
             if (_pendingField != null)
             {
                 // A bought field needs bare ground: no building, belt or existing field.
                 foreach (var c in FootprintCells(x, y))
                 {
-                    if (!gridRenderer.IsInBounds(c.x, c.y)) return false;
-                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return false;
-                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return false;
+                    if (!gridRenderer.IsInBounds(c.x, c.y)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return PlacementBlock.Occupied;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return PlacementBlock.OnField;
                 }
-                return true;
+                return PlacementBlock.None;
             }
 
             if (_pending.building == null)
             {
-                return gridRenderer.IsInBounds(x, y) &&
-                       (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(x, y));
+                if (!gridRenderer.IsInBounds(x, y)) return PlacementBlock.OffGrid;
+                return GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
+                    ? PlacementBlock.Occupied : PlacementBlock.None;
             }
 
             var fp = GetEffectiveFootprint();
@@ -721,30 +730,53 @@ namespace MobileIdleBuilder
                 for (int dy = 0; dy < fp.y; dy++)
                 {
                     int cx = x + dx, cy = y + dy;
-                    if (!gridRenderer.IsInBounds(cx, cy)) return false;
-                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return false;
+                    if (!gridRenderer.IsInBounds(cx, cy)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return PlacementBlock.Occupied;
 
                     var fieldAtCell = FieldGenerator.GetFieldAt(cx, cy);
 
                     if (_pending.building.placementRule == PlacementRule.MustBeOnField)
                     {
-                        if (fieldAtCell == null) return false;
+                        if (fieldAtCell == null) return PlacementBlock.NeedsField;
                         if (_pending.building.compatibleFields != null && _pending.building.compatibleFields.Length > 0)
                         {
                             bool compatible = System.Array.Exists(_pending.building.compatibleFields,
                                                                   ft => ft == fieldAtCell.fieldType);
-                            if (!compatible) return false;
+                            if (!compatible) return PlacementBlock.WrongField;
                         }
                     }
                     else if (fieldAtCell != null)
                     {
-                        return false;
+                        return PlacementBlock.OnField;
                     }
                 }
             }
 
-            return true;
+            return PlacementBlock.None;
         }
+
+        internal enum PlacementBlock { None, OffGrid, Occupied, NeedsField, WrongField, OnField }
+
+        /// <summary>
+        /// One-line reason shown in the notification banner when a tap picks a cell the ✓ can't confirm,
+        /// so a disabled ✓ never goes unexplained (#258). Null for None. The banner does not wrap: keep it short.
+        /// </summary>
+        internal static string BlockMessage(PlacementBlock block, string buildingName, bool isField)
+        {
+            string name = string.IsNullOrEmpty(buildingName) ? "it" : "the " + buildingName;
+            switch (block)
+            {
+                case PlacementBlock.OffGrid:    return "Doesn't fit: part of it is off the grid.";
+                case PlacementBlock.Occupied:   return "That spot is taken.";
+                case PlacementBlock.NeedsField: return $"Place {name} on a field tile.";
+                case PlacementBlock.WrongField: return $"{Capitalize(name)} can't harvest this field.";
+                case PlacementBlock.OnField:    return isField ? "A new field needs empty ground."
+                                                               : "Fields are for Harvesters. Pick an empty tile.";
+                default:                        return null;
+            }
+        }
+
+        private static string Capitalize(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
 
         private List<RecipeSO> GetMatchingRecipes(FieldSO field)
         {
