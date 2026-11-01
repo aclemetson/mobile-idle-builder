@@ -162,12 +162,22 @@ namespace MobileIdleBuilder
                 await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.DeleteAsync(k_SaveKey);
                 GameLogger.Info("[UGSCloudSave] Cloud save deleted.");
             }
+            catch (Unity.Services.CloudSave.CloudSaveException ex) when (IsNotFound(ex))
+            {
+                // Nothing stored under the key (never pushed, or already wiped) — the goal state.
+                GameLogger.Info("[UGSCloudSave] No cloud save to delete.");
+            }
             catch (Exception ex)
             {
                 GameLogger.Warning($"[UGSCloudSave] DeleteAsync failed: {ex.Message}");
                 throw;
             }
         }
+
+        private static bool IsNotFound(Unity.Services.CloudSave.CloudSaveException ex) =>
+            ex.Reason == Unity.Services.CloudSave.CloudSaveExceptionReason.NotFound
+            || ex.ErrorCode == 404
+            || (ex.Message?.Contains("404") ?? false);
 
         /// <summary>Pushes SaveData to UGS under key "save_v1".</summary>
         public async Task<bool> PushAsync(SaveData data)
