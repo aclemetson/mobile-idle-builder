@@ -22,6 +22,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | building/structure visuals, procedural meshes, shaders, art direction | `visual-design.md` |
 | rewarded ads, ad SDK, LevelPlay go-live | `../levelplay-ads-setup.md` |
 | any code change (before committing) | `testing.md` |
+| AI playtests (agent plays in the Editor via MCP), playtest briefs, fixtures, `playtest_*` tools | `../../Playtests/README.md` |
 
 ## Feature assignments (`tasks/`)
 

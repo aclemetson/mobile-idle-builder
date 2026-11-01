@@ -283,16 +283,8 @@ namespace MobileIdleBuilder.Dev
             var input = _inputField.value?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(input)) return;
 
-            AppendLog($"> {input}", "log-entry--info");
             _inputField.SetValueWithoutNotify(string.Empty);
-
-            var result = _registry.Execute(input);
-            bool isError = !string.IsNullOrEmpty(result)
-                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
-            if (!string.IsNullOrEmpty(result))
-                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
-
-            if (!isError) MarkDevConsoleUsed(input);
+            RunAndLog(input);
 
             // Don't re-focus if a scene transition is already underway — keeping the input
             // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
@@ -307,6 +299,33 @@ namespace MobileIdleBuilder.Dev
             {
                 _inputField.Blur();
             }
+        }
+
+        /// <summary>
+        /// Runs one command without the console UI open (the AI playtest tools drive the
+        /// console this way). Same logging and save tainting as a typed command. Returns
+        /// null when the console has not run Start() yet.
+        /// </summary>
+        public static string ExecuteCommand(string input)
+        {
+            var console = s_Instance;
+            if (console == null || console._registry == null) return null;
+            return console.RunAndLog(input?.Trim() ?? string.Empty);
+        }
+
+        private string RunAndLog(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            AppendLog($"> {input}", "log-entry--info");
+            var result = _registry.Execute(input);
+            bool isError = !string.IsNullOrEmpty(result)
+                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
+            if (!string.IsNullOrEmpty(result))
+                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
+
+            if (!isError) MarkDevConsoleUsed(input);
+            return result;
         }
 
         // Alpha builds ship the console, so a command that ran taints this save's balancing data:
@@ -342,7 +361,12 @@ namespace MobileIdleBuilder.Dev
                 _logLabels.RemoveAt(0);
             }
 
-            _logView.schedule.Execute(() => _logView.ScrollTo(_logLabels[^1]));
+            // Runs a frame later: a scene reload in between (snapshot load) rebinds the UI and
+            // empties _logLabels, so scroll to this label only if it is still in the log.
+            _logView.schedule.Execute(() =>
+            {
+                if (label.parent == _logView) _logView.ScrollTo(label);
+            });
         }
 
         // ── Command registration ──────────────────────────────────────────────
@@ -1133,6 +1157,39 @@ namespace MobileIdleBuilder.Dev
 
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
+
+            // ── simulated spending and absence (AI playtest benchmarks) ──────
+            _registry.Register("iap grant <tier>", "Simulate buying crystal pack 1-4 ($0.99 / $4.99 / $9.99 / $19.99)",
+                args => IapGrant(args[0]));
+
+            _registry.Register("away <seconds>", "Simulate closing the app for <seconds> (offline earnings, timers)",
+                args =>
+                {
+                    if (!double.TryParse(args[0], out double seconds) || seconds <= 0)
+                        return "Error: <seconds> must be a positive number.";
+                    if (SaveManager.Instance == null || ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
+                        return "Error: game not loaded yet.";
+                    SaveManager.Instance.DevSimulateAway(seconds);
+                    Playtest.PlaytestBenchmark.Active?.AddAway(seconds);
+                    return $"Away for {Playtest.PlaytestBenchmark.FormatDuration(seconds)}.";
+                });
+        }
+
+        // Grants a crystal pack through the same award path as a completed store purchase, so
+        // crystalsPurchased stays a true audit of (simulated) spending.
+        private static string IapGrant(string tierArg)
+        {
+            var tiers = PremiumShopCalculator.CrystalPackTiers;
+            if (!int.TryParse(tierArg, out int tier) || tier < 1 || tier > tiers.Length)
+                return $"Error: <tier> must be 1-{tiers.Length}.";
+            var shop = PremiumShopService.Instance;
+            if (shop == null) return "Error: PremiumShopService not ready.";
+
+            var pack = tiers[tier - 1];
+            shop.AwardCrystals(pack.CrystalAmount);
+            double dollars = double.Parse(pack.DisplayPrice.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture);
+            Playtest.PlaytestBenchmark.Active?.AddPurchase(dollars, pack.CrystalAmount, pack.Name);
+            return $"Granted {pack.Name}: +{pack.CrystalAmount} crystals ({pack.DisplayPrice}).";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────

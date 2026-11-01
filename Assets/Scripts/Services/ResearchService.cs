@@ -70,7 +70,7 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (_activeResearch == null) return;
-            if (DateTime.UtcNow >= _activeCompleteUtc)
+            if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
         }
 
@@ -110,7 +110,7 @@ namespace MobileIdleBuilder
             get
             {
                 if (_activeResearch == null) return 0;
-                double rem = (_activeCompleteUtc - DateTime.UtcNow).TotalSeconds;
+                double rem = (_activeCompleteUtc - GameClock.UtcNow).TotalSeconds;
                 return rem > 0 ? rem : 0;
             }
         }
@@ -172,7 +172,7 @@ namespace MobileIdleBuilder
             }
 
             _activeResearch    = research;
-            _activeCompleteUtc = DateTime.UtcNow.AddSeconds(effective);
+            _activeCompleteUtc = GameClock.UtcNow.AddSeconds(effective);
 
             var save = SaveManager.Instance?.Current;
             if (save != null)
@@ -282,7 +282,7 @@ namespace MobileIdleBuilder
         public void ProcessActiveTimer()
         {
             if (_activeResearch == null) return;
-            if (DateTime.UtcNow >= _activeCompleteUtc)
+            if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
         }
 

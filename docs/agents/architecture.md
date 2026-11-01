@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06). If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -68,6 +68,10 @@ SaveData (save.json) ◄──ECSLoadBridge.FlushToSave()/ApplyLoadedSave()─�
 - Singletons override `Awake()` MUST call `base.Awake()` (CLAUDE.md rule).
 - Never read/write ECS singletons from a MonoBehaviour before `ECSLoadBridge.IsLoaded` is true. The bridge's polling coroutine is the only sanctioned wait; copy how `TutorialOverlayController` guards its `Update()` on `ECSLoadBridge.IsLoaded`.
 - Sub-controllers receive ECS access via `SetECSContext(EntityManager)` called by `HUDController` after the bridge loads — do not create your own timing.
+
+## Time
+
+Anything a player waits on (research timers, field cooldowns, speed boosts, offline earnings via the background timestamp, daily/weekly/achievement resets, PVP, ad caps) reads `GameClock.UtcNow` (`Assets/Scripts/Services/GameClock.cs`), never `DateTime.UtcNow`. Release builds read the wall clock; editor/dev builds let the AI playtest harness freeze and fast-forward it (`Playtests/README.md`, "Time"). Stays on the wall clock: `SaveData.lastSaved` (cold-boot offline earnings + cloud reconcile), the idle snapshot stamp, auth policy, telemetry.
 
 ## Key ECS singletons (components in `Assets/Scripts/Components/`)
 

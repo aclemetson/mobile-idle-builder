@@ -87,6 +87,7 @@ namespace MobileIdleBuilder
         private VisualElement _drawerPanel;
         private VisualElement _drawerBackdrop;
         private bool          _drawerOpen;
+        private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
 
         // ---- Placement controls ----
         private Button        _btnRotateOutput;
@@ -331,6 +332,7 @@ namespace MobileIdleBuilder
             _inspector?.Tick();
             UpdatePlacementConfirmPopup();
             RefreshBuildingAffordabilityIfChanged();
+            RefreshBannerClearance();
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -360,6 +362,7 @@ namespace MobileIdleBuilder
             // Closed drawer is hidden, not just slid off-screen, so its ScrollView scroller
             // can never peek in at the left edge (#196). See OpenDrawer / CloseDrawer.
             if (_drawerPanel != null) _drawerPanel.style.visibility = Visibility.Hidden;
+            _drawerTapGuard.Attach(_drawerPanel);
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -1879,6 +1882,7 @@ namespace MobileIdleBuilder
         public void HideFieldBanner()                => _banner?.HideFieldBanner();
         public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
         public void HideTutorialHint()               => _banner?.HideTutorialHint();
+        public void SetTutorialHintProgress(string progress) => _banner?.SetTutorialHintProgress(progress);
 
         // ============================================================
         // Output selector
@@ -2045,6 +2049,21 @@ namespace MobileIdleBuilder
             open();
         }
 
+        /// <summary>
+        /// Keeps the tutorial hint clear of any open menu. The left drawer and every slide panel sit over the
+        /// banner's bottom bar, which hides their bottom rows (the Place buttons). Derived from what is on
+        /// screen each frame, so every open path is covered and no caller can leave the banner expanded.
+        /// </summary>
+        private void RefreshBannerClearance()
+        {
+            if (_banner == null || _allPanels == null) return;
+            bool menuOpen = _drawerOpen;
+            if (!menuOpen)
+                foreach (var panel in _allPanels)
+                    if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            _banner.SetMenuOpen(menuOpen);
+        }
+
         private void CloseAllPanels()
         {
             foreach (var panel in _allPanels)
@@ -2066,6 +2085,7 @@ namespace MobileIdleBuilder
         {
             if (_drawerPanel == null) return;
             _drawerOpen = true;
+            _drawerTapGuard.MarkOpened();
             _drawerPanel.style.visibility = Visibility.Visible;
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);

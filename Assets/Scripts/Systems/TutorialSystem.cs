@@ -20,6 +20,13 @@ namespace MobileIdleBuilder
         private int _diagLastCount;
         private int _diagLastStep;
 
+        /// <summary>
+        /// Linked sources counted for the current step when it advances on ConveyorLinked, else -1. Lets
+        /// the overlay tell a belt that linked nothing apart from one that linked but the step wants more
+        /// (#255: a wrong belt left the step silently stuck).
+        /// </summary>
+        public static int CurrentStepConveyorLinks { get; private set; } = -1;
+
         public void OnCreate(ref SystemState state)
         {
             _diagLastCount = -1;
@@ -30,6 +37,7 @@ namespace MobileIdleBuilder
 
         public void OnUpdate(ref SystemState state)
         {
+            CurrentStepConveyorLinks = -1;
             var tutorial = SystemAPI.GetSingleton<TutorialStateData>();
             if (!tutorial.IsActive) return;
 
@@ -102,11 +110,23 @@ namespace MobileIdleBuilder
                 }
             }
 
-            if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
+            if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.ConveyorLinked)
+            {
+                CurrentStepConveyorLinks = CountConveyorLinks(step.advanceCondition, ref state);
+                if (CurrentStepConveyorLinks < System.Math.Max(1, step.advanceCondition.minCount)) return;
+            }
+            else if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
 
             // Side-effect: mark first run complete when the prestige-run condition triggers
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.PrestigeRunMin)
                 tutorial.FirstRunComplete = true;
+
+            // Paid on advance, never on entry: entry re-runs when a save loads on this step.
+            if (step.rewardEntropy > 0 && SystemAPI.TryGetSingletonRW<PlayerProgressData>(out var progress))
+            {
+                progress.ValueRW.BaseCurrency += step.rewardEntropy;
+                GameLogger.Info($"[TutorialSystem] Step '{step.id}' rewarded {step.rewardEntropy} entropy.");
+            }
 
             tutorial.CurrentStepIndex++;
 
@@ -208,6 +228,25 @@ namespace MobileIdleBuilder
                 case ConditionType.FieldPurchasedMin:
                     return FieldPurchaseService.PurchasedCount(SaveManager.Instance?.Current, c.fieldId)
                            >= System.Math.Max(1, c.minCount);
+
+                case ConditionType.BuildingRecipeSet:
+                    // The recipe set UiEvent fires for any recipe on any building, so it can't tell a
+                    // second Combiner set to Neutron from one left on Proton. Read the live recipe.
+                    foreach (var (bd, rp, e) in SystemAPI.Query<RefRO<BuildingData>, RefRO<RecipeProcessData>>()
+                                                         .WithEntityAccess())
+                        if (MatchesTarget(c, bd.ValueRO, e, ref state) && rp.ValueRO.RecipeID == c.recipeId)
+                            return true;
+                    return false;
+
+                case ConditionType.ItemCraftedMin:
+                    // Automated output belted to the Demon is sold before it can reach the inventory,
+                    // so count crafts. Holding the item also counts (Empty output, or a craft from a
+                    // previous session).
+                    if (c.items == null || c.items.Count == 0) return true;
+                    foreach (var r in c.items)
+                        if (CraftLog.Count(r.itemId) < r.quantity
+                            && SlotBufferUtils.CountInInventory(inv, r.itemId) < r.quantity) return false;
+                    return true;
 
                 default:
                     return false;

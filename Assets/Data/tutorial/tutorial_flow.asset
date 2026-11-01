@@ -27,6 +27,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: recombination_i
       skipToId: collect_quarks_for_nucleons
@@ -42,6 +43,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: collect_first_electron
     hintText: Tap the electron field to collect 5 electrons.
     advanceCondition:
@@ -58,6 +60,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -81,6 +84,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: direct_to_maxwells_demon
     hintText: Tap Maxwell's Demon to sell your electrons.
     advanceCondition:
@@ -95,6 +99,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -118,6 +123,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: sell_electrons_in_demon
     hintText: Drag your electrons to the right side to sell them.
     advanceCondition:
@@ -134,6 +140,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -149,6 +156,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: close_demon_panel
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -163,6 +171,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -178,6 +187,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: explain_quark_field
     hintText: 
     advanceCondition:
@@ -192,6 +202,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -207,6 +218,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: collect_quarks
     hintText: Tap the quark field to collect 5 Up Quarks and 5 Down Quarks.
     advanceCondition:
@@ -225,6 +237,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -248,6 +261,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: direct_to_maxwells_demon_quarks
     hintText: Bring your quarks to Maxwell's Demon to convert them to entropy.
     advanceCondition:
@@ -262,6 +276,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -285,6 +300,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: sell_quarks_in_demon
     hintText: Drag your quarks to the right side to sell them.
     advanceCondition:
@@ -303,6 +319,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -318,6 +335,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: close_demon_panel_quarks
     hintText: Great! Close the panel when you're ready.
     advanceCondition:
@@ -332,6 +350,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -347,6 +366,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: open_research_drawer
     hintText: Open the menu on the left to find the Research panel.
     advanceCondition:
@@ -361,6 +381,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -392,6 +413,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_recombination_i
     hintText: Purchase Recombination I to unlock nucleon synthesis.
     advanceCondition:
@@ -406,6 +428,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -437,6 +460,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: recombination_unlocked
     hintText: 
     advanceCondition:
@@ -451,6 +475,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -466,6 +491,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: collect_quarks_for_nucleons
     hintText: "Collect 8 Up Quarks and 8 Down Quarks \u2014 you'll need them to synthesize
       2 Protons and 2 Neutrons."
@@ -485,6 +511,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -509,6 +536,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: open_recipe_panel_for_nucleons
     hintText: Open the Build menu to craft nucleons from quarks.
     advanceCondition:
@@ -523,6 +551,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -543,6 +572,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: craft_two_protons
     hintText: Craft 2 Protons. Each requires 2 Up Quarks + 1 Down Quark.
     advanceCondition:
@@ -559,6 +589,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -575,6 +606,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: craft_two_neutrons
     hintText: Now craft 2 Neutrons. Each requires 1 Up Quark + 2 Down Quarks.
     advanceCondition:
@@ -591,6 +623,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -607,6 +640,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: direct_to_demon_for_nucleons
     hintText: Tap Maxwell's Demon to sell your Protons and Neutrons for entropy.
     advanceCondition:
@@ -621,6 +655,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -649,6 +684,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: sell_protons_and_neutrons
     hintText: Deposit your Protons and Neutrons into the Demon.
     advanceCondition:
@@ -667,6 +703,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -683,6 +720,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: close_demon_after_nucleons
     hintText: Close Maxwell's Demon.
     advanceCondition:
@@ -697,6 +735,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -713,6 +752,7 @@ MonoBehaviour:
     lockedResearchIds:
     - hydrogen_synthesis
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_hydrogen_synthesis
     hintText: Purchase Hydrogen Synthesis in the Research panel to unlock atomic
       assembly.
@@ -728,6 +768,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -759,6 +800,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: gather_for_hydrogen
     hintText: Collect 4 Up Quarks, 2 Down Quarks, and 2 Electrons to craft Hydrogen
       atoms.
@@ -780,6 +822,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -799,6 +842,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 1
+    rewardEntropy: 0
   - id: craft_protons_for_hydrogen
     hintText: Craft 2 Protons to use in Hydrogen synthesis.
     advanceCondition:
@@ -815,6 +859,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -830,6 +875,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 1
+    rewardEntropy: 0
   - id: craft_hydrogen
     hintText: Combine a Proton and an Electron to craft 2 Hydrogen atoms.
     advanceCondition:
@@ -846,6 +892,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -861,6 +908,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 1
+    rewardEntropy: 0
   - id: hydrogen_crafted
     hintText: 
     advanceCondition:
@@ -875,6 +923,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -890,6 +939,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: direct_to_demon_for_hydrogen
     hintText: Bring your Hydrogen atoms to Maxwell's Demon.
     advanceCondition:
@@ -904,6 +954,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -931,6 +982,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: sell_hydrogen_in_demon
     hintText: Deposit your Hydrogen atoms to earn entropy.
     advanceCondition:
@@ -947,6 +999,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -962,6 +1015,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: close_demon_after_hydrogen
     hintText: Close Maxwell's Demon when ready.
     advanceCondition:
@@ -976,6 +1030,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -991,6 +1046,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: intro_automation_i
     hintText: 
     advanceCondition:
@@ -1005,6 +1061,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1020,6 +1077,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_automation_i
     hintText: Purchase Automation I in the Research panel to unlock the Harvester.
     advanceCondition:
@@ -1034,6 +1092,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1061,6 +1120,7 @@ MonoBehaviour:
         modifier: warning
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_first_building
     hintText: Place a Harvester on the lepton field to begin collecting electrons
       automatically.
@@ -1076,13 +1136,14 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 72d35512ec798ca4e9e9970d3e19e483, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: electron_field
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-harvester
@@ -1091,6 +1152,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_conveyor
     hintText: Open the menu, tap Builder, then Place on Conveyor Belt. Tap the glowing
       tile in front of the Harvester, then the glowing tile in front of Maxwell's
@@ -1107,6 +1169,7 @@ MonoBehaviour:
       fromBuildingType: 1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1122,8 +1185,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 375
   - id: automation_started
-    hintText: Your factory is running. Watch it produce particles automatically.
+    hintText: Your factory is running, and the Architect sent 375 entropy for your
+      next Harvesters.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1136,6 +1201,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1151,6 +1217,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_quark_harvester
     hintText: Place a Harvester on each quark field. Set one to Up Quarks and the
       other to Down Quarks.
@@ -1166,6 +1233,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1181,8 +1249,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 350
   - id: intro_sfc
-    hintText: Save up entropy to place the Strong Force Combiner.
+    hintText: 'The Architect sent 350 entropy: enough for a Strong Force Combiner
+      and a generator to power it.'
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1195,6 +1265,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1210,6 +1281,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_sfc
     hintText: Open the Build menu and place a Strong Force Combiner on the glowing
       tiles, between your quark Harvesters and Maxwell's Demon.
@@ -1225,6 +1297,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1240,6 +1313,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_generator
     hintText: Place a Basic Generator within range of the Strong Force Combiner to
       power it.
@@ -1255,6 +1329,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1270,6 +1345,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: link_generator
     hintText: The Combiner powers on automatically while a generator is in range.
       Keep generators close to the buildings they power.
@@ -1285,6 +1361,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1300,6 +1377,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: route_quarks_to_sfc
     hintText: Place a Conveyor Belt from the glowing tile in front of a quark Harvester
       to the glowing tile below the Combiner. Do this for both quark Harvesters.
@@ -1315,6 +1393,7 @@ MonoBehaviour:
       fromBuildingType: 1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1330,6 +1409,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: configure_sfc_recipes
     hintText: Open the Combiner and set its recipe to Proton.
     advanceCondition:
@@ -1344,6 +1424,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1359,6 +1440,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: route_nucleons_to_demon
     hintText: Place a Conveyor Belt from the glowing tile above the Combiner to the
       glowing tile in front of Maxwell's Demon.
@@ -1374,6 +1456,7 @@ MonoBehaviour:
       fromBuildingType: 2
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1389,6 +1472,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: nucleon_loop_complete
     hintText: Your nucleon pipeline is running automatically.
     advanceCondition:
@@ -1403,6 +1487,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1418,6 +1503,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: intro_atom_gen
     hintText: Save up entropy to place the Atom Generator.
     advanceCondition:
@@ -1432,6 +1518,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1447,8 +1534,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_atom_generator
-    hintText: Open the Build menu and place an Atom Generator.
+    hintText: Place an Atom Generator on the glowing tiles, inside your Basic Generator's
+      power range. The spot leaves room for a belt at each intake and at the output.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -1461,13 +1550,14 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 3de8bb1fc3fea6f4bba01d9e117d3e6a, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: power:atomic_assembler
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-atomic_assembler
@@ -1476,6 +1566,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: connect_atom_gen_inputs
     hintText: Re-route the proton belt into the Atom Generator, and feed it electrons
       from your Harvester.
@@ -1491,6 +1582,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1506,6 +1598,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: route_hydrogen_to_demon
     hintText: Place a Conveyor Belt from the glowing tile in front of the Atom Generator's
       output to the glowing tile in front of Maxwell's Demon.
@@ -1521,6 +1614,7 @@ MonoBehaviour:
       fromBuildingType: 4
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1536,6 +1630,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: hydrogen_loop_complete
     hintText: Your factory is producing hydrogen automatically.
     advanceCondition:
@@ -1550,6 +1645,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1565,6 +1661,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_field_synthesis
     hintText: Save up 250 entropy and research Field Synthesis.
     advanceCondition:
@@ -1579,6 +1676,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1594,6 +1692,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_quark_field_pair
     hintText: Open the Build menu and place a Quark Field Pair on two empty tiles.
     advanceCondition:
@@ -1608,6 +1707,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: quark_field
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1623,6 +1723,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: field_pair_placed
     hintText: Harvest the new pair and set a second Combiner to Neutron.
     advanceCondition:
@@ -1637,6 +1738,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1652,6 +1754,168 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
+  - id: place_neutron_harvesters
+    hintText: Place a Harvester on each new quark field. Set one to Up Quarks and
+      one to Down Quarks.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 5
+      buildingType: 1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-harvester
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: place_neutron_combiner
+    hintText: Place a second Strong Force Combiner near the new Harvesters, inside
+      your generator's power range.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 2
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: power:strong_force_combiner
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-strong_force_combiner
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: set_neutron_recipe
+    hintText: 'Tap the new Combiner and set its recipe to Neutron: 1 Up Quark + 2
+      Down Quarks.'
+    advanceCondition:
+      type: 12
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: 2
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: 5
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: route_quarks_to_neutron_combiner
+    hintText: Belt both new Harvesters into the second Combiner. Start on the glowing
+      tile at each Harvester's output and end on the glowing tile at the Combiner's
+      input.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 4
+      buildingType: 2
+      buildingIsEntropySink: 0
+      fromBuildingType: 1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:harvester>strong_force_combiner
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-conveyor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: route_neutrons_to_atom_gen
+    hintText: Belt the Neutron Combiner's output into the Atom Generator's free input.
+      Neutrons wait there until Atomic Assembly teaches it Helium-4.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: 2
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:strong_force_combiner>atomic_assembler
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-conveyor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: post_tutorial_intro
     hintText: Your hydrogen loop is running. Save up 500 entropy to research Atomic
       Assembly.
@@ -1667,6 +1931,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1682,6 +1947,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_atomic_assembly
     hintText: Purchase Atomic Assembly in the Research panel to unlock heavier elements.
     advanceCondition:
@@ -1696,6 +1962,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1711,6 +1978,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: atomic_assembly_unlocked
     hintText: 
     advanceCondition:
@@ -1725,6 +1993,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1740,11 +2009,12 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: craft_first_helium
-    hintText: "Craft Helium-4 in your Atom Generator \u2014 2 protons, 2 neutrons,
-      2 electrons."
+    hintText: 'Tap the Atom Generator and set its recipe to Helium-4: 2 protons,
+      2 neutrons, 2 electrons.'
     advanceCondition:
-      type: 1
+      type: 11
       anyOf: 0
       items:
       - itemId: 7
@@ -1757,21 +2027,23 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: atomic_assembler
+      highlightMode: 2
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-recipes
+      pulseButtonId: 
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 5000
   - id: first_element_context
     hintText: 
     advanceCondition:
@@ -1786,6 +2058,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -1801,485 +2074,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-  - id: buy_heavy_elements
-    hintText: Save 3,000 entropy and purchase Heavy Elements to unlock Uranium synthesis.
-    advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: heavy_elements
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 900aa07d95b92804aac1809765344343, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: heavy_elements_unlocked
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 2f4e215fc284ae24b8586b12e645fdbb, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: craft_first_uranium
-    hintText: "Craft Uranium in the Atom Generator. Costs 1,190 eV \u2014 upgrade
-      generators first if needed."
-    advanceCondition:
-      type: 1
-      anyOf: 0
-      items:
-      - itemId: 13
-        quantity: 1
-      uiEventId: 
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-recipes
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: uranium_crafted
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 6070f72c988bfdf4cbbf64026ce51ed9, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: buy_isotope_engineering
-    hintText: Save 1,500 entropy and purchase Isotope Engineering to unlock the Isotopic
-      Manipulator.
-    advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: isotopes
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 6d35297167589f64ea4b9432175ad754, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: isotopes_unlocked
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 721eb2ff2d10d8b4d8e2f245da48ca0e, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: place_isotopic_manipulator
-    hintText: Place an Isotopic Manipulator and connect it to power, neutrons, and
-      base elements.
-    advanceCondition:
-      type: 5
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: 
-      minCount: 1
-      buildingType: 5
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 5c4f6e2e370d5fd4397ccc11dacf20bc, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-place-isotopic_manipulator
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: craft_first_isotope
-    hintText: "Craft Deuterium in the Isotopic Manipulator \u2014 1 Hydrogen + 1
-      Neutron."
-    advanceCondition:
-      type: 1
-      anyOf: 0
-      items:
-      - itemId: 14
-        quantity: 1
-      uiEventId: 
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-recipes
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: isotope_crafted
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 26ae493ab17b8e84a80806f435b7a37f, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: buy_radioactive_isotopes
-    hintText: "Save 5,000 entropy and purchase Radioactive Isotopes \u2014 requires
-      Isotope Engineering and Heavy Elements."
-    advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: radioactive_isotopes
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: ef38038a87f7e9b44b020f791a455337, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: radioactive_isotopes_unlocked
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 86f9e09f1335cc54caf7e8a1b91ddb3b, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: place_radioactive_containment
-    hintText: "Place a Radioactive Containment structure \u2014 2\xD72 footprint,
-      draws 30 eV \u2014 to safely house the Isotopic Manipulator."
-    advanceCondition:
-      type: 5
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: 
-      minCount: 1
-      buildingType: 6
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 765cb97afa86f24459de25a6c941d86f, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-place-radioactive_containment
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: craft_uranium_235
-    hintText: "Craft Uranium-235 in the Containment building's Isotopic Manipulator
-      \u2014 removes 3 neutrons from Uranium, emitting an Alpha particle."
-    advanceCondition:
-      type: 1
-      anyOf: 0
-      items:
-      - itemId: 17
-        quantity: 1
-      uiEventId: 
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-recipes
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: uranium_235_crafted
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 559fca6955da77345bff902cc680eb10, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: collect_alpha_particle
-    hintText: Collect the Alpha particle emitted from your Containment building.
-    advanceCondition:
-      type: 1
-      anyOf: 0
-      items:
-      - itemId: 18
-        quantity: 1
-      uiEventId: 
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: particles_loop_complete
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: e1f1eda721baabc46a11bbb8c8e08d4f, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
+    rewardEntropy: 0
   - id: intro_nuclear_reactors
     hintText: Building atoms one nucleon at a time is slow. There is a faster way.
     advanceCondition:
@@ -2294,6 +2089,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -2309,8 +2105,9 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: buy_fusion_i
-    hintText: Purchase Stellar Fusion in the Research panel to unlock the Fusion
+    hintText: Save 4,000 entropy and research Stellar Fusion to unlock the Fusion
       Reactor.
     advanceCondition:
       type: 4
@@ -2324,6 +2121,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -2339,8 +2137,10 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: place_fusion_reactor
-    hintText: Open the Build menu and place a Fusion Reactor.
+    hintText: Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside
+      your generator's power range.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -2353,6 +2153,39 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: power:fusion_reactor
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-fusion_reactor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: power_for_fusion
+    hintText: Your factory needs 80 eV and one generator makes 50. Place a second
+      Basic Generator so the reactor and everything near it stays powered.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 3
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -2362,12 +2195,13 @@ MonoBehaviour:
       highlightMode: 0
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-place-fusion_reactor
+      pulseButtonId: btn-place-basic_generator
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0
   - id: fusion_explained
     hintText: 
     advanceCondition:
@@ -2382,6 +2216,7 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
@@ -2397,94 +2232,106 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-  - id: buy_fissile_extraction
-    hintText: Purchase Fissile Extraction to open uranium and plutonium fields.
+    rewardEntropy: 0
+  - id: route_helium_to_reactor
+    hintText: Remove the belt from the Atom Generator to Maxwell's Demon (Builder,
+      Deconstruct), then belt the Atom Generator's output into the Fusion Reactor.
     advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: fissile_extraction
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 2247ffc9d3ec4544590845dd5f1363fb, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: buy_fission_i
-    hintText: Purchase Nuclear Fission to unlock the Fission Reactor.
-    advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: fission_i
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-  - id: place_fission_reactor
-    hintText: Open the Build menu and place a Fission Reactor.
-    advanceCondition:
-      type: 5
+      type: 8
       anyOf: 0
       items: []
       uiEventId: 
       researchId: 
       minCount: 1
-      buildingType: 12
+      buildingType: 11
       buildingIsEntropySink: 0
-      fromBuildingType: -1
+      fromBuildingType: 4
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: route:atomic_assembler>fusion_reactor
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-place-fission_reactor
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-  - id: reactors_complete
+    rewardEntropy: 0
+  - id: craft_first_carbon
+    hintText: Tap the Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4
+      become one Carbon.
+    advanceCondition:
+      type: 11
+      anyOf: 0
+      items:
+      - itemId: 9
+        quantity: 1
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: fusion_reactor
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: route_carbon_to_demon
+    hintText: Belt the Fusion Reactor's output into Maxwell's Demon. Each Carbon
+      sells for 160 entropy.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
+      fromBuildingType: 11
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:fusion_reactor>maxwells_demon
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-conveyor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: tutorial_complete
     hintText: 
     advanceCondition:
       type: 3
@@ -2498,11 +2345,12 @@ MonoBehaviour:
       fromBuildingType: -1
       minLevel: 0
       fieldId: 
+      recipeId: -1
     skipCondition:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 11400000, guid: d2cf1b4040bb32d408ea0c4e6e5b9281, type: 2}
+      dialogue: {fileID: 11400000, guid: a5540aeff9bc6ae4b9ffec407e63040c, type: 2}
       highlightTarget: 
       highlightMode: 0
       blockCollection: 0
@@ -2513,3 +2361,4 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
+    rewardEntropy: 0

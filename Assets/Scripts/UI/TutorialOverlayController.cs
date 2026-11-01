@@ -45,6 +45,13 @@ namespace MobileIdleBuilder
         private bool        _queryReady;
         private EntityQuery _powerGridQuery;
         private bool        _powerQueryReady;
+        private EntityQuery _inventoryQuery;
+        private bool        _inventoryQueryReady;
+        private string      _lastHintProgress;
+        private float       _nextHintProgressAt;
+
+        // Collect taps are human-paced; refreshing the counts a few times a second avoids a string per frame.
+        private const float HintProgressInterval = 0.2f;
 
         void Start()
         {
@@ -60,6 +67,7 @@ namespace MobileIdleBuilder
 
             _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
             _placementController = FindAnyObjectByType<BuildingPlacementController>();
+            if (_conveyorController != null) _conveyorController.OnStartChanged += OnConveyorStartChanged;
 
             if (hudController != null)
             {
@@ -90,6 +98,11 @@ namespace MobileIdleBuilder
                 _powerGridQuery = world.EntityManager.CreateEntityQuery(
                     ComponentType.ReadOnly<PowerGridState>());
                 _powerQueryReady = true;
+
+                _inventoryQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadOnly<InventorySlot>());
+                _inventoryQueryReady = true;
             }
         }
 
@@ -101,6 +114,8 @@ namespace MobileIdleBuilder
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
+
+            if (_conveyorController != null) _conveyorController.OnStartChanged -= OnConveyorStartChanged;
 
             if (hudController != null)
             {
@@ -143,6 +158,8 @@ namespace MobileIdleBuilder
                 if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
                     hudController?.HideTutorialHint();
                 dialogueController?.HideDialogue();
+                _lastHintProgress = null;
+                hudController?.SetTutorialHintProgress(null);
                 return;
             }
 
@@ -161,11 +178,42 @@ namespace MobileIdleBuilder
                     return; // advanced — OnStepChanged already ran
             }
 
-            if (state.CurrentStepIndex == _lastStepIndex) return;
+            bool stepChanged = state.CurrentStepIndex != _lastStepIndex;
+            if (stepChanged)
+            {
+                int prevIdx = _lastStepIndex;
+                _lastStepIndex = state.CurrentStepIndex;
+                OnStepChanged(state.CurrentStepIndex, prevIdx);
+            }
 
-            int prevIdx = _lastStepIndex;
-            _lastStepIndex = state.CurrentStepIndex;
-            OnStepChanged(state.CurrentStepIndex, prevIdx);
+            if (stepChanged || Time.unscaledTime >= _nextHintProgressAt)
+            {
+                _nextHintProgressAt = Time.unscaledTime + HintProgressInterval;
+                RefreshHintProgress(state.CurrentStepIndex);
+            }
+        }
+
+        /// <summary>
+        /// Keeps the have/need line under the hint current for gather (InventoryMin) steps (#260). Pushed
+        /// to the banner only when the text changes; the banner keeps it hidden while the hint is.
+        /// </summary>
+        private void RefreshHintProgress(int stepIndex)
+        {
+            string progress = null;
+            var flow = TutorialFlowSO.Current;
+            if (flow != null && stepIndex < flow.steps.Length && _inventoryQueryReady
+                && _inventoryQuery.CalculateEntityCount() == 1)
+            {
+                var inv = _inventoryQuery.GetSingletonBuffer<InventorySlot>(true);
+                progress = TutorialHintProgress.Format(
+                    flow.steps[stepIndex].advanceCondition,
+                    id => SlotBufferUtils.CountInInventory(inv, id),
+                    id => ItemDatabase.GetStatic(id)?.displayName);
+            }
+
+            if (progress == _lastHintProgress) return;
+            _lastHintProgress = progress;
+            hudController?.SetTutorialHintProgress(progress);
         }
 
         // ── Step entry ────────────────────────────────────────────────────────
@@ -366,7 +414,82 @@ namespace MobileIdleBuilder
         private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
-        private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
+        private void OnConveyorPlacedHandler()
+        {
+            TryAdvanceOnUiEvent("conveyor_placed");
+            NoteBeltPlaced();
+        }
+
+        // ── Belt feedback (#255) ──────────────────────────────────────────────
+
+        // One line in the notification banner, which does not wrap: keep it short.
+        internal const string UnlinkedBeltMessage = "Belt not linked. Draw it between the two glowing tiles.";
+
+        // The new belt reaches ECS and TutorialSystem a few frames after the chain is placed.
+        private const float BeltCheckDelaySeconds = 0.5f;
+        private Coroutine _beltCheck;
+
+        // Link count when the open chain's first segment was placed; -1 when no chain is open.
+        private int _chainLinksBefore = -1;
+        private int _chainStepIndex   = -1;
+
+        /// <summary>
+        /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
+        /// word why. Each confirm auto-chains from the segment's end, so a route is often drawn in several
+        /// segments: remember the count before the first one and judge the whole chain once it ends.
+        /// </summary>
+        private void NoteBeltPlaced()
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            if (flow.steps[_lastStepIndex].advanceCondition?.type != ConditionType.ConveyorLinked) return;
+
+            if (_chainStepIndex != _lastStepIndex)
+            {
+                _chainStepIndex   = _lastStepIndex;
+                _chainLinksBefore = TutorialSystem.CurrentStepConveyorLinks;
+            }
+            if (_conveyorController == null || !_conveyorController.HasStart) EndBeltChain();
+        }
+
+        // The start drops when the player taps New, leaves belt mode, or placed a single belt.
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            if (!hasStart) EndBeltChain();
+        }
+
+        /// <summary>Warns, and re-shows the glowing route, when the chain that just ended linked nothing new.</summary>
+        private void EndBeltChain()
+        {
+            if (_chainStepIndex < 0) return;
+            int stepIndex = _chainStepIndex, linksBefore = _chainLinksBefore;
+            _chainStepIndex   = -1;
+            _chainLinksBefore = -1;
+
+            if (_beltCheck != null) StopCoroutine(_beltCheck);
+            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(stepIndex, linksBefore));
+        }
+
+        private IEnumerator WarnIfBeltUnlinked(int stepIndex, int linksBefore)
+        {
+            yield return new WaitForSecondsRealtime(BeltCheckDelaySeconds);
+            _beltCheck = null;
+
+            int linksAfter = TutorialSystem.CurrentStepConveyorLinks;
+            if (!IsBeltUnlinked(stepAdvanced: _lastStepIndex != stepIndex, linksBefore, linksAfter)) yield break;
+
+            InventoryPopupController.NotifyWarning(UnlinkedBeltMessage);
+            var enter = TutorialFlowSO.Current?.steps[stepIndex].onEnter;
+            if (enter != null && enter.highlightMode == HighlightMode.Full && !string.IsNullOrEmpty(enter.highlightTarget))
+                tutorialHighlighter?.ShowHighlight(enter.highlightTarget);
+        }
+
+        /// <summary>
+        /// True when a belt placed on a ConveyorLinked step linked nothing new: the step did not advance and
+        /// the link count did not rise. A count of -1 means the step is no longer being evaluated.
+        /// </summary>
+        internal static bool IsBeltUnlinked(bool stepAdvanced, int linksBefore, int linksAfter) =>
+            !stepAdvanced && linksAfter >= 0 && linksAfter <= Mathf.Max(0, linksBefore);
         private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
         // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
         // upgrade UI needs no tutorial hook.

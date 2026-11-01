@@ -137,6 +137,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void CountLinkedSources_BeltPassingASecondSource_CountsOnlyTheOneItStartsAt()
+        {
+            // Two quark Harvesters side by side; one belt starts at the first and runs past the second.
+            // Only a head pulls building output, so the second Harvester never feeds it (#275).
+            var fronts = new List<(int, Vector2Int)> { (1, new(0, 0)), (2, new(1, 0)) };
+            var inputs = new HashSet<Vector2Int> { new(3, 0) };
+            Assert.AreEqual(1, TutorialRouteGuide.CountLinkedSources(fronts, inputs,
+                Belt(new(0, 0), new(1, 0), new(2, 0), new(3, 0))));
+        }
+
+        [Test]
         public void CountLinkedSources_ALoopedBeltTerminates()
         {
             var belts = new Dictionary<Vector2Int, Vector2Int?>
@@ -199,6 +210,82 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("harvester", f);
             Assert.AreEqual("maxwells_demon", t);
             Assert.IsFalse(TutorialRouteGuide.TryParseSuggest("suggest:combiner", out _, out _, out _));
+        }
+
+        [Test]
+        public void TryParsePower_ReadsBuilding()
+        {
+            Assert.IsTrue(TutorialRouteGuide.TryParsePower("power:atomic_assembler", out var b));
+            Assert.AreEqual("atomic_assembler", b);
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("power:", out _));
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("route:harvester>maxwells_demon", out _));
+        }
+
+        // ── Powered placement ────────────────────────────────────────────────
+
+        static bool AllBuildable(Vector2Int c, Vector2Int blocked) => c != blocked && c.x >= 0 && c.y >= 0;
+
+        [Test]
+        public void SuggestPoweredAnchor_PicksNearestSpotInsideInfluence()
+        {
+            // Generator at (1,1), influence 2 tiles. Four cells are one step away; the scan (y, x) meets (1,0) first.
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)));
+
+            Assert.AreEqual(new Vector2Int(1, 0), spot);
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NeverReturnsAnUnpoweredSpot()
+        {
+            // Generator at (1,1) with 2 tiles of influence: (9,9) is far outside, so the suggestion stays near it.
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)));
+
+            Assert.IsNotNull(spot);
+            Assert.IsTrue(PowerCoverageMath.FootprintWithinRadius(1, 1, 1, 1,
+                spot.Value.x, spot.Value.y, spot.Value.x, spot.Value.y, 2f));
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NoSource_ReturnsNull()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)>();
+            Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => true));
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NothingBuildableInRange_ReturnsNull()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => false));
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_PrefersSpotWhosePortFrontsAreOpen()
+        {
+            // Without the check (1,0) wins. Its output front (one tile below) is off the grid, so the
+            // suggestion moves to the nearest spot where every port front is usable (#275).
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var fronts  = new List<Vector2Int> { new(0, -1) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), fronts, c => c.y >= 0 && c != new Vector2Int(1, 1));
+
+            Assert.IsNotNull(spot);
+            Assert.AreNotEqual(new Vector2Int(1, 0), spot);
+            Assert.GreaterOrEqual(spot.Value.y - 1, 0);
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NoOpenSpot_FallsBackToNearest()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), new List<Vector2Int> { new(0, -1) }, _ => false);
+
+            Assert.AreEqual(new Vector2Int(1, 0), spot);
         }
     }
 }

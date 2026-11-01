@@ -23,7 +23,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
-            _savePath   = Path.Combine(Application.persistentDataPath, "save.json");
+            _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _bakPath    = _savePath + ".bak";
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             _bakBackup  = File.Exists(_bakPath)  ? File.ReadAllText(_bakPath)  : null;

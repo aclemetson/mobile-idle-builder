@@ -52,7 +52,7 @@ namespace MobileIdleBuilder
             EnsureContent();
             if (_todaysChallengeIds.Count == 0)
                 ReloadFromSave();
-            CheckDailyReset(DateTime.UtcNow);
+            CheckDailyReset(GameClock.UtcNow);
         }
 
         void EnsureContent()
@@ -244,7 +244,7 @@ namespace MobileIdleBuilder
             }
         }
 
-        public bool CanClaimLoginReward() => CanClaimLoginReward(DateTime.UtcNow);
+        public bool CanClaimLoginReward() => CanClaimLoginReward(GameClock.UtcNow);
 
         /// <summary>True if today's (UTC) login reward has not been claimed yet.</summary>
         public bool CanClaimLoginReward(DateTime now)
@@ -258,7 +258,7 @@ namespace MobileIdleBuilder
             return last == DateTime.MinValue || last.Date < now.Date;
         }
 
-        public bool ClaimLoginReward() => ClaimLoginReward(DateTime.UtcNow);
+        public bool ClaimLoginReward() => ClaimLoginReward(GameClock.UtcNow);
 
         /// <summary>
         /// Claims today's login reward, grants it, advances the streak index (looping after the

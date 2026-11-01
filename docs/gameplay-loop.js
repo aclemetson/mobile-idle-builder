@@ -1215,10 +1215,122 @@ function renderWorldsTab() {
   }
 }
 
+// ─── SECTION 8e: TUTORIAL TIMING TAB ────────────────────────────────────
+// Simulates the entropy balance step by step: a step that costs more than the
+// balance waits (cost - balance) / rate seconds; every second of reading, acting
+// or waiting earns the current passive rate.
+
+function tutTimeFmt(sec) {
+  sec = Math.round(sec);
+  if (sec < 60) return sec + 's';
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h) return `${h}h ${m}m`;
+  return s ? `${m}m ${s}s` : `${m}m`;
+}
+
+function simulateTutorialTiming(opts) {
+  const T = D.tutorial_timing;
+  let balance = T.starting_entropy, clock = 0, aiClock = 0;
+  const phases = T.phases.map(ph => {
+    let rate = ph.rate, phaseSec = 0;
+    const rows = ph.steps.map(s => {
+      const read = opts.skipDialogue ? Math.min(s.read, 2) : s.read;
+      const r    = rate * opts.incomeMult;
+      // Detour legs run in order before the step itself, so their research timers earn toward the next leg.
+      const legs = (opts.detour && s.detour ? s.detour : []).concat([{ cost: s.cost || 0, act: s.act }]);
+      let wait = 0, act = 0, cost = 0;
+      legs.forEach(leg => {
+        const w = leg.cost > balance ? (r > 0 ? (leg.cost - balance) / r : Infinity) : 0;
+        balance += (w + leg.act) * r - leg.cost;
+        wait += w; act += leg.act; cost += leg.cost;
+      });
+      balance += read * r + (s.gain || 0);
+      if (s.rate !== undefined) rate = s.rate;   // income unlocked by this step applies afterwards
+      const total = wait + read + act;
+      clock += total; phaseSec += total;
+      if (s.meas !== undefined) aiClock += s.meas;
+      return { s, read, act, wait, cost, total, clock, balance };
+    });
+    return { ph, rows, phaseSec };
+  });
+  return { phases, total: clock, aiClock };
+}
+
+function renderTutorialTimingTab() {
+  const container = document.getElementById('timing-phases');
+  if (!container || !D.tutorial_timing) return;
+
+  const opts = {
+    incomeMult:   parseFloat(document.getElementById('tt-income')?.value) || 1,
+    skipDialogue: !!document.getElementById('tt-skip')?.checked,
+    detour:       !!document.getElementById('tt-detour')?.checked,
+  };
+  const sim = simulateTutorialTiming(opts);
+
+  const at = num => sim.phases.flatMap(p => p.rows).find(x => x.s.num === num)?.clock || 0;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('tt-total',       tutTimeFmt(sim.total));
+  set('tt-to-auto',     tutTimeFmt(at(33)));
+  set('tt-to-hydrogen', tutTimeFmt(at(47)));
+  set('tt-to-uranium',  tutTimeFmt(at(59)));
+
+  const THEAD = `<thead><tr>
+    <th style="width:28px">#</th>
+    <th style="width:200px">Step</th>
+    <th>What the player does</th>
+    <th style="width:70px">Read</th>
+    <th style="width:70px">Do</th>
+    <th style="width:80px">Wait for e</th>
+    <th style="width:80px">Est. total</th>
+    <th style="width:80px">AI median</th>
+    <th style="width:80px">Elapsed</th>
+  </tr></thead>`;
+
+  container.innerHTML = sim.phases.map(({ ph, rows, phaseSec }) => {
+    const body = rows.map(x => {
+      const s = x.s;
+      const cls = s.gate ? ' class="row-gate"' : s.milestone ? ' class="row-milestone"' : '';
+      let dir = s.dir;
+      if (x.cost) dir += ` <span class="cost" style="font-size:11px;">(−${x.cost.toLocaleString()}e)</span>`;
+      if (s.warn) dir += `<br><em style="font-size:11px;color:#f0883e;">⚠ ${s.warn}</em>`;
+      const meas = s.meas !== undefined ? `${tutTimeFmt(s.meas)}<br><span style="font-size:10px;color:#6e7681;">n=${s.n}</span>` : '—';
+      const wait = x.wait === Infinity ? '∞' : x.wait ? tutTimeFmt(x.wait) : '—';
+      return `<tr${cls}>
+        <td class="step-num">${s.num}</td>
+        <td class="step-id">${s.id}</td>
+        <td style="font-size:12px;">${dir}</td>
+        <td class="time">${x.read ? tutTimeFmt(x.read) : '—'}</td>
+        <td class="time">${x.act ? tutTimeFmt(x.act) : '—'}</td>
+        <td class="time" style="color:${x.wait > 300 ? '#f0883e' : ''}">${wait}</td>
+        <td class="time" style="font-weight:600;color:#e6edf3;">${tutTimeFmt(x.total)}</td>
+        <td class="time" style="color:#8b949e;">${meas}</td>
+        <td class="time">${tutTimeFmt(x.clock)}</td>
+      </tr>`;
+    }).join('');
+    return `
+      <div class="phase" style="border-left:4px solid ${ph.color}">
+        <div class="phase-header" style="background:${ph.color}18">
+          <h2>${ph.label}</h2>
+          <span class="phase-meta">Steps ${ph.steps[0].num}–${ph.steps[ph.steps.length - 1].num} · income ${ph.rate ? ph.rate * opts.incomeMult + ' e/s' : 'manual only'}</span>
+          <span class="phase-entropy" style="color:#d2a8ff">${tutTimeFmt(phaseSec)}</span>
+        </div>
+        <table>${THEAD}<tbody>${body}</tbody></table>
+      </div>`;
+  }).join('');
+
+  const f = document.getElementById('timing-findings');
+  if (f) f.innerHTML = D.tutorial_timing.findings.map(x => `<li>${x}</li>`).join('');
+}
+
+['tt-income', 'tt-skip', 'tt-detour'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', renderTutorialTimingTab);
+});
+
 // ─── SECTION 9: INIT ─────────────────────────────────────────────────────
 // Runs once at page load. DOM is ready because this script is at end of body.
 
 renderOverviewTab();
+renderTutorialTimingTab();
 renderDialogueTab();
 renderGapsTab();
 renderItemsTable();

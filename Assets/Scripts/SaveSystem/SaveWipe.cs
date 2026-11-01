@@ -13,7 +13,7 @@ namespace MobileIdleBuilder
     public static class SaveWipe
     {
         /// <summary>
-        /// Every file the game writes to <see cref="Application.persistentDataPath"/> outside of
+        /// Every file the game writes to <see cref="LocalSaveService.SaveDirectory"/> outside of
         /// save.json — each one owned by a service that reloads it on boot, and each one therefore
         /// able to outlive a save wipe and carry stale state into a "fresh" run.
         /// </summary>
@@ -78,7 +78,7 @@ namespace MobileIdleBuilder
 
             foreach (var name in SidecarFiles)
             {
-                string path = Path.Combine(Application.persistentDataPath, name);
+                string path = Path.Combine(LocalSaveService.SaveDirectory, name);
                 if (!File.Exists(path)) continue;
                 File.Delete(path);
                 deleted.Add(name);

@@ -54,6 +54,7 @@ namespace MobileIdleBuilder
                 string itemId = ItemDatabase.GetStatic(evt.ItemID)?.id ?? "";
                 AchievementService.Instance?.NotifyCraft(itemId, evt.Quantity);
                 TierProgress.NotifyItemProduced(evt.ItemID);
+                CraftLog.Record(evt.ItemID, evt.Quantity);
             }
         }
     }

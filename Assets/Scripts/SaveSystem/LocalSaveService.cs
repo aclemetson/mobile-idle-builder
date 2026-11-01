@@ -12,11 +12,23 @@ namespace MobileIdleBuilder
     {
         const string FileName = "save.json";
 
+        /// <summary>
+        /// Test seam: the test assemblies point this at a temp folder for the whole run, so no test
+        /// can read, overwrite or delete the developer's real save and sidecar files.
+        /// </summary>
+        internal static string SaveDirectoryOverride;
+
+        /// <summary>
+        /// Folder that holds save.json and every sidecar file (settings, recipe knowledge, cached
+        /// flags). Everything the save wipe deletes must resolve its path from here.
+        /// </summary>
+        public static string SaveDirectory => SaveDirectoryOverride ?? Application.persistentDataPath;
+
         readonly string _filePath;
 
         public LocalSaveService()
         {
-            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+            _filePath = Path.Combine(SaveDirectory, FileName);
         }
 
         public bool Exists() => File.Exists(_filePath);

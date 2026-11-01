@@ -220,7 +220,7 @@ glance. Two distinct shapes (the grammar):
 - **Input port:** hole on the edge **opposite** `Facing`, opening outward toward the belt. `Input.Facing`
   is the *travel direction of incoming items*, so a south-facing input is fed from the building's north
   edge. (When authoring `ports` in `game_data.json`, to put an intake on the **East** edge use
-  `local_facing: "West"`, etc. See the `_note_ports` on `atomic_assembler`.)
+  `local_facing: "West"`, etc. See the `_note_ports` on `atomic_assembler`.) The Atom Generator is 2x1 since #275 (four intakes, one output); `BuildingVisualizer` centres the nucleus on the footprint and grows it 25% per extra tile, since a round body can't stretch.
 
 **Mechanism:** `BuildingVisualizer.Refresh()` Pass 3 already iterates `PlacedPortData` per building to
 draw the port arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per

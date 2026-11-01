@@ -170,7 +170,9 @@ namespace MobileIdleBuilder
         /// Counts the distinct sources with a belt that starts on one of their output fronts and whose
         /// chain ends (its tail) on one of <paramref name="inputFronts"/>, i.e. items really flow from
         /// that source into the target. Reads the belts as they are now, so a link built before the
-        /// step began still counts.
+        /// step began still counts. The front must be a chain head: ConveyorSystem only pulls building
+        /// output onto a head, so a belt that merely passes in front of a second source never carries
+        /// its items (#275 playtest: one belt past both quark Harvesters passed the step, then jammed).
         /// </summary>
         /// <param name="sourceFronts">(source id, output front cell) for every output port of every source.</param>
         /// <param name="belts">Every belt cell mapped to the cell it feeds, or null at a tail.</param>
@@ -178,10 +180,14 @@ namespace MobileIdleBuilder
                                              ICollection<Vector2Int> inputFronts,
                                              IReadOnlyDictionary<Vector2Int, Vector2Int?> belts)
         {
+            var fed = new HashSet<Vector2Int>();
+            foreach (var next in belts.Values)
+                if (next != null) fed.Add(next.Value);
+
             var linked = new HashSet<int>();
             foreach (var (source, front) in sourceFronts)
             {
-                if (linked.Contains(source) || !belts.ContainsKey(front)) continue;
+                if (linked.Contains(source) || !belts.ContainsKey(front) || fed.Contains(front)) continue;
 
                 var cur = front;
                 for (int n = 0; n <= belts.Count; n++) // bounded: a looped belt never reaches a tail
@@ -236,6 +242,80 @@ namespace MobileIdleBuilder
             if (colon <= 0) return false;
             building = rest.Substring(0, colon);
             return TryParseRoute("route:" + rest.Substring(colon + 1), out from, out to);
+        }
+
+        /// <summary>
+        /// Parses "power:&lt;building&gt;" (e.g. "power:atomic_assembler"): where to place &lt;building&gt; so a
+        /// power source reaches its footprint.
+        /// </summary>
+        public static bool TryParsePower(string targetId, out string building)
+        {
+            building = null;
+            const string prefix = "power:";
+            if (targetId == null || !targetId.StartsWith(prefix, StringComparison.Ordinal)) return false;
+            building = targetId.Substring(prefix.Length);
+            return building.Length > 0;
+        }
+
+        /// <summary>
+        /// Nearest buildable anchor where a footprint is powered by one of <paramref name="sources"/>, using
+        /// <see cref="PowerCoverageMath.FootprintWithinRadius"/> (the rule the sim runs). Each source is its
+        /// footprint (min, max cells) and its influence radius. Returns null when no spot is in range.
+        /// </summary>
+        public static Vector2Int? SuggestPoweredAnchor(int gridWidth, int gridHeight, Vector2Int footprint,
+                                                       IReadOnlyList<(Vector2Int min, Vector2Int max, float radius)> sources,
+                                                       Func<Vector2Int, bool> isBuildable,
+                                                       IReadOnlyList<Vector2Int> portFrontOffsets = null,
+                                                       Func<Vector2Int, bool> isPortFrontOk = null)
+        {
+            // Spots whose every port front passes isPortFrontOk (free for a belt, not beside the Demon,
+            // #275) beat the plain nearest spot, which is kept as the fallback when none qualifies.
+            Vector2Int? best = null, bestOpen = null;
+            int bestDistance = int.MaxValue, bestOpenDistance = int.MaxValue;
+
+            for (int y = 0; y < gridHeight; y++)
+            for (int x = 0; x < gridWidth; x++)
+            {
+                var anchor = new Vector2Int(x, y);
+                if (!FootprintBuildable(anchor, footprint, isBuildable)) continue;
+
+                int nearest = int.MaxValue;
+                foreach (var s in sources)
+                {
+                    if (!PowerCoverageMath.FootprintWithinRadius(s.min.x, s.min.y, s.max.x, s.max.y,
+                            anchor.x, anchor.y, anchor.x + footprint.x - 1, anchor.y + footprint.y - 1, s.radius))
+                        continue;
+                    nearest = Mathf.Min(nearest, Manhattan(anchor, s.min));
+                }
+                // Closest powered spot to a source wins; ties keep scan order (y, x) so the glow is stable.
+                if (nearest < bestDistance)
+                {
+                    bestDistance = nearest;
+                    best         = anchor;
+                }
+                if (nearest < bestOpenDistance && portFrontOffsets != null && isPortFrontOk != null
+                    && AllFrontsOk(anchor, portFrontOffsets, isPortFrontOk))
+                {
+                    bestOpenDistance = nearest;
+                    bestOpen         = anchor;
+                }
+            }
+            return bestOpen ?? best;
+        }
+
+        private static bool AllFrontsOk(Vector2Int anchor, IReadOnlyList<Vector2Int> offsets, Func<Vector2Int, bool> ok)
+        {
+            foreach (var o in offsets)
+                if (!ok(anchor + o)) return false;
+            return true;
+        }
+
+        private static bool FootprintBuildable(Vector2Int anchor, Vector2Int footprint, Func<Vector2Int, bool> isBuildable)
+        {
+            for (int dx = 0; dx < footprint.x; dx++)
+            for (int dy = 0; dy < footprint.y; dy++)
+                if (!isBuildable(anchor + new Vector2Int(dx, dy))) return false;
+            return true;
         }
     }
 }

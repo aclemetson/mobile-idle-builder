@@ -53,7 +53,7 @@ namespace MobileIdleBuilder
             base.Awake();
             if (Instance != this) return;
 
-            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+            _filePath = Path.Combine(LocalSaveService.SaveDirectory, FileName);
             LoadCache();
         }
 
