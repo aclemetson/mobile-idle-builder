@@ -559,9 +559,9 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 64. `place_fusion_reactor`
 
-- **Hint:** Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside your generator's power range.
+- **Hint:** Place a Fusion Reactor (1,500 entropy) on the glowing tile next to your Atom Generator's output, inside your generator's power range.
 - **Advances when:** have at least 1 x Fusion Reactor (`fusion_reactor`)
-- **Tap:** pulses button `btn-place-fusion_reactor`; highlights `power:fusion_reactor` (Full)
+- **Tap:** pulses button `btn-place-fusion_reactor`; highlights `power:fusion_reactor@atomic_assembler` (Full)
 
 ### 65. `power_for_fusion`
 

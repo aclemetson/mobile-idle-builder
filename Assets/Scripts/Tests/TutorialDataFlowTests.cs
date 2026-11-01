@@ -163,8 +163,11 @@ namespace MobileIdleBuilder.Tests
                     else NeedBuilding(id, "pulsed button");
                 }
                 string target = s.on_enter?.highlight_target;
-                if (!string.IsNullOrEmpty(target) && target.StartsWith("power:"))
-                    NeedBuilding(target.Substring("power:".Length), "highlight");
+                if (TutorialRouteGuide.TryParsePower(target, out var powered, out var near))
+                {
+                    NeedBuilding(powered, "highlight");
+                    NeedBuilding(near, "highlight anchor");
+                }
 
                 // Effects of finishing this step apply to the steps after it.
                 if (c?.type == "ResearchUnlocked" && !string.IsNullOrEmpty(c.research_id)) _unlocked.Add(c.research_id);

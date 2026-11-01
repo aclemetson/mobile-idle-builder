@@ -2170,8 +2170,8 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: place_fusion_reactor
-    hintText: Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside
-      your generator's power range.
+    hintText: Place a Fusion Reactor (1,500 entropy) on the glowing tile next to
+      your Atom Generator's output, inside your generator's power range.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -2190,7 +2190,7 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: power:fusion_reactor
+      highlightTarget: power:fusion_reactor@atomic_assembler
       highlightMode: 1
       blockCollection: 0
       collectionFilter: None
