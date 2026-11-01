@@ -387,6 +387,8 @@ namespace MobileIdleBuilder
             { "intro_building_upgrades",      "post_tutorial_intro" },
             { "upgrade_atom_generator_speed", "post_tutorial_intro" },
             { "upgrade_context",              "post_tutorial_intro" },
+            // #307: neutrons go to the Demon until Nucleosynthesis, then move to the Atom Generator.
+            { "route_neutrons_to_atom_gen",   "route_neutrons_to_demon" },
             // #275: the tutorial now ends at the first Carbon from fusion. Heavy elements, isotopes and
             // radioactive isotopes came between Helium and Fusion, so those saves resume at Fusion.
             { "buy_heavy_elements",            "intro_nuclear_reactors" },

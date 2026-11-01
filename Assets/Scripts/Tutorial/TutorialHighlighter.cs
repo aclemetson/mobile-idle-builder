@@ -66,6 +66,17 @@ namespace MobileIdleBuilder
         /// <summary>Show the amber tile + pulse without moving the camera.</summary>
         public void ShowVisualOnly(string targetId) => BeginSearch(targetId, panCamera: false);
 
+        /// <summary>True when <paramref name="targetId"/> suggests where to place a building (see TutorialRouteGuide).</summary>
+        public static bool IsPlacementSuggestion(string targetId) =>
+            TutorialRouteGuide.IsPlacementSuggestion(targetId, IsFieldId);
+
+        private static bool IsFieldId(string id)
+        {
+            foreach (var f in FindObjectsByType<FieldInstance>(FindObjectsSortMode.None))
+                if (f.Field != null && f.Field.id == id) return true;
+            return false;
+        }
+
         /// <summary>Return camera to the character and remove all highlight visuals.</summary>
         public void ClearHighlight()
         {
@@ -99,19 +110,25 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Retries every frame until FieldGenerator has spawned the target,
         /// then applies the camera pan and/or visual highlight.
-        /// Times out after 15 seconds to avoid an infinite loop on bad IDs.
+        /// Times out after 15 seconds to avoid an infinite loop on bad IDs, except route and placement
+        /// targets, which wait for the player until the step ends.
         /// </summary>
         private IEnumerator SearchAndHighlight(string targetId, bool panCamera)
         {
             float        timeout = 15f;
             WorldTarget? target  = null;
+            // Route and placement targets wait on the player (a belt to remove, a generator to place),
+            // not on spawn order, so they keep looking until the step ends (#307: the reroute glow
+            // appears once the old neutron belt is deconstructed). Step changes stop this search.
+            bool waitsOnPlayer = TutorialRouteGuide.TryParseRoute(targetId, out _, out _)
+                              || IsPlacementSuggestion(targetId);
 
             while (target == null)
             {
                 target   = FindWorldTarget(targetId);
                 timeout -= Time.deltaTime;
 
-                if (timeout <= 0f)
+                if (timeout <= 0f && !waitsOnPlayer)
                 {
                     GameLogger.Warning($"[TutorialHighlighter] Timed out searching for target '{targetId}'. " +
                                      "Check that the FieldSO id matches exactly.");
@@ -119,8 +136,9 @@ namespace MobileIdleBuilder
                     yield break;
                 }
 
+                // Past the spawn window a waiting search scans the grid four times a second, not every frame.
                 if (target == null)
-                    yield return null;
+                    yield return timeout > 0f ? null : new WaitForSecondsRealtime(0.25f);
             }
 
             _searchRoutine = null;
@@ -151,7 +169,8 @@ namespace MobileIdleBuilder
 
         private WorldTarget? FindWorldTarget(string targetId)
         {
-            // Scene-based field instances
+            // Scene-based field instances. A field that already has a building on it is not where the
+            // next Harvester goes, so skip it (#308: the glow stayed on the field just built on).
             var fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
             foreach (var f in fields)
             {
@@ -160,6 +179,7 @@ namespace MobileIdleBuilder
                 float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
                 int   ax = Mathf.RoundToInt(f.transform.position.x / cs);
                 int   az = Mathf.RoundToInt(f.transform.position.z / cs);
+                if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(ax, az)) continue;
                 // Camera target = tile centre on the ground plane
                 var camTarget = new Vector3(ax * cs, 0f, az * cs);
                 return new WorldTarget { AnchorX = ax, AnchorZ = az,

@@ -1884,18 +1884,18 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
-  - id: route_neutrons_to_atom_gen
-    hintText: Belt the Neutron Combiner's output into the Atom Generator's free input.
-      Neutrons wait there until Atomic Assembly teaches it Helium-4.
+  - id: route_neutrons_to_demon
+    hintText: Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom
+      Generator can't use neutrons until Nucleosynthesis, so sell them for now.
     advanceCondition:
       type: 8
       anyOf: 0
       items: []
       uiEventId: 
       researchId: 
-      minCount: 2
-      buildingType: 4
-      buildingIsEntropySink: 0
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
       fromBuildingType: 2
       minLevel: 0
       fieldId: 
@@ -1905,7 +1905,7 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: route:strong_force_combiner>atomic_assembler
+      highlightTarget: route:strong_force_combiner>maxwells_demon
       highlightMode: 1
       blockCollection: 0
       collectionFilter: None
@@ -1917,8 +1917,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: post_tutorial_intro
-    hintText: Your hydrogen loop is running. Save up 500 entropy to research Atomic
-      Assembly.
+    hintText: Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1949,7 +1948,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: buy_atomic_assembly
-    hintText: Purchase Atomic Assembly in the Research panel to unlock heavier elements.
+    hintText: Purchase Nucleosynthesis in the Research panel to unlock heavier elements.
     advanceCondition:
       type: 4
       anyOf: 0
@@ -2004,6 +2003,38 @@ MonoBehaviour:
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: reroute_neutrons_to_atom_gen
+    hintText: Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct),
+      then belt the Neutron Combiner into the Atom Generator's free input.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: 2
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:strong_force_combiner>atomic_assembler
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-deconstruct
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []

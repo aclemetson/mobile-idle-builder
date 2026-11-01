@@ -118,7 +118,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(loop + 1, Index("buy_field_synthesis"));
             Assert.AreEqual(loop + 2, Index("place_quark_field_pair"));
             Assert.AreEqual(loop + 3, Index("field_pair_placed"));
-            // The new pair becomes the neutron line before Atomic Assembly (#269, #275).
+            // The new pair becomes the neutron line before Nucleosynthesis (#269, #275).
             Assert.AreEqual(loop + 4, Index("place_neutron_harvesters"));
             Assert.AreEqual(loop + 9, Index("post_tutorial_intro"));
 
