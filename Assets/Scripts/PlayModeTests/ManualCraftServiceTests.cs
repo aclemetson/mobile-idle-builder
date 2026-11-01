@@ -244,6 +244,18 @@ namespace MobileIdleBuilder.PlayModeTests
             SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(_playerEntity, isReadOnly: true), item.itemId);
 
         [Test]
+        public void DescribeMissing_NamesEachShortInputAndHowMany()
+        {
+            SpawnServices();
+            _hydrogenSO.displayName = "Hydrogen";
+            AddInventoryItem(_hydrogenSO.itemId, 3);
+            var recipe = MakeRecipe("hydrogen", 2, "proton", 1);
+
+            Assert.IsNull(ManualCraftService.Instance.DescribeMissing(recipe, 1), "1 craft needs 2, have 3");
+            Assert.AreEqual("Hydrogen ×7", ManualCraftService.Instance.DescribeMissing(recipe, 5), "5 crafts need 10, have 3");
+        }
+
+        [Test]
         public void MaxCraftable_IsTheFewestWholeCraftsAnyInputAllows()
         {
             SpawnServices();

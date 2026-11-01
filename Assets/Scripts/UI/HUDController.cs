@@ -1376,7 +1376,9 @@ namespace MobileIdleBuilder
             }
         }
 
-        // x1 / x5 / x10 / Max (#310). Each is enabled only when the inventory can pay for that many.
+        // x1 / x5 / x10 / Max (#310). One the inventory can't pay for (or with no building placed) is
+        // styled unavailable but stays tappable: ListTapRouter swallows taps on disabled buttons, so a
+        // disabled one looked pressed and did nothing. Tapping it says what is missing instead.
         private VisualElement BuildCraftButtons(RecipeJson recipe, bool isLocked, bool hasBuilding, int max)
         {
             var group = new VisualElement();
@@ -1397,7 +1399,7 @@ namespace MobileIdleBuilder
                 var btn = new Button { text = isMax ? "Max" : $"x{qty}" };
                 btn.AddToClassList("craft-btn");
                 btn.AddToClassList("craft-qty-btn");
-                btn.SetEnabled(hasBuilding && (isMax ? max >= 1 : max >= qty));
+                btn.EnableInClassList("craft-btn--unavailable", !(hasBuilding && (isMax ? max >= 1 : max >= qty)));
                 // Routed from the list, not the button: a Button's own Clickable consumes the
                 // pointer-down before any manipulator added later. See ListTapRouter.
                 ListTapRouter.Register(_recipeList, btn, () => OnCraftPressed(recipe, qty));
@@ -1413,15 +1415,20 @@ namespace MobileIdleBuilder
         {
             if (craftService == null) return;
             if (count == CraftMax) count = craftService.MaxCraftable(recipe);
+            // Max with nothing affordable: report what one craft needs.
+            int wanted = Mathf.Max(1, count);
 
-            switch (craftService.TryEnqueue(recipe, count, out string missingBuilding))
+            switch (craftService.TryEnqueue(recipe, wanted, out string missingBuilding))
             {
                 case ManualCraftService.EnqueueResult.NoBuilding:
                     InventoryPopupController.NotifyWarning($"Place {AOrAn(missingBuilding)} first");
                     break;
                 case ManualCraftService.EnqueueResult.NotEnoughMaterials:
                 case ManualCraftService.EnqueueResult.NotReady:
-                    InventoryPopupController.NotifyWarning("Not enough materials");
+                    string missing = craftService.DescribeMissing(recipe, wanted);
+                    InventoryPopupController.NotifyWarning(missing != null
+                        ? $"Need {missing} in your inventory"
+                        : "Not enough materials");
                     break;
             }
         }
