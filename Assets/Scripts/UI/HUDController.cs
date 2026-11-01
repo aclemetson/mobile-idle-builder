@@ -278,7 +278,11 @@ namespace MobileIdleBuilder
             if (craftService != null)
             {
                 _craftQueueView = new CraftQueueView(craftService);
-                _recipeList?.parent?.Insert(_recipeList.parent.IndexOf(_recipeList), _craftQueueView.Root);
+                // Floats over the bottom of the panel (added last so it draws and picks on top) instead
+                // of sitting above the list: above it, every show/hide shoved the rows ~230px, so a quick
+                // second tap on a 1s Proton landed on a label and did nothing on a phone.
+                _recipeList?.parent?.Add(_craftQueueView.Root);
+                _craftQueueView.Root.RegisterCallback<GeometryChangedEvent>(_ => UpdateRecipeListClearance());
                 craftService.QueueChanged += OnCraftQueueChanged;
             }
         }
@@ -1438,12 +1442,30 @@ namespace MobileIdleBuilder
         private void OnCraftQueueChanged()
         {
             _craftQueueView?.Rebuild();
+            UpdateRecipeListClearance();
             if (IsRecipePanelOpen && !ListTapRouter.GestureInProgress)
             {
                 float scroll = _recipeList.scrollOffset.y;
                 BuildRecipeList();
                 _recipeList.scrollOffset = new Vector2(0f, scroll);
             }
+        }
+
+        // Matches .recipe-list .unity-scroll-view__content-container padding-bottom in GameHUD.uss.
+        private const float RecipeListEndPadding = 56f;
+
+        // While the queue strip floats over the bottom of the panel, pad the end of the list by its
+        // height so the last rows can still scroll clear of it. Padding the end never moves the rows
+        // above, unlike the strip pushing the whole list down.
+        private void UpdateRecipeListClearance()
+        {
+            var content = _recipeList?.contentContainer;
+            var strip   = _craftQueueView?.Root;
+            if (content == null) return;
+            bool shown = strip != null && !strip.ClassListContains("hidden") && !float.IsNaN(strip.layout.height);
+            content.style.paddingBottom = shown
+                ? new StyleLength(RecipeListEndPadding + strip.layout.height)
+                : new StyleLength(StyleKeyword.Null);
         }
 
         private static string AOrAn(string name)
