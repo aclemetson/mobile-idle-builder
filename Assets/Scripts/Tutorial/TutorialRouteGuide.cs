@@ -213,6 +213,19 @@ namespace MobileIdleBuilder
         // ── Target id parsing ───────────────────────────────────────────────
 
         /// <summary>
+        /// True when a highlight target marks where to put a building: "suggest:", "power:", or a field
+        /// id (where to put a Harvester). Placing any building clears such a glow, whether or not the
+        /// player used the spot (#308). Routes and placed buildings are not placement suggestions.
+        /// </summary>
+        public static bool IsPlacementSuggestion(string targetId, Func<string, bool> isFieldId)
+        {
+            if (string.IsNullOrEmpty(targetId)) return false;
+            if (TryParseSuggest(targetId, out _, out _, out _) || TryParsePower(targetId, out _)) return true;
+            if (TryParseRoute(targetId, out _, out _)) return false;
+            return isFieldId != null && isFieldId(targetId);
+        }
+
+        /// <summary>
         /// Parses "route:&lt;from&gt;&gt;&lt;to&gt;" (e.g. "route:harvester&gt;maxwells_demon").
         /// </summary>
         public static bool TryParseRoute(string targetId, out string from, out string to)

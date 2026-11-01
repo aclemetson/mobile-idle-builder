@@ -49,8 +49,9 @@ namespace MobileIdleBuilder.Dev
             { "place_neutron_combiner",       300 },   // after -843e; enough for the second 300e Combiner
             { "route_quarks_to_neutron_combiner", 0 },
             { "post_tutorial_intro",          200 },
-            { "buy_atomic_assembly",          500 },   // enough for 500e Atomic Assembly
+            { "buy_atomic_assembly",          500 },   // enough for 500e Nucleosynthesis
             { "atomic_assembly_unlocked",      50 },
+            { "reroute_neutrons_to_atom_gen",  50 },
             { "first_element_context",       5050 },   // craft_first_helium rewards 5,000e
             { "buy_fusion_i",                4000 },   // enough for 4000e Stellar Fusion
             { "place_fusion_reactor",        1500 },   // after -4000e; enough for the 1500e Fusion Reactor
@@ -127,6 +128,7 @@ namespace MobileIdleBuilder.Dev
             { "post_tutorial_intro",         20_000f },
             { "buy_atomic_assembly",         22_000f },
             { "atomic_assembly_unlocked",    24_000f },
+            { "reroute_neutrons_to_atom_gen", 25_000f },
             { "craft_first_helium",          26_000f },
             { "first_element_context",       28_000f },
             { "intro_nuclear_reactors",      30_000f },
@@ -271,10 +273,11 @@ namespace MobileIdleBuilder.Dev
             { "place_neutron_combiner",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "set_neutron_recipe",           (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "route_quarks_to_neutron_combiner", (k_HydrogenLoop_Buildings, k_HydrogenLoop_Conveyors) },
-            { "route_neutrons_to_atom_gen",   (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "route_neutrons_to_demon",      (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "reroute_neutrons_to_atom_gen", (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "craft_first_helium",           (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "first_element_context",        (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
         };

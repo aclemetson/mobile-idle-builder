@@ -287,5 +287,18 @@ namespace MobileIdleBuilder.Tests
 
             Assert.AreEqual(new Vector2Int(1, 0), spot);
         }
+
+        // ── Placement glows (#308) ──────────────────────────────────────────
+
+        [TestCase("suggest:strong_force_combiner:harvester>maxwells_demon", true)]
+        [TestCase("power:atomic_assembler", true)]
+        [TestCase("electron_field", true)]
+        [TestCase("route:harvester>maxwells_demon", false)]
+        [TestCase("maxwells_demon", false)]
+        [TestCase("atomic_assembler", false)]
+        [TestCase("", false)]
+        [TestCase(null, false)]
+        public void IsPlacementSuggestion_OnlyForWhereToBuildTargets(string target, bool expected)
+            => Assert.AreEqual(expected, TutorialRouteGuide.IsPlacementSuggestion(target, id => id == "electron_field"));
     }
 }
