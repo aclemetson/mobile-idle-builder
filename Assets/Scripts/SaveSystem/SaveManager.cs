@@ -237,7 +237,9 @@ namespace MobileIdleBuilder
                 {
                     var wipeTask = _cloud.DeleteAsync();
                     yield return new WaitUntil(() => wipeTask.IsCompleted);
-                    GameLogger.Info("[SaveManager] Cloud save wiped by dev tool.");
+                    // Observe the fault so it isn't rethrown on the finalizer thread later.
+                    if (wipeTask.IsFaulted) GameLogger.Warning($"[SaveManager] Cloud wipe failed: {wipeTask.Exception?.GetBaseException().Message}");
+                    else GameLogger.Info("[SaveManager] Cloud save wiped by dev tool.");
                 }
                 yield break;
             }
@@ -339,6 +341,7 @@ namespace MobileIdleBuilder
             }
             var task = _cloud.DeleteAsync();
             yield return new WaitUntil(() => task.IsCompleted);
+            _ = task.Exception; // observe the fault so it isn't rethrown on the finalizer thread
             onDone?.Invoke(!task.IsFaulted);
         }
 
