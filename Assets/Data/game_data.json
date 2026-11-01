@@ -13075,9 +13075,10 @@
     },
     {
       "id": "place_fusion_reactor",
-      "hint": "Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside your generator's power range.",
+      "_comment": "#311: the glow is the powered open spot whose input is closest to the Atom Generator's output, wherever the player put it, so the Helium belt in route_helium_to_reactor stays short.",
+      "hint": "Place a Fusion Reactor (1,500 entropy) on the glowing tile next to your Atom Generator's output, inside your generator's power range.",
       "advance_condition": { "type": "BuildingMin", "building_id": "fusion_reactor", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor", "highlight_target": "power:fusion_reactor", "highlight_mode": "Full" }
+      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor", "highlight_target": "power:fusion_reactor@atomic_assembler", "highlight_mode": "Full" }
     },
     {
       "_comment": "Draw is now 2 Combiners 20 + Atom Generator 20 + Fusion Reactor 40 = 80 eV against one Basic Generator's 50. Without this step the whole factory browns out with no explanation.",

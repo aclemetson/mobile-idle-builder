@@ -27,6 +27,8 @@ namespace MobileIdleBuilder
     ///       &lt;from&gt; feed it and its output reaches &lt;to&gt; (#203)
     ///   "power:&lt;building&gt;" — the nearest free spot where &lt;building&gt; is inside a placed generator's
     ///       influence circle (PowerCoverageMath), so it gets power
+    ///   "power:&lt;building&gt;@&lt;near&gt;" — the same, ranked by how close its inputs are to &lt;near&gt;'s
+    ///       outputs instead of to the generator (#311)
     ///   Building keys are BuildingSO ids (e.g. "harvester", "strong_force_combiner");
     ///   "maxwells_demon" matches the entropy sink. Grid math lives in TutorialRouteGuide.
     ///
@@ -175,8 +177,8 @@ namespace MobileIdleBuilder
             if (TutorialRouteGuide.TryParseSuggest(targetId, out var building, out var sFrom, out var sTo))
                 return FindSuggestTarget(building, sFrom, sTo);
 
-            if (TutorialRouteGuide.TryParsePower(targetId, out var powered))
-                return FindPoweredTarget(powered);
+            if (TutorialRouteGuide.TryParsePower(targetId, out var powered, out var near))
+                return FindPoweredTarget(powered, near);
 
             // Any other placed building by BuildingSO id ("atomic_assembler", "fusion_reactor", ...).
             // Only "atomic_assembler" used to resolve, so other ids timed out with no highlight.
@@ -192,8 +194,10 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Nearest free spot where <paramref name="buildingKey"/> is inside a placed power source's influence
         /// circle, so the grid links it. Retries until a generator is placed (returns null until then).
+        /// With <paramref name="nearKey"/>, the spot whose inputs are closest to that building's outputs
+        /// wins instead, wherever the player put it (#311: the Fusion Reactor next to the Atom Generator).
         /// </summary>
-        private WorldTarget? FindPoweredTarget(string buildingKey)
+        private WorldTarget? FindPoweredTarget(string buildingKey, string nearKey = null)
         {
             var so = FindBuildingSO(buildingKey);
             if (so == null || gridRenderer == null) return null;
@@ -207,21 +211,35 @@ namespace MobileIdleBuilder
             // has an input on every edge tile, so a belt ending there could sell what it carries, and a
             // boxed-in Atom Generator had no side left for the neutron line.
             var frontOffsets = new List<Vector2Int>();
+            var inputOffsets = new List<Vector2Int>();
             if (so.ports != null)
                 foreach (var port in so.ports)
                 {
                     var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
-                    frontOffsets.Add(port.portType == PortType.Input
-                        ? TutorialRouteGuide.InputFront(cell, facing)
-                        : TutorialRouteGuide.OutputFront(cell, facing));
+                    bool isInput = port.portType == PortType.Input;
+                    var front = isInput ? TutorialRouteGuide.InputFront(cell, facing)
+                                        : TutorialRouteGuide.OutputFront(cell, facing);
+                    frontOffsets.Add(front);
+                    if (isInput) inputOffsets.Add(front);
                 }
             var demon = FindEntropySinkTarget();
             bool BesideDemon(Vector2Int c) => demon is WorldTarget d
                 && c.x >= d.AnchorX - 1 && c.x <= d.AnchorX + d.FootprintW
                 && c.y >= d.AnchorZ - 1 && c.y <= d.AnchorZ + d.FootprintH;
 
+            // Output fronts of the building to sit next to, taken or not: the Atom Generator's still has
+            // its belt to the Demon at this point, which the next step has the player remove.
+            System.Func<Vector2Int, int> distanceFor = null;
+            if (!string.IsNullOrEmpty(nearKey))
+            {
+                var nearOutputs = new List<Vector2Int>();
+                if (!GatherPortFronts(nearKey, PortType.Output, nearOutputs) || nearOutputs.Count == 0) return null;
+                if (inputOffsets.Count > 0)
+                    distanceFor = anchor => TutorialRouteGuide.InputDistance(anchor, inputOffsets, nearOutputs);
+            }
+
             var a  = TutorialRouteGuide.SuggestPoweredAnchor(gridRenderer.Width, gridRenderer.Height, fp,
-                sources, IsBuildable, frontOffsets, c => IsBeltFree(c) && !BesideDemon(c));
+                sources, IsBuildable, frontOffsets, c => IsBeltFree(c) && !BesideDemon(c), distanceFor);
             if (a == null) return null;
 
             var anchor = a.Value;
