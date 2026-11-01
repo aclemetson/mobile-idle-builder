@@ -28,7 +28,7 @@ namespace MobileIdleBuilder.PlayModeTests
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             _bakBackup  = File.Exists(_bakPath)  ? File.ReadAllText(_bakPath)  : null;
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (File.Exists(_bakPath))  File.Delete(_bakPath);
         }
 
@@ -41,7 +41,7 @@ namespace MobileIdleBuilder.PlayModeTests
                 _saveManagerGO = null;
             }
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (File.Exists(_bakPath))  File.Delete(_bakPath);
 
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);

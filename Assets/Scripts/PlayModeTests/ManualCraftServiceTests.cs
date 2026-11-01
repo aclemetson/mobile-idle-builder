@@ -42,7 +42,7 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
 
             _testWorld    = new World("ManualCraftTestWorld");
             _em           = _testWorld.EntityManager;
@@ -71,7 +71,7 @@ namespace MobileIdleBuilder.PlayModeTests
             if (_testWorld.IsCreated) _testWorld.Dispose();
             World.DefaultGameObjectInjectionWorld = null;
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
             if (_hydrogenSO != null) { Object.DestroyImmediate(_hydrogenSO); _hydrogenSO = null; }
