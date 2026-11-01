@@ -484,6 +484,40 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void Analyzer_RotatedMultiCellSink_ConnectsBeltAtItsRotatedCell()
+        {
+            // A 2x1 sink rotated 90° covers (5,5) and (5,6). The belt ends at (4,6), which only touches
+            // the sink's rotated second cell, so the flow must still be credited as entropy.
+            var grid = new GridSaveData
+            {
+                buildings = new List<BuildingSaveData>
+                {
+                    new BuildingSaveData { buildingId = 1, recipeId = 0,  position = new[] { 0, 6 } },
+                    new BuildingSaveData { buildingId = 2, recipeId = -1, position = new[] { 5, 5 }, rotation = 1 },
+                },
+                conveyors = new List<ConveyorSaveData>
+                {
+                    new ConveyorSaveData { cells = new[] { 1,6, 2,6, 3,6, 4,6 } },
+                }
+            };
+
+            var snap = IdleGraphAnalyzer.BuildSnapshot(
+                grid,
+                id => id == 1,
+                id => id == 2,
+                id => id == 2 ? new Vector2Int(2, 1) : Vector2Int.one,
+                (_, __) => 10,
+                _ => 1f,
+                _ => 5f,
+                1f,
+                DateTime.UtcNow.ToString("O"));
+
+            Assert.AreEqual(1, snap.chains.Count);
+            Assert.IsTrue(snap.chains[0].endsAtEntropySink,
+                "belt into a rotated multi-cell sink must earn entropy, not fall back to inventory");
+        }
+
+        [Test]
         public void Analyzer_SetsSnapshotTimestamp()
         {
             string ts = "2026-06-06T12:00:00.000Z";
