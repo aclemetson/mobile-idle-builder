@@ -94,6 +94,30 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// What the inventory is short of for <paramref name="count"/> crafts, e.g. "Electron ×1, Down
+        /// Quark ×2". Null when nothing is missing. Only the player's inventory counts: items on belts
+        /// or inside buildings do not, which is why the Recipes panel says "in your inventory".
+        /// </summary>
+        public string DescribeMissing(RecipeJson recipe, int count)
+        {
+            if (recipe?.inputs == null || count <= 0) return null;
+            var have = GetInventoryCounts();
+            var parts = new List<string>();
+            foreach (var input in recipe.inputs)
+            {
+                if (input.quantity <= 0) continue;
+                int itemId = ItemDatabase.Instance.GetItemId(input.id);
+                int held   = itemId >= 0 && have.TryGetValue(itemId, out int q) ? q : 0;
+                int shortBy = input.quantity * count - held;
+                if (shortBy <= 0) continue;
+                var so = ItemDatabase.Instance.Get(input.id);
+                string name = so != null && !string.IsNullOrEmpty(so.displayName) ? so.displayName : input.id;
+                parts.Add($"{name} ×{shortBy}");
+            }
+            return parts.Count == 0 ? null : string.Join(", ", parts);
+        }
+
+        /// <summary>
         /// Consumes inputs and deposits the recipe output into the ECS inventory at once.
         /// Returns false and makes no changes if inputs are insufficient.
         /// </summary>
