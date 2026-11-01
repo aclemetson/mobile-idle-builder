@@ -149,15 +149,40 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void TransformPort_RotationOnly_RotatesCellAndFacing()
         {
-            // Port at (1,0) in 2×1 footprint, rotated 1× CW:
-            // nx = (h-1-y) = (1-1-0) = 0, ny = x = 1 → cell=(0,1), facing=South
+            // Port on the east end (1,0) of a 2×1, facing East, rotated 1× CW: the east end turns to the
+            // south end. nx = y = 0, ny = (w-1-x) = 0 → cell=(0,0), facing=South (out of the building).
             var port = new BuildingPort { localCell = new Vector2Int(1, 0), localFacing = OutputDirection.East };
             var fp   = new Vector2Int(2, 1);
 
             var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 1);
 
-            Assert.AreEqual(new Vector2Int(0, 1), cell);
+            Assert.AreEqual(new Vector2Int(0, 0), cell);
             Assert.AreEqual(OutputDirection.South, facing);
+        }
+
+        [Test]
+        public void TransformPort_EveryRotation_KeepsEdgePortsFacingOutOfTheFootprint(
+            [Values(0, 1, 2, 3)] int rotation, [Values(false, true)] bool flipped)
+        {
+            // A port that faces off an edge of the footprint must still face off an edge after any
+            // rotation/flip, never into another cell of the same building (#306).
+            var fp = new Vector2Int(3, 2);
+            for (int x = 0; x < fp.x; x++)
+            for (int y = 0; y < fp.y; y++)
+            for (int d = 0; d < 4; d++)
+            {
+                var facing = (OutputDirection)d;
+                var out0   = PortUtils.AdjacentCell(new Vector2Int(x, y), facing);
+                bool offEdge = out0.x < 0 || out0.y < 0 || out0.x >= fp.x || out0.y >= fp.y;
+                if (!offEdge) continue;
+
+                var (cell, dir) = PortUtils.TransformPort(
+                    new BuildingPort { localCell = new Vector2Int(x, y), localFacing = facing }, fp, flipped, rotation);
+                var rfp = PortUtils.RotatedFootprint(fp, rotation);
+                var n   = PortUtils.AdjacentCell(cell, dir);
+                Assert.IsTrue(n.x < 0 || n.y < 0 || n.x >= rfp.x || n.y >= rfp.y,
+                    $"({x},{y}) {facing} rot {rotation} flip {flipped} -> ({cell.x},{cell.y}) {dir} points inside");
+            }
         }
     }
 }

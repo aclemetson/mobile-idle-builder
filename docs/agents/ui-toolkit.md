@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205). If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -65,6 +65,8 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 2. A **stationary tap sets a candidate cell** (`SetCandidate`), locks the ghost there (`_hasCandidate` skips the desktop hover-follow), and raises `OnCandidateChanged(true)`. Tapping another cell repositions; Rotate/Flip re-draw the ghost at the candidate.
 3. A **world-anchored confirm popup** (`placement-confirm-popup` in `GameHUD.uxml`, ✕ `btn-cancel-candidate` / ↻ `btn-rotate-candidate` / ✓ `btn-confirm-place`) floats above the candidate. `HUDController.UpdatePlacementConfirmPopup` repositions it every frame via `RuntimePanelUtils.CameraTransformWorldToPanel(panel, CandidateWorldPosition, Camera.main)`, disables ✓ when `CandidateValid` is false, and hides it on `OnCandidateChanged(false)` / placement end. ✓ → `ConfirmCandidate()` (runs the field output-selector if needed, else `ConfirmPlacement`); ✕ / Esc → `ClearCandidate()`; ↻ → `placementController.Rotate()` (same call as the bottom-bar `btn-rotate-output` and the R key). The ↻ button is shown by `OnCandidateChanged` only when `placementController.CanRotate` is true; the per-frame re-anchor + ✓-validity refresh already pick up the new footprint after a rotate. Flip stays on the bottom `placement-bar` (`btn-flip-building`), not the popup.
 
+**Why ✓ is disabled:** `IsCellValidForPending` is `BlockAt(x, y) == PlacementBlock.None`. `BlockAt` returns the first reason a cell fails (`OffGrid`, `Occupied`, `NeedsField`, `WrongField`, `OnField`), and `SetCandidate` shows `BlockMessage(...)` through `InventoryPopupController.NotifyWarning` on every tap of an invalid cell, so a disabled ✓ always comes with a reason (#258). Messages must fit the one-line banner (`PlacementBlockMessageTests` caps them at 56 characters). A new placement rule adds a `PlacementBlock` value and a message, not a bare `return false`.
+
 **Gotcha (cost a debug cycle):** `BuildingPlacementController.IsPointerOverPlacementUI` (assigned by `HUDController`) must hit-test the **`placement-bar`** strip and the popup — NOT the `placement-overlay` container, which is full-screen/transparent so the world shows through. Hit-testing the overlay makes *every* tap read as "over UI", so no candidate is ever set and the popup never appears. Use `ScreenPointInElement` (`RuntimePanelUtils.ScreenToPanel` + `worldBound.Contains`).
 
 ## World-input blocking (taps/pans starting on UI)
@@ -96,6 +98,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 4. In `HUDController.cs`: add the `GetComponent<>()` field (`:106-111` region), wire the button (`:347-369` region), add the `OpenXPanel` method mirroring an existing one (closes others, removes `hidden`, calls `Refresh()`).
 5. Tell the user to add the component to the HUD GameObject in GameScene (manual step).
 6. Use `ToastService` for transient feedback, not ad-hoc labels.
+   - **Back button (#205):** a new slide panel must be in `_allPanels` (so Android back / Escape closes it). A new modal needs an `IsOpen` + `Close()` and a row in `BackNavigation` (`UI/BackNavigation.cs`, pure, tested) plus the switch in `HUDController.HandleBackButton`. Order: mode active → yield to its controller; dialogue → swallowed (never skipped); confirm prompt; idle return; update notice; inspector; panel; drawer; root → nothing.
 7. Verify visibility: panel must not be clipped by a zero-height wrapper; check parent sizing classes (CLAUDE.md recurring bug).
 8. Mobile: respect safe area (`SafeAreaAdapter` exists; it pads the document root in panel px, never percent, since UI Toolkit resolves percent padding against WIDTH, and paints `safe-area-fill` strips in the top-bar colour behind the top/left/right insets when a `top-bar` exists, framing off the landscape camera cutout). Android does not report rounded display corners as unsafe, so inset edge-to-edge bottom panels from the sides (see `.dialogue-box`); test portrait sizing.
 

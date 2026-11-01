@@ -9,7 +9,7 @@ namespace MobileIdleBuilder.Tests
     /// <summary>
     /// recipes.json drives the Recipes panel: a recipe shows only once ResearchService marks it known,
     /// which it does for recipes whose requires_research matches the research just finished. Helium
-    /// through iron had no requires_research, so Atomic Assembly never revealed them. These tests keep
+    /// through iron had no requires_research, so Nucleosynthesis never revealed them. These tests keep
     /// recipes.json in step with game_data.json, the source of truth for recipe gating.
     /// </summary>
     [TestFixture]

@@ -325,15 +325,15 @@ From step 31 onward, grid presets have not yet been captured from a playthrough.
 
 ## Part 8 — tutorial skip: Post-Tutorial Research Gates (Steps 51–70)
 
-### 8.1 Atomic Assembly
+### 8.1 Nucleosynthesis
 
 - [ ] `tutorial skip buy_atomic_assembly`
   - Expected: `Skipped to 'buy_atomic_assembly' [51]. Entropy: 500e. 3 research node(s) unlocked. (grid preset not yet captured...)`
-  - In-game: Research panel: 3 previous nodes purchased; **Atomic Assembly = available** (500e)
+  - In-game: Research panel: 3 previous nodes purchased; **Nucleosynthesis = available** (500e)
 
 - [ ] `tutorial skip atomic_assembly_unlocked`
   - Expected: `Skipped to 'atomic_assembly_unlocked' [52]. Entropy: 50e. **4** research node(s) unlocked.`
-  - In-game: **Atomic Assembly now shows as purchased** ✓
+  - In-game: **Nucleosynthesis now shows as purchased** ✓
   - Atom Generator recipe panel should now include Helium-4 and other elements
 
 ### 8.2 Heavy Elements

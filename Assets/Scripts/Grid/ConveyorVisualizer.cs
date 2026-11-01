@@ -251,6 +251,7 @@ namespace MobileIdleBuilder
 
             var inputPorts = CollectInputPorts(em);
             var feeds      = new bool[4];
+            var sinks      = new bool[4];
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -258,18 +259,19 @@ namespace MobileIdleBuilder
                 var cell = (seg.Cell.x, seg.Cell.y);
                 if (_spawnedBelts.ContainsKey(cell)) continue;
 
-                // A tail is drawn exiting toward the input it really feeds (same choice as
-                // ConveyorSystem, via TailDelivery), not straight past it (#223). Data is untouched,
-                // so extending the belt from this tile still links along its stored ExitDir.
+                // A tail is drawn exiting toward the input it really feeds (same ranking as
+                // ConveyorSystem.TryPickInput, via TailDelivery), not straight past it (#223). Data is
+                // untouched, so extending the belt from this tile still links along its stored ExitDir.
                 int exitDir = seg.ExitDir;
                 if (seg.NextSegment == Entity.Null)
                 {
                     for (int d = 0; d < 4; d++)
                     {
                         int2 nb = Adjacent(seg.Cell, d);
-                        feeds[d] = inputPorts.Contains((nb.x, nb.y, d));
+                        feeds[d] = inputPorts.TryGetValue((nb.x, nb.y, d), out bool sink);
+                        sinks[d] = feeds[d] && sink;
                     }
-                    exitDir = TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds);
+                    exitDir = TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds, sinks);
                 }
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
@@ -282,23 +284,25 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Every building input port as (cell x, cell y, facing). A tail at cell C feeds direction d
-        /// when (C + d, d) is in this set, the same test as ConveyorSystem.HasMatchingPort.
+        /// Every building input port as (cell x, cell y, facing) -> whether its building is an entropy
+        /// sink. A tail at cell C feeds direction d when (C + d, d) is a key, the same test as
+        /// ConveyorSystem.HasMatchingPort; the sink flag feeds TailInputPriority (Demon last).
         /// </summary>
-        private HashSet<(int, int, int)> CollectInputPorts(EntityManager em)
+        private Dictionary<(int, int, int), bool> CollectInputPorts(EntityManager em)
         {
-            var set = new HashSet<(int, int, int)>();
-            if (_portQuery.IsEmpty) return set;
+            var map = new Dictionary<(int, int, int), bool>();
+            if (_portQuery.IsEmpty) return map;
             var buildings = _portQuery.ToEntityArray(Allocator.Temp);
             for (int b = 0; b < buildings.Length; b++)
             {
+                bool isSink = em.HasComponent<EntropySinkTag>(buildings[b]);
                 var ports = em.GetBuffer<PlacedPortData>(buildings[b], isReadOnly: true);
                 for (int p = 0; p < ports.Length; p++)
                     if (ports[p].PortType == (int)PortType.Input)
-                        set.Add((ports[p].CellX, ports[p].CellY, ports[p].Facing));
+                        map[(ports[p].CellX, ports[p].CellY, ports[p].Facing)] = isSink;
             }
             buildings.Dispose();
-            return set;
+            return map;
         }
 
         /// <summary>Destroys all belt ribbons and rebuilds them from current ECS data. Call after any

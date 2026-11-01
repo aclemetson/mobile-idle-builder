@@ -20,13 +20,15 @@ namespace MobileIdleBuilder
     ///
     /// Supported target IDs:
     ///   FieldInstance.Field.id — e.g. "electron_field", "quark_field"
-    ///   "maxwells_demon", "atomic_assembler" — placed buildings
+    ///   "maxwells_demon" or any BuildingSO id ("atomic_assembler", "fusion_reactor") — placed buildings
     ///   "route:&lt;from&gt;&gt;&lt;to&gt;" — the start and end tiles of the next belt to draw: the free
     ///       cell in front of a &lt;from&gt; output and the free cell in front of a &lt;to&gt; input (#202)
     ///   "suggest:&lt;building&gt;:&lt;from&gt;&gt;&lt;to&gt;" — where to place &lt;building&gt; so belts from
     ///       &lt;from&gt; feed it and its output reaches &lt;to&gt; (#203)
     ///   "power:&lt;building&gt;" — the nearest free spot where &lt;building&gt; is inside a placed generator's
     ///       influence circle (PowerCoverageMath), so it gets power
+    ///   "power:&lt;building&gt;@&lt;near&gt;" — the same, ranked by how close its inputs are to &lt;near&gt;'s
+    ///       outputs instead of to the generator (#311)
     ///   Building keys are BuildingSO ids (e.g. "harvester", "strong_force_combiner");
     ///   "maxwells_demon" matches the entropy sink. Grid math lives in TutorialRouteGuide.
     ///
@@ -64,6 +66,17 @@ namespace MobileIdleBuilder
         /// <summary>Show the amber tile + pulse without moving the camera.</summary>
         public void ShowVisualOnly(string targetId) => BeginSearch(targetId, panCamera: false);
 
+        /// <summary>True when <paramref name="targetId"/> suggests where to place a building (see TutorialRouteGuide).</summary>
+        public static bool IsPlacementSuggestion(string targetId) =>
+            TutorialRouteGuide.IsPlacementSuggestion(targetId, IsFieldId);
+
+        private static bool IsFieldId(string id)
+        {
+            foreach (var f in FindObjectsByType<FieldInstance>(FindObjectsSortMode.None))
+                if (f.Field != null && f.Field.id == id) return true;
+            return false;
+        }
+
         /// <summary>Return camera to the character and remove all highlight visuals.</summary>
         public void ClearHighlight()
         {
@@ -97,19 +110,25 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Retries every frame until FieldGenerator has spawned the target,
         /// then applies the camera pan and/or visual highlight.
-        /// Times out after 15 seconds to avoid an infinite loop on bad IDs.
+        /// Times out after 15 seconds to avoid an infinite loop on bad IDs, except route and placement
+        /// targets, which wait for the player until the step ends.
         /// </summary>
         private IEnumerator SearchAndHighlight(string targetId, bool panCamera)
         {
             float        timeout = 15f;
             WorldTarget? target  = null;
+            // Route and placement targets wait on the player (a belt to remove, a generator to place),
+            // not on spawn order, so they keep looking until the step ends (#307: the reroute glow
+            // appears once the old neutron belt is deconstructed). Step changes stop this search.
+            bool waitsOnPlayer = TutorialRouteGuide.TryParseRoute(targetId, out _, out _)
+                              || IsPlacementSuggestion(targetId);
 
             while (target == null)
             {
                 target   = FindWorldTarget(targetId);
                 timeout -= Time.deltaTime;
 
-                if (timeout <= 0f)
+                if (timeout <= 0f && !waitsOnPlayer)
                 {
                     GameLogger.Warning($"[TutorialHighlighter] Timed out searching for target '{targetId}'. " +
                                      "Check that the FieldSO id matches exactly.");
@@ -117,8 +136,9 @@ namespace MobileIdleBuilder
                     yield break;
                 }
 
+                // Past the spawn window a waiting search scans the grid four times a second, not every frame.
                 if (target == null)
-                    yield return null;
+                    yield return timeout > 0f ? null : new WaitForSecondsRealtime(0.25f);
             }
 
             _searchRoutine = null;
@@ -149,7 +169,8 @@ namespace MobileIdleBuilder
 
         private WorldTarget? FindWorldTarget(string targetId)
         {
-            // Scene-based field instances
+            // Scene-based field instances. A field that already has a building on it is not where the
+            // next Harvester goes, so skip it (#308: the glow stayed on the field just built on).
             var fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
             foreach (var f in fields)
             {
@@ -158,6 +179,7 @@ namespace MobileIdleBuilder
                 float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
                 int   ax = Mathf.RoundToInt(f.transform.position.x / cs);
                 int   az = Mathf.RoundToInt(f.transform.position.z / cs);
+                if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(ax, az)) continue;
                 // Camera target = tile centre on the ground plane
                 var camTarget = new Vector3(ax * cs, 0f, az * cs);
                 return new WorldTarget { AnchorX = ax, AnchorZ = az,
@@ -169,17 +191,20 @@ namespace MobileIdleBuilder
             if (targetId == "maxwells_demon")
                 return FindEntropySinkTarget();
 
-            if (targetId == "atomic_assembler")
-                return FindPlacedBuildingTarget(4);
-
             if (TutorialRouteGuide.TryParseRoute(targetId, out var from, out var to))
                 return FindRouteTarget(from, to);
 
             if (TutorialRouteGuide.TryParseSuggest(targetId, out var building, out var sFrom, out var sTo))
                 return FindSuggestTarget(building, sFrom, sTo);
 
-            if (TutorialRouteGuide.TryParsePower(targetId, out var powered))
-                return FindPoweredTarget(powered);
+            if (TutorialRouteGuide.TryParsePower(targetId, out var powered, out var near))
+                return FindPoweredTarget(powered, near);
+
+            // Any other placed building by BuildingSO id ("atomic_assembler", "fusion_reactor", ...).
+            // Only "atomic_assembler" used to resolve, so other ids timed out with no highlight.
+            var placed = FindBuildingSO(targetId);
+            if (placed != null)
+                return FindPlacedBuildingTarget(placed.buildingId);
 
             return null;
         }
@@ -189,8 +214,10 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Nearest free spot where <paramref name="buildingKey"/> is inside a placed power source's influence
         /// circle, so the grid links it. Retries until a generator is placed (returns null until then).
+        /// With <paramref name="nearKey"/>, the spot whose inputs are closest to that building's outputs
+        /// wins instead, wherever the player put it (#311: the Fusion Reactor next to the Atom Generator).
         /// </summary>
-        private WorldTarget? FindPoweredTarget(string buildingKey)
+        private WorldTarget? FindPoweredTarget(string buildingKey, string nearKey = null)
         {
             var so = FindBuildingSO(buildingKey);
             if (so == null || gridRenderer == null) return null;
@@ -199,8 +226,40 @@ namespace MobileIdleBuilder
             if (sources.Count == 0) return null;
 
             var fp = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+
+            // Keep every belt tile in front of its ports free and off the Demon's edge (#275): the Demon
+            // has an input on every edge tile, so a belt ending there could sell what it carries, and a
+            // boxed-in Atom Generator had no side left for the neutron line.
+            var frontOffsets = new List<Vector2Int>();
+            var inputOffsets = new List<Vector2Int>();
+            if (so.ports != null)
+                foreach (var port in so.ports)
+                {
+                    var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
+                    bool isInput = port.portType == PortType.Input;
+                    var front = isInput ? TutorialRouteGuide.InputFront(cell, facing)
+                                        : TutorialRouteGuide.OutputFront(cell, facing);
+                    frontOffsets.Add(front);
+                    if (isInput) inputOffsets.Add(front);
+                }
+            var demon = FindEntropySinkTarget();
+            bool BesideDemon(Vector2Int c) => demon is WorldTarget d
+                && c.x >= d.AnchorX - 1 && c.x <= d.AnchorX + d.FootprintW
+                && c.y >= d.AnchorZ - 1 && c.y <= d.AnchorZ + d.FootprintH;
+
+            // Output fronts of the building to sit next to, taken or not: the Atom Generator's still has
+            // its belt to the Demon at this point, which the next step has the player remove.
+            System.Func<Vector2Int, int> distanceFor = null;
+            if (!string.IsNullOrEmpty(nearKey))
+            {
+                var nearOutputs = new List<Vector2Int>();
+                if (!GatherPortFronts(nearKey, PortType.Output, nearOutputs) || nearOutputs.Count == 0) return null;
+                if (inputOffsets.Count > 0)
+                    distanceFor = anchor => TutorialRouteGuide.InputDistance(anchor, inputOffsets, nearOutputs);
+            }
+
             var a  = TutorialRouteGuide.SuggestPoweredAnchor(gridRenderer.Width, gridRenderer.Height, fp,
-                sources, IsBuildable);
+                sources, IsBuildable, frontOffsets, c => IsBeltFree(c) && !BesideDemon(c), distanceFor);
             if (a == null) return null;
 
             var anchor = a.Value;

@@ -94,14 +94,7 @@ namespace MobileIdleBuilder
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated) return false;
             using var query = world.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
-            if (query.IsEmpty) return false;
-
-            var progress = query.GetSingleton<PlayerProgressData>();
-            if (progress.BaseCurrency < amount) return false;
-            progress.BaseCurrency      -= amount;
-            progress.TotalEntropySpent += amount;
-            query.SetSingleton(progress);
-            return true;
+            return EntropyWallet.TrySpend(query, amount);
         }
     }
 }

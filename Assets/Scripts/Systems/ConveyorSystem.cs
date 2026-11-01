@@ -102,9 +102,7 @@ namespace MobileIdleBuilder
                     {
                         // Tail: clear if an accepting building input is in any adjacent cell that
                         // sits in front of the input port — regardless of the belt's exit direction.
-                        canAdvance = false;
-                        if (TryFindInputBuilding(seg.Cell, seg.ExitDir, buildingMap, out Entity destBldg, out _))
-                            canAdvance = DecideDeposit(e, destBldg, item.ItemID) != InputDecision.Wait;
+                        canAdvance = TryPickInput(e, seg, item.ItemID, buildingMap, out _, out _, out _);
                     }
 
                     if (!canAdvance)
@@ -148,9 +146,9 @@ namespace MobileIdleBuilder
                 {
                     // Tail segment — deposit into a building input whose port faces this cell,
                     // in whichever adjacent direction it sits (independent of the belt's exit dir).
-                    if (TryFindInputBuilding(seg.Cell, seg.ExitDir, buildingMap, out Entity bldg, out int deliverDir))
+                    if (TryPickInput(e, seg, item.ItemID, buildingMap, out Entity bldg, out int deliverDir, out var decision))
                     {
-                        switch (DecideDeposit(e, bldg, item.ItemID))
+                        switch (decision)
                         {
                             case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
                             case InputDecision.Overflow: overflows.Add((e, item.ItemID));                          break;
@@ -393,26 +391,40 @@ namespace MobileIdleBuilder
             return false;
         }
 
-        // Order (the tile's own exit first, then N/E/S/W) is shared with ConveyorVisualizer via
-        // TailDelivery so the drawn tail always points where items really go (#223).
-        private bool TryFindInputBuilding(int2 segCell, int exitDir, NativeHashMap<int2, Entity> buildingMap,
-                                          out Entity building, out int deliverDir)
+        /// <summary>
+        /// The input a tail item goes to, and what that input does with it. A tail can sit in front of
+        /// several inputs, and Maxwell's Demon has one on every edge tile, so a belt ending beside it
+        /// used to sell whatever it carried to the first input the scan met (#275: every proton bound
+        /// for a 2x1 Atom Generator next to the Demon was sold). Inputs are tried in
+        /// <see cref="TailInputPriority"/> order and the first that doesn't make the item wait wins, so
+        /// a building that needs the item gets it and the Demon still takes anything nobody else wants.
+        /// False (item waits) when no adjacent input takes it now.
+        /// </summary>
+        private bool TryPickInput(Entity tail, ConveyorSegmentData seg, int itemID,
+                                  NativeHashMap<int2, Entity> buildingMap,
+                                  out Entity building, out int deliverDir, out InputDecision decision)
         {
-            for (int i = 0; i < 4; i++)
+            building   = Entity.Null;
+            deliverDir = -1;
+            decision   = InputDecision.Wait;
+            int bestRank = int.MaxValue;
+            for (int dir = 0; dir < 4; dir++)
             {
-                int dir = TailDelivery.DirAt(exitDir, i);
-                int2 candidate = AdjacentCell(segCell, dir);
+                int2 candidate = AdjacentCell(seg.Cell, dir);
                 if (!buildingMap.TryGetValue(candidate, out Entity cand)) continue;
                 if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;
 
+                int rank = TailInputPriority.Rank(dir == seg.ExitDir, EntityManager.HasComponent<EntropySinkTag>(cand));
+                if (rank >= bestRank) continue;
+                var d = DecideDeposit(tail, cand, itemID);
+                if (d == InputDecision.Wait) continue;
+
+                bestRank   = rank;
                 building   = cand;
                 deliverDir = dir;
-                return true;
+                decision   = d;
             }
-
-            building   = Entity.Null;
-            deliverDir = -1;
-            return false;
+            return building != Entity.Null;
         }
 
         private bool HasMatchingPort(Entity building, int2 portCell, int dir, PortType required)

@@ -21,7 +21,7 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: "The Research panel shows your next frontier. Atomic Assembly opens the
+    text: "The Research panel shows your next frontier. Nucleosynthesis opens the
       rest of the periodic table \u2014 but it costs five hundred entropy. Let the
       factory accumulate it."
     portrait: {fileID: 0}

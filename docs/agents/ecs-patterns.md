@@ -2,7 +2,7 @@
 
 **Scope:** How systems, components, authoring, and the Mono↔ECS boundary work here. Read before writing or modifying any ECS code.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; EntropyWallet + CostReduction rows 2026-10-31 (#279). If code contradicts this doc, trust the code and update this doc.
 > Power Relay (spreader) + shared `PowerCoverageMath` + placement radius preview added 2026-07-03.
 > Range-limited node-to-node connectivity (`LinkRadius`/`IsGridLinked` now live) + dashed connection previews + `⚡` overlay toggle added 2026-07-04.
 
@@ -50,6 +50,7 @@ Runtime entity creation (buildings placed during play) bypasses baking: `Assets/
 
 1. **Load/flush singletons** — `ECSLoadBridge.ApplyLoadedSave()` / `FlushToSave()`: cached `EntityQuery` + `GetSingleton`/`SetSingleton`. For persisted state.
 2. **Write-through on live purchase** — `ECSLoadBridge.AddEntropy()` (`ECSLoadBridge.cs:279`): guarded by `IsLoaded` and `query.IsEmpty`. For services granting currency.
+   - **Spending entropy** (any purchase): `EntropyWallet.TrySpend(progressQuery, cost)` (or `SpendUpTo` for post-placement charges). Do not write `BaseCurrency -=` yourself.
 3. **Direct query from UI** — `HUDController` / sub-controllers cache an `EntityQuery` in `SetECSContext(EntityManager)` and read singletons per-refresh (`PrestigeShopSubController.cs:31-36`). UI writes singletons only for player actions (e.g., purchase deducts `PrestigeData`).
 
 Rules: always check `query.IsEmpty` before `GetSingleton`; never touch ECS before `ECSLoadBridge.IsLoaded`; remember anything written to ECS must be covered by `FlushToSave()` or it won't persist (see `save-system.md`).
@@ -61,7 +62,7 @@ Rules: always check `query.IsEmpty` before `GetSingleton`; never touch ECS befor
 | `BuildingData.ProductionSpeed` (upgrade level) | YES (`ProductionSystem.cs:81`) | indirectly via output rate | shown in inspector |
 | `PrestigeData.SpeedMultiplier` | **NO — not read by ProductionSystem** | YES (`GridSaveService.cs:335`) | shown only |
 | `PrestigeData.OutputMultiplier` | **NO** | no | shown only |
-| `PrestigeData.CostReduction` | n/a | n/a | YES (`HUDController.cs:961,1000`) |
+| `PrestigeData.CostReduction` | n/a | n/a | YES (`EntropyWallet.ReducedCost`: HUD build list + `OnBuildingPlaced`, `DemolishRefund`) |
 | `ManagerAssignmentData.AppliedOutputMult` (per-building manager) | YES — `ProductionSystem.cs` deposit loop AND `CollectorSystem.cs` deposit, gated by `HasComponent` | YES (`GridSaveService.RebuildIdleSnapshot` → `IdleGraphAnalyzer` `getManagerOutputMultiplier`, applied to every producing node — collector AND synthesizer) | Managers panel + inspector assign row |
 | Manager `CraftSpeed` (baked into `BuildingData.ProductionSpeed`) | YES for crafters (`ProductionSystem.cs:81`); **NO for collectors** (`CollectorSystem` ignores `ProductionSpeed`, uses `CollectorData.OutputRate`) | **NO** — offline synth craft rate uses the recipe's `baseCraftTime` × global speed, not the manager CraftSpeed baked into `ProductionSpeed` | inspector |
 | `ManagerAssignmentData.AppliedPowerMult` (PowerDiscount) | YES — `PowerGridSystem` multiplies the consumer's `PowerConsumer.DrawEV` by it when the component is present (Burst-read), reducing global draw | no — offline synthesis ignores power entirely (no brownout/throttle modelled offline) | Managers panel + inspector power row |

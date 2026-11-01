@@ -1,47 +1,36 @@
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Which adjacent building input a belt's tail (last tile) feeds (#223). Shared by
-    /// ConveyorSystem (where items actually go) and ConveyorVisualizer (where the tile is drawn
-    /// pointing), so the picture always matches the simulation.
+    /// Which way a belt's tail (last tile) is DRAWN exiting (#223). ConveyorSystem lets a tail feed any
+    /// adjacent input port that faces it, not only the one straight ahead, so a belt drawn up beside a
+    /// building still delivers, and a belt cut by deleting its downstream neighbour keeps feeding
+    /// whatever input it now touches. Drawing the tile straight past that input hid where items went.
     ///
-    /// A tail feeds any adjacent input port that faces it, not only the one straight ahead, so a
-    /// belt drawn up beside a building still delivers, and a belt cut by deleting its downstream
-    /// neighbour keeps feeding whatever input it now touches. The input the tile's own ExitDir points
-    /// at is tried first; the rest follow in direction order (North, East, South, West).
+    /// The choice uses the same <see cref="TailInputPriority"/> ranking ConveyorSystem.TryPickInput uses
+    /// (#275): the input the tile's ExitDir points at first, Maxwell's Demon last, ties in direction
+    /// order (North, East, South, West). The simulation can still skip a preferred input for one item it
+    /// won't take right now (full, or unused by its recipe); the picture shows the preferred input.
     /// </summary>
     public static class TailDelivery
     {
         /// <summary>
-        /// The <paramref name="i"/>-th direction (0..3) to try for a tail whose drawn exit is
-        /// <paramref name="exitDir"/>: the exit itself first, then the other three in ascending order.
-        /// An invalid <paramref name="exitDir"/> falls back to plain 0..3. Index-based (no delegate)
-        /// so the per-frame simulation path allocates nothing.
-        /// </summary>
-        public static int DirAt(int exitDir, int i)
-        {
-            if (exitDir < 0 || exitDir > 3) return i;
-            if (i == 0) return exitDir;
-            int k = i - 1;
-            return k < exitDir ? k : k + 1;
-        }
-
-        /// <summary>
-        /// The direction the tail tile should be DRAWN exiting: the input it feeds, or its own
+        /// The direction to draw the tail exiting: the best-ranked input it can feed, or its own
         /// <paramref name="exitDir"/> when it feeds nothing. Never a U-turn back out of the side the
         /// items enter from (<paramref name="entryDir"/> is the travel direction on entry).
-        /// <paramref name="feedsInput"/>[d] is true when an input port faces this tile from direction d.
+        /// <paramref name="feedsInput"/>[d] is true when an input port faces this tile from direction d;
+        /// <paramref name="isSink"/>[d] when that input belongs to an entropy sink (Maxwell's Demon).
         /// </summary>
-        public static int VisualExit(int entryDir, int exitDir, bool[] feedsInput)
+        public static int VisualExit(int entryDir, int exitDir, bool[] feedsInput, bool[] isSink)
         {
-            for (int i = 0; i < 4; i++)
+            int best = -1, bestRank = int.MaxValue;
+            for (int d = 0; d < 4; d++)
             {
-                int d = DirAt(exitDir, i);
                 if (!feedsInput[d]) continue;
                 if (entryDir >= 0 && entryDir <= 3 && d == (entryDir + 2) % 4) continue;   // no U-turn
-                return d;
+                int rank = TailInputPriority.Rank(d == exitDir, isSink != null && isSink[d]);
+                if (rank < bestRank) { bestRank = rank; best = d; }
             }
-            return exitDir;
+            return best >= 0 ? best : exitDir;
         }
     }
 }
