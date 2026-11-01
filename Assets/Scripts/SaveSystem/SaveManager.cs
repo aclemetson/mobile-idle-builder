@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Globalization;
+using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using UnityEngine;
@@ -27,10 +29,22 @@ namespace MobileIdleBuilder
         [Header("Config")]
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
+        [Tooltip("Minimum seconds between autosave cloud pushes. Autosave still writes locally every " +
+                 "autoSaveIntervalSeconds; background/quit and explicit SaveToCloud() always push.")]
+        [SerializeField] float cloudPushIntervalSeconds = 300f;
 
         LocalSaveService _local;
         ICloudSaveService _cloud;
         SaveData _current;
+
+        // Content hash (LocalSaveService.LastWrittenContentHash) of the last save that reached the
+        // cloud, and when that push was started. The autosave skips pushes that would upload
+        // identical state or come sooner than cloudPushIntervalSeconds after the previous one.
+        ulong _lastPushedHash;
+        float _lastPushStartedAt = float.NegativeInfinity;
+
+        /// <summary>Test seam: realtime clock (seconds) used for the cloud-push throttle.</summary>
+        internal Func<float> RealtimeNow = () => Time.realtimeSinceStartup;
 
         public SaveData Current   => _current;
         public bool     IsNewGame { get; private set; }
@@ -52,6 +66,9 @@ namespace MobileIdleBuilder
 
             if (IsNewGame)
                 GameLogger.Info("[Save] No save file found — starting fresh.");
+            else if (_local.LastLoadSource != LocalSaveService.LoadSource.Main)
+                GameLogger.Warning($"[Save] Loaded save from fallback ({_local.LastLoadSource}) — save.json was " +
+                                   $"missing or corrupt. Tutorial step: '{_current.tutorial.currentStepId}'");
             else
                 GameLogger.Info($"[Save] Loaded save — tutorial step: '{_current.tutorial.currentStepId}'  " +
                           $"active={_current.tutorial.isActive}  prestiged={_current.tutorial.hasCompletedFirstRun}");
@@ -120,7 +137,35 @@ namespace MobileIdleBuilder
         {
             if (_cloud == null || !_cloud.IsAvailable) return;
             if (!FeatureFlags.CloudSaveEnabled) return;   // honor the cloud-save kill-switch
-            _ = _cloud.PushAsync(_current);
+            _ = PushAndRecord();
+        }
+
+        // Starts a cloud push of _current and records its content hash once it succeeds. Everything up
+        // to the await runs synchronously, and PushAsync serializes before its own first await, so the
+        // snapshot is taken now even if the app is about to be suspended. The continuation resumes on
+        // Unity's main-thread SynchronizationContext, so the 64-bit field write is never torn.
+        // A failed push still counts toward the interval: offline devices retry on the next window
+        // rather than every autosave.
+        async Task<bool> PushAndRecord()
+        {
+            ulong hash = _local.LastWrittenContentHash;
+            _lastPushStartedAt = RealtimeNow();
+            bool ok = await _cloud.PushAsync(_current);
+            if (ok) _lastPushedHash = hash;
+            return ok;
+        }
+
+        /// <summary>
+        /// Whether an autosave should push to the cloud: only when the saved content differs from
+        /// the last successful push AND at least <paramref name="minIntervalSeconds"/> have passed
+        /// since the previous push started. A content hash of 0 means "unknown" and always counts
+        /// as changed.
+        /// </summary>
+        internal static bool ShouldAutoPush(ulong contentHash, ulong lastPushedHash,
+                                            float now, float lastPushStartedAt, float minIntervalSeconds)
+        {
+            if (contentHash != 0 && contentHash == lastPushedHash) return false;
+            return now - lastPushStartedAt >= minIntervalSeconds;
         }
 
         // Called when the app returns from background (OnApplicationPause(false)).
@@ -255,12 +300,32 @@ namespace MobileIdleBuilder
             _local.SaveWithBackup(_current);
         }
 
+        /// <summary>Saves locally, then always pushes to the cloud (if available). For explicit saves.</summary>
         public IEnumerator SaveToCloud()
         {
             if (_cloud == null || !_cloud.IsAvailable) { SaveLocal(); yield break; }
 
             SaveLocal();
-            var task = _cloud.PushAsync(_current);
+            var task = PushAndRecord();
+            yield return new WaitUntil(() => task.IsCompleted);
+        }
+
+        /// <summary>
+        /// One autosave: always writes locally, but pushes to the cloud only when the state changed
+        /// since the last successful push and the push interval has elapsed (<see cref="ShouldAutoPush"/>).
+        /// Internal so EditMode tests can pump it directly.
+        /// </summary>
+        internal IEnumerator AutoSaveTick()
+        {
+            SaveLocal();
+
+            if (_cloud == null || !_cloud.IsAvailable) yield break;
+            if (!FeatureFlags.CloudSaveEnabled) yield break;
+            if (!ShouldAutoPush(_local.LastWrittenContentHash, _lastPushedHash,
+                                RealtimeNow(), _lastPushStartedAt, cloudPushIntervalSeconds))
+                yield break;
+
+            var task = PushAndRecord();
             yield return new WaitUntil(() => task.IsCompleted);
         }
 
@@ -326,15 +391,35 @@ namespace MobileIdleBuilder
             while (true)
             {
                 yield return new WaitForSeconds(autoSaveIntervalSeconds);
-                yield return SaveToCloud();
+                yield return AutoSaveTick();
             }
         }
 
-        bool IsCloudNewer(SaveData cloud)
+        bool IsCloudNewer(SaveData cloud) => IsNewerStamp(cloud.lastSaved, _current.lastSaved);
+
+        /// <summary>
+        /// True if ISO 8601 stamp <paramref name="candidate"/> is later than <paramref name="current"/>.
+        /// Same rules as before #280: an empty (or now also unparseable) current stamp always loses;
+        /// otherwise an empty or unparseable candidate never wins. Parsed culture-invariantly so the
+        /// device locale cannot change the result, and without throwing on a malformed stamp.
+        /// </summary>
+        internal static bool IsNewerStamp(string candidate, string current)
         {
-            if (string.IsNullOrEmpty(_current.lastSaved)) return true;
-            if (string.IsNullOrEmpty(cloud.lastSaved))    return false;
-            return DateTime.Parse(cloud.lastSaved) > DateTime.Parse(_current.lastSaved);
+            if (!TryParseStamp(current, out var cur))    return true;
+            if (!TryParseStamp(candidate, out var cand)) return false;
+            return cand > cur;
+        }
+
+        static bool TryParseStamp(string s, out DateTime utc)
+        {
+            utc = default;
+            if (string.IsNullOrEmpty(s)) return false;
+            // RoundtripKind keeps the "Z" of an "o" stamp as DateTimeKind.Utc. It must not be combined
+            // with AdjustToUniversal (that throws), so normalise any offset stamp afterwards.
+            if (!DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
+                return false;
+            utc = parsed.Kind == DateTimeKind.Local ? parsed.ToUniversalTime() : parsed;
+            return true;
         }
 
         static string GeneratePlayerId() => $"uid_{Guid.NewGuid():N}";

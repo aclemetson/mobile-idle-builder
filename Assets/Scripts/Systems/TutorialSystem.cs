@@ -121,6 +121,13 @@ namespace MobileIdleBuilder
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.PrestigeRunMin)
                 tutorial.FirstRunComplete = true;
 
+            // Paid on advance, never on entry: entry re-runs when a save loads on this step.
+            if (step.rewardEntropy > 0 && SystemAPI.TryGetSingletonRW<PlayerProgressData>(out var progress))
+            {
+                progress.ValueRW.BaseCurrency += step.rewardEntropy;
+                GameLogger.Info($"[TutorialSystem] Step '{step.id}' rewarded {step.rewardEntropy} entropy.");
+            }
+
             tutorial.CurrentStepIndex++;
 
             if (tutorial.CurrentStepIndex >= flow.steps.Length)
@@ -221,6 +228,25 @@ namespace MobileIdleBuilder
                 case ConditionType.FieldPurchasedMin:
                     return FieldPurchaseService.PurchasedCount(SaveManager.Instance?.Current, c.fieldId)
                            >= System.Math.Max(1, c.minCount);
+
+                case ConditionType.BuildingRecipeSet:
+                    // The recipe set UiEvent fires for any recipe on any building, so it can't tell a
+                    // second Combiner set to Neutron from one left on Proton. Read the live recipe.
+                    foreach (var (bd, rp, e) in SystemAPI.Query<RefRO<BuildingData>, RefRO<RecipeProcessData>>()
+                                                         .WithEntityAccess())
+                        if (MatchesTarget(c, bd.ValueRO, e, ref state) && rp.ValueRO.RecipeID == c.recipeId)
+                            return true;
+                    return false;
+
+                case ConditionType.ItemCraftedMin:
+                    // Automated output belted to the Demon is sold before it can reach the inventory,
+                    // so count crafts. Holding the item also counts (Empty output, or a craft from a
+                    // previous session).
+                    if (c.items == null || c.items.Count == 0) return true;
+                    foreach (var r in c.items)
+                        if (CraftLog.Count(r.itemId) < r.quantity
+                            && SlotBufferUtils.CountInInventory(inv, r.itemId) < r.quantity) return false;
+                    return true;
 
                 default:
                     return false;

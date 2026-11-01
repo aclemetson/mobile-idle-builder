@@ -58,6 +58,14 @@ namespace MobileIdleBuilder
         /// Returns true if the player pressed a cancel input this frame —
         /// Escape key or right mouse button.
         /// </summary>
+        /// <summary>
+        /// Returns true if the Android back button (or back gesture) was pressed this frame. The Input
+        /// System reports it as the Escape key, so this is also Escape on desktop. Unlike
+        /// <see cref="WasCancelPressed"/> it ignores the right mouse button: back closes UI layers.
+        /// </summary>
+        public static bool WasBackPressed() =>
+            Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+
         public static bool WasCancelPressed()
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)

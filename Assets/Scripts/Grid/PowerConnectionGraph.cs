@@ -91,15 +91,18 @@ namespace MobileIdleBuilder
         /// footprints to world-space centres with <paramref name="cellSize"/>. Returns an empty list when
         /// the world is null/uncreated. Read-only — allocates and disposes its own Temp arrays.
         /// </summary>
+        static readonly CachedEntityQuery s_nodeQuery = new CachedEntityQuery(
+            ComponentType.ReadOnly<PowerNodeData>(),
+            ComponentType.ReadOnly<GridPosition>());
+
         public static List<PowerNode> GatherFromEcs(EntityManager em, float cellSize)
         {
             var nodes = new List<PowerNode>();
             if (em.World == null || !em.World.IsCreated) return nodes;
 
-            var query = em.CreateEntityQuery(
-                ComponentType.ReadOnly<PowerNodeData>(),
-                ComponentType.ReadOnly<GridPosition>());
-            var entities = query.ToEntityArray(Allocator.Temp);
+            // Cached per world: this runs every 0.4 s while the power overlay is open and on every
+            // placement preview; it used to create (and never dispose) a new query each call (#285).
+            var entities = s_nodeQuery.For(em).ToEntityArray(Allocator.Temp);
 
             for (int e = 0; e < entities.Length; e++)
             {

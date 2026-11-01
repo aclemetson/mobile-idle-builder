@@ -67,6 +67,8 @@ namespace MobileIdleBuilder
 
             _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
             _placementController = FindAnyObjectByType<BuildingPlacementController>();
+            if (_conveyorController != null) _conveyorController.OnStartChanged += OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced += OnBuildingPlacedHandler;
 
             if (hudController != null)
             {
@@ -113,6 +115,9 @@ namespace MobileIdleBuilder
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
+
+            if (_conveyorController != null) _conveyorController.OnStartChanged -= OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced -= OnBuildingPlacedHandler;
 
             if (hudController != null)
             {
@@ -414,7 +419,7 @@ namespace MobileIdleBuilder
         private void OnConveyorPlacedHandler()
         {
             TryAdvanceOnUiEvent("conveyor_placed");
-            CheckBeltLinked();
+            NoteBeltPlaced();
         }
 
         // ── Belt feedback (#255) ──────────────────────────────────────────────
@@ -426,18 +431,45 @@ namespace MobileIdleBuilder
         private const float BeltCheckDelaySeconds = 0.5f;
         private Coroutine _beltCheck;
 
+        // Link count when the open chain's first segment was placed; -1 when no chain is open.
+        private int _chainLinksBefore = -1;
+        private int _chainStepIndex   = -1;
+
         /// <summary>
         /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
-        /// word why. Warn, and re-show the glowing route so the player can redraw it.
+        /// word why. Each confirm auto-chains from the segment's end, so a route is often drawn in several
+        /// segments: remember the count before the first one and judge the whole chain once it ends.
         /// </summary>
-        private void CheckBeltLinked()
+        private void NoteBeltPlaced()
         {
             var flow = TutorialFlowSO.Current;
             if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
             if (flow.steps[_lastStepIndex].advanceCondition?.type != ConditionType.ConveyorLinked) return;
 
+            if (_chainStepIndex != _lastStepIndex)
+            {
+                _chainStepIndex   = _lastStepIndex;
+                _chainLinksBefore = TutorialSystem.CurrentStepConveyorLinks;
+            }
+            if (_conveyorController == null || !_conveyorController.HasStart) EndBeltChain();
+        }
+
+        // The start drops when the player taps New, leaves belt mode, or placed a single belt.
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            if (!hasStart) EndBeltChain();
+        }
+
+        /// <summary>Warns, and re-shows the glowing route, when the chain that just ended linked nothing new.</summary>
+        private void EndBeltChain()
+        {
+            if (_chainStepIndex < 0) return;
+            int stepIndex = _chainStepIndex, linksBefore = _chainLinksBefore;
+            _chainStepIndex   = -1;
+            _chainLinksBefore = -1;
+
             if (_beltCheck != null) StopCoroutine(_beltCheck);
-            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(_lastStepIndex, TutorialSystem.CurrentStepConveyorLinks));
+            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(stepIndex, linksBefore));
         }
 
         private IEnumerator WarnIfBeltUnlinked(int stepIndex, int linksBefore)
@@ -460,6 +492,40 @@ namespace MobileIdleBuilder
         /// </summary>
         internal static bool IsBeltUnlinked(bool stepAdvanced, int linksBefore, int linksAfter) =>
             !stepAdvanced && linksAfter >= 0 && linksAfter <= Mathf.Max(0, linksBefore);
+        // ── Placement glow (#308) ─────────────────────────────────────────────
+
+        // The placed building reaches ECS, GridOccupancy and TutorialSystem a few frames later.
+        private const float PlacementGlowRecheckSeconds = 0.5f;
+        private Coroutine _placementGlowRecheck;
+
+        /// <summary>
+        /// A placement glow (where to put a building) used to stay lit when the player built somewhere
+        /// else, or stay on the spot they just built on while the step waited for more. Any placement
+        /// clears it. If the step still wants a building, the glow comes back worked out fresh from the
+        /// grid as it is now, without moving the camera.
+        /// </summary>
+        private void OnBuildingPlacedHandler(BuildingPlacementController.BuildingEntry _)
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            var enter = flow.steps[_lastStepIndex].onEnter;
+            if (enter == null || enter.highlightMode == HighlightMode.None) return;
+            if (!TutorialHighlighter.IsPlacementSuggestion(enter.highlightTarget)) return;
+
+            tutorialHighlighter?.ClearHighlight();
+            if (_placementGlowRecheck != null) StopCoroutine(_placementGlowRecheck);
+            _placementGlowRecheck = StartCoroutine(ReshowPlacementGlow(_lastStepIndex, enter.highlightTarget));
+        }
+
+        private IEnumerator ReshowPlacementGlow(int stepIndex, string target)
+        {
+            yield return new WaitForSecondsRealtime(PlacementGlowRecheckSeconds);
+            _placementGlowRecheck = null;
+            // Advanced: OnStepChanged already showed the next step's guidance.
+            if (_lastStepIndex != stepIndex || !_wasActive) yield break;
+            tutorialHighlighter?.ShowVisualOnly(target);
+        }
+
         private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
         // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
         // upgrade UI needs no tutorial hook.

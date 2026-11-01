@@ -17,6 +17,7 @@
 // 12. nuclear          periodic table (118) + nuclear buildings/particles/research (design)
 // 13. worlds           Track/World layer (Physics/Chemistry/Biology) + Chemistry fields/buildings/recipes/research
 //                        Phases 1-3 + 4a shipped (Chemistry C1 playable); C2-C4 + Biology are design
+// 14. tutorial_timing  current 69-step tutorial (ends at first Carbon): player directions + time model + AI-measured medians
 // ────────────────────────────────────────────────────────────────────────────
 window.LOOP_DATA = {
 
@@ -1560,6 +1561,116 @@ worlds: {
     { id:'organic_chemistry',  branch:'Chemistry', prereq:'reaction_engineering',cost:'~2M',      unlocks:'C3 Organic Synthesizer; hydrocarbons', status:'design' },
     { id:'biochem_precursors', branch:'Chemistry', prereq:'organic_chemistry',   cost:'~5M',      unlocks:'C4 biochemistry; glucose/amino_acid/fatty_acid/nucleotide (feeds Biology)', status:'design' },
     { id:'biology_lab',        branch:'Biology',   prereq:'biochem_precursors',  cost:'~10-25M',  unlocks:'opens the Biology world (B1 Biomolecules)', status:'design' },
+  ],
+},
+
+// ─────────────────────────────────────── TUTORIAL TIMING ──
+// Current 69-step flow, ending at the first Carbon from fusion (#275; game_data.json tutorial_steps,
+// Playtests/tutorial-walkthrough.md), verified 2026-10-31. Per step:
+//   dir   what the player does          read  seconds reading dialogue/hint (15 chars/s + 1 s per line)
+//   act   seconds tapping/building/research timers (not waiting for entropy)
+//   cost  entropy spent at the step     gain  one-off entropy from a manual sale
+//   rate  passive income e/s from this step on (inherits the phase rate)
+//   meas  AI playtest median seconds, n = runs (Playtests/benchmarks/*/*.jsonl, 2026-10-22/23)
+// The renderer simulates the entropy balance from starting_entropy (250): wait = (cost - balance) / rate.
+tutorial_timing: {
+  starting_entropy: 250,
+  phases: [
+    { label:'① Learning the Loop', color:'#1a5c8a', rate:0, steps:[
+      { num:1,  id:'intro_dialogue',               read:36, act:0,  meas:5.1,  n:10, dir:'Read The Architect\'s 4-line welcome; tap to advance each line.' },
+      { num:2,  id:'collect_first_electron',       read:7,  act:8,  meas:11.7, n:8,  dir:'Tap the blue Lepton Field 5 times (1.5 s recharge per tap) to hold 5 Electrons. The quark field is locked.' },
+      { num:3,  id:'direct_to_maxwells_demon',     read:9,  act:3,  meas:1.7,  n:8,  dir:'Tap the highlighted Maxwell\'s Demon to open its panel.' },
+      { num:4,  id:'sell_electrons_in_demon',      read:9,  act:5,  gain:5, meas:3.6, n:8, dir:'Drag the Electrons to the deposit side until none are left (+5e).' },
+      { num:5,  id:'close_demon_panel',            read:6,  act:2,  meas:3.4,  n:8,  dir:'Close the Demon panel.' },
+      { num:6,  id:'explain_quark_field',          read:23, act:0,  meas:3.0,  n:8,  dir:'Read 2 lines about the orange Quark Field.' },
+      { num:7,  id:'collect_quarks',               read:3,  act:20, meas:20.3, n:8,  dir:'Tap the Quark Field until you hold 5 Up and 5 Down. Each tap rolls a random flavour, so expect about 12 taps.' },
+      { num:8,  id:'direct_to_maxwells_demon_quarks', read:11, act:3, meas:2.7, n:8, dir:'Tap Maxwell\'s Demon.' },
+      { num:9,  id:'sell_quarks_in_demon',         read:11, act:5,  gain:11, meas:3.0, n:8, dir:'Deposit every Up and Down Quark, extras included (about +11e).' },
+      { num:10, id:'close_demon_panel_quarks',     read:6,  act:2,  meas:4.0,  n:8,  dir:'Close the Demon panel.' },
+    ]},
+    { label:'② Research &amp; Nucleons', color:'#8a4a00', rate:0, steps:[
+      { num:11, id:'open_research_drawer',         read:11, act:3,  meas:3.0,  n:8,  dir:'Open the left menu drawer (pulsing handle).' },
+      { num:12, id:'buy_recombination_i',          read:8,  act:15, cost:100, meas:14.7, n:7, gate:true, dir:'Tap Research, buy Recombination I (100e), wait out the 10 s timer.' },
+      { num:13, id:'recombination_unlocked',       read:28, act:0,  meas:3.4,  n:8,  dir:'Read 2 lines on proton and neutron makeup.' },
+      { num:14, id:'collect_quarks_for_nucleons',  read:3,  act:32, meas:55.1, n:7,  dir:'Tap the Quark Field until you hold 8 Up and 8 Down (about 20 taps).' },
+      { num:15, id:'open_recipe_panel_for_nucleons', read:8, act:3, meas:5.6,  n:7,  dir:'Open the recipe menu (pulsing button).' },
+      { num:16, id:'craft_two_protons',            read:11, act:6,  meas:4.6,  n:7,  dir:'Craft Proton twice (2 Up + 1 Down each, 1 s craft).' },
+      { num:17, id:'craft_two_neutrons',           read:13, act:6,  meas:4.7,  n:7,  dir:'Craft Neutron twice (1 Up + 2 Down each). 2 Up + 2 Down are left over.' },
+      { num:18, id:'direct_to_demon_for_nucleons', read:13, act:3,  meas:4.3,  n:7,  dir:'Tap Maxwell\'s Demon.' },
+      { num:19, id:'sell_protons_and_neutrons',    read:8,  act:4,  gain:12, meas:2.9, n:7, dir:'Deposit the 2 Protons and 2 Neutrons (+12e).' },
+      { num:20, id:'close_demon_after_nucleons',   read:7,  act:2,  meas:3.8,  n:6,  dir:'Close the Demon.' },
+    ]},
+    { label:'③ Hydrogen by Hand', color:'#1a6e40', rate:0, steps:[
+      { num:21, id:'buy_hydrogen_synthesis',       read:10, act:21, cost:50, meas:20.8, n:5, gate:true, dir:'Open Research, buy Hydrogen Synthesis (50e), wait 15 s.' },
+      { num:22, id:'gather_for_hydrogen',          read:20, act:12, meas:34.5, n:6,  dir:'Tap both fields until you hold 4 Up, 2 Down and 2 Electrons. Leftovers from step 17 count.' },
+      { num:23, id:'craft_protons_for_hydrogen',   read:8,  act:6,  meas:7.8,  n:5,  dir:'Craft 2 Protons from the recipe menu. Collection is paused, so this uses the stock from step 22.' },
+      { num:24, id:'craft_hydrogen',               read:13, act:7,  meas:4.0,  n:4,  dir:'Craft Hydrogen twice (Proton + Electron, 2 s each).' },
+      { num:25, id:'hydrogen_crafted',             read:10, act:0,  meas:1.6,  n:4,  milestone:true, dir:'Read the Hydrogen milestone line.' },
+      { num:26, id:'direct_to_demon_for_hydrogen', read:11, act:3,  meas:7.3,  n:4,  dir:'Tap Maxwell\'s Demon.' },
+      { num:27, id:'sell_hydrogen_in_demon',       read:3,  act:5,  gain:10, meas:1.8, n:4, dir:'Deposit both Hydrogen (+10e).' },
+      { num:28, id:'close_demon_after_hydrogen',   read:3,  act:2,  meas:1.4,  n:4,  dir:'Close the Demon.' },
+    ]},
+    { label:'④ First Automation', color:'#1a5c8a', rate:0, steps:[
+      { num:29, id:'intro_automation_i',           read:26, act:0,  meas:4.9,  n:4,  dir:'Read 3 lines introducing Automation I.' },
+      { num:30, id:'buy_automation_i',             read:6,  act:26, cost:25, meas:26.4, n:4, gate:true, dir:'Open Research, buy Automation I (25e), wait 20 s.' },
+      { num:31, id:'place_first_building',         read:12, act:15, cost:100, meas:20.8, n:4, dir:'Open Builder, pick Harvester (100e), place it on the Lepton Field (the camera pans there), confirm.' },
+      { num:32, id:'place_conveyor',               read:24, act:20, gain:375, meas:12.2, n:2,  dir:'Menu, Builder, Conveyor Belt. Tap the glowing tile at the Harvester\'s output, then the glowing tile at the Demon\'s input, then the check and Done. Belts are free.' },
+      { num:33, id:'automation_started',           read:37, act:0,  rate:0.8, meas:5.9, n:2, milestone:true, dir:'Read 3 lines (offline earnings, prestige ceiling). Electron income starts at about 0.8 e/s.' },
+    ]},
+    { label:'⑤ Nucleon Pipeline', color:'#8a4a00', rate:0.8, steps:[
+      { num:34, id:'place_quark_harvester',        read:16, act:30, cost:375, gain:350, meas:294.4, n:2, dir:'Save 375e, then place a Harvester on each quark field (150e + 225e). Set one to Up Quarks and one to Down Quarks.' },
+      { num:35, id:'intro_sfc',                    read:13, act:0,  meas:1.8,  n:2,  dir:'Read 1 line.' },
+      { num:36, id:'place_sfc',                    read:10, act:15, cost:200, meas:327.1, n:2, dir:'Save 200e; place the Strong Force Combiner on the suggested glowing tiles between the quark Harvesters and the Demon.' },
+      { num:37, id:'place_generator',              read:11, act:10, cost:150, meas:247.5, n:2, dir:'Save 150e; place a Basic Generator within 2 tiles of the Combiner.' },
+      { num:38, id:'link_generator',               read:20, act:2,  dir:'Read 1 line. The step completes once the Combiner shows as powered.' },
+      { num:39, id:'route_quarks_to_sfc',          read:13, act:35, meas:10.8, n:1,  warn:'One of two playtests stuck here: Harvesters faced away from the Combiner, so the belt had to wrap around it.', dir:'Draw a belt from each quark Harvester\'s output glow to the Combiner\'s input glow (2 belts).' },
+      { num:40, id:'configure_sfc_recipes',        read:12, act:8,  meas:7.7,  n:1,  dir:'Tap the Combiner and set its recipe to Proton.' },
+      { num:41, id:'route_nucleons_to_demon',      read:10, act:18, meas:11.6, n:1,  dir:'Draw a belt from the Combiner\'s output glow to the Demon\'s input glow.' },
+      { num:42, id:'nucleon_loop_complete',        read:21, act:0,  rate:2.5, meas:4.0, n:1, milestone:true, dir:'Read 2 lines. Electrons + Protons now earn about 2.5 e/s.' },
+    ]},
+    { label:'⑥ Hydrogen Automation', color:'#1a6e40', rate:2.5, steps:[
+      { num:43, id:'intro_atom_gen',               read:14, act:0,  meas:64.4, n:1,  dir:'Read 1 line.' },
+      { num:44, id:'place_atom_generator',         read:19, act:25, cost:350, warn:'Playtest: the first placement was out of the 4-tile link range and stayed unpowered.', dir:'Save 350e; place the Atom Generator on the glowing in-range tile, rotate its output toward the Demon, confirm.' },
+      { num:45, id:'connect_atom_gen_inputs',      read:13, act:50, warn:'Playtest stalled here (belt feedback); no clean timing yet.', dir:'Re-route the proton belt into the Atom Generator, then belt the electron Harvester into it (2 linked inputs).' },
+      { num:46, id:'route_hydrogen_to_demon',      read:15, act:18, dir:'Belt the Atom Generator\'s output to the Demon.' },
+      { num:47, id:'hydrogen_loop_complete',       read:25, act:0,  milestone:true, dir:'Read 2 lines. Hydrogen earns about 2.5 e/s, capped by one Up Quark Harvester (0.5 Protons/s).' },
+    ]},
+    { label:'⑥b Field Synthesis', color:'#8a4a00', rate:2.5, steps:[
+      { num:48, id:'buy_field_synthesis',          read:10, act:28, cost:250, gate:true, dir:'Save 250e; Research, Field Synthesis; wait 20 s.' },
+      { num:49, id:'place_quark_field_pair',       read:18, act:15, cost:300, dir:'Save 300e; Builder, Quark Field Pair; place it on two empty tiles.' },
+      { num:50, id:'field_pair_placed',            read:22, act:0,  dir:'Read 2 lines about the neutron line.' },
+    ]},
+    { label:'⑦ Neutron Line', color:'#1a6e40', rate:2.5, steps:[
+      { num:51, id:'place_neutron_harvesters',     read:8,  act:30, cost:843, dir:'Save 843e; place a Harvester on each new quark field (337e + 506e), one Up and one Down.' },
+      { num:52, id:'place_neutron_combiner',       read:8,  act:15, cost:300, dir:'Save 300e; place a second Combiner on the glowing tiles, in power range.' },
+      { num:53, id:'set_neutron_recipe',           read:6,  act:8,  dir:'Tap the new Combiner and set its recipe to Neutron.' },
+      { num:54, id:'route_quarks_to_neutron_combiner', read:10, act:35, dir:'Belt each new Harvester into the second Combiner (one belt per Harvester).' },
+      { num:55, id:'route_neutrons_to_atom_gen',   read:10, act:20, dir:'Belt the neutron Combiner into a free Atom Generator intake.' },
+    ]},
+    { label:'⑧ Atomic Assembly', color:'#1a5c8a', rate:2.5, steps:[
+      { num:56, id:'post_tutorial_intro',          read:23, act:0,  dir:'Read 2 lines.' },
+      { num:57, id:'buy_atomic_assembly',          read:15, act:38, cost:500, gate:true, dir:'Save 500e; Research, Atomic Assembly; wait 30 s.' },
+      { num:58, id:'atomic_assembly_unlocked',     read:25, act:0,  dir:'Read 2 lines.' },
+      { num:59, id:'craft_first_helium',           read:6,  act:20, gain:5000, milestone:true, dir:'Tap the Atom Generator and set it to Helium-4. The first Helium pays a 5,000e research grant.' },
+      { num:60, id:'first_element_context',        read:26, act:0,  dir:'Read 2 lines.' },
+    ]},
+    { label:'⑨ Fusion and Carbon', color:'#8a4a00', rate:2.5, steps:[
+      { num:61, id:'intro_nuclear_reactors',       read:15, act:0,  dir:'Read 1 line.' },
+      { num:62, id:'buy_fusion_i',                 read:6,  act:188, cost:4000, gate:true, dir:'Save 4,000e; Research, Stellar Fusion; wait 3 min.' },
+      { num:63, id:'place_fusion_reactor',         read:8,  act:20, cost:1500, dir:'Save 1,500e; place a Fusion Reactor on the glowing tile.' },
+      { num:64, id:'power_for_fusion',             read:10, act:15, cost:225, dir:'Save 225e; place a second Basic Generator (draw is now 80 eV against 50).' },
+      { num:65, id:'fusion_explained',             read:18, act:0,  dir:'Read 1 line.' },
+      { num:66, id:'route_helium_to_reactor',      read:12, act:35, dir:'Remove the Atom Generator to Demon belt, then belt the Atom Generator into the Reactor.' },
+      { num:67, id:'craft_first_carbon',           read:6,  act:20, rate:13, milestone:true, dir:'Tap the Reactor and set Fuse Carbon. One Carbon per 12 s (0.25 Helium/s).' },
+      { num:68, id:'route_carbon_to_demon',        read:8,  act:20, dir:'Belt the Reactor into the Demon. Each Carbon sells for 160e (about 13 e/s).' },
+      { num:69, id:'tutorial_complete',            read:20, act:0,  milestone:true, dir:'Read 2 lines. Tutorial complete.' },
+    ]},
+  ],
+  findings: [
+    'Steps 34-37 were three entropy waits (about 14 min measured on 0.8 e/s). place_conveyor (+375e) and place_quark_harvester (+350e) now pay for those buildings (#274); measure again.',
+    'Helium-4 earns the same 2.5 e/s as Hydrogen; the neutron line pays off through Fusion (Carbon, 160e), not Helium sales (#270).',
+    'Stellar Fusion (4,000e) is the largest wait after the first Helium. The 5,000e Helium grant covers it and most of the Fusion Reactor; at the old 2,500e the 2026-10-31 active-grinder run idled about 21 min here and finished in 70.5 min.',
+    'Hidden costs to watch: the second Basic Generator at step 64 (80 eV draw vs 50) and the neutron line (about 1,140e) at steps 51-52.',
   ],
 },
 

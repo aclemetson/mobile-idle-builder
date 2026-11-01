@@ -15,7 +15,7 @@ MonoBehaviour:
   id: atomic_assembler
   displayName: Atom Generator
   description: Assembles nucleons and electrons into atoms. Starts with hydrogen;
-    research Atomic Assembly to unlock heavier elements. Power cost scales with atomic
+    research Nucleosynthesis to unlock heavier elements. Power cost scales with atomic
     mass.
   icon: {fileID: 0}
   prefab: {fileID: 0}
@@ -157,18 +157,21 @@ MonoBehaviour:
   - Neutrons
   - Electrons
   isEntropySink: 0
-  footprint: {x: 1, y: 1}
+  footprint: {x: 2, y: 1}
   structureKind: 1
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
+    localFacing: 2
+  - portType: 0
+    localCell: {x: 1, y: 0}
+    localFacing: 2
   - portType: 0
     localCell: {x: 0, y: 0}
     localFacing: 1
   - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 2
+    localCell: {x: 1, y: 0}
+    localFacing: 3
   - portType: 1
     localCell: {x: 0, y: 0}
     localFacing: 2

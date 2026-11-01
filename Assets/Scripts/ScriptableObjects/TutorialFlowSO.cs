@@ -52,6 +52,10 @@ namespace MobileIdleBuilder
         /// satisfied (handles e.g. protons consumed into hydrogen before the check runs).
         /// A non-substep ("major") step bounds the run and is never auto-skipped this way.</summary>
         public bool isSubstep;
+        /// <summary>Entropy granted once, when this step advances (not on entry, which re-runs on load).
+        /// Covers a tutorial gate without changing the research's cost for everyone else. 0 = none.
+        /// Paid by TutorialSystem, so it only works on state-driven steps, not UiEvent ones.</summary>
+        public long rewardEntropy;
     }
 
     /// <summary>Defines when a tutorial step is considered complete.</summary>
@@ -82,6 +86,8 @@ namespace MobileIdleBuilder
         public int                minLevel;
         /// <summary>FieldPurchasedMin only: FieldSO id; minCount = purchases this run (a quark pair is one).</summary>
         public string             fieldId;
+        /// <summary>BuildingRecipeSet only: RecipeSO.recipeId the target building must be set to.</summary>
+        public int                recipeId = -1;
     }
 
     [Serializable]

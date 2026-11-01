@@ -14,9 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Atomic Assembly is active. Helium-4 is now craftable \u2014 two protons,
-      two neutrons, two electrons. It sells for twenty entropy: four times hydrogen,
-      for roughly four times the inputs."
+    text: "Nucleosynthesis is active. Helium-4 is now craftable \u2014 two protons,
+      two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on
+      its own it earns no more. Its real value is as fuel for something far bigger.
+      First, move your neutron belt off the Demon and into the Atom Generator. Then
+      set the Atom Generator to Helium-4."
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

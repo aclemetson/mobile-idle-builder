@@ -5,7 +5,7 @@ what felt wrong: softlocks, unclear goals, missing feedback, pacing walls, UI ov
 problems. The EditMode/PlayMode suites keep them fixed once found.
 
 Each run follows a **brief** in `briefs/`. A brief sets a persona, a goal, a rubric and a time box.
-Reports go to `reports/` (gitignored); benchmark timings go to `benchmarks/` (committed).
+Reports go to `reports/` (gitignored); benchmark timings go to `benchmarks/` (also gitignored; they stay on the machine that ran them).
 
 | Brief | What it tests | Timed |
 |---|---|---|
@@ -212,7 +212,7 @@ Dialogue that pauses the game counts its real reading time as player time.
    `actions` count). To save context on long runs, a screenshot every turn is not required once a
    screen is familiar: read `playtest_state`, and take a screenshot whenever the screen changes or
    something looks wrong. When it ends: `playtest_benchmark end` with an `outcome`, `manage_editor` stop,
-   write the report, and commit the files under `benchmarks/<scenario>/`.
+   write the report. The files under `benchmarks/<scenario>/` stay local (gitignored).
 
 ## Benchmarks
 

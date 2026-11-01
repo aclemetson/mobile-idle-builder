@@ -35,6 +35,7 @@ namespace MobileIdleBuilder.PlayModeTests
 
         ItemSO _hydrogenSO; // id="hydrogen", itemId=6
         ItemSO _protonSO;   // id="proton",   itemId=4
+        BuildingSO _atomGenSO;
 
 
         [SetUp]
@@ -42,7 +43,7 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
 
             _testWorld    = new World("ManualCraftTestWorld");
             _em           = _testWorld.EntityManager;
@@ -68,10 +69,15 @@ namespace MobileIdleBuilder.PlayModeTests
             if (_itemDatabaseGO != null) { Object.DestroyImmediate(_itemDatabaseGO); _itemDatabaseGO = null; }
             if (_saveManagerGO  != null) { Object.DestroyImmediate(_saveManagerGO);  _saveManagerGO  = null; }
 
+            ManualCraftService.RecipeLookupOverride = null;
+            ManualCraftService.BuildingsOverride    = null;
+            ManualCraftService.QueueOverride        = null;
+            if (_atomGenSO != null) { Object.DestroyImmediate(_atomGenSO); _atomGenSO = null; }
+
             if (_testWorld.IsCreated) _testWorld.Dispose();
             World.DefaultGameObjectInjectionWorld = null;
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
             if (_hydrogenSO != null) { Object.DestroyImmediate(_hydrogenSO); _hydrogenSO = null; }
@@ -213,6 +219,138 @@ namespace MobileIdleBuilder.PlayModeTests
                 World.DefaultGameObjectInjectionWorld = _testWorld; // TearDown disposes _testWorld
                 if (world2.IsCreated) world2.Dispose();
             }
+        }
+
+        // ── Craft queue (#310) ────────────────────────────────────────────────
+
+        RecipeJson SetUpQueue(RecipeJson recipe)
+        {
+            SpawnServices();
+            ManualCraftService.QueueOverride        = new CraftQueueSaveData();
+            ManualCraftService.RecipeLookupOverride = id => id == recipe.id ? recipe : null;
+            return recipe;
+        }
+
+        static RecipeJson MenuRecipe(string id, string inputId, int inputQty, string outputId, float seconds)
+        {
+            var r = MakeRecipe(inputId, inputQty, outputId, 1);
+            r.id = id;
+            r.base_craft_time = seconds;
+            r.crafted_in = new List<string> { ManualCraftService.InventoryMenuSource };
+            return r;
+        }
+
+        int Count(ItemSO item) =>
+            SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(_playerEntity, isReadOnly: true), item.itemId);
+
+        [Test]
+        public void MaxCraftable_IsTheFewestWholeCraftsAnyInputAllows()
+        {
+            SpawnServices();
+            AddInventoryItem(_hydrogenSO.itemId, 7);
+            Assert.AreEqual(3, ManualCraftService.Instance.MaxCraftable(MakeRecipe("hydrogen", 2, "proton", 1)));
+        }
+
+        [Test]
+        public void TryEnqueue_TakesAllInputsNow_AndDepositsOnlyWhenEachItemFinishes()
+        {
+            var recipe = SetUpQueue(MenuRecipe("proton", "hydrogen", 2, "proton", 1f));
+            AddInventoryItem(_hydrogenSO.itemId, 10);
+
+            Assert.AreEqual(ManualCraftService.EnqueueResult.Queued,
+                ManualCraftService.Instance.TryEnqueue(recipe, 5, out _));
+            Assert.AreEqual(0, Count(_hydrogenSO), "all five crafts' inputs are taken when queued");
+            Assert.AreEqual(0, Count(_protonSO), "nothing is made instantly");
+
+            // Enqueue stamped the queue with GameClock.UtcNow; tick relative to that stamp.
+            var start = System.DateTime.Parse(ManualCraftService.QueueOverride.activeCompleteUtc, null,
+                System.Globalization.DateTimeStyles.RoundtripKind).AddSeconds(-1);
+            ManualCraftService.Instance.TickQueue(start.AddSeconds(2.5));
+            Assert.AreEqual(2, Count(_protonSO), "one proton per second of craft time");
+
+            ManualCraftService.Instance.TickQueue(start.AddSeconds(60));
+            Assert.AreEqual(5, Count(_protonSO));
+            Assert.IsTrue(CraftQueue.IsEmpty(ManualCraftService.QueueOverride));
+        }
+
+        [Test]
+        public void TryEnqueue_MoreThanTheInventoryCanPayFor_IsRefusedAndTakesNothing()
+        {
+            var recipe = SetUpQueue(MenuRecipe("proton", "hydrogen", 2, "proton", 1f));
+            AddInventoryItem(_hydrogenSO.itemId, 9);
+
+            Assert.AreEqual(ManualCraftService.EnqueueResult.NotEnoughMaterials,
+                ManualCraftService.Instance.TryEnqueue(recipe, 5, out _));
+            Assert.AreEqual(9, Count(_hydrogenSO));
+            Assert.IsTrue(CraftQueue.IsEmpty(ManualCraftService.QueueOverride));
+        }
+
+        [Test]
+        public void CancelQueued_RefundsTheInputsOfEveryItemLeft()
+        {
+            var recipe = SetUpQueue(MenuRecipe("proton", "hydrogen", 2, "proton", 1f));
+            AddInventoryItem(_hydrogenSO.itemId, 10);
+            ManualCraftService.Instance.TryEnqueue(recipe, 5, out _);
+
+            ManualCraftService.Instance.CancelQueued(0);
+            Assert.AreEqual(10, Count(_hydrogenSO));
+            Assert.AreEqual(0, Count(_protonSO));
+            Assert.IsTrue(CraftQueue.IsEmpty(ManualCraftService.QueueOverride));
+        }
+
+        // ── Building-only recipes (#309) ──────────────────────────────────────
+
+        RecipeJson AtomGenRecipe()
+        {
+            _atomGenSO = ScriptableObject.CreateInstance<BuildingSO>();
+            _atomGenSO.id          = "atomic_assembler";
+            _atomGenSO.buildingId  = 4;
+            _atomGenSO.displayName = "Atom Generator";
+            ManualCraftService.BuildingsOverride = new[] { _atomGenSO };
+
+            // Stands in for Helium-4: made only in the Atom Generator.
+            var r = MakeRecipe("hydrogen", 1, "proton", 1);
+            r.id = "helium_4";
+            r.base_craft_time = 4f;
+            r.crafted_in = new List<string> { "atomic_assembler" };
+            return SetUpQueue(r);
+        }
+
+        void PlaceAtomGenerator(float speed, int currentRecipeOutputItemId)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new BuildingData { BuildingType = 4, ProductionSpeed = speed, IsActive = true });
+            // Busy making something else: the old path refused any building not already set to this
+            // recipe or mid-cycle, which is what showed "No eligible building".
+            _em.AddComponentData(e, new RecipeProcessData { IsCrafting = true, CraftTime = 2f });
+            _em.AddBuffer<RecipeOutputSlot>(e).Add(new RecipeOutputSlot { ItemID = currentRecipeOutputItemId, Quantity = 1 });
+        }
+
+        [Test]
+        public void BuildingRecipe_AtomGeneratorSetToAnotherRecipe_CanStillCraftFromTheMenu()
+        {
+            var recipe = AtomGenRecipe();
+            PlaceAtomGenerator(speed: 2f, currentRecipeOutputItemId: _hydrogenSO.itemId);
+            AddInventoryItem(_hydrogenSO.itemId, 3);
+
+            Assert.IsTrue(ManualCraftService.Instance.HasCraftingBuilding(recipe, out float speed, out _));
+            Assert.AreEqual(2f, speed);
+            Assert.AreEqual(ManualCraftService.EnqueueResult.Queued,
+                ManualCraftService.Instance.TryEnqueue(recipe, 3, out _));
+            Assert.AreEqual(2f, ManualCraftService.QueueOverride.entries[0].unitSeconds, 1e-4f,
+                "craft time is the recipe's 4s at the generator's 2x speed");
+        }
+
+        [Test]
+        public void BuildingRecipe_NoBuildingPlaced_NamesTheBuildingToPlace()
+        {
+            var recipe = AtomGenRecipe();
+            AddInventoryItem(_hydrogenSO.itemId, 3);
+
+            Assert.AreEqual(ManualCraftService.EnqueueResult.NoBuilding,
+                ManualCraftService.Instance.TryEnqueue(recipe, 1, out string missing));
+            Assert.AreEqual("Atom Generator", missing);
+            Assert.AreEqual(3, Count(_hydrogenSO), "a refused craft takes nothing");
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

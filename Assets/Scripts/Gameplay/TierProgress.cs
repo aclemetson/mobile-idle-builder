@@ -19,6 +19,9 @@ namespace MobileIdleBuilder
     /// </summary>
     public static class TierProgress
     {
+        static readonly CachedEntityQuery s_progressQuery =
+            new CachedEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+
         /// <summary>
         /// Call when an item has been produced. Raises CurrentTier if this item outranks it, and fires
         /// AchievementService.NotifyTierReached (which drives the ReachTier achievements and the
@@ -36,7 +39,9 @@ namespace MobileIdleBuilder
             try
             {
                 var em = world.EntityManager;
-                using var q = em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                // Called once per crafted item: reuse one query per world instead of creating and
+                // disposing a new one every call (#285).
+                var q = s_progressQuery.For(em);
                 if (q.CalculateEntityCount() != 1) return;
 
                 var progress = q.GetSingleton<PlayerProgressData>();

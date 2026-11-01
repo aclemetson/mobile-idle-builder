@@ -181,10 +181,10 @@ namespace MobileIdleBuilder
             OnChainPlaced?.Invoke();
 
             // Auto-chain: the run's end becomes the next start so the player can keep extending.
+            // The start is moved, never dropped, so OnStartChanged(false) still means the chain ended.
             Vector2Int newStart = _destCell;
-            ClearStartAndCandidate();
+            ClearPathState();
             _startCell = newStart;
-            SetHasStart(true);
             MarkStart();
         }
 
@@ -469,10 +469,15 @@ namespace MobileIdleBuilder
 
         private void ClearStartAndCandidate()
         {
+            SetHasStart(false);
+            ClearPathState();
+        }
+
+        private void ClearPathState()
+        {
             conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             ClearHover();
-            SetHasStart(false);
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
             _isSingle    = false;
