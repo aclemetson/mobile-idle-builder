@@ -92,6 +92,7 @@ namespace MobileIdleBuilder
 
             AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
             TierProgress.NotifyItemProduced(outputId);
+            CraftLog.Record(outputId, recipe.output.quantity);
             return true;
         }
 

@@ -167,7 +167,8 @@ with `playtest_benchmark note`:
 | Belt placed, no warning, no advance | The step needs 2 links (steps 39 and 45) | Draw the second belt |
 | Belts linked but nothing flows | No recipe set, unpowered, output buffer full, or the wrong input | Inspector: set the recipe, check power, Empty the buffer, check which input the belt feeds |
 | Building tinted red / `⚠` in the power label | Out of generator range, or draw is more than supply | Move it into range (deconstruct and re-place) or add or upgrade a generator |
-| Atom Generator output points away from the Demon | Not rotated before ✓ | Draw the belt from the side it does face, or deconstruct, re-place and rotate |
+| Atom Generator output points away from the Demon | Rotated, or placed off the glow | Draw the belt from the side it does face. It is 2x1 with four intakes, so another side is usually free |
+| Items on a belt next to the Demon get sold | No building beside the tail takes them (wrong recipe, full) | A belt tail feeds any building that needs the item before the Demon; check the recipe and the buffer |
 | Waiting for entropy feels endless | Normal idle pacing | `time_scale` and `wait`. Log the gap in minutes; that's the pacing data |
 
 ### Rung 2: Harness fixes (no game state is changed by hand)

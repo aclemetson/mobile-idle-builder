@@ -129,3 +129,5 @@ __pycache__/
 /[Aa]ssets/[Ss]creenshots/
 /[Aa]ssets/[Ss]creenshots.meta
 /Playtests/reports/
+# Benchmark timings stay on the machine that ran them
+/Playtests/benchmarks/
