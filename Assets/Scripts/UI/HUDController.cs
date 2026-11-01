@@ -1497,7 +1497,7 @@ namespace MobileIdleBuilder
                 float reduction = !_prestigeQuery.IsEmpty
                     ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
                     : 0f;
-                int cost = rawCost > 0 ? (int)(rawCost * (1f - reduction)) : 0;
+                long cost = EntropyWallet.ReducedCost(rawCost, reduction);
                 bool canAfford = currentEntropy >= cost;
 
                 var costLabel = MakeCostLabel(cost, canAfford);
@@ -1640,14 +1640,11 @@ namespace MobileIdleBuilder
             float reduction = !_prestigeQuery.IsEmpty
                 ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
                 : 0f;
-            int cost = (int)(rawCost * (1f - reduction));
+            long cost = EntropyWallet.ReducedCost(rawCost, reduction);
 
-            var entity   = _progressQuery.GetSingletonEntity();
-            var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            long actual = System.Math.Min(cost, progress.BaseCurrency);
-            progress.BaseCurrency      -= actual;
-            progress.TotalEntropySpent += actual;
-            _em.SetComponentData(entity, progress);
+            // The building is already placed when this event fires, so charge what the player has
+            // rather than refusing (refusing would make it free). See EntropyWallet.SpendUpTo.
+            EntropyWallet.SpendUpTo(_progressQuery, cost);
         }
 
         // ============================================================

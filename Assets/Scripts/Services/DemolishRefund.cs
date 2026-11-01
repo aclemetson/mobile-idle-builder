@@ -24,7 +24,7 @@ namespace MobileIdleBuilder
                                         float costReduction)
         {
             if (so == null) return 0;
-            long spent = Mathf.Max(0, (int)(so.entropyCost * (1f - costReduction)));
+            long spent = EntropyWallet.ReducedCost(so.entropyCost, costReduction);
 
             if (so.upgradeLevels != null)
                 foreach (var u in so.upgradeLevels)
