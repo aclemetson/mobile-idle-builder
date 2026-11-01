@@ -540,10 +540,9 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFieldLockStates(TutorialOnEnter enter)
         {
-            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var fi in allFields)
+            foreach (var fi in FieldGenerator.AllInstances)
             {
-                if (fi.Field == null) continue;
+                if (fi == null || fi.Field == null) continue;
                 bool locked;
                 if (enter.blockCollection)
                     locked = true;
@@ -557,9 +556,8 @@ namespace MobileIdleBuilder
 
         private void UnlockAllFields()
         {
-            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var fi in allFields)
-                fi.SetLocked(false);
+            foreach (var fi in FieldGenerator.AllInstances)
+                if (fi != null) fi.SetLocked(false);
         }
 
         // ── UI helpers ────────────────────────────────────────────────────────

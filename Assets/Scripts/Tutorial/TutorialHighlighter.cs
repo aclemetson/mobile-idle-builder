@@ -72,8 +72,8 @@ namespace MobileIdleBuilder
 
         private static bool IsFieldId(string id)
         {
-            foreach (var f in FindObjectsByType<FieldInstance>(FindObjectsSortMode.None))
-                if (f.Field != null && f.Field.id == id) return true;
+            foreach (var f in FieldGenerator.AllInstances)
+                if (f != null && f.Field != null && f.Field.id == id) return true;
             return false;
         }
 
@@ -169,12 +169,12 @@ namespace MobileIdleBuilder
 
         private WorldTarget? FindWorldTarget(string targetId)
         {
-            // Scene-based field instances. A field that already has a building on it is not where the
-            // next Harvester goes, so skip it (#308: the glow stayed on the field just built on).
-            var fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var f in fields)
+            // Field instances on the active site (FieldGenerator's registry; no scene scan). A field that
+            // already has a building on it is not where the next Harvester goes, so skip it (#308: the
+            // glow stayed on the field just built on).
+            foreach (var f in FieldGenerator.AllInstances)
             {
-                if (f.Field == null || f.Field.id != targetId) continue;
+                if (f == null || f.Field == null || f.Field.id != targetId) continue;
 
                 float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
                 int   ax = Mathf.RoundToInt(f.transform.position.x / cs);
