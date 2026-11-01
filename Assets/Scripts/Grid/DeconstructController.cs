@@ -256,6 +256,8 @@ namespace MobileIdleBuilder
             _em.DestroyEntity(e);
             GridOccupancy.Instance.ReleaseRect(fx, fy, fw, fh);
             buildingVisualizer?.RemoveBuilding(fx, fy);
+            // A belt tail that fed this building now feeds something else or nothing: redraw it (#223).
+            conveyorVisualizer?.RefreshAll();
             ApplyRefund(spent, refund);
             if (refund > 0) InventoryPopupController.Notify("entropy", (int)System.Math.Min(refund, int.MaxValue));
             ClearHover();

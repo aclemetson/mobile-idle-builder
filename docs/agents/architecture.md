@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); ConveyorSystem tail drawing 2026-11-01 (#223). If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -24,7 +24,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 |---|---|
 | `ProductionSystem.cs` | Per-building craft loop: check inputs (local `BuildingInputSlot` buffer, falls back to global inventory), advance `Progress += dt × BuildingData.ProductionSpeed`, consume inputs, deposit to `BuildingOutputSlot`. Burst-compiled `ISystem`. |
 | `CollectorSystem.cs` | Field harvesters: produce items at fixed rate, no inputs. |
-| `ConveyorSystem.cs` | Moves items building output slot → adjacent input slot, respecting ports/direction. Input hand-off rules live in `Components/InputAcceptance.cs`: the input cap is **per item type**, a set recipe refuses items it does not use, and a mixed belt whose front item is jamming a needed item overflows that front item to the global inventory (#200). |
+| `ConveyorSystem.cs` | Moves items building output slot → adjacent input slot, respecting ports/direction. Input hand-off rules live in `Components/InputAcceptance.cs`: the input cap is **per item type**, a set recipe refuses items it does not use, and a mixed belt whose front item is jamming a needed item overflows that front item to the global inventory (#200). A belt's tail feeds any adjacent input port facing it, ranked by `TailInputPriority` (the input its `ExitDir` points at first, Maxwell's Demon last, #275; `ConveyorSystem.TryPickInput`). `ConveyorVisualizer` draws the tail exiting toward the best-ranked input with the same ranking (`Grid/TailDelivery.cs`, #223), so picture and simulation agree. |
 | `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's `link_radius_tiles` (range-limited connections, relayed through **Power Relay** buildings), computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
 | `EntropySinkSystem.cs` | Sink building consumes items → grants entropy (base currency). |
 | `NetWorthSystem.cs` | Aggregates net worth (inventory + currency + spent); drives prestige wall. |

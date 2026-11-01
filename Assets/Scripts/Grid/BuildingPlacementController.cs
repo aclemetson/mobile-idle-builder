@@ -95,6 +95,7 @@ namespace MobileIdleBuilder
         // ---- Field purchase state (Field Synthesis) ----
         private FieldSO        _pendingField;
         private FieldGenerator _fieldGenerator;
+        private ConveyorVisualizer _conveyorVisualizer;
 
         /// <summary>The field being bought and placed, or null while placing a building.</summary>
         public FieldSO PendingField => IsPlacing ? _pendingField : null;
@@ -534,6 +535,8 @@ namespace MobileIdleBuilder
                     for (int dy = 0; dy < fp.y; dy++)
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
+                // A new building can give a belt tail an input to feed: redraw so the tail points at it (#223).
+                (_conveyorVisualizer ??= FindAnyObjectByType<ConveyorVisualizer>())?.RefreshAll();
                 OnBuildingPlaced?.Invoke(_pending);
                 AchievementService.Instance?.NotifyBuildingPlaced(_pending.building?.id ?? _pending.building?.name ?? "");
                 SaveManager.Instance?.SaveLocal();
