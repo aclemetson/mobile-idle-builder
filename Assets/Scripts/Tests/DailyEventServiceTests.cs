@@ -28,7 +28,7 @@ namespace MobileIdleBuilder.Tests
         {
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
         }
 
         [TearDown]
@@ -38,7 +38,7 @@ namespace MobileIdleBuilder.Tests
             if (_saveManagerGO != null) { UnityEngine.Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
             if (_content      != null) { UnityEngine.Object.DestroyImmediate(_content);      _content      = null; }
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
         }
 

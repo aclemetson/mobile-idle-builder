@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -34,8 +34,8 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 
 | Class | Role |
 |---|---|
-| `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. 60s autosave; `SaveLocal()` + best-effort cloud push (`PushToCloudBestEffort`) on both background (`OnApplicationPause(true)`) and quit (`OnApplicationQuit`) — fire-and-forget Task, not the `SaveToCloud` coroutine, since the player loop is suspended once backgrounded; honors the `CloudSaveEnabled` kill-switch. Cloud reconcile: newest `lastSaved` timestamp wins, loser kept as 24h backup. |
-| `LocalSaveService` | JSON file read/write. `LocalSaveService.SaveDirectory` is the one folder for `save.json` and every sidecar file (`SettingsService`, `RecipeKnowledgeService`, `FeatureFlagService`, `SaveWipe` resolve paths from it); tests redirect it to a temp folder (see `testing.md`). |
+| `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. **Autosave** (`AutoSaveTick`, every `autoSaveIntervalSeconds` = 60s) always writes locally but pushes to the cloud only when the save's content hash differs from the last *successful* push AND `cloudPushIntervalSeconds` (300s) have passed since the last push started (`ShouldAutoPush`); honors the `CloudSaveEnabled` kill-switch. `SaveToCloud()` (explicit saves, e.g. `MaintenanceWatcher`) always pushes. `SaveLocal()` + best-effort cloud push (`PushToCloudBestEffort`) on both background (`OnApplicationPause(true)`) and quit (`OnApplicationQuit`), always, unthrottled — fire-and-forget Task, not a coroutine, since the player loop is suspended once backgrounded. `ICloudSaveService.PushAsync` returns `Task<bool>` (never throws; true only if the write landed). Cloud reconcile: newest `lastSaved` wins (`IsNewerStamp`, culture-invariant, never throws; an empty local stamp always loses), loser kept as 24h backup. |
+| `LocalSaveService` | JSON file read/write. `LocalSaveService.SaveDirectory` is the one folder for `save.json` and every sidecar file (`SettingsService`, `RecipeKnowledgeService`, `FeatureFlagService`, `SaveWipe` resolve paths from it); tests redirect it to a temp folder (see `testing.md`). **Crash-safe (#280):** writes go to `save.json.tmp`, are flushed to disk, then swapped in with `File.Replace` (delete + move fallback); `SaveWithBackup` copies the old `save.json` to `.bak` first. `Load()` tries `save.json` → `save.json.tmp` → `save.json.bak`, skipping empty/unparseable files, and reports `LastLoadSource`. After a fallback load the corrupt `save.json` is never rotated over the good `.bak`. `Serialize` hashes the JSON with `lastSaved` blanked (`LastWrittenContentHash`, FNV-1a 64) and splices the stamp in, so the save is serialized once. |
 | `UGSCloudSaveService` + `AuthSessionPolicy` | UGS Cloud Save; Google sign-in with 30/90-day re-auth policy; anonymous fallback. |
 | `PrestigeSaveWatcher` | Clears idle snapshot when `PrestigeData.RunCount` changes (prevents double-earning). |
 | `GridSaveService` | Building/conveyor/field persistence + idle snapshot rebuild (below). |

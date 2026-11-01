@@ -170,9 +170,9 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Pushes SaveData to UGS under key "save_v1".</summary>
-        public async Task PushAsync(SaveData data)
+        public async Task<bool> PushAsync(SaveData data)
         {
-            if (!IsAvailable) return;
+            if (!IsAvailable) return false;
 
             try
             {
@@ -180,10 +180,12 @@ namespace MobileIdleBuilder
                 var    payload = new Dictionary<string, object> { { k_SaveKey, json } };
                 await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.SaveAsync(payload);
                 GameLogger.Info($"[UGSCloudSave] Pushed. lastSaved: {data.lastSaved}");
+                return true;
             }
             catch (Exception ex)
             {
                 GameLogger.Warning($"[UGSCloudSave] PushAsync failed: {ex.Message}");
+                return false;
             }
         }
     }
