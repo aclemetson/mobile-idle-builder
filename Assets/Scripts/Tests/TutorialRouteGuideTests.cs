@@ -137,6 +137,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void CountLinkedSources_BeltPassingASecondSource_CountsOnlyTheOneItStartsAt()
+        {
+            // Two quark Harvesters side by side; one belt starts at the first and runs past the second.
+            // Only a head pulls building output, so the second Harvester never feeds it (#275).
+            var fronts = new List<(int, Vector2Int)> { (1, new(0, 0)), (2, new(1, 0)) };
+            var inputs = new HashSet<Vector2Int> { new(3, 0) };
+            Assert.AreEqual(1, TutorialRouteGuide.CountLinkedSources(fronts, inputs,
+                Belt(new(0, 0), new(1, 0), new(2, 0), new(3, 0))));
+        }
+
+        [Test]
         public void CountLinkedSources_ALoopedBeltTerminates()
         {
             var belts = new Dictionary<Vector2Int, Vector2Int?>
@@ -251,5 +262,91 @@ namespace MobileIdleBuilder.Tests
             var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
             Assert.IsNull(TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources, c => false));
         }
+
+        [Test]
+        public void SuggestPoweredAnchor_PrefersSpotWhosePortFrontsAreOpen()
+        {
+            // Without the check (1,0) wins. Its output front (one tile below) is off the grid, so the
+            // suggestion moves to the nearest spot where every port front is usable (#275).
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var fronts  = new List<Vector2Int> { new(0, -1) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), fronts, c => c.y >= 0 && c != new Vector2Int(1, 1));
+
+            Assert.IsNotNull(spot);
+            Assert.AreNotEqual(new Vector2Int(1, 0), spot);
+            Assert.GreaterOrEqual(spot.Value.y - 1, 0);
+        }
+
+        [Test]
+        public void SuggestPoweredAnchor_NoOpenSpot_FallsBackToNearest()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(1, 1), new Vector2Int(1, 1), 2f) };
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(10, 10, Vector2Int.one, sources,
+                c => AllBuildable(c, new Vector2Int(1, 1)), new List<Vector2Int> { new(0, -1) }, _ => false);
+
+            Assert.AreEqual(new Vector2Int(1, 0), spot);
+        }
+
+        // ── Placement next to another building (#311) ───────────────────────
+
+        [Test]
+        public void TryParsePower_WithNearBuilding()
+        {
+            Assert.IsTrue(TutorialRouteGuide.TryParsePower("power:fusion_reactor@atomic_assembler", out var b, out var near));
+            Assert.AreEqual("fusion_reactor", b);
+            Assert.AreEqual("atomic_assembler", near);
+
+            Assert.IsTrue(TutorialRouteGuide.TryParsePower("power:fusion_reactor", out b, out near));
+            Assert.AreEqual("fusion_reactor", b);
+            Assert.IsNull(near);
+
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("power:fusion_reactor@", out _, out _));
+            Assert.IsFalse(TutorialRouteGuide.TryParsePower("power:@atomic_assembler", out _, out _));
+        }
+
+        [Test]
+        public void InputDistance_UsesTheClosestInputFront()
+        {
+            var inputs = new List<Vector2Int> { new(-1, 0), new(1, 0) };   // belt tiles west and east
+            var outs   = new List<Vector2Int> { new(10, 5) };
+            Assert.AreEqual(4, TutorialRouteGuide.InputDistance(new Vector2Int(5, 5), inputs, outs)); // (6,5) -> (10,5)
+        }
+
+        [TestCase(2, 2)]
+        [TestCase(15, 3)]
+        [TestCase(8, 14)]
+        public void SuggestPoweredAnchor_NearBuilding_LandsBesideItsOutputWhereverItIs(int outX, int outY)
+        {
+            // One generator powers the whole 20x20 grid. The glow must follow the source's output, not the
+            // generator, so the belt between them stays short wherever the player built the source.
+            var sources = new List<(Vector2Int, Vector2Int, float)> { (new Vector2Int(0, 0), new Vector2Int(0, 0), 40f) };
+            var output  = new Vector2Int(outX, outY);
+            var inputs  = new List<Vector2Int> { new(-1, 0), new(1, 0), new(0, 1) }; // the reactor's three intakes
+            var fronts  = new List<Vector2Int>(inputs) { new(0, -1) };                // plus its output
+
+            var spot = TutorialRouteGuide.SuggestPoweredAnchor(20, 20, Vector2Int.one, sources,
+                c => c.x >= 0 && c.y >= 0 && c.x < 20 && c.y < 20 && c != output,
+                fronts, c => c.x >= 0 && c.y >= 0 && c.x < 20 && c.y < 20 && c != output,
+                a => TutorialRouteGuide.InputDistance(a, inputs, new[] { output }));
+
+            Assert.IsNotNull(spot);
+            Assert.AreEqual(1, TutorialRouteGuide.InputDistance(spot.Value, inputs, new[] { output }),
+                "an intake belt tile sits right next to the source's output tile");
+        }
+
+        // ── Placement glows (#308) ──────────────────────────────────────────
+
+        [TestCase("suggest:strong_force_combiner:harvester>maxwells_demon", true)]
+        [TestCase("power:atomic_assembler", true)]
+        [TestCase("power:fusion_reactor@atomic_assembler", true)]
+        [TestCase("electron_field", true)]
+        [TestCase("route:harvester>maxwells_demon", false)]
+        [TestCase("maxwells_demon", false)]
+        [TestCase("atomic_assembler", false)]
+        [TestCase("", false)]
+        [TestCase(null, false)]
+        public void IsPlacementSuggestion_OnlyForWhereToBuildTargets(string target, bool expected)
+            => Assert.AreEqual(expected, TutorialRouteGuide.IsPlacementSuggestion(target, id => id == "electron_field"));
     }
 }

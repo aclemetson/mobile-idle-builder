@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: atomic_assembly
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: atomic_assembly
-  displayName: Atomic Assembly
-  description: Unlock the Atomic Assembler and the ability to build complete atoms
-    from nucleons and electrons.
+  displayName: Nucleosynthesis
+  description: 'Teach the Atom Generator to build elements heavier than hydrogen:
+    Helium, Lithium, Carbon, Oxygen, Silicon and Iron.'
   icon: {fileID: 0}
   branch: 0
   prerequisites:

@@ -14,6 +14,19 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>
+    /// Order in which a belt tail tries the inputs it sits in front of (#275). Lower first; ConveyorSystem
+    /// skips any input that would make the item wait. Real buildings come before Maxwell's Demon, which
+    /// has an input on every edge tile: a tail can't be trusted to point at the right one (it re-aims at
+    /// the nearest input when a belt is cut), so a proton line ending beside the Demon sold everything.
+    /// The Demon still takes whatever no building wants, so a belt drawn into it keeps selling.
+    /// </summary>
+    public static class TailInputPriority
+    {
+        public static int Rank(bool beltPointsAtIt, bool isEntropySink)
+            => (isEntropySink ? 2 : 0) + (beltPointsAtIt ? 0 : 1);
+    }
+
+    /// <summary>
     /// Rules for a belt tail handing an item to a building input (#200).
     ///
     /// <list type="bullet">

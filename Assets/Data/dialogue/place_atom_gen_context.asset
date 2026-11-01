@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Place the Atom Generator on the glowing tile. It draws 20 eV, and a generator
-      only powers buildings inside its influence circle, so the glow marks the spot
-      that is in range of your Basic Generator. Use the rotate button before you
-      confirm, so its output faces Maxwell's Demon.
+    text: 'Place the Atom Generator on the glowing tiles. It draws 20 eV, and a generator
+      only powers buildings inside its influence circle, so the glow marks a spot
+      in range of your Basic Generator. It is two tiles wide with four intakes, and
+      the glow leaves room for a belt at each one: hydrogen needs protons and electrons
+      now, and helium will need neutrons too.'
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

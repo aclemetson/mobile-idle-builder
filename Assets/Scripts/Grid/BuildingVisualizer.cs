@@ -281,7 +281,9 @@ namespace MobileIdleBuilder
                         cube.name = $"AtomGenerator_{x}_{y}";
                         cube.transform.localPosition = new Vector3(
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
-                        cube.transform.localScale = Vector3.one * cs;
+                        // 2x1 since #275: a round nucleus can't stretch, so grow it a little to read as
+                        // spanning both tiles while the port holes stay on the footprint edges.
+                        cube.transform.localScale = Vector3.one * cs * (1f + 0.25f * (Mathf.Max(fw, fh) - 1));
                         cube.AddComponent<AtomGeneratorStructure>().Initialize(ent);
                     }
                     else if (styleKind == BuildingStructureKind.IsotopicManipulator)

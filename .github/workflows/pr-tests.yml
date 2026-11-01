@@ -41,13 +41,13 @@ jobs:
         with:
           lfs: true
 
-      - name: Cache Library
-        uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-
+      # Bring back the warm Library/ from the last test run (checkout's git clean deletes it).
+      # actions/cache could not do this here: its save step fails on this runner (no gzip), so
+      # every run cold-imported (~16 min). Same stash mechanism as the release builds, under its
+      # own name so the editor-target test Library never thrashes the Android build stashes.
+      - name: Restore Library
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Restore -Name tests
 
       - name: Run edit mode tests
         shell: powershell
@@ -56,6 +56,12 @@ jobs:
       - name: Run play mode tests
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\test-local.ps1 -TestPlatform playmode
+
+      # always(): a failed or cancelled run still leaves a usable Library for the next one.
+      - name: Save Library
+        if: always()
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name tests
 
       - uses: actions/upload-artifact@v4
         if: always()

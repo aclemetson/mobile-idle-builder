@@ -36,6 +36,12 @@ namespace MobileIdleBuilder
             _modal.RemoveFromClassList("hidden");
         }
 
+        /// <summary>True while the update notice is on screen.</summary>
+        public bool IsOpen => _modal != null && !_modal.ClassListContains("hidden");
+
+        /// <summary>Back button: dismiss exactly as the OK button does.</summary>
+        public void Close() => Hide();
+
         private void Hide()
         {
             _modal?.AddToClassList("hidden");

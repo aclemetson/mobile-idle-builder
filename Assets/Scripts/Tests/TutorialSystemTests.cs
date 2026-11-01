@@ -840,6 +840,143 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(0, GetStepIndex(), "Non-substep steps must not be forward-skipped");
         }
 
+        // ── ItemCraftedMin ────────────────────────────────────────────────────
+
+        private static TutorialStepDef ItemCraftedMinStep(string id, int itemId, int qty)
+            => new TutorialStepDef
+            {
+                id = id,
+                advanceCondition = new TutorialConditionDef
+                {
+                    type  = ConditionType.ItemCraftedMin,
+                    items = new List<ItemCountReq> { new ItemCountReq { itemId = itemId, quantity = qty } }
+                },
+                onEnter = new TutorialOnEnter()
+            };
+
+        [Test]
+        public void ItemCraftedMin_NothingCrafted_DoesNotAdvance()
+        {
+            CraftLog.Clear();
+            MakeFlow(ItemCraftedMinStep("craft_first_helium", itemId: 7, qty: 1), UiEventStep("next", "x"));
+            SetStepIndex(0);
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void ItemCraftedMin_CraftedThenSold_Advances()
+        {
+            // A belt carries automated output to the Demon, which sells it the same frame: the item is
+            // crafted but never held. The step must still advance.
+            CraftLog.Clear();
+            MakeFlow(ItemCraftedMinStep("craft_first_helium", itemId: 7, qty: 1), UiEventStep("next", "x"));
+            SetStepIndex(0);
+            CraftLog.Record(itemId: 7, quantity: 1);
+
+            _world.Update();
+
+            CraftLog.Clear();
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
+        public void ItemCraftedMin_OtherItemCrafted_DoesNotAdvance()
+        {
+            CraftLog.Clear();
+            MakeFlow(ItemCraftedMinStep("craft_first_carbon", itemId: 9, qty: 1), UiEventStep("next", "x"));
+            SetStepIndex(0);
+            CraftLog.Record(itemId: 7, quantity: 3);
+
+            _world.Update();
+
+            CraftLog.Clear();
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void ItemCraftedMin_HeldInInventory_Advances()
+        {
+            CraftLog.Clear();
+            MakeFlow(ItemCraftedMinStep("craft_first_carbon", itemId: 9, qty: 1), UiEventStep("next", "x"));
+            SetStepIndex(0);
+            AddToInventory(itemId: 9, qty: 1);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        // ── BuildingRecipeSet ─────────────────────────────────────────────────
+
+        private Entity CreateBuildingWithRecipe(int buildingType, int recipeId)
+        {
+            var e = CreateBuilding(buildingType);
+            _em.AddComponentData(e, new RecipeProcessData { RecipeID = recipeId });
+            return e;
+        }
+
+        private static TutorialStepDef RecipeSetStep(string id, int buildingType, int recipeId)
+            => new TutorialStepDef
+            {
+                id = id,
+                advanceCondition = new TutorialConditionDef
+                    { type = ConditionType.BuildingRecipeSet, buildingType = buildingType, recipeId = recipeId },
+                onEnter = new TutorialOnEnter()
+            };
+
+        [Test]
+        public void BuildingRecipeSet_OnlyOtherRecipe_DoesNotAdvance()
+        {
+            MakeFlow(RecipeSetStep("set_neutron_recipe", buildingType: 2, recipeId: 5), UiEventStep("next", "x"));
+            SetStepIndex(0);
+            CreateBuildingWithRecipe(buildingType: 2, recipeId: 4); // first Combiner, on Proton
+            CreateBuildingWithRecipe(buildingType: 2, recipeId: -1); // second Combiner, no recipe yet
+
+            _world.Update();
+
+            Assert.AreEqual(0, GetStepIndex());
+        }
+
+        [Test]
+        public void BuildingRecipeSet_MatchingRecipe_Advances()
+        {
+            MakeFlow(RecipeSetStep("set_neutron_recipe", buildingType: 2, recipeId: 5), UiEventStep("next", "x"));
+            SetStepIndex(0);
+            CreateBuildingWithRecipe(buildingType: 2, recipeId: 4);
+            CreateBuildingWithRecipe(buildingType: 2, recipeId: 5);
+
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        // ── Reward entropy ────────────────────────────────────────────────────
+
+        [Test]
+        public void RewardEntropy_PaidOnceWhenStepAdvances()
+        {
+            var step = InventoryMinStep("craft_first_helium", itemId: 7, qty: 1);
+            step.rewardEntropy = 2500;
+            MakeFlow(step, UiEventStep("next", "x"));
+            SetStepIndex(0);
+            _em.AddComponentData(_playerEntity, new PlayerProgressData { BaseCurrency = 100 });
+
+            _world.Update();
+            Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(_playerEntity).BaseCurrency,
+                "No reward before the condition is met");
+
+            AddToInventory(itemId: 7, qty: 1);
+            _world.Update();
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+            Assert.AreEqual(2600, _em.GetComponentData<PlayerProgressData>(_playerEntity).BaseCurrency,
+                "Reward is paid exactly once, on advance");
+        }
+
         // ── Completion ────────────────────────────────────────────────────────
 
         [Test]

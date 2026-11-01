@@ -120,6 +120,10 @@ back before the next one. Same-volume moves are instant. Expect the first build 
 runner (or a deleted stash) to be slow; `build-android.ps1` allows 150 min for that. Delete the
 stash folder to force a cold build.
 
+`pr-tests.yml` uses the same script with its own stash, `_library-stash\tests` (editor target,
+so it never shares a Library with the Android builds). It replaced `actions/cache`, whose save
+step failed on this runner (`gzip: command not found`), so every PR test run cold-imported.
+
 ## 2. PR Tests
 
 Edit and play mode tests run directly on the self-hosted runner via `scripts/test-local.ps1`.

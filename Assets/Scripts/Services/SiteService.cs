@@ -104,9 +104,7 @@ namespace MobileIdleBuilder
 
             var save = SaveManager.Instance?.Current;
             if (save == null) return false;
-            if (GetCurrentEntropy() < site.unlockCost) return false;
-
-            DeductEntropy(site.unlockCost);
+            if (!EntropyWallet.TrySpend(_progressQuery, site.unlockCost)) return false;
 
             save.unlockedSites ??= new List<string>();
             if (!save.unlockedSites.Contains(site.id))
@@ -168,20 +166,6 @@ namespace MobileIdleBuilder
 
         // ── ECS helpers (mirror ResearchService) ─────────────────────────────
 
-        private long GetCurrentEntropy()
-        {
-            if (_progressQuery.IsEmpty) return 0;
-            return _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
-        }
-
-        private void DeductEntropy(long amount)
-        {
-            if (_progressQuery.IsEmpty) return;
-            var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            long actual = Math.Min(amount, progress.BaseCurrency);
-            progress.BaseCurrency      -= actual;
-            progress.TotalEntropySpent += actual;
-            _progressQuery.SetSingleton(progress);
-        }
+        private long GetCurrentEntropy() => EntropyWallet.Balance(_progressQuery);
     }
 }
