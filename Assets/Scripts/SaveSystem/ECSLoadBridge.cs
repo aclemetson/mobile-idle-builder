@@ -387,6 +387,29 @@ namespace MobileIdleBuilder
             { "intro_building_upgrades",      "post_tutorial_intro" },
             { "upgrade_atom_generator_speed", "post_tutorial_intro" },
             { "upgrade_context",              "post_tutorial_intro" },
+            // #275: the tutorial now ends at the first Carbon from fusion. Heavy elements, isotopes and
+            // radioactive isotopes came between Helium and Fusion, so those saves resume at Fusion.
+            { "buy_heavy_elements",            "intro_nuclear_reactors" },
+            { "heavy_elements_unlocked",       "intro_nuclear_reactors" },
+            { "craft_first_uranium",           "intro_nuclear_reactors" },
+            { "uranium_crafted",               "intro_nuclear_reactors" },
+            { "buy_isotope_engineering",       "intro_nuclear_reactors" },
+            { "isotopes_unlocked",             "intro_nuclear_reactors" },
+            { "place_isotopic_manipulator",    "intro_nuclear_reactors" },
+            { "craft_first_isotope",           "intro_nuclear_reactors" },
+            { "isotope_crafted",               "intro_nuclear_reactors" },
+            { "buy_radioactive_isotopes",      "intro_nuclear_reactors" },
+            { "radioactive_isotopes_unlocked", "intro_nuclear_reactors" },
+            { "place_radioactive_containment", "intro_nuclear_reactors" },
+            { "craft_uranium_235",             "intro_nuclear_reactors" },
+            { "uranium_235_crafted",           "intro_nuclear_reactors" },
+            { "collect_alpha_particle",        "intro_nuclear_reactors" },
+            { "particles_loop_complete",       "intro_nuclear_reactors" },
+            // Fission came after Fusion; those players have built a reactor, so they get the last line.
+            { "buy_fissile_extraction",        "tutorial_complete" },
+            { "buy_fission_i",                 "tutorial_complete" },
+            { "place_fission_reactor",         "tutorial_complete" },
+            { "reactors_complete",             "tutorial_complete" },
         };
 
         internal static int ResolveStepIndex(string stepId)

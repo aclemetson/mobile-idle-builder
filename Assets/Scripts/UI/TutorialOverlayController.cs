@@ -67,6 +67,7 @@ namespace MobileIdleBuilder
 
             _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
             _placementController = FindAnyObjectByType<BuildingPlacementController>();
+            if (_conveyorController != null) _conveyorController.OnStartChanged += OnConveyorStartChanged;
 
             if (hudController != null)
             {
@@ -113,6 +114,8 @@ namespace MobileIdleBuilder
                 dialogueController.OnHighlightRequested -= OnHighlightRequested;
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
+
+            if (_conveyorController != null) _conveyorController.OnStartChanged -= OnConveyorStartChanged;
 
             if (hudController != null)
             {
@@ -414,7 +417,7 @@ namespace MobileIdleBuilder
         private void OnConveyorPlacedHandler()
         {
             TryAdvanceOnUiEvent("conveyor_placed");
-            CheckBeltLinked();
+            NoteBeltPlaced();
         }
 
         // ── Belt feedback (#255) ──────────────────────────────────────────────
@@ -426,18 +429,45 @@ namespace MobileIdleBuilder
         private const float BeltCheckDelaySeconds = 0.5f;
         private Coroutine _beltCheck;
 
+        // Link count when the open chain's first segment was placed; -1 when no chain is open.
+        private int _chainLinksBefore = -1;
+        private int _chainStepIndex   = -1;
+
         /// <summary>
         /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
-        /// word why. Warn, and re-show the glowing route so the player can redraw it.
+        /// word why. Each confirm auto-chains from the segment's end, so a route is often drawn in several
+        /// segments: remember the count before the first one and judge the whole chain once it ends.
         /// </summary>
-        private void CheckBeltLinked()
+        private void NoteBeltPlaced()
         {
             var flow = TutorialFlowSO.Current;
             if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
             if (flow.steps[_lastStepIndex].advanceCondition?.type != ConditionType.ConveyorLinked) return;
 
+            if (_chainStepIndex != _lastStepIndex)
+            {
+                _chainStepIndex   = _lastStepIndex;
+                _chainLinksBefore = TutorialSystem.CurrentStepConveyorLinks;
+            }
+            if (_conveyorController == null || !_conveyorController.HasStart) EndBeltChain();
+        }
+
+        // The start drops when the player taps New, leaves belt mode, or placed a single belt.
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            if (!hasStart) EndBeltChain();
+        }
+
+        /// <summary>Warns, and re-shows the glowing route, when the chain that just ended linked nothing new.</summary>
+        private void EndBeltChain()
+        {
+            if (_chainStepIndex < 0) return;
+            int stepIndex = _chainStepIndex, linksBefore = _chainLinksBefore;
+            _chainStepIndex   = -1;
+            _chainLinksBefore = -1;
+
             if (_beltCheck != null) StopCoroutine(_beltCheck);
-            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(_lastStepIndex, TutorialSystem.CurrentStepConveyorLinks));
+            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(stepIndex, linksBefore));
         }
 
         private IEnumerator WarnIfBeltUnlinked(int stepIndex, int linksBefore)
