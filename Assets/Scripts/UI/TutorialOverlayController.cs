@@ -68,6 +68,7 @@ namespace MobileIdleBuilder
             _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
             _placementController = FindAnyObjectByType<BuildingPlacementController>();
             if (_conveyorController != null) _conveyorController.OnStartChanged += OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced += OnBuildingPlacedHandler;
 
             if (hudController != null)
             {
@@ -116,6 +117,7 @@ namespace MobileIdleBuilder
             }
 
             if (_conveyorController != null) _conveyorController.OnStartChanged -= OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced -= OnBuildingPlacedHandler;
 
             if (hudController != null)
             {
@@ -490,6 +492,40 @@ namespace MobileIdleBuilder
         /// </summary>
         internal static bool IsBeltUnlinked(bool stepAdvanced, int linksBefore, int linksAfter) =>
             !stepAdvanced && linksAfter >= 0 && linksAfter <= Mathf.Max(0, linksBefore);
+        // ── Placement glow (#308) ─────────────────────────────────────────────
+
+        // The placed building reaches ECS, GridOccupancy and TutorialSystem a few frames later.
+        private const float PlacementGlowRecheckSeconds = 0.5f;
+        private Coroutine _placementGlowRecheck;
+
+        /// <summary>
+        /// A placement glow (where to put a building) used to stay lit when the player built somewhere
+        /// else, or stay on the spot they just built on while the step waited for more. Any placement
+        /// clears it. If the step still wants a building, the glow comes back worked out fresh from the
+        /// grid as it is now, without moving the camera.
+        /// </summary>
+        private void OnBuildingPlacedHandler(BuildingPlacementController.BuildingEntry _)
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            var enter = flow.steps[_lastStepIndex].onEnter;
+            if (enter == null || enter.highlightMode == HighlightMode.None) return;
+            if (!TutorialHighlighter.IsPlacementSuggestion(enter.highlightTarget)) return;
+
+            tutorialHighlighter?.ClearHighlight();
+            if (_placementGlowRecheck != null) StopCoroutine(_placementGlowRecheck);
+            _placementGlowRecheck = StartCoroutine(ReshowPlacementGlow(_lastStepIndex, enter.highlightTarget));
+        }
+
+        private IEnumerator ReshowPlacementGlow(int stepIndex, string target)
+        {
+            yield return new WaitForSecondsRealtime(PlacementGlowRecheckSeconds);
+            _placementGlowRecheck = null;
+            // Advanced: OnStepChanged already showed the next step's guidance.
+            if (_lastStepIndex != stepIndex || !_wasActive) yield break;
+            tutorialHighlighter?.ShowVisualOnly(target);
+        }
+
         private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
         // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
         // upgrade UI needs no tutorial hook.

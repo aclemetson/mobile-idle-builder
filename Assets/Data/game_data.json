@@ -170,8 +170,8 @@
     },
     {
       "id": "atomic_assembly",
-      "display_name": "Atomic Assembly",
-      "description": "Unlock the Atomic Assembler and the ability to build complete atoms from nucleons and electrons.",
+      "display_name": "Nucleosynthesis",
+      "description": "Teach the Atom Generator to build elements heavier than hydrogen: Helium, Lithium, Carbon, Oxygen, Silicon and Iron.",
       "branch": "Chemistry",
       "prerequisites": ["hydrogen_synthesis"],
       "depth_in_tree": 1,
@@ -9710,7 +9710,7 @@
       "_comment": "--- TIER 2 BUILDINGS ---",
       "id": "atomic_assembler",
       "display_name": "Atom Generator",
-      "description": "Assembles nucleons and electrons into atoms. Starts with hydrogen; research Atomic Assembly to unlock heavier elements. Power cost scales with atomic mass.",
+      "description": "Assembles nucleons and electrons into atoms. Starts with hydrogen; research Nucleosynthesis to unlock heavier elements. Power cost scales with atomic mass.",
       "icon_path": "TODO",
       "prefab_path": "TODO",
       "building_id": 4,
@@ -11834,7 +11834,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs, once Atomic Assembly teaches your Atom Generator to make it.",
+          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs. Your Atom Generator can only make hydrogen for now, so sell the neutrons at the Demon until Nucleosynthesis teaches it helium.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11995,7 +11995,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "The Research panel shows your next frontier. Atomic Assembly opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.",
+          "text": "The Research panel shows your next frontier. Nucleosynthesis opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12008,7 +12008,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Atomic Assembly. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.",
+          "text": "Nucleosynthesis. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -12021,7 +12021,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Atomic Assembly is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. Tap your Atom Generator and set it to Helium-4.",
+          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. First, move your neutron belt off the Demon and into the Atom Generator. Then set the Atom Generator to Helium-4.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -13008,10 +13008,11 @@
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:harvester>strong_force_combiner", "highlight_mode": "Full" }
     },
     {
-      "id": "route_neutrons_to_atom_gen",
-      "hint": "Belt the Neutron Combiner's output into the Atom Generator's free input. Neutrons wait there until Atomic Assembly teaches it Helium-4.",
-      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
-      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
+      "_comment": "The Atom Generator makes only Hydrogen until Nucleosynthesis, so neutrons fed into it sat unused (#307). Sell them at the Demon until then; reroute_neutrons_to_atom_gen moves the belt after the research. Saves on the old route_neutrons_to_atom_gen step resume here (ECSLoadBridge.RetiredSteps).",
+      "id": "route_neutrons_to_demon",
+      "hint": "Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom Generator can't use neutrons until Nucleosynthesis, so sell them for now.",
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "maxwells_demon", "min_count": 1 },
+      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>maxwells_demon", "highlight_mode": "Full" }
     },
 
     { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
@@ -13019,15 +13020,15 @@
     { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
     {
       "id": "post_tutorial_intro",
-      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Atomic Assembly.",
+      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "post_tutorial_intro" }
     },
 
-    { "_comment": "--- ⑧a: Atomic Assembly unlock (insert motivation/pacing steps before this if needed) ---" },
+    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
     {
       "id": "buy_atomic_assembly",
-      "hint": "Purchase Atomic Assembly in the Research panel to unlock heavier elements.",
+      "hint": "Purchase Nucleosynthesis in the Research panel to unlock heavier elements.",
       "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
       "on_enter": {
         "dialogue_id": "intro_atomic_assembly_context",
@@ -13039,6 +13040,13 @@
       "hint": "",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
+    },
+    {
+      "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
+      "id": "reroute_neutrons_to_atom_gen",
+      "hint": "Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
+      "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
     },
 
     { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
