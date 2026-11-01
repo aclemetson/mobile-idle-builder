@@ -265,7 +265,9 @@ namespace MobileIdleBuilder
             {
                 if (bsd?.position == null || bsd.position.Length < 2) continue;
                 int ax = bsd.position[0], ay = bsd.position[1];
-                Vector2Int fp = getFootprint(bsd.buildingId);
+                // Rotation 1/3 swaps width and height — a vertical Strong Force Combiner covers (x,y+1),
+                // not (x+1,y), and belts touching its real second cell must still connect.
+                Vector2Int fp = PortUtils.RotatedFootprint(getFootprint(bsd.buildingId), bsd.rotation);
                 int w = Mathf.Max(1, fp.x);
                 int h = Mathf.Max(1, fp.y);
                 for (int dx = 0; dx < w; dx++)
