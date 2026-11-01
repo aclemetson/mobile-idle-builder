@@ -111,6 +111,10 @@ namespace MobileIdleBuilder
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
 
+        // ---- Recipe-menu craft queue (#310) ----
+        private CraftQueueView _craftQueueView;
+        private bool IsRecipePanelOpen => _recipePanel != null && !_recipePanel.ClassListContains("hidden");
+
         // ---- Tutorial events ----
         public event System.Action OnDrawerOpened;
         public event System.Action OnResearchPanelOpened;
@@ -262,6 +266,13 @@ namespace MobileIdleBuilder
 
             if (researchService != null)
                 researchService.OnResearchUnlocked += OnResearchUnlocked;
+
+            if (craftService != null)
+            {
+                _craftQueueView = new CraftQueueView(craftService);
+                _recipeList?.parent?.Insert(_recipeList.parent.IndexOf(_recipeList), _craftQueueView.Root);
+                craftService.QueueChanged += OnCraftQueueChanged;
+            }
         }
 
         void OnDisable()
@@ -298,6 +309,11 @@ namespace MobileIdleBuilder
 
             if (researchService != null)
                 researchService.OnResearchUnlocked -= OnResearchUnlocked;
+
+            if (craftService != null)
+                craftService.QueueChanged -= OnCraftQueueChanged;
+            _craftQueueView?.Root.RemoveFromHierarchy();
+            _craftQueueView = null;
         }
 
         void Start()
@@ -333,6 +349,7 @@ namespace MobileIdleBuilder
             UpdatePlacementConfirmPopup();
             RefreshBuildingAffordabilityIfChanged();
             RefreshBannerClearance();
+            if (_craftQueueView != null && IsRecipePanelOpen) _craftQueueView.Tick(GameClock.UtcNow);
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -1289,7 +1306,8 @@ namespace MobileIdleBuilder
 
                 bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
                 bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
-                bool canCraft = !isLocked && (craftService?.CanCraft(recipe) ?? false);
+                int  max      = isLocked ? 0 : (craftService?.MaxCraftable(recipe) ?? 0);
+                bool canCraft = max >= 1;
 
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
@@ -1325,44 +1343,97 @@ namespace MobileIdleBuilder
                 info.Add(nameLabel);
                 info.Add(inputsContainer);
 
-                // Item-creation timer: how long this recipe takes to craft.
-                if (recipe.base_craft_time > 0f)
+                // A building-only recipe needs one of its buildings placed (any recipe, busy or idle, #309).
+                // Its speed sets the craft time, same as the building takes.
+                float speed = 1f;
+                string missingBuilding = null;
+                bool hasBuilding = craftService == null
+                    || craftService.HasCraftingBuilding(recipe, out speed, out missingBuilding);
+                if (!isLocked && !hasBuilding)
                 {
-                    var timeLabel = new Label($"Craft time: {recipe.base_craft_time:0.#}s");
-                    timeLabel.style.fontSize = 11;
-                    timeLabel.style.opacity  = 0.7f;
-                    info.Add(timeLabel);
+                    var needLabel = new Label($"Place {AOrAn(missingBuilding)} to craft this");
+                    needLabel.AddToClassList("recipe-lock-hint");
+                    info.Add(needLabel);
                 }
 
-                var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
-                craftBtn.AddToClassList("craft-btn");
-                craftBtn.SetEnabled(!isLocked && canCraft);
-                var captured = recipe;
-                if (!isLocked)
-                    // Routed from the list, not the button: a Button's own Clickable consumes the
-                    // pointer-down before any manipulator added later. See ListTapRouter.
-                    ListTapRouter.Register(_recipeList, craftBtn, () => OnCraftPressed(captured));
+                var timeLabel = new Label($"Craft time: {ManualCraftService.UnitSeconds(recipe, speed):0.#}s");
+                timeLabel.style.fontSize = 11;
+                timeLabel.style.opacity  = 0.7f;
+                info.Add(timeLabel);
 
                 row.Add(info);
-                row.Add(craftBtn);
+                row.Add(BuildCraftButtons(recipe, isLocked, hasBuilding, max));
                 _recipeList.Add(row);
             }
         }
 
-        private void OnCraftPressed(RecipeJson recipe)
+        // x1 / x5 / x10 / Max (#310). Each is enabled only when the inventory can pay for that many.
+        private VisualElement BuildCraftButtons(RecipeJson recipe, bool isLocked, bool hasBuilding, int max)
         {
-            if (recipe.requiresBuilding)
+            var group = new VisualElement();
+            group.AddToClassList("craft-qty-group");
+
+            if (isLocked)
             {
-                if (!craftService.TriggerBuildingCraft(recipe))
-                    InventoryPopupController.NotifyWarning("No eligible building");
+                var locked = new Button { text = "Locked" };
+                locked.AddToClassList("craft-btn");
+                locked.SetEnabled(false);
+                group.Add(locked);
+                return group;
             }
-            else
+
+            foreach (int qty in CraftQuantities)
             {
-                if (!craftService.TryCraft(recipe))
+                bool isMax = qty == CraftMax;
+                var btn = new Button { text = isMax ? "Max" : $"x{qty}" };
+                btn.AddToClassList("craft-btn");
+                btn.AddToClassList("craft-qty-btn");
+                btn.SetEnabled(hasBuilding && (isMax ? max >= 1 : max >= qty));
+                // Routed from the list, not the button: a Button's own Clickable consumes the
+                // pointer-down before any manipulator added later. See ListTapRouter.
+                ListTapRouter.Register(_recipeList, btn, () => OnCraftPressed(recipe, qty));
+                group.Add(btn);
+            }
+            return group;
+        }
+
+        private const int CraftMax = -1;
+        private static readonly int[] CraftQuantities = { 1, 5, 10, CraftMax };
+
+        private void OnCraftPressed(RecipeJson recipe, int count)
+        {
+            if (craftService == null) return;
+            if (count == CraftMax) count = craftService.MaxCraftable(recipe);
+
+            switch (craftService.TryEnqueue(recipe, count, out string missingBuilding))
+            {
+                case ManualCraftService.EnqueueResult.NoBuilding:
+                    InventoryPopupController.NotifyWarning($"Place {AOrAn(missingBuilding)} first");
+                    break;
+                case ManualCraftService.EnqueueResult.NotEnoughMaterials:
+                case ManualCraftService.EnqueueResult.NotReady:
                     InventoryPopupController.NotifyWarning("Not enough materials");
-                else
-                    BuildRecipeList();
+                    break;
             }
+        }
+
+        // Rebuild the queue strip, and the recipe list (counts and button states moved) unless a
+        // finger is down on it: replacing a button mid-press drops the tap (see ListTapRouter).
+        private void OnCraftQueueChanged()
+        {
+            _craftQueueView?.Rebuild();
+            if (IsRecipePanelOpen && !ListTapRouter.GestureInProgress)
+            {
+                float scroll = _recipeList.scrollOffset.y;
+                BuildRecipeList();
+                _recipeList.scrollOffset = new Vector2(0f, scroll);
+            }
+        }
+
+        private static string AOrAn(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "a building";
+            return ("AEIOU".IndexOf(char.ToUpperInvariant(name[0])) >= 0 ? "an " : "a ") + name;
         }
 
         // ============================================================

@@ -1,19 +1,25 @@
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace MobileIdleBuilder
 {
     /// <summary>
     /// Managed-side bridge between the UI and the ECS inventory.
-    /// Provides CanCraft / TryCraft for manual (non-automated) recipe execution,
-    /// and a snapshot of current inventory counts for the HUD.
+    /// Runs the recipe-menu craft queue (#310): inputs are taken when items are queued, each item takes
+    /// the recipe's craft time (scaled by the fastest placed building that makes it), and the output
+    /// lands in the inventory when it finishes. Also provides a snapshot of inventory counts for the HUD.
     /// </summary>
     [DefaultExecutionOrder(-80)]
     public class ManualCraftService : SingletonMonoBehaviour<ManualCraftService>
     {
+        /// <summary>Recipes in recipes.json that the player can craft without a building.</summary>
+        public const string InventoryMenuSource = "inventory_menu";
+
+        private const float MinUnitSeconds = 0.1f;
+
         private EntityManager _em;
         private EntityQuery   _inventoryQuery;
         private EntityQuery   _buildingQuery;
@@ -21,10 +27,27 @@ namespace MobileIdleBuilder
 
         public bool IsReady { get; private set; }
 
+        /// <summary>Fired after the queue changes: items queued, cancelled or finished.</summary>
+        public event Action QueueChanged;
+
+        // Test seams: production reads RecipeDatabase / BuildingDatabase / SaveManager.
+        internal static Func<string, RecipeJson> RecipeLookupOverride;
+        internal static BuildingSO[]             BuildingsOverride;
+        internal static CraftQueueSaveData       QueueOverride;
+
+        private BuildingSO[] _buildings;
+
         void Start()
         {
             if (Instance != this) return; // a duplicate destroyed by SingletonMonoBehaviour.Awake
             EnsureBound();
+        }
+
+        void Update()
+        {
+            if (Instance != this) return;
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded) return;
+            TickQueue(GameClock.UtcNow);
         }
 
         // This is a persistent (DontDestroyOnLoad) singleton, but the DOTS world is rebuilt on every
@@ -44,55 +67,41 @@ namespace MobileIdleBuilder
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>());
-            _buildingQuery  = _em.CreateEntityQuery(
-                ComponentType.ReadOnly<BuildingData>(),
-                ComponentType.ReadWrite<RecipeProcessData>(),
-                ComponentType.ReadOnly<RecipeInputSlot>(),
-                ComponentType.ReadOnly<RecipeOutputSlot>());
+            _buildingQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>());
             IsReady = true;
             GameLogger.Debug("[ManualCraftService] (Re)bound to the active ECS world.");
         }
 
-        /// <summary>Returns true if the player's ECS inventory has enough inputs for this recipe.</summary>
-        public bool CanCraft(RecipeJson recipe)
+        /// <summary>Returns true if the player's ECS inventory has enough inputs for one craft of this recipe.</summary>
+        public bool CanCraft(RecipeJson recipe) => MaxCraftable(recipe) >= 1;
+
+        /// <summary>How many of this recipe the current inventory can pay for.</summary>
+        public int MaxCraftable(RecipeJson recipe)
         {
             EnsureBound();
-            if (!IsReady || _inventoryQuery.IsEmpty) return false;
+            if (!IsReady || _inventoryQuery.IsEmpty || recipe?.inputs == null || recipe.inputs.Count == 0) return 0;
 
             var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
+            int max = int.MaxValue;
             foreach (var input in recipe.inputs)
             {
+                if (input.quantity <= 0) continue;
                 int itemId = ItemDatabase.Instance.GetItemId(input.id);
-                if (itemId < 0 || SlotBufferUtils.CountInInventory(buffer, itemId) < input.quantity)
-                    return false;
+                if (itemId < 0) return 0;
+                max = Math.Min(max, SlotBufferUtils.CountInInventory(buffer, itemId) / input.quantity);
             }
-            return true;
+            return max == int.MaxValue ? 0 : max;
         }
 
         /// <summary>
-        /// Consumes inputs and deposits the recipe output into the ECS inventory.
+        /// Consumes inputs and deposits the recipe output into the ECS inventory at once.
         /// Returns false and makes no changes if inputs are insufficient.
         /// </summary>
         public bool TryCraft(RecipeJson recipe)
         {
             if (!CanCraft(recipe)) return false;
-
-            var entity = _inventoryQuery.GetSingletonEntity();
-            var buffer = _em.GetBuffer<InventorySlot>(entity);
-
-            foreach (var input in recipe.inputs)
-            {
-                int itemId = ItemDatabase.Instance.GetItemId(input.id);
-                SlotBufferUtils.RemoveFromInventory(ref buffer, itemId, input.quantity);
-            }
-
-            int outputId = ItemDatabase.Instance.GetItemId(recipe.output.id);
-            if (outputId >= 0)
-                SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
-
-            AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
-            TierProgress.NotifyItemProduced(outputId);
-            CraftLog.Record(outputId, recipe.output.quantity);
+            ChangeInputs(recipe, -1);
+            DepositOutput(recipe);
             return true;
         }
 
@@ -109,111 +118,177 @@ namespace MobileIdleBuilder
             return result;
         }
 
-        // ---- Building craft trigger ----
+        // ---- Building requirement (#309) ----
 
         /// <summary>
-        /// Returns true if a placed building produces this recipe's output,
-        /// is not already mid-cycle, and the inventory has the required inputs.
+        /// Whether a recipe can be crafted from the menu right now. Recipes made only in a building need
+        /// one of those buildings placed; its current recipe and whether it is busy do not matter.
+        /// <paramref name="speed"/> is the fastest placed building's ProductionSpeed (1 for menu recipes).
+        /// <paramref name="missingBuildingName"/> names the building to place when none is.
         /// </summary>
-        public bool CanTriggerBuildingCraft(RecipeJson recipe)
+        public bool HasCraftingBuilding(RecipeJson recipe, out float speed, out string missingBuildingName)
         {
+            speed = 1f;
+            missingBuildingName = null;
+            if (recipe == null || !recipe.requiresBuilding) return true;
+
+            var types = CraftingBuildingTypes(recipe, out missingBuildingName);
+            missingBuildingName ??= "the right building";
+
             EnsureBound();
-            if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
+            if (!IsReady || types.Count == 0) return false;
 
-            int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
-            if (outputItemId < 0) return false;
-
-            var inventoryBuffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
-
-            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            bool found = false;
+            float best = 0f;
+            var data = _buildingQuery.ToComponentDataArray<BuildingData>(Allocator.Temp);
             try
             {
-                foreach (var entity in entities)
+                for (int i = 0; i < data.Length; i++)
                 {
-                    var process = _em.GetComponentData<RecipeProcessData>(entity);
-                    if (process.IsCrafting) continue;
-
-                    var outputs = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
-                    bool outputMatches = false;
-                    for (int i = 0; i < outputs.Length; i++)
-                    {
-                        if (outputs[i].ItemID == outputItemId) { outputMatches = true; break; }
-                    }
-                    if (!outputMatches) continue;
-
-                    var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
-                    bool hasInputs = true;
-                    for (int i = 0; i < inputsBuf.Length; i++)
-                    {
-                        if (SlotBufferUtils.CountInInventory(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
-                        {
-                            hasInputs = false;
-                            break;
-                        }
-                    }
-                    if (hasInputs) return true;
+                    if (!types.Contains(data[i].BuildingType)) continue;
+                    found = true;
+                    best = Mathf.Max(best, data[i].ProductionSpeed);
                 }
             }
-            finally
-            {
-                entities.Dispose();
-            }
-            return false;
+            finally { data.Dispose(); }
+
+            if (!found) return false;
+            speed = best > 0f ? best : 1f;
+            missingBuildingName = null;
+            return true;
         }
+
+        /// <summary>Seconds one item takes: the recipe's craft time divided by the building speed.</summary>
+        public static float UnitSeconds(RecipeJson recipe, float speed)
+        {
+            float baseTime = recipe != null && recipe.base_craft_time > 0f ? recipe.base_craft_time : 1f;
+            return Mathf.Max(MinUnitSeconds, baseTime / Mathf.Max(0.01f, speed));
+        }
+
+        // Numeric building types (BuildingSO.buildingId) that make this recipe: those named in
+        // recipes.json crafted_in, plus any whose supportedRecipes output the same item.
+        private HashSet<int> CraftingBuildingTypes(RecipeJson recipe, out string firstName)
+        {
+            var types = new HashSet<int>();
+            firstName = null;
+            foreach (var b in Buildings())
+            {
+                if (b == null) continue;
+                bool makes = recipe.crafted_in != null && recipe.crafted_in.Contains(b.id);
+                if (!makes && b.supportedRecipes != null && recipe.output != null)
+                {
+                    foreach (var r in b.supportedRecipes)
+                        if (r != null && r.outputItem != null && r.outputItem.id == recipe.output.id) { makes = true; break; }
+                }
+                if (!makes) continue;
+                types.Add(b.buildingId);
+                firstName ??= b.displayName;
+            }
+            return types;
+        }
+
+        private BuildingSO[] Buildings()
+        {
+            if (BuildingsOverride != null) return BuildingsOverride;
+            if (_buildings == null)
+                _buildings = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings ?? Array.Empty<BuildingSO>();
+            return _buildings;
+        }
+
+        // ---- Craft queue (#310) ----
+
+        /// <summary>The live queue, stored in the save so it survives a reload. Null before a save exists.</summary>
+        public CraftQueueSaveData Queue
+        {
+            get
+            {
+                if (QueueOverride != null) return QueueOverride;
+                var run = SaveManager.Instance?.Current?.currentRun;
+                if (run == null) return null;
+                return run.craftQueue ??= new CraftQueueSaveData();
+            }
+        }
+
+        public enum EnqueueResult { Queued, NotEnoughMaterials, NoBuilding, NotReady }
 
         /// <summary>
-        /// Starts one production cycle on a placed building that outputs this recipe's item.
-        /// Returns false if no eligible building is found or inputs are insufficient.
+        /// Queues <paramref name="count"/> crafts. Takes all their inputs now, so the queue can never
+        /// stall for lack of materials and cancelling can refund exactly what was taken.
         /// </summary>
-        public bool TriggerBuildingCraft(RecipeJson recipe)
+        public EnqueueResult TryEnqueue(RecipeJson recipe, int count, out string missingBuildingName)
         {
-            EnsureBound();
-            if (!IsReady || _buildingQuery.IsEmptyIgnoreFilter) return false;
+            missingBuildingName = null;
+            var queue = Queue;
+            if (recipe == null || queue == null || count <= 0) return EnqueueResult.NotReady;
+            if (!HasCraftingBuilding(recipe, out float speed, out missingBuildingName)) return EnqueueResult.NoBuilding;
+            if (MaxCraftable(recipe) < count) return EnqueueResult.NotEnoughMaterials;
 
-            int outputItemId = ItemDatabase.Instance?.GetItemId(recipe.output.id) ?? -1;
-            if (outputItemId < 0) return false;
-
-            var inventoryBuffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity(), isReadOnly: true);
-
-            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
-            try
-            {
-                foreach (var entity in entities)
-                {
-                    var process = _em.GetComponentData<RecipeProcessData>(entity);
-                    if (process.IsCrafting) continue;
-
-                    var outputs = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
-                    bool outputMatches = false;
-                    for (int i = 0; i < outputs.Length; i++)
-                    {
-                        if (outputs[i].ItemID == outputItemId) { outputMatches = true; break; }
-                    }
-                    if (!outputMatches) continue;
-
-                    var inputsBuf = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
-                    bool hasInputs = true;
-                    for (int i = 0; i < inputsBuf.Length; i++)
-                    {
-                        if (SlotBufferUtils.CountInInventory(inventoryBuffer, inputsBuf[i].ItemID) < inputsBuf[i].Quantity)
-                        {
-                            hasInputs = false;
-                            break;
-                        }
-                    }
-                    if (!hasInputs) continue;
-
-                    process.IsCrafting = true;
-                    _em.SetComponentData(entity, process);
-                    return true;
-                }
-            }
-            finally
-            {
-                entities.Dispose();
-            }
-            return false;
+            ChangeInputs(recipe, -count);
+            CraftQueue.Enqueue(queue, recipe.id, count, UnitSeconds(recipe, speed), GameClock.UtcNow);
+            QueueChanged?.Invoke();
+            return EnqueueResult.Queued;
         }
 
+        /// <summary>Cancels a queue entry and gives back the inputs of every item it still held.</summary>
+        public void CancelQueued(int index)
+        {
+            var queue = Queue;
+            if (CraftQueue.IsEmpty(queue) || index < 0 || index >= queue.entries.Count) return;
+
+            var recipe = FindRecipe(queue.entries[index].recipeId);
+            int removed = CraftQueue.Cancel(queue, index, GameClock.UtcNow);
+            if (recipe != null && removed > 0) ChangeInputs(recipe, removed);
+            QueueChanged?.Invoke();
+        }
+
+        /// <summary>Finishes due items. Called every frame once the save is applied to ECS.</summary>
+        public void TickQueue(DateTime now)
+        {
+            var queue = Queue;
+            if (CraftQueue.IsEmpty(queue)) return;
+            EnsureBound();
+            if (!IsReady || _inventoryQuery.IsEmpty) return;
+
+            int done = CraftQueue.Tick(queue, now, id =>
+            {
+                var recipe = FindRecipe(id);
+                if (recipe != null) DepositOutput(recipe);
+            });
+            if (done > 0) QueueChanged?.Invoke();
+        }
+
+        public static RecipeJson FindRecipe(string id) =>
+            RecipeLookupOverride != null ? RecipeLookupOverride(id) : RecipeDatabase.Instance?.GetRecipe(id);
+
+        // ---- Inventory helpers ----
+
+        // times < 0 removes that many crafts' inputs; times > 0 gives them back.
+        private void ChangeInputs(RecipeJson recipe, int times)
+        {
+            EnsureBound();
+            if (!IsReady || _inventoryQuery.IsEmpty) return;
+            var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            foreach (var input in recipe.inputs)
+            {
+                int itemId = ItemDatabase.Instance.GetItemId(input.id);
+                if (itemId < 0 || input.quantity <= 0) continue;
+                int qty = input.quantity * Math.Abs(times);
+                if (times < 0) SlotBufferUtils.RemoveFromInventory(ref buffer, itemId, qty);
+                else           SlotBufferUtils.AddToInventory(ref buffer, itemId, qty);
+            }
+        }
+
+        private void DepositOutput(RecipeJson recipe)
+        {
+            int outputId = ItemDatabase.Instance.GetItemId(recipe.output.id);
+            if (outputId < 0) return;
+
+            var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
+
+            AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
+            TierProgress.NotifyItemProduced(outputId);
+            CraftLog.Record(outputId, recipe.output.quantity);
+        }
     }
 }
