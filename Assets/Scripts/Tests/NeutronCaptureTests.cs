@@ -61,8 +61,11 @@ namespace MobileIdleBuilder.Tests
         {
             var rp = _gd.research.Single(r => r.id == "rapid_neutron_capture");
             CollectionAssert.Contains(rp.prerequisites, "slow_neutron_capture");
-            Assert.IsTrue(_slow.All(r => r.required_research == "slow_neutron_capture"));
-            Assert.IsTrue(_fast.All(r => r.required_research == "rapid_neutron_capture"));
+            // Capture groups are gated by the old element-group nodes (#322 phase 4); fast ones must still
+            // sit behind the r-Process.
+            foreach (var r in _fast)
+                Assert.IsTrue(Requires(r.required_research, "rapid_neutron_capture"), $"{r.id} ({r.required_research})");
+
             Assert.Greater(_fast.Min(r => r.base_craft_time), _slow.Max(r => r.base_craft_time));
             Assert.Greater(_fast.Min(r => r.fixed_power_cost_ev), _slow.Max(r => r.fixed_power_cost_ev));
 
@@ -70,6 +73,21 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(nc.power_cost_is_dynamic, "the building's draw follows its recipe");
             CollectionAssert.AreEqual(new[] { "s_capture_", "r_capture_" }, nc.recipe_mode_prefixes);
             Assert.AreEqual(2, nc.recipe_mode_labels.Count);
+        }
+
+        bool Requires(string research, string ancestor)
+        {
+            var byId  = _gd.research.ToDictionary(r => r.id);
+            var stack = new Stack<string>(new[] { research });
+            var seen  = new HashSet<string>();
+            while (stack.Count > 0)
+            {
+                var id = stack.Pop();
+                if (id == ancestor) return true;
+                if (id == null || !seen.Add(id) || !byId.TryGetValue(id, out var r) || r.prerequisites == null) continue;
+                foreach (var p in r.prerequisites) stack.Push(p);
+            }
+            return false;
         }
 
         [Test]

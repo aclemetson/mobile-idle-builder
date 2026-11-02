@@ -36,7 +36,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 1
   simplificationNote: 'A flood of neutrons in seconds (a neutron-star merger), then

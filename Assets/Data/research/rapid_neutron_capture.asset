@@ -27,19 +27,12 @@ MonoBehaviour:
   fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 4c97e0b1e325cb64ca93fbd9cad64459, type: 2}
-  - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
-  - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
-  - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
-  - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 0ae5f6f5dd80ae04085c223c85aaf6c1, type: 2}
-  - {fileID: 11400000, guid: 20187d3a2a78d704aa1611fd15cfdca8, type: 2}
-  - {fileID: 11400000, guid: 70c5d5a2ccbcec048ab53d7a44ab9b69, type: 2}
-  - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
-  - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: When two neutron stars collide, matter is bathed in so many neutrons

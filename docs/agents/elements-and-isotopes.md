@@ -36,6 +36,12 @@ Working back from Uranium (the Actinide Vein site, which now also spawns `neutro
 - **Real second outputs:** `RecipeSO.ProducedOutputs()` fills `RecipeOutputSlot` with the main output plus every non-escaping byproduct, so existing fission fragments/neutrons and the U-235 alpha are now produced too. Offline earnings still count only the main output.
 - **Per-side outputs on any building:** `assignable_outputs` gives a building the Filter's `OutputPortFilter` rules (no `ItemFilterTag`), so the player picks which side each product leaves by. Guarded by `DecayChainTests`.
 
+### Actinide map phase 4: stopgap recipes retired (2026-11-02, #322)
+
+- The Atom Generator no longer builds anything from Cobalt to Protactinium (54 recipes + assets removed; `FusionLadderDataTests` guards it). It keeps H, D, He, Uranium and the post-uranium synthetics (Np..Og) until the Breeder Reactor / Particle Accelerator are designed.
+- The old element-group nodes keep their names, costs and tree positions (so Materials Science, Advanced Materials and Transuranic Synthesis keep their prerequisites) but now gate Neutron Capture groups: `slow_neutron_capture` Tc..In + La; `transition_metals` Co..Br; `heavy_transition_metals` Pr..Sm; `lanthanides_and_heavy_metals` Gd..Re + Hg; `rapid_neutron_capture` Eu; `precious_metals` Pt, Au; `exotic_metals` Os, Ir.
+- `precious_metals` now also requires `rapid_neutron_capture`, so the fast-only elements stay behind the r-Process (this also pushes Advanced Materials and Transuranic Synthesis behind it).
+
 ### Actinide map phase 3: neutron capture (2026-11-02, #322)
 
 - **Neutron Capture** (`neutron_capture`, building 26, 20k, gate `slow_neutron_capture`): element + neutrons → the next element up (beta decay after capture, a neutrino escapes). Two recipe groups shown one at a time by a mode switch (`recipe_mode_labels` / `recipe_mode_prefixes`):
