@@ -1534,6 +1534,8 @@ namespace MobileIdleBuilder
                 string detail = entry.defaultRecipe != null
                     ? $"Produces: {entry.defaultRecipe.displayName}"
                     : bso?.description ?? "";
+                if (IsObsolete(bso))
+                    detail = $"Obsolete. {bso.obsoleteCondition}";
 
                 int rawCost = entry.building?.entropyCost ?? 0;
                 float reduction = !_prestigeQuery.IsEmpty
@@ -1638,6 +1640,12 @@ namespace MobileIdleBuilder
 
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
         // cost column blank (#197).
+        /// <summary>True once the research that replaces <paramref name="bso"/> is done (e.g. Nucleon Harvesting
+        /// for the Strong Force Combiner). The building stays placeable; the Build menu just says so.</summary>
+        private bool IsObsolete(BuildingSO bso) =>
+            bso != null && bso.isObsoleteable && !string.IsNullOrEmpty(bso.obsoletedByResearch)
+            && researchService != null && researchService.IsUnlocked(bso.obsoletedByResearch);
+
         internal static string FormatBuildCost(long cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
 
         private static Label MakeCostLabel(long cost, bool canAfford)

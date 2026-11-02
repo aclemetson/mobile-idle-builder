@@ -54,6 +54,8 @@ namespace MobileIdleBuilder
         public bool isObsoleteable;
         [TextArea(1, 2)]
         public string obsoleteCondition;
+        /// <summary>Research id that makes this building obsolete (Build menu tags it); empty = never.</summary>
+        public string obsoletedByResearch;
 
         [Header("Power")]
         public bool requiresPower;
