@@ -14,25 +14,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: fusion_i
   displayName: Stellar Fusion
-  description: "Unlock the Fusion Reactor \u2014 fuse light nuclei into heavier ones,
-    the shortcut up the ladder toward iron."
+  description: Unlock the Fusion Reactor. Fuse 2 Deuterium into Helium, or 3 Helium
+    into Carbon. Every fusion releases particles that escape as bonus entropy.
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
-  depthInTree: 2
+  - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
+  depthInTree: 3
   costBaseCurrency: 4000
   costPrestigeCurrency: 0
   durationSeconds: 180
   fieldCooldownMult: 1
-  unlocksItems: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
+  - {fileID: 11400000, guid: 2aa3f256dbe6a324c89dcd09b44631e5, type: 2}
+  - {fileID: 11400000, guid: 448089786c690e04aa8883e0ba514702, type: 2}
   unlocksRecipes:
+  - {fileID: 11400000, guid: bcb789ae341b0f74b8678b5b0cdd921c, type: 2}
   - {fileID: 11400000, guid: 836ddfb7854822e43b54924bad753eed, type: 2}
   - {fileID: 11400000, guid: e758c6af4a6a4a24386c8e2135ee9cfb, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: e11788d032fc84a48819ecc26d1b74fe, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
+  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
   - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
   - {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
   resetsOnPrestige: 1

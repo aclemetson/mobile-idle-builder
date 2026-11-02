@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: atomic_assembly
   displayName: Nucleosynthesis
-  description: 'Teach the Atom Generator to build elements heavier than hydrogen:
-    Helium, Lithium, Carbon, Oxygen, Silicon and Iron.'
+  description: Teach the Atom Generator to build Helium-4 from 2 protons, 2 neutrons
+    and 2 electrons. Heavier atoms need fusion.
   icon: {fileID: 0}
   branch: 0
   prerequisites:
@@ -27,27 +27,15 @@ MonoBehaviour:
   fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: 06518bba2d1ed46478d8250e3ed0edcb, type: 2}
-  - {fileID: 11400000, guid: 1861494e6440194438a3d3f9af7636d5, type: 2}
-  - {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
-  - {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
-  - {fileID: 11400000, guid: e9d4fd82ea10f0747bcd10d5cc822c97, type: 2}
-  - {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: b1c7db86db5ca8c48ad6413a15432273, type: 2}
-  - {fileID: 11400000, guid: 6eeeec7bd1cf4934da06177d3d4bc52f, type: 2}
-  - {fileID: 11400000, guid: 0b604021efe0659479f9ac160bdca66b, type: 2}
-  - {fileID: 11400000, guid: 5c01084f0c6a99a4d82ae683ba1c3ce0, type: 2}
-  - {fileID: 11400000, guid: 19cdd73aafa3f1444b12fc175d583eb8, type: 2}
-  - {fileID: 11400000, guid: 32f9d6720a129a843920a5bc954ab542, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
+  - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
-  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
-  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
-  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
   - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2

@@ -309,8 +309,10 @@ namespace MobileIdleBuilder
         {
             var starts = new List<Vector2Int>();
             var ends   = new List<Vector2Int>();
-            if (!GatherPortFronts(from, PortType.Output, starts) || !GatherPortFronts(to, PortType.Input, ends))
-                return null;
+            bool found = from == to
+                ? GatherChainFronts(from, starts, ends)
+                : GatherPortFronts(from, PortType.Output, starts) && GatherPortFronts(to, PortType.Input, ends);
+            if (!found) return null;
 
             if (!TutorialRouteGuide.TryPickRoute(starts, ends, IsBeltFree, out var s, out var e))
                 return null;
@@ -401,18 +403,63 @@ namespace MobileIdleBuilder
                     ProducedItemId(em, entity) is int produced && !onlyProducing.Contains(produced))
                     continue;
 
-                var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
-                for (int i = 0; i < ports.Length; i++)
-                {
-                    if (ports[i].PortType != (int)type) continue;
-                    var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
-                    var facing = (OutputDirection)ports[i].Facing;
-                    result.Add(type == PortType.Output
-                        ? TutorialRouteGuide.OutputFront(cell, facing)
-                        : TutorialRouteGuide.InputFront(cell, facing));
-                }
+                AddPortFronts(em, entity, type, result);
             }
             return any;
+        }
+
+        private static void AddPortFronts(EntityManager em, Entity entity, PortType type, List<Vector2Int> result)
+        {
+            var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+            for (int i = 0; i < ports.Length; i++)
+            {
+                if (ports[i].PortType != (int)type) continue;
+                var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
+                var facing = (OutputDirection)ports[i].Facing;
+                result.Add(type == PortType.Output
+                    ? TutorialRouteGuide.OutputFront(cell, facing)
+                    : TutorialRouteGuide.InputFront(cell, facing));
+            }
+        }
+
+        /// <summary>
+        /// A belt between two buildings of the same type (e.g. Fusion Reactor → Fusion Reactor): starts at
+        /// the one whose product another one consumes, ends at that consumer, judged by their set recipes.
+        /// Without this the glow could point a reactor's output back into the wrong reactor.
+        /// </summary>
+        private bool GatherChainFronts(string buildingKey, List<Vector2Int> starts, List<Vector2Int> ends)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return false;
+            var em = world.EntityManager;
+            var so = FindBuildingSO(buildingKey);
+            if (so == null) return false;
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                   ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            var placed = new List<(Entity e, int? produced, HashSet<int> consumed)>();
+            foreach (var entity in entities)
+            {
+                if (em.GetComponentData<BuildingData>(entity).BuildingType != so.buildingId) continue;
+                var consumed = new HashSet<int>();
+                if (em.HasBuffer<RecipeInputSlot>(entity))
+                {
+                    var inputs = em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+                    for (int i = 0; i < inputs.Length; i++) consumed.Add(inputs[i].ItemID);
+                }
+                placed.Add((entity, ProducedItemId(em, entity), consumed));
+            }
+            if (placed.Count < 2) return false;
+
+            foreach (var a in placed)
+                foreach (var b in placed)
+                {
+                    if (a.e == b.e || a.produced is not int item || !b.consumed.Contains(item)) continue;
+                    AddPortFronts(em, a.e, PortType.Output, starts);
+                    AddPortFronts(em, b.e, PortType.Input, ends);
+                }
+            return starts.Count > 0 && ends.Count > 0;
         }
 
         /// <summary>Item ids consumed by any of <paramref name="building"/>'s recipes.</summary>

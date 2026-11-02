@@ -25,7 +25,9 @@ MonoBehaviour:
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
   outputQuantity: 1
-  byproducts: []
+  byproducts:
+  - item: {fileID: 11400000, guid: 448089786c690e04aa8883e0ba514702, type: 2}
+    quantity: 1
   baseCraftTime: 28
   manualCraftTime: 28
   powerCostIsDynamic: 0
@@ -37,4 +39,4 @@ MonoBehaviour:
   requiredResearch: {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: Fusion shortcut; the Atomic Assembler can also build this element.
+  simplificationNote: 

@@ -152,6 +152,7 @@ namespace MobileIdleBuilder.Editor
         public string codex_entry          = "";
         public float  base_sell_value      = 1f;
         public float  isotope_sell_multiplier = 1f;
+        public bool   escapes_as_entropy   = false;
     }
 
     [Serializable]

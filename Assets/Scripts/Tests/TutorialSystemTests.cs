@@ -693,6 +693,26 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ConveyorLinked_SameTypeChain_ReactorIntoReactorCounts()
+        {
+            // Helium from one Fusion Reactor belted into a second one: both are the target type, and
+            // the first still has to count as the source.
+            const int ReactorType = 11;
+            MakeFlow(LinkStep("route_helium_to_carbon_reactor", ReactorType, ReactorType, 1),
+                     UiEventStep("next", "dialogue_complete"));
+            SetStepIndex(0);
+            CreatePortedBuilding(ReactorType, new Vector2Int(0, 0), PortType.Output, OutputDirection.East);
+            CreatePortedBuilding(ReactorType, new Vector2Int(4, 0), PortType.Input, OutputDirection.East);
+            _world.Update();
+            Assert.AreEqual(0, GetStepIndex(), "no belt yet");
+
+            CreateBelt(new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0));
+            _world.Update();
+
+            Assert.AreEqual(1, GetStepIndex());
+        }
+
+        [Test]
         public void ConveyorLinked_ALinkBuiltBeforeTheStepStillCounts()
         {
             // #233: the Combiner -> Demon belt was built while an earlier step was active.

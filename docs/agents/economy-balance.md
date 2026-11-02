@@ -82,7 +82,8 @@ Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tuto
 | Phase | Gate (research → entropy cost) | Economy landmark |
 |---|---|---|
 | ⑦ Run 2 ramp | repeat discounts: Recombination I 75e, Hydrogen Synth 38e, Automation I 13e | H loop ~4–8 e/sec |
-| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | He-4 ×10 … Fe ×5,120 sell values |
+| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (10e) only |
+| ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e | D 4e; 2D→He (10e) + γ 5e escape bonus; 3He→C 160e. Li..Fe only via fusion: `light_elements` 6k, `fusion_ii` 20k, `mid_elements` 30k, `fusion_iii` 120k (Fe 167.8M), `transition_metals` 150k (post-iron gate) |
 | ⑨ Heavy Elements | 3,000e | Uranium = 1,310,720e/unit |
 | ⑩ Isotopes | 1,500e | isotopes sell 1.5× base element |
 | ⑪ Radioactive Decay | 5,000e | needs ⑨+⑩ |

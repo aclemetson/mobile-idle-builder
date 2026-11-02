@@ -52,11 +52,15 @@ namespace MobileIdleBuilder.Dev
             { "buy_atomic_assembly",          500 },   // enough for 500e Nucleosynthesis
             { "atomic_assembly_unlocked",      50 },
             { "reroute_neutrons_to_atom_gen",  50 },
-            { "first_element_context",       5050 },   // craft_first_helium rewards 5,000e
-            { "buy_fusion_i",                4000 },   // enough for 4000e Stellar Fusion
+            { "first_element_context",       6550 },   // craft_first_helium rewards 6,500e
+            { "craft_first_deuterium",       5350 },   // after -1200e Deuterium Synthesis
+            { "buy_fusion_i",                5350 },   // enough for 4000e Stellar Fusion
             { "place_fusion_reactor",        1500 },   // after -4000e; enough for the 1500e Fusion Reactor
             { "power_for_fusion",             225 },   // after -1500e; enough for the second 225e Basic Generator
             { "fusion_explained",              50 },
+            { "place_carbon_reactor",        1850 },   // fuse_first_helium rewards 1,800e for the second reactor
+            { "power_for_carbon_reactor",     340 },   // after -1500e; enough for the third Basic Generator
+            { "set_carbon_recipe",             50 },
         };
 
         /// <summary>
@@ -131,9 +135,11 @@ namespace MobileIdleBuilder.Dev
             { "reroute_neutrons_to_atom_gen", 25_000f },
             { "craft_first_helium",          26_000f },
             { "first_element_context",       28_000f },
+            { "craft_first_deuterium",       29_000f },
             { "intro_nuclear_reactors",      30_000f },
             { "place_fusion_reactor",        35_000f },
-            { "route_helium_to_reactor",     38_000f },
+            { "route_deuterium_to_reactor",  37_000f },
+            { "place_carbon_reactor",        38_000f },
             { "craft_first_carbon",          40_000f },
             { "tutorial_complete",           45_000f },
         };

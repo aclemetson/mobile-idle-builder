@@ -24,9 +24,8 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: Lithium, Carbon, Oxygen, Silicon, and Iron are also available in the recipe
-      panel. Each one is more complex and more valuable. Start with Helium-4 and
-      scale up from there.
+    text: Helium-4 is as far as the Atom Generator goes. Every heavier element must
+      be fused from lighter ones, and that road starts with Helium.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

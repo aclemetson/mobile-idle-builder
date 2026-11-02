@@ -28,12 +28,12 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is178()
+        public void AllItems_TotalCount_Is180()
         {
             // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
-            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4). Biology track complete.
-            Assert.AreEqual(178, _items.Length,
-                $"Expected 178 items in Resources/Items/, found {_items.Length}. " +
+            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4) + 2 fusion particles (neutrino, gamma).
+            Assert.AreEqual(180, _items.Length,
+                $"Expected 180 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -76,7 +76,8 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 2 — Isotopes (base = round(nucYield(Z) × isotopeSellMultiplier)) ──────
 
-        [Test] public void T2_Deuterium_SellValue()   => AssertSell("deuterium",    8f);
+        // Deuterium sits below half a Helium (0.8x) so fusing two of them is worth more than selling them.
+        [Test] public void T2_Deuterium_SellValue()   => AssertSell("deuterium",    4f);
         [Test] public void T2_Tritium_SellValue()     => AssertSell("tritium",      8f);
         [Test] public void T2_Carbon14_SellValue()    => AssertSell("carbon_14",    240f);
         [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  128f);
@@ -85,6 +86,11 @@ namespace MobileIdleBuilder.Tests
 
         [Test] public void T2_AlphaParticle_SellValue() => AssertSell("alpha_particle", 50f);
         [Test] public void T2_BetaParticle_SellValue()  => AssertSell("beta_particle",  30f);
+
+        // ── Tier 2 — Fusion particles (escape the reactor; paid as entropy per craft) ─────
+
+        [Test] public void T2_Neutrino_SellValue()      => AssertSell("neutrino",     3f);
+        [Test] public void T2_GammaPhoton_SellValue()   => AssertSell("gamma_photon", 5f);
 
         // ── Tier 3 — Molecular ───────────────────────────────────────────────
 

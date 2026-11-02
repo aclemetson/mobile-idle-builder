@@ -56,5 +56,22 @@ namespace MobileIdleBuilder
         public bool isSimplified;
         [TextArea(1, 3)]
         public string simplificationNote;
+
+        /// <summary>
+        /// Entropy paid on every craft by byproducts that escape the building (see
+        /// <see cref="ItemSO.escapesAsEntropy"/>): quantity x sell value, summed. 0 when none escape.
+        /// </summary>
+        public float EscapeEntropyPerCraft
+        {
+            get
+            {
+                if (byproducts == null) return 0f;
+                float total = 0f;
+                foreach (var b in byproducts)
+                    if (b.item != null && b.item.escapesAsEntropy && b.quantity > 0)
+                        total += b.quantity * b.item.baseSellValue;
+                return total;
+            }
+        }
     }
 }
