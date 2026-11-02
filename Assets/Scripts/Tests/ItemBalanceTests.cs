@@ -28,12 +28,13 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is180()
+        public void AllItems_TotalCount_Is186()
         {
             // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
-            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4) + 2 fusion particles (neutrino, gamma).
-            Assert.AreEqual(180, _items.Length,
-                $"Expected 180 items in Resources/Items/, found {_items.Length}. " +
+            // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4) + 2 fusion particles (neutrino, gamma)
+            // + 6 decay-chain isotopes (#322).
+            Assert.AreEqual(186, _items.Length,
+                $"Expected 186 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 

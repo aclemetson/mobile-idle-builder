@@ -93,17 +93,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4f2eb6efc8a4f814abd301b967b71296, type: 2}
   - {fileID: 11400000, guid: e15e1b61635281f4191c28126ac186b8, type: 2}
   - {fileID: 11400000, guid: 022f1e9be5017b649a4eca515299e95a, type: 2}
-  - {fileID: 11400000, guid: 8e0e55e2c78050943907a6e4009f843c, type: 2}
-  - {fileID: 11400000, guid: 63f1f5d2a5a55e240830fbdd28b047fd, type: 2}
-  - {fileID: 11400000, guid: 9e568d57136193f49848404b605db800, type: 2}
-  - {fileID: 11400000, guid: 0b7d70a9d4d35a24c8877dc10a1b3178, type: 2}
-  - {fileID: 11400000, guid: e26215ea54851a84db470a86e739baec, type: 2}
-  - {fileID: 11400000, guid: 4218031a3319f9c42bea7ed4154fdefc, type: 2}
-  - {fileID: 11400000, guid: b6ebaa20017297d47abed554d8da5187, type: 2}
-  - {fileID: 11400000, guid: 500d50b7756774f4a8b8d4aad9422943, type: 2}
-  - {fileID: 11400000, guid: bb225815adfdafe408db7fd54bfedb22, type: 2}
-  - {fileID: 11400000, guid: 704b0cc753fc47a438158cc2470d4b03, type: 2}
-  - {fileID: 11400000, guid: 3d3e136847ea6274db1eda355adc7820, type: 2}
   - {fileID: 11400000, guid: 3147937b0dc07804f8f2554f07ad699c, type: 2}
   - {fileID: 11400000, guid: 825eb24d3e6c9554da4e5c60fc8ad417, type: 2}
   - {fileID: 11400000, guid: 69306d901a1f6c44ab93bec2aa585abe, type: 2}
@@ -136,6 +125,7 @@ MonoBehaviour:
   - Electrons
   isEntropySink: 0
   isItemFilter: 0
+  assignableOutputs: 0
   footprint: {x: 2, y: 1}
   structureKind: 1
   ports:

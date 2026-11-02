@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: thorium_233
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: thorium_233
+  displayName: Thorium-233
+  symbol: Th-233
+  icon: {fileID: 21300000, guid: 615f73b725b11c74f86bc43c9bfd19cb, type: 3}
+  itemId: 181
+  tier: 2
+  category: 3
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 90
+  atomicMass: 233
+  charge: 0
+  isRadioactive: 1
+  decayType: 2
+  halfLifeNote: 22 minutes
+  isFissile: 0
+  isHarvested: 0
+  fieldType: None
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: Thorium-232 that has caught one neutron. It beta-decays within minutes
+    into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.
+  codexUnlocked: 0
+  baseSellValue: 100
+  isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

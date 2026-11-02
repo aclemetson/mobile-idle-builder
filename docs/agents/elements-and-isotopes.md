@@ -25,6 +25,17 @@ The Assembler built Iron from 82 particles behind the 500e Nucleosynthesis node 
 - **Deuterium value 4e** (`isotope_sell_multiplier` 0.8) so 2 D (8e) → He (10e) + γ (5e) is worth fusing, and 2 D cost 3s of Atom Generator time vs 4s for one He.
 - Guarded by `FusionLadderDataTests`.
 
+### Actinide map phase 1: decay chain (shipped 2026-11-01, #322)
+
+Working back from Uranium (the Actinide Vein site, which now also spawns `neutron_field` for the Harvester's `collect_neutron`). All gated by `radioactive_isotopes`:
+
+- **Decay Chamber** = the repurposed `radioactive_containment` (2x2, inputs on the west, outputs East and South, `assignable_outputs`): one isotope in, the element it decays into out, plus its particle. Alpha decays U → Th → Ra → Rn → Po → Pb release a real `alpha_particle`; beta decays release a `neutrino` (paid as entropy).
+- **Isotopic Manipulator** gains `irradiate_<el>` (+1 neutron: Th-233, Ra-227, Rn-223, Pb-209 → beta-minus to Pa, Ac, Fr, Bi) and `strip_<el>` (Rn → Rn-211 + 11 n, Pb → Pb-201 + 7 n → electron capture to At, Tl). Stripped neutrons come out as items: the intended neutron source.
+- New named isotope items (`item_id` 181–186) carry `decay_type` (`BetaPlus` added for electron capture) and sell at their parent element's value.
+- The Atom Generator no longer builds Tl..Pa (Z81–91); Uranium stays (Atom Gen + harvest). Value rises toward iron, so alpha decays and stripping (lower Z) gain value, adding a neutron (higher Z) loses it.
+- **Real second outputs:** `RecipeSO.ProducedOutputs()` fills `RecipeOutputSlot` with the main output plus every non-escaping byproduct, so existing fission fragments/neutrons and the U-235 alpha are now produced too. Offline earnings still count only the main output.
+- **Per-side outputs on any building:** `assignable_outputs` gives a building the Filter's `OutputPortFilter` rules (no `ItemFilterTag`), so the player picks which side each product leaves by. Guarded by `DecayChainTests`.
+
 ### Phase 1 implementation status (data-first, shipped)
 
 The full table was implemented as pure `game_data.json` data (items `item_id` 52–149, recipes `recipe_id` 50–147) generated from the locked value model below. Notes for the next agent:

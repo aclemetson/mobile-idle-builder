@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: radon_223
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: radon_223
+  displayName: Radon-223
+  symbol: Rn-223
+  icon: {fileID: 21300000, guid: 8802af9480142144cb5b36262ecf4bfb, type: 3}
+  itemId: 183
+  tier: 2
+  category: 3
+  tierData: {fileID: 11400000, guid: 0a5ddb030605a6a4eab540209a8e4ed6, type: 2}
+  atomicNumber: 86
+  atomicMass: 223
+  charge: 0
+  isRadioactive: 1
+  decayType: 2
+  halfLifeNote: 24 minutes
+  isFissile: 0
+  isHarvested: 0
+  fieldType: None
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: A neutron-heavy radon that beta-decays into Francium-223, the only
+    francium found in nature.
+  codexUnlocked: 0
+  baseSellValue: 245
+  isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

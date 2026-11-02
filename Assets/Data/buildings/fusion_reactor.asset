@@ -65,6 +65,7 @@ MonoBehaviour:
   - Nucleus B
   isEntropySink: 0
   isItemFilter: 0
+  assignableOutputs: 0
   footprint: {x: 1, y: 1}
   structureKind: 0
   ports:

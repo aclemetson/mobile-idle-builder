@@ -89,7 +89,8 @@ namespace MobileIdleBuilder
     {
         None,
         Alpha,
-        Beta
+        Beta,
+        BetaPlus   // beta-plus / electron capture: a proton becomes a neutron (Z - 1)
     }
 
     [Flags]

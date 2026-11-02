@@ -405,6 +405,9 @@ namespace MobileIdleBuilder
                     }
                 }
 
+                if (buildingSO.assignableOutputs && !buildingSO.isItemFilter)
+                    AddFilterSection(_inspectorEntity);
+
                 AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
@@ -828,8 +831,16 @@ namespace MobileIdleBuilder
             }
             foreach (var (_, id) in rules)
                 if (id != PortFilterRules.Everything && !items.Contains(id)) items.Add(id);
+            // A building with assignable outputs (#322) sorts its own products.
+            bool isFilter = _em.HasComponent<ItemFilterTag>(entity);
+            if (!isFilter && _em.HasBuffer<RecipeOutputSlot>(entity))
+            {
+                var products = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+                for (int i = 0; i < products.Length; i++)
+                    if (!items.Contains(products[i].ItemID)) items.Add(products[i].ItemID);
+            }
 
-            AddInspectorRow(_inspectorRecipes, "—— Sorting ——");
+            AddInspectorRow(_inspectorRecipes, isFilter ? "—— Sorting ——" : "—— Output sides ——");
             if (items.Count == 0)
                 AddInspectorRow(_inspectorRecipes, "Belt a mixed line in. Each item that arrives gets a row here.");
             foreach (var itemId in items)
@@ -1064,12 +1075,8 @@ namespace MobileIdleBuilder
 
             var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
             outputBuf.Clear();
-            if (recipe.outputItem != null)
-                outputBuf.Add(new RecipeOutputSlot
-                {
-                    ItemID   = recipe.outputItem.itemId,
-                    Quantity = recipe.outputQuantity
-                });
+            foreach (var (item, qty) in recipe.ProducedOutputs())
+                outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
             SellInputsTheRecipeDoesNotUse(entity);
 

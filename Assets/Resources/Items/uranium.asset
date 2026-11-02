@@ -33,7 +33,8 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: "The heaviest naturally occurring element. Radioactive \u2014 decays
     slowly over billions of years. The primary fuel for nuclear fission reactors.
-    Requires advanced assembly techniques."
+    Requires advanced assembly techniques. Decays: alpha decay turns it into Thorium
+    (Decay Chamber)."
   codexUnlocked: 0
   baseSellValue: 64
   isotopeSellMultiplier: 1

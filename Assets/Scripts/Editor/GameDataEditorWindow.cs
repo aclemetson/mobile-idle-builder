@@ -49,7 +49,7 @@ namespace MobileIdleBuilder.Editor
         private static readonly string[] FieldTypeOptions =
             { "None", "Quark", "Lepton", "Uranium", "Plutonium", "Element", "ElementMetal" };
         private static readonly string[] DecayTypeOptions =
-            { "None", "Alpha", "Beta" };
+            { "None", "Alpha", "Beta", "BetaPlus" };
         private static readonly string[] EnvironmentOptions =
             { "Dev", "Staging", "Prod" };
 
@@ -498,6 +498,7 @@ namespace MobileIdleBuilder.Editor
             b.input_slot_labels= StringArrayField("Input Slot Labels", b.input_slot_labels);
             b.is_entropy_sink  = Toggle("Is Entropy Sink", b.is_entropy_sink);
             b.is_item_filter   = Toggle("Is Item Filter", b.is_item_filter);
+            b.assignable_outputs = Toggle("Assignable Outputs", b.assignable_outputs);
 
             H("Supported Recipes");
             b.supported_recipes = IdListField("Recipes", b.supported_recipes, _recipeIds);
