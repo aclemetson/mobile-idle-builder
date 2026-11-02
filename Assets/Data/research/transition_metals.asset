@@ -14,23 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: transition_metals
   displayName: Transition Metals
-  description: Fuse the last odd rungs below iron (Chlorine to Manganese), and build
-    Nickel, Cobalt, Copper and Zinc beyond it in the Atom Generator.
+  description: 'Build Nickel, Cobalt, Copper and Zinc beyond Iron in the Atom Generator.
+    (Interim: the Actinide map''s fission and neutron capture will replace this.)'
   icon: {fileID: 0}
   branch: 2
   prerequisites:
-  - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
-  depthInTree: 6
-  costBaseCurrency: 150000
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
+  depthInTree: 7
+  costBaseCurrency: 250000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
-  - {fileID: 11400000, guid: 89b33da28615202459096ab75d854a0d, type: 2}
-  - {fileID: 11400000, guid: 5ed6af1e7dd24c145b1ddd327ae7f06a, type: 2}
-  - {fileID: 11400000, guid: e62f17f097d33ae4498907181c45f781, type: 2}
-  - {fileID: 11400000, guid: c4932c0b7989ec14499515b2d1fb1812, type: 2}
   - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
   - {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
   - {fileID: 11400000, guid: b28f1a8061c3b71459a2610eb4b6845d, type: 2}
@@ -42,11 +37,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
   - {fileID: 11400000, guid: 65bb40278e1be8145874cff40ba59794, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: b55c7b0772bb38e4c956c67e6ce491ee, type: 2}
-  - {fileID: 11400000, guid: 02b241c4051ecba469cef6cb42ad1b54, type: 2}
-  - {fileID: 11400000, guid: eee5723157e262d439db5809087b2a62, type: 2}
-  - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
-  - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
   - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
   - {fileID: 11400000, guid: 84de2773693fc6a41bdaf9adc6f277af, type: 2}
   - {fileID: 11400000, guid: f6030caaa967ffc4187edb305eeed22b, type: 2}

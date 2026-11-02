@@ -75,15 +75,28 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void AtomGeneratorElementsPastIron_NeedTheIronFusionTier()
+        public void AtomGeneratorElementsPastIron_NeedTheWholeStellarLadder()
         {
             // The cheap fission floor (Francium..Uranium, under 200e for 300+ particles) stays early: it
-            // feeds the isotope and fission branches and is no shortcut. Anything worth more waits for iron.
+            // feeds the isotope and fission branches and is no shortcut. Anything worth more waits until
+            // Explosive Burning has completed every element up to Iron.
             var bad = _gd.recipes.Where(r => BuiltIn(r, "atomic_assembler") && Z(r) > 26
                                              && _items[r.output_item].base_sell_value > 1000f
-                                             && !Requires(r.required_research, "fusion_iii"))
+                                             && !Requires(r.required_research, "explosive_burning"))
                                  .Select(r => $"{r.id} ({r.required_research})").ToList();
-            CollectionAssert.IsEmpty(bad, "Post-iron Atom Generator recipes must sit behind Silicon Burning");
+            CollectionAssert.IsEmpty(bad, "Post-iron Atom Generator recipes must sit behind Explosive Burning");
+        }
+
+        [Test]
+        public void ExplosiveBurning_UnlocksTheOddRungsChlorineToManganese()
+        {
+            var odd = new[] { "chlorine", "potassium", "scandium", "vanadium", "manganese" };
+            foreach (var el in odd)
+            {
+                var r = _gd.recipes.Single(x => x.id == $"capture_{el}");
+                Assert.AreEqual("explosive_burning", r.required_research, el);
+            }
+            Assert.IsTrue(Requires("explosive_burning", "fusion_iii"));
         }
 
         [Test]

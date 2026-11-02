@@ -42,7 +42,7 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "The last day of a massive star: silicon burning forges its way to
