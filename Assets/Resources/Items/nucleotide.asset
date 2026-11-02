@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: A base, a sugar, and a phosphate. Strung together, nucleotides encode
     heredity as DNA and RNA.
   codexUnlocked: 0
-  baseSellValue: 60000
+  baseSellValue: 425000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

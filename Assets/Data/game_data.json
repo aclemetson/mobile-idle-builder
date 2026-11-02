@@ -338,7 +338,7 @@
       "branch": "Nuclear",
       "prerequisites": ["isotopes", "heavy_elements"],
       "depth_in_tree": 3,
-      "cost_base_currency": 5000,
+      "cost_base_currency": 40000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
       "unlocks_items": ["alpha_particle", "beta_particle", "lead_201", "lead_209", "radium_227", "radon_211", "radon_223", "thorium_233", "uranium_235"],
@@ -360,7 +360,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
-      "cost_base_currency": 6000,
+      "cost_base_currency": 195000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
       "unlocks_items": ["lithium", "beryllium", "boron"],
@@ -380,7 +380,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 30000,
+      "cost_base_currency": 2320000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
       "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus"],
@@ -400,7 +400,7 @@
       "branch": "Materials",
       "prerequisites": ["explosive_burning"],
       "depth_in_tree": 7,
-      "cost_base_currency": 250000,
+      "cost_base_currency": 50600000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
       "unlocks_items": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine"],
@@ -420,7 +420,7 @@
       "branch": "Materials",
       "prerequisites": ["transition_metals", "rapid_neutron_capture"],
       "depth_in_tree": 4,
-      "cost_base_currency": 500000,
+      "cost_base_currency": 82900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["platinum", "gold"],
@@ -440,7 +440,7 @@
       "branch": "Materials",
       "prerequisites": ["precious_metals"],
       "depth_in_tree": 5,
-      "cost_base_currency": 750000,
+      "cost_base_currency": 120000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["osmium", "iridium"],
@@ -460,7 +460,7 @@
       "branch": "Nuclear",
       "prerequisites": ["heavy_elements", "exotic_metals"],
       "depth_in_tree": 6,
-      "cost_base_currency": 2000000,
+      "cost_base_currency": 275000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": ["plutonium", "neptunium", "americium", "curium", "berkelium", "californium", "einsteinium", "fermium"],
@@ -502,7 +502,7 @@
       "branch": "Chemistry",
       "prerequisites": ["molecular_synthesis", "mid_elements"],
       "depth_in_tree": 4,
-      "cost_base_currency": 40000,
+      "cost_base_currency": 4360000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["silica", "iron_oxide", "uranium_hexafluoride"],
@@ -522,7 +522,7 @@
       "branch": "Materials",
       "prerequisites": ["advanced_molecules", "transition_metals"],
       "depth_in_tree": 5,
-      "cost_base_currency": 400000,
+      "cost_base_currency": 59900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["steel", "carbon_fiber", "titanium_alloy"],
@@ -542,7 +542,7 @@
       "branch": "Materials",
       "prerequisites": ["materials_science", "precious_metals"],
       "depth_in_tree": 6,
-      "cost_base_currency": 800000,
+      "cost_base_currency": 165000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": ["semiconductor_wafer", "aerogel", "superconductor", "metamaterial"],
@@ -562,7 +562,7 @@
       "branch": "Engineering",
       "prerequisites": ["advanced_materials", "transuranic_elements"],
       "depth_in_tree": 7,
-      "cost_base_currency": 5000000,
+      "cost_base_currency": 460000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 10800,
       "unlocks_items": ["quantum_processor", "plasma_containment_ring", "antimatter_cell"],
@@ -582,7 +582,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["component_engineering"],
       "depth_in_tree": 8,
-      "cost_base_currency": 50000000,
+      "cost_base_currency": 904000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 14400,
       "unlocks_items": ["dyson_node", "orbital_frame", "graviton_lens"],
@@ -623,7 +623,7 @@
       "branch": "Engineering",
       "prerequisites": ["molecular_synthesis"],
       "depth_in_tree": 4,
-      "cost_base_currency": 10000,
+      "cost_base_currency": 353000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": [],
@@ -643,7 +643,7 @@
       "branch": "Materials",
       "prerequisites": ["precious_metals"],
       "depth_in_tree": 5,
-      "cost_base_currency": 750000,
+      "cost_base_currency": 126000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["praseodymium", "neodymium", "promethium", "samarium"],
@@ -663,7 +663,7 @@
       "branch": "Materials",
       "prerequisites": ["exotic_metals"],
       "depth_in_tree": 6,
-      "cost_base_currency": 1500000,
+      "cost_base_currency": 194000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "mercury"],
@@ -683,7 +683,7 @@
       "branch": "Nuclear",
       "prerequisites": ["transuranic_elements"],
       "depth_in_tree": 7,
-      "cost_base_currency": 4000000,
+      "cost_base_currency": 324000000,
       "cost_prestige_currency": 50,
       "duration_seconds": 7200,
       "unlocks_items": ["mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium", "roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
@@ -723,7 +723,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
-      "cost_base_currency": 20000,
+      "cost_base_currency": 556000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
       "unlocks_items": ["oxygen", "neon", "magnesium", "silicon"],
@@ -743,7 +743,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 120000,
+      "cost_base_currency": 23800000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["sulfur", "argon", "calcium", "titanium", "chromium", "iron"],
@@ -763,7 +763,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_iii"],
       "depth_in_tree": 6,
-      "cost_base_currency": 150000,
+      "cost_base_currency": 48100000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["chlorine", "potassium", "scandium", "vanadium", "manganese"],
@@ -783,7 +783,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 3,
-      "cost_base_currency": 30000,
+      "cost_base_currency": 1250000,
       "cost_prestige_currency": 0,
       "duration_seconds": 900,
       "unlocks_items": ["uranium", "plutonium"],
@@ -803,7 +803,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fissile_extraction"],
       "depth_in_tree": 4,
-      "cost_base_currency": 80000,
+      "cost_base_currency": 8180000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": [],
@@ -823,7 +823,7 @@
       "branch": "Nuclear",
       "prerequisites": ["fission_i"],
       "depth_in_tree": 5,
-      "cost_base_currency": 120000,
+      "cost_base_currency": 37400000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["silver", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "lanthanum"],
@@ -843,7 +843,7 @@
       "branch": "Nuclear",
       "prerequisites": ["slow_neutron_capture"],
       "depth_in_tree": 6,
-      "cost_base_currency": 300000,
+      "cost_base_currency": 57000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["europium"],
@@ -864,7 +864,7 @@
       "branch": "Chemistry",
       "prerequisites": ["mid_elements"],
       "depth_in_tree": 3,
-      "cost_base_currency": 150000,
+      "cost_base_currency": 39300000,
       "cost_prestige_currency": 0,
       "duration_seconds": 300,
       "unlocks_items": ["carbon_dioxide", "table_salt", "sulfuric_acid"],
@@ -885,7 +885,7 @@
       "branch": "Chemistry",
       "prerequisites": ["chemistry_lab"],
       "depth_in_tree": 4,
-      "cost_base_currency": 500000,
+      "cost_base_currency": 87100000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["catalyst", "chlorine_gas", "sodium_hydroxide", "nitric_acid"],
@@ -905,7 +905,7 @@
       "branch": "Chemistry",
       "prerequisites": ["reaction_engineering"],
       "depth_in_tree": 5,
-      "cost_base_currency": 2000000,
+      "cost_base_currency": 230000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["ethane", "octane", "ethanol", "polymer_precursor"],
@@ -925,7 +925,7 @@
       "branch": "Chemistry",
       "prerequisites": ["organic_chemistry"],
       "depth_in_tree": 6,
-      "cost_base_currency": 5000000,
+      "cost_base_currency": 386000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": [],
@@ -946,7 +946,7 @@
       "branch": "Biology",
       "prerequisites": ["biochem_precursors"],
       "depth_in_tree": 6,
-      "cost_base_currency": 10000000,
+      "cost_base_currency": 553000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
@@ -967,7 +967,7 @@
       "branch": "Biology",
       "prerequisites": ["biology_lab"],
       "depth_in_tree": 7,
-      "cost_base_currency": 50000000,
+      "cost_base_currency": 674000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 10800,
       "unlocks_items": ["ribosome", "mitochondria", "cell_membrane", "prokaryotic_cell"],
@@ -987,7 +987,7 @@
       "branch": "Biology",
       "prerequisites": ["cell_biology"],
       "depth_in_tree": 8,
-      "cost_base_currency": 250000000,
+      "cost_base_currency": 951000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 14400,
       "unlocks_items": ["eukaryotic_cell", "tissue", "organ"],
@@ -1007,7 +1007,7 @@
       "branch": "Biology",
       "prerequisites": ["multicellular_life"],
       "depth_in_tree": 8,
-      "cost_base_currency": 1000000000,
+      "cost_base_currency": 2020000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 14400,
       "unlocks_items": ["organism", "population", "ecosystem"],
@@ -1215,7 +1215,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A soft alkali metal and the lightest solid element. Critical in battery technology — the backbone of rechargeable batteries used in every mobile device.",
-      "base_sell_value": 20.0,
+      "base_sell_value": 228.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1263,7 +1263,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The third most abundant element in the universe. Highly reactive and essential for combustion and respiration. Makes up 21% of Earth's atmosphere.",
-      "base_sell_value": 640.0,
+      "base_sell_value": 977.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1287,7 +1287,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A semiconductor at the heart of modern electronics. Silicon wafers are the foundation of processors, solar cells, and transistors.",
-      "base_sell_value": 40960.0,
+      "base_sell_value": 4650.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1311,7 +1311,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The most common element on Earth by mass. The endpoint of stellar fusion — stars cannot fuse elements heavier than iron without consuming more energy than they produce.",
-      "base_sell_value": 167772160.0,
+      "base_sell_value": 37200.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1432,7 +1432,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The fissile isotope of uranium used in nuclear reactors and weapons. Splitting U-235 releases enormous energy and produces alpha particles as decay byproducts.",
-      "base_sell_value": 128.0,
+      "base_sell_value": 1500.0,
       "isotope_sell_multiplier": 2.0
     },
     {
@@ -1509,7 +1509,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Harder than steel and lighter than aluminium. Beryllium is transparent to X-rays and used in nuclear reactor reflectors. Toxic in dust form — handle with care.",
-      "base_sell_value": 40.0,
+      "base_sell_value": 513.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1533,7 +1533,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A metalloid bridging metals and nonmetals. Boron carbide is one of the hardest materials known. Boron-10 absorbs neutrons, making it essential for nuclear reactor control rods.",
-      "base_sell_value": 80.0,
+      "base_sell_value": 869.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1557,7 +1557,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "78% of Earth's atmosphere. Nitrogen is the limiting nutrient in agriculture — the Haber process that synthesises ammonia from it feeds half of humanity.",
-      "base_sell_value": 320.0,
+      "base_sell_value": 1160.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1581,7 +1581,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The most abundant metal in Earth's crust, yet rare in pure form before electrolysis was discovered. Lightweight and corrosion-resistant — the backbone of aerospace and packaging.",
-      "base_sell_value": 20480.0,
+      "base_sell_value": 5080.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1605,7 +1605,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A transition metal with strong magnetic properties. Critical in stainless steel, lithium-nickel battery cathodes, and superalloys that survive jet engine temperatures.",
-      "base_sell_value": 210453399.0,
+      "base_sell_value": 48800.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1629,7 +1629,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The best electrical conductor among common metals. In our Quantum Foundry, copper is synthesised atom by atom — ironic, given it is the cheapest ore in simpler mining games.",
-      "base_sell_value": 235707807.0,
+      "base_sell_value": 54600.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1653,7 +1653,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zinc galvanises steel against corrosion and is half of brass alloy. Essential in human biology as a cofactor in hundreds of enzymes.",
-      "base_sell_value": 263992744.0,
+      "base_sell_value": 60400.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1677,7 +1677,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest electrical and thermal conductivity of any element. Used in solar panel contacts, antibacterial coatings, and high-performance circuit connections.",
-      "base_sell_value": 522.0,
+      "base_sell_value": 20100.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1701,7 +1701,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chemically inert, immune to corrosion, and malleable beyond any other metal. Every connector in space hardware is gold-plated. Its rarity is a product of neutron star collisions.",
-      "base_sell_value": 16618.0,
+      "base_sell_value": 952000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1725,7 +1725,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature. Rarer than gold.",
-      "base_sell_value": 10379.0,
+      "base_sell_value": 874000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1749,7 +1749,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing components in fusion reactors all rely on tungsten's thermal extremity.",
-      "base_sell_value": 2250.0,
+      "base_sell_value": 563000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1773,7 +1773,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Does not occur naturally on Earth — only made in reactors and particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling it requires exquisite precision.",
-      "base_sell_value": 52.0,
+      "base_sell_value": 240.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -1799,7 +1799,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hydrogen cooled to −253°C, just 20 degrees above absolute zero. The most energy-dense chemical rocket propellant by mass. Used as a feedstock for fuel cells and semiconductor processing.",
-      "base_sell_value": 300.0,
+      "base_sell_value": 110.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1823,7 +1823,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Two hydrogen, one oxygen — the universal solvent and prerequisite for life as we know it. In the Foundry it is a chemical intermediate and coolant feedstock.",
-      "base_sell_value": 6000.0,
+      "base_sell_value": 13900.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1847,7 +1847,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The simplest hydrocarbon. Natural gas is mostly methane. SpaceX's Raptor engine burns it with oxygen. A key carbon feedstock for synthesising carbon fibre and polymers.",
-      "base_sell_value": 5000.0,
+      "base_sell_value": 1980.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1871,7 +1871,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The Haber–Bosch synthesis of ammonia is arguably the most important industrial reaction in history — it enabled fertilisers that now feed half the world's population.",
-      "base_sell_value": 10000.0,
+      "base_sell_value": 21000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1895,7 +1895,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Silicon dioxide — the primary component of sand, glass, and quartz. Ultrapure silica is the substrate from which semiconductor wafers are grown.",
-      "base_sell_value": 50000.0,
+      "base_sell_value": 58500.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1919,7 +1919,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iron oxide — rust — is the thermite reaction's fuel and the precursor ore for steel production. In the Foundry we synthesise it directly from pure iron and oxygen.",
-      "base_sell_value": 200000.0,
+      "base_sell_value": 203000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1943,7 +1943,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "UF₆ is the gaseous compound used in uranium enrichment centrifuges. Its production here enables isotope separation and is a prerequisite for superconductor synthesis.",
-      "base_sell_value": 8000000.0,
+      "base_sell_value": 106000.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -1969,7 +1969,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iron alloyed with controlled carbon content. The structural material of the industrial age — bridges, skyscrapers, ships. Synthesised here by reducing iron oxide with methane.",
-      "base_sell_value": 1500000.0,
+      "base_sell_value": 1230000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1993,7 +1993,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Crystalline carbon arranged in long chains — five times stronger than steel at one quarter the weight. The structural material of spacecraft, racing vehicles, and megastructures.",
-      "base_sell_value": 6000000.0,
+      "base_sell_value": 457000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2017,7 +2017,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Titanium alloyed with aluminium and vanadium — the aerospace standard. Survives re-entry temperatures, resists saltwater corrosion, and biocompatible enough for implants.",
-      "base_sell_value": 25000000.0,
+      "base_sell_value": 1330000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2041,7 +2041,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ultrapure crystalline silicon sliced to sub-millimetre thickness. The substrate on which every integrated circuit is etched. Grown from molten silica in hydrogen atmosphere.",
-      "base_sell_value": 100000000.0,
+      "base_sell_value": 1280000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2065,7 +2065,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The lightest solid material ever synthesised — 99.8% air by volume. An extraordinary thermal insulator. Used in Mars rover heat shields and as structural fill in megastructures.",
-      "base_sell_value": 400000000.0,
+      "base_sell_value": 1360000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2089,7 +2089,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A material with zero electrical resistance below its critical temperature. Enables MRI machines, maglev trains, and the magnetic confinement coils of fusion reactors.",
-      "base_sell_value": 1600000000.0,
+      "base_sell_value": 4350000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2113,7 +2113,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Engineered at the nanoscale to have properties impossible in natural materials — negative refractive index, electromagnetic cloaking, and exotic gravitational interactions.",
-      "base_sell_value": 6400000000.0,
+      "base_sell_value": 12900000.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -2139,7 +2139,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A processor that harnesses quantum superposition and entanglement. Factorises problems in polynomial time that classical computers cannot solve in the lifetime of the universe.",
-      "base_sell_value": 50000000000.0,
+      "base_sell_value": 18100000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2163,7 +2163,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A toroidal magnetic confinement structure that holds stellar plasma at 150 million degrees — hotter than the sun's core. The heart of a fusion power plant or a miniature star.",
-      "base_sell_value": 200000000000.0,
+      "base_sell_value": 61300000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2187,7 +2187,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A magnetic bottle storing antihydrogen — matter's mirror. When antimatter meets matter, 100% of both masses convert to energy per E=mc². The most energy-dense storage known.",
-      "base_sell_value": 800000000000.0,
+      "base_sell_value": 50700000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2211,7 +2211,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The structural anchor point of a Dyson sphere. Each node bears the gravitational tension of thousands of square kilometres of solar-collecting surface. Built to last a million years.",
-      "base_sell_value": 5000000000000.0,
+      "base_sell_value": 183000000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2235,7 +2235,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The load-bearing superstructure of a megastructure. Woven from titanium alloy and carbon fibre into a tensegrity lattice strong enough to encircle a star.",
-      "base_sell_value": 20000000000000.0,
+      "base_sell_value": 402000000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2259,7 +2259,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A metamaterial array that bends spacetime curvature. Compensates for tidal forces across the inner surface of a Dyson sphere, maintaining structural integrity against the star's gravity gradient.",
-      "base_sell_value": 100000000000000.0,
+      "base_sell_value": 945000000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2283,7 +2283,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Fluorine (F), element number 9 with mass number 19. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 1280.0,
+      "base_sell_value": 2270.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2307,7 +2307,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neon (Ne), element number 10 with mass number 20. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 2560.0,
+      "base_sell_value": 2000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2331,7 +2331,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Sodium (Na), element number 11 with mass number 23. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 5120.0,
+      "base_sell_value": 3570.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2355,7 +2355,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Magnesium (Mg), element number 12 with mass number 24. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 10240.0,
+      "base_sell_value": 3220.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2379,7 +2379,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Phosphorus (P), element number 15 with mass number 31. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 81920.0,
+      "base_sell_value": 6800.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2403,7 +2403,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Sulfur (S), element number 16 with mass number 32. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 163840.0,
+      "base_sell_value": 8510.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2427,7 +2427,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chlorine (Cl), element number 17 with mass number 35. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 327680.0,
+      "base_sell_value": 15400.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2451,7 +2451,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Argon (Ar), element number 18 with mass number 40. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 655360.0,
+      "base_sell_value": 13400.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2475,7 +2475,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Potassium (K), element number 19 with mass number 39. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 1310720.0,
+      "base_sell_value": 21100.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2499,7 +2499,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Calcium (Ca), element number 20 with mass number 40. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 2621440.0,
+      "base_sell_value": 18300.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2523,7 +2523,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Scandium (Sc), element number 21 with mass number 45. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 5242880.0,
+      "base_sell_value": 26900.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2547,7 +2547,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Titanium (Ti), element number 22 with mass number 48. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 10485760.0,
+      "base_sell_value": 24100.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2571,7 +2571,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Vanadium (V), element number 23 with mass number 51. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 20971520.0,
+      "base_sell_value": 33500.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2595,7 +2595,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chromium (Cr), element number 24 with mass number 52. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 41943040.0,
+      "base_sell_value": 30400.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2619,7 +2619,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Manganese (Mn), element number 25 with mass number 55. Forged by fusion, climbing the ladder toward iron, the most stable nucleus.",
-      "base_sell_value": 83886080.0,
+      "base_sell_value": 40600.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2643,7 +2643,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cobalt (Co), element number 27 with mass number 59. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 187904820.0,
+      "base_sell_value": 43000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2667,7 +2667,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gallium (Ga), element number 31 with mass number 69. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 295671874.0,
+      "base_sell_value": 66200.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2691,7 +2691,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Germanium (Ge), element number 32 with mass number 74. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 331152499.0,
+      "base_sell_value": 72000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2715,7 +2715,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Arsenic (As), element number 33 with mass number 75. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 370890799.0,
+      "base_sell_value": 77800.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2739,7 +2739,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Selenium (Se), element number 34 with mass number 80. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 415397695.0,
+      "base_sell_value": 83600.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2763,7 +2763,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bromine (Br), element number 35 with mass number 79. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 465245419.0,
+      "base_sell_value": 89400.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2787,7 +2787,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Krypton (Kr), element number 36 with mass number 84. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 313.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2811,7 +2811,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rubidium (Rb), element number 37 with mass number 85. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 310.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2835,7 +2835,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Strontium (Sr), element number 38 with mass number 88. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 307.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2859,7 +2859,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Yttrium (Y), element number 39 with mass number 89. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 304.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2883,7 +2883,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zirconium (Zr), element number 40 with mass number 90. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 301.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2907,7 +2907,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Niobium (Nb), element number 41 with mass number 93. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 298.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2931,7 +2931,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Molybdenum (Mo), element number 42 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 295.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2955,7 +2955,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Technetium (Tc), element number 43 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 331.0,
+      "base_sell_value": 6210.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2979,7 +2979,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ruthenium (Ru), element number 44 with mass number 102. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 371.0,
+      "base_sell_value": 9650.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3003,7 +3003,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhodium (Rh), element number 45 with mass number 103. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 416.0,
+      "base_sell_value": 13100.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3027,7 +3027,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Palladium (Pd), element number 46 with mass number 106. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 466.0,
+      "base_sell_value": 16600.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3051,7 +3051,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cadmium (Cd), element number 48 with mass number 114. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 585.0,
+      "base_sell_value": 23600.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3075,7 +3075,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Indium (In), element number 49 with mass number 115. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 656.0,
+      "base_sell_value": 27100.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3099,7 +3099,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tin (Sn), element number 50 with mass number 120. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 272.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3123,7 +3123,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Antimony (Sb), element number 51 with mass number 121. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 270.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3147,7 +3147,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tellurium (Te), element number 52 with mass number 130. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 267.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3171,7 +3171,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iodine (I), element number 53 with mass number 127. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 264.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3195,7 +3195,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Xenon (Xe), element number 54 with mass number 132. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 262.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3219,7 +3219,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cesium (Cs), element number 55 with mass number 133. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 259.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3243,7 +3243,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Barium (Ba), element number 56 with mass number 138. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 256.0,
+      "base_sell_value": 2770.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3267,7 +3267,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lanthanum (La), element number 57 with mass number 139. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 287.0,
+      "base_sell_value": 6210.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3291,7 +3291,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cerium (Ce), element number 58 with mass number 140. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 251.0,
+      "base_sell_value": 4050.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3315,7 +3315,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Praseodymium (Pr), element number 59 with mass number 141. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 281.0,
+      "base_sell_value": 26000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3339,7 +3339,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neodymium (Nd), element number 60 with mass number 142. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 315.0,
+      "base_sell_value": 48000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3363,7 +3363,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Promethium (Pm), element number 61 with mass number 145. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 353.0,
+      "base_sell_value": 70000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3387,7 +3387,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Samarium (Sm), element number 62 with mass number 152. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 396.0,
+      "base_sell_value": 92000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3411,7 +3411,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Europium (Eu), element number 63 with mass number 153. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 645.0,
+      "base_sell_value": 134000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3435,7 +3435,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gadolinium (Gd), element number 64 with mass number 158. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 723.0,
+      "base_sell_value": 173000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3459,7 +3459,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Terbium (Tb), element number 65 with mass number 159. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 810.0,
+      "base_sell_value": 212000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3483,7 +3483,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dysprosium (Dy), element number 66 with mass number 164. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 908.0,
+      "base_sell_value": 251000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3507,7 +3507,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Holmium (Ho), element number 67 with mass number 165. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1017.0,
+      "base_sell_value": 290000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3531,7 +3531,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Erbium (Er), element number 68 with mass number 166. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1139.0,
+      "base_sell_value": 329000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3555,7 +3555,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thulium (Tm), element number 69 with mass number 169. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1276.0,
+      "base_sell_value": 368000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3579,7 +3579,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ytterbium (Yb), element number 70 with mass number 174. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1429.0,
+      "base_sell_value": 407000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3603,7 +3603,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lutetium (Lu), element number 71 with mass number 175. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1601.0,
+      "base_sell_value": 446000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3627,7 +3627,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hafnium (Hf), element number 72 with mass number 180. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1793.0,
+      "base_sell_value": 485000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3651,7 +3651,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tantalum (Ta), element number 73 with mass number 181. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2009.0,
+      "base_sell_value": 524000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3675,7 +3675,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhenium (Re), element number 75 with mass number 187. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2520.0,
+      "base_sell_value": 602000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3699,7 +3699,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Osmium (Os), element number 76 with mass number 192. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 4043.0,
+      "base_sell_value": 699000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3723,7 +3723,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iridium (Ir), element number 77 with mass number 193. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 6480.0,
+      "base_sell_value": 796000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3747,7 +3747,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mercury (Hg), element number 80 with mass number 202. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 18613.0,
+      "base_sell_value": 991000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3771,7 +3771,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thallium (Tl), element number 81 with mass number 205. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 200.0,
+      "base_sell_value": 2520.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3795,7 +3795,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead (Pb), element number 82 with mass number 208. A fission fragment on the long descent from the heavy actinides back toward iron. Stable: the end of the uranium decay chain. Add a neutron for Lead-209 (decays into Bismuth), or remove seven for Lead-201 (decays into Thallium).",
-      "base_sell_value": 180.0,
+      "base_sell_value": 1820.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3819,7 +3819,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bismuth (Bi), element number 83 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 227.0,
+      "base_sell_value": 2310.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3843,7 +3843,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Polonium (Po), element number 84 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Lead.",
-      "base_sell_value": 147.0,
+      "base_sell_value": 1470.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3867,7 +3867,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Astatine (At), element number 85 with mass number 210. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 132.0,
+      "base_sell_value": 1810.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3891,7 +3891,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radon (Rn), element number 86 with mass number 222. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Polonium. Add a neutron for Radon-223 (decays into Francium), or remove eleven for Radon-211 (decays into Astatine).",
-      "base_sell_value": 119.0,
+      "base_sell_value": 1120.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3915,7 +3915,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Francium (Fr), element number 87 with mass number 223. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 150.0,
+      "base_sell_value": 1610.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3939,7 +3939,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radium (Ra), element number 88 with mass number 226. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radon. Add a neutron to make Radium-227, which decays into Actinium.",
-      "base_sell_value": 97.0,
+      "base_sell_value": 762.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3963,7 +3963,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Actinium (Ac), element number 89 with mass number 227. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 122.0,
+      "base_sell_value": 1250.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3987,7 +3987,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thorium (Th), element number 90 with mass number 232. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radium. Add a neutron (Isotopic Manipulator) to make Thorium-233, which decays into Protactinium.",
-      "base_sell_value": 79.0,
+      "base_sell_value": 413.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4011,7 +4011,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Protactinium (Pa), element number 91 with mass number 231. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 100.0,
+      "base_sell_value": 893.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4035,7 +4035,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neptunium (Np), element number 93 with mass number 237. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 58.0,
+      "base_sell_value": 652000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4059,7 +4059,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Americium (Am), element number 95 with mass number 243. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 335544320.0,
+      "base_sell_value": 669000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4083,7 +4083,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Curium (Cm), element number 96 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 671088640.0,
+      "base_sell_value": 680000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4107,7 +4107,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Berkelium (Bk), element number 97 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 1342177280.0,
+      "base_sell_value": 680000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4131,7 +4131,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Californium (Cf), element number 98 with mass number 251. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 2684354560.0,
+      "base_sell_value": 691000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4155,7 +4155,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Einsteinium (Es), element number 99 with mass number 252. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 5368709120.0,
+      "base_sell_value": 693000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4179,7 +4179,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Fermium (Fm), element number 100 with mass number 257. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 10737418240.0,
+      "base_sell_value": 707000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4203,7 +4203,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mendelevium (Md), element number 101 with mass number 258. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 21474836480.0,
+      "base_sell_value": 844000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4227,7 +4227,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nobelium (No), element number 102 with mass number 259. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 42949672960.0,
+      "base_sell_value": 848000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4251,7 +4251,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lawrencium (Lr), element number 103 with mass number 266. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 85899345920.0,
+      "base_sell_value": 871000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4275,7 +4275,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rutherfordium (Rf), element number 104 with mass number 267. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 171798691840.0,
+      "base_sell_value": 874000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4299,7 +4299,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dubnium (Db), element number 105 with mass number 268. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 343597383680.0,
+      "base_sell_value": 877000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4323,7 +4323,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Seaborgium (Sg), element number 106 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 687194767360.0,
+      "base_sell_value": 880000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4347,7 +4347,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bohrium (Bh), element number 107 with mass number 270. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1374389534720.0,
+      "base_sell_value": 884000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4371,7 +4371,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hassium (Hs), element number 108 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2748779069440.0,
+      "base_sell_value": 880000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4395,7 +4395,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Meitnerium (Mt), element number 109 with mass number 278. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 5497558138880.0,
+      "base_sell_value": 910000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4419,7 +4419,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Darmstadtium (Ds), element number 110 with mass number 281. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 10995116277760.0,
+      "base_sell_value": 920000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4443,7 +4443,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Roentgenium (Rg), element number 111 with mass number 282. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 21990232555520.0,
+      "base_sell_value": 923000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4467,7 +4467,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Copernicium (Cn), element number 112 with mass number 285. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 43980465111040.0,
+      "base_sell_value": 933000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4491,7 +4491,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nihonium (Nh), element number 113 with mass number 286. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 87960930222080.0,
+      "base_sell_value": 936000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4515,7 +4515,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Flerovium (Fl), element number 114 with mass number 289. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 175921860444160.0,
+      "base_sell_value": 946000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4539,7 +4539,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Moscovium (Mc), element number 115 with mass number 290. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 351843720888320.0,
+      "base_sell_value": 949000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4563,7 +4563,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Livermorium (Lv), element number 116 with mass number 293. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 703687441776640.0,
+      "base_sell_value": 959000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4587,7 +4587,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tennessine (Ts), element number 117 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1407374883553280.0,
+      "base_sell_value": 962000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4611,277 +4611,741 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Oganesson (Og), element number 118 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2814749767106560.0,
+      "base_sell_value": 962000.0,
       "isotope_sell_multiplier": 1.0
     },
 
-    { "_organic_note": "OrganicCompound category (Chem/Bio Phase 2). Forward-declared Chemistry C4 outputs; recipes that produce them land in Phase 4. base_sell_value is a first-pass placeholder to tune with those recipes. Biology (deferred) consumes these as field feedstock.",
-      "id": "glucose", "display_name": "Glucose", "symbol": "Glc", "icon_path": "TODO",
-      "item_id": 150, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
-      "atomic_number": 0, "atomic_mass": 180, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_organic_note": "OrganicCompound category (Chem/Bio Phase 2). Forward-declared Chemistry C4 outputs; recipes that produce them land in Phase 4. base_sell_value is a first-pass placeholder to tune with those recipes. Biology (deferred) consumes these as field feedstock.",
+      "id": "glucose",
+      "display_name": "Glucose",
+      "symbol": "Glc",
+      "icon_path": "TODO",
+      "item_id": 150,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "OrganicCompound",
+      "atomic_number": 0,
+      "atomic_mass": 180,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A simple sugar and the universal cellular fuel. Chemistry's first step toward biology.",
-      "base_sell_value": 25000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 182000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "fatty_acid", "display_name": "Fatty Acid", "symbol": "FA", "icon_path": "TODO",
-      "item_id": 151, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
-      "atomic_number": 0, "atomic_mass": 256, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "fatty_acid",
+      "display_name": "Fatty Acid",
+      "symbol": "FA",
+      "icon_path": "TODO",
+      "item_id": 151,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "OrganicCompound",
+      "atomic_number": 0,
+      "atomic_mass": 256,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A long hydrocarbon chain with an acid head. The building block of cell membranes.",
-      "base_sell_value": 30000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 866000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "amino_acid", "display_name": "Amino Acid", "symbol": "AA", "icon_path": "TODO",
-      "item_id": 152, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
-      "atomic_number": 0, "atomic_mass": 110, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "amino_acid",
+      "display_name": "Amino Acid",
+      "symbol": "AA",
+      "icon_path": "TODO",
+      "item_id": 152,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "OrganicCompound",
+      "atomic_number": 0,
+      "atomic_mass": 110,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The monomer of proteins. Twenty of these, chained, spell out every enzyme and structure of life.",
-      "base_sell_value": 40000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 198000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "nucleotide", "display_name": "Nucleotide", "symbol": "Nt", "icon_path": "TODO",
-      "item_id": 153, "tier": 3, "tier_ref": "tier_3", "category": "OrganicCompound",
-      "atomic_number": 0, "atomic_mass": 330, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "nucleotide",
+      "display_name": "Nucleotide",
+      "symbol": "Nt",
+      "icon_path": "TODO",
+      "item_id": 153,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "OrganicCompound",
+      "atomic_number": 0,
+      "atomic_mass": 330,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A base, a sugar, and a phosphate. Strung together, nucleotides encode heredity as DNA and RNA.",
-      "base_sell_value": 60000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 425000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_chem_c1_note": "Chemistry C1 inorganic compounds (Chem/Bio Phase 4a). Synthesized by the Compound Synthesizer from mined elements. Category Molecule (reuses the existing category). base_sell_value is FIRST-PASS: it tracks today's (physics-era) element values, which the Phase 6 economy re-tier will re-cost.",
-      "id": "carbon_dioxide", "display_name": "Carbon Dioxide", "symbol": "CO2", "icon_path": "TODO",
-      "item_id": 154, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 44, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_chem_c1_note": "Chemistry C1 inorganic compounds (Chem/Bio Phase 4a). Synthesized by the Compound Synthesizer from mined elements. Category Molecule (reuses the existing category). base_sell_value is FIRST-PASS: it tracks today's (physics-era) element values, which the Phase 6 economy re-tier will re-cost.",
+      "id": "carbon_dioxide",
+      "display_name": "Carbon Dioxide",
+      "symbol": "CO2",
+      "icon_path": "TODO",
+      "item_id": 154,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 44,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "One carbon bonded to two oxygens. The exhaust of combustion and the feedstock of photosynthesis.",
-      "base_sell_value": 5000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 8930.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "table_salt", "display_name": "Table Salt", "symbol": "NaCl", "icon_path": "TODO",
-      "item_id": 155, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 58, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "table_salt",
+      "display_name": "Table Salt",
+      "symbol": "NaCl",
+      "icon_path": "TODO",
+      "item_id": 155,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 58,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "An ionic lattice of sodium and chlorine. The archetypal salt and an essential electrolyte.",
-      "base_sell_value": 900000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 31200.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "sulfuric_acid", "display_name": "Sulfuric Acid", "symbol": "H2SO4", "icon_path": "TODO",
-      "item_id": 156, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 98, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "sulfuric_acid",
+      "display_name": "Sulfuric Acid",
+      "symbol": "H2SO4",
+      "icon_path": "TODO",
+      "item_id": 156,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 98,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The workhorse of industrial chemistry: a strong diprotic acid made from sulfur, oxygen, and hydrogen.",
-      "base_sell_value": 500000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 26100.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_chem_c2c3_note": "Chemistry C2 (salts/acids/catalyst) and C3 (hydrocarbons) products (Chem/Bio Phase 4b). Category Molecule. base_sell_value is FIRST-PASS, tracking today's physics-era element values; the Phase 6 economy re-tier will re-cost.",
-      "id": "catalyst", "display_name": "Catalyst", "symbol": "cat", "icon_path": "TODO",
-      "item_id": 157, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_chem_c2c3_note": "Chemistry C2 (salts/acids/catalyst) and C3 (hydrocarbons) products (Chem/Bio Phase 4b). Category Molecule. base_sell_value is FIRST-PASS, tracking today's physics-era element values; the Phase 6 economy re-tier will re-cost.",
+      "id": "catalyst",
+      "display_name": "Catalyst",
+      "symbol": "cat",
+      "icon_path": "TODO",
+      "item_id": 157,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A prepared metal surface that speeds a reaction without being consumed. The quiet enabler of every industrial-scale synthesis.",
-      "base_sell_value": 8000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 130000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "chlorine_gas", "display_name": "Chlorine Gas", "symbol": "Cl2", "icon_path": "TODO",
-      "item_id": 158, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 71, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "chlorine_gas",
+      "display_name": "Chlorine Gas",
+      "symbol": "Cl2",
+      "icon_path": "TODO",
+      "item_id": 158,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 71,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Two chlorine atoms, paired. A reactive green gas and the reagent behind countless industrial chlorinations.",
-      "base_sell_value": 700000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 50200.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "sodium_hydroxide", "display_name": "Sodium Hydroxide", "symbol": "NaOH", "icon_path": "TODO",
-      "item_id": 159, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 40, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "sodium_hydroxide",
+      "display_name": "Sodium Hydroxide",
+      "symbol": "NaOH",
+      "icon_path": "TODO",
+      "item_id": 159,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 40,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A strong base, the alkaline counterpart to the acids. Caustic soda dissolves, saponifies, and neutralizes across all of chemistry.",
-      "base_sell_value": 1000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 28800.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "nitric_acid", "display_name": "Nitric Acid", "symbol": "HNO3", "icon_path": "TODO",
-      "item_id": 160, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 63, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "nitric_acid",
+      "display_name": "Nitric Acid",
+      "symbol": "HNO3",
+      "icon_path": "TODO",
+      "item_id": 160,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 63,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A powerful oxidizing acid of nitrogen, oxygen, and hydrogen. The reagent behind fertilizers, explosives, and etched metal.",
-      "base_sell_value": 1200000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 33200.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "ethane", "display_name": "Ethane", "symbol": "C2H6", "icon_path": "TODO",
-      "item_id": 161, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 30, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "ethane",
+      "display_name": "Ethane",
+      "symbol": "C2H6",
+      "icon_path": "TODO",
+      "item_id": 161,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 30,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The simplest two-carbon hydrocarbon. A short link in the chain that organic chemistry builds outward without end.",
-      "base_sell_value": 1500000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 58100.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "octane", "display_name": "Octane", "symbol": "C8H18", "icon_path": "TODO",
-      "item_id": 162, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 114, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "octane",
+      "display_name": "Octane",
+      "symbol": "C8H18",
+      "icon_path": "TODO",
+      "item_id": 162,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 114,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "An eight-carbon chain, dense with stored energy. The archetypal fuel and a heavier feedstock for synthesis.",
-      "base_sell_value": 6000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 325000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "ethanol", "display_name": "Ethanol", "symbol": "C2H6O", "icon_path": "TODO",
-      "item_id": 163, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 46, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "ethanol",
+      "display_name": "Ethanol",
+      "symbol": "C2H6O",
+      "icon_path": "TODO",
+      "item_id": 163,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 46,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A hydrocarbon with an oxygen-hydrogen head — the first alcohol. Solvent, fuel, and a stepping stone to more complex organics.",
-      "base_sell_value": 3000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 129000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "polymer_precursor", "display_name": "Polymer Precursor", "symbol": "mono", "icon_path": "TODO",
-      "item_id": 164, "tier": 3, "tier_ref": "tier_3", "category": "Molecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "polymer_precursor",
+      "display_name": "Polymer Precursor",
+      "symbol": "mono",
+      "icon_path": "TODO",
+      "item_id": 164,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Molecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A reactive monomer poised to link into long polymer chains. The bridge between small organics and macromolecular matter.",
-      "base_sell_value": 12000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 571000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_bio_b1_note": "Biology B1 biomolecules (Chem/Bio Biology track). Category Biomolecule. Assembled by the Biosynthesizer from organic compounds harvested on the Biology map. base_sell_value is FIRST-PASS (Phase 6 re-tier).",
-      "id": "protein", "display_name": "Protein", "symbol": "Prot", "icon_path": "TODO",
-      "item_id": 165, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_bio_b1_note": "Biology B1 biomolecules (Chem/Bio Biology track). Category Biomolecule. Assembled by the Biosynthesizer from organic compounds harvested on the Biology map. base_sell_value is FIRST-PASS (Phase 6 re-tier).",
+      "id": "protein",
+      "display_name": "Protein",
+      "symbol": "Prot",
+      "icon_path": "TODO",
+      "item_id": 165,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Biomolecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A folded chain of amino acids. Enzymes, motors, and scaffolds — proteins do nearly all the work of a living cell.",
-      "base_sell_value": 120000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 958000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "carbohydrate", "display_name": "Carbohydrate", "symbol": "Carb", "icon_path": "TODO",
-      "item_id": 166, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "carbohydrate",
+      "display_name": "Carbohydrate",
+      "symbol": "Carb",
+      "icon_path": "TODO",
+      "item_id": 166,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Biomolecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A polymer of sugars. The cell's fuel store and structural fiber, from starch to cellulose.",
-      "base_sell_value": 100000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 894000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "lipid_membrane", "display_name": "Lipid Membrane", "symbol": "Lip", "icon_path": "TODO",
-      "item_id": 167, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "lipid_membrane",
+      "display_name": "Lipid Membrane",
+      "symbol": "Lip",
+      "icon_path": "TODO",
+      "item_id": 167,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Biomolecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A bilayer of fatty acids that separates inside from outside. The first boundary — without it, there is no cell.",
-      "base_sell_value": 140000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 3630000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "nucleic_acid", "display_name": "Nucleic Acid", "symbol": "DNA", "icon_path": "TODO",
-      "item_id": 168, "tier": 3, "tier_ref": "tier_3", "category": "Biomolecule",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "nucleic_acid",
+      "display_name": "Nucleic Acid",
+      "symbol": "DNA",
+      "icon_path": "TODO",
+      "item_id": 168,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Biomolecule",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A chain of nucleotides — DNA and RNA. The molecule of heredity, storing and transcribing the instructions of life.",
-      "base_sell_value": 200000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 1900000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_bio_b2_note": "Biology B2 cellular components (Chem/Bio Biology track). Category CellPart. Assembled by the Cell Assembler. base_sell_value FIRST-PASS (Phase 6 re-tier).",
-      "id": "ribosome", "display_name": "Ribosome", "symbol": "Rib", "icon_path": "TODO",
-      "item_id": 169, "tier": 3, "tier_ref": "tier_3", "category": "CellPart",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_bio_b2_note": "Biology B2 cellular components (Chem/Bio Biology track). Category CellPart. Assembled by the Cell Assembler. base_sell_value FIRST-PASS (Phase 6 re-tier).",
+      "id": "ribosome",
+      "display_name": "Ribosome",
+      "symbol": "Rib",
+      "icon_path": "TODO",
+      "item_id": 169,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "CellPart",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The cell's factory floor: a complex of nucleic acid and protein that reads genetic code and builds new proteins.",
-      "base_sell_value": 2000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 4080000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "mitochondria", "display_name": "Mitochondria", "symbol": "Mito", "icon_path": "TODO",
-      "item_id": 170, "tier": 3, "tier_ref": "tier_3", "category": "CellPart",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "mitochondria",
+      "display_name": "Mitochondria",
+      "symbol": "Mito",
+      "icon_path": "TODO",
+      "item_id": 170,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "CellPart",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The powerhouse of the cell. A membrane-bound organelle that burns fuel into usable energy.",
-      "base_sell_value": 3000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 5810000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "cell_membrane", "display_name": "Cell Membrane", "symbol": "Mem", "icon_path": "TODO",
-      "item_id": 171, "tier": 3, "tier_ref": "tier_3", "category": "CellPart",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "cell_membrane",
+      "display_name": "Cell Membrane",
+      "symbol": "Mem",
+      "icon_path": "TODO",
+      "item_id": 171,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "CellPart",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A closed lipid boundary studded with proteins. It defines the cell and controls what crosses in and out.",
-      "base_sell_value": 1500000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 8450000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "prokaryotic_cell", "display_name": "Prokaryotic Cell", "symbol": "Pro", "icon_path": "TODO",
-      "item_id": 172, "tier": 3, "tier_ref": "tier_3", "category": "CellPart",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "prokaryotic_cell",
+      "display_name": "Prokaryotic Cell",
+      "symbol": "Pro",
+      "icon_path": "TODO",
+      "item_id": 172,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "CellPart",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "The first complete cell: a membrane enclosing ribosomes, energy, and a loop of DNA. Simple, ancient, and alive.",
-      "base_sell_value": 15000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 18800000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_bio_b3_note": "Biology B3 multicellular components (Chem/Bio Biology track). eukaryotic_cell is CellPart; tissue/organ are Organism. Assembled by the Tissue Culture.",
-      "id": "eukaryotic_cell", "display_name": "Eukaryotic Cell", "symbol": "Euk", "icon_path": "TODO",
-      "item_id": 173, "tier": 3, "tier_ref": "tier_3", "category": "CellPart",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_bio_b3_note": "Biology B3 multicellular components (Chem/Bio Biology track). eukaryotic_cell is CellPart; tissue/organ are Organism. Assembled by the Tissue Culture.",
+      "id": "eukaryotic_cell",
+      "display_name": "Eukaryotic Cell",
+      "symbol": "Euk",
+      "icon_path": "TODO",
+      "item_id": 173,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "CellPart",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "A cell with a nucleus and specialised organelles. Larger and more capable than its prokaryotic ancestors — the building block of complex life.",
-      "base_sell_value": 60000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 25200000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "tissue", "display_name": "Tissue", "symbol": "Tis", "icon_path": "TODO",
-      "item_id": 174, "tier": 3, "tier_ref": "tier_3", "category": "Organism",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "tissue",
+      "display_name": "Tissue",
+      "symbol": "Tis",
+      "icon_path": "TODO",
+      "item_id": 174,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Organism",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Many like cells acting as one. A sheet of coordinated eukaryotic cells performing a shared function.",
-      "base_sell_value": 250000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 102000000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "organ", "display_name": "Organ", "symbol": "Org", "icon_path": "TODO",
-      "item_id": 175, "tier": 3, "tier_ref": "tier_3", "category": "Organism",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "organ",
+      "display_name": "Organ",
+      "symbol": "Org",
+      "icon_path": "TODO",
+      "item_id": 175,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Organism",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Several tissues combined into a functional unit — a heart, a leaf, a liver. The machinery of a body.",
-      "base_sell_value": 1000000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 409000000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "_bio_b4_note": "Biology B4 whole-life tier (Chem/Bio Biology track). Category Organism. The Biology endgame, assembled by the Bioreactor.",
-      "id": "organism", "display_name": "Organism", "symbol": "Life", "icon_path": "TODO",
-      "item_id": 176, "tier": 3, "tier_ref": "tier_3", "category": "Organism",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "_bio_b4_note": "Biology B4 whole-life tier (Chem/Bio Biology track). Category Organism. The Biology endgame, assembled by the Bioreactor.",
+      "id": "organism",
+      "display_name": "Organism",
+      "symbol": "Life",
+      "icon_path": "TODO",
+      "item_id": 176,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Organism",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Organs integrated into a single living whole that senses, moves, and reproduces. Chemistry has become a creature.",
-      "base_sell_value": 5000000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 1640000000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "population", "display_name": "Population", "symbol": "Pop", "icon_path": "TODO",
-      "item_id": 177, "tier": 3, "tier_ref": "tier_3", "category": "Organism",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "population",
+      "display_name": "Population",
+      "symbol": "Pop",
+      "icon_path": "TODO",
+      "item_id": 177,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Organism",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Many organisms of one kind, breeding and competing. Life at the scale where evolution takes hold.",
-      "base_sell_value": 25000000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 8210000000.0,
+      "isotope_sell_multiplier": 1.0
+    },
 
-    { "id": "ecosystem", "display_name": "Ecosystem", "symbol": "Eco", "icon_path": "TODO",
-      "item_id": 178, "tier": 3, "tier_ref": "tier_3", "category": "Organism",
-      "atomic_number": 0, "atomic_mass": 0, "charge": "0",
-      "is_radioactive": false, "decay_type": "None", "half_life_note": "",
-      "is_fissile": false, "is_harvested": false, "field_type": "None",
-      "is_secondary_particle": false, "particle_uses": 0,
+    {
+      "id": "ecosystem",
+      "display_name": "Ecosystem",
+      "symbol": "Eco",
+      "icon_path": "TODO",
+      "item_id": 178,
+      "tier": 3,
+      "tier_ref": "tier_3",
+      "category": "Organism",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
       "codex_entry": "Countless populations woven into one self-sustaining web — predators, prey, plants, and decomposers cycling matter and energy. A living world.",
-      "base_sell_value": 150000000000.0, "isotope_sell_multiplier": 1.0 },
+      "base_sell_value": 41100000000.0,
+      "isotope_sell_multiplier": 1.0
+    },
     {
       "id": "neutrino",
       "display_name": "Neutrino",
@@ -4955,7 +5419,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thorium-232 that has caught one neutron. It beta-decays within minutes into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.",
-      "base_sell_value": 92.0,
+      "base_sell_value": 656.0,
       "isotope_sell_multiplier": 1.163
     },
     {
@@ -4979,7 +5443,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radium-226 plus one neutron. A neutron inside it turns into a proton (beta decay), making Actinium-227.",
-      "base_sell_value": 112.0,
+      "base_sell_value": 1010.0,
       "isotope_sell_multiplier": 1.155
     },
     {
@@ -5003,7 +5467,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A neutron-heavy radon that beta-decays into Francium-223, the only francium found in nature.",
-      "base_sell_value": 137.0,
+      "base_sell_value": 1370.0,
       "isotope_sell_multiplier": 1.148
     },
     {
@@ -5027,7 +5491,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radon stripped of eleven neutrons. Too proton-rich to last, it captures an electron and becomes Astatine-211, an isotope used in cancer therapy.",
-      "base_sell_value": 119.0,
+      "base_sell_value": 1570.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -5051,7 +5515,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead-208 plus one neutron. It beta-decays into Bismuth-209, the heaviest element with a near-stable isotope.",
-      "base_sell_value": 205.0,
+      "base_sell_value": 2070.0,
       "isotope_sell_multiplier": 1.139
     },
     {
@@ -5075,7 +5539,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead with seven neutrons removed. It captures an electron and becomes Thallium-201, used in heart scans.",
-      "base_sell_value": 180.0,
+      "base_sell_value": 2280.0,
       "isotope_sell_multiplier": 1.0
     }
   ],
@@ -9332,26 +9796,98 @@
       "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_oxygen", "display_name": "Mine Oxygen", "recipe_id": 166, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "oxygen", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_sodium", "display_name": "Mine Sodium", "recipe_id": 167, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "sodium", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_chlorine", "display_name": "Mine Chlorine", "recipe_id": 168, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "chlorine", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_sulfur", "display_name": "Mine Sulfur", "recipe_id": 169, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "sulfur", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    {
+      "id": "collect_oxygen",
+      "display_name": "Mine Oxygen",
+      "recipe_id": 166,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "oxygen",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 3.0,
+      "manual_craft_time": 3.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["element_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "chemistry_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_sodium",
+      "display_name": "Mine Sodium",
+      "recipe_id": 167,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "sodium",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 10.0,
+      "manual_craft_time": 10.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["element_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "chemistry_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_chlorine",
+      "display_name": "Mine Chlorine",
+      "recipe_id": 168,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "chlorine",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 45.0,
+      "manual_craft_time": 45.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["element_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "chemistry_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_sulfur",
+      "display_name": "Mine Sulfur",
+      "recipe_id": 169,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "sulfur",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 25.0,
+      "manual_craft_time": 25.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["element_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "chemistry_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
 
     { "id": "carbon_dioxide", "display_name": "Carbon Dioxide", "recipe_id": 170, "tier": 3, "category": "Molecule",
       "inputs": [ { "item": "carbon", "quantity": 1 }, { "item": "oxygen", "quantity": 2 } ],
@@ -9372,27 +9908,99 @@
       "valid_buildings": ["compound_synthesizer"], "can_craft_manually": false, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
 
-    { "_comment": "--- CHEMISTRY C2: metal harvest (Metal Harvester) + reactions/catalysis (Catalytic Reactor). Chem/Bio Phase 4b. ---",
-      "id": "collect_iron", "display_name": "Mine Iron", "recipe_id": 173, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "iron", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["metal_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "reaction_engineering", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_copper", "display_name": "Mine Copper", "recipe_id": 174, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "copper", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["metal_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "reaction_engineering", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_aluminum", "display_name": "Mine Aluminum", "recipe_id": 175, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "aluminum", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["metal_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "reaction_engineering", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_nickel", "display_name": "Mine Nickel", "recipe_id": 176, "tier": 3, "category": "Element",
-      "inputs": [], "neutron_adjustment": [], "output_item": "nickel", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["metal_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "reaction_engineering", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    {
+      "_comment": "--- CHEMISTRY C2: metal harvest (Metal Harvester) + reactions/catalysis (Catalytic Reactor). Chem/Bio Phase 4b. ---",
+      "id": "collect_iron",
+      "display_name": "Mine Iron",
+      "recipe_id": 173,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "iron",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 38.0,
+      "manual_craft_time": 38.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["metal_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "reaction_engineering",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_copper",
+      "display_name": "Mine Copper",
+      "recipe_id": 174,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "copper",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 56.0,
+      "manual_craft_time": 56.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["metal_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "reaction_engineering",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_aluminum",
+      "display_name": "Mine Aluminum",
+      "recipe_id": 175,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "aluminum",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 5.0,
+      "manual_craft_time": 5.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["metal_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "reaction_engineering",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_nickel",
+      "display_name": "Mine Nickel",
+      "recipe_id": 176,
+      "tier": 3,
+      "category": "Element",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "nickel",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 50.0,
+      "manual_craft_time": 50.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["metal_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "reaction_engineering",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
 
     { "id": "chlorine_gas", "display_name": "Chlorine Gas", "recipe_id": 177, "tier": 3, "category": "Molecule",
       "inputs": [ { "item": "chlorine", "quantity": 2 } ],
@@ -9471,27 +10079,99 @@
       "valid_buildings": ["organic_synthesizer"], "can_craft_manually": false, "known_from_start": false,
       "required_research": "biochem_precursors", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
 
-    { "_comment": "--- BIOLOGY B1: organic-compound harvest (Organic Harvester) + biomolecule synthesis (Biosynthesizer). Chem/Bio Biology track. ---",
-      "id": "collect_glucose", "display_name": "Harvest Glucose", "recipe_id": 189, "tier": 3, "category": "Molecule",
-      "inputs": [], "neutron_adjustment": [], "output_item": "glucose", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_amino_acid", "display_name": "Harvest Amino Acid", "recipe_id": 190, "tier": 3, "category": "Molecule",
-      "inputs": [], "neutron_adjustment": [], "output_item": "amino_acid", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_fatty_acid", "display_name": "Harvest Fatty Acid", "recipe_id": 191, "tier": 3, "category": "Molecule",
-      "inputs": [], "neutron_adjustment": [], "output_item": "fatty_acid", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_nucleotide", "display_name": "Harvest Nucleotide", "recipe_id": 192, "tier": 3, "category": "Molecule",
-      "inputs": [], "neutron_adjustment": [], "output_item": "nucleotide", "output_quantity": 1, "byproducts": [],
-      "base_craft_time": 2.5, "manual_craft_time": 2.5, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["organic_harvester"], "can_craft_manually": true, "known_from_start": false,
-      "required_research": "biology_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
+    {
+      "_comment": "--- BIOLOGY B1: organic-compound harvest (Organic Harvester) + biomolecule synthesis (Biosynthesizer). Chem/Bio Biology track. ---",
+      "id": "collect_glucose",
+      "display_name": "Harvest Glucose",
+      "recipe_id": 189,
+      "tier": 3,
+      "category": "Molecule",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "glucose",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 33.0,
+      "manual_craft_time": 33.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "biology_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_amino_acid",
+      "display_name": "Harvest Amino Acid",
+      "recipe_id": 190,
+      "tier": 3,
+      "category": "Molecule",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "amino_acid",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 36.0,
+      "manual_craft_time": 36.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "biology_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_fatty_acid",
+      "display_name": "Harvest Fatty Acid",
+      "recipe_id": 191,
+      "tier": 3,
+      "category": "Molecule",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "fatty_acid",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 158.0,
+      "manual_craft_time": 158.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "biology_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "collect_nucleotide",
+      "display_name": "Harvest Nucleotide",
+      "recipe_id": 192,
+      "tier": 3,
+      "category": "Molecule",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "nucleotide",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 77.0,
+      "manual_craft_time": 77.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["organic_harvester"],
+      "can_craft_manually": true,
+      "known_from_start": false,
+      "required_research": "biology_lab",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
 
     { "id": "protein", "display_name": "Protein", "recipe_id": 193, "tier": 3, "category": "Molecule",
       "inputs": [ { "item": "amino_acid", "quantity": 4 } ],
@@ -12574,7 +13254,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Uranium-235. Enriched nuclear fuel, worth twice ordinary Uranium, and enrichment releases three spare neutrons you can put to work elsewhere.",
+          "text": "Uranium-235. Enriched nuclear fuel, worth many times ordinary Uranium, and enrichment releases three spare neutrons you can put to work elsewhere.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",

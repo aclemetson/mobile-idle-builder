@@ -41,6 +41,24 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ResearchCosts_FitTheIntField()
+        {
+            // ResearchSO.costBaseCurrency and the importer model are int; JsonUtility silently mangles larger values.
+            foreach (var r in _gd.research)
+                Assert.LessOrEqual(r.cost_base_currency, int.MaxValue, $"{r.id} overflows int (scripts/rebalance_curve.py WAGE_GROWTH)");
+        }
+
+        [Test]
+        public void EarningRate_ClimbsAfterTheTutorial_NoRecipeOutEarnsItsUnlock()
+        {
+            // The derived economy (scripts/rebalance_curve.py): a raw collect recipe earns at most the wage of the
+            // research that unlocks it, so a Chemistry mine cannot out-earn the whole physics chain (#332).
+            var byId = _gd.recipes.ToDictionary(r => r.id);
+            foreach (var id in new[] { "collect_iron", "collect_nickel", "collect_copper" })
+                Assert.GreaterOrEqual(byId[id].base_craft_time, 10f, $"{id} must not mine a metal every couple of seconds");
+        }
+
+        [Test]
         public void CaptureTakesLonger_TheLaterItsResearch()
         {
             int Depth(string id)

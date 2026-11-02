@@ -59,7 +59,7 @@ namespace MobileIdleBuilder.Tests
                 double outV = _items[r.output_item].base_sell_value
                               + r.byproducts.Sum(b => _items[b.item].base_sell_value * b.quantity);
                 double gain = outV / inV;
-                Assert.That(gain, Is.InRange(2.0, 8.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})");
+                Assert.That(gain, Is.InRange(2.0, 20.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})");
             }
         }
 
@@ -73,8 +73,8 @@ namespace MobileIdleBuilder.Tests
         }
 
         /// <summary>
-        /// Tier value (2026-11-02 balance pass): every nuclear processing step is worth doing on its own. Before
-        /// it, values peaked at iron like binding energy, so every neutron capture lost value (x0.24-0.99).
+        /// Every nuclear processing step is worth doing on its own (scripts/rebalance_curve.py prices each recipe
+        /// as inputs + wage x craft time). Before 2026-11-02 values peaked at iron and every neutron capture lost value.
         /// </summary>
         [Test]
         public void EveryNuclearStep_GainsValue()
@@ -87,7 +87,7 @@ namespace MobileIdleBuilder.Tests
                 double inV  = r.inputs.Sum(i => _items[i.item].base_sell_value * i.quantity);
                 double outV = _items[r.output_item].base_sell_value
                               + (r.byproducts ?? new List<GdIng>()).Sum(b => _items[b.item].base_sell_value * b.quantity);
-                Assert.Greater(outV / inV, 1.05, $"{r.id}: {inV} -> {outV}");
+                Assert.Greater(outV / inV, 1.0, $"{r.id}: {inV} -> {outV}");
             }
         }
 

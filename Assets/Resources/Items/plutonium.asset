@@ -35,6 +35,6 @@ MonoBehaviour:
     particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling
     it requires exquisite precision."
   codexUnlocked: 0
-  baseSellValue: 52
+  baseSellValue: 240
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

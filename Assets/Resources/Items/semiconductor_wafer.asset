@@ -35,6 +35,6 @@ MonoBehaviour:
     substrate on which every integrated circuit is etched. Grown from molten silica
     in hydrogen atmosphere.
   codexUnlocked: 0
-  baseSellValue: 100000000
+  baseSellValue: 1280000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

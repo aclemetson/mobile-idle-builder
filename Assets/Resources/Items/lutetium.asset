@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Lutetium (Lu), element number 71 with mass number 175. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 1601
+  baseSellValue: 446000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

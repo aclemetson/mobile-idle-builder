@@ -35,6 +35,6 @@ MonoBehaviour:
     toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature.
     Rarer than gold.
   codexUnlocked: 0
-  baseSellValue: 10379
+  baseSellValue: 874000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

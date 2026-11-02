@@ -27,6 +27,8 @@ The Assembler built Iron from 82 particles behind the 500e Nucleosynthesis node 
 
 ### Balance pass: tier value (2026-11-02, integration/2026-11-02)
 
+> **Superseded the same day** by the derived economy (`economy-balance.md` "Derived economy"): the rules below (every nuclear step gains, alpha 10 / beta 2, Helium 15, capture time by tier, no research cheaper than its prerequisite) still hold, but the specific values quoted here were replaced by generated ones.
+
 Every nuclear processing step now gains value on its own, like the fusion ladder (guarded by `FissionDataTests.EveryNuclearStep_GainsValue`, ratio > 1.05). Before it, values peaked at iron like binding energy, so every neutron capture lost value (Fe→Co ×0.60, Co→…→Br ×0.24 a step, Tc→Hg ×0.99, r-process ×0.96) and Gold was worth less than the Platinum it is made from.
 
 - **Neutron capture:** `V(out) = gain × V(inputs) − V(escaping neutrino)`, slow `gain` 1.12, fast 1.6, computed down each chain from its seed (Iron, or the fission fragments Mo, Ba, Ce). Results: Co 188M … Br 465M (climbing from iron), Ag 522, In 656, La 287, Sm 396, Eu 645, Re 2,520, Pt 10,379, **Au 16,618**, Hg 18,613. No closed loop: capture never reaches Uranium, and nothing else consumes these elements.
@@ -90,6 +92,8 @@ The Fusion + Fission reactors were introduced as **additive shortcuts** next to 
 - **Tutorial:** a Phase ⑫ reactor beat is appended after the existing nuclear steps (intro → research `fusion_i` → place Fusion Reactor → research `fissile_extraction`/`fission_i` → place Fission Reactor → finale), gated only on `ResearchUnlocked`/`BuildingMin` (robust) + 4 new dialogues. Crafting/input-routing is explained in dialogue rather than gated, since a craft gate would either auto-complete on leftover inventory or require reactor-specific connection events that don't exist yet.
 
 ## Creation regimes — the natural tent, then the post-iron climb
+
+> **Superseded for numbers (2026-11-02):** item values after the tutorial are now generated from one progression curve by `scripts/rebalance_curve.py` (see `economy-balance.md` "Derived economy" and `docs/progression-curve.html`). The formulas below explain the original physics-motivated shape; the live values in `game_data.json` no longer follow them (e.g. Iron 37,200, not 167,772,160).
 
 Binding energy per nucleon peaks at iron-56. The **natural** economy (fusion + fission, Z1–92) is therefore a tent that peaks at iron (~168M e) — both feedstocks (hydrogen, uranium) are cheap and both directions climb toward iron. Past uranium, elements **no longer occur naturally**; they must be **synthesized with energy input** — a *second* endgame unlocked only after iron, whose value climbs **again, past iron**, to the global peak at Oganesson (~11.3 quadrillion e).
 
@@ -409,6 +413,8 @@ So the curve **rises to iron from both sides, is cheapest around uranium/plutoni
 > **Balance caveat:** Oganesson at ~10^16 is the new netWorth ceiling, far above the old element economy. It is reachable only after the full post-iron endgame (iron first, then both synthesis branches), so it should not distort early/mid pacing — but re-check prestige `✦` (≈log10 netWorth) and the megastructure interaction, since synthetics now out-value tier-5 components. Final constants need an idle-sim pass.
 
 ## Pacing & gating — iron is ~a month away
+
+> **Superseded (2026-11-02):** the chosen pace is Iron in about half a day to a day and the whole tree in about a week of active play (5 buildings, before idle multipliers and prestige). The curve that produces it is in `economy-balance.md` "Derived economy".
 
 Iron must read as a **long-term apex**: the player should reach it only after **a month-plus of regular play and a healthy stack of prestiges + prestige upgrades**, not in the first few sessions. The ~168M e value is one half of that; the other half is *gating the climb* so the value is earned, not farmed early. Four compounding gates meter each rung toward iron (no single wall — they stack):
 

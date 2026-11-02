@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: "78% of Earth's atmosphere. Nitrogen is the limiting nutrient in agriculture
     \u2014 the Haber process that synthesises ammonia from it feeds half of humanity."
   codexUnlocked: 0
-  baseSellValue: 320
+  baseSellValue: 1160
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

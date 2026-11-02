@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Tellurium (Te), element number 52 with mass number 130. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 267
+  baseSellValue: 2770
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Uranium-235. Enriched nuclear fuel, worth twice ordinary Uranium, and enrichment
-      releases three spare neutrons you can put to work elsewhere.
+    text: Uranium-235. Enriched nuclear fuel, worth many times ordinary Uranium,
+      and enrichment releases three spare neutrons you can put to work elsewhere.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
