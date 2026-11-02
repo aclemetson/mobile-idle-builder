@@ -161,7 +161,8 @@ namespace MobileIdleBuilder
         {
             if (research == null || HasActiveResearch || !CanPurchase(research)) return;
 
-            DeductEntropy(research.costBaseCurrency);
+            // Check-and-spend in one step; CanPurchase already confirmed the balance.
+            if (!EntropyWallet.TrySpend(_progressQuery, research.costBaseCurrency)) return;
             AchievementService.Instance?.NotifyEntropySpent(research.costBaseCurrency);
 
             int effective = EffectiveDurationSeconds(research);
@@ -348,20 +349,6 @@ namespace MobileIdleBuilder
         private ResearchSO FindResearch(string id) =>
             _allResearch == null ? null : System.Array.Find(_allResearch, r => r != null && r.id == id);
 
-        private long GetCurrentEntropy()
-        {
-            if (_progressQuery.IsEmpty) return 0;
-            return _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
-        }
-
-        private void DeductEntropy(int amount)
-        {
-            if (_progressQuery.IsEmpty) return;
-            var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            long actual = Math.Min(amount, progress.BaseCurrency);
-            progress.BaseCurrency      -= actual;
-            progress.TotalEntropySpent += actual;
-            _progressQuery.SetSingleton(progress);
-        }
+        private long GetCurrentEntropy() => EntropyWallet.Balance(_progressQuery);
     }
 }

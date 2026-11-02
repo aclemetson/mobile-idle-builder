@@ -63,7 +63,7 @@ Heavier items (Helium-4 and up) need a building, not the recipe panel.
 | Start | Research panel, tap the node. It costs entropy up front, then a real-time timer runs |
 | One at a time | The lab is busy until the timer finishes |
 | Wait it out | `playtest_control time_scale` (10x or less on benchmark runs) and `wait` |
-| Tutorial costs | Recombination I 100e / 10 s, Hydrogen Synthesis 50e / 15 s, Automation I 25e / 20 s, Field Synthesis 250e / 20 s, Atomic Assembly 500e / 30 s |
+| Tutorial costs | Recombination I 100e / 10 s, Hydrogen Synthesis 50e / 15 s, Automation I 25e / 20 s, Field Synthesis 250e / 20 s, Nucleosynthesis 500e / 30 s |
 
 Skipping a timer costs crystals, so it's not allowed in no-crystal briefs.
 

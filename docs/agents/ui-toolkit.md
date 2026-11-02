@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205). If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -98,6 +98,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 4. In `HUDController.cs`: add the `GetComponent<>()` field (`:106-111` region), wire the button (`:347-369` region), add the `OpenXPanel` method mirroring an existing one (closes others, removes `hidden`, calls `Refresh()`).
 5. Tell the user to add the component to the HUD GameObject in GameScene (manual step).
 6. Use `ToastService` for transient feedback, not ad-hoc labels.
+   - **Back button (#205):** a new slide panel must be in `_allPanels` (so Android back / Escape closes it). A new modal needs an `IsOpen` + `Close()` and a row in `BackNavigation` (`UI/BackNavigation.cs`, pure, tested) plus the switch in `HUDController.HandleBackButton`. Order: mode active → yield to its controller; dialogue → swallowed (never skipped); confirm prompt; idle return; update notice; inspector; panel; drawer; root → nothing.
 7. Verify visibility: panel must not be clipped by a zero-height wrapper; check parent sizing classes (CLAUDE.md recurring bug).
 8. Mobile: respect safe area (`SafeAreaAdapter` exists; it pads the document root in panel px, never percent, since UI Toolkit resolves percent padding against WIDTH, and paints `safe-area-fill` strips in the top-bar colour behind the top/left/right insets when a `top-bar` exists, framing off the landscape camera cutout). Android does not report rounded display corners as unsafe, so inset edge-to-edge bottom panels from the sides (see `.dialogue-box`); test portrait sizing.
 

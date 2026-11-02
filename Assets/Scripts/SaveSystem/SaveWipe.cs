@@ -33,7 +33,7 @@ namespace MobileIdleBuilder
         };
 
         /// <summary>
-        /// Deletes the local save file (save.json + .bak) and the auth/idle PlayerPrefs keys.
+        /// Deletes the local save file (save.json + .bak + any leftover .tmp) and the auth/idle PlayerPrefs keys.
         /// When <paramref name="scheduleCloudWipe"/> is true, sets <see cref="SaveManager.k_WipePending"/>
         /// so <c>SaveManager.ReconcileWithCloud()</c> deletes the cloud key on the next boot.
         /// Used by the editor tool (which cannot reach UGS in edit mode) and as the offline

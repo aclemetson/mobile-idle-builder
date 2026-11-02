@@ -1884,18 +1884,18 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
-  - id: route_neutrons_to_atom_gen
-    hintText: Belt the Neutron Combiner's output into the Atom Generator's free input.
-      Neutrons wait there until Atomic Assembly teaches it Helium-4.
+  - id: route_neutrons_to_demon
+    hintText: Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom
+      Generator can't use neutrons until Nucleosynthesis, so sell them for now.
     advanceCondition:
       type: 8
       anyOf: 0
       items: []
       uiEventId: 
       researchId: 
-      minCount: 2
-      buildingType: 4
-      buildingIsEntropySink: 0
+      minCount: 1
+      buildingType: 7
+      buildingIsEntropySink: 1
       fromBuildingType: 2
       minLevel: 0
       fieldId: 
@@ -1905,7 +1905,7 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: route:strong_force_combiner>atomic_assembler
+      highlightTarget: route:strong_force_combiner>maxwells_demon
       highlightMode: 1
       blockCollection: 0
       collectionFilter: None
@@ -1917,8 +1917,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: post_tutorial_intro
-    hintText: Your hydrogen loop is running. Save up 500 entropy to research Atomic
-      Assembly.
+    hintText: Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -1949,7 +1948,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: buy_atomic_assembly
-    hintText: Purchase Atomic Assembly in the Research panel to unlock heavier elements.
+    hintText: Purchase Nucleosynthesis in the Research panel to unlock Helium-4.
     advanceCondition:
       type: 4
       anyOf: 0
@@ -2010,6 +2009,38 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: reroute_neutrons_to_atom_gen
+    hintText: Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct),
+      then belt the Neutron Combiner into the Atom Generator's free input.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 4
+      buildingIsEntropySink: 0
+      fromBuildingType: 2
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:strong_force_combiner>atomic_assembler
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-deconstruct
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: craft_first_helium
     hintText: 'Tap the Atom Generator and set its recipe to Helium-4: 2 protons,
       2 neutrons, 2 electrons.'
@@ -2043,7 +2074,7 @@ MonoBehaviour:
       lockedMessages: []
     lockedResearchIds: []
     isSubstep: 0
-    rewardEntropy: 5000
+    rewardEntropy: 6500
   - id: first_element_context
     hintText: 
     advanceCondition:
@@ -2075,8 +2106,106 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: intro_deuterium
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 11b00eb18dc9a404ab165d3abc0d1d8d, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: buy_deuterium_synthesis
+    hintText: Research Deuterium Synthesis (1,200 entropy) to teach the Atom Generator
+      heavy hydrogen.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: deuterium_synthesis
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: craft_first_deuterium
+    hintText: 'Tap the Atom Generator and set its recipe to Assemble Deuterium: 1
+      proton, 1 neutron, 1 electron.'
+    advanceCondition:
+      type: 11
+      anyOf: 0
+      items:
+      - itemId: 14
+        quantity: 2
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: atomic_assembler
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: intro_nuclear_reactors
-    hintText: Building atoms one nucleon at a time is slow. There is a faster way.
+    hintText: Fusing two Deuterium is far easier than building Helium nucleon by
+      nucleon.
     advanceCondition:
       type: 3
       anyOf: 0
@@ -2139,8 +2268,8 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: place_fusion_reactor
-    hintText: Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside
-      your generator's power range.
+    hintText: Place a Fusion Reactor (1,500 entropy) on the glowing tile next to
+      your Atom Generator's output, inside your generator's power range.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -2159,7 +2288,7 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 0}
-      highlightTarget: power:fusion_reactor
+      highlightTarget: power:fusion_reactor@atomic_assembler
       highlightMode: 1
       blockCollection: 0
       collectionFilter: None
@@ -2233,9 +2362,9 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
-  - id: route_helium_to_reactor
+  - id: route_deuterium_to_reactor
     hintText: Remove the belt from the Atom Generator to Maxwell's Demon (Builder,
-      Deconstruct), then belt the Atom Generator's output into the Fusion Reactor.
+      Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.
     advanceCondition:
       type: 8
       anyOf: 0
@@ -2265,9 +2394,168 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: fuse_first_helium
+    hintText: Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium
+      become one Helium, and the gamma ray that escapes pays bonus entropy.
+    advanceCondition:
+      type: 12
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: 11
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: 208
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: fusion_reactor
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 1800
+  - id: place_carbon_reactor
+    hintText: Place a second Fusion Reactor on the glowing tile next to the first
+      one's output. It will fuse Helium into Carbon.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 2
+      buildingType: 11
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: power:fusion_reactor@fusion_reactor
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-fusion_reactor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: power_for_carbon_reactor
+    hintText: Two reactors need 120 eV and your generators make 100. Place a third
+      Basic Generator near the new reactor.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 3
+      buildingType: 3
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-basic_generator
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: set_carbon_recipe
+    hintText: Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three
+      Helium-4 become one Carbon.
+    advanceCondition:
+      type: 12
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: 11
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: 149
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: fusion_reactor
+      highlightMode: 2
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: route_helium_to_carbon_reactor
+    hintText: Belt the first reactor's Helium into the Carbon reactor.
+    advanceCondition:
+      type: 8
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: 11
+      buildingIsEntropySink: 0
+      fromBuildingType: 11
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: route:fusion_reactor>fusion_reactor
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-conveyor
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: craft_first_carbon
-    hintText: Tap the Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4
-      become one Carbon.
+    hintText: Wait for the Carbon reactor to collect three Helium-4 and fuse them
+      into Carbon.
     advanceCondition:
       type: 11
       anyOf: 0
@@ -2300,7 +2588,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: route_carbon_to_demon
-    hintText: Belt the Fusion Reactor's output into Maxwell's Demon. Each Carbon
+    hintText: Belt the Carbon reactor's output into Maxwell's Demon. Each Carbon
       sells for 160 entropy.
     advanceCondition:
       type: 8

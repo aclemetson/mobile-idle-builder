@@ -170,22 +170,42 @@
     },
     {
       "id": "atomic_assembly",
-      "display_name": "Atomic Assembly",
-      "description": "Unlock the Atomic Assembler and the ability to build complete atoms from nucleons and electrons.",
+      "display_name": "Nucleosynthesis",
+      "description": "Teach the Atom Generator to build Helium-4 from 2 protons, 2 neutrons and 2 electrons. Heavier atoms need fusion.",
       "branch": "Chemistry",
       "prerequisites": ["hydrogen_synthesis"],
       "depth_in_tree": 1,
       "cost_base_currency": 500,
       "cost_prestige_currency": 0,
       "duration_seconds": 30,
-      "unlocks_items": ["helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
-      "unlocks_recipes": ["helium_4", "lithium", "carbon", "oxygen", "silicon", "iron"],
+      "unlocks_items": ["helium_4"],
+      "unlocks_recipes": ["helium_4"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["isotopes", "heavy_elements", "light_elements", "mid_elements", "molecular_synthesis", "fusion_i", "power_distribution"],
+      "unlocks_research": ["deuterium_synthesis", "isotopes", "heavy_elements", "molecular_synthesis", "power_distribution"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.2,
       "codex_entry": "Combining protons, neutrons, and electrons into stable atoms. Each element's identity is defined by its proton count — change it and you change the element.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "deuterium_synthesis",
+      "display_name": "Deuterium Synthesis",
+      "description": "Teach the Atom Generator to build Deuterium (1 proton, 1 neutron, 1 electron): heavy hydrogen, the fuel for your first fusion.",
+      "branch": "Nuclear",
+      "prerequisites": ["atomic_assembly"],
+      "depth_in_tree": 2,
+      "cost_base_currency": 1200,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 45,
+      "unlocks_items": ["deuterium"],
+      "unlocks_recipes": ["assemble_deuterium"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["fusion_i"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.2,
+      "codex_entry": "Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing bare protons, which is why every fusion experiment on Earth starts with it.",
       "icon_path": "TODO"
     },
     {
@@ -274,14 +294,14 @@
     {
       "id": "isotopes",
       "display_name": "Isotope Engineering",
-      "description": "Unlock the Isotopic Manipulator to add or remove neutrons from base elements, creating isotopes.",
+      "description": "Unlock the Isotopic Manipulator to add or remove neutrons from base elements, creating isotopes like Tritium and Carbon-14.",
       "branch": "Nuclear",
       "prerequisites": ["atomic_assembly"],
       "depth_in_tree": 2,
       "cost_base_currency": 1500,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["deuterium", "tritium", "carbon_14"],
+      "unlocks_items": ["tritium", "carbon_14"],
       "unlocks_recipes": ["deuterium", "tritium", "carbon_14"],
       "unlocks_buildings": ["isotopic_manipulator"],
       "unlocks_grid_expansion": false,
@@ -336,18 +356,18 @@
       "_comment": "--- TIER 2 ELEMENT GATES ---",
       "id": "light_elements",
       "display_name": "Light Elements",
-      "description": "Unlock synthesis of beryllium and boron — the lightest solid elements beyond lithium.",
-      "branch": "Chemistry",
-      "prerequisites": ["atomic_assembly"],
-      "depth_in_tree": 2,
-      "cost_base_currency": 1000,
+      "description": "Fuse Lithium (Helium + Deuterium), then Beryllium and Boron by adding one proton at a time.",
+      "branch": "Nuclear",
+      "prerequisites": ["fusion_i"],
+      "depth_in_tree": 4,
+      "cost_base_currency": 6000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["beryllium", "boron", "fluorine", "neon"],
-      "unlocks_recipes": ["beryllium", "boron", "fluorine", "neon"],
+      "unlocks_items": ["lithium", "beryllium", "boron"],
+      "unlocks_recipes": ["capture_lithium", "capture_beryllium", "capture_boron"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["mid_elements"],
+      "unlocks_research": [],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.2,
       "codex_entry": "The lightest solid elements: beryllium, harder than steel and lighter than aluminium; boron, an exotic metalloid with industrial and nuclear applications.",
@@ -356,18 +376,18 @@
     {
       "id": "mid_elements",
       "display_name": "Mid-Period Elements",
-      "description": "Unlock nitrogen, aluminum, and nickel — spanning organic chemistry to industrial metals.",
-      "branch": "Chemistry",
-      "prerequisites": ["atomic_assembly"],
-      "depth_in_tree": 2,
-      "cost_base_currency": 2000,
+      "description": "Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen, Fluorine, Sodium, Aluminum and Phosphorus.",
+      "branch": "Nuclear",
+      "prerequisites": ["fusion_ii"],
+      "depth_in_tree": 5,
+      "cost_base_currency": 30000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["nitrogen", "aluminum", "nickel", "sodium", "magnesium", "phosphorus", "sulfur", "chlorine", "argon", "potassium", "calcium"],
-      "unlocks_recipes": ["nitrogen", "aluminum", "nickel", "sodium", "magnesium", "phosphorus", "sulfur", "chlorine", "argon", "potassium", "calcium"],
+      "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus"],
+      "unlocks_recipes": ["capture_nitrogen", "capture_fluorine", "capture_sodium", "capture_aluminum", "capture_phosphorus"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["transition_metals", "advanced_molecules"],
+      "unlocks_research": ["advanced_molecules", "chemistry_lab"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.2,
       "codex_entry": "Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable batteries.",
@@ -376,15 +396,15 @@
     {
       "id": "transition_metals",
       "display_name": "Transition Metals",
-      "description": "Unlock copper and zinc — the workhorses of electrical engineering and metallurgy.",
+      "description": "Build Nickel, Cobalt, Copper and Zinc beyond Iron in the Atom Generator. (Interim: the Actinide map's fission and neutron capture will replace this.)",
       "branch": "Materials",
-      "prerequisites": ["mid_elements"],
-      "depth_in_tree": 3,
-      "cost_base_currency": 8000,
+      "prerequisites": ["explosive_burning"],
+      "depth_in_tree": 7,
+      "cost_base_currency": 250000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["copper", "zinc", "scandium", "titanium", "vanadium", "chromium", "manganese", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
-      "unlocks_recipes": ["copper", "zinc", "scandium", "titanium", "vanadium", "chromium", "manganese", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
+      "unlocks_items": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
+      "unlocks_recipes": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["precious_metals", "materials_science"],
@@ -679,18 +699,18 @@
     {
       "id": "fusion_i",
       "display_name": "Stellar Fusion",
-      "description": "Unlock the Fusion Reactor \u2014 fuse light nuclei into heavier ones, the shortcut up the ladder toward iron.",
+      "description": "Unlock the Fusion Reactor. Fuse 2 Deuterium into Helium, or 3 Helium into Carbon. Every fusion releases particles that escape as bonus entropy.",
       "branch": "Nuclear",
-      "prerequisites": ["atomic_assembly"],
-      "depth_in_tree": 2,
+      "prerequisites": ["deuterium_synthesis"],
+      "depth_in_tree": 3,
       "cost_base_currency": 4000,
       "cost_prestige_currency": 0,
       "duration_seconds": 180,
-      "unlocks_items": [],
-      "unlocks_recipes": ["fuse_helium", "fuse_carbon"],
+      "unlocks_items": ["carbon", "neutrino", "gamma_photon"],
+      "unlocks_recipes": ["fuse_deuterium", "fuse_helium", "fuse_carbon"],
       "unlocks_buildings": ["fusion_reactor"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["fusion_ii", "fissile_extraction"],
+      "unlocks_research": ["light_elements", "fusion_ii", "fissile_extraction"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.15,
       "codex_entry": "Stars fuse hydrogen into helium and onward, releasing binding energy at every step up to iron. The Fusion Reactor reproduces that ladder: combine two cheap light nuclei into one heavier, more valuable atom.",
@@ -702,15 +722,15 @@
       "description": "Unlock the alpha-capture chain \u2014 oxygen through silicon by successive helium fusion.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
-      "depth_in_tree": 3,
+      "depth_in_tree": 4,
       "cost_base_currency": 20000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": [],
+      "unlocks_items": ["oxygen", "neon", "magnesium", "silicon"],
       "unlocks_recipes": ["fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["fusion_iii"],
+      "unlocks_research": ["mid_elements", "fusion_iii"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.1,
       "codex_entry": "In evolved stars, helium nuclei (alpha particles) are captured one at a time: oxygen, neon, magnesium, silicon. Each capture climbs the fusion ladder by two protons.",
@@ -722,18 +742,38 @@
       "description": "Unlock the terminal fusion rungs \u2014 sulfur through iron, the natural peak.",
       "branch": "Astrophysics",
       "prerequisites": ["fusion_ii"],
-      "depth_in_tree": 4,
+      "depth_in_tree": 5,
       "cost_base_currency": 120000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
-      "unlocks_items": [],
+      "unlocks_items": ["sulfur", "argon", "calcium", "titanium", "chromium", "iron"],
       "unlocks_recipes": ["fuse_sulfur", "fuse_argon", "fuse_calcium", "fuse_titanium", "fuse_chromium", "fuse_iron"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["explosive_burning"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.1,
       "codex_entry": "The last day of a massive star: silicon burning forges its way to iron-56, the most tightly bound nucleus. Fusion can climb no further \u2014 beyond iron it costs more energy than it yields.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "explosive_burning",
+      "display_name": "Explosive Burning",
+      "description": "Fuse a proton onto Sulfur, Argon, Calcium, Titanium and Chromium: Chlorine, Potassium, Scandium, Vanadium and Manganese. With Iron, this completes every element a star can make.",
+      "branch": "Astrophysics",
+      "prerequisites": ["fusion_iii"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 150000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 1800,
+      "unlocks_items": ["chlorine", "potassium", "scandium", "vanadium", "manganese"],
+      "unlocks_recipes": ["capture_chlorine", "capture_potassium", "capture_scandium", "capture_vanadium", "capture_manganese"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["transition_metals"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.1,
+      "codex_entry": "When a massive star explodes, a shock wave sweeps through its silicon and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements next to iron, like Manganese and Vanadium.",
       "icon_path": "TODO"
     },
     {
@@ -1280,8 +1320,8 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A stable isotope of hydrogen with one added neutron. Found naturally in heavy water. An essential fuel for nuclear fusion reactions alongside tritium.",
-      "base_sell_value": 8.0,
-      "isotope_sell_multiplier": 1.5
+      "base_sell_value": 4.0,
+      "isotope_sell_multiplier": 0.8
     },
     {
       "id": "tritium",
@@ -4801,7 +4841,59 @@
       "is_fissile": false, "is_harvested": false, "field_type": "None",
       "is_secondary_particle": false, "particle_uses": 0,
       "codex_entry": "Countless populations woven into one self-sustaining web — predators, prey, plants, and decomposers cycling matter and energy. A living world.",
-      "base_sell_value": 150000000000.0, "isotope_sell_multiplier": 1.0 }
+      "base_sell_value": 150000000000.0, "isotope_sell_multiplier": 1.0 },
+    {
+      "id": "neutrino",
+      "display_name": "Neutrino",
+      "symbol": "\u03bd",
+      "icon_path": "TODO",
+      "item_id": 179,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Particle",
+      "atomic_number": 2,
+      "atomic_mass": 4,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": true,
+      "particle_uses": 0,
+      "_note_particle_uses": "7 = SecondaryParticle(1) | EnergyRecovery(2) | RecipeInput(4)",
+      "codex_entry": "A ghostly particle with almost no mass. Trillions pass through you every second without touching a single atom. Fusion releases neutrinos that fly straight out of the reactor, carrying energy with them.",
+      "base_sell_value": 3.0,
+      "isotope_sell_multiplier": 1.0,
+      "escapes_as_entropy": true
+    },
+    {
+      "id": "gamma_photon",
+      "display_name": "Gamma Photon",
+      "symbol": "\u03b3",
+      "icon_path": "TODO",
+      "item_id": 180,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Particle",
+      "atomic_number": 2,
+      "atomic_mass": 4,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": true,
+      "particle_uses": 0,
+      "_note_particle_uses": "7 = SecondaryParticle(1) | EnergyRecovery(2) | RecipeInput(4)",
+      "codex_entry": "A high-energy packet of light. When two nuclei fuse, the new nucleus weighs slightly less than the pieces that made it; the missing mass leaves as a gamma ray (E = mc\u00b2).",
+      "base_sell_value": 5.0,
+      "isotope_sell_multiplier": 1.0,
+      "escapes_as_entropy": true
+    }
   ],
 
   "recipes": [
@@ -4985,136 +5077,28 @@
       "simplification_note": ""
     },
     {
-      "id": "lithium",
-      "display_name": "Lithium",
-      "recipe_id": 8,
+      "id": "assemble_deuterium",
+      "display_name": "Assemble Deuterium",
+      "recipe_id": 207,
       "tier": 2,
-      "category": "Element",
+      "category": "Isotope",
       "inputs": [
-        { "item": "proton", "quantity": 3 },
-        { "item": "neutron", "quantity": 4 },
-        { "item": "electron", "quantity": 3 }
+        { "item": "proton", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 },
+        { "item": "electron", "quantity": 1 }
       ],
       "neutron_adjustment": [],
-      "output_item": "lithium",
+      "output_item": "deuterium",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 7.0,
-      "manual_craft_time": 7.0,
+      "base_craft_time": 1.5,
+      "manual_craft_time": 1.5,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 35.0,
+      "fixed_power_cost_ev": 10.0,
       "valid_buildings": ["atomic_assembler"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "atomic_assembly",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "carbon",
-      "display_name": "Carbon",
-      "recipe_id": 9,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 6 },
-        { "item": "neutron", "quantity": 6 },
-        { "item": "electron", "quantity": 6 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "carbon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 12.0,
-      "manual_craft_time": 12.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 60.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "atomic_assembly",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "oxygen",
-      "display_name": "Oxygen",
-      "recipe_id": 10,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 8 },
-        { "item": "neutron", "quantity": 8 },
-        { "item": "electron", "quantity": 8 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "oxygen",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 16.0,
-      "manual_craft_time": 16.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 80.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "atomic_assembly",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "silicon",
-      "display_name": "Silicon",
-      "recipe_id": 11,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 14 },
-        { "item": "neutron", "quantity": 14 },
-        { "item": "electron", "quantity": 14 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "silicon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 28.0,
-      "manual_craft_time": 28.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 140.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "atomic_assembly",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "iron",
-      "display_name": "Iron",
-      "recipe_id": 12,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 26 },
-        { "item": "neutron", "quantity": 30 },
-        { "item": "electron", "quantity": 26 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "iron",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 56.0,
-      "manual_craft_time": 56.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 280.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "atomic_assembly",
+      "required_research": "deuterium_synthesis",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -5258,115 +5242,6 @@
     },
 
     {
-      "_comment": "--- TIER 2: NEW ELEMENT RECIPES (recipe_ids 18–29) ---",
-      "id": "beryllium",
-      "display_name": "Beryllium",
-      "recipe_id": 18,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 4 },
-        { "item": "neutron", "quantity": 5 },
-        { "item": "electron", "quantity": 4 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "beryllium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 9.0,
-      "manual_craft_time": 9.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "light_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "boron",
-      "display_name": "Boron",
-      "recipe_id": 19,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 5 },
-        { "item": "neutron", "quantity": 6 },
-        { "item": "electron", "quantity": 5 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "boron",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 11.0,
-      "manual_craft_time": 11.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "light_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "nitrogen",
-      "display_name": "Nitrogen",
-      "recipe_id": 20,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 7 },
-        { "item": "neutron", "quantity": 7 },
-        { "item": "electron", "quantity": 7 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "nitrogen",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 14.0,
-      "manual_craft_time": 14.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "aluminum",
-      "display_name": "Aluminum",
-      "recipe_id": 21,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 13 },
-        { "item": "neutron", "quantity": 14 },
-        { "item": "electron", "quantity": 13 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "aluminum",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 27.0,
-      "manual_craft_time": 27.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
       "id": "nickel",
       "display_name": "Nickel",
       "recipe_id": 22,
@@ -5388,7 +5263,7 @@
       "valid_buildings": ["atomic_assembler"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "mid_elements",
+      "required_research": "transition_metals",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -6103,411 +5978,6 @@
       "can_craft_manually": false,
       "known_from_start": false,
       "required_research": "megastructure_theory",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "fluorine",
-      "display_name": "Fluorine",
-      "recipe_id": 50,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 9 },
-        { "item": "neutron", "quantity": 10 },
-        { "item": "electron", "quantity": 9 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "fluorine",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 19.0,
-      "manual_craft_time": 19.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 95.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "light_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "neon",
-      "display_name": "Neon",
-      "recipe_id": 51,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 10 },
-        { "item": "neutron", "quantity": 10 },
-        { "item": "electron", "quantity": 10 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "neon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 20.0,
-      "manual_craft_time": 20.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 100.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "light_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "sodium",
-      "display_name": "Sodium",
-      "recipe_id": 52,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 11 },
-        { "item": "neutron", "quantity": 12 },
-        { "item": "electron", "quantity": 11 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "sodium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 23.0,
-      "manual_craft_time": 23.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 115.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "magnesium",
-      "display_name": "Magnesium",
-      "recipe_id": 53,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 12 },
-        { "item": "neutron", "quantity": 12 },
-        { "item": "electron", "quantity": 12 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "magnesium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 24.0,
-      "manual_craft_time": 24.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 120.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "phosphorus",
-      "display_name": "Phosphorus",
-      "recipe_id": 54,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 15 },
-        { "item": "neutron", "quantity": 16 },
-        { "item": "electron", "quantity": 15 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "phosphorus",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 31.0,
-      "manual_craft_time": 31.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 155.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "sulfur",
-      "display_name": "Sulfur",
-      "recipe_id": 55,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 16 },
-        { "item": "neutron", "quantity": 16 },
-        { "item": "electron", "quantity": 16 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "sulfur",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 32.0,
-      "manual_craft_time": 32.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 160.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "chlorine",
-      "display_name": "Chlorine",
-      "recipe_id": 56,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 17 },
-        { "item": "neutron", "quantity": 18 },
-        { "item": "electron", "quantity": 17 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "chlorine",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 35.0,
-      "manual_craft_time": 35.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 175.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "argon",
-      "display_name": "Argon",
-      "recipe_id": 57,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 18 },
-        { "item": "neutron", "quantity": 22 },
-        { "item": "electron", "quantity": 18 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "argon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 40.0,
-      "manual_craft_time": 40.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 200.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "potassium",
-      "display_name": "Potassium",
-      "recipe_id": 58,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 19 },
-        { "item": "neutron", "quantity": 20 },
-        { "item": "electron", "quantity": 19 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "potassium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 39.0,
-      "manual_craft_time": 39.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 195.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "calcium",
-      "display_name": "Calcium",
-      "recipe_id": 59,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 20 },
-        { "item": "neutron", "quantity": 20 },
-        { "item": "electron", "quantity": 20 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "calcium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 40.0,
-      "manual_craft_time": 40.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 200.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "mid_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "scandium",
-      "display_name": "Scandium",
-      "recipe_id": 60,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 21 },
-        { "item": "neutron", "quantity": 24 },
-        { "item": "electron", "quantity": 21 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "scandium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 45.0,
-      "manual_craft_time": 45.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 225.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "titanium",
-      "display_name": "Titanium",
-      "recipe_id": 61,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 22 },
-        { "item": "neutron", "quantity": 26 },
-        { "item": "electron", "quantity": 22 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "titanium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 48.0,
-      "manual_craft_time": 48.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 240.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "vanadium",
-      "display_name": "Vanadium",
-      "recipe_id": 62,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 23 },
-        { "item": "neutron", "quantity": 28 },
-        { "item": "electron", "quantity": 23 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "vanadium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 51.0,
-      "manual_craft_time": 51.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 255.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "chromium",
-      "display_name": "Chromium",
-      "recipe_id": 63,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 24 },
-        { "item": "neutron", "quantity": 28 },
-        { "item": "electron", "quantity": 24 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "chromium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 52.0,
-      "manual_craft_time": 52.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 260.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "manganese",
-      "display_name": "Manganese",
-      "recipe_id": 64,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 25 },
-        { "item": "neutron", "quantity": 30 },
-        { "item": "electron", "quantity": 25 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "manganese",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 55.0,
-      "manual_craft_time": 55.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 275.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -8755,7 +8225,7 @@
     },
     {
       "id": "fuse_helium",
-      "display_name": "Fuse Helium-4",
+      "display_name": "Fuse Helium-4 (p-p chain)",
       "recipe_id": 148,
       "tier": 2,
       "category": "Fusion",
@@ -8765,7 +8235,10 @@
       "neutron_adjustment": [],
       "output_item": "helium_4",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "neutrino", "quantity": 2 },
+        { "item": "gamma_photon", "quantity": 2 }
+      ],
       "base_craft_time": 2.0,
       "manual_craft_time": 2.0,
       "power_cost_is_dynamic": false,
@@ -8775,8 +8248,8 @@
       "known_from_start": false,
       "required_research": "fusion_i",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "is_simplified": true,
+      "simplification_note": "The proton-proton chain turns two protons into neutrons; the two neutrinos and the gamma rays from positron annihilation escape as entropy."
     },
     {
       "id": "fuse_carbon",
@@ -8790,7 +8263,9 @@
       "neutron_adjustment": [],
       "output_item": "carbon",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 6.0,
       "manual_craft_time": 6.0,
       "power_cost_is_dynamic": false,
@@ -8801,7 +8276,7 @@
       "required_research": "fusion_i",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_oxygen",
@@ -8816,7 +8291,9 @@
       "neutron_adjustment": [],
       "output_item": "oxygen",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 8.0,
       "manual_craft_time": 8.0,
       "power_cost_is_dynamic": false,
@@ -8827,7 +8304,7 @@
       "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_neon",
@@ -8842,7 +8319,9 @@
       "neutron_adjustment": [],
       "output_item": "neon",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 10.0,
       "manual_craft_time": 10.0,
       "power_cost_is_dynamic": false,
@@ -8853,7 +8332,7 @@
       "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_magnesium",
@@ -8868,7 +8347,9 @@
       "neutron_adjustment": [],
       "output_item": "magnesium",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 12.0,
       "manual_craft_time": 12.0,
       "power_cost_is_dynamic": false,
@@ -8879,7 +8360,7 @@
       "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_silicon",
@@ -8894,7 +8375,9 @@
       "neutron_adjustment": [],
       "output_item": "silicon",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 14.0,
       "manual_craft_time": 14.0,
       "power_cost_is_dynamic": false,
@@ -8905,7 +8388,7 @@
       "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_sulfur",
@@ -8920,7 +8403,9 @@
       "neutron_adjustment": [],
       "output_item": "sulfur",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 16.0,
       "manual_craft_time": 16.0,
       "power_cost_is_dynamic": false,
@@ -8931,7 +8416,7 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_argon",
@@ -8946,7 +8431,9 @@
       "neutron_adjustment": [],
       "output_item": "argon",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 20.0,
       "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
@@ -8957,7 +8444,7 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_calcium",
@@ -8972,7 +8459,9 @@
       "neutron_adjustment": [],
       "output_item": "calcium",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 20.0,
       "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
@@ -8983,7 +8472,7 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_titanium",
@@ -8998,7 +8487,9 @@
       "neutron_adjustment": [],
       "output_item": "titanium",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 24.0,
       "manual_craft_time": 24.0,
       "power_cost_is_dynamic": false,
@@ -9009,7 +8500,7 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_chromium",
@@ -9024,7 +8515,9 @@
       "neutron_adjustment": [],
       "output_item": "chromium",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 26.0,
       "manual_craft_time": 26.0,
       "power_cost_is_dynamic": false,
@@ -9035,7 +8528,7 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
     },
     {
       "id": "fuse_iron",
@@ -9050,7 +8543,9 @@
       "neutron_adjustment": [],
       "output_item": "iron",
       "output_quantity": 1,
-      "byproducts": [],
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
       "base_craft_time": 28.0,
       "manual_craft_time": 28.0,
       "power_cost_is_dynamic": false,
@@ -9061,7 +8556,398 @@
       "required_research": "fusion_iii",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": "Fusion shortcut; the Atomic Assembler can also build this element."
+      "simplification_note": ""
+    },
+    {
+      "id": "fuse_deuterium",
+      "display_name": "Fuse Deuterium",
+      "recipe_id": 208,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "deuterium", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "helium_4",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 1.0,
+      "manual_craft_time": 1.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 5.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fusion_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Real D + D fusion usually makes helium-3 or tritium; here it goes straight to helium-4."
+    },
+    {
+      "id": "capture_lithium",
+      "display_name": "Fuse Lithium",
+      "recipe_id": 209,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "helium_4", "quantity": 1 },
+        { "item": "deuterium", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lithium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 3.0,
+      "manual_craft_time": 3.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 15.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "light_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_beryllium",
+      "display_name": "Fuse Beryllium",
+      "recipe_id": 210,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "lithium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "beryllium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "light_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_boron",
+      "display_name": "Fuse Boron",
+      "recipe_id": 211,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "beryllium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "boron",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 5.0,
+      "manual_craft_time": 5.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 25.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "light_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_nitrogen",
+      "display_name": "Fuse Nitrogen",
+      "recipe_id": 212,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "carbon", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "nitrogen",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 7.0,
+      "manual_craft_time": 7.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 35.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "mid_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_fluorine",
+      "display_name": "Fuse Fluorine",
+      "recipe_id": 213,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "oxygen", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "fluorine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 9.0,
+      "manual_craft_time": 9.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 45.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "mid_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_sodium",
+      "display_name": "Fuse Sodium",
+      "recipe_id": 214,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "neon", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "sodium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 11.0,
+      "manual_craft_time": 11.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 55.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "mid_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_aluminum",
+      "display_name": "Fuse Aluminum",
+      "recipe_id": 215,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "magnesium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "aluminum",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 13.0,
+      "manual_craft_time": 13.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 65.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "mid_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_phosphorus",
+      "display_name": "Fuse Phosphorus",
+      "recipe_id": 216,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "silicon", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "phosphorus",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 15.0,
+      "manual_craft_time": 15.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 75.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "mid_elements",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_chlorine",
+      "display_name": "Fuse Chlorine",
+      "recipe_id": 217,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "sulfur", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "chlorine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 17.0,
+      "manual_craft_time": 17.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 85.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "explosive_burning",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_potassium",
+      "display_name": "Fuse Potassium",
+      "recipe_id": 218,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "argon", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "potassium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 19.0,
+      "manual_craft_time": 19.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 95.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "explosive_burning",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_scandium",
+      "display_name": "Fuse Scandium",
+      "recipe_id": 219,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "calcium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "scandium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 21.0,
+      "manual_craft_time": 21.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 105.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "explosive_burning",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_vanadium",
+      "display_name": "Fuse Vanadium",
+      "recipe_id": 220,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "titanium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "vanadium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 23.0,
+      "manual_craft_time": 23.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 115.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "explosive_burning",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "capture_manganese",
+      "display_name": "Fuse Manganese",
+      "recipe_id": 221,
+      "tier": 2,
+      "category": "Fusion",
+      "inputs": [
+        { "item": "chromium", "quantity": 1 },
+        { "item": "hydrogen", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "manganese",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 25.0,
+      "manual_craft_time": 25.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 125.0,
+      "valid_buildings": ["fusion_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "explosive_burning",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
     },
     {
       "id": "fission_u235",
@@ -9710,7 +9596,7 @@
       "_comment": "--- TIER 2 BUILDINGS ---",
       "id": "atomic_assembler",
       "display_name": "Atom Generator",
-      "description": "Assembles nucleons and electrons into atoms. Starts with hydrogen; research Atomic Assembly to unlock heavier elements. Power cost scales with atomic mass.",
+      "description": "Assembles nucleons and electrons into atoms. Starts with hydrogen; research Nucleosynthesis to unlock heavier elements. Power cost scales with atomic mass.",
       "icon_path": "TODO",
       "prefab_path": "TODO",
       "building_id": 4,
@@ -9727,7 +9613,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["hydrogen", "helium_4", "lithium", "carbon", "oxygen", "silicon", "iron", "uranium", "beryllium", "boron", "nitrogen", "aluminum", "nickel", "copper", "zinc", "silver", "gold", "platinum", "tungsten", "plutonium", "fluorine", "neon", "sodium", "magnesium", "phosphorus", "sulfur", "chlorine", "argon", "potassium", "calcium", "scandium", "titanium", "vanadium", "chromium", "manganese", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton", "rubidium", "strontium", "yttrium", "zirconium", "niobium", "molybdenum", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "tin", "antimony", "tellurium", "iodine", "xenon", "cesium", "barium", "lanthanum", "cerium", "praseodymium", "neodymium", "promethium", "samarium", "europium", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "osmium", "iridium", "mercury", "thallium", "lead", "bismuth", "polonium", "astatine", "radon", "francium", "radium", "actinium", "thorium", "protactinium", "neptunium", "americium", "curium", "berkelium", "californium", "einsteinium", "fermium", "mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium", "roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
+      "supported_recipes": ["hydrogen", "assemble_deuterium", "helium_4", "uranium", "nickel", "copper", "zinc", "silver", "gold", "platinum", "tungsten", "plutonium", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton", "rubidium", "strontium", "yttrium", "zirconium", "niobium", "molybdenum", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "tin", "antimony", "tellurium", "iodine", "xenon", "cesium", "barium", "lanthanum", "cerium", "praseodymium", "neodymium", "promethium", "samarium", "europium", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "osmium", "iridium", "mercury", "thallium", "lead", "bismuth", "polonium", "astatine", "radon", "francium", "radium", "actinium", "thorium", "protactinium", "neptunium", "americium", "curium", "berkelium", "californium", "einsteinium", "fermium", "mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium", "roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
       "input_slot_count": 3,
       "input_slot_labels": ["Protons", "Neutrons", "Electrons"],
       "is_entropy_sink": false,
@@ -10085,7 +9971,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["fuse_helium", "fuse_carbon", "fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon", "fuse_sulfur", "fuse_argon", "fuse_calcium", "fuse_titanium", "fuse_chromium", "fuse_iron"],
+      "supported_recipes": ["fuse_deuterium", "fuse_helium", "capture_lithium", "capture_beryllium", "capture_boron", "fuse_carbon", "capture_nitrogen", "fuse_oxygen", "capture_fluorine", "fuse_neon", "capture_sodium", "fuse_magnesium", "capture_aluminum", "fuse_silicon", "capture_phosphorus", "fuse_sulfur", "capture_chlorine", "fuse_argon", "capture_potassium", "fuse_calcium", "capture_scandium", "fuse_titanium", "capture_vanadium", "fuse_chromium", "capture_manganese", "fuse_iron"],
       "input_slot_count": 2,
       "input_slot_labels": ["Nucleus A", "Nucleus B"],
       "is_entropy_sink": false,
@@ -11834,7 +11720,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs, once Atomic Assembly teaches your Atom Generator to make it.",
+          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs. Your Atom Generator can only make hydrogen for now, so sell the neutrons at the Demon until Nucleosynthesis teaches it helium.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -11995,7 +11881,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "The Research panel shows your next frontier. Atomic Assembly opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.",
+          "text": "The Research panel shows your next frontier. Nucleosynthesis opens the rest of the periodic table — but it costs five hundred entropy. Let the factory accumulate it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12008,7 +11894,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Atomic Assembly. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.",
+          "text": "Nucleosynthesis. Every element above hydrogen follows the same principle: proton count defines the element, neutron count defines its isotope. The Atom Generator supports all of them once this is purchased.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -12021,7 +11907,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Atomic Assembly is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. Tap your Atom Generator and set it to Helium-4.",
+          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. First, move your neutron belt off the Demon and into the Atom Generator. Then set the Atom Generator to Helium-4.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -12029,7 +11915,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Lithium, Carbon, Oxygen, Silicon, and Iron are also available in the recipe panel. Each one is more complex and more valuable. Start with Helium-4 and scale up from there.",
+          "text": "Helium-4 is as far as the Atom Generator goes. Every heavier element must be fused from lighter ones, and that road starts with Helium.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12050,7 +11936,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Heavier elements are worth more, but building them one nucleon at a time is slow. I have sent you 5,000 entropy toward Stellar Fusion and your first reactor: the stars build carbon from helium, and so will you.",
+          "text": "Building it one nucleon at a time is slow, and the Atom Generator will go no further than this. Heavier atoms must be fused. I have sent you 6,500 entropy toward that road.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12271,11 +12157,32 @@
       ]
     },
     {
+      "id": "intro_deuterium_context",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Stars do not build helium from loose particles. They start with deuterium: one proton and one neutron, already bound together. Hydrogen's heavy twin.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Research Deuterium Synthesis and your Atom Generator can make it from a proton, a neutron and an electron, quicker than helium.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
       "id": "intro_nuclear_reactors_context",
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Assembling atoms one nucleon at a time is precise, but slow. The stars found a faster way — fuse light nuclei together, or split heavy ones apart. Both roads converge on iron, the most stable nucleus there is.",
+          "text": "Two deuterium nuclei, pressed together hard enough, fuse into helium. That is a Fusion Reactor's whole job: join light nuclei into heavier ones, climbing the ladder toward iron.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -12288,9 +12195,17 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Your Fusion Reactor fuses two light nuclei into a heavier one — four hydrogen into helium, three helium into carbon, and onward up the ladder. Feed it light atoms and it climbs toward iron far faster than the Assembler ever could. Three Helium-4 make one Carbon, worth 160 entropy: sixteen times the helium it came from.",
+          "text": "Every fusion turns a sliver of mass into energy. It leaves the reactor as particles — gamma rays, neutrinos — that pass straight through your walls. Each one that escapes is paid out as bonus entropy.",
           "portrait_path": "TODO",
           "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Feed the reactor Deuterium and it makes Helium. A second reactor fed that Helium makes Carbon: three Helium-4 for one Carbon, worth 160 entropy.",
+          "portrait_path": "TODO",
+          "pause_game": false,
           "highlight_target": "",
           "action": ""
         }
@@ -13008,10 +12923,11 @@
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:harvester>strong_force_combiner", "highlight_mode": "Full" }
     },
     {
-      "id": "route_neutrons_to_atom_gen",
-      "hint": "Belt the Neutron Combiner's output into the Atom Generator's free input. Neutrons wait there until Atomic Assembly teaches it Helium-4.",
-      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
-      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
+      "_comment": "The Atom Generator makes only Hydrogen until Nucleosynthesis, so neutrons fed into it sat unused (#307). Sell them at the Demon until then; reroute_neutrons_to_atom_gen moves the belt after the research. Saves on the old route_neutrons_to_atom_gen step resume here (ECSLoadBridge.RetiredSteps).",
+      "id": "route_neutrons_to_demon",
+      "hint": "Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom Generator can't use neutrons until Nucleosynthesis, so sell them for now.",
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "maxwells_demon", "min_count": 1 },
+      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>maxwells_demon", "highlight_mode": "Full" }
     },
 
     { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
@@ -13019,15 +12935,15 @@
     { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
     {
       "id": "post_tutorial_intro",
-      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Atomic Assembly.",
+      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "post_tutorial_intro" }
     },
 
-    { "_comment": "--- ⑧a: Atomic Assembly unlock (insert motivation/pacing steps before this if needed) ---" },
+    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
     {
       "id": "buy_atomic_assembly",
-      "hint": "Purchase Atomic Assembly in the Research panel to unlock heavier elements.",
+      "hint": "Purchase Nucleosynthesis in the Research panel to unlock Helium-4.",
       "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
       "on_enter": {
         "dialogue_id": "intro_atomic_assembly_context",
@@ -13040,17 +12956,24 @@
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
     },
+    {
+      "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
+      "id": "reroute_neutrons_to_atom_gen",
+      "hint": "Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
+      "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
+    },
 
     { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
     {
-      "_comment": "ItemCraftedMin, not InventoryMin: the Atom Generator's belt carries Helium to the Demon, which sells it before it can reach the inventory. The reward covers Stellar Fusion (4,000e) and most of the Fusion Reactor (1,500e): the 2,500e it was left ~21 min of forced idle in the 2026-10-31 active-grinder run. It keeps the tutorial fits 45-60 min without cheapening the research for everyone (#275).",
+      "_comment": "ItemCraftedMin, not InventoryMin: the Atom Generator's belt carries Helium to the Demon, which sells it before it can reach the inventory. The reward covers Deuterium Synthesis (1,200e), Stellar Fusion (4,000e) and most of the first Fusion Reactor (1,500e), so the tutorial fits 45-60 min without cheapening the research for everyone (#275).",
       "id": "craft_first_helium",
       "hint": "Tap the Atom Generator and set its recipe to Helium-4: 2 protons, 2 neutrons, 2 electrons.",
       "advance_condition": {
         "type": "ItemCraftedMin",
         "items": [{ "item_id": 7, "quantity": 1 }]
       },
-      "reward_entropy": 5000,
+      "reward_entropy": 6500,
       "on_enter": { "highlight_target": "atomic_assembler", "highlight_mode": "VisualOnly" }
     },
     {
@@ -13060,10 +12983,34 @@
       "on_enter": { "dialogue_id": "first_element_crafted_context" }
     },
 
-    { "_comment": "--- PHASE ⑨: FUSION, the tutorial's ending (#275). Heavy elements, isotopes, radioactive isotopes and fission left the tutorial; saves on those steps resume via ECSLoadBridge.RetiredSteps. fusion_i needs only atomic_assembly. ---" },
+    { "_comment": "--- PHASE 9a: DEUTERIUM, the fuel for the first fusion. The Atom Generator builds only H, D and He; everything heavier comes from the Fusion Reactor. ---" },
+    {
+      "id": "intro_deuterium",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "intro_deuterium_context" }
+    },
+    {
+      "id": "buy_deuterium_synthesis",
+      "hint": "Research Deuterium Synthesis (1,200 entropy) to teach the Atom Generator heavy hydrogen.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "deuterium_synthesis" },
+      "on_enter": { "pulse_button_id": "btn-research" }
+    },
+    {
+      "_comment": "ItemCraftedMin: the Atom Generator's belt still runs to the Demon, which sells the Deuterium before it reaches the inventory.",
+      "id": "craft_first_deuterium",
+      "hint": "Tap the Atom Generator and set its recipe to Assemble Deuterium: 1 proton, 1 neutron, 1 electron.",
+      "advance_condition": {
+        "type": "ItemCraftedMin",
+        "items": [{ "item_id": 14, "quantity": 2 }]
+      },
+      "on_enter": { "highlight_target": "atomic_assembler", "highlight_mode": "VisualOnly" }
+    },
+
+    { "_comment": "--- PHASE 9b: FUSION, the tutorial's ending (#275). Reactor A fuses Deuterium into Helium, reactor B fuses Helium into Carbon. Heavy elements, isotopes, radioactive isotopes and fission left the tutorial; saves on those steps resume via ECSLoadBridge.RetiredSteps. ---" },
     {
       "id": "intro_nuclear_reactors",
-      "hint": "Building atoms one nucleon at a time is slow. There is a faster way.",
+      "hint": "Fusing two Deuterium is far easier than building Helium nucleon by nucleon.",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "intro_nuclear_reactors_context" }
     },
@@ -13075,9 +13022,10 @@
     },
     {
       "id": "place_fusion_reactor",
-      "hint": "Place a Fusion Reactor (1,500 entropy) on the glowing tile, inside your generator's power range.",
+      "_comment": "#311: the glow is the powered open spot whose input is closest to the Atom Generator's output, wherever the player put it, so the Deuterium belt in route_deuterium_to_reactor stays short.",
+      "hint": "Place a Fusion Reactor (1,500 entropy) on the glowing tile next to your Atom Generator's output, inside your generator's power range.",
       "advance_condition": { "type": "BuildingMin", "building_id": "fusion_reactor", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor", "highlight_target": "power:fusion_reactor", "highlight_mode": "Full" }
+      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor", "highlight_target": "power:fusion_reactor@atomic_assembler", "highlight_mode": "Full" }
     },
     {
       "_comment": "Draw is now 2 Combiners 20 + Atom Generator 20 + Fusion Reactor 40 = 80 eV against one Basic Generator's 50. Without this step the whole factory browns out with no explanation.",
@@ -13093,15 +13041,49 @@
       "on_enter": { "dialogue_id": "fusion_explained_context" }
     },
     {
-      "_comment": "The Atom Generator's output still has its belt to the Demon, so the player removes it first; the route guide only lights a free output front.",
-      "id": "route_helium_to_reactor",
-      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's output into the Fusion Reactor.",
+      "_comment": "Was route_helium_to_reactor (saves map across via ECSLoadBridge.RetiredSteps). The Atom Generator's output still has its belt to the Demon, so the player removes it first; the route guide only lights a free output front.",
+      "id": "route_deuterium_to_reactor",
+      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "atomic_assembler", "building_id": "fusion_reactor", "min_count": 1 },
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:atomic_assembler>fusion_reactor", "highlight_mode": "Full" }
     },
     {
+      "_comment": "BuildingRecipeSet, not ItemCraftedMin: Helium was already crafted this session by the Atom Generator. The reward covers the second reactor (1,500e) and its generator (150e).",
+      "id": "fuse_first_helium",
+      "hint": "Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.",
+      "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 208 },
+      "reward_entropy": 1800,
+      "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
+    },
+    {
+      "id": "place_carbon_reactor",
+      "hint": "Place a second Fusion Reactor on the glowing tile next to the first one's output. It will fuse Helium into Carbon.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "fusion_reactor", "min_count": 2 },
+      "on_enter": { "pulse_button_id": "btn-place-fusion_reactor", "highlight_target": "power:fusion_reactor@fusion_reactor", "highlight_mode": "Full" }
+    },
+    {
+      "_comment": "Draw is now 2 Combiners 20 + Atom Generator 20 + 2 Fusion Reactors 80 = 120 eV against two Basic Generators' 100.",
+      "id": "power_for_carbon_reactor",
+      "hint": "Two reactors need 120 eV and your generators make 100. Place a third Basic Generator near the new reactor.",
+      "advance_condition": { "type": "BuildingMin", "building_id": "basic_generator", "min_count": 3 },
+      "on_enter": { "pulse_button_id": "btn-place-basic_generator" }
+    },
+    {
+      "_comment": "Set before routing: the reactor-to-reactor route glow picks its start and end from the reactors' recipes (Helium maker to Helium user).",
+      "id": "set_carbon_recipe",
+      "hint": "Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4 become one Carbon.",
+      "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 149 },
+      "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
+    },
+    {
+      "id": "route_helium_to_carbon_reactor",
+      "hint": "Belt the first reactor's Helium into the Carbon reactor.",
+      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "fusion_reactor", "building_id": "fusion_reactor", "min_count": 1 },
+      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:fusion_reactor>fusion_reactor", "highlight_mode": "Full" }
+    },
+    {
       "id": "craft_first_carbon",
-      "hint": "Tap the Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4 become one Carbon.",
+      "hint": "Wait for the Carbon reactor to collect three Helium-4 and fuse them into Carbon.",
       "advance_condition": {
         "type": "ItemCraftedMin",
         "items": [{ "item_id": 9, "quantity": 1 }]
@@ -13110,7 +13092,7 @@
     },
     {
       "id": "route_carbon_to_demon",
-      "hint": "Belt the Fusion Reactor's output into Maxwell's Demon. Each Carbon sells for 160 entropy.",
+      "hint": "Belt the Carbon reactor's output into Maxwell's Demon. Each Carbon sells for 160 entropy.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "fusion_reactor", "building_id": "maxwells_demon", "min_count": 1 },
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:fusion_reactor>maxwells_demon", "highlight_mode": "Full" }
     },

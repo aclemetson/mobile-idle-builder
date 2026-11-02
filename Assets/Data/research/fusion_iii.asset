@@ -20,12 +20,18 @@ MonoBehaviour:
   branch: 4
   prerequisites:
   - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
-  depthInTree: 4
+  depthInTree: 5
   costBaseCurrency: 120000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
-  unlocksItems: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
+  - {fileID: 11400000, guid: 55585eeeadbafda4aa27cffdaeccfce5, type: 2}
+  - {fileID: 11400000, guid: 4c6c94900546a7340bd82fd524fc4c57, type: 2}
+  - {fileID: 11400000, guid: 4236c7094747bed418dfcc0397e20a57, type: 2}
+  - {fileID: 11400000, guid: 645e50d6505ef684bb44d92ee861a907, type: 2}
+  - {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 43088a3f0b9148d4aa5d507942d133c2, type: 2}
   - {fileID: 11400000, guid: d0974d965bf54c044b180fb892d68f36, type: 2}
@@ -35,7 +41,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "The last day of a massive star: silicon burning forges its way to

@@ -197,6 +197,9 @@ namespace MobileIdleBuilder
             GameLogger.Develop($"[InspectorUI] Panel shown — entity={entity}");
         }
 
+        /// <summary>True while a building is selected in the inspector.</summary>
+        public bool IsOpen => _inspectorEntity != Entity.Null;
+
         public void HideBuildingInspector()
         {
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
@@ -318,6 +321,12 @@ namespace MobileIdleBuilder
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
                 }
+            }
+
+            if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+            {
+                float bonus = _em.GetComponentData<RecipeProcessData>(_inspectorEntity).ByproductEntropy;
+                if (bonus > 0f) AddInspectorRow(_inspectorStatic, "  " + HUDController.EscapeBonusText(bonus));
             }
 
             // buildingSO fetched above (before the power-source early-out).
@@ -798,23 +807,9 @@ namespace MobileIdleBuilder
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
-        private long GetBaseCurrency()
-        {
-            if (!_ecsReady || _playerQuery.IsEmpty) return 0L;
-            return _em.GetComponentData<PlayerProgressData>(_playerQuery.GetSingletonEntity()).BaseCurrency;
-        }
+        private long GetBaseCurrency() => _ecsReady ? EntropyWallet.Balance(_playerQuery) : 0L;
 
-        private bool TryDeductCurrency(int cost)
-        {
-            if (_playerQuery.IsEmpty) return false;
-            var entity   = _playerQuery.GetSingletonEntity();
-            var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            if (progress.BaseCurrency < cost) return false;
-            progress.BaseCurrency      -= cost;
-            progress.TotalEntropySpent += cost;
-            _em.SetComponentData(entity, progress);
-            return true;
-        }
+        private bool TryDeductCurrency(long cost) => EntropyWallet.TrySpend(_playerQuery, cost);
 
         private BuildingSO GetBuildingSO(Entity entity)
         {
@@ -839,7 +834,8 @@ namespace MobileIdleBuilder
                 CraftTime       = recipe.baseCraftTime,
                 Progress        = 0f,
                 InputsSatisfied = false,
-                IsCrafting      = false
+                IsCrafting      = false,
+                ByproductEntropy = recipe.EscapeEntropyPerCraft
             });
 
             var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);

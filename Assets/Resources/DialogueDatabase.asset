@@ -153,6 +153,8 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 559fca6955da77345bff902cc680eb10, type: 2}
   - id: particles_loop_context
     dialogue: {fileID: 11400000, guid: e1f1eda721baabc46a11bbb8c8e08d4f, type: 2}
+  - id: intro_deuterium_context
+    dialogue: {fileID: 11400000, guid: 11b00eb18dc9a404ab165d3abc0d1d8d, type: 2}
   - id: intro_nuclear_reactors_context
     dialogue: {fileID: 11400000, guid: a0399aad662fdc64ba15e71b34b02c04, type: 2}
   - id: fusion_explained_context

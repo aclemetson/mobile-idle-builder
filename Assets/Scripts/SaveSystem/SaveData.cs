@@ -108,6 +108,9 @@ namespace MobileIdleBuilder
         // A quark pair counts once. Each purchase raises the next price; cleared with the run on prestige.
         public List<string> fieldPurchaseIds        = new();
         public List<int>    fieldPurchaseCounts     = new();
+        // Recipe-menu craft queue (ManualCraftService, #310). Inputs were taken when each item was
+        // queued; cleared with the run on prestige.
+        public CraftQueueSaveData craftQueue        = new();
 
         /// <summary>
         /// The grid for the currently active site. Falls back to the legacy single 'grid'
@@ -127,6 +130,26 @@ namespace MobileIdleBuilder
                 return grid;
             }
         }
+    }
+
+    /// <summary>One queued recipe-menu craft: <c>count</c> items of a recipe, each taking <c>unitSeconds</c>.</summary>
+    [Serializable]
+    public class CraftQueueEntry
+    {
+        public string recipeId;
+        public int    count;
+        public float  unitSeconds;
+    }
+
+    /// <summary>
+    /// The recipe-menu craft queue. Only the front entry is in progress; it finishes at
+    /// <c>activeCompleteUtc</c> (ISO 8601 "O", same timed-effect pattern as research). Logic: <see cref="CraftQueue"/>.
+    /// </summary>
+    [Serializable]
+    public class CraftQueueSaveData
+    {
+        public List<CraftQueueEntry> entries = new();
+        public string activeCompleteUtc      = "";
     }
 
     [Serializable]

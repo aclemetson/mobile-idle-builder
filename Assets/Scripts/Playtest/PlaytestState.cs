@@ -294,7 +294,7 @@ namespace MobileIdleBuilder.Playtest
         public static List<FieldInstance> Fields()
         {
             var list = new List<FieldInstance>();
-            foreach (var f in UnityEngine.Object.FindObjectsByType<FieldInstance>(FindObjectsSortMode.None))
+            foreach (var f in FieldGenerator.AllInstances)
                 if (f != null && f.Field != null) list.Add(f);
             return list;
         }

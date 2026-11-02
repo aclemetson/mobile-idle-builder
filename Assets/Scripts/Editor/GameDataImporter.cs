@@ -377,6 +377,7 @@ namespace MobileIdleBuilder.Editor
             so.codexEntry          = data.codex_entry;
             so.baseSellValue       = data.base_sell_value;
             so.isotopeSellMultiplier = data.isotope_sell_multiplier;
+            so.escapesAsEntropy    = data.escapes_as_entropy;
 
             so.icon = LoadAssetOrWarn<Sprite>(data.icon_path, $"ItemSO '{data.id}'.icon")
                       ?? LoadGeneratedIcon(data.id);

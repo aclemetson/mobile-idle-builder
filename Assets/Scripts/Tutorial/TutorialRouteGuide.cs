@@ -213,6 +213,19 @@ namespace MobileIdleBuilder
         // ── Target id parsing ───────────────────────────────────────────────
 
         /// <summary>
+        /// True when a highlight target marks where to put a building: "suggest:", "power:", or a field
+        /// id (where to put a Harvester). Placing any building clears such a glow, whether or not the
+        /// player used the spot (#308). Routes and placed buildings are not placement suggestions.
+        /// </summary>
+        public static bool IsPlacementSuggestion(string targetId, Func<string, bool> isFieldId)
+        {
+            if (string.IsNullOrEmpty(targetId)) return false;
+            if (TryParseSuggest(targetId, out _, out _, out _) || TryParsePower(targetId, out _)) return true;
+            if (TryParseRoute(targetId, out _, out _)) return false;
+            return isFieldId != null && isFieldId(targetId);
+        }
+
+        /// <summary>
         /// Parses "route:&lt;from&gt;&gt;&lt;to&gt;" (e.g. "route:harvester&gt;maxwells_demon").
         /// </summary>
         public static bool TryParseRoute(string targetId, out string from, out string to)
@@ -248,25 +261,59 @@ namespace MobileIdleBuilder
         /// Parses "power:&lt;building&gt;" (e.g. "power:atomic_assembler"): where to place &lt;building&gt; so a
         /// power source reaches its footprint.
         /// </summary>
-        public static bool TryParsePower(string targetId, out string building)
+        public static bool TryParsePower(string targetId, out string building) =>
+            TryParsePower(targetId, out building, out _);
+
+        /// <summary>
+        /// Parses "power:&lt;building&gt;" or "power:&lt;building&gt;@&lt;near&gt;" (e.g.
+        /// "power:fusion_reactor@atomic_assembler"). With a <paramref name="near"/> building the spot is
+        /// the powered one whose inputs sit closest to that building's outputs (#311), not to the generator.
+        /// </summary>
+        public static bool TryParsePower(string targetId, out string building, out string near)
         {
-            building = null;
+            building = near = null;
             const string prefix = "power:";
             if (targetId == null || !targetId.StartsWith(prefix, StringComparison.Ordinal)) return false;
-            building = targetId.Substring(prefix.Length);
+            var rest = targetId.Substring(prefix.Length);
+            int at = rest.IndexOf('@');
+            if (at >= 0)
+            {
+                near = rest.Substring(at + 1);
+                rest = rest.Substring(0, at);
+                if (near.Length == 0) return false;
+            }
+            building = rest;
             return building.Length > 0;
+        }
+
+        /// <summary>
+        /// Distance from a candidate anchor to the nearest <paramref name="targets"/> cell, measured from
+        /// whichever of the building's <paramref name="inputFronts"/> (offsets from the anchor) is closest.
+        /// How far a belt from one of those cells would run into the building.
+        /// </summary>
+        public static int InputDistance(Vector2Int anchor, IReadOnlyList<Vector2Int> inputFronts,
+                                        IReadOnlyList<Vector2Int> targets)
+        {
+            int best = int.MaxValue;
+            foreach (var f in inputFronts)
+            foreach (var t in targets)
+                best = Mathf.Min(best, Manhattan(anchor + f, t));
+            return best;
         }
 
         /// <summary>
         /// Nearest buildable anchor where a footprint is powered by one of <paramref name="sources"/>, using
         /// <see cref="PowerCoverageMath.FootprintWithinRadius"/> (the rule the sim runs). Each source is its
         /// footprint (min, max cells) and its influence radius. Returns null when no spot is in range.
+        /// <paramref name="distanceFor"/>, when given, replaces "distance to the nearest powering source"
+        /// as the ranking (e.g. <see cref="InputDistance"/> to another building's output, #311).
         /// </summary>
         public static Vector2Int? SuggestPoweredAnchor(int gridWidth, int gridHeight, Vector2Int footprint,
                                                        IReadOnlyList<(Vector2Int min, Vector2Int max, float radius)> sources,
                                                        Func<Vector2Int, bool> isBuildable,
                                                        IReadOnlyList<Vector2Int> portFrontOffsets = null,
-                                                       Func<Vector2Int, bool> isPortFrontOk = null)
+                                                       Func<Vector2Int, bool> isPortFrontOk = null,
+                                                       Func<Vector2Int, int> distanceFor = null)
         {
             // Spots whose every port front passes isPortFrontOk (free for a belt, not beside the Demon,
             // #275) beat the plain nearest spot, which is kept as the fallback when none qualifies.
@@ -287,6 +334,7 @@ namespace MobileIdleBuilder
                         continue;
                     nearest = Mathf.Min(nearest, Manhattan(anchor, s.min));
                 }
+                if (nearest != int.MaxValue && distanceFor != null) nearest = distanceFor(anchor);
                 // Closest powered spot to a source wins; ties keep scan order (y, x) so the glow is stable.
                 if (nearest < bestDistance)
                 {

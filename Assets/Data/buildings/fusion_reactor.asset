@@ -32,17 +32,31 @@ MonoBehaviour:
   linkRadiusTiles: 0
   baseOutputRate: 1
   supportedRecipes:
+  - {fileID: 11400000, guid: bcb789ae341b0f74b8678b5b0cdd921c, type: 2}
   - {fileID: 11400000, guid: 836ddfb7854822e43b54924bad753eed, type: 2}
+  - {fileID: 11400000, guid: bc81222a1362ed241b3e4a74f61efc74, type: 2}
+  - {fileID: 11400000, guid: a2a978fc6f2cab44c8794d522ce614d5, type: 2}
+  - {fileID: 11400000, guid: 04e9637445ae72b4b9c9b8a09bd7b352, type: 2}
   - {fileID: 11400000, guid: e758c6af4a6a4a24386c8e2135ee9cfb, type: 2}
+  - {fileID: 11400000, guid: 18d8c24fc0a976944b3b0a238ce26f4a, type: 2}
   - {fileID: 11400000, guid: a2f350106494f5c44ba427f09c97f0e0, type: 2}
+  - {fileID: 11400000, guid: 3cc60278fb985db4f8431f14dce466ff, type: 2}
   - {fileID: 11400000, guid: 24da610dc434e6046b54f4bb4c8ecbc9, type: 2}
+  - {fileID: 11400000, guid: 63a5048ef762a6940ad1de1bb422d57f, type: 2}
   - {fileID: 11400000, guid: 3aa75351a59a7df458d9ce4ab5cf936e, type: 2}
+  - {fileID: 11400000, guid: c216c34d551829b46ac369db8907609c, type: 2}
   - {fileID: 11400000, guid: 2bf96794b3af2ae4e93b5eab183e17a0, type: 2}
+  - {fileID: 11400000, guid: a52840c1a88be6a409efbe174c244e73, type: 2}
   - {fileID: 11400000, guid: 43088a3f0b9148d4aa5d507942d133c2, type: 2}
+  - {fileID: 11400000, guid: b55c7b0772bb38e4c956c67e6ce491ee, type: 2}
   - {fileID: 11400000, guid: d0974d965bf54c044b180fb892d68f36, type: 2}
+  - {fileID: 11400000, guid: 02b241c4051ecba469cef6cb42ad1b54, type: 2}
   - {fileID: 11400000, guid: 716dd01167a799d4da71115fe9297ff7, type: 2}
+  - {fileID: 11400000, guid: eee5723157e262d439db5809087b2a62, type: 2}
   - {fileID: 11400000, guid: 10924634e73b74940943c8e88c9873e8, type: 2}
+  - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
   - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
+  - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
   - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
   inputSlotCount: 2
   inputSlotLabels:

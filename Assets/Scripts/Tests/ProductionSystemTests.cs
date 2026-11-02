@@ -276,5 +276,60 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(0.5f * Speed * 0.5f, process.Progress, 0.001f,
                 "Brownout must scale progress by ThrottleRatio");
         }
+
+        // ── Escaping byproducts (fusion neutrinos / gamma) ───────────────────
+
+        private Entity AddProgress(long currency)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new PlayerProgressData { BaseCurrency = currency });
+            return e;
+        }
+
+        private void SetByproductEntropy(float perCraft)
+        {
+            var p = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            p.ByproductEntropy = perCraft;
+            _em.SetComponentData(_buildingEntity, p);
+        }
+
+        [Test]
+        public void CompletedCraft_PaysByproductEntropy()
+        {
+            var progress = AddProgress(100);
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime);
+
+            Assert.AreEqual(105, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency,
+                "A finished craft pays its escaping byproducts' entropy");
+        }
+
+        [Test]
+        public void UnfinishedCraft_PaysNoByproductEntropy()
+        {
+            var progress = AddProgress(100);
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime * 0.5f);
+
+            Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
+
+        [Test]
+        public void ByproductEntropy_ScalesWithGlobalOutputBonus()
+        {
+            var progress = AddProgress(0);
+            var bonus = _em.CreateEntity();
+            _em.AddComponentData(bonus, new GlobalProductionBonus { SpeedMult = 1f, OutputMult = 2f });
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime);
+
+            Assert.AreEqual(10, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
     }
 }

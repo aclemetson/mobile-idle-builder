@@ -131,6 +131,12 @@ namespace MobileIdleBuilder
             });
         }
 
+        /// <summary>True while the welcome-back modal is on screen.</summary>
+        public bool IsOpen => _modal != null && !_modal.ClassListContains("hidden");
+
+        /// <summary>Back button: dismiss exactly as the Claim button does (earnings are already credited).</summary>
+        public void Close() => Hide();
+
         private void Hide()
         {
             _modal?.AddToClassList("hidden");

@@ -22,9 +22,9 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: 'Heavier elements are worth more, but building them one nucleon at a time
-      is slow. I have sent you 5,000 entropy toward Stellar Fusion and your first
-      reactor: the stars build carbon from helium, and so will you.'
+    text: Building it one nucleon at a time is slow, and the Atom Generator will
+      go no further than this. Heavier atoms must be fused. I have sent you 6,500
+      entropy toward that road.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

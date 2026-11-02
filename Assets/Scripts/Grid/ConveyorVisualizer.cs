@@ -27,7 +27,13 @@ namespace MobileIdleBuilder
 
         private EntityQuery _segmentQuery;
         private EntityQuery _itemQuery;
+        private EntityQuery _portQuery;
         private bool        _queriesReady;
+
+        // Tail tiles drawn exiting toward the input they actually feed, when that differs from their
+        // stored ExitDir (#223). Keyed by cell; read by the item animation so items glide into the
+        // building instead of straight past it. Rebuilt with the belts.
+        private readonly Dictionary<(int, int), int> _tailVisualExit = new();
 
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres = new();
@@ -72,6 +78,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<ConveyorSegmentData>(),
                 ComponentType.ReadOnly<ConveyorItemData>()
             );
+            _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
             _queriesReady = true;
         }
 
@@ -82,6 +89,7 @@ namespace MobileIdleBuilder
             {
                 _segmentQuery.Dispose();
                 _itemQuery.Dispose();
+                _portQuery.Dispose();
             }
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
@@ -158,7 +166,8 @@ namespace MobileIdleBuilder
                 // Animate position: lerp from entry edge to exit edge
                 Vector3 cellCenter  = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
                 Vector3 entryEdge   = cellCenter + DirOffset(OppositeDir(seg.EntryDir), cs * 0.45f);
-                Vector3 exitEdge    = cellCenter + DirOffset(seg.ExitDir, cs * 0.45f);
+                int     exitDir     = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                Vector3 exitEdge    = cellCenter + DirOffset(exitDir, cs * 0.45f);
                 float   t           = Mathf.Clamp01(item.Progress);
                 Vector3 pos         = Vector3.Lerp(entryEdge, exitEdge, t);
                 pos.y               = 0.3f;
@@ -240,17 +249,60 @@ namespace MobileIdleBuilder
                 exitMap[(seg.Cell.x, seg.Cell.y)] = seg.ExitDir;
             }
 
+            var inputPorts = CollectInputPorts(em);
+            var feeds      = new bool[4];
+            var sinks      = new bool[4];
+
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg  = em.GetComponentData<ConveyorSegmentData>(entities[i]);
                 var cell = (seg.Cell.x, seg.Cell.y);
                 if (_spawnedBelts.ContainsKey(cell)) continue;
 
+                // A tail is drawn exiting toward the input it really feeds (same ranking as
+                // ConveyorSystem.TryPickInput, via TailDelivery), not straight past it (#223). Data is
+                // untouched, so extending the belt from this tile still links along its stored ExitDir.
+                int exitDir = seg.ExitDir;
+                if (seg.NextSegment == Entity.Null)
+                {
+                    for (int d = 0; d < 4; d++)
+                    {
+                        int2 nb = Adjacent(seg.Cell, d);
+                        feeds[d] = inputPorts.TryGetValue((nb.x, nb.y, d), out bool sink);
+                        sinks[d] = feeds[d] && sink;
+                    }
+                    exitDir = TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds, sinks);
+                }
+                if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
+                else                        _tailVisualExit.Remove(cell);
+
                 var inbound = ComputeInboundEdges(seg.Cell, exitMap);
-                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, seg.ExitDir, inbound, cs);
+                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
             }
 
             entities.Dispose();
+        }
+
+        /// <summary>
+        /// Every building input port as (cell x, cell y, facing) -> whether its building is an entropy
+        /// sink. A tail at cell C feeds direction d when (C + d, d) is a key, the same test as
+        /// ConveyorSystem.HasMatchingPort; the sink flag feeds TailInputPriority (Demon last).
+        /// </summary>
+        private Dictionary<(int, int, int), bool> CollectInputPorts(EntityManager em)
+        {
+            var map = new Dictionary<(int, int, int), bool>();
+            if (_portQuery.IsEmpty) return map;
+            var buildings = _portQuery.ToEntityArray(Allocator.Temp);
+            for (int b = 0; b < buildings.Length; b++)
+            {
+                bool isSink = em.HasComponent<EntropySinkTag>(buildings[b]);
+                var ports = em.GetBuffer<PlacedPortData>(buildings[b], isReadOnly: true);
+                for (int p = 0; p < ports.Length; p++)
+                    if (ports[p].PortType == (int)PortType.Input)
+                        map[(ports[p].CellX, ports[p].CellY, ports[p].Facing)] = isSink;
+            }
+            buildings.Dispose();
+            return map;
         }
 
         /// <summary>Destroys all belt ribbons and rebuilds them from current ECS data. Call after any
@@ -259,6 +311,7 @@ namespace MobileIdleBuilder
         {
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             _spawnedBelts.Clear();
+            _tailVisualExit.Clear();
             Refresh();
             RefreshGapMarkers();
         }

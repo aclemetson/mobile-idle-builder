@@ -36,3 +36,4 @@ MonoBehaviour:
   codexUnlocked: 0
   baseSellValue: 3.5184372e+14
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

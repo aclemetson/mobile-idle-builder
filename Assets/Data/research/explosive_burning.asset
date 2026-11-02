@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: explosive_burning
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: explosive_burning
+  displayName: Explosive Burning
+  description: 'Fuse a proton onto Sulfur, Argon, Calcium, Titanium and Chromium:
+    Chlorine, Potassium, Scandium, Vanadium and Manganese. With Iron, this completes
+    every element a star can make.'
+  icon: {fileID: 0}
+  branch: 4
+  prerequisites:
+  - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 150000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
+  - {fileID: 11400000, guid: 89b33da28615202459096ab75d854a0d, type: 2}
+  - {fileID: 11400000, guid: 5ed6af1e7dd24c145b1ddd327ae7f06a, type: 2}
+  - {fileID: 11400000, guid: e62f17f097d33ae4498907181c45f781, type: 2}
+  - {fileID: 11400000, guid: c4932c0b7989ec14499515b2d1fb1812, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b55c7b0772bb38e4c956c67e6ce491ee, type: 2}
+  - {fileID: 11400000, guid: 02b241c4051ecba469cef6cb42ad1b54, type: 2}
+  - {fileID: 11400000, guid: eee5723157e262d439db5809087b2a62, type: 2}
+  - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
+  - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: When a massive star explodes, a shock wave sweeps through its silicon
+    and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements
+    next to iron, like Manganese and Vanadium.

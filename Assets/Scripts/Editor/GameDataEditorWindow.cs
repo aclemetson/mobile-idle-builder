@@ -399,6 +399,7 @@ namespace MobileIdleBuilder.Editor
             item.is_secondary_particle = Toggle("Is Secondary Particle", item.is_secondary_particle);
             if (item.is_secondary_particle)
                 item.particle_uses = IntField("Particle Uses (bitmask)", item.particle_uses);
+            item.escapes_as_entropy = Toggle("Escapes as Entropy (byproduct)", item.escapes_as_entropy);
 
             H("Economy");
             item.base_sell_value       = FloatField("Base Sell Value",       item.base_sell_value);
