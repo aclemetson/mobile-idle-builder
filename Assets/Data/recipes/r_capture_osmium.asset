@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: r_capture_osmium
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: r_capture_osmium
+  displayName: 'Fast capture: Osmium'
+  recipeId: 285
+  tier: 2
+  category: 4
+  inputs:
+  - item: {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
+    quantity: 3
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
+  outputQuantity: 1
+  byproducts:
+  - item: {fileID: 11400000, guid: 2aa3f256dbe6a324c89dcd09b44631e5, type: 2}
+    quantity: 1
+  baseCraftTime: 30
+  manualCraftTime: 30
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 180
+  validBuildings:
+  - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 1
+  simplificationNote: 'A flood of neutrons in seconds (a neutron-star merger), then
+    beta decays: the only way to make this element.'

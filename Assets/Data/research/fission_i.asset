@@ -40,7 +40,8 @@ MonoBehaviour:
   unlocksBuildings:
   - {fileID: 11400000, guid: e4346b137e117ed4a80e2d84116dc0f8, type: 2}
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "A slow neutron splits a heavy fissile nucleus into two mid-weight

@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: rapid_neutron_capture
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: rapid_neutron_capture
+  displayName: r-Process
+  description: 'Unlock Fast mode: a flood of neutrons makes the elements slow capture
+    can''t reach, including Gold and Platinum.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
+  depthInTree: 6
+  costBaseCurrency: 300000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 4c97e0b1e325cb64ca93fbd9cad64459, type: 2}
+  - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
+  - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
+  - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
+  - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 0ae5f6f5dd80ae04085c223c85aaf6c1, type: 2}
+  - {fileID: 11400000, guid: 20187d3a2a78d704aa1611fd15cfdca8, type: 2}
+  - {fileID: 11400000, guid: 70c5d5a2ccbcec048ab53d7a44ab9b69, type: 2}
+  - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
+  - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: When two neutron stars collide, matter is bathed in so many neutrons
+    that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen
+    forging gold and platinum.
