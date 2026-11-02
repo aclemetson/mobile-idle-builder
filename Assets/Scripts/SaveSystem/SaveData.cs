@@ -203,6 +203,7 @@ namespace MobileIdleBuilder
         public int   rotation;        // 0-3 CW
         public bool  flipped;
         public int   outputDirection; // -1 = not a field-collector
+        public int[] portFilters;     // Filter rules [facing, itemId, …] (PortFilterRules); null = none / defaults
     }
 
     [Serializable]

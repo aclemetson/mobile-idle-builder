@@ -29,6 +29,7 @@ MonoBehaviour:
   unlocksRecipes: []
   unlocksBuildings:
   - {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
+  - {fileID: 11400000, guid: 67eafaf92dc630d4c864cb8f7448f623, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}

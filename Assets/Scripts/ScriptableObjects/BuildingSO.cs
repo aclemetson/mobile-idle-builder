@@ -72,6 +72,7 @@ namespace MobileIdleBuilder
         public int inputSlotCount;
         public string[] inputSlotLabels;    // e.g. ["Protons", "Neutrons", "Electrons"]
         public bool isEntropySink;          // true = Maxwell's Demon; items in input buffer are consumed for entropy
+        public bool isItemFilter;           // true = Filter (#321): routes each item to the output side its rules pick
 
         [Header("Placement")]
         public Vector2Int footprint = Vector2Int.one; // width x height in grid cells

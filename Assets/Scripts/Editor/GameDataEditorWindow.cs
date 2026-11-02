@@ -497,6 +497,7 @@ namespace MobileIdleBuilder.Editor
             b.input_slot_count = IntField("Input Slot Count", b.input_slot_count);
             b.input_slot_labels= StringArrayField("Input Slot Labels", b.input_slot_labels);
             b.is_entropy_sink  = Toggle("Is Entropy Sink", b.is_entropy_sink);
+            b.is_item_filter   = Toggle("Is Item Filter", b.is_item_filter);
 
             H("Supported Recipes");
             b.supported_recipes = IdListField("Recipes", b.supported_recipes, _recipeIds);

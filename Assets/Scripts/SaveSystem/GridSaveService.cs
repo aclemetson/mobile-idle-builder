@@ -254,6 +254,10 @@ namespace MobileIdleBuilder
                 if (_em.HasComponent<OutputDirectionData>(e))
                     bsd.outputDirection = _em.GetComponentData<OutputDirectionData>(e).Direction;
 
+                if (_em.HasBuffer<OutputPortFilter>(e))
+                    bsd.portFilters = PortFilterRules.Flatten(
+                        FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(e, isReadOnly: true)));
+
                 grid.buildings.Add(bsd);
             }
             entities.Dispose();
@@ -421,7 +425,8 @@ namespace MobileIdleBuilder
                         outputDir, bsd.rotation, bsd.flipped,
                         speedLevel:   Mathf.Max(1, bsd.level),
                         storageLevel: Mathf.Max(1, bsd.storageLevel),
-                        inputLevel:   Mathf.Max(1, bsd.inputLevel));
+                        inputLevel:   Mathf.Max(1, bsd.inputLevel),
+                        portFilters:  bsd.portFilters);
                 }
             }
 
@@ -647,7 +652,8 @@ namespace MobileIdleBuilder
                 DateTime.UtcNow.ToString("O"),
                 getManagerOutputMultiplier,
                 getRecipeInfo,
-                SurplusSale.CurrentFraction());
+                SurplusSale.CurrentFraction(),
+                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

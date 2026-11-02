@@ -316,6 +316,16 @@ namespace MobileIdleBuilder
                 }
 
                 int itemID = outputBuf[0].ItemID;
+                if (EntityManager.HasBuffer<OutputPortFilter>(bldg))
+                {
+                    // A Filter (#321): this side only takes the items its rules send here.
+                    var rules = FilterSystem.ReadRules(EntityManager.GetBuffer<OutputPortFilter>(bldg, isReadOnly: true));
+                    itemID = -1;
+                    for (int k = 0; k < outputBuf.Length && itemID < 0; k++)
+                        if (outputBuf[k].Quantity > 0 && PortFilterRules.Route(rules, outputBuf[k].ItemID) == portFacing)
+                            itemID = outputBuf[k].ItemID;
+                    if (itemID < 0) continue;
+                }
                 SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
                 pulls.Add((e, itemID));
                 if (debugLog)
