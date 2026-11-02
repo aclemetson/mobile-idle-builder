@@ -1374,11 +1374,24 @@ namespace MobileIdleBuilder
                 timeLabel.style.opacity  = 0.7f;
                 info.Add(timeLabel);
 
+                float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
+                if (bonus > 0f)
+                {
+                    var bonusLabel = new Label(EscapeBonusText(bonus));
+                    bonusLabel.style.fontSize = 11;
+                    bonusLabel.AddToClassList("recipe-bonus-hint");
+                    info.Add(bonusLabel);
+                }
+
                 row.Add(info);
                 row.Add(BuildCraftButtons(recipe, isLocked, hasBuilding, max));
                 _recipeList.Add(row);
             }
         }
+
+        /// <summary>Recipe-row / inspector line for fusion byproducts that escape as entropy.</summary>
+        internal static string EscapeBonusText(float entropyPerCraft) =>
+            $"Releases particles: +{entropyPerCraft:0.#} entropy per craft";
 
         // x1 / x5 / x10 / Max (#310). One the inventory can't pay for (or with no building placed) is
         // styled unavailable but stays tappable: ListTapRouter swallows taps on disabled buttons, so a

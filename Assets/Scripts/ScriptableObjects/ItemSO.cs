@@ -44,5 +44,11 @@ namespace MobileIdleBuilder
         [Header("Economy")]
         public float baseSellValue;
         public float isotopeSellMultiplier;
+
+        /// <summary>
+        /// True for particles that fly off a reaction instead of staying in the building (neutrinos,
+        /// gamma photons). As a recipe byproduct they pay their sell value as entropy on every craft.
+        /// </summary>
+        public bool escapesAsEntropy;
     }
 }

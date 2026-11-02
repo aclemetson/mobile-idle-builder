@@ -27,10 +27,28 @@ namespace MobileIdleBuilder
         public int tier;
         public List<RecipeIngredientJson> inputs;
         public RecipeOutputJson output;
+        public List<RecipeIngredientJson> byproducts;   // optional; escaping ones pay entropy per craft
         public float base_craft_time;
         public List<string> crafted_in; // e.g. ["inventory_menu", "atomic_assembler"]
         public string requires_research;
         public string unlocks_research;
+
+        /// <summary>
+        /// Entropy paid per craft by byproducts that escape (neutrinos, gamma photons), looked up in
+        /// <paramref name="items"/>. Mirrors <see cref="RecipeSO.EscapeEntropyPerCraft"/>.
+        /// </summary>
+        public float EscapeEntropyPerCraft(ItemDatabase items)
+        {
+            if (byproducts == null || items == null) return 0f;
+            float total = 0f;
+            foreach (var b in byproducts)
+            {
+                var item = items.Get(b.id);
+                if (item != null && item.escapesAsEntropy && b.quantity > 0)
+                    total += b.quantity * item.baseSellValue;
+            }
+            return total;
+        }
 
         // Requires a dedicated building — not available in the inventory craft menu
         public bool requiresBuilding =>

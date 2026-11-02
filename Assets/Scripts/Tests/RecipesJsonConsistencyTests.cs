@@ -55,10 +55,19 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void AtomicAssembly_RevealsTheFirstHeavierElements()
+        public void AtomicAssembly_RevealsOnlyHelium()
         {
             var ids = ResearchService.RecipesGatedBy(_recipes, "atomic_assembly").ToList();
-            CollectionAssert.IsSupersetOf(ids, new[] { "helium", "lithium", "carbon", "oxygen", "silicon", "iron" });
+            CollectionAssert.AreEquivalent(new[] { "helium" }, ids);
+        }
+
+        [Test]
+        public void DeuteriumAndFusion_RevealTheFusionLadder()
+        {
+            CollectionAssert.AreEquivalent(new[] { "assemble_deuterium" },
+                ResearchService.RecipesGatedBy(_recipes, "deuterium_synthesis").ToList());
+            CollectionAssert.IsSupersetOf(ResearchService.RecipesGatedBy(_recipes, "fusion_i").ToList(),
+                new[] { "fuse_deuterium", "fuse_helium", "fuse_carbon" });
         }
     }
 }

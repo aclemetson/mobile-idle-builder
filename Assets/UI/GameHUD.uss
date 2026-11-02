@@ -669,6 +669,10 @@
     -unity-font-style: italic;
 }
 
+.recipe-bonus-hint {
+    color: var(--color-success);
+}
+
 .craft-btn {
     min-width: 64px;
     padding: var(--spacing-xs) var(--spacing-sm);

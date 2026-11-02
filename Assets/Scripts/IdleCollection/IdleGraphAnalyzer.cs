@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         public float CraftTimeSeconds;
         public int[] InputItemIds;
         public int[] InputQuantities;
+        public float ByproductEntropy;   // entropy paid per craft by escaping byproducts (neutrinos, gamma)
     }
 
     /// <summary>
@@ -202,6 +203,24 @@ namespace MobileIdleBuilder
                         baseSellValue     = getItemSellValue(node.OutputItemId)
                     });
                 }
+            }
+
+            // ---- Escaping byproducts → entropy, once per craft of every producing synth -----------
+            // Paid regardless of where the main output goes, exactly like the live ProductionSystem.
+            for (int i = 0; i < n; i++)
+            {
+                var node = nodes[i];
+                if (!node.Recipe.Valid || node.IsSink || node.Recipe.ByproductEntropy <= 0f) continue;
+                if (node.OutputRate <= 0f) continue;
+
+                int outQty = node.Recipe.OutputQuantity > 0 ? node.Recipe.OutputQuantity : 1;
+                snapshot.chains.Add(new IdleChainEntry
+                {
+                    itemId            = node.OutputItemId,
+                    itemsPerSecond    = node.OutputRate / outQty,   // crafts per second
+                    endsAtEntropySink = true,
+                    baseSellValue     = node.Recipe.ByproductEntropy
+                });
             }
 
             GameLogger.Debug($"[IdleGraph] buildings={n} conveyors={conveyors.Count} chains={snapshot.chains.Count}");

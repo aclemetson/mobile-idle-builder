@@ -279,7 +279,10 @@ namespace MobileIdleBuilder
                                                      .WithEntityAccess())
             {
                 bool isTarget = MatchesTarget(c, bd.ValueRO, e, ref state);
-                bool isSource = !isTarget && !SystemAPI.HasComponent<EntropySinkTag>(e)
+                // A chain of one building type (Fusion Reactor → Fusion Reactor) has every building as
+                // both a possible source and a possible target.
+                bool sameTypeChain = c.fromBuildingType >= 0 && c.fromBuildingType == c.buildingType;
+                bool isSource = (!isTarget || sameTypeChain) && !SystemAPI.HasComponent<EntropySinkTag>(e)
                              && (c.fromBuildingType < 0 || bd.ValueRO.BuildingType == c.fromBuildingType);
                 if (!isTarget && !isSource) continue;
 

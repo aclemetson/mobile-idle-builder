@@ -310,6 +310,9 @@ namespace MobileIdleBuilder
             var buffer = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
             SlotBufferUtils.AddToInventory(ref buffer, outputId, recipe.output.quantity);
 
+            long escaped = (long)recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
+            if (escaped > 0) ECSLoadBridge.Instance?.AddEntropy(escaped);
+
             AchievementService.Instance?.NotifyCraft(recipe.output.id, recipe.output.quantity);
             TierProgress.NotifyItemProduced(outputId);
             CraftLog.Record(outputId, recipe.output.quantity);

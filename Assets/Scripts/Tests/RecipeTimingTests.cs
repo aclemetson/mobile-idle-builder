@@ -63,9 +63,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Iron_CraftTime_Is56s()
+        public void Deuterium_CraftTime_BeatsHalfAHelium()
         {
-            Assert.AreEqual(56f, RequireRecipe("iron").base_craft_time, 0.001f);
+            // Two Deuterium (then one fusion) must take less Atom Generator time than one Helium.
+            Assert.Less(2f * RequireRecipe("assemble_deuterium").base_craft_time,
+                        RequireRecipe("helium").base_craft_time);
+        }
+
+        [Test]
+        public void FuseIron_CraftTime_Is28s()
+        {
+            Assert.AreEqual(28f, RequireRecipe("fuse_iron").base_craft_time, 0.001f);
         }
 
         // ── Tier 3 — Molecular craft times ───────────────────────────────────

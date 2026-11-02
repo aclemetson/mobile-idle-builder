@@ -518,6 +518,52 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void Analyzer_SynthByproductEntropy_PaysPerCraftEvenIntoInventory()
+        {
+            // Collector (item 10 at 2/s) -> belt -> synth (2 x item 10 -> item 20, 1s, +5 entropy per craft)
+            // -> belt -> nowhere. The synth crafts 1/s: item 20 goes to inventory, the bonus to entropy.
+            var grid = new GridSaveData
+            {
+                buildings = new List<BuildingSaveData>
+                {
+                    new BuildingSaveData { buildingId = 1, recipeId = 0, position = new[] { 0, 0 } },
+                    new BuildingSaveData { buildingId = 3, recipeId = 7, position = new[] { 4, 0 } },
+                },
+                conveyors = new List<ConveyorSaveData>
+                {
+                    new ConveyorSaveData { cells = new[] { 1,0, 2,0, 3,0 } },
+                    new ConveyorSaveData { cells = new[] { 5,0, 6,0 } },
+                }
+            };
+
+            var snap = IdleGraphAnalyzer.BuildSnapshot(
+                grid,
+                id => id == 1,
+                _ => false,
+                _ => Vector2Int.one,
+                (_, __) => 10,
+                _ => 2f,
+                _ => 1f,
+                1f,
+                DateTime.UtcNow.ToString("O"),
+                null,
+                (b, _) => b == 3
+                    ? new IdleRecipeInfo
+                    {
+                        Valid = true, OutputItemId = 20, OutputQuantity = 1, CraftTimeSeconds = 1f,
+                        InputItemIds = new[] { 10 }, InputQuantities = new[] { 2 }, ByproductEntropy = 5f
+                    }
+                    : default);
+
+            var bonus = snap.chains.Find(c => c.endsAtEntropySink);
+            Assert.IsNotNull(bonus, "the synth's escaping byproducts must be an entropy chain");
+            Assert.AreEqual(1f, bonus.itemsPerSecond, 1e-4f, "one bonus per craft, 1 craft/s");
+            Assert.AreEqual(5f, bonus.baseSellValue, 1e-4f);
+            Assert.IsTrue(snap.chains.Exists(c => !c.endsAtEntropySink && c.itemId == 20),
+                "the main output still goes to inventory");
+        }
+
+        [Test]
         public void Analyzer_SetsSnapshotTimestamp()
         {
             string ts = "2026-06-06T12:00:00.000Z";

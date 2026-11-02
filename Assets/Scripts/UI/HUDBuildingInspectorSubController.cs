@@ -323,6 +323,12 @@ namespace MobileIdleBuilder
                 }
             }
 
+            if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
+            {
+                float bonus = _em.GetComponentData<RecipeProcessData>(_inspectorEntity).ByproductEntropy;
+                if (bonus > 0f) AddInspectorRow(_inspectorStatic, "  " + HUDController.EscapeBonusText(bonus));
+            }
+
             // buildingSO fetched above (before the power-source early-out).
 
             // Field-collector recipe display: show what the underlying field produces.
@@ -828,7 +834,8 @@ namespace MobileIdleBuilder
                 CraftTime       = recipe.baseCraftTime,
                 Progress        = 0f,
                 InputsSatisfied = false,
-                IsCrafting      = false
+                IsCrafting      = false,
+                ByproductEntropy = recipe.EscapeEntropyPerCraft
             });
 
             var inputBuf = _em.GetBuffer<RecipeInputSlot>(entity);

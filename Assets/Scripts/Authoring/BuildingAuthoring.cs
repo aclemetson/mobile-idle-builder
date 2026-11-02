@@ -59,7 +59,8 @@ namespace MobileIdleBuilder
                     CraftTime       = craftTime,
                     Progress        = 0f,
                     InputsSatisfied = false,
-                    IsCrafting      = false
+                    IsCrafting      = false,
+                    ByproductEntropy = r != null ? r.EscapeEntropyPerCraft : 0f
                 });
 
                 // Recipe input/output slots

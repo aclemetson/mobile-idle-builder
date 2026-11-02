@@ -615,7 +615,8 @@ namespace MobileIdleBuilder
                     OutputQuantity   = recipe.outputQuantity > 0 ? recipe.outputQuantity : 1,
                     CraftTimeSeconds = recipe.baseCraftTime > 0f ? recipe.baseCraftTime : 1f,
                     InputItemIds     = inputIds,
-                    InputQuantities  = inputQtys
+                    InputQuantities  = inputQtys,
+                    ByproductEntropy = recipe.EscapeEntropyPerCraft
                 };
             }
 

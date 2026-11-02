@@ -91,7 +91,8 @@ namespace MobileIdleBuilder
                 RecipeID        = recipeId,
                 CraftTime       = craftTime,
                 Progress        = 0f,
-                InputsSatisfied = false
+                InputsSatisfied = false,
+                ByproductEntropy = recipe != null ? recipe.EscapeEntropyPerCraft : 0f
             });
 
             _em.SetComponentData(entity, new BuildingInventoryConfig

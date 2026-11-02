@@ -14,25 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: transition_metals
   displayName: Transition Metals
-  description: "Unlock copper and zinc \u2014 the workhorses of electrical engineering
-    and metallurgy."
+  description: 'Build Nickel, Cobalt, Copper and Zinc beyond Iron in the Atom Generator.
+    (Interim: the Actinide map''s fission and neutron capture will replace this.)'
   icon: {fileID: 0}
   branch: 2
   prerequisites:
-  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
-  depthInTree: 3
-  costBaseCurrency: 8000
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
+  depthInTree: 7
+  costBaseCurrency: 250000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
   unlocksItems:
+  - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
   - {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
   - {fileID: 11400000, guid: b28f1a8061c3b71459a2610eb4b6845d, type: 2}
-  - {fileID: 11400000, guid: 5ed6af1e7dd24c145b1ddd327ae7f06a, type: 2}
-  - {fileID: 11400000, guid: 4236c7094747bed418dfcc0397e20a57, type: 2}
-  - {fileID: 11400000, guid: e62f17f097d33ae4498907181c45f781, type: 2}
-  - {fileID: 11400000, guid: 645e50d6505ef684bb44d92ee861a907, type: 2}
-  - {fileID: 11400000, guid: c4932c0b7989ec14499515b2d1fb1812, type: 2}
   - {fileID: 11400000, guid: 3a2da077bc6cc0143a8daf8a8e159dea, type: 2}
   - {fileID: 11400000, guid: 7a4f4bd0ff4598c41a3333cd60fab9db, type: 2}
   - {fileID: 11400000, guid: 949b7487c47f6eb4cab3b5e207c6a8a0, type: 2}
@@ -41,13 +37,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
   - {fileID: 11400000, guid: 65bb40278e1be8145874cff40ba59794, type: 2}
   unlocksRecipes:
+  - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
   - {fileID: 11400000, guid: 84de2773693fc6a41bdaf9adc6f277af, type: 2}
   - {fileID: 11400000, guid: f6030caaa967ffc4187edb305eeed22b, type: 2}
-  - {fileID: 11400000, guid: 9a90ee6f48bb6c146a25c30971bcd103, type: 2}
-  - {fileID: 11400000, guid: f29e82650ba566a41aee6f0d21f2c416, type: 2}
-  - {fileID: 11400000, guid: c841f2d8fe4e1134b92a7840af2935b1, type: 2}
-  - {fileID: 11400000, guid: 4eaae974964eec8478cee715118c3e25, type: 2}
-  - {fileID: 11400000, guid: aa76d400aa92af040b376571847559ac, type: 2}
   - {fileID: 11400000, guid: 7bda0b4f7a6cd5042892ce7a7736a23d, type: 2}
   - {fileID: 11400000, guid: f3a957238730102418c5bc5ab38fd9fa, type: 2}
   - {fileID: 11400000, guid: 88dd10cc7d4f5c14c8cb68432b4b87c6, type: 2}
