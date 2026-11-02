@@ -444,6 +444,7 @@ namespace MobileIdleBuilder.Editor
             so.tier                = data.tier;
             so.isObsoleteable      = data.is_obsoleteable;
             so.obsoleteCondition   = data.obsolete_condition;
+            so.obsoletedByResearch = data.obsoleted_by_research;
             so.requiresPower       = data.requires_power;
             so.isPowerSource       = data.is_power_source;
             so.basePowerCostEV     = data.base_power_cost_ev;

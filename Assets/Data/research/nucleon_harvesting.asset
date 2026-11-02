@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: nucleon_harvesting
   displayName: Nucleon Harvesting
-  description: Unlock the Nucleon Harvester special upgrade for paired field harvesters
-    on opposing polarity fields.
+  description: 'Unlock the Nucleon Harvester: place one across two quark fields,
+    or merge two neighbouring Harvesters (Up and Down Quarks) into one. Makes protons
+    or neutrons with no Combiner.'
   icon: {fileID: 0}
   branch: 3
   prerequisites:
@@ -26,8 +27,11 @@ MonoBehaviour:
   durationSeconds: 30
   fieldCooldownMult: 1
   unlocksItems: []
-  unlocksRecipes: []
-  unlocksBuildings: []
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 3f18d3fe4b12b374f910c4aec67433c2, type: 2}
+  - {fileID: 11400000, guid: ff2d1f56464c16d4aba77c9b8c08e48e, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 3b47660239217eb43abb35409149ad14, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1

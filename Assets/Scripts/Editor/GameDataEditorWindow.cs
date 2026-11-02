@@ -474,7 +474,10 @@ namespace MobileIdleBuilder.Editor
             H("Obsolescence");
             b.is_obsoleteable    = Toggle("Is Obsoleteable", b.is_obsoleteable);
             if (b.is_obsoleteable)
-                b.obsolete_condition = TextArea("Obsolete Condition", b.obsolete_condition);
+            {
+                b.obsolete_condition    = TextArea("Obsolete Condition", b.obsolete_condition);
+                b.obsoleted_by_research = TextField("Obsoleted By Research", b.obsoleted_by_research);
+            }
 
             H("Power");
             b.requires_power       = Toggle("Requires Power",        b.requires_power);

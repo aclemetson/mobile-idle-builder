@@ -345,6 +345,7 @@ namespace MobileIdleBuilder
                 if (isFieldCollector)
                 {
                     AddFieldCollectorRecipeSection(_inspectorEntity, buildingSO, fieldOnTile);
+                    AddNucleonMergeSection(_inspectorEntity, buildingSO, buildingCellX, buildingCellY);
                 }
                 else if (buildingSO.supportedRecipes != null)
                 {
@@ -754,18 +755,8 @@ namespace MobileIdleBuilder
         {
             if (field.drops == null || field.drops.Count == 0) return;
 
-            // Find which of the building's declared recipes match this field's actual drops.
-            var relevantRecipes = new List<RecipeSO>();
-            if (so.supportedRecipes != null)
-            {
-                var dropIds = new HashSet<int>();
-                foreach (var drop in field.drops)
-                    if (drop?.item != null) dropIds.Add(drop.item.itemId);
-
-                foreach (var r in so.supportedRecipes)
-                    if (r?.outputItem != null && dropIds.Contains(r.outputItem.itemId))
-                        relevantRecipes.Add(r);
-            }
+            // Same list the placement chooser offered (FieldRecipes covers the Nucleon Harvester too).
+            var relevantRecipes = FieldRecipes.For(so, field);
 
             // Single (or no) relevant recipe: static "Collects" display, no chooser.
             if (relevantRecipes.Count <= 1)
@@ -803,6 +794,147 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Nucleon Harvester merge (#313) ────────────────────────────────────
+
+        /// <summary>
+        /// On a Harvester next to an opposite-polarity Harvester (Up beside Down Quarks), once Nucleon
+        /// Harvesting is researched: a Merge row. The fee makes two Harvesters + merge cost exactly one placed
+        /// Nucleon Harvester (NucleonHarvesterMerge.Fee).
+        /// </summary>
+        private void AddNucleonMergeSection(Entity entity, BuildingSO so, int cellX, int cellY)
+        {
+            if (so == null || so.id != NucleonHarvesterMerge.HarvesterId || cellX < 0) return;
+            if (!(ResearchService.Instance?.IsUnlocked(NucleonHarvesterMerge.ResearchId) ?? false)) return;
+            var nucleon = FindPlaceableBuilding(NucleonHarvesterMerge.NucleonHarvesterId);
+            if (nucleon == null) return;
+            if (!TryFindMergePartner(entity, so, new Vector2Int(cellX, cellY), out var partner)) return;
+
+            long fee = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            bool canAfford = GetBaseCurrency() >= fee;
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            var name = new Label("Nucleon Harvester");
+            name.AddToClassList("upgrade-row-name");
+            row.Add(name);
+            var desc = new Label("Merge with the neighbouring Harvester into one Nucleon Harvester. " +
+                                 "It makes protons or neutrons straight from the fields, no Combiner needed.");
+            desc.AddToClassList("upgrade-row-desc");
+            row.Add(desc);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
+            var costLabel = new Label($"{fee:N0} e");
+            costLabel.AddToClassList("upgrade-row-cost");
+            if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+            footer.Add(costLabel);
+            var btn = new Button { text = "Merge" };
+            btn.AddToClassList("craft-btn");
+            btn.SetEnabled(canAfford);
+            ListTapRouter.Register(_inspectorUpgrades, btn,
+                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee));
+            footer.Add(btn);
+            row.Add(footer);
+            _inspectorUpgrades?.Add(row);
+        }
+
+        /// <summary>An orthogonally adjacent Harvester on a quark field collecting the opposite quark.</summary>
+        private bool TryFindMergePartner(Entity self, BuildingSO harvester, Vector2Int cell, out Entity partner)
+        {
+            partner = Entity.Null;
+            if (!IsQuarkField(cell)) return false;
+            string mine = RecipeIdOf(self, harvester);
+
+            using var query = _em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                    ComponentType.ReadOnly<GridPosition>(),
+                                                    ComponentType.ReadOnly<RecipeProcessData>());
+            using var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var e in entities)
+            {
+                if (e == self || _em.GetComponentData<BuildingData>(e).BuildingType != harvester.buildingId) continue;
+                var c = _em.GetComponentData<GridPosition>(e).Cell;
+                var other = new Vector2Int(c.x, c.y);
+                if (!NucleonHarvesterMerge.TryPlacement(cell, other, out _, out _) || !IsQuarkField(other)) continue;
+                if (!NucleonHarvesterMerge.OpposingPolarity(mine, RecipeIdOf(e, harvester))) continue;
+                partner = e;
+                return true;
+            }
+            return false;
+        }
+
+        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee)
+        {
+            if (!_ecsReady || !_em.Exists(a) || !_em.Exists(b)) return; // changed while the panel was open
+            var ca = _em.GetComponentData<GridPosition>(a).Cell;
+            var cb = _em.GetComponentData<GridPosition>(b).Cell;
+            if (!NucleonHarvesterMerge.TryPlacement(new Vector2Int(ca.x, ca.y), new Vector2Int(cb.x, cb.y),
+                                                    out var anchor, out int rotation)) return;
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null || !TryDeductCurrency(fee)) return;
+
+            var bdA = _em.GetComponentData<BuildingData>(a);
+            var bdB = _em.GetComponentData<BuildingData>(b);
+            int speed   = NucleonHarvesterMerge.CarriedLevel(bdA.UpgradeLevel, bdB.UpgradeLevel);
+            int storage = NucleonHarvesterMerge.CarriedLevel(bdA.StorageUpgradeLevel, bdB.StorageUpgradeLevel);
+
+            RemoveForMerge(a);
+            RemoveForMerge(b);
+            rotation = NucleonHarvesterMerge.PreferBeltedRotation(nucleon, anchor, rotation, IsBeltAt);
+
+            var recipe = System.Array.Find(nucleon.supportedRecipes,
+                                           r => r != null && r.id == NucleonHarvesterMerge.DefaultRecipeId);
+            if (!placer.PlaceBuilding(anchor.x, anchor.y, nucleon, recipe, null, rotation, false, speed, storage))
+                GameLogger.Warning($"[Inspector] Nucleon Harvester merge could not place at ({anchor.x},{anchor.y}).");
+
+            GetBuildingVisualizer()?.Refresh();
+            FindAnyObjectByType<ConveyorVisualizer>()?.RefreshAll();
+            SaveManager.Instance?.SaveLocal();
+            HideBuildingInspector();
+            _hud?.ShowNotification("\u269B", "Merged into a Nucleon Harvester. Tap it to choose protons or neutrons.");
+        }
+
+        private void RemoveForMerge(Entity e)
+        {
+            var c = _em.GetComponentData<GridPosition>(e).Cell;
+            _em.DestroyEntity(e);
+            GridOccupancy.Instance?.ReleaseRect(c.x, c.y, 1, 1);
+            GetBuildingVisualizer()?.RemoveBuilding(c.x, c.y);
+        }
+
+        private bool IsBeltAt(Vector2Int cell)
+        {
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<ConveyorSegmentData>());
+            using var segs = q.ToComponentDataArray<ConveyorSegmentData>(Unity.Collections.Allocator.Temp);
+            foreach (var s in segs)
+                if (s.Cell.x == cell.x && s.Cell.y == cell.y) return true;
+            return false;
+        }
+
+        private static bool IsQuarkField(Vector2Int cell) =>
+            FieldGenerator.GetFieldAt(cell.x, cell.y)?.fieldType == "Quark";
+
+        private string RecipeIdOf(Entity e, BuildingSO so)
+        {
+            int id = _em.GetComponentData<RecipeProcessData>(e).RecipeID;
+            var r = so.supportedRecipes == null ? null
+                : System.Array.Find(so.supportedRecipes, x => x != null && x.recipeId == id);
+            return r?.id;
+        }
+
+        private BuildingSO FindPlaceableBuilding(string id)
+        {
+            if (_placement?.availableBuildings == null) return null;
+            foreach (var entry in _placement.availableBuildings)
+                if (entry.building != null && entry.building.id == id) return entry.building;
+            return null;
+        }
+
+        private float CostReduction()
+        {
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
+            return q.IsEmpty ? 0f : q.GetSingleton<PrestigeData>().CostReduction;
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

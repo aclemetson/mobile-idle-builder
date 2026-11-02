@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: nucleon_harvester
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: nucleon_harvester
+  displayName: Nucleon Harvester
+  description: Spans two quark fields and pulls whole protons or neutrons out of
+    them, no Combiner needed. Place it from the Build menu, or merge two neighbouring
+    Harvesters (one on Up Quarks, one on Down Quarks) from a Harvester's info panel.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 24
+  tier: 1
+  category: 0
+  isObsoleteable: 0
+  obsoleteCondition: 
+  obsoletedByResearch: 
+  requiresPower: 0
+  isPowerSource: 0
+  basePowerCostEV: 0
+  powerCostIsDynamic: 0
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 3f18d3fe4b12b374f910c4aec67433c2, type: 2}
+  - {fileID: 11400000, guid: ff2d1f56464c16d4aba77c9b8c08e48e, type: 2}
+  inputSlotCount: 0
+  inputSlotLabels: []
+  isEntropySink: 0
+  footprint: {x: 2, y: 1}
+  structureKind: 0
+  ports:
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
+  placementRule: 1
+  compatibleAdjacentCategories: 
+  compatibleFields:
+  - Quark
+  entropyCost: 500
+  baseMaxOutputItems: 20
+  baseMaxInputItemsPerSlot: 0
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 1250
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 5000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 0
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 20000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 300
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 1200
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 5000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
+  availableFromStart: 0
+  tutorialNote: Not taught in the tutorial. Replaces two Harvesters plus a Strong
+    Force Combiner.
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: 'Quarks are never found alone: they are always bound in groups of three.
+    The Nucleon Harvester straddles two quark fields of opposite polarity and draws
+    out whole protons (up, up, down) or neutrons (up, down, down), skipping the Combiner
+    entirely.'

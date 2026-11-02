@@ -23,6 +23,7 @@ MonoBehaviour:
   category: 0
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 0
   isPowerSource: 0
   basePowerCostEV: 0
