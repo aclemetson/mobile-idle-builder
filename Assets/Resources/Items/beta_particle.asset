@@ -35,6 +35,6 @@ MonoBehaviour:
     A high-energy electron. Collected by Radioactive Containment buildings and fed
     back into the power grid.
   codexUnlocked: 0
-  baseSellValue: 30
+  baseSellValue: 2
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

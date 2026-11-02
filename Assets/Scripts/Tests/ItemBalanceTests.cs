@@ -47,14 +47,14 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T1_Neutron_SellValue()     => AssertSell("neutron",    3f);
 
         // ── Tier 2 — Elements (convergent value model: fusion doubles up to the iron
-        //    peak Z26 = 167,772,160; the fission side (#322 rescale) is steep next to iron (Co 100M, x4.1/Z
-        //    to Z35), nearly flat through the fission fragments (~200-313, Z36-80) and gentle down the
-        //    decay chain to the uranium floor = 64; Np/Pu sit just below uranium (Pu is harvested);
+        //    peak Z26 = 167,772,160; fission fragments (Z36-80, ~200-313) and the decay chain (U 64 -> Pb) follow
+        //    the #322 rescale; everything made by neutron capture is worth more than its seed (tier value:
+        //    slow x1.12, fast x1.6 per step); Np/Pu sit just below uranium (Pu is harvested);
         //    post-iron synthesis climbs from Americium (Z95) to Oganesson = the global max).
         //    See docs/agents/elements-and-isotopes.md. Values = nucYield(Z). ──────────────
 
         [Test] public void T2_Hydrogen_SellValue()    => AssertSell("hydrogen",   5f);
-        [Test] public void T2_Helium4_SellValue()     => AssertSell("helium_4",   10f);
+        [Test] public void T2_Helium4_SellValue()     => AssertSell("helium_4",   15f);   // #270: pays more per proton than Hydrogen
         [Test] public void T2_Lithium_SellValue()     => AssertSell("lithium",    20f);
         [Test] public void T2_Beryllium_SellValue()   => AssertSell("beryllium",  40f);
         [Test] public void T2_Boron_SellValue()       => AssertSell("boron",      80f);
@@ -64,15 +64,15 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    40960f);
         [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   20480f);
         [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       167772160f);   // natural peak
-        [Test] public void T2_Cobalt_SellValue()      => AssertSell("cobalt",     100000000f);   // next to iron, below it
-        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     24456144f);
-        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     5981030f);
-        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       1462729f);
-        [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 292f);
-        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     281f);
-        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   214f);
-        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   206f);
-        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       204f);
+        [Test] public void T2_Cobalt_SellValue()      => AssertSell("cobalt",     187904820f);   // first capture step up from iron
+        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     210453399f);
+        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     235707807f);
+        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       263992744f);
+        [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 331f);
+        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     522f);
+        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   2250f);
+        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   10379f);
+        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       16618f);
         [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    64f);          // cheap fission floor
         [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  52f);          // harvested on the Actinide Vein: cheap
         [Test] public void T2_Americium_SellValue()   => AssertSell("americium",  335544320f);   // first post-iron synthetic
@@ -82,14 +82,14 @@ namespace MobileIdleBuilder.Tests
 
         // Deuterium sits below half a Helium (0.8x) so fusing two of them is worth more than selling them.
         [Test] public void T2_Deuterium_SellValue()   => AssertSell("deuterium",    4f);
-        [Test] public void T2_Tritium_SellValue()     => AssertSell("tritium",      8f);
+        [Test] public void T2_Tritium_SellValue()     => AssertSell("tritium",      13f);
         [Test] public void T2_Carbon14_SellValue()    => AssertSell("carbon_14",    240f);
         [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  128f);
 
         // ── Tier 2 — Decay particles ─────────────────────────────────────────
 
-        [Test] public void T2_AlphaParticle_SellValue() => AssertSell("alpha_particle", 50f);
-        [Test] public void T2_BetaParticle_SellValue()  => AssertSell("beta_particle",  30f);
+        [Test] public void T2_AlphaParticle_SellValue() => AssertSell("alpha_particle", 10f);   // a bare Helium nucleus
+        [Test] public void T2_BetaParticle_SellValue()  => AssertSell("beta_particle",  2f);    // an electron
 
         // ── Tier 2 — Fusion particles (escape the reactor; paid as entropy per craft) ─────
 

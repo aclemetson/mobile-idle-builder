@@ -14,9 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Alpha and Beta particles \u2014 secondary energy currency, harvested from
-      nuclear instability. What is a hazard in any other context is a resource here.
-      Your Containment building converts decay into power."
+    text: 'Alpha and Beta particles are the debris of nuclear instability. What is
+      a hazard anywhere else is a resource here: sell them at Maxwell''s Demon.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

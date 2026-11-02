@@ -64,13 +64,31 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void ValueRisesTowardIron_FromPlutoniumDownToCobalt()
+        public void DecayChain_ValueRisesFromUraniumDownToLead()
         {
-            var byZ = _gd.items.Where(i => i.category == "Element" && i.atomic_number >= 26 && i.atomic_number <= 94)
-                               .ToDictionary(i => i.atomic_number);
-            for (int z = 27; z <= 94; z++)
-                Assert.Greater(byZ[z - 1].base_sell_value, byZ[z].base_sell_value,
-                    $"Z{z - 1} {byZ[z - 1].id} must be worth more than Z{z} {byZ[z].id} (iron is the peak)");
+            // The natural alpha chain U -> Th -> Ra -> Rn -> Po -> Pb: each daughter is worth more.
+            var chain = new[] { "uranium", "thorium", "radium", "radon", "polonium", "lead" };
+            for (int i = 1; i < chain.Length; i++)
+                Assert.Greater(_items[chain[i]].base_sell_value, _items[chain[i - 1]].base_sell_value, chain[i]);
+        }
+
+        /// <summary>
+        /// Tier value (2026-11-02 balance pass): every nuclear processing step is worth doing on its own. Before
+        /// it, values peaked at iron like binding energy, so every neutron capture lost value (x0.24-0.99).
+        /// </summary>
+        [Test]
+        public void EveryNuclearStep_GainsValue()
+        {
+            var buildings = new[] { "fusion_reactor", "fission_reactor", "neutron_capture", "radioactive_containment", "isotopic_manipulator" };
+            // Hydrogen + neutron in the Manipulator stays cheap on purpose: the Atom Generator is the Deuterium route (#320).
+            var exempt = new HashSet<string> { "deuterium" };
+            foreach (var r in _gd.recipes.Where(r => buildings.Contains(r.valid_buildings[0]) && !exempt.Contains(r.id)))
+            {
+                double inV  = r.inputs.Sum(i => _items[i.item].base_sell_value * i.quantity);
+                double outV = _items[r.output_item].base_sell_value
+                              + (r.byproducts ?? new List<GdIng>()).Sum(b => _items[b.item].base_sell_value * b.quantity);
+                Assert.Greater(outV / inV, 1.05, $"{r.id}: {inV} -> {outV}");
+            }
         }
 
         [Test]

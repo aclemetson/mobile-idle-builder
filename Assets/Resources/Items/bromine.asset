@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Bromine (Br), element number 35 with mass number 79. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 1280
+  baseSellValue: 465245400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

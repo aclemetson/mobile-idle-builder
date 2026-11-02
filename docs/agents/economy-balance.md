@@ -82,9 +82,10 @@ Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tuto
 | Phase | Gate (research → entropy cost) | Economy landmark |
 |---|---|---|
 | ⑦ Run 2 ramp | repeat discounts: Recombination I 75e, Hydrogen Synth 38e, Automation I 13e | H loop ~4–8 e/sec |
-| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (10e) only |
-| ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e | D 4e; 2D→He (10e) + γ 5e escape bonus; 3He→C 160e. Li..Fe only via fusion: `light_elements` 6k, `fusion_ii` 20k, `mid_elements` 30k, `fusion_iii` 120k (Fe 167.8M), `explosive_burning` 150k (Cl..Mn), `transition_metals` 250k (now gates Neutron Capture Co..Br, #322) |
-| ⑨ Heavy Elements | 3,000e | Uranium = 1,310,720e/unit |
+| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (15e) only (Deuterium comes at ⑧b) |
+| ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e | D 4e; 2D→He (15e, was 10e: #270) + γ 5e escape bonus; 3He→C 160e. Li..Fe only via fusion: `light_elements` 6k, `fusion_ii` 20k, `mid_elements` 30k, `fusion_iii` 120k (Fe 167.8M), `explosive_burning` 150k (Cl..Mn), `transition_metals` 250k (now gates Neutron Capture Co..Br, #322) |
+| ⑧c Actinide branch (post-fusion) | `slow_neutron_capture` 120k → `rapid_neutron_capture` 300k → `precious_metals` 500k → `exotic_metals` / `heavy_transition_metals` 750k → `lanthanides_and_heavy_metals` 1.5M → `transuranic_elements` 2M → `superheavy_synthesis` 4M | Tier value (2026-11-02): every nuclear step gains (capture ×1.12 slow / ×1.6 fast, alpha 10e, beta 2e); Au 16.6k, Pt 10.4k. Capture time 12–20s slow / 30–50s fast by unlock tier. See `elements-and-isotopes.md` "Balance pass: tier value" |
+| ⑨ Heavy Elements | 3,000e | Atom Generator Uranium = 64e/unit: the decay-chain on-ramp (U → Pb gains ~×3.5 with alpha particles) |
 | ⑩ Isotopes | 1,500e | isotopes sell 1.5× base element |
 | ⑪ Radioactive Decay | 5,000e | needs ⑨+⑩ |
 | ⑫ Molecular Synthesis | 3,000e (+ element gates 1K→80K) | tier 3 |
