@@ -781,20 +781,7 @@ namespace MobileIdleBuilder
 
         private static string Capitalize(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
 
-        private List<RecipeSO> GetMatchingRecipes(FieldSO field)
-        {
-            var result = new List<RecipeSO>();
-            if (field.outputItems == null || field.outputItems.Count == 0) return result;
-            if (_pending.building.supportedRecipes == null) return result;
-
-            foreach (var recipe in _pending.building.supportedRecipes)
-            {
-                if (recipe == null) continue;
-                if (field.outputItems.Contains(recipe.outputItem))
-                    result.Add(recipe);
-            }
-            return result;
-        }
+        private List<RecipeSO> GetMatchingRecipes(FieldSO field) => FieldRecipes.For(_pending.building, field);
 
         private static Vector3 FacingEdgeOffset(OutputDirection dir, float cellSize)
         {

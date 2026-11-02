@@ -444,6 +444,7 @@ namespace MobileIdleBuilder.Editor
             so.tier                = data.tier;
             so.isObsoleteable      = data.is_obsoleteable;
             so.obsoleteCondition   = data.obsolete_condition;
+            so.obsoletedByResearch = data.obsoleted_by_research;
             so.requiresPower       = data.requires_power;
             so.isPowerSource       = data.is_power_source;
             so.basePowerCostEV     = data.base_power_cost_ev;
@@ -455,6 +456,10 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isItemFilter        = data.is_item_filter;
+            so.assignableOutputs   = data.assignable_outputs;
+            so.recipeModeLabels    = data.recipe_mode_labels;
+            so.recipeModePrefixes  = data.recipe_mode_prefixes;
             so.entropyCost                = data.entropy_cost;
             so.baseMaxOutputItems         = data.base_max_output_items;
             so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;

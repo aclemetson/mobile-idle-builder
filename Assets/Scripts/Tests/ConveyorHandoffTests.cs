@@ -255,12 +255,14 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void MixedBelt_FullItemJammingNeededItem_OverflowsToInventory()
+        public void MixedBelt_FullItemJammingNeededItem_IsSoldNotSentToInventory()
         {
             var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
             SetProtonRecipe(building);
             SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
             var inventory = CreatePlayerInventory();
+            var progress  = _em.CreateEntity();
+            _em.AddComponentData(progress, new PlayerProgressData { BaseCurrency = 100 });
 
             var upstream = CreateUpstream(new int2(-1, 0), UpQuark);          // the needed item, stuck behind
             var tail     = CreateTail(new int2(0, 0), East, DownQuark, upstream); // full item at the front
@@ -269,8 +271,10 @@ namespace MobileIdleBuilder.Tests
 
             Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail), "Jamming item must leave the belt");
             Assert.AreEqual(30, CountIn(building, DownQuark), "Building buffer stays at its cap");
-            Assert.AreEqual(1, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark),
-                "Jamming item goes to the player's inventory, not lost");
+            Assert.AreEqual(0, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark),
+                "#312: the jamming item is sold, not hidden in the inventory");
+            long expected = 100 + SurplusSale.Value(SurplusSale.DemonPrice(DownQuark), 1, SurplusSale.BaseFraction);
+            Assert.AreEqual(expected, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
         }
 
         [Test]

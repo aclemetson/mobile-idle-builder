@@ -14,22 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: precious_metals
   displayName: Precious Metals
-  description: "Unlock silver and gold \u2014 rare, noble, and indispensable in electronics."
+  description: 'Fast neutron capture for Platinum and Gold: made in nature only by
+    neutron-star mergers.'
   icon: {fileID: 0}
   branch: 2
   prerequisites:
   - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
   depthInTree: 4
   costBaseCurrency: 25000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
+  - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
   - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 1fb4e4df9a3ad8c4e8e5774038c6a8bc, type: 2}
-  - {fileID: 11400000, guid: 2ad640107ca2d3e4682a015c2f4a5ec3, type: 2}
+  - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
+  - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

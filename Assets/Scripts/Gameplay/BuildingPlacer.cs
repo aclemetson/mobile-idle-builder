@@ -25,7 +25,8 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
-                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1)
+                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1,
+                                  int[] portFilters = null)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -115,12 +116,8 @@ namespace MobileIdleBuilder
                 }
 
                 var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
-                if (recipe.outputItem != null)
-                    outputBuf.Add(new RecipeOutputSlot
-                    {
-                        ItemID   = recipe.outputItem.itemId,
-                        Quantity = recipe.outputQuantity
-                    });
+                foreach (var (item, qty) in recipe.ProducedOutputs())
+                    outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
             }
 
             if (outputDirection.HasValue)
@@ -178,7 +175,7 @@ namespace MobileIdleBuilder
             {
                 _em.AddComponentData(entity, new PowerConsumer
                 {
-                    DrawEV = BuildingSO.PowerDrawForLevel(building, speedLevel)
+                    DrawEV = BuildingSO.PowerDrawFor(building, speedLevel, recipe)
                 });
                 _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
             }
@@ -199,8 +196,38 @@ namespace MobileIdleBuilder
                 }
             }
 
+            if (building != null && (building.isItemFilter || building.assignableOutputs))
+                AddFilterComponents(entity, portFilters, building.isItemFilter);
+
             GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
+        }
+
+        /// <summary>
+        /// Filter (#321) or a building with assignable outputs (#322): its routing rules (saved ones, or
+        /// "everything goes straight through" for a new one). Straight through = the output facing the same
+        /// way items enter.
+        /// </summary>
+        private void AddFilterComponents(Entity entity, int[] portFilters, bool isFilter)
+        {
+            var rules = PortFilterRules.Parse(portFilters);
+            if (rules.Count == 0)
+            {
+                var ports = _em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+                int inFacing = -1;
+                for (int i = 0; i < ports.Length && inFacing < 0; i++)
+                    if (ports[i].PortType == (int)PortType.Input) inFacing = ports[i].Facing;
+                if (inFacing >= 0) rules = PortFilterRules.Default(inFacing);
+            }
+
+            // A Filter also moves items through itself and lists what it has seen; a building with assignable
+            // outputs (the Decay Chamber, #322) only uses the per-side rules for its own products.
+            if (isFilter)
+            {
+                _em.AddComponent<ItemFilterTag>(entity);
+                _em.AddBuffer<FilterSeenItem>(entity);
+            }
+            FilterSystem.WriteRules(_em.AddBuffer<OutputPortFilter>(entity), rules);
         }
     }
 }

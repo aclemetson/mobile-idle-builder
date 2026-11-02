@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: fission_i
   displayName: Nuclear Fission
-  description: "Unlock the Fission Reactor \u2014 split fissile nuclei into mid-weight
-    fragments worth far more than their fuel."
+  description: 'Unlock the Fission Reactor: split Uranium-235 or Plutonium into two
+    lighter elements and spare neutrons. Choose which side each product leaves by.'
   icon: {fileID: 0}
   branch: 1
   prerequisites:
@@ -28,11 +28,20 @@ MonoBehaviour:
   unlocksItems: []
   unlocksRecipes:
   - {fileID: 11400000, guid: 3c0787a948f661f48a2ca71ec42eaeb1, type: 2}
+  - {fileID: 11400000, guid: abb0f48e8ca71864e9236f126dfd0757, type: 2}
+  - {fileID: 11400000, guid: 17d7d7b689e473148b2704c6cacd77fb, type: 2}
+  - {fileID: 11400000, guid: a54f7fcb06142054b82a8e9a98330546, type: 2}
+  - {fileID: 11400000, guid: 0cf01bbff6d29394994b1219829584d4, type: 2}
+  - {fileID: 11400000, guid: 7d89bfccfbbc9374786b95bb9d727b4e, type: 2}
+  - {fileID: 11400000, guid: b1ba269b0d4ff7e419531923e86102cd, type: 2}
   - {fileID: 11400000, guid: 81d3e11de48055f4386e1eaa2dee8aff, type: 2}
+  - {fileID: 11400000, guid: 7f46442546b09714fa1b2ecc7999c5ad, type: 2}
+  - {fileID: 11400000, guid: f17c23f834f9cba4c9a898442d81fba9, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: e4346b137e117ed4a80e2d84116dc0f8, type: 2}
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "A slow neutron splits a heavy fissile nucleus into two mid-weight

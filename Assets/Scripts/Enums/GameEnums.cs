@@ -89,7 +89,8 @@ namespace MobileIdleBuilder
     {
         None,
         Alpha,
-        Beta
+        Beta,
+        BetaPlus   // beta-plus / electron capture: a proton becomes a neutron (Z - 1)
     }
 
     [Flags]
@@ -156,6 +157,7 @@ namespace MobileIdleBuilder
         IdleTimeCap,              // additive seconds per level (+1800 = 30 min)
         IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
         DemolishRefund,           // additive fraction of spent entropy refunded on removal (+0.10 = 10 %)
+        SurplusResale,            // additive fraction of the Demon price paid for auto-sold unused items (+0.10 = 10 %)
     }
 
     public enum AchievementTrigger

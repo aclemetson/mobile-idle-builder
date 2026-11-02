@@ -718,6 +718,48 @@
     font-size: var(--font-size-sm);
 }
 
+/* Filter sorting rows (#321): item name, then one button per output side plus Wait. */
+.filter-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 2px 0;
+}
+
+.filter-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.filter-side-btn {
+    min-width: 0;
+    width: 44px;
+    height: 36px;
+    margin: 0 2px;
+    background-color: rgba(0, 229, 255, 0.06);
+    border-color: var(--color-border);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    -unity-text-align: middle-center;
+}
+
+/* Recipe mode switch (Neutron Capture Slow / Fast): same look, sized to its label. */
+.recipe-mode-btn {
+    width: auto;
+    flex-grow: 1;
+    padding: 0 var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.filter-side-btn--on {
+    background-color: rgba(0, 229, 255, 0.28);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
 /* Can't afford it (or no building yet): looks unavailable but still takes the tap, which explains
    what is missing. No fill, so it reads as "not ready" rather than as a button held down. */
 .craft-btn.craft-btn--unavailable,

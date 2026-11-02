@@ -248,6 +248,7 @@ namespace MobileIdleBuilder.Editor
         public string                 category                   = "Core";
         public bool                   is_obsoleteable            = false;
         public string                 obsolete_condition         = "";
+        public string                 obsoleted_by_research      = "";
         public bool                   requires_power             = false;
         public bool                   is_power_source            = false;
         public float                  base_power_cost_ev         = 0f;
@@ -260,6 +261,10 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public bool                   is_item_filter             = false;
+        public bool                   assignable_outputs         = false;
+        public string[]               recipe_mode_labels         = null;
+        public string[]               recipe_mode_prefixes       = null;
         public int[]                  footprint                  = { 1, 1 };
         public string                 structure_kind             = "None";
         public List<PortJson>         ports                      = new();

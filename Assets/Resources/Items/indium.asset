@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Indium (In), element number 49 with mass number 115. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 972649
+  baseSellValue: 275
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

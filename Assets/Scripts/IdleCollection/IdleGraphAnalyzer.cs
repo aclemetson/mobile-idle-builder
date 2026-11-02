@@ -41,6 +41,7 @@ namespace MobileIdleBuilder
             public BuildingSaveData Bsd;
             public bool  IsCollector;
             public bool  IsSink;
+            public bool  IsFilter;           // #321: passes items through by its rules; never a final consumer
             public IdleRecipeInfo Recipe;   // valid only for synthesizers
             public readonly List<int> Outgoing = new(); // indices (or -1 for inventory)
             public readonly List<int> Incoming = new(); // producer node indices feeding this node
@@ -61,7 +62,9 @@ namespace MobileIdleBuilder
             float effectiveItemsPerSecondMultiplier,
             string snapshotTimestamp,
             Func<BuildingSaveData, float> getManagerOutputMultiplier = null,
-            Func<int, int, IdleRecipeInfo> getRecipeInfo = null)
+            Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
+            float surplusSaleFraction = 0f,
+            Func<int, bool> isFilter = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -82,6 +85,7 @@ namespace MobileIdleBuilder
                     Bsd         = bsd,
                     IsCollector = isCollector(bsd.buildingId),
                     IsSink      = isEntropySink(bsd.buildingId),
+                    IsFilter    = isFilter?.Invoke(bsd.buildingId) ?? false,
                     Recipe      = info
                 };
                 indexOf[bsd] = i;
@@ -95,12 +99,13 @@ namespace MobileIdleBuilder
             bool CanConsume(BuildingSaveData b)
             {
                 int idx = indexOf[b];
-                return nodes[idx].IsSink ||
+                return nodes[idx].IsSink || nodes[idx].IsFilter ||
                        (nodes[idx].Recipe.Valid && nodes[idx].Recipe.InputItemIds != null &&
                         nodes[idx].Recipe.InputItemIds.Length > 0);
             }
 
             var cellToBuilding = BuildCellMap(buildings, getFootprint);
+            var filterExits    = new List<(int filter, int side, int to)>();
 
             // ---- Edges (producer at head → consumer/inventory at tail) --------
             foreach (var chain in conveyors)
@@ -111,16 +116,48 @@ namespace MobileIdleBuilder
                 int tx = chain.cells[chain.cells.Length - 2];
                 int ty = chain.cells[chain.cells.Length - 1];
 
-                var producer = FindAdjacent(hx, hy, cellToBuilding, CanProduce);
-                if (producer == null) continue;
-
                 var consumer = FindAdjacent(tx, ty, cellToBuilding, CanConsume);
+                int to = consumer != null ? indexOf[consumer] : -1;
+
+                var producer = FindAdjacent(hx, hy, cellToBuilding, CanProduce);
+                if (producer == null)
+                {
+                    // A belt leaving a Filter: remember which side it starts from and where it ends.
+                    var filter = FindAdjacent(hx, hy, cellToBuilding, b => nodes[indexOf[b]].IsFilter);
+                    if (filter != null && filter.position?.Length >= 2)
+                    {
+                        int f = indexOf[filter];
+                        int side = SideFacing(filter.position[0], filter.position[1], hx, hy);
+                        if (side >= 0 && to != f) filterExits.Add((f, side, to));
+                    }
+                    continue;
+                }
+
                 int from = indexOf[producer];
-                int to   = consumer != null ? indexOf[consumer] : -1;
                 if (to == from) continue; // ignore a belt that loops back to its own source
 
                 nodes[from].Outgoing.Add(to);
                 if (to >= 0) nodes[to].Incoming.Add(from);
+            }
+
+            // ---- Filters are see-through (#321) --------------------------------
+            // A belt into a Filter is re-pointed at wherever the Filter sends that producer's item (following
+            // chained Filters). An item no side takes waits on its belt, so that edge earns nothing.
+            for (int i = 0; i < n; i++)
+            {
+                var node = nodes[i];
+                if (node.IsFilter) continue;
+                int item = StaticOutputItem(node, getOutputItemId);
+                for (int k = node.Outgoing.Count - 1; k >= 0; k--)
+                {
+                    int to = node.Outgoing[k];
+                    if (to < 0 || !nodes[to].IsFilter) continue;
+                    nodes[to].Incoming.Remove(i);
+                    int target = ThroughFilters(to, item, nodes, filterExits);
+                    if (target == Waits || target == i) { node.Outgoing.RemoveAt(k); continue; }
+                    node.Outgoing[k] = target;
+                    if (target >= 0) nodes[target].Incoming.Add(i);
+                }
             }
 
             // ---- Compute output rates (collectors first, synthesizers by flood) -
@@ -175,10 +212,10 @@ namespace MobileIdleBuilder
             //   • into a sink            → entropy from the item's sell value;
             //   • into no building       → player inventory;
             //   • into a PRODUCING synth → consumed internally (credited later as that synth's output);
-            //   • into a STARVED synth   → the item is stuck (the synth can't process it), so credit it to
-            //                              inventory — this is the non-regressive fallback that guarantees no
-            //                              producer output is ever silently dropped (matches the old model
-            //                              when a whole chain fails to resolve).
+            //   • into a STARVED synth   → the item is stuck (the synth can't process it). With a
+            //                              surplusSaleFraction it is sold at that share of its price, as live
+            //                              play sells unusable items (#312); with 0 it goes to inventory (the
+            //                              old non-regressive fallback). Either way no output is dropped.
             for (int i = 0; i < n; i++)
             {
                 var node = nodes[i];
@@ -190,17 +227,18 @@ namespace MobileIdleBuilder
                 foreach (int to in node.Outgoing)
                 {
                     bool sink         = to >= 0 && nodes[to].IsSink;
-                    bool inventory    = to < 0;
                     bool producingSyn = to >= 0 && nodes[to].Recipe.Valid && !nodes[to].IsSink
                                                 && nodes[to].OutputRate > 0f;
                     if (producingSyn) continue; // consumed by a synth that will be credited via its own output
 
+                    bool stuck = to >= 0 && !sink && surplusSaleFraction > 0f;
+                    float price = getItemSellValue(node.OutputItemId);
                     snapshot.chains.Add(new IdleChainEntry
                     {
                         itemId            = node.OutputItemId,
                         itemsPerSecond    = perEdge,
-                        endsAtEntropySink = sink,
-                        baseSellValue     = getItemSellValue(node.OutputItemId)
+                        endsAtEntropySink = sink || stuck,
+                        baseSellValue     = stuck ? price * surplusSaleFraction : price
                     });
                 }
             }
@@ -225,6 +263,54 @@ namespace MobileIdleBuilder
 
             GameLogger.Debug($"[IdleGraph] buildings={n} conveyors={conveyors.Count} chains={snapshot.chains.Count}");
             return snapshot;
+        }
+
+        private const int Waits = -2;
+
+        /// <summary>The item a producer always makes, known before rates are computed (collector or recipe).</summary>
+        private static int StaticOutputItem(Node node, Func<int, int, int> getOutputItemId)
+        {
+            if (node.IsCollector) return getOutputItemId(node.Bsd.buildingId, node.Bsd.recipeId);
+            return node.Recipe.Valid ? node.Recipe.OutputItemId : -1;
+        }
+
+        /// <summary>
+        /// Where <paramref name="item"/> ends up after entering Filter <paramref name="filter"/>: a consumer node,
+        /// -1 (a belt to nowhere: inventory), or <see cref="Waits"/> when no side takes it or that side has no belt.
+        /// A Filter with no rules (an old save) sends everything out of its first belt.
+        /// </summary>
+        private static int ThroughFilters(int filter, int item, Node[] nodes, List<(int filter, int side, int to)> exits)
+        {
+            for (int hop = 0; hop < 8; hop++)
+            {
+                var rules = PortFilterRules.Parse(nodes[filter].Bsd.portFilters);
+                int side  = rules.Count == 0 ? FirstExitSide(filter, exits) : PortFilterRules.Route(rules, item);
+                if (side == PortFilterRules.NoRoute) return Waits;
+
+                int next = Waits;
+                foreach (var e in exits)
+                    if (e.filter == filter && e.side == side) { next = e.to; break; }
+                if (next == Waits || next < 0 || !nodes[next].IsFilter) return next;
+                filter = next;
+            }
+            return Waits; // a loop of Filters
+        }
+
+        private static int FirstExitSide(int filter, List<(int filter, int side, int to)> exits)
+        {
+            foreach (var e in exits) if (e.filter == filter) return e.side;
+            return PortFilterRules.NoRoute;
+        }
+
+        /// <summary>OutputDirection from a 1x1 building at (fx, fy) to the neighbouring cell (hx, hy), or -1.</summary>
+        private static int SideFacing(int fx, int fy, int hx, int hy)
+        {
+            int dx = hx - fx, dy = hy - fy;
+            if (dx == 0 && dy == 1)  return (int)OutputDirection.North;
+            if (dx == 1 && dy == 0)  return (int)OutputDirection.East;
+            if (dx == 0 && dy == -1) return (int)OutputDirection.South;
+            if (dx == -1 && dy == 0) return (int)OutputDirection.West;
+            return -1;
         }
 
         /// <summary>Input-limited output for a synthesizer node: min(craft rate, what its inputs sustain).</summary>

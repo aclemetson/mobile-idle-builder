@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: radioactive_isotopes
   displayName: Radioactive Isotopes
-  description: Unlock uranium enrichment to U-235 and decay particle containment
-    buildings.
+  description: 'Unlock the Decay Chamber and the decay chain: let Uranium decay down
+    to Lead, and add or strip neutrons to reach the elements in between.'
   icon: {fileID: 0}
   branch: 1
   prerequisites:
@@ -27,10 +27,34 @@ MonoBehaviour:
   durationSeconds: 600
   fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: 2c22aaf8536bf9544b99e1c40b04d0df, type: 2}
   - {fileID: 11400000, guid: e2aba8074061d6a43b06898f28397f3e, type: 2}
   - {fileID: 11400000, guid: d28965b569d92104b815bac2b5af2cc0, type: 2}
+  - {fileID: 11400000, guid: af5d4cc0b91384840abafa94f5593d4f, type: 2}
+  - {fileID: 11400000, guid: 9baf610e8f7aec443b194f5e7347c564, type: 2}
+  - {fileID: 11400000, guid: 8bacf782d3cb3454193cc16bff45036e, type: 2}
+  - {fileID: 11400000, guid: 0039fef86aba3c5498c59dbd4450c5f5, type: 2}
+  - {fileID: 11400000, guid: a40f22af396d0fe48a743926a35c6f85, type: 2}
+  - {fileID: 11400000, guid: 6b40eda9c81166447a2c6d65c24bc3c7, type: 2}
+  - {fileID: 11400000, guid: 2c22aaf8536bf9544b99e1c40b04d0df, type: 2}
   unlocksRecipes:
+  - {fileID: 11400000, guid: cf0d50209b57a7f49a09aaa452623f03, type: 2}
+  - {fileID: 11400000, guid: 3bf13c90228c0294fbd20e57bc1692c1, type: 2}
+  - {fileID: 11400000, guid: 30ae2468216d07b4caa5a67ce71d95b2, type: 2}
+  - {fileID: 11400000, guid: 61da60bd071e2124dabf8572d535f6ac, type: 2}
+  - {fileID: 11400000, guid: 24ad2ce01e38b8143a9fa295cc3e0d18, type: 2}
+  - {fileID: 11400000, guid: 3e3cb8392d542c04598095bfddfa48e5, type: 2}
+  - {fileID: 11400000, guid: 720ec7710915cfd48bc6ba4b2d8812cc, type: 2}
+  - {fileID: 11400000, guid: 00faaece528abf442861728a2083689a, type: 2}
+  - {fileID: 11400000, guid: 75c204f95e4ac5846a85c37473612011, type: 2}
+  - {fileID: 11400000, guid: 33adc2805c9fd24429efd467220c7873, type: 2}
+  - {fileID: 11400000, guid: f21f6382df7ab644e9b26d64ef8d10d6, type: 2}
+  - {fileID: 11400000, guid: a45e4066c94f02f4bab8378055410bd1, type: 2}
+  - {fileID: 11400000, guid: 8aeb67e5e6833c247b314632493b03da, type: 2}
+  - {fileID: 11400000, guid: bb5ca4790c0140040b816372a7f24335, type: 2}
+  - {fileID: 11400000, guid: 0391eec11b827fb4382791ec1fd1b846, type: 2}
+  - {fileID: 11400000, guid: 6966f8f8699f998428149392eacfb28f, type: 2}
+  - {fileID: 11400000, guid: fda950d3c5d2fe14c991f08b25f7e940, type: 2}
+  - {fileID: 11400000, guid: b3ccdeea14324e64aa912819440eba25, type: 2}
   - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: a04311d95f751514d9d93d850530272d, type: 2}

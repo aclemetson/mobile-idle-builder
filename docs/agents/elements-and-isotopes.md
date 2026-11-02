@@ -25,6 +25,37 @@ The Assembler built Iron from 82 particles behind the 500e Nucleosynthesis node 
 - **Deuterium value 4e** (`isotope_sell_multiplier` 0.8) so 2 D (8e) → He (10e) + γ (5e) is worth fusing, and 2 D cost 3s of Atom Generator time vs 4s for one He.
 - Guarded by `FusionLadderDataTests`.
 
+### Actinide map phase 1: decay chain (shipped 2026-11-01, #322)
+
+Working back from Uranium (the Actinide Vein site, which now also spawns `neutron_field` for the Harvester's `collect_neutron`). All gated by `radioactive_isotopes`:
+
+- **Decay Chamber** = the repurposed `radioactive_containment` (2x2, inputs on the west, outputs East and South, `assignable_outputs`): one isotope in, the element it decays into out, plus its particle. Alpha decays U → Th → Ra → Rn → Po → Pb release a real `alpha_particle`; beta decays release a `neutrino` (paid as entropy).
+- **Isotopic Manipulator** gains `irradiate_<el>` (+1 neutron: Th-233, Ra-227, Rn-223, Pb-209 → beta-minus to Pa, Ac, Fr, Bi) and `strip_<el>` (Rn → Rn-211 + 11 n, Pb → Pb-201 + 7 n → electron capture to At, Tl). Stripped neutrons come out as items: the intended neutron source.
+- New named isotope items (`item_id` 181–186) carry `decay_type` (`BetaPlus` added for electron capture) and sell at their parent element's value.
+- The Atom Generator no longer builds Tl..Pa (Z81–91); Uranium stays (Atom Gen + harvest). Value rises toward iron, so alpha decays and stripping (lower Z) gain value, adding a neutron (higher Z) loses it.
+- **Real second outputs:** `RecipeSO.ProducedOutputs()` fills `RecipeOutputSlot` with the main output plus every non-escaping byproduct, so existing fission fragments/neutrons and the U-235 alpha are now produced too. Offline earnings still count only the main output.
+- **Per-side outputs on any building:** `assignable_outputs` gives a building the Filter's `OutputPortFilter` rules (no `ItemFilterTag`), so the player picks which side each product leaves by. Guarded by `DecayChainTests`.
+
+### Actinide map phase 4: stopgap recipes retired (2026-11-02, #322)
+
+- The Atom Generator no longer builds anything from Cobalt to Protactinium (54 recipes + assets removed; `FusionLadderDataTests` guards it). It keeps H, D, He, Uranium and the post-uranium synthetics (Np..Og) until the Breeder Reactor / Particle Accelerator are designed.
+- The old element-group nodes keep their names, costs and tree positions (so Materials Science, Advanced Materials and Transuranic Synthesis keep their prerequisites) but now gate Neutron Capture groups: `slow_neutron_capture` Tc..In + La; `transition_metals` Co..Br; `heavy_transition_metals` Pr..Sm; `lanthanides_and_heavy_metals` Gd..Re + Hg; `rapid_neutron_capture` Eu; `precious_metals` Pt, Au; `exotic_metals` Os, Ir.
+- `precious_metals` now also requires `rapid_neutron_capture`, so the fast-only elements stay behind the r-Process (this also pushes Advanced Materials and Transuranic Synthesis behind it).
+
+### Actinide map phase 3: neutron capture (2026-11-02, #322)
+
+- **Neutron Capture** (`neutron_capture`, building 26, 20k, gate `slow_neutron_capture`): element + neutrons → the next element up (beta decay after capture, a neutrino escapes). Two recipe groups shown one at a time by a mode switch (`recipe_mode_labels` / `recipe_mode_prefixes`):
+  - **Slow (s-process)** `s_capture_<el>`: 1 neutron, 12s, 40 eV, research `slow_neutron_capture` (120k, after `fission_i`). 34 steps filling Co→Br (from Iron), Tc→In (from Mo), La (from Ba), Pr→Sm (from Ce), Gd→Re (from Eu), Hg (from Au).
+  - **Fast (r-process)** `r_capture_<el>`: 3 neutrons, 30s, 180 eV, research `rapid_neutron_capture` (300k). The only route to Eu, Os, Ir, Pt, Au.
+- The building's draw follows its recipe (`power_cost_is_dynamic`, `BuildingSO.PowerDrawFor`).
+- With phases 1-3 every element Z27–92 has a route other than the Atom Generator. Guarded by `NeutronCaptureTests`.
+
+### Actinide map phase 2: fission (2026-11-02, #322)
+
+- **Fission Reactor:** one input (from the west), three assignable output sides. Ten splits, each into two real fragments whose protons add up to the fuel's, plus 2 released neutrons: U-235 → Ba+Kr, Xe+Sr, Cs+Rb, I+Y, Te+Zr, Sb+Nb, Sn+Mo; 2 Plutonium → Xe+Zr, Ba+Sr, Ce+Kr. 20s, 200 eV, gate `fission_i`. Gains ×4.5 (U-235) / ×5.5 (Pu) under the rescaled values (see the entropy-yield ladder). Bromine/Selenium splits are left out: they would land in the steep band next to iron.
+- Enrichment (`uranium_235`) now releases its 3 stripped neutrons instead of an alpha particle.
+- Guarded by `FissionDataTests` (conservation, gain range, monotonic values toward iron).
+
 ### Phase 1 implementation status (data-first, shipped)
 
 The full table was implemented as pure `game_data.json` data (items `item_id` 52–149, recipes `recipe_id` 50–147) generated from the locked value model below. Notes for the next agent:
@@ -338,26 +369,30 @@ Z :  1   2   3   4    5    6    7    8    9    10      14       20         25   
 e :  5  10  20  40   80  160  320  640 1280  2560   40,960  2,621,440  83,886,080  167,772,160
 ```
 
-**2. Fission ladder (Z92→26, climb down).** A dense descending ladder anchored to the same iron peak: `yield(Z) = round( 64 × 2,621,440^((92 − Z) / 66) )` for 27 ≤ Z ≤ 92 (`2,621,440 = iron / 64`). Iron at the top, uranium floored at **64 e** (the last natural element). Per-step ratio ≈ `2,621,440^(1/66) ≈ 1.25` (+25% per Z toward iron) — smaller gaps than fusion's 2×/rung because it packs ~66 rungs into the same height:
+**2. Fission side (Z94→27, climb down). Rescaled 2026-11-02 (#322).** The old single ladder (`64 × 2,621,440^((92 − Z)/66)`, +25% per Z) made one fission worth ~140,000× its fuel (U-235 128e → Kr + Ba ≈ 18M). It is now three bands, so a split gains a few times its fuel and the steep climb sits next to iron, where research gates meter it:
+
+- **Decay band, Z81–92:** `64 × 1.1091^(92 − Z)`: U 64 → Tl 200 (the decay chain gains ~3× end to end).
+- **Fission-fragment band, Z36–80:** `200 × 1.01^(81 − Z)`: nearly flat, Hg 202 … Ba 256 … Kr 313. Every fission pair lands here, so U-235 (128) → two fragments + 2 neutrons ≈ 575 (×4.5).
+- **Next to iron, Z27–35:** `V(36) × 4.089^(36 − Z)`: Br 1,280 … Zn 1.46M, Cu 5.98M, Ni 24.5M, **Co 100M** (Fe 167,772,160 stays the peak).
+- **Np, Pu (93–94):** continue below uranium (`64 / 1.1091^(Z − 92)`: Np 58, Pu 52) because Plutonium is harvested on the Actinide Vein.
 
 ```
-Z :     27        28        30        36        47       56     74    82    90  92
-el:     Co        Ni        Zn        Kr        Ag       Ba      W    Pb    Th   U
-e : 134,112,510 107,205,900 68,504,244 17,873,675 1,522,149 202,862 3,603 601  46  64
+Z :    27    28     30     35    36   47   56   74   79   82   90  92  94
+el:    Co    Ni     Zn     Br    Kr   Ag   Ba    W   Au   Pb   Th   U  Pu
+e :  100M 24.5M  1.46M  1,280   313  281  256  214  204  180   79  64  52
 ```
 
-**3. Post-iron synthesis ladder (Z93→118, climb past iron).** A second rising ladder for the artificial elements: `yield(Z) = round( 167,772,160 × 2^(Z − 92) )` — doubling per Z from above iron up to **Oganesson, the single most valuable item in the game**. Neutron breeding (93–100) then accelerator synthesis (101–118):
+**3. Post-iron synthesis ladder (Z95→118, climb past iron).** `yield(Z) = round( 167,772,160 × 2^(Z − 94) )`: doubling per Z from Americium up to **Oganesson, the single most valuable item in the game**:
 
 ```
-Z :     93        94        96         100          103          110            118
-el:     Np        Pu        Cm         Fm           Lr           Ds             Og
-e : 335,544,320 671,088,640 2,684,354,560 42,949,672,960 343,597,383,680 43,980,465,111,040 11,258,999,068,426,240
-        (336M)    (671M)     (2.68B)      (43B)         (344B)         (44T)          (11.26Q)
+Z :     95          96           100            110             118
+el:     Am          Cm           Fm             Ds              Og
+e : 335,544,320 671,088,640 10,737,418,240 10,995,116,277,760 2,814,749,767,106,560
 ```
 
-So the curve **rises to iron, falls to uranium, then jumps the natural/synthetic cliff (U 64 → Np 336M) and rises far past iron to Og**. The near-iron elements on both natural sides (Mn/Cr, Co/Ni) are endgame-grade millions; the synthetics are the true pinnacle.
+So the curve **rises to iron from both sides, is cheapest around uranium/plutonium, then jumps the natural/synthetic cliff (Pu 52 → Am 336M) and rises far past iron to Og.** Gold, Platinum and the other r-process elements sit in the flat fragment band by value; their trophy status comes from being reachable only by fast neutron capture (phase 3), not from price.
 
-> **Migration note:** every implemented element follows OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the three formulas above** — e.g. Si 1,280→40,960, Fe 5,120→167,772,160, Ni 10,240→~107M, U 1,310,720→64, **Pu 2,621,440→671,088,640** (Pu is now a post-iron synthetic, not cheap). H..O are unchanged. Downstream tier-3+ recipes that consume heavy/iron elements (`uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis re-reviewed; the synthetic elements (up to ~10^16) now exceed even the megastructure component tier, so they sit at the very top of the entropy economy.
+> **Migration note:** every implemented element follows OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the three formulas above** — e.g. Si 1,280→40,960, Fe 5,120→167,772,160, Ni 10,240→~107M, U 1,310,720→64, Pu (rescaled again 2026-11-02 to 52: harvested, so cheap). H..O are unchanged. Downstream tier-3+ recipes that consume heavy/iron elements (`uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis re-reviewed; the synthetic elements (up to ~10^16) now exceed even the megastructure component tier, so they sit at the very top of the entropy economy.
 
 > **Balance caveat:** Oganesson at ~10^16 is the new netWorth ceiling, far above the old element economy. It is reachable only after the full post-iron endgame (iron first, then both synthesis branches), so it should not distort early/mid pacing — but re-check prestige `✦` (≈log10 netWorth) and the megastructure interaction, since synthetics now out-value tier-5 components. Final constants need an idle-sim pass.
 

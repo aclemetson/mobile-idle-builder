@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: transition_metals
   displayName: Transition Metals
-  description: 'Build Nickel, Cobalt, Copper and Zinc beyond Iron in the Atom Generator.
-    (Interim: the Actinide map''s fission and neutron capture will replace this.)'
+  description: 'Neutron capture next to iron: Cobalt, Nickel, Copper, Zinc and on
+    to Bromine (Slow mode). The steepest climb in value on the Actinide map.'
   icon: {fileID: 0}
   branch: 2
   prerequisites:
@@ -35,18 +35,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9ffbf013a224d3947b74fb8730a66349, type: 2}
   - {fileID: 11400000, guid: a44f5b0f14e5c0947a0e3505237d6976, type: 2}
   - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
-  - {fileID: 11400000, guid: 65bb40278e1be8145874cff40ba59794, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 8e382186215214d4eb7410439746b09e, type: 2}
-  - {fileID: 11400000, guid: 84de2773693fc6a41bdaf9adc6f277af, type: 2}
-  - {fileID: 11400000, guid: f6030caaa967ffc4187edb305eeed22b, type: 2}
-  - {fileID: 11400000, guid: 7bda0b4f7a6cd5042892ce7a7736a23d, type: 2}
-  - {fileID: 11400000, guid: f3a957238730102418c5bc5ab38fd9fa, type: 2}
-  - {fileID: 11400000, guid: 88dd10cc7d4f5c14c8cb68432b4b87c6, type: 2}
-  - {fileID: 11400000, guid: d59ed00f09acb3248b845eaad51364c1, type: 2}
-  - {fileID: 11400000, guid: 1eadca1b317c82f42a11213f824294da, type: 2}
-  - {fileID: 11400000, guid: fc3402ef3c29aa04db61d4f98f7972bf, type: 2}
-  - {fileID: 11400000, guid: dcd9af526cfe3ba42816a93ec23eb677, type: 2}
+  - {fileID: 11400000, guid: accbf0b97a2dfd048ab5980532cc26ed, type: 2}
+  - {fileID: 11400000, guid: 1a1f8799d6c57af40bb23a7873859a42, type: 2}
+  - {fileID: 11400000, guid: cbd042a1fb6d7d540a6b9c9cd947e5dd, type: 2}
+  - {fileID: 11400000, guid: 4993166b625eefb4ea709019fa5409c6, type: 2}
+  - {fileID: 11400000, guid: ac7a48118c1de4b45b5c1fc6ac74e8ab, type: 2}
+  - {fileID: 11400000, guid: e9efeaa09773fe44080a0d328fbab4e7, type: 2}
+  - {fileID: 11400000, guid: 6d58746f79cdd2643b9050776a46bc61, type: 2}
+  - {fileID: 11400000, guid: c536b8e7923582942be21d6c522f2e8b, type: 2}
+  - {fileID: 11400000, guid: 2df787a5cd7ef9949ae94b976941cc2c, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

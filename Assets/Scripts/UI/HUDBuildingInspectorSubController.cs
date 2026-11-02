@@ -345,6 +345,11 @@ namespace MobileIdleBuilder
                 if (isFieldCollector)
                 {
                     AddFieldCollectorRecipeSection(_inspectorEntity, buildingSO, fieldOnTile);
+                    AddNucleonMergeSection(_inspectorEntity, buildingSO, buildingCellX, buildingCellY);
+                }
+                else if (buildingSO.isItemFilter)
+                {
+                    AddFilterSection(_inspectorEntity);
                 }
                 else if (buildingSO.supportedRecipes != null)
                 {
@@ -354,6 +359,7 @@ namespace MobileIdleBuilder
                     var available = new List<RecipeSO>();
                     foreach (var r in buildingSO.supportedRecipes)
                         if (IsRecipeAvailable(r)) available.Add(r);
+                    available = FilterByRecipeMode(_inspectorEntity, buildingSO, available);
 
                     // Exactly one usable recipe and none set yet: assign it instead of leaving the
                     // building idle at "No recipe" with no chooser to fix it (#186).
@@ -399,6 +405,9 @@ namespace MobileIdleBuilder
                         }
                     }
                 }
+
+                if (buildingSO.assignableOutputs && !buildingSO.isItemFilter)
+                    AddFilterSection(_inspectorEntity);
 
                 AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
@@ -668,7 +677,7 @@ namespace MobileIdleBuilder
             else if (so.requiresPower && _em.HasComponent<PowerConsumer>(entity))
             {
                 var pc = _em.GetComponentData<PowerConsumer>(entity);
-                pc.DrawEV = BuildingSO.PowerDrawForLevel(so, nextLevel);
+                pc.DrawEV = BuildingSO.PowerDrawFor(so, nextLevel, CurrentRecipe(entity, so));
                 _em.SetComponentData(entity, pc);
             }
 
@@ -754,18 +763,8 @@ namespace MobileIdleBuilder
         {
             if (field.drops == null || field.drops.Count == 0) return;
 
-            // Find which of the building's declared recipes match this field's actual drops.
-            var relevantRecipes = new List<RecipeSO>();
-            if (so.supportedRecipes != null)
-            {
-                var dropIds = new HashSet<int>();
-                foreach (var drop in field.drops)
-                    if (drop?.item != null) dropIds.Add(drop.item.itemId);
-
-                foreach (var r in so.supportedRecipes)
-                    if (r?.outputItem != null && dropIds.Contains(r.outputItem.itemId))
-                        relevantRecipes.Add(r);
-            }
+            // Same list the placement chooser offered (FieldRecipes covers the Nucleon Harvester too).
+            var relevantRecipes = FieldRecipes.For(so, field);
 
             // Single (or no) relevant recipe: static "Collects" display, no chooser.
             if (relevantRecipes.Count <= 1)
@@ -803,6 +802,297 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Recipe modes (#322: Neutron Capture Slow / Fast) ───────────────────
+
+        // The mode each building's picker shows. Not saved: it opens on the mode of the building's recipe.
+        private readonly Dictionary<Entity, int> _recipeMode = new();
+
+        /// <summary>
+        /// For a building with recipe modes, adds a row of mode buttons and returns only that mode's recipes.
+        /// Modes with nothing researched yet are hidden; with one mode left there is no row at all.
+        /// </summary>
+        private List<RecipeSO> FilterByRecipeMode(Entity entity, BuildingSO so, List<RecipeSO> available)
+        {
+            if (so.recipeModePrefixes == null || so.recipeModePrefixes.Length == 0) return available;
+
+            var modes = new List<int>();
+            for (int m = 0; m < so.recipeModePrefixes.Length; m++)
+                if (available.Exists(r => so.RecipeModeOf(r.id) == m)) modes.Add(m);
+            if (modes.Count == 0) return available;
+
+            if (!_recipeMode.TryGetValue(entity, out int mode) || !modes.Contains(mode))
+            {
+                int current = so.RecipeModeOf(CurrentRecipe(entity, so)?.id);
+                mode = modes.Contains(current) ? current : modes[0];
+                _recipeMode[entity] = mode;
+            }
+
+            if (modes.Count > 1)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("filter-row");
+                foreach (int m in modes)
+                {
+                    int captured = m;
+                    string label = so.recipeModeLabels != null && m < so.recipeModeLabels.Length ? so.recipeModeLabels[m] : $"Mode {m + 1}";
+                    var btn = new Button { text = label };
+                    btn.AddToClassList("filter-side-btn");
+                    btn.AddToClassList("recipe-mode-btn");
+                    btn.EnableInClassList("filter-side-btn--on", m == mode);
+                    ListTapRouter.Register(_inspectorRecipes, btn, () =>
+                    {
+                        _recipeMode[entity] = captured;
+                        RefreshInspectorContent();
+                    });
+                    row.Add(btn);
+                }
+                _inspectorRecipes?.Add(row);
+            }
+            return available.FindAll(r => so.RecipeModeOf(r.id) == mode);
+        }
+
+        private RecipeSO CurrentRecipe(Entity entity, BuildingSO so)
+        {
+            if (so?.supportedRecipes == null || !_em.HasComponent<RecipeProcessData>(entity)) return null;
+            int id = _em.GetComponentData<RecipeProcessData>(entity).RecipeID;
+            return System.Array.Find(so.supportedRecipes, r => r != null && r.recipeId == id);
+        }
+
+        private BuildingSO FindBuildingSOForEntity(Entity entity)
+        {
+            if (!_em.HasComponent<BuildingData>(entity) || _placement?.availableBuildings == null) return null;
+            int type = _em.GetComponentData<BuildingData>(entity).BuildingType;
+            foreach (var entry in _placement.availableBuildings)
+                if (entry.building != null && entry.building.buildingId == type) return entry.building;
+            return null;
+        }
+
+        // ── Filter (#321) ─────────────────────────────────────────────────────
+
+        private static readonly string[] SideArrows = { "\u2191", "\u2192", "\u2193", "\u2190" }; // N E S W
+
+        /// <summary>
+        /// One row per item that has reached the Filter (or that a rule names), plus "Everything else". Each row
+        /// has a button per output side; the lit one is where that item goes now. An item row's "Else" sends it
+        /// with everything else; the "Everything else" row's "Wait" holds unassigned items back.
+        /// </summary>
+        private void AddFilterSection(Entity entity)
+        {
+            if (!_em.HasBuffer<OutputPortFilter>(entity)) return;
+            var rules = FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(entity, isReadOnly: true));
+
+            var sides = new List<int>();
+            var ports = _em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+            for (int i = 0; i < ports.Length; i++)
+                if (ports[i].PortType == (int)PortType.Output && !sides.Contains(ports[i].Facing)) sides.Add(ports[i].Facing);
+            sides.Sort();
+
+            var items = new List<int>();
+            if (_em.HasBuffer<FilterSeenItem>(entity))
+            {
+                var seen = _em.GetBuffer<FilterSeenItem>(entity, isReadOnly: true);
+                for (int i = 0; i < seen.Length; i++) if (!items.Contains(seen[i].ItemID)) items.Add(seen[i].ItemID);
+            }
+            foreach (var (_, id) in rules)
+                if (id != PortFilterRules.Everything && !items.Contains(id)) items.Add(id);
+            // A building with assignable outputs (#322) sorts its own products.
+            bool isFilter = _em.HasComponent<ItemFilterTag>(entity);
+            if (!isFilter && _em.HasBuffer<RecipeOutputSlot>(entity))
+            {
+                var products = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+                for (int i = 0; i < products.Length; i++)
+                    if (!items.Contains(products[i].ItemID)) items.Add(products[i].ItemID);
+            }
+
+            AddInspectorRow(_inspectorRecipes, isFilter ? "—— Sorting ——" : "—— Output sides ——");
+            if (items.Count == 0)
+                AddInspectorRow(_inspectorRecipes, "Belt a mixed line in. Each item that arrives gets a row here.");
+            foreach (var itemId in items)
+                AddFilterRow(entity, rules, sides, itemId, ItemName(itemId));
+            AddFilterRow(entity, rules, sides, PortFilterRules.Everything, "Everything else");
+        }
+
+        private void AddFilterRow(Entity entity, List<(int facing, int itemId)> rules, List<int> sides,
+                                  int itemId, string label)
+        {
+            // The side this row's rule names (for an item with no rule of its own, it rides "Everything else").
+            int current = PortFilterRules.NoRoute;
+            foreach (var (facing, id) in rules)
+                if (id == itemId) current = facing;
+
+            var row = new VisualElement();
+            row.AddToClassList("filter-row");
+            var icon = itemId >= 0 ? HUDController.MakeItemIcon(ItemDatabase.Instance?.Get(itemId)?.icon, "item-icon") : null;
+            if (icon != null) row.Add(icon);
+            var name = new Label(label);
+            name.AddToClassList("filter-row__name");
+            row.Add(name);
+
+            var choices = new List<int>(sides) { PortFilterRules.NoRoute };
+            foreach (int side in choices)
+            {
+                int captured = side;
+                // No rule of its own: an item goes wherever "Everything else" goes ("Else"); for the
+                // "Everything else" row itself, no side means unassigned items wait.
+                string noSide = itemId == PortFilterRules.Everything ? "Wait" : "Else";
+                var btn = new Button { text = side == PortFilterRules.NoRoute ? noSide : SideArrows[side & 3] };
+                btn.AddToClassList("filter-side-btn");
+                btn.EnableInClassList("filter-side-btn--on", side == current);
+                ListTapRouter.Register(_inspectorRecipes, btn, () =>
+                {
+                    if (!_ecsReady || !_em.Exists(entity) || !_em.HasBuffer<OutputPortFilter>(entity)) return;
+                    var live = FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(entity, isReadOnly: true));
+                    PortFilterRules.Assign(live, itemId, captured);
+                    FilterSystem.WriteRules(_em.GetBuffer<OutputPortFilter>(entity), live);
+                    SaveManager.Instance?.SaveLocal();
+                    RefreshInspectorContent();
+                });
+                row.Add(btn);
+            }
+            _inspectorRecipes?.Add(row);
+        }
+
+        // ── Nucleon Harvester merge (#313) ────────────────────────────────────
+
+        /// <summary>
+        /// On a Harvester next to an opposite-polarity Harvester (Up beside Down Quarks), once Nucleon
+        /// Harvesting is researched: a Merge row. The fee makes two Harvesters + merge cost exactly one placed
+        /// Nucleon Harvester (NucleonHarvesterMerge.Fee).
+        /// </summary>
+        private void AddNucleonMergeSection(Entity entity, BuildingSO so, int cellX, int cellY)
+        {
+            if (so == null || so.id != NucleonHarvesterMerge.HarvesterId || cellX < 0) return;
+            if (!(ResearchService.Instance?.IsUnlocked(NucleonHarvesterMerge.ResearchId) ?? false)) return;
+            var nucleon = FindPlaceableBuilding(NucleonHarvesterMerge.NucleonHarvesterId);
+            if (nucleon == null) return;
+            if (!TryFindMergePartner(entity, so, new Vector2Int(cellX, cellY), out var partner)) return;
+
+            long fee = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            bool canAfford = GetBaseCurrency() >= fee;
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            var name = new Label("Nucleon Harvester");
+            name.AddToClassList("upgrade-row-name");
+            row.Add(name);
+            var desc = new Label("Merge with the neighbouring Harvester into one Nucleon Harvester. " +
+                                 "It makes protons or neutrons straight from the fields, no Combiner needed.");
+            desc.AddToClassList("upgrade-row-desc");
+            row.Add(desc);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
+            var costLabel = new Label($"{fee:N0} e");
+            costLabel.AddToClassList("upgrade-row-cost");
+            if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+            footer.Add(costLabel);
+            var btn = new Button { text = "Merge" };
+            btn.AddToClassList("craft-btn");
+            btn.SetEnabled(canAfford);
+            ListTapRouter.Register(_inspectorUpgrades, btn,
+                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee));
+            footer.Add(btn);
+            row.Add(footer);
+            _inspectorUpgrades?.Add(row);
+        }
+
+        /// <summary>An orthogonally adjacent Harvester on a quark field collecting the opposite quark.</summary>
+        private bool TryFindMergePartner(Entity self, BuildingSO harvester, Vector2Int cell, out Entity partner)
+        {
+            partner = Entity.Null;
+            if (!IsQuarkField(cell)) return false;
+            string mine = RecipeIdOf(self, harvester);
+
+            using var query = _em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                    ComponentType.ReadOnly<GridPosition>(),
+                                                    ComponentType.ReadOnly<RecipeProcessData>());
+            using var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var e in entities)
+            {
+                if (e == self || _em.GetComponentData<BuildingData>(e).BuildingType != harvester.buildingId) continue;
+                var c = _em.GetComponentData<GridPosition>(e).Cell;
+                var other = new Vector2Int(c.x, c.y);
+                if (!NucleonHarvesterMerge.TryPlacement(cell, other, out _, out _) || !IsQuarkField(other)) continue;
+                if (!NucleonHarvesterMerge.OpposingPolarity(mine, RecipeIdOf(e, harvester))) continue;
+                partner = e;
+                return true;
+            }
+            return false;
+        }
+
+        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee)
+        {
+            if (!_ecsReady || !_em.Exists(a) || !_em.Exists(b)) return; // changed while the panel was open
+            var ca = _em.GetComponentData<GridPosition>(a).Cell;
+            var cb = _em.GetComponentData<GridPosition>(b).Cell;
+            if (!NucleonHarvesterMerge.TryPlacement(new Vector2Int(ca.x, ca.y), new Vector2Int(cb.x, cb.y),
+                                                    out var anchor, out int rotation)) return;
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null || !TryDeductCurrency(fee)) return;
+
+            var bdA = _em.GetComponentData<BuildingData>(a);
+            var bdB = _em.GetComponentData<BuildingData>(b);
+            int speed   = NucleonHarvesterMerge.CarriedLevel(bdA.UpgradeLevel, bdB.UpgradeLevel);
+            int storage = NucleonHarvesterMerge.CarriedLevel(bdA.StorageUpgradeLevel, bdB.StorageUpgradeLevel);
+
+            RemoveForMerge(a);
+            RemoveForMerge(b);
+            rotation = NucleonHarvesterMerge.PreferBeltedRotation(nucleon, anchor, rotation, IsBeltAt);
+
+            var recipe = System.Array.Find(nucleon.supportedRecipes,
+                                           r => r != null && r.id == NucleonHarvesterMerge.DefaultRecipeId);
+            if (!placer.PlaceBuilding(anchor.x, anchor.y, nucleon, recipe, null, rotation, false, speed, storage))
+                GameLogger.Warning($"[Inspector] Nucleon Harvester merge could not place at ({anchor.x},{anchor.y}).");
+
+            GetBuildingVisualizer()?.Refresh();
+            FindAnyObjectByType<ConveyorVisualizer>()?.RefreshAll();
+            SaveManager.Instance?.SaveLocal();
+            HideBuildingInspector();
+            _hud?.ShowNotification("\u269B", "Merged into a Nucleon Harvester. Tap it to choose protons or neutrons.");
+        }
+
+        private void RemoveForMerge(Entity e)
+        {
+            var c = _em.GetComponentData<GridPosition>(e).Cell;
+            _em.DestroyEntity(e);
+            GridOccupancy.Instance?.ReleaseRect(c.x, c.y, 1, 1);
+            GetBuildingVisualizer()?.RemoveBuilding(c.x, c.y);
+        }
+
+        private bool IsBeltAt(Vector2Int cell)
+        {
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<ConveyorSegmentData>());
+            using var segs = q.ToComponentDataArray<ConveyorSegmentData>(Unity.Collections.Allocator.Temp);
+            foreach (var s in segs)
+                if (s.Cell.x == cell.x && s.Cell.y == cell.y) return true;
+            return false;
+        }
+
+        private static bool IsQuarkField(Vector2Int cell) =>
+            FieldGenerator.GetFieldAt(cell.x, cell.y)?.fieldType == "Quark";
+
+        private string RecipeIdOf(Entity e, BuildingSO so)
+        {
+            int id = _em.GetComponentData<RecipeProcessData>(e).RecipeID;
+            var r = so.supportedRecipes == null ? null
+                : System.Array.Find(so.supportedRecipes, x => x != null && x.recipeId == id);
+            return r?.id;
+        }
+
+        private BuildingSO FindPlaceableBuilding(string id)
+        {
+            if (_placement?.availableBuildings == null) return null;
+            foreach (var entry in _placement.availableBuildings)
+                if (entry.building != null && entry.building.id == id) return entry.building;
+            return null;
+        }
+
+        private float CostReduction()
+        {
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
+            return q.IsEmpty ? 0f : q.GetSingleton<PrestigeData>().CostReduction;
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
@@ -851,12 +1141,19 @@ namespace MobileIdleBuilder
 
             var outputBuf = _em.GetBuffer<RecipeOutputSlot>(entity);
             outputBuf.Clear();
-            if (recipe.outputItem != null)
-                outputBuf.Add(new RecipeOutputSlot
-                {
-                    ItemID   = recipe.outputItem.itemId,
-                    Quantity = recipe.outputQuantity
-                });
+            foreach (var (item, qty) in recipe.ProducedOutputs())
+                outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
+
+            SellInputsTheRecipeDoesNotUse(entity);
+
+            // A building whose draw follows its recipe (Neutron Capture Slow/Fast) re-reads it now.
+            var so = FindBuildingSOForEntity(entity);
+            if (so != null && so.powerCostIsDynamic && _em.HasComponent<PowerConsumer>(entity))
+            {
+                var pc = _em.GetComponentData<PowerConsumer>(entity);
+                pc.DrawEV = BuildingSO.PowerDrawFor(so, _em.GetComponentData<BuildingData>(entity).UpgradeLevel, recipe);
+                _em.SetComponentData(entity, pc);
+            }
 
             // Drives the tutorial's "set the Combiner to Proton" step (combiner_recipe_set).
             _hud?.NotifyBuildingRecipeSet();
@@ -1038,6 +1335,24 @@ namespace MobileIdleBuilder
             outBuf.Clear();
 
             RefreshInspectorContent();
+        }
+
+        /// <summary>
+        /// After a recipe change, inputs the new recipe doesn't use would sit in the buffer forever. Sell
+        /// them at the surplus price (#312) and say so.
+        /// </summary>
+        private void SellInputsTheRecipeDoesNotUse(Entity entity)
+        {
+            if (!_em.HasBuffer<BuildingInputSlot>(entity) || _playerQuery.IsEmpty) return;
+            long earned = SurplusSale.SellUnusedInputs(_em.GetBuffer<BuildingInputSlot>(entity),
+                                                       _em.GetBuffer<RecipeInputSlot>(entity),
+                                                       SurplusSale.DemonPrice, SurplusSale.CurrentFraction());
+            if (earned <= 0) return;
+
+            var progress = _playerQuery.GetSingleton<PlayerProgressData>();
+            progress.BaseCurrency += earned;
+            _playerQuery.SetSingleton(progress);
+            InventoryPopupController.Notify("entropy", (int)System.Math.Min(earned, int.MaxValue));
         }
 
         private void EmptyInputToInventory(Entity building)

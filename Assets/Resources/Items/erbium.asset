@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Erbium (Er), element number 68 with mass number 166. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 13810
+  baseSellValue: 228
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

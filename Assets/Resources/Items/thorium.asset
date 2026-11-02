@@ -31,9 +31,11 @@ MonoBehaviour:
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: Thorium (Th), element number 90 with mass number 232. A fission fragment
-    on the long descent from the heavy actinides back toward iron.
+  codexEntry: 'Thorium (Th), element number 90 with mass number 232. A fission fragment
+    on the long descent from the heavy actinides back toward iron. Decays: alpha
+    decay turns it into Radium. Add a neutron (Isotopic Manipulator) to make Thorium-233,
+    which decays into Protactinium.'
   codexUnlocked: 0
-  baseSellValue: 100
+  baseSellValue: 79
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0
