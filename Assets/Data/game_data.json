@@ -799,7 +799,7 @@
     {
       "id": "fission_i",
       "display_name": "Nuclear Fission",
-      "description": "Unlock the Fission Reactor \u2014 split fissile nuclei into mid-weight fragments worth far more than their fuel.",
+      "description": "Unlock the Fission Reactor: split Uranium-235 or Plutonium into two lighter elements and spare neutrons. Choose which side each product leaves by.",
       "branch": "Nuclear",
       "prerequisites": ["fissile_extraction"],
       "depth_in_tree": 4,
@@ -807,7 +807,7 @@
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": [],
-      "unlocks_recipes": ["fission_u235", "fission_pu239"],
+      "unlocks_recipes": ["fission_u235", "fission_u235_xe_sr", "fission_u235_cs_rb", "fission_u235_i_y", "fission_u235_te_zr", "fission_u235_sb_nb", "fission_u235_sn_mo", "fission_pu239", "fission_pu239_ba_sr", "fission_pu239_ce_kr"],
       "unlocks_buildings": ["fission_reactor"],
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
@@ -1565,7 +1565,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A transition metal with strong magnetic properties. Critical in stainless steel, lithium-nickel battery cathodes, and superalloys that survive jet engine temperatures.",
-      "base_sell_value": 107205900.0,
+      "base_sell_value": 24456144.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1589,7 +1589,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The best electrical conductor among common metals. In our Quantum Foundry, copper is synthesised atom by atom — ironic, given it is the cheapest ore in simpler mining games.",
-      "base_sell_value": 85697486.0,
+      "base_sell_value": 5981030.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1613,7 +1613,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zinc galvanises steel against corrosion and is half of brass alloy. Essential in human biology as a cofactor in hundreds of enzymes.",
-      "base_sell_value": 68504244.0,
+      "base_sell_value": 1462729.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1637,7 +1637,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest electrical and thermal conductivity of any element. Used in solar panel contacts, antibacterial coatings, and high-performance circuit connections.",
-      "base_sell_value": 1522149.0,
+      "base_sell_value": 281.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1661,7 +1661,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chemically inert, immune to corrosion, and malleable beyond any other metal. Every connector in space hardware is gold-plated. Its rarity is a product of neutron star collisions.",
-      "base_sell_value": 1176.0,
+      "base_sell_value": 204.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1685,7 +1685,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature. Rarer than gold.",
-      "base_sell_value": 1471.0,
+      "base_sell_value": 206.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1709,7 +1709,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing components in fusion reactors all rely on tungsten's thermal extremity.",
-      "base_sell_value": 3603.0,
+      "base_sell_value": 214.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1733,7 +1733,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Does not occur naturally on Earth — only made in reactors and particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling it requires exquisite precision.",
-      "base_sell_value": 671088640.0,
+      "base_sell_value": 52.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -2603,7 +2603,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cobalt (Co), element number 27 with mass number 59. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 134112510.0,
+      "base_sell_value": 100000000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2627,7 +2627,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gallium (Ga), element number 31 with mass number 69. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 54760433.0,
+      "base_sell_value": 357727.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2651,7 +2651,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Germanium (Ge), element number 32 with mass number 74. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 43774003.0,
+      "base_sell_value": 87486.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2675,7 +2675,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Arsenic (As), element number 33 with mass number 75. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 34991750.0,
+      "base_sell_value": 21396.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2699,7 +2699,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Selenium (Se), element number 34 with mass number 80. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 27971455.0,
+      "base_sell_value": 5233.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2723,7 +2723,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bromine (Br), element number 35 with mass number 79. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 22359622.0,
+      "base_sell_value": 1280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2747,7 +2747,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Krypton (Kr), element number 36 with mass number 84. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 17873675.0,
+      "base_sell_value": 313.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2771,7 +2771,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rubidium (Rb), element number 37 with mass number 85. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 14287730.0,
+      "base_sell_value": 310.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2795,7 +2795,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Strontium (Sr), element number 38 with mass number 88. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 11421224.0,
+      "base_sell_value": 307.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2819,7 +2819,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Yttrium (Y), element number 39 with mass number 89. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 9129816.0,
+      "base_sell_value": 304.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2843,7 +2843,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zirconium (Zr), element number 40 with mass number 90. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 7298127.0,
+      "base_sell_value": 301.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2867,7 +2867,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Niobium (Nb), element number 41 with mass number 93. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 5833925.0,
+      "base_sell_value": 298.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2891,7 +2891,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Molybdenum (Mo), element number 42 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 4663481.0,
+      "base_sell_value": 295.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2915,7 +2915,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Technetium (Tc), element number 43 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 3727860.0,
+      "base_sell_value": 292.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2939,7 +2939,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ruthenium (Ru), element number 44 with mass number 102. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2979950.0,
+      "base_sell_value": 289.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2963,7 +2963,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhodium (Rh), element number 45 with mass number 103. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2382091.0,
+      "base_sell_value": 286.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2987,7 +2987,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Palladium (Pd), element number 46 with mass number 106. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1904179.0,
+      "base_sell_value": 283.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3011,7 +3011,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cadmium (Cd), element number 48 with mass number 114. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1216765.0,
+      "base_sell_value": 278.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3035,7 +3035,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Indium (In), element number 49 with mass number 115. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 972649.0,
+      "base_sell_value": 275.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3059,7 +3059,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tin (Sn), element number 50 with mass number 120. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 777509.0,
+      "base_sell_value": 272.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3083,7 +3083,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Antimony (Sb), element number 51 with mass number 121. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 621520.0,
+      "base_sell_value": 270.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3107,7 +3107,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tellurium (Te), element number 52 with mass number 130. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 496826.0,
+      "base_sell_value": 267.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3131,7 +3131,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iodine (I), element number 53 with mass number 127. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 397149.0,
+      "base_sell_value": 264.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3155,7 +3155,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Xenon (Xe), element number 54 with mass number 132. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 317470.0,
+      "base_sell_value": 262.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3179,7 +3179,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cesium (Cs), element number 55 with mass number 133. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 253777.0,
+      "base_sell_value": 259.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3203,7 +3203,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Barium (Ba), element number 56 with mass number 138. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 202862.0,
+      "base_sell_value": 256.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3227,7 +3227,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lanthanum (La), element number 57 with mass number 139. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 162163.0,
+      "base_sell_value": 254.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3251,7 +3251,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cerium (Ce), element number 58 with mass number 140. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 129629.0,
+      "base_sell_value": 251.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3275,7 +3275,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Praseodymium (Pr), element number 59 with mass number 141. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 103622.0,
+      "base_sell_value": 249.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3299,7 +3299,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neodymium (Nd), element number 60 with mass number 142. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 82832.0,
+      "base_sell_value": 246.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3323,7 +3323,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Promethium (Pm), element number 61 with mass number 145. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 66214.0,
+      "base_sell_value": 244.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3347,7 +3347,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Samarium (Sm), element number 62 with mass number 152. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 52930.0,
+      "base_sell_value": 242.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3371,7 +3371,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Europium (Eu), element number 63 with mass number 153. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 42310.0,
+      "base_sell_value": 239.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3395,7 +3395,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gadolinium (Gd), element number 64 with mass number 158. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 33822.0,
+      "base_sell_value": 237.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3419,7 +3419,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Terbium (Tb), element number 65 with mass number 159. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 27036.0,
+      "base_sell_value": 235.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3443,7 +3443,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dysprosium (Dy), element number 66 with mass number 164. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 21612.0,
+      "base_sell_value": 232.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3467,7 +3467,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Holmium (Ho), element number 67 with mass number 165. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 17276.0,
+      "base_sell_value": 230.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3491,7 +3491,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Erbium (Er), element number 68 with mass number 166. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 13810.0,
+      "base_sell_value": 228.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3515,7 +3515,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thulium (Tm), element number 69 with mass number 169. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 11039.0,
+      "base_sell_value": 225.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3539,7 +3539,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ytterbium (Yb), element number 70 with mass number 174. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 8825.0,
+      "base_sell_value": 223.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3563,7 +3563,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lutetium (Lu), element number 71 with mass number 175. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 7054.0,
+      "base_sell_value": 221.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3587,7 +3587,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hafnium (Hf), element number 72 with mass number 180. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 5639.0,
+      "base_sell_value": 219.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3611,7 +3611,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tantalum (Ta), element number 73 with mass number 181. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 4508.0,
+      "base_sell_value": 217.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3635,7 +3635,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhenium (Re), element number 75 with mass number 187. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2880.0,
+      "base_sell_value": 212.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3659,7 +3659,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Osmium (Os), element number 76 with mass number 192. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2302.0,
+      "base_sell_value": 210.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3683,7 +3683,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iridium (Ir), element number 77 with mass number 193. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1841.0,
+      "base_sell_value": 208.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3707,7 +3707,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mercury (Hg), element number 80 with mass number 202. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 940.0,
+      "base_sell_value": 202.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3731,7 +3731,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thallium (Tl), element number 81 with mass number 205. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 752.0,
+      "base_sell_value": 200.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3755,7 +3755,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead (Pb), element number 82 with mass number 208. A fission fragment on the long descent from the heavy actinides back toward iron. Stable: the end of the uranium decay chain. Add a neutron for Lead-209 (decays into Bismuth), or remove seven for Lead-201 (decays into Thallium).",
-      "base_sell_value": 601.0,
+      "base_sell_value": 180.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3779,7 +3779,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bismuth (Bi), element number 83 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 480.0,
+      "base_sell_value": 163.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3803,7 +3803,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Polonium (Po), element number 84 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Lead.",
-      "base_sell_value": 384.0,
+      "base_sell_value": 147.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3827,7 +3827,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Astatine (At), element number 85 with mass number 210. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 307.0,
+      "base_sell_value": 132.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3851,7 +3851,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radon (Rn), element number 86 with mass number 222. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Polonium. Add a neutron for Radon-223 (decays into Francium), or remove eleven for Radon-211 (decays into Astatine).",
-      "base_sell_value": 245.0,
+      "base_sell_value": 119.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3875,7 +3875,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Francium (Fr), element number 87 with mass number 223. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 196.0,
+      "base_sell_value": 107.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3899,7 +3899,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radium (Ra), element number 88 with mass number 226. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radon. Add a neutron to make Radium-227, which decays into Actinium.",
-      "base_sell_value": 157.0,
+      "base_sell_value": 97.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3923,7 +3923,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Actinium (Ac), element number 89 with mass number 227. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 125.0,
+      "base_sell_value": 87.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3947,7 +3947,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thorium (Th), element number 90 with mass number 232. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radium. Add a neutron (Isotopic Manipulator) to make Thorium-233, which decays into Protactinium.",
-      "base_sell_value": 100.0,
+      "base_sell_value": 79.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3971,7 +3971,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Protactinium (Pa), element number 91 with mass number 231. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 80.0,
+      "base_sell_value": 71.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3995,7 +3995,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neptunium (Np), element number 93 with mass number 237. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 335544320.0,
+      "base_sell_value": 58.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4019,7 +4019,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Americium (Am), element number 95 with mass number 243. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 1342177280.0,
+      "base_sell_value": 335544320.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4043,7 +4043,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Curium (Cm), element number 96 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 2684354560.0,
+      "base_sell_value": 671088640.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4067,7 +4067,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Berkelium (Bk), element number 97 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 5368709120.0,
+      "base_sell_value": 1342177280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4091,7 +4091,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Californium (Cf), element number 98 with mass number 251. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 10737418240.0,
+      "base_sell_value": 2684354560.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4115,7 +4115,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Einsteinium (Es), element number 99 with mass number 252. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 21474836480.0,
+      "base_sell_value": 5368709120.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4139,7 +4139,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Fermium (Fm), element number 100 with mass number 257. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 42949672960.0,
+      "base_sell_value": 10737418240.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4163,7 +4163,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mendelevium (Md), element number 101 with mass number 258. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 85899345920.0,
+      "base_sell_value": 21474836480.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4187,7 +4187,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nobelium (No), element number 102 with mass number 259. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 171798691840.0,
+      "base_sell_value": 42949672960.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4211,7 +4211,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lawrencium (Lr), element number 103 with mass number 266. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 343597383680.0,
+      "base_sell_value": 85899345920.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4235,7 +4235,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rutherfordium (Rf), element number 104 with mass number 267. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 687194767360.0,
+      "base_sell_value": 171798691840.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4259,7 +4259,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dubnium (Db), element number 105 with mass number 268. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1374389534720.0,
+      "base_sell_value": 343597383680.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4283,7 +4283,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Seaborgium (Sg), element number 106 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2748779069440.0,
+      "base_sell_value": 687194767360.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4307,7 +4307,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bohrium (Bh), element number 107 with mass number 270. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 5497558138880.0,
+      "base_sell_value": 1374389534720.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4331,7 +4331,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hassium (Hs), element number 108 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 10995116277760.0,
+      "base_sell_value": 2748779069440.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4355,7 +4355,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Meitnerium (Mt), element number 109 with mass number 278. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 21990232555520.0,
+      "base_sell_value": 5497558138880.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4379,7 +4379,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Darmstadtium (Ds), element number 110 with mass number 281. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 43980465111040.0,
+      "base_sell_value": 10995116277760.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4403,7 +4403,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Roentgenium (Rg), element number 111 with mass number 282. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 87960930222080.0,
+      "base_sell_value": 21990232555520.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4427,7 +4427,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Copernicium (Cn), element number 112 with mass number 285. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 175921860444160.0,
+      "base_sell_value": 43980465111040.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4451,7 +4451,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nihonium (Nh), element number 113 with mass number 286. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 351843720888320.0,
+      "base_sell_value": 87960930222080.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4475,7 +4475,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Flerovium (Fl), element number 114 with mass number 289. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 703687441776640.0,
+      "base_sell_value": 175921860444160.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4499,7 +4499,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Moscovium (Mc), element number 115 with mass number 290. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1407374883553280.0,
+      "base_sell_value": 351843720888320.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4523,7 +4523,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Livermorium (Lv), element number 116 with mass number 293. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2814749767106560.0,
+      "base_sell_value": 703687441776640.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4547,7 +4547,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tennessine (Ts), element number 117 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 5629499534213120.0,
+      "base_sell_value": 1407374883553280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4571,7 +4571,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Oganesson (Og), element number 118 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 11258999068426240.0,
+      "base_sell_value": 2814749767106560.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -4915,7 +4915,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thorium-232 that has caught one neutron. It beta-decays within minutes into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.",
-      "base_sell_value": 100.0,
+      "base_sell_value": 79.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4939,7 +4939,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radium-226 plus one neutron. A neutron inside it turns into a proton (beta decay), making Actinium-227.",
-      "base_sell_value": 157.0,
+      "base_sell_value": 97.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4963,7 +4963,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A neutron-heavy radon that beta-decays into Francium-223, the only francium found in nature.",
-      "base_sell_value": 245.0,
+      "base_sell_value": 119.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4987,7 +4987,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Radon stripped of eleven neutrons. Too proton-rich to last, it captures an electron and becomes Astatine-211, an isotope used in cancer therapy.",
-      "base_sell_value": 245.0,
+      "base_sell_value": 119.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -5011,7 +5011,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead-208 plus one neutron. It beta-decays into Bismuth-209, the heaviest element with a near-stable isotope.",
-      "base_sell_value": 601.0,
+      "base_sell_value": 180.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -5035,7 +5035,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lead with seven neutrons removed. It captures an electron and becomes Thallium-201, used in heart scans.",
-      "base_sell_value": 601.0,
+      "base_sell_value": 180.0,
       "isotope_sell_multiplier": 1.0
     }
   ],
@@ -5415,7 +5415,7 @@
       "output_item": "uranium_235",
       "output_quantity": 1,
       "byproducts": [
-        { "item": "alpha_particle", "quantity": 1 }
+        { "item": "neutron", "quantity": 3 }
       ],
       "_note_byproducts": "Alpha particle emitted as U-238 loses 3 neutrons during enrichment.",
       "base_craft_time": 24.0,
@@ -5428,7 +5428,7 @@
       "required_research": "radioactive_isotopes",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": ""
+      "simplification_note": "Real enrichment separates U-235 from U-238; here the Manipulator strips three neutrons, which come out as items."
     },
 
     {
@@ -8844,13 +8844,12 @@
     },
     {
       "id": "fission_u235",
-      "display_name": "Fission U-235",
+      "display_name": "Split U-235: Barium + Krypton",
       "recipe_id": 160,
       "tier": 2,
       "category": "Fission",
       "inputs": [
-        { "item": "uranium_235", "quantity": 1 },
-        { "item": "neutron", "quantity": 1 }
+        { "item": "uranium_235", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "barium",
@@ -8859,8 +8858,8 @@
         { "item": "krypton", "quantity": 1 },
         { "item": "neutron", "quantity": 2 }
       ],
-      "base_craft_time": 10.0,
-      "manual_craft_time": 10.0,
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 200.0,
       "valid_buildings": ["fission_reactor"],
@@ -8868,18 +8867,185 @@
       "known_from_start": false,
       "required_research": "fission_i",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": "Second fragment (krypton) + neutrons are authored as byproducts but not emitted until byproduct support lands."
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_xe_sr",
+      "display_name": "Split U-235: Xenon + Strontium",
+      "recipe_id": 242,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "xenon",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "strontium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_cs_rb",
+      "display_name": "Split U-235: Cesium + Rubidium",
+      "recipe_id": 243,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cesium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "rubidium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_i_y",
+      "display_name": "Split U-235: Iodine + Yttrium",
+      "recipe_id": 244,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "iodine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "yttrium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_te_zr",
+      "display_name": "Split U-235: Tellurium + Zirconium",
+      "recipe_id": 245,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tellurium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "zirconium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_sb_nb",
+      "display_name": "Split U-235: Antimony + Niobium",
+      "recipe_id": 246,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "antimony",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "niobium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_sn_mo",
+      "display_name": "Split U-235: Tin + Molybdenum",
+      "recipe_id": 247,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tin",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "molybdenum", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
     },
     {
       "id": "fission_pu239",
-      "display_name": "Fission Pu-239",
+      "display_name": "Split Plutonium: Xenon + Zirconium",
       "recipe_id": 161,
       "tier": 2,
       "category": "Fission",
       "inputs": [
-        { "item": "plutonium", "quantity": 1 },
-        { "item": "neutron", "quantity": 1 }
+        { "item": "plutonium", "quantity": 2 }
       ],
       "neutron_adjustment": [],
       "output_item": "xenon",
@@ -8888,17 +9054,73 @@
         { "item": "zirconium", "quantity": 1 },
         { "item": "neutron", "quantity": 2 }
       ],
-      "base_craft_time": 10.0,
-      "manual_craft_time": 10.0,
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 240.0,
+      "fixed_power_cost_ev": 200.0,
       "valid_buildings": ["fission_reactor"],
       "can_craft_manually": false,
       "known_from_start": false,
       "required_research": "fission_i",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": "Second fragment (zirconium) + neutrons are authored as byproducts but not emitted until byproduct support lands."
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_pu239_ba_sr",
+      "display_name": "Split Plutonium: Barium + Strontium",
+      "recipe_id": 248,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "plutonium", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "barium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "strontium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_pu239_ce_kr",
+      "display_name": "Split Plutonium: Cerium + Krypton",
+      "recipe_id": 249,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "plutonium", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cerium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "krypton", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
     },
     {
       "id": "collect_uranium",
@@ -10517,24 +10739,24 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["fission_u235", "fission_pu239"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Fissile", "Neutron"],
+      "supported_recipes": ["fission_u235", "fission_u235_xe_sr", "fission_u235_cs_rb", "fission_u235_i_y", "fission_u235_te_zr", "fission_u235_sb_nb", "fission_u235_sn_mo", "fission_pu239", "fission_pu239_ba_sr", "fission_pu239_ce_kr"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Fissile"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "None",
       "_note_ports": "Inputs on E/W/N edges, output on the S edge (mirrors the Atom Generator).",
       "ports": [
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "East" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 5000,
-      "base_max_output_items": 20,
+      "base_max_output_items": 30,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 90, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 15000, "cost_prestige_currency": 0 },
@@ -10542,13 +10764,13 @@
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 210, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 240000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
-        { "level": 2, "max_output_items": 150,  "cost_base_currency": 10000,  "cost_prestige_currency": 0 },
-        { "level": 3, "max_output_items": 750,  "cost_base_currency": 40000,  "cost_prestige_currency": 0 },
+        { "level": 2, "max_output_items": 150, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 4000, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
       ],
       "input_upgrade_levels": [
-        { "level": 2, "max_input_items": 120,  "cost_base_currency": 10000,  "cost_prestige_currency": 0 },
-        { "level": 3, "max_input_items": 400,  "cost_base_currency": 40000,  "cost_prestige_currency": 0 },
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
         { "level": 4, "max_input_items": 1500, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
@@ -10558,7 +10780,8 @@
       "tutorial_note": "",
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
-      "codex_entry": "A shielded rod-array core. A slow neutron splits a heavy fissile nucleus into two fragments closer to iron, releasing more neutrons to sustain the chain."
+      "codex_entry": "A shielded rod-array core. A slow neutron splits a heavy fissile nucleus into two fragments closer to iron, releasing more neutrons to sustain the chain.",
+      "assignable_outputs": true
     },
     {
       "_comment": "--- CHEMISTRY C1 BUILDINGS (Chem/Bio Phase 4a) ---",

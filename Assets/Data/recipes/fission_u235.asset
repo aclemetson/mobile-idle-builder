@@ -13,14 +13,12 @@ MonoBehaviour:
   m_Name: fission_u235
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_u235
-  displayName: Fission U-235
+  displayName: 'Split U-235: Barium + Krypton'
   recipeId: 160
   tier: 2
   category: 9
   inputs:
   - item: {fileID: 11400000, guid: 2c22aaf8536bf9544b99e1c40b04d0df, type: 2}
-    quantity: 1
-  - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
     quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: c10fa2a929cbd404ba52d68971ab70f3, type: 2}
@@ -30,8 +28,8 @@ MonoBehaviour:
     quantity: 1
   - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
     quantity: 2
-  baseCraftTime: 10
-  manualCraftTime: 10
+  baseCraftTime: 20
+  manualCraftTime: 20
   powerCostIsDynamic: 0
   fixedPowerCostEV: 200
   validBuildings:
@@ -40,6 +38,7 @@ MonoBehaviour:
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: Second fragment (krypton) + neutrons are authored as byproducts
-    but not emitted until byproduct support lands.
+  isSimplified: 1
+  simplificationNote: A fissile nucleus absorbs a neutron and splits into two lighter
+    ones, releasing about three neutrons; one keeps the chain going, the other two
+    come out. The two fragments' protons always add up to the parent's.
