@@ -26,6 +26,9 @@ namespace MobileIdleBuilder
         private EntityQuery _segmentQuery;
         private EntityQuery _buildingQuery;
         private float       _debugTimer;
+        // Fractional entropy from surplus sales not yet paid: a 1e quark at 50% is worth 0.5, so two of
+        // them pay 1 instead of each truncating to 0.
+        private double      _surplusCarry;
 
         protected override void OnCreate()
         {
@@ -174,18 +177,27 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Jam overflow (#200): the front item was blocking an item the building needs, so it
-            // goes to the player's inventory instead and the belt keeps flowing.
-            if (overflows.Count > 0 && SystemAPI.TryGetSingletonEntity<PlayerInventoryTag>(out Entity invEntity))
+            // Jam overflow (#200): the front item was blocking an item the building needs, so it is
+            // sold at the surplus price (#312) and the belt keeps flowing. It used to go to the
+            // inventory, where nothing ever sold it.
+            if (overflows.Count > 0)
             {
+                float fraction = SurplusSale.CurrentFraction();
                 foreach (var (from, itemID) in overflows)
                 {
                     if (!EntityManager.HasComponent<ConveyorItemData>(from)) continue;
-                    var inv = EntityManager.GetBuffer<InventorySlot>(invEntity);
-                    SlotBufferUtils.AddToInventory(ref inv, itemID, 1);
+                    _surplusCarry += SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
                     EntityManager.RemoveComponent<ConveyorItemData>(from);
                 }
-                if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sent to inventory");
+                long earned = (long)System.Math.Floor(_surplusCarry);
+                if (earned > 0 && SystemAPI.TryGetSingletonEntity<PlayerProgressData>(out Entity progressEntity))
+                {
+                    _surplusCarry -= earned;
+                    var progress = EntityManager.GetComponentData<PlayerProgressData>(progressEntity);
+                    progress.BaseCurrency += earned;
+                    EntityManager.SetComponentData(progressEntity, progress);
+                }
+                if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sold, paid {earned}");
             }
 
             foreach (var target in mergeTargets)

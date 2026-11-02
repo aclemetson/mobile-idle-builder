@@ -61,7 +61,8 @@ namespace MobileIdleBuilder
             float effectiveItemsPerSecondMultiplier,
             string snapshotTimestamp,
             Func<BuildingSaveData, float> getManagerOutputMultiplier = null,
-            Func<int, int, IdleRecipeInfo> getRecipeInfo = null)
+            Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
+            float surplusSaleFraction = 0f)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -175,10 +176,10 @@ namespace MobileIdleBuilder
             //   • into a sink            → entropy from the item's sell value;
             //   • into no building       → player inventory;
             //   • into a PRODUCING synth → consumed internally (credited later as that synth's output);
-            //   • into a STARVED synth   → the item is stuck (the synth can't process it), so credit it to
-            //                              inventory — this is the non-regressive fallback that guarantees no
-            //                              producer output is ever silently dropped (matches the old model
-            //                              when a whole chain fails to resolve).
+            //   • into a STARVED synth   → the item is stuck (the synth can't process it). With a
+            //                              surplusSaleFraction it is sold at that share of its price, as live
+            //                              play sells unusable items (#312); with 0 it goes to inventory (the
+            //                              old non-regressive fallback). Either way no output is dropped.
             for (int i = 0; i < n; i++)
             {
                 var node = nodes[i];
@@ -190,17 +191,18 @@ namespace MobileIdleBuilder
                 foreach (int to in node.Outgoing)
                 {
                     bool sink         = to >= 0 && nodes[to].IsSink;
-                    bool inventory    = to < 0;
                     bool producingSyn = to >= 0 && nodes[to].Recipe.Valid && !nodes[to].IsSink
                                                 && nodes[to].OutputRate > 0f;
                     if (producingSyn) continue; // consumed by a synth that will be credited via its own output
 
+                    bool stuck = to >= 0 && !sink && surplusSaleFraction > 0f;
+                    float price = getItemSellValue(node.OutputItemId);
                     snapshot.chains.Add(new IdleChainEntry
                     {
                         itemId            = node.OutputItemId,
                         itemsPerSecond    = perEdge,
-                        endsAtEntropySink = sink,
-                        baseSellValue     = getItemSellValue(node.OutputItemId)
+                        endsAtEntropySink = sink || stuck,
+                        baseSellValue     = stuck ? price * surplusSaleFraction : price
                     });
                 }
             }

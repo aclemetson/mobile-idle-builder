@@ -646,7 +646,8 @@ namespace MobileIdleBuilder
                 speedMult,
                 DateTime.UtcNow.ToString("O"),
                 getManagerOutputMultiplier,
-                getRecipeInfo);
+                getRecipeInfo,
+                SurplusSale.CurrentFraction());
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

@@ -9,7 +9,7 @@ namespace MobileIdleBuilder
         Wait,
         /// <summary>Take it into the building's input buffer.</summary>
         Accept,
-        /// <summary>Take it off the belt into the player's global inventory (it was jamming the belt).</summary>
+        /// <summary>Take it off the belt and sell it at the surplus price (it was jamming the belt, #312).</summary>
         Overflow,
     }
 
@@ -37,7 +37,7 @@ namespace MobileIdleBuilder
     /// <item><b>Recipe filter.</b> Once a recipe is set, items it does not use are not taken in.</item>
     /// <item><b>Jam overflow.</b> A belt carrying several item types can jam when its front item cannot
     /// be taken (full or unused) while an item the recipe is short of sits behind it. Only then is the
-    /// front item moved to the player's inventory so the belt keeps flowing; nothing is lost. A belt
+    /// front item sold at the surplus price (<see cref="SurplusSale"/>) so the belt keeps flowing. A belt
     /// carrying one item type never overflows, it just backs up.</item>
     /// </list>
     ///
