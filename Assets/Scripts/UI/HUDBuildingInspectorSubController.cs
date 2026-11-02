@@ -347,6 +347,10 @@ namespace MobileIdleBuilder
                     AddFieldCollectorRecipeSection(_inspectorEntity, buildingSO, fieldOnTile);
                     AddNucleonMergeSection(_inspectorEntity, buildingSO, buildingCellX, buildingCellY);
                 }
+                else if (buildingSO.isItemFilter)
+                {
+                    AddFilterSection(_inspectorEntity);
+                }
                 else if (buildingSO.supportedRecipes != null)
                 {
                     // Only offer recipes whose gating research has been purchased. Research-gating
@@ -794,6 +798,83 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Filter (#321) ─────────────────────────────────────────────────────
+
+        private static readonly string[] SideArrows = { "\u2191", "\u2192", "\u2193", "\u2190" }; // N E S W
+
+        /// <summary>
+        /// One row per item that has reached the Filter (or that a rule names), plus "Everything else". Each row
+        /// has a button per output side; the lit one is where that item goes now. An item row's "Else" sends it
+        /// with everything else; the "Everything else" row's "Wait" holds unassigned items back.
+        /// </summary>
+        private void AddFilterSection(Entity entity)
+        {
+            if (!_em.HasBuffer<OutputPortFilter>(entity)) return;
+            var rules = FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(entity, isReadOnly: true));
+
+            var sides = new List<int>();
+            var ports = _em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+            for (int i = 0; i < ports.Length; i++)
+                if (ports[i].PortType == (int)PortType.Output && !sides.Contains(ports[i].Facing)) sides.Add(ports[i].Facing);
+            sides.Sort();
+
+            var items = new List<int>();
+            if (_em.HasBuffer<FilterSeenItem>(entity))
+            {
+                var seen = _em.GetBuffer<FilterSeenItem>(entity, isReadOnly: true);
+                for (int i = 0; i < seen.Length; i++) if (!items.Contains(seen[i].ItemID)) items.Add(seen[i].ItemID);
+            }
+            foreach (var (_, id) in rules)
+                if (id != PortFilterRules.Everything && !items.Contains(id)) items.Add(id);
+
+            AddInspectorRow(_inspectorRecipes, "—— Sorting ——");
+            if (items.Count == 0)
+                AddInspectorRow(_inspectorRecipes, "Belt a mixed line in. Each item that arrives gets a row here.");
+            foreach (var itemId in items)
+                AddFilterRow(entity, rules, sides, itemId, ItemName(itemId));
+            AddFilterRow(entity, rules, sides, PortFilterRules.Everything, "Everything else");
+        }
+
+        private void AddFilterRow(Entity entity, List<(int facing, int itemId)> rules, List<int> sides,
+                                  int itemId, string label)
+        {
+            // The side this row's rule names (for an item with no rule of its own, it rides "Everything else").
+            int current = PortFilterRules.NoRoute;
+            foreach (var (facing, id) in rules)
+                if (id == itemId) current = facing;
+
+            var row = new VisualElement();
+            row.AddToClassList("filter-row");
+            var icon = itemId >= 0 ? HUDController.MakeItemIcon(ItemDatabase.Instance?.Get(itemId)?.icon, "item-icon") : null;
+            if (icon != null) row.Add(icon);
+            var name = new Label(label);
+            name.AddToClassList("filter-row__name");
+            row.Add(name);
+
+            var choices = new List<int>(sides) { PortFilterRules.NoRoute };
+            foreach (int side in choices)
+            {
+                int captured = side;
+                // No rule of its own: an item goes wherever "Everything else" goes ("Else"); for the
+                // "Everything else" row itself, no side means unassigned items wait.
+                string noSide = itemId == PortFilterRules.Everything ? "Wait" : "Else";
+                var btn = new Button { text = side == PortFilterRules.NoRoute ? noSide : SideArrows[side & 3] };
+                btn.AddToClassList("filter-side-btn");
+                btn.EnableInClassList("filter-side-btn--on", side == current);
+                ListTapRouter.Register(_inspectorRecipes, btn, () =>
+                {
+                    if (!_ecsReady || !_em.Exists(entity) || !_em.HasBuffer<OutputPortFilter>(entity)) return;
+                    var live = FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(entity, isReadOnly: true));
+                    PortFilterRules.Assign(live, itemId, captured);
+                    FilterSystem.WriteRules(_em.GetBuffer<OutputPortFilter>(entity), live);
+                    SaveManager.Instance?.SaveLocal();
+                    RefreshInspectorContent();
+                });
+                row.Add(btn);
+            }
+            _inspectorRecipes?.Add(row);
         }
 
         // ── Nucleon Harvester merge (#313) ────────────────────────────────────

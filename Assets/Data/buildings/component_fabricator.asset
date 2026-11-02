@@ -43,6 +43,7 @@ MonoBehaviour:
   - Primary Material
   - Secondary Material
   isEntropySink: 0
+  isItemFilter: 0
   footprint: {x: 1, y: 1}
   structureKind: 6
   ports:

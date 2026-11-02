@@ -25,7 +25,8 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
-                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1)
+                                  int speedLevel = 1, int storageLevel = 1, int inputLevel = 1,
+                                  int[] portFilters = null)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -199,8 +200,32 @@ namespace MobileIdleBuilder
                 }
             }
 
+            if (building != null && building.isItemFilter)
+                AddFilterComponents(entity, portFilters);
+
             GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
+        }
+
+        /// <summary>
+        /// Filter (#321): its routing rules (saved ones, or "everything goes straight through" for a new one)
+        /// and the list of items it has seen. Straight through = the output facing the same way items enter.
+        /// </summary>
+        private void AddFilterComponents(Entity entity, int[] portFilters)
+        {
+            var rules = PortFilterRules.Parse(portFilters);
+            if (rules.Count == 0)
+            {
+                var ports = _em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+                int inFacing = -1;
+                for (int i = 0; i < ports.Length && inFacing < 0; i++)
+                    if (ports[i].PortType == (int)PortType.Input) inFacing = ports[i].Facing;
+                if (inFacing >= 0) rules = PortFilterRules.Default(inFacing);
+            }
+
+            _em.AddComponent<ItemFilterTag>(entity);
+            _em.AddBuffer<FilterSeenItem>(entity);
+            FilterSystem.WriteRules(_em.AddBuffer<OutputPortFilter>(entity), rules);
         }
     }
 }

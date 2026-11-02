@@ -456,6 +456,7 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isItemFilter        = data.is_item_filter;
             so.entropyCost                = data.entropy_cost;
             so.baseMaxOutputItems         = data.base_max_output_items;
             so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;

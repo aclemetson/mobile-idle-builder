@@ -39,6 +39,7 @@ MonoBehaviour:
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0
+  isItemFilter: 0
   footprint: {x: 2, y: 1}
   structureKind: 0
   ports:

@@ -40,6 +40,7 @@ MonoBehaviour:
   - Fissile
   - Neutron
   isEntropySink: 0
+  isItemFilter: 0
   footprint: {x: 1, y: 1}
   structureKind: 0
   ports:
