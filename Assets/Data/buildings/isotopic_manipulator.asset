@@ -37,12 +37,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 320d8f44744963e479aa45bce808200f, type: 2}
   - {fileID: 11400000, guid: 534588c4ae9e1be4ea3e6db25bf28162, type: 2}
   - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
+  - {fileID: 11400000, guid: 6966f8f8699f998428149392eacfb28f, type: 2}
+  - {fileID: 11400000, guid: bb5ca4790c0140040b816372a7f24335, type: 2}
+  - {fileID: 11400000, guid: 0391eec11b827fb4382791ec1fd1b846, type: 2}
+  - {fileID: 11400000, guid: 8aeb67e5e6833c247b314632493b03da, type: 2}
+  - {fileID: 11400000, guid: b3ccdeea14324e64aa912819440eba25, type: 2}
+  - {fileID: 11400000, guid: fda950d3c5d2fe14c991f08b25f7e940, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Base Element
   - Neutrons
   isEntropySink: 0
   isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
   structureKind: 3
   ports:

@@ -746,6 +746,14 @@
     -unity-text-align: middle-center;
 }
 
+/* Recipe mode switch (Neutron Capture Slow / Fast): same look, sized to its label. */
+.recipe-mode-btn {
+    width: auto;
+    flex-grow: 1;
+    padding: 0 var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
 .filter-side-btn--on {
     background-color: rgba(0, 229, 255, 0.28);
     border-color: var(--color-primary);

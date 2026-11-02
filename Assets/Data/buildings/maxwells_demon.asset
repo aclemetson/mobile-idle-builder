@@ -38,6 +38,9 @@ MonoBehaviour:
   inputSlotLabels: []
   isEntropySink: 1
   isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 3, y: 3}
   structureKind: 0
   ports:

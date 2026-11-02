@@ -79,14 +79,9 @@ namespace MobileIdleBuilder
                 }
 
                 var recipeOutputBuf = AddBuffer<RecipeOutputSlot>(entity);
-                if (r != null && r.outputItem != null)
-                {
-                    recipeOutputBuf.Add(new RecipeOutputSlot
-                    {
-                        ItemID   = r.outputItem.itemId,
-                        Quantity = r.outputQuantity
-                    });
-                }
+                if (r != null)
+                    foreach (var (item, qty) in r.ProducedOutputs())
+                        recipeOutputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
                 // Local inventory buffers (required for conveyor connectivity)
                 AddBuffer<BuildingInputSlot>(entity);

@@ -314,15 +314,15 @@
     {
       "id": "heavy_elements",
       "display_name": "Heavy Elements",
-      "description": "Unlock synthesis of uranium and other heavy elements in the Atomic Assembler.",
+      "description": "Build Uranium in the Atom Generator: the start of the decay chain that runs down to Lead.",
       "branch": "Nuclear",
       "prerequisites": ["atomic_assembly"],
       "depth_in_tree": 2,
       "cost_base_currency": 3000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["uranium", "francium", "radium", "actinium", "thorium", "protactinium"],
-      "unlocks_recipes": ["uranium", "francium", "radium", "actinium", "thorium", "protactinium"],
+      "unlocks_items": ["uranium"],
+      "unlocks_recipes": ["uranium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["radioactive_isotopes", "transuranic_elements"],
@@ -334,15 +334,15 @@
     {
       "id": "radioactive_isotopes",
       "display_name": "Radioactive Isotopes",
-      "description": "Unlock uranium enrichment to U-235 and decay particle containment buildings.",
+      "description": "Unlock the Decay Chamber and the decay chain: let Uranium decay down to Lead, and add or strip neutrons to reach the elements in between.",
       "branch": "Nuclear",
       "prerequisites": ["isotopes", "heavy_elements"],
       "depth_in_tree": 3,
       "cost_base_currency": 5000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["uranium_235", "alpha_particle", "beta_particle"],
-      "unlocks_recipes": ["uranium_235"],
+      "unlocks_items": ["alpha_particle", "beta_particle", "lead_201", "lead_209", "radium_227", "radon_211", "radon_223", "thorium_233", "uranium_235"],
+      "unlocks_recipes": ["collect_neutron", "decay_lead_201", "decay_lead_209", "decay_polonium", "decay_radium", "decay_radium_227", "decay_radon", "decay_radon_211", "decay_radon_223", "decay_thorium", "decay_thorium_233", "decay_uranium", "irradiate_lead", "irradiate_radium", "irradiate_radon", "irradiate_thorium", "strip_lead", "strip_radon", "uranium_235"],
       "unlocks_buildings": ["radioactive_containment"],
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
@@ -396,15 +396,15 @@
     {
       "id": "transition_metals",
       "display_name": "Transition Metals",
-      "description": "Build Nickel, Cobalt, Copper and Zinc beyond Iron in the Atom Generator. (Interim: the Actinide map's fission and neutron capture will replace this.)",
+      "description": "Neutron capture next to iron: Cobalt, Nickel, Copper, Zinc and on to Bromine (Slow mode). The steepest climb in value on the Actinide map.",
       "branch": "Materials",
       "prerequisites": ["explosive_burning"],
       "depth_in_tree": 7,
       "cost_base_currency": 250000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
-      "unlocks_recipes": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton"],
+      "unlocks_items": ["nickel", "copper", "zinc", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine"],
+      "unlocks_recipes": ["s_capture_nickel", "s_capture_copper", "s_capture_zinc", "s_capture_cobalt", "s_capture_gallium", "s_capture_germanium", "s_capture_arsenic", "s_capture_selenium", "s_capture_bromine"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["precious_metals", "materials_science"],
@@ -416,15 +416,15 @@
     {
       "id": "precious_metals",
       "display_name": "Precious Metals",
-      "description": "Unlock silver and gold — rare, noble, and indispensable in electronics.",
+      "description": "Fast neutron capture for Platinum and Gold: made in nature only by neutron-star mergers.",
       "branch": "Materials",
-      "prerequisites": ["transition_metals"],
+      "prerequisites": ["transition_metals", "rapid_neutron_capture"],
       "depth_in_tree": 4,
       "cost_base_currency": 25000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
-      "unlocks_items": ["silver", "gold"],
-      "unlocks_recipes": ["silver", "gold"],
+      "unlocks_items": ["platinum", "gold"],
+      "unlocks_recipes": ["r_capture_platinum", "r_capture_gold"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["exotic_metals", "advanced_materials", "heavy_transition_metals"],
@@ -436,15 +436,15 @@
     {
       "id": "exotic_metals",
       "display_name": "Exotic Metals",
-      "description": "Unlock platinum and tungsten — extreme performance metals for high-temperature and catalytic applications.",
+      "description": "Fast neutron capture for Osmium and Iridium, the densest metals there are.",
       "branch": "Materials",
       "prerequisites": ["precious_metals"],
       "depth_in_tree": 5,
       "cost_base_currency": 80000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
-      "unlocks_items": ["platinum", "tungsten"],
-      "unlocks_recipes": ["platinum", "tungsten"],
+      "unlocks_items": ["osmium", "iridium"],
+      "unlocks_recipes": ["r_capture_osmium", "r_capture_iridium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["transuranic_elements", "lanthanides_and_heavy_metals"],
@@ -639,15 +639,15 @@
     {
       "id": "heavy_transition_metals",
       "display_name": "Heavy Transition Metals",
-      "description": "Unlock the 4d and post-transition metals of period 5 \u2014 rubidium through xenon.",
+      "description": "Neutron capture from Cerium: Praseodymium, Neodymium, Promethium and Samarium (Slow mode).",
       "branch": "Materials",
       "prerequisites": ["precious_metals"],
       "depth_in_tree": 5,
       "cost_base_currency": 150000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
-      "unlocks_items": ["rubidium", "strontium", "yttrium", "zirconium", "niobium", "molybdenum", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "tin", "antimony", "tellurium", "iodine", "xenon"],
-      "unlocks_recipes": ["rubidium", "strontium", "yttrium", "zirconium", "niobium", "molybdenum", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "tin", "antimony", "tellurium", "iodine", "xenon"],
+      "unlocks_items": ["praseodymium", "neodymium", "promethium", "samarium"],
+      "unlocks_recipes": ["s_capture_praseodymium", "s_capture_neodymium", "s_capture_promethium", "s_capture_samarium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
@@ -659,15 +659,15 @@
     {
       "id": "lanthanides_and_heavy_metals",
       "display_name": "Lanthanides and Heavy Metals",
-      "description": "Unlock the lanthanide series and the dense period-6 metals \u2014 cesium through radon.",
+      "description": "Neutron capture from Europium up to Rhenium, and Gold into Mercury (Slow mode).",
       "branch": "Materials",
       "prerequisites": ["exotic_metals"],
       "depth_in_tree": 6,
       "cost_base_currency": 400000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
-      "unlocks_items": ["cesium", "barium", "lanthanum", "cerium", "praseodymium", "neodymium", "promethium", "samarium", "europium", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "osmium", "iridium", "mercury", "thallium", "lead", "bismuth", "polonium", "astatine", "radon"],
-      "unlocks_recipes": ["cesium", "barium", "lanthanum", "cerium", "praseodymium", "neodymium", "promethium", "samarium", "europium", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "osmium", "iridium", "mercury", "thallium", "lead", "bismuth", "polonium", "astatine", "radon"],
+      "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "mercury"],
+      "unlocks_recipes": ["s_capture_tungsten", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_rhenium", "s_capture_mercury"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
@@ -799,7 +799,7 @@
     {
       "id": "fission_i",
       "display_name": "Nuclear Fission",
-      "description": "Unlock the Fission Reactor \u2014 split fissile nuclei into mid-weight fragments worth far more than their fuel.",
+      "description": "Unlock the Fission Reactor: split Uranium-235 or Plutonium into two lighter elements and spare neutrons. Choose which side each product leaves by.",
       "branch": "Nuclear",
       "prerequisites": ["fissile_extraction"],
       "depth_in_tree": 4,
@@ -807,13 +807,53 @@
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": [],
-      "unlocks_recipes": ["fission_u235", "fission_pu239"],
+      "unlocks_recipes": ["fission_u235", "fission_u235_xe_sr", "fission_u235_cs_rb", "fission_u235_i_y", "fission_u235_te_zr", "fission_u235_sb_nb", "fission_u235_sn_mo", "fission_pu239", "fission_pu239_ba_sr", "fission_pu239_ce_kr"],
       "unlocks_buildings": ["fission_reactor"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["slow_neutron_capture"],
       "resets_on_prestige": true,
       "prestige_memory_discount": 0.1,
       "codex_entry": "A slow neutron splits a heavy fissile nucleus into two mid-weight fragments \u2014 each closer to iron, and each worth far more than the cheap fuel that produced it. The fragments and spare neutrons are caught for reuse.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "slow_neutron_capture",
+      "display_name": "s-Process",
+      "description": "Unlock Neutron Capture in Slow mode: add neutrons to an element to make the next one up, filling the gaps fission and decay leave.",
+      "branch": "Nuclear",
+      "prerequisites": ["fission_i"],
+      "depth_in_tree": 5,
+      "cost_base_currency": 120000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 1800,
+      "unlocks_items": ["silver", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "lanthanum"],
+      "unlocks_recipes": ["s_capture_silver", "s_capture_technetium", "s_capture_ruthenium", "s_capture_rhodium", "s_capture_palladium", "s_capture_cadmium", "s_capture_indium", "s_capture_lanthanum"],
+      "unlocks_buildings": ["neutron_capture"],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["rapid_neutron_capture"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.1,
+      "codex_entry": "In red giant stars, free neutrons trickle into heavy nuclei one at a time, slowly enough for each unstable result to decay before the next arrives.",
+      "icon_path": "TODO"
+    },
+    {
+      "id": "rapid_neutron_capture",
+      "display_name": "r-Process",
+      "description": "Unlock Fast mode: a flood of neutrons makes the elements slow capture can't reach, including Gold and Platinum.",
+      "branch": "Nuclear",
+      "prerequisites": ["slow_neutron_capture"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 300000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["europium"],
+      "unlocks_recipes": ["r_capture_europium"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["precious_metals"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.1,
+      "codex_entry": "When two neutron stars collide, matter is bathed in so many neutrons that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen forging gold and platinum.",
       "icon_path": "TODO"
     },
     {
@@ -1294,7 +1334,7 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "The heaviest naturally occurring element. Radioactive — decays slowly over billions of years. The primary fuel for nuclear fission reactors. Requires advanced assembly techniques.",
+      "codex_entry": "The heaviest naturally occurring element. Radioactive — decays slowly over billions of years. The primary fuel for nuclear fission reactors. Requires advanced assembly techniques. Decays: alpha decay turns it into Thorium (Decay Chamber).",
       "base_sell_value": 64.0,
       "isotope_sell_multiplier": 1.0
     },
@@ -1565,7 +1605,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A transition metal with strong magnetic properties. Critical in stainless steel, lithium-nickel battery cathodes, and superalloys that survive jet engine temperatures.",
-      "base_sell_value": 107205900.0,
+      "base_sell_value": 24456144.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1589,7 +1629,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The best electrical conductor among common metals. In our Quantum Foundry, copper is synthesised atom by atom — ironic, given it is the cheapest ore in simpler mining games.",
-      "base_sell_value": 85697486.0,
+      "base_sell_value": 5981030.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1613,7 +1653,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zinc galvanises steel against corrosion and is half of brass alloy. Essential in human biology as a cofactor in hundreds of enzymes.",
-      "base_sell_value": 68504244.0,
+      "base_sell_value": 1462729.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1637,7 +1677,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest electrical and thermal conductivity of any element. Used in solar panel contacts, antibacterial coatings, and high-performance circuit connections.",
-      "base_sell_value": 1522149.0,
+      "base_sell_value": 281.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1661,7 +1701,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chemically inert, immune to corrosion, and malleable beyond any other metal. Every connector in space hardware is gold-plated. Its rarity is a product of neutron star collisions.",
-      "base_sell_value": 1176.0,
+      "base_sell_value": 204.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1685,7 +1725,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature. Rarer than gold.",
-      "base_sell_value": 1471.0,
+      "base_sell_value": 206.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1709,7 +1749,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing components in fusion reactors all rely on tungsten's thermal extremity.",
-      "base_sell_value": 3603.0,
+      "base_sell_value": 214.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1733,7 +1773,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Does not occur naturally on Earth — only made in reactors and particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling it requires exquisite precision.",
-      "base_sell_value": 671088640.0,
+      "base_sell_value": 52.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -2603,7 +2643,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cobalt (Co), element number 27 with mass number 59. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 134112510.0,
+      "base_sell_value": 100000000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2627,7 +2667,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gallium (Ga), element number 31 with mass number 69. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 54760433.0,
+      "base_sell_value": 357727.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2651,7 +2691,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Germanium (Ge), element number 32 with mass number 74. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 43774003.0,
+      "base_sell_value": 87486.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2675,7 +2715,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Arsenic (As), element number 33 with mass number 75. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 34991750.0,
+      "base_sell_value": 21396.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2699,7 +2739,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Selenium (Se), element number 34 with mass number 80. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 27971455.0,
+      "base_sell_value": 5233.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2723,7 +2763,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bromine (Br), element number 35 with mass number 79. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 22359622.0,
+      "base_sell_value": 1280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2747,7 +2787,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Krypton (Kr), element number 36 with mass number 84. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 17873675.0,
+      "base_sell_value": 313.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2771,7 +2811,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rubidium (Rb), element number 37 with mass number 85. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 14287730.0,
+      "base_sell_value": 310.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2795,7 +2835,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Strontium (Sr), element number 38 with mass number 88. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 11421224.0,
+      "base_sell_value": 307.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2819,7 +2859,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Yttrium (Y), element number 39 with mass number 89. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 9129816.0,
+      "base_sell_value": 304.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2843,7 +2883,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Zirconium (Zr), element number 40 with mass number 90. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 7298127.0,
+      "base_sell_value": 301.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2867,7 +2907,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Niobium (Nb), element number 41 with mass number 93. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 5833925.0,
+      "base_sell_value": 298.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2891,7 +2931,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Molybdenum (Mo), element number 42 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 4663481.0,
+      "base_sell_value": 295.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2915,7 +2955,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Technetium (Tc), element number 43 with mass number 98. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 3727860.0,
+      "base_sell_value": 292.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2939,7 +2979,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ruthenium (Ru), element number 44 with mass number 102. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2979950.0,
+      "base_sell_value": 289.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2963,7 +3003,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhodium (Rh), element number 45 with mass number 103. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2382091.0,
+      "base_sell_value": 286.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2987,7 +3027,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Palladium (Pd), element number 46 with mass number 106. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1904179.0,
+      "base_sell_value": 283.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3011,7 +3051,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cadmium (Cd), element number 48 with mass number 114. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1216765.0,
+      "base_sell_value": 278.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3035,7 +3075,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Indium (In), element number 49 with mass number 115. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 972649.0,
+      "base_sell_value": 275.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3059,7 +3099,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tin (Sn), element number 50 with mass number 120. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 777509.0,
+      "base_sell_value": 272.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3083,7 +3123,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Antimony (Sb), element number 51 with mass number 121. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 621520.0,
+      "base_sell_value": 270.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3107,7 +3147,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tellurium (Te), element number 52 with mass number 130. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 496826.0,
+      "base_sell_value": 267.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3131,7 +3171,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iodine (I), element number 53 with mass number 127. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 397149.0,
+      "base_sell_value": 264.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3155,7 +3195,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Xenon (Xe), element number 54 with mass number 132. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 317470.0,
+      "base_sell_value": 262.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3179,7 +3219,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cesium (Cs), element number 55 with mass number 133. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 253777.0,
+      "base_sell_value": 259.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3203,7 +3243,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Barium (Ba), element number 56 with mass number 138. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 202862.0,
+      "base_sell_value": 256.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3227,7 +3267,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lanthanum (La), element number 57 with mass number 139. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 162163.0,
+      "base_sell_value": 254.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3251,7 +3291,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Cerium (Ce), element number 58 with mass number 140. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 129629.0,
+      "base_sell_value": 251.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3275,7 +3315,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Praseodymium (Pr), element number 59 with mass number 141. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 103622.0,
+      "base_sell_value": 249.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3299,7 +3339,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neodymium (Nd), element number 60 with mass number 142. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 82832.0,
+      "base_sell_value": 246.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3323,7 +3363,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Promethium (Pm), element number 61 with mass number 145. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 66214.0,
+      "base_sell_value": 244.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3347,7 +3387,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Samarium (Sm), element number 62 with mass number 152. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 52930.0,
+      "base_sell_value": 242.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3371,7 +3411,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Europium (Eu), element number 63 with mass number 153. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 42310.0,
+      "base_sell_value": 239.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3395,7 +3435,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gadolinium (Gd), element number 64 with mass number 158. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 33822.0,
+      "base_sell_value": 237.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3419,7 +3459,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Terbium (Tb), element number 65 with mass number 159. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 27036.0,
+      "base_sell_value": 235.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3443,7 +3483,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dysprosium (Dy), element number 66 with mass number 164. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 21612.0,
+      "base_sell_value": 232.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3467,7 +3507,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Holmium (Ho), element number 67 with mass number 165. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 17276.0,
+      "base_sell_value": 230.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3491,7 +3531,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Erbium (Er), element number 68 with mass number 166. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 13810.0,
+      "base_sell_value": 228.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3515,7 +3555,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thulium (Tm), element number 69 with mass number 169. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 11039.0,
+      "base_sell_value": 225.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3539,7 +3579,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ytterbium (Yb), element number 70 with mass number 174. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 8825.0,
+      "base_sell_value": 223.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3563,7 +3603,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lutetium (Lu), element number 71 with mass number 175. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 7054.0,
+      "base_sell_value": 221.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3587,7 +3627,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hafnium (Hf), element number 72 with mass number 180. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 5639.0,
+      "base_sell_value": 219.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3611,7 +3651,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tantalum (Ta), element number 73 with mass number 181. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 4508.0,
+      "base_sell_value": 217.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3635,7 +3675,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhenium (Re), element number 75 with mass number 187. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2880.0,
+      "base_sell_value": 212.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3659,7 +3699,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Osmium (Os), element number 76 with mass number 192. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 2302.0,
+      "base_sell_value": 210.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3683,7 +3723,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iridium (Ir), element number 77 with mass number 193. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 1841.0,
+      "base_sell_value": 208.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3707,7 +3747,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mercury (Hg), element number 80 with mass number 202. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 940.0,
+      "base_sell_value": 202.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3731,7 +3771,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thallium (Tl), element number 81 with mass number 205. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 752.0,
+      "base_sell_value": 200.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3754,8 +3794,8 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "Lead (Pb), element number 82 with mass number 208. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 601.0,
+      "codex_entry": "Lead (Pb), element number 82 with mass number 208. A fission fragment on the long descent from the heavy actinides back toward iron. Stable: the end of the uranium decay chain. Add a neutron for Lead-209 (decays into Bismuth), or remove seven for Lead-201 (decays into Thallium).",
+      "base_sell_value": 180.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3779,7 +3819,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bismuth (Bi), element number 83 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 480.0,
+      "base_sell_value": 163.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3802,8 +3842,8 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "Polonium (Po), element number 84 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 384.0,
+      "codex_entry": "Polonium (Po), element number 84 with mass number 209. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Lead.",
+      "base_sell_value": 147.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3827,7 +3867,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Astatine (At), element number 85 with mass number 210. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 307.0,
+      "base_sell_value": 132.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3850,8 +3890,8 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "Radon (Rn), element number 86 with mass number 222. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 245.0,
+      "codex_entry": "Radon (Rn), element number 86 with mass number 222. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Polonium. Add a neutron for Radon-223 (decays into Francium), or remove eleven for Radon-211 (decays into Astatine).",
+      "base_sell_value": 119.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3875,7 +3915,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Francium (Fr), element number 87 with mass number 223. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 196.0,
+      "base_sell_value": 107.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3898,8 +3938,8 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "Radium (Ra), element number 88 with mass number 226. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 157.0,
+      "codex_entry": "Radium (Ra), element number 88 with mass number 226. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radon. Add a neutron to make Radium-227, which decays into Actinium.",
+      "base_sell_value": 97.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3923,7 +3963,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Actinium (Ac), element number 89 with mass number 227. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 125.0,
+      "base_sell_value": 87.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3946,8 +3986,8 @@
       "field_type": "None",
       "is_secondary_particle": false,
       "particle_uses": 0,
-      "codex_entry": "Thorium (Th), element number 90 with mass number 232. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 100.0,
+      "codex_entry": "Thorium (Th), element number 90 with mass number 232. A fission fragment on the long descent from the heavy actinides back toward iron. Decays: alpha decay turns it into Radium. Add a neutron (Isotopic Manipulator) to make Thorium-233, which decays into Protactinium.",
+      "base_sell_value": 79.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3971,7 +4011,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Protactinium (Pa), element number 91 with mass number 231. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 80.0,
+      "base_sell_value": 71.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3995,7 +4035,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neptunium (Np), element number 93 with mass number 237. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 335544320.0,
+      "base_sell_value": 58.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4019,7 +4059,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Americium (Am), element number 95 with mass number 243. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 1342177280.0,
+      "base_sell_value": 335544320.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4043,7 +4083,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Curium (Cm), element number 96 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 2684354560.0,
+      "base_sell_value": 671088640.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4067,7 +4107,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Berkelium (Bk), element number 97 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 5368709120.0,
+      "base_sell_value": 1342177280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4091,7 +4131,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Californium (Cf), element number 98 with mass number 251. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 10737418240.0,
+      "base_sell_value": 2684354560.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4115,7 +4155,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Einsteinium (Es), element number 99 with mass number 252. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 21474836480.0,
+      "base_sell_value": 5368709120.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4139,7 +4179,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Fermium (Fm), element number 100 with mass number 257. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 42949672960.0,
+      "base_sell_value": 10737418240.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4163,7 +4203,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mendelevium (Md), element number 101 with mass number 258. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 85899345920.0,
+      "base_sell_value": 21474836480.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4187,7 +4227,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nobelium (No), element number 102 with mass number 259. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 171798691840.0,
+      "base_sell_value": 42949672960.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4211,7 +4251,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lawrencium (Lr), element number 103 with mass number 266. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 343597383680.0,
+      "base_sell_value": 85899345920.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4235,7 +4275,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rutherfordium (Rf), element number 104 with mass number 267. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 687194767360.0,
+      "base_sell_value": 171798691840.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4259,7 +4299,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dubnium (Db), element number 105 with mass number 268. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1374389534720.0,
+      "base_sell_value": 343597383680.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4283,7 +4323,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Seaborgium (Sg), element number 106 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2748779069440.0,
+      "base_sell_value": 687194767360.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4307,7 +4347,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bohrium (Bh), element number 107 with mass number 270. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 5497558138880.0,
+      "base_sell_value": 1374389534720.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4331,7 +4371,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hassium (Hs), element number 108 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 10995116277760.0,
+      "base_sell_value": 2748779069440.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4355,7 +4395,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Meitnerium (Mt), element number 109 with mass number 278. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 21990232555520.0,
+      "base_sell_value": 5497558138880.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4379,7 +4419,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Darmstadtium (Ds), element number 110 with mass number 281. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 43980465111040.0,
+      "base_sell_value": 10995116277760.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4403,7 +4443,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Roentgenium (Rg), element number 111 with mass number 282. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 87960930222080.0,
+      "base_sell_value": 21990232555520.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4427,7 +4467,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Copernicium (Cn), element number 112 with mass number 285. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 175921860444160.0,
+      "base_sell_value": 43980465111040.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4451,7 +4491,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nihonium (Nh), element number 113 with mass number 286. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 351843720888320.0,
+      "base_sell_value": 87960930222080.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4475,7 +4515,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Flerovium (Fl), element number 114 with mass number 289. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 703687441776640.0,
+      "base_sell_value": 175921860444160.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4499,7 +4539,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Moscovium (Mc), element number 115 with mass number 290. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 1407374883553280.0,
+      "base_sell_value": 351843720888320.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4523,7 +4563,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Livermorium (Lv), element number 116 with mass number 293. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 2814749767106560.0,
+      "base_sell_value": 703687441776640.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4547,7 +4587,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tennessine (Ts), element number 117 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 5629499534213120.0,
+      "base_sell_value": 1407374883553280.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -4571,7 +4611,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Oganesson (Og), element number 118 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 11258999068426240.0,
+      "base_sell_value": 2814749767106560.0,
       "isotope_sell_multiplier": 1.0
     },
 
@@ -4893,6 +4933,150 @@
       "base_sell_value": 5.0,
       "isotope_sell_multiplier": 1.0,
       "escapes_as_entropy": true
+    },
+    {
+      "id": "thorium_233",
+      "display_name": "Thorium-233",
+      "symbol": "Th-233",
+      "icon_path": "TODO",
+      "item_id": 181,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 90,
+      "atomic_mass": 233,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "Beta",
+      "half_life_note": "22 minutes",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "Thorium-232 that has caught one neutron. It beta-decays within minutes into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.",
+      "base_sell_value": 79.0,
+      "isotope_sell_multiplier": 1.0
+    },
+    {
+      "id": "radium_227",
+      "display_name": "Radium-227",
+      "symbol": "Ra-227",
+      "icon_path": "TODO",
+      "item_id": 182,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 88,
+      "atomic_mass": 227,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "Beta",
+      "half_life_note": "42 minutes",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "Radium-226 plus one neutron. A neutron inside it turns into a proton (beta decay), making Actinium-227.",
+      "base_sell_value": 97.0,
+      "isotope_sell_multiplier": 1.0
+    },
+    {
+      "id": "radon_223",
+      "display_name": "Radon-223",
+      "symbol": "Rn-223",
+      "icon_path": "TODO",
+      "item_id": 183,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 86,
+      "atomic_mass": 223,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "Beta",
+      "half_life_note": "24 minutes",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "A neutron-heavy radon that beta-decays into Francium-223, the only francium found in nature.",
+      "base_sell_value": 119.0,
+      "isotope_sell_multiplier": 1.0
+    },
+    {
+      "id": "radon_211",
+      "display_name": "Radon-211",
+      "symbol": "Rn-211",
+      "icon_path": "TODO",
+      "item_id": 184,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 86,
+      "atomic_mass": 211,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "BetaPlus",
+      "half_life_note": "14.6 hours",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "Radon stripped of eleven neutrons. Too proton-rich to last, it captures an electron and becomes Astatine-211, an isotope used in cancer therapy.",
+      "base_sell_value": 119.0,
+      "isotope_sell_multiplier": 1.0
+    },
+    {
+      "id": "lead_209",
+      "display_name": "Lead-209",
+      "symbol": "Pb-209",
+      "icon_path": "TODO",
+      "item_id": 185,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 82,
+      "atomic_mass": 209,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "Beta",
+      "half_life_note": "3.3 hours",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "Lead-208 plus one neutron. It beta-decays into Bismuth-209, the heaviest element with a near-stable isotope.",
+      "base_sell_value": 180.0,
+      "isotope_sell_multiplier": 1.0
+    },
+    {
+      "id": "lead_201",
+      "display_name": "Lead-201",
+      "symbol": "Pb-201",
+      "icon_path": "TODO",
+      "item_id": 186,
+      "tier": 2,
+      "tier_ref": "tier_2",
+      "category": "Isotope",
+      "atomic_number": 82,
+      "atomic_mass": 201,
+      "charge": "0",
+      "is_radioactive": true,
+      "decay_type": "BetaPlus",
+      "half_life_note": "9.3 hours",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "Lead with seven neutrons removed. It captures an electron and becomes Thallium-201, used in heart scans.",
+      "base_sell_value": 180.0,
+      "isotope_sell_multiplier": 1.0
     }
   ],
 
@@ -5271,7 +5455,7 @@
       "output_item": "uranium_235",
       "output_quantity": 1,
       "byproducts": [
-        { "item": "alpha_particle", "quantity": 1 }
+        { "item": "neutron", "quantity": 3 }
       ],
       "_note_byproducts": "Alpha particle emitted as U-238 loses 3 neutrons during enrichment.",
       "base_craft_time": 24.0,
@@ -5284,198 +5468,9 @@
       "required_research": "radioactive_isotopes",
       "unlocks_research": null,
       "is_simplified": false,
-      "simplification_note": ""
+      "simplification_note": "Real enrichment separates U-235 from U-238; here the Manipulator strips three neutrons, which come out as items."
     },
 
-    {
-      "id": "nickel",
-      "display_name": "Nickel",
-      "recipe_id": 22,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 28 },
-        { "item": "neutron", "quantity": 30 },
-        { "item": "electron", "quantity": 28 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "nickel",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 58.0,
-      "manual_craft_time": 58.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "copper",
-      "display_name": "Copper",
-      "recipe_id": 23,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 29 },
-        { "item": "neutron", "quantity": 34 },
-        { "item": "electron", "quantity": 29 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "copper",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 63.0,
-      "manual_craft_time": 63.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "zinc",
-      "display_name": "Zinc",
-      "recipe_id": 24,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 30 },
-        { "item": "neutron", "quantity": 35 },
-        { "item": "electron", "quantity": 30 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "zinc",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 65.0,
-      "manual_craft_time": 65.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "silver",
-      "display_name": "Silver",
-      "recipe_id": 25,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 47 },
-        { "item": "neutron", "quantity": 61 },
-        { "item": "electron", "quantity": 47 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "silver",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 108.0,
-      "manual_craft_time": 108.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "precious_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "gold",
-      "display_name": "Gold",
-      "recipe_id": 26,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 79 },
-        { "item": "neutron", "quantity": 118 },
-        { "item": "electron", "quantity": 79 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "gold",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 197.0,
-      "manual_craft_time": 197.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "precious_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "platinum",
-      "display_name": "Platinum",
-      "recipe_id": 27,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 78 },
-        { "item": "neutron", "quantity": 117 },
-        { "item": "electron", "quantity": 78 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "platinum",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 195.0,
-      "manual_craft_time": 195.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "exotic_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "tungsten",
-      "display_name": "Tungsten",
-      "recipe_id": 28,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 74 },
-        { "item": "neutron", "quantity": 110 },
-        { "item": "electron", "quantity": 74 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "tungsten",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 184.0,
-      "manual_craft_time": 184.0,
-      "power_cost_is_dynamic": true,
-      "fixed_power_cost_ev": 0.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "exotic_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
     {
       "id": "plutonium",
       "display_name": "Plutonium",
@@ -6024,1572 +6019,6 @@
       "can_craft_manually": false,
       "known_from_start": false,
       "required_research": "megastructure_theory",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "cobalt",
-      "display_name": "Cobalt",
-      "recipe_id": 65,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 27 },
-        { "item": "neutron", "quantity": 32 },
-        { "item": "electron", "quantity": 27 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "cobalt",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 59.0,
-      "manual_craft_time": 59.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 295.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "gallium",
-      "display_name": "Gallium",
-      "recipe_id": 66,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 31 },
-        { "item": "neutron", "quantity": 38 },
-        { "item": "electron", "quantity": 31 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "gallium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 69.0,
-      "manual_craft_time": 69.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 345.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "germanium",
-      "display_name": "Germanium",
-      "recipe_id": 67,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 32 },
-        { "item": "neutron", "quantity": 42 },
-        { "item": "electron", "quantity": 32 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "germanium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 74.0,
-      "manual_craft_time": 74.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 370.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "arsenic",
-      "display_name": "Arsenic",
-      "recipe_id": 68,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 33 },
-        { "item": "neutron", "quantity": 42 },
-        { "item": "electron", "quantity": 33 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "arsenic",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 75.0,
-      "manual_craft_time": 75.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 375.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "selenium",
-      "display_name": "Selenium",
-      "recipe_id": 69,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 34 },
-        { "item": "neutron", "quantity": 46 },
-        { "item": "electron", "quantity": 34 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "selenium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 80.0,
-      "manual_craft_time": 80.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 400.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "bromine",
-      "display_name": "Bromine",
-      "recipe_id": 70,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 35 },
-        { "item": "neutron", "quantity": 44 },
-        { "item": "electron", "quantity": 35 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "bromine",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 79.0,
-      "manual_craft_time": 79.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 395.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "krypton",
-      "display_name": "Krypton",
-      "recipe_id": 71,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 36 },
-        { "item": "neutron", "quantity": 48 },
-        { "item": "electron", "quantity": 36 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "krypton",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 84.0,
-      "manual_craft_time": 84.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 420.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "rubidium",
-      "display_name": "Rubidium",
-      "recipe_id": 72,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 37 },
-        { "item": "neutron", "quantity": 48 },
-        { "item": "electron", "quantity": 37 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "rubidium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 85.0,
-      "manual_craft_time": 85.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 425.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "strontium",
-      "display_name": "Strontium",
-      "recipe_id": 73,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 38 },
-        { "item": "neutron", "quantity": 50 },
-        { "item": "electron", "quantity": 38 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "strontium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 88.0,
-      "manual_craft_time": 88.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 440.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "yttrium",
-      "display_name": "Yttrium",
-      "recipe_id": 74,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 39 },
-        { "item": "neutron", "quantity": 50 },
-        { "item": "electron", "quantity": 39 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "yttrium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 89.0,
-      "manual_craft_time": 89.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 445.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "zirconium",
-      "display_name": "Zirconium",
-      "recipe_id": 75,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 40 },
-        { "item": "neutron", "quantity": 50 },
-        { "item": "electron", "quantity": 40 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "zirconium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 90.0,
-      "manual_craft_time": 90.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 450.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "niobium",
-      "display_name": "Niobium",
-      "recipe_id": 76,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 41 },
-        { "item": "neutron", "quantity": 52 },
-        { "item": "electron", "quantity": 41 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "niobium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 93.0,
-      "manual_craft_time": 93.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 465.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "molybdenum",
-      "display_name": "Molybdenum",
-      "recipe_id": 77,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 42 },
-        { "item": "neutron", "quantity": 56 },
-        { "item": "electron", "quantity": 42 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "molybdenum",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 98.0,
-      "manual_craft_time": 98.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 490.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "technetium",
-      "display_name": "Technetium",
-      "recipe_id": 78,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 43 },
-        { "item": "neutron", "quantity": 55 },
-        { "item": "electron", "quantity": 43 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "technetium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 98.0,
-      "manual_craft_time": 98.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 490.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "ruthenium",
-      "display_name": "Ruthenium",
-      "recipe_id": 79,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 44 },
-        { "item": "neutron", "quantity": 58 },
-        { "item": "electron", "quantity": 44 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "ruthenium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 102.0,
-      "manual_craft_time": 102.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 510.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "rhodium",
-      "display_name": "Rhodium",
-      "recipe_id": 80,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 45 },
-        { "item": "neutron", "quantity": 58 },
-        { "item": "electron", "quantity": 45 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "rhodium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 103.0,
-      "manual_craft_time": 103.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 515.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "palladium",
-      "display_name": "Palladium",
-      "recipe_id": 81,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 46 },
-        { "item": "neutron", "quantity": 60 },
-        { "item": "electron", "quantity": 46 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "palladium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 106.0,
-      "manual_craft_time": 106.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 530.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "cadmium",
-      "display_name": "Cadmium",
-      "recipe_id": 82,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 48 },
-        { "item": "neutron", "quantity": 66 },
-        { "item": "electron", "quantity": 48 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "cadmium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 114.0,
-      "manual_craft_time": 114.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 570.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "indium",
-      "display_name": "Indium",
-      "recipe_id": 83,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 49 },
-        { "item": "neutron", "quantity": 66 },
-        { "item": "electron", "quantity": 49 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "indium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 115.0,
-      "manual_craft_time": 115.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 575.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "tin",
-      "display_name": "Tin",
-      "recipe_id": 84,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 50 },
-        { "item": "neutron", "quantity": 70 },
-        { "item": "electron", "quantity": 50 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "tin",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 120.0,
-      "manual_craft_time": 120.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 600.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "antimony",
-      "display_name": "Antimony",
-      "recipe_id": 85,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 51 },
-        { "item": "neutron", "quantity": 70 },
-        { "item": "electron", "quantity": 51 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "antimony",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 121.0,
-      "manual_craft_time": 121.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 605.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "tellurium",
-      "display_name": "Tellurium",
-      "recipe_id": 86,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 52 },
-        { "item": "neutron", "quantity": 78 },
-        { "item": "electron", "quantity": 52 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "tellurium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 130.0,
-      "manual_craft_time": 130.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 650.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "iodine",
-      "display_name": "Iodine",
-      "recipe_id": 87,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 53 },
-        { "item": "neutron", "quantity": 74 },
-        { "item": "electron", "quantity": 53 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "iodine",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 127.0,
-      "manual_craft_time": 127.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 635.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "xenon",
-      "display_name": "Xenon",
-      "recipe_id": 88,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 54 },
-        { "item": "neutron", "quantity": 78 },
-        { "item": "electron", "quantity": 54 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "xenon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 132.0,
-      "manual_craft_time": 132.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 660.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_transition_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "cesium",
-      "display_name": "Cesium",
-      "recipe_id": 89,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 55 },
-        { "item": "neutron", "quantity": 78 },
-        { "item": "electron", "quantity": 55 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "cesium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 133.0,
-      "manual_craft_time": 133.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 665.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "barium",
-      "display_name": "Barium",
-      "recipe_id": 90,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 56 },
-        { "item": "neutron", "quantity": 82 },
-        { "item": "electron", "quantity": 56 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "barium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 138.0,
-      "manual_craft_time": 138.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 690.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "lanthanum",
-      "display_name": "Lanthanum",
-      "recipe_id": 91,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 57 },
-        { "item": "neutron", "quantity": 82 },
-        { "item": "electron", "quantity": 57 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "lanthanum",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 139.0,
-      "manual_craft_time": 139.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 695.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "cerium",
-      "display_name": "Cerium",
-      "recipe_id": 92,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 58 },
-        { "item": "neutron", "quantity": 82 },
-        { "item": "electron", "quantity": 58 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "cerium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 140.0,
-      "manual_craft_time": 140.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 700.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "praseodymium",
-      "display_name": "Praseodymium",
-      "recipe_id": 93,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 59 },
-        { "item": "neutron", "quantity": 82 },
-        { "item": "electron", "quantity": 59 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "praseodymium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 141.0,
-      "manual_craft_time": 141.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 705.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "neodymium",
-      "display_name": "Neodymium",
-      "recipe_id": 94,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 60 },
-        { "item": "neutron", "quantity": 82 },
-        { "item": "electron", "quantity": 60 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "neodymium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 142.0,
-      "manual_craft_time": 142.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 710.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "promethium",
-      "display_name": "Promethium",
-      "recipe_id": 95,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 61 },
-        { "item": "neutron", "quantity": 84 },
-        { "item": "electron", "quantity": 61 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "promethium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 145.0,
-      "manual_craft_time": 145.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 725.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "samarium",
-      "display_name": "Samarium",
-      "recipe_id": 96,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 62 },
-        { "item": "neutron", "quantity": 90 },
-        { "item": "electron", "quantity": 62 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "samarium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 152.0,
-      "manual_craft_time": 152.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 760.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "europium",
-      "display_name": "Europium",
-      "recipe_id": 97,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 63 },
-        { "item": "neutron", "quantity": 90 },
-        { "item": "electron", "quantity": 63 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "europium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 153.0,
-      "manual_craft_time": 153.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 765.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "gadolinium",
-      "display_name": "Gadolinium",
-      "recipe_id": 98,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 64 },
-        { "item": "neutron", "quantity": 94 },
-        { "item": "electron", "quantity": 64 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "gadolinium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 158.0,
-      "manual_craft_time": 158.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 790.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "terbium",
-      "display_name": "Terbium",
-      "recipe_id": 99,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 65 },
-        { "item": "neutron", "quantity": 94 },
-        { "item": "electron", "quantity": 65 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "terbium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 159.0,
-      "manual_craft_time": 159.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 795.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "dysprosium",
-      "display_name": "Dysprosium",
-      "recipe_id": 100,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 66 },
-        { "item": "neutron", "quantity": 98 },
-        { "item": "electron", "quantity": 66 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "dysprosium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 164.0,
-      "manual_craft_time": 164.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 820.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "holmium",
-      "display_name": "Holmium",
-      "recipe_id": 101,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 67 },
-        { "item": "neutron", "quantity": 98 },
-        { "item": "electron", "quantity": 67 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "holmium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 165.0,
-      "manual_craft_time": 165.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 825.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "erbium",
-      "display_name": "Erbium",
-      "recipe_id": 102,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 68 },
-        { "item": "neutron", "quantity": 98 },
-        { "item": "electron", "quantity": 68 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "erbium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 166.0,
-      "manual_craft_time": 166.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 830.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "thulium",
-      "display_name": "Thulium",
-      "recipe_id": 103,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 69 },
-        { "item": "neutron", "quantity": 100 },
-        { "item": "electron", "quantity": 69 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "thulium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 169.0,
-      "manual_craft_time": 169.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 845.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "ytterbium",
-      "display_name": "Ytterbium",
-      "recipe_id": 104,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 70 },
-        { "item": "neutron", "quantity": 104 },
-        { "item": "electron", "quantity": 70 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "ytterbium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 174.0,
-      "manual_craft_time": 174.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 870.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "lutetium",
-      "display_name": "Lutetium",
-      "recipe_id": 105,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 71 },
-        { "item": "neutron", "quantity": 104 },
-        { "item": "electron", "quantity": 71 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "lutetium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 175.0,
-      "manual_craft_time": 175.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 875.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "hafnium",
-      "display_name": "Hafnium",
-      "recipe_id": 106,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 72 },
-        { "item": "neutron", "quantity": 108 },
-        { "item": "electron", "quantity": 72 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "hafnium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 180.0,
-      "manual_craft_time": 180.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 900.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "tantalum",
-      "display_name": "Tantalum",
-      "recipe_id": 107,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 73 },
-        { "item": "neutron", "quantity": 108 },
-        { "item": "electron", "quantity": 73 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "tantalum",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 181.0,
-      "manual_craft_time": 181.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 905.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "rhenium",
-      "display_name": "Rhenium",
-      "recipe_id": 108,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 75 },
-        { "item": "neutron", "quantity": 112 },
-        { "item": "electron", "quantity": 75 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "rhenium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 187.0,
-      "manual_craft_time": 187.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 935.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "osmium",
-      "display_name": "Osmium",
-      "recipe_id": 109,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 76 },
-        { "item": "neutron", "quantity": 116 },
-        { "item": "electron", "quantity": 76 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "osmium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 192.0,
-      "manual_craft_time": 192.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 960.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "iridium",
-      "display_name": "Iridium",
-      "recipe_id": 110,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 77 },
-        { "item": "neutron", "quantity": 116 },
-        { "item": "electron", "quantity": 77 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "iridium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 193.0,
-      "manual_craft_time": 193.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 965.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "mercury",
-      "display_name": "Mercury",
-      "recipe_id": 111,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 80 },
-        { "item": "neutron", "quantity": 122 },
-        { "item": "electron", "quantity": 80 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "mercury",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 202.0,
-      "manual_craft_time": 202.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1010.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "thallium",
-      "display_name": "Thallium",
-      "recipe_id": 112,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 81 },
-        { "item": "neutron", "quantity": 124 },
-        { "item": "electron", "quantity": 81 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "thallium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 205.0,
-      "manual_craft_time": 205.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1025.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "lead",
-      "display_name": "Lead",
-      "recipe_id": 113,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 82 },
-        { "item": "neutron", "quantity": 126 },
-        { "item": "electron", "quantity": 82 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "lead",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 208.0,
-      "manual_craft_time": 208.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1040.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "bismuth",
-      "display_name": "Bismuth",
-      "recipe_id": 114,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 83 },
-        { "item": "neutron", "quantity": 126 },
-        { "item": "electron", "quantity": 83 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "bismuth",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 209.0,
-      "manual_craft_time": 209.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1045.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "polonium",
-      "display_name": "Polonium",
-      "recipe_id": 115,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 84 },
-        { "item": "neutron", "quantity": 125 },
-        { "item": "electron", "quantity": 84 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "polonium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 209.0,
-      "manual_craft_time": 209.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1045.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "astatine",
-      "display_name": "Astatine",
-      "recipe_id": 116,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 85 },
-        { "item": "neutron", "quantity": 125 },
-        { "item": "electron", "quantity": 85 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "astatine",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 210.0,
-      "manual_craft_time": 210.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1050.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "radon",
-      "display_name": "Radon",
-      "recipe_id": 117,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 86 },
-        { "item": "neutron", "quantity": 136 },
-        { "item": "electron", "quantity": 86 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "radon",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 222.0,
-      "manual_craft_time": 222.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1110.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "francium",
-      "display_name": "Francium",
-      "recipe_id": 118,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 87 },
-        { "item": "neutron", "quantity": 136 },
-        { "item": "electron", "quantity": 87 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "francium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 223.0,
-      "manual_craft_time": 223.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1115.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "radium",
-      "display_name": "Radium",
-      "recipe_id": 119,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 88 },
-        { "item": "neutron", "quantity": 138 },
-        { "item": "electron", "quantity": 88 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "radium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 226.0,
-      "manual_craft_time": 226.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1130.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "actinium",
-      "display_name": "Actinium",
-      "recipe_id": 120,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 89 },
-        { "item": "neutron", "quantity": 138 },
-        { "item": "electron", "quantity": 89 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "actinium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 227.0,
-      "manual_craft_time": 227.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1135.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "thorium",
-      "display_name": "Thorium",
-      "recipe_id": 121,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 90 },
-        { "item": "neutron", "quantity": 142 },
-        { "item": "electron", "quantity": 90 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "thorium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 232.0,
-      "manual_craft_time": 232.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1160.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_elements",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
-      "id": "protactinium",
-      "display_name": "Protactinium",
-      "recipe_id": 122,
-      "tier": 2,
-      "category": "Element",
-      "inputs": [
-        { "item": "proton", "quantity": 91 },
-        { "item": "neutron", "quantity": 140 },
-        { "item": "electron", "quantity": 91 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "protactinium",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 231.0,
-      "manual_craft_time": 231.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 1155.0,
-      "valid_buildings": ["atomic_assembler"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "heavy_elements",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -8997,13 +7426,12 @@
     },
     {
       "id": "fission_u235",
-      "display_name": "Fission U-235",
+      "display_name": "Split U-235: Barium + Krypton",
       "recipe_id": 160,
       "tier": 2,
       "category": "Fission",
       "inputs": [
-        { "item": "uranium_235", "quantity": 1 },
-        { "item": "neutron", "quantity": 1 }
+        { "item": "uranium_235", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "barium",
@@ -9012,8 +7440,8 @@
         { "item": "krypton", "quantity": 1 },
         { "item": "neutron", "quantity": 2 }
       ],
-      "base_craft_time": 10.0,
-      "manual_craft_time": 10.0,
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 200.0,
       "valid_buildings": ["fission_reactor"],
@@ -9021,18 +7449,185 @@
       "known_from_start": false,
       "required_research": "fission_i",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": "Second fragment (krypton) + neutrons are authored as byproducts but not emitted until byproduct support lands."
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_xe_sr",
+      "display_name": "Split U-235: Xenon + Strontium",
+      "recipe_id": 242,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "xenon",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "strontium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_cs_rb",
+      "display_name": "Split U-235: Cesium + Rubidium",
+      "recipe_id": 243,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cesium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "rubidium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_i_y",
+      "display_name": "Split U-235: Iodine + Yttrium",
+      "recipe_id": 244,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "iodine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "yttrium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_te_zr",
+      "display_name": "Split U-235: Tellurium + Zirconium",
+      "recipe_id": 245,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tellurium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "zirconium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_sb_nb",
+      "display_name": "Split U-235: Antimony + Niobium",
+      "recipe_id": 246,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "antimony",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "niobium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_u235_sn_mo",
+      "display_name": "Split U-235: Tin + Molybdenum",
+      "recipe_id": 247,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "uranium_235", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tin",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "molybdenum", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
     },
     {
       "id": "fission_pu239",
-      "display_name": "Fission Pu-239",
+      "display_name": "Split Plutonium: Xenon + Zirconium",
       "recipe_id": 161,
       "tier": 2,
       "category": "Fission",
       "inputs": [
-        { "item": "plutonium", "quantity": 1 },
-        { "item": "neutron", "quantity": 1 }
+        { "item": "plutonium", "quantity": 2 }
       ],
       "neutron_adjustment": [],
       "output_item": "xenon",
@@ -9041,17 +7636,1165 @@
         { "item": "zirconium", "quantity": 1 },
         { "item": "neutron", "quantity": 2 }
       ],
-      "base_craft_time": 10.0,
-      "manual_craft_time": 10.0,
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 240.0,
+      "fixed_power_cost_ev": 200.0,
       "valid_buildings": ["fission_reactor"],
       "can_craft_manually": false,
       "known_from_start": false,
       "required_research": "fission_i",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": "Second fragment (zirconium) + neutrons are authored as byproducts but not emitted until byproduct support lands."
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_pu239_ba_sr",
+      "display_name": "Split Plutonium: Barium + Strontium",
+      "recipe_id": 248,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "plutonium", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "barium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "strontium", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "fission_pu239_ce_kr",
+      "display_name": "Split Plutonium: Cerium + Krypton",
+      "recipe_id": 249,
+      "tier": 2,
+      "category": "Fission",
+      "inputs": [
+        { "item": "plutonium", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cerium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "krypton", "quantity": 1 },
+        { "item": "neutron", "quantity": 2 }
+      ],
+      "base_craft_time": 20.0,
+      "manual_craft_time": 20.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 200.0,
+      "valid_buildings": ["fission_reactor"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "fission_i",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Harvested Plutonium skips enrichment, so a split takes two. A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing about three neutrons; one keeps the chain going, the other two come out. The two fragments' protons always add up to the parent's."
+    },
+    {
+      "id": "s_capture_cobalt",
+      "display_name": "Slow capture: Cobalt",
+      "recipe_id": 250,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "iron", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cobalt",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_nickel",
+      "display_name": "Slow capture: Nickel",
+      "recipe_id": 251,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "cobalt", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "nickel",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_copper",
+      "display_name": "Slow capture: Copper",
+      "recipe_id": 252,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "nickel", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "copper",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_zinc",
+      "display_name": "Slow capture: Zinc",
+      "recipe_id": 253,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "copper", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "zinc",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_gallium",
+      "display_name": "Slow capture: Gallium",
+      "recipe_id": 254,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "zinc", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "gallium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_germanium",
+      "display_name": "Slow capture: Germanium",
+      "recipe_id": 255,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "gallium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "germanium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_arsenic",
+      "display_name": "Slow capture: Arsenic",
+      "recipe_id": 256,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "germanium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "arsenic",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_selenium",
+      "display_name": "Slow capture: Selenium",
+      "recipe_id": 257,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "arsenic", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "selenium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_bromine",
+      "display_name": "Slow capture: Bromine",
+      "recipe_id": 258,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "selenium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "bromine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_technetium",
+      "display_name": "Slow capture: Technetium",
+      "recipe_id": 259,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "molybdenum", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "technetium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_ruthenium",
+      "display_name": "Slow capture: Ruthenium",
+      "recipe_id": 260,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "technetium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "ruthenium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_rhodium",
+      "display_name": "Slow capture: Rhodium",
+      "recipe_id": 261,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "ruthenium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "rhodium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_palladium",
+      "display_name": "Slow capture: Palladium",
+      "recipe_id": 262,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "rhodium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "palladium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_silver",
+      "display_name": "Slow capture: Silver",
+      "recipe_id": 263,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "palladium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "silver",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_cadmium",
+      "display_name": "Slow capture: Cadmium",
+      "recipe_id": 264,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "silver", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "cadmium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_indium",
+      "display_name": "Slow capture: Indium",
+      "recipe_id": 265,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "cadmium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "indium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_lanthanum",
+      "display_name": "Slow capture: Lanthanum",
+      "recipe_id": 266,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "barium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lanthanum",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "slow_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_praseodymium",
+      "display_name": "Slow capture: Praseodymium",
+      "recipe_id": 267,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "cerium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "praseodymium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "heavy_transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_neodymium",
+      "display_name": "Slow capture: Neodymium",
+      "recipe_id": 268,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "praseodymium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "neodymium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "heavy_transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_promethium",
+      "display_name": "Slow capture: Promethium",
+      "recipe_id": 269,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "neodymium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "promethium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "heavy_transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_samarium",
+      "display_name": "Slow capture: Samarium",
+      "recipe_id": 270,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "promethium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "samarium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "heavy_transition_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_gadolinium",
+      "display_name": "Slow capture: Gadolinium",
+      "recipe_id": 271,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "europium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "gadolinium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_terbium",
+      "display_name": "Slow capture: Terbium",
+      "recipe_id": 272,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "gadolinium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "terbium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_dysprosium",
+      "display_name": "Slow capture: Dysprosium",
+      "recipe_id": 273,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "terbium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "dysprosium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_holmium",
+      "display_name": "Slow capture: Holmium",
+      "recipe_id": 274,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "dysprosium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "holmium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_erbium",
+      "display_name": "Slow capture: Erbium",
+      "recipe_id": 275,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "holmium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "erbium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_thulium",
+      "display_name": "Slow capture: Thulium",
+      "recipe_id": 276,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "erbium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "thulium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_ytterbium",
+      "display_name": "Slow capture: Ytterbium",
+      "recipe_id": 277,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "thulium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "ytterbium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_lutetium",
+      "display_name": "Slow capture: Lutetium",
+      "recipe_id": 278,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "ytterbium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lutetium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_hafnium",
+      "display_name": "Slow capture: Hafnium",
+      "recipe_id": 279,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "lutetium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "hafnium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_tantalum",
+      "display_name": "Slow capture: Tantalum",
+      "recipe_id": 280,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "hafnium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tantalum",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_tungsten",
+      "display_name": "Slow capture: Tungsten",
+      "recipe_id": 281,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "tantalum", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "tungsten",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_rhenium",
+      "display_name": "Slow capture: Rhenium",
+      "recipe_id": 282,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "tungsten", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "rhenium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "s_capture_mercury",
+      "display_name": "Slow capture: Mercury",
+      "recipe_id": 283,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "gold", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "mercury",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 12.0,
+      "manual_craft_time": 12.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "lanthanides_and_heavy_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
+    },
+    {
+      "id": "r_capture_europium",
+      "display_name": "Fast capture: Europium",
+      "recipe_id": 284,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "samarium", "quantity": 1 },
+        { "item": "neutron", "quantity": 3 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "europium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 30.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 180.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "rapid_neutron_capture",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A flood of neutrons in seconds (a neutron-star merger), then beta decays: the only way to make this element."
+    },
+    {
+      "id": "r_capture_osmium",
+      "display_name": "Fast capture: Osmium",
+      "recipe_id": 285,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "rhenium", "quantity": 1 },
+        { "item": "neutron", "quantity": 3 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "osmium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 30.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 180.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "exotic_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A flood of neutrons in seconds (a neutron-star merger), then beta decays: the only way to make this element."
+    },
+    {
+      "id": "r_capture_iridium",
+      "display_name": "Fast capture: Iridium",
+      "recipe_id": 286,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "osmium", "quantity": 1 },
+        { "item": "neutron", "quantity": 3 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "iridium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 30.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 180.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "exotic_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A flood of neutrons in seconds (a neutron-star merger), then beta decays: the only way to make this element."
+    },
+    {
+      "id": "r_capture_platinum",
+      "display_name": "Fast capture: Platinum",
+      "recipe_id": 287,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "iridium", "quantity": 1 },
+        { "item": "neutron", "quantity": 3 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "platinum",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 30.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 180.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "precious_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A flood of neutrons in seconds (a neutron-star merger), then beta decays: the only way to make this element."
+    },
+    {
+      "id": "r_capture_gold",
+      "display_name": "Fast capture: Gold",
+      "recipe_id": 288,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "platinum", "quantity": 1 },
+        { "item": "neutron", "quantity": 3 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "gold",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 30.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 180.0,
+      "valid_buildings": ["neutron_capture"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "precious_metals",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "A flood of neutrons in seconds (a neutron-star merger), then beta decays: the only way to make this element."
     },
     {
       "id": "collect_uranium",
@@ -9098,6 +8841,484 @@
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": "Harvested from a fissile field."
+    },
+    {
+      "id": "collect_neutron",
+      "display_name": "Collect Neutron",
+      "recipe_id": 224,
+      "tier": 2,
+      "category": "Nucleon",
+      "inputs": [],
+      "neutron_adjustment": [],
+      "output_item": "neutron",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 1.0,
+      "manual_craft_time": 1.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["harvester"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "irradiate_thorium",
+      "display_name": "Irradiate Thorium",
+      "recipe_id": 225,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "thorium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "thorium_233",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "irradiate_radium",
+      "display_name": "Irradiate Radium",
+      "recipe_id": 226,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radium", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "radium_227",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "irradiate_radon",
+      "display_name": "Irradiate Radon",
+      "recipe_id": 227,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radon", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "radon_223",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "irradiate_lead",
+      "display_name": "Irradiate Lead",
+      "recipe_id": 228,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "lead", "quantity": 1 },
+        { "item": "neutron", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lead_209",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "strip_radon",
+      "display_name": "Strip Radon",
+      "recipe_id": 229,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radon", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "radon_211",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutron", "quantity": 11 }
+      ],
+      "base_craft_time": 8.0,
+      "manual_craft_time": 8.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Removing eleven neutrons at once is a game shortcut."
+    },
+    {
+      "id": "strip_lead",
+      "display_name": "Strip Lead",
+      "recipe_id": 230,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "lead", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lead_201",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutron", "quantity": 7 }
+      ],
+      "base_craft_time": 8.0,
+      "manual_craft_time": 8.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 40.0,
+      "valid_buildings": ["isotopic_manipulator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Removing seven neutrons at once is a game shortcut."
+    },
+    {
+      "id": "decay_uranium",
+      "display_name": "Uranium Decay",
+      "recipe_id": 231,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "uranium", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "thorium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "alpha_particle", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 30.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "U-238 really takes 4.5 billion years; here it takes seconds."
+    },
+    {
+      "id": "decay_thorium",
+      "display_name": "Thorium Decay",
+      "recipe_id": 232,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "thorium", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "radium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "alpha_particle", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 30.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Th-232 decays to Ra-228; shown as Radium."
+    },
+    {
+      "id": "decay_radium",
+      "display_name": "Radium Decay",
+      "recipe_id": 233,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radium", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "radon",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "alpha_particle", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 30.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_radon",
+      "display_name": "Radon Decay",
+      "recipe_id": 234,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radon", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "polonium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "alpha_particle", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 30.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Rn-222 decays to Po-218; shown as Polonium."
+    },
+    {
+      "id": "decay_polonium",
+      "display_name": "Polonium Decay",
+      "recipe_id": 235,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "polonium", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "lead",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "alpha_particle", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 30.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "Po-210 decays to Pb-206; shown as Lead."
+    },
+    {
+      "id": "decay_thorium_233",
+      "display_name": "Thorium-233 Decay",
+      "recipe_id": 236,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "thorium_233", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "protactinium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_radium_227",
+      "display_name": "Radium-227 Decay",
+      "recipe_id": 237,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radium_227", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "actinium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_radon_223",
+      "display_name": "Radon-223 Decay",
+      "recipe_id": 238,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radon_223", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "francium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_lead_209",
+      "display_name": "Lead-209 Decay",
+      "recipe_id": 239,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "lead_209", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "bismuth",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_radon_211",
+      "display_name": "Radon-211 Decay",
+      "recipe_id": 240,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "radon_211", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "astatine",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
+    },
+    {
+      "id": "decay_lead_201",
+      "display_name": "Lead-201 Decay",
+      "recipe_id": 241,
+      "tier": 2,
+      "category": "Isotope",
+      "inputs": [
+        { "item": "lead_201", "quantity": 1 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "thallium",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "neutrino", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 20.0,
+      "valid_buildings": ["radioactive_containment"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "radioactive_isotopes",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": ""
     },
 
     { "_comment": "--- CHEMISTRY C1: element harvest recipes (Element Harvester) + inorganic synthesis (Compound Synthesizer). Chem/Bio Phase 4a. ---",
@@ -9385,7 +9606,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["collect_up_quark", "collect_down_quark", "collect_electron", "collect_uranium", "collect_plutonium"],
+      "supported_recipes": ["collect_up_quark", "collect_down_quark", "collect_electron", "collect_uranium", "collect_plutonium", "collect_neutron"],
       "input_slot_count": 0,
       "input_slot_labels": [],
       "is_entropy_sink": false,
@@ -9393,7 +9614,7 @@
       "ports": [],
       "placement_rule": "MustBeOnField",
       "compatible_adjacent_categories": [],
-      "compatible_fields": ["Quark", "Lepton"],
+      "compatible_fields": ["Quark", "Lepton", "Neutron"],
       "entropy_cost": 100,
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 0,
@@ -9521,6 +9742,68 @@
       "decay_collection_rate": 0.0,
       "codex_entry": "A sorting gate. Every item that arrives is checked against your rules and sent out of the matching side, so one belt can carry several items to several buildings.",
       "is_item_filter": true
+    },
+    {
+      "id": "neutron_capture",
+      "display_name": "Neutron Capture",
+      "description": "Soaks an element in neutrons until one turns into a proton, making the next element up. Slow mode (s-process) is cheap on power; Fast mode (r-process) is the only way to make Gold, Platinum, Iridium, Osmium and Europium.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 26,
+      "tier": 2,
+      "category": "Transient",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": true,
+      "is_power_source": false,
+      "base_power_cost_ev": 40.0,
+      "power_cost_is_dynamic": true,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": ["s_capture_cobalt", "s_capture_nickel", "s_capture_copper", "s_capture_zinc", "s_capture_gallium", "s_capture_germanium", "s_capture_arsenic", "s_capture_selenium", "s_capture_bromine", "s_capture_technetium", "s_capture_ruthenium", "s_capture_rhodium", "s_capture_palladium", "s_capture_silver", "s_capture_cadmium", "s_capture_indium", "s_capture_lanthanum", "s_capture_praseodymium", "s_capture_neodymium", "s_capture_promethium", "s_capture_samarium", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_tungsten", "s_capture_rhenium", "s_capture_mercury", "r_capture_europium", "r_capture_osmium", "r_capture_iridium", "r_capture_platinum", "r_capture_gold"],
+      "input_slot_count": 2,
+      "input_slot_labels": ["Element", "Neutrons"],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "East" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 20000,
+      "base_max_output_items": 30,
+      "base_max_input_items_per_slot": 30,
+      "upgrade_levels": [
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 90, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 15000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 135, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 60000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 210, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 240000, "cost_prestige_currency": 0 }
+      ],
+      "storage_upgrade_levels": [
+        { "level": 2, "max_output_items": 150, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_output_items": 4000, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
+      ],
+      "input_upgrade_levels": [
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
+        { "level": 4, "max_input_items": 1500, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
+      ],
+      "has_special_upgrade": false,
+      "special_upgrade_id": null,
+      "required_research": "slow_neutron_capture",
+      "available_from_start": false,
+      "tutorial_note": "Not taught in the tutorial.",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "Half of the elements heavier than iron were made by slow neutron capture inside ageing giant stars; the other half, including most of the gold on Earth, by rapid capture in neutron-star mergers.",
+      "assignable_outputs": false,
+      "recipe_mode_labels": ["Slow (s-process)", "Fast (r-process)"],
+      "recipe_mode_prefixes": ["s_capture_", "r_capture_"]
     },
     {
       "id": "strong_force_combiner",
@@ -9765,7 +10048,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["hydrogen", "assemble_deuterium", "helium_4", "uranium", "nickel", "copper", "zinc", "silver", "gold", "platinum", "tungsten", "plutonium", "cobalt", "gallium", "germanium", "arsenic", "selenium", "bromine", "krypton", "rubidium", "strontium", "yttrium", "zirconium", "niobium", "molybdenum", "technetium", "ruthenium", "rhodium", "palladium", "cadmium", "indium", "tin", "antimony", "tellurium", "iodine", "xenon", "cesium", "barium", "lanthanum", "cerium", "praseodymium", "neodymium", "promethium", "samarium", "europium", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "osmium", "iridium", "mercury", "thallium", "lead", "bismuth", "polonium", "astatine", "radon", "francium", "radium", "actinium", "thorium", "protactinium", "neptunium", "americium", "curium", "berkelium", "californium", "einsteinium", "fermium", "mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium", "roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
+      "supported_recipes": ["hydrogen", "assemble_deuterium", "helium_4", "uranium", "plutonium", "neptunium", "americium", "curium", "berkelium", "californium", "einsteinium", "fermium", "mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium", "roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
       "input_slot_count": 3,
       "input_slot_labels": ["Protons", "Neutrons", "Electrons"],
       "is_entropy_sink": false,
@@ -9829,7 +10112,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 0.5,
-      "supported_recipes": ["deuterium", "tritium", "carbon_14", "uranium_235"],
+      "supported_recipes": ["deuterium", "tritium", "carbon_14", "uranium_235", "irradiate_thorium", "irradiate_radium", "irradiate_radon", "irradiate_lead", "strip_radon", "strip_lead"],
       "input_slot_count": 2,
       "input_slot_labels": ["Base Element", "Neutrons"],
       "is_entropy_sink": false,
@@ -9872,8 +10155,8 @@
     },
     {
       "id": "radioactive_containment",
-      "display_name": "Radioactive Containment",
-      "description": "Required housing for any building producing radioactive isotopes. Safely contains decay events and harvests alpha and beta particles.",
+      "display_name": "Decay Chamber",
+      "description": "Lets unstable isotopes decay: one isotope in, the element it becomes out, plus the particle it releases. Choose which output side each product leaves by.",
       "icon_path": "TODO",
       "prefab_path": "TODO",
       "building_id": 6,
@@ -9889,27 +10172,32 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 0.0,
-      "supported_recipes": [],
-      "input_slot_count": 0,
-      "input_slot_labels": [],
+      "supported_recipes": ["decay_uranium", "decay_thorium", "decay_radium", "decay_radon", "decay_polonium", "decay_thorium_233", "decay_radium_227", "decay_radon_223", "decay_lead_209", "decay_radon_211", "decay_lead_201"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Isotope"],
       "is_entropy_sink": false,
       "footprint": [2, 2],
       "_note_footprint": "Houses the Isotopic Manipulator inside it — larger footprint.",
       "structure_kind": "RadioactiveContainment",
-      "ports": [],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 1], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [1, 1], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [1, 0], "local_facing": "South" }
+      ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 2500,
       "base_max_output_items": 30,
       "base_max_input_items_per_slot": 30,
-      "_note_containment": "The Containment building collects decay particles from the Manipulator inside it. base_max_output_items is the particle collection buffer.",
+      "_note_containment": "Repurposed as the Decay Chamber (#322). Its two outputs carry the element and the released particle; the player assigns them per side (OutputPortFilter).",
       "upgrade_levels": [
         { "level": 2, "output_rate": 0.0, "power_cost_ev": 50.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 3000, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 80.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
-        { "level": 2, "max_output_items": 200,  "cost_base_currency": 2000, "cost_prestige_currency": 0 },
+        { "level": 2, "max_output_items": 200, "cost_base_currency": 2000, "cost_prestige_currency": 0 },
         { "level": 3, "max_output_items": 1000, "cost_base_currency": 8000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
@@ -9919,7 +10207,8 @@
       "tutorial_note": "",
       "collects_decay_particles": true,
       "decay_collection_rate": 1.0,
-      "codex_entry": "Required housing for any building producing radioactive isotopes. Safely contains decay events and harvests alpha and beta particles as usable energy currency."
+      "codex_entry": "Required housing for any building producing radioactive isotopes. Safely contains decay events and harvests alpha and beta particles as usable energy currency.",
+      "assignable_outputs": true
     },
 
     {
@@ -10186,24 +10475,24 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["fission_u235", "fission_pu239"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Fissile", "Neutron"],
+      "supported_recipes": ["fission_u235", "fission_u235_xe_sr", "fission_u235_cs_rb", "fission_u235_i_y", "fission_u235_te_zr", "fission_u235_sb_nb", "fission_u235_sn_mo", "fission_pu239", "fission_pu239_ba_sr", "fission_pu239_ce_kr"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Fissile"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "None",
       "_note_ports": "Inputs on E/W/N edges, output on the S edge (mirrors the Atom Generator).",
       "ports": [
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "East" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
       "compatible_adjacent_categories": [],
       "compatible_fields": [],
       "entropy_cost": 5000,
-      "base_max_output_items": 20,
+      "base_max_output_items": 30,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
         { "level": 2, "output_rate": 2.0, "power_cost_ev": 90, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 15000, "cost_prestige_currency": 0 },
@@ -10211,13 +10500,13 @@
         { "level": 4, "output_rate": 8.0, "power_cost_ev": 210, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 240000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
-        { "level": 2, "max_output_items": 150,  "cost_base_currency": 10000,  "cost_prestige_currency": 0 },
-        { "level": 3, "max_output_items": 750,  "cost_base_currency": 40000,  "cost_prestige_currency": 0 },
+        { "level": 2, "max_output_items": 150, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 750, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
         { "level": 4, "max_output_items": 4000, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
       ],
       "input_upgrade_levels": [
-        { "level": 2, "max_input_items": 120,  "cost_base_currency": 10000,  "cost_prestige_currency": 0 },
-        { "level": 3, "max_input_items": 400,  "cost_base_currency": 40000,  "cost_prestige_currency": 0 },
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 10000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 40000, "cost_prestige_currency": 0 },
         { "level": 4, "max_input_items": 1500, "cost_base_currency": 160000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
@@ -10227,7 +10516,8 @@
       "tutorial_note": "",
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
-      "codex_entry": "A shielded rod-array core. A slow neutron splits a heavy fissile nucleus into two fragments closer to iron, releasing more neutrons to sustain the chain."
+      "codex_entry": "A shielded rod-array core. A slow neutron splits a heavy fissile nucleus into two fragments closer to iron, releasing more neutrons to sustain the chain.",
+      "assignable_outputs": true
     },
     {
       "_comment": "--- CHEMISTRY C1 BUILDINGS (Chem/Bio Phase 4a) ---",
@@ -10865,6 +11155,18 @@
       "codex_entry": "A bred-actinide deposit. Harvest plutonium \u2014 denser fission fuel, and the gateway to the transuranic ladder."
     },
     {
+      "id": "neutron_field",
+      "display_name": "Neutron Flux",
+      "field_type": "Neutron",
+      "drops": [
+        { "item": "neutron", "weight": 1.0 }
+      ],
+      "tap_cooldown_seconds": 2.0,
+      "field_color": "#B0BEC5",
+      "field_icon_path": "TODO",
+      "codex_entry": "Free neutrons streaming out of the decaying ore around it. Harvest them to feed the Isotopic Manipulator, or strip them from heavy elements yourself."
+    },
+    {
       "_element_fields_note": "Chemistry (Chem/Bio Phase 2) feedstock. field_type 'Element' (shared) so one Element Harvester works on all three. They drop EXISTING Element items (mined, not synthesized). Introduced per-site via the absolute-count density-override path on site_chem_lab (like the fissile fields).",
       "id": "element_field_light",
       "display_name": "Light Element Seam",
@@ -10999,7 +11301,8 @@
         { "field": "uranium_field", "density_multiplier": 3.0 },
         { "field": "plutonium_field", "density_multiplier": 2.0 },
         { "field": "quark_field", "density_multiplier": 0.5 },
-        { "field": "electron_field", "density_multiplier": 0.5 }
+        { "field": "electron_field", "density_multiplier": 0.5 },
+        { "field": "neutron_field", "density_multiplier": 2.0 }
       ]
     },
     {

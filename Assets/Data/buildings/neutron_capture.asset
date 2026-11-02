@@ -1,0 +1,167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04844973bb4ba9148b9400a4801a7cf7, type: 3}
+  m_Name: neutron_capture
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
+  id: neutron_capture
+  displayName: Neutron Capture
+  description: Soaks an element in neutrons until one turns into a proton, making
+    the next element up. Slow mode (s-process) is cheap on power; Fast mode (r-process)
+    is the only way to make Gold, Platinum, Iridium, Osmium and Europium.
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  buildingId: 26
+  tier: 2
+  category: 1
+  isObsoleteable: 0
+  obsoleteCondition: 
+  obsoletedByResearch: 
+  requiresPower: 1
+  isPowerSource: 0
+  basePowerCostEV: 40
+  powerCostIsDynamic: 1
+  baseOutputEV: 0
+  influenceRadiusTiles: 0
+  linkRadiusTiles: 0
+  baseOutputRate: 1
+  supportedRecipes:
+  - {fileID: 11400000, guid: 4993166b625eefb4ea709019fa5409c6, type: 2}
+  - {fileID: 11400000, guid: accbf0b97a2dfd048ab5980532cc26ed, type: 2}
+  - {fileID: 11400000, guid: 1a1f8799d6c57af40bb23a7873859a42, type: 2}
+  - {fileID: 11400000, guid: cbd042a1fb6d7d540a6b9c9cd947e5dd, type: 2}
+  - {fileID: 11400000, guid: ac7a48118c1de4b45b5c1fc6ac74e8ab, type: 2}
+  - {fileID: 11400000, guid: e9efeaa09773fe44080a0d328fbab4e7, type: 2}
+  - {fileID: 11400000, guid: 6d58746f79cdd2643b9050776a46bc61, type: 2}
+  - {fileID: 11400000, guid: c536b8e7923582942be21d6c522f2e8b, type: 2}
+  - {fileID: 11400000, guid: 2df787a5cd7ef9949ae94b976941cc2c, type: 2}
+  - {fileID: 11400000, guid: 0e94f18aaa8ba8541b963a8500a7462b, type: 2}
+  - {fileID: 11400000, guid: ba26ecf3cb5f02c4f801abe502611bbe, type: 2}
+  - {fileID: 11400000, guid: 66554c6849d134e4fbda12551c818102, type: 2}
+  - {fileID: 11400000, guid: e9b23353ed98c614b9d349d135f108e5, type: 2}
+  - {fileID: 11400000, guid: 647e88b107442014e8aac9b358712330, type: 2}
+  - {fileID: 11400000, guid: 0850b0e7b69a8db4fafcecb0b62a0431, type: 2}
+  - {fileID: 11400000, guid: 5372911317f43b5419285310384b5c4e, type: 2}
+  - {fileID: 11400000, guid: fcf2b255a7e46ed4d94a4dae0a7cba38, type: 2}
+  - {fileID: 11400000, guid: 366cde23b9f42ff4eb27362f9d25b395, type: 2}
+  - {fileID: 11400000, guid: f16bbc81835b31448b3c4f6ad7b27857, type: 2}
+  - {fileID: 11400000, guid: f3466836512be2d4fa83cd5e90677c53, type: 2}
+  - {fileID: 11400000, guid: ed636e5e47015ff4e850b6f6d0a2df5b, type: 2}
+  - {fileID: 11400000, guid: 814bc6309c745c640aab5d5e4e7fa02a, type: 2}
+  - {fileID: 11400000, guid: fce32c01b750fa7428e7171ba5c4ff43, type: 2}
+  - {fileID: 11400000, guid: 3f807af68efefb847afe2e79953e8c1d, type: 2}
+  - {fileID: 11400000, guid: b625182c9a397c649a859fb735f0adde, type: 2}
+  - {fileID: 11400000, guid: 9c1b09b5877f5eb4c815e2bdfa5cb712, type: 2}
+  - {fileID: 11400000, guid: d2ccc893985a70d4aab137e947739326, type: 2}
+  - {fileID: 11400000, guid: a3da424e40a61c045aa14f36d0c2f05c, type: 2}
+  - {fileID: 11400000, guid: 7a60dbe29b190cd4c9177975cd97a0cf, type: 2}
+  - {fileID: 11400000, guid: 06368f52d399dd64ebe5fb4ae75ebd71, type: 2}
+  - {fileID: 11400000, guid: 054883ddea8164c40a85c606d83d5e8f, type: 2}
+  - {fileID: 11400000, guid: be4d4efbb269a894393ab8e80f216fb5, type: 2}
+  - {fileID: 11400000, guid: 5ca742bbee3a9bf4597da1c46ce9b0e2, type: 2}
+  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
+  - {fileID: 11400000, guid: 0ae5f6f5dd80ae04085c223c85aaf6c1, type: 2}
+  - {fileID: 11400000, guid: 20187d3a2a78d704aa1611fd15cfdca8, type: 2}
+  - {fileID: 11400000, guid: 70c5d5a2ccbcec048ab53d7a44ab9b69, type: 2}
+  - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
+  - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
+  inputSlotCount: 2
+  inputSlotLabels:
+  - Element
+  - Neutrons
+  isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels:
+  - Slow (s-process)
+  - Fast (r-process)
+  recipeModePrefixes:
+  - s_capture_
+  - r_capture_
+  footprint: {x: 1, y: 1}
+  structureKind: 0
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 0
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  placementRule: 0
+  compatibleAdjacentCategories: 
+  compatibleFields: []
+  entropyCost: 20000
+  baseMaxOutputItems: 30
+  baseMaxInputItemsPerSlot: 30
+  upgradeLevels:
+  - level: 2
+    outputRate: 2
+    powerCostEV: 90
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 15000
+    costPrestigeCurrency: 0
+  - level: 3
+    outputRate: 4
+    powerCostEV: 135
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 60000
+    costPrestigeCurrency: 0
+  - level: 4
+    outputRate: 8
+    powerCostEV: 210
+    outputEV: 0
+    influenceRadiusTiles: 0
+    linkRadiusTiles: 0
+    costBaseCurrency: 240000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 150
+    costBaseCurrency: 10000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 750
+    costBaseCurrency: 40000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 4000
+    costBaseCurrency: 160000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 10000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 40000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 160000
+    costPrestigeCurrency: 0
+  hasSpecialUpgrade: 0
+  specialUpgrade: {fileID: 0}
+  requiredResearch: {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
+  availableFromStart: 0
+  tutorialNote: Not taught in the tutorial.
+  collectsDecayParticles: 0
+  decayCollectionRate: 0
+  codexEntry: Half of the elements heavier than iron were made by slow neutron capture
+    inside ageing giant stars; the other half, including most of the gold on Earth,
+    by rapid capture in neutron-star mergers.
