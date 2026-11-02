@@ -35,6 +35,6 @@ MonoBehaviour:
     industrial reaction in history \u2014 it enabled fertilisers that now feed half
     the world's population."
   codexUnlocked: 0
-  baseSellValue: 21000
+  baseSellValue: 20000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -13,10 +13,11 @@ namespace MobileIdleBuilder.Tests
     [TestFixture]
     public class ProgressionBalanceTests
     {
-        [Serializable] class GdResearch { public string id; public List<string> prerequisites; public long cost_base_currency; }
+        [Serializable] class GdResearch { public string id; public List<string> prerequisites; public long cost_base_currency; public string block; }
+        [Serializable] class GdBlock    { public string id; public float target_hours; }
         [Serializable] class GdIng      { public string item; public int quantity; }
         [Serializable] class GdRecipe   { public string id; public List<GdIng> inputs; public string output_item; public List<string> valid_buildings; public string required_research; public float base_craft_time; }
-        [Serializable] class GameData   { public List<GdResearch> research; public List<GdRecipe> recipes; }
+        [Serializable] class GameData   { public List<GdResearch> research; public List<GdRecipe> recipes; public List<GdBlock> research_blocks; }
 
         GameData _gd;
         Dictionary<string, GdResearch> _research;
@@ -41,11 +42,25 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void ResearchCosts_FitTheIntField()
+        public void ResearchCosts_ArePositive_AndStoreExactly()
         {
-            // ResearchSO.costBaseCurrency and the importer model are int; JsonUtility silently mangles larger values.
+            // ResearchSO.costBaseCurrency is a long; game_data.json holds numbers as doubles, exact up to 2^53.
             foreach (var r in _gd.research)
-                Assert.LessOrEqual(r.cost_base_currency, int.MaxValue, $"{r.id} overflows int (scripts/rebalance_curve.py WAGE_GROWTH)");
+            {
+                Assert.Greater(r.cost_base_currency, 0L, $"{r.id} has no cost");
+                Assert.LessOrEqual(r.cost_base_currency, 1L << 53, $"{r.id} is too large to store exactly");
+            }
+        }
+
+        [Test]
+        public void EveryResearch_BelongsToABlock_AndBlocksHaveTargets()
+        {
+            var ids = new HashSet<string>(_gd.research_blocks.Select(b => b.id));
+            Assert.IsNotEmpty(ids, "research_blocks missing");
+            foreach (var b in _gd.research_blocks)
+                Assert.Greater(b.target_hours, 0f, $"block {b.id} needs target_hours");
+            foreach (var r in _gd.research)
+                Assert.IsTrue(ids.Contains(r.block), $"{r.id} names block '{r.block}', which does not exist");
         }
 
         [Test]

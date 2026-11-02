@@ -36,6 +36,6 @@ MonoBehaviour:
     decay turns it into Polonium. Add a neutron for Radon-223 (decays into Francium),
     or remove eleven for Radon-211 (decays into Astatine).'
   codexUnlocked: 0
-  baseSellValue: 1120
+  baseSellValue: 25100
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -4,7 +4,8 @@
     python scripts/apply_research_tree.py saved_tree.json --apply    # write them
 
 saved_tree.json is the editor's `trees/working` document (Claude reads it from the artifact's database).
-Applies display_name, branch, cost_base_currency, duration_seconds, description, prerequisites and the layout
+Applies display_name, branch, block, cost_base_currency, duration_seconds, description, prerequisites, the research
+blocks (name, order, target_hours: rerun scripts/rebalance_curve.py afterwards to re-derive costs) and the layout
 (`tree_x`, `tree_y`, for the in-game tree). New nodes are created with empty unlocks. A deleted node is removed
 only if no recipe, building, world or tutorial step still refers to it; otherwise it is reported and kept.
 """
@@ -15,8 +16,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gamedata_edit import GameData   # noqa: E402
 
-FIELDS = {"name": "display_name", "branch": "branch", "cost": "cost_base_currency",
+FIELDS = {"name": "display_name", "branch": "branch", "block": "block", "cost": "cost_base_currency",
           "duration": "duration_seconds", "description": "description", "prereqs": "prerequisites"}
+
+
+def strip_blocks(blocks):
+    keys = ("id", "name", "order", "target_hours", "anchor", "description")
+    return [{k: b.get(k) for k in keys} for b in blocks]
 
 
 def references(gd, rid):
@@ -62,6 +68,10 @@ def main():
             else:
                 report.append(f"- delete {rid}")
 
+    old_blocks = gd.get("research_blocks") or []
+    new_blocks = saved.get("blocks")
+    if new_blocks is not None and strip_blocks(old_blocks) != strip_blocks(new_blocks):
+        report.append(f"~ research_blocks: {[(b['name'], b['target_hours']) for b in new_blocks]}")
     print("\n".join(report) or "no data changes")
     if kept:
         print("\n".join(kept))
@@ -85,6 +95,12 @@ def main():
     for rid in current:
         if rid not in wanted and not references(gd, rid):
             g.delete("research", rid)
+    if new_blocks is not None:
+        start = g.text.index('\n  "research_blocks": [')
+        end = g.text.index('\n  ],', start) + len('\n  ],')
+        body = ",\n".join("    " + json.dumps(b, ensure_ascii=False)
+                          for b in sorted(strip_blocks(new_blocks), key=lambda b: b["order"]))
+        g.text = g.text[:start] + '\n  "research_blocks": [\n' + body + '\n  ],' + g.text[end:]
     g.save()
     print(f"\napplied to {Path(g.path).name}")
 

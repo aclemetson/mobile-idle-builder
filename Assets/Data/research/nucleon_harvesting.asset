@@ -20,9 +20,9 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
+  - {fileID: 11400000, guid: 9ab356751cf66ae43bdbfc91ac9bdfb7, type: 2}
   depthInTree: 1
-  costBaseCurrency: 800
+  costBaseCurrency: 74800
   costPrestigeCurrency: 0
   durationSeconds: 30
   fieldCooldownMult: 1

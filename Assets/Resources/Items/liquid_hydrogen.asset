@@ -35,6 +35,6 @@ MonoBehaviour:
     zero. The most energy-dense chemical rocket propellant by mass. Used as a feedstock
     for fuel cells and semiconductor processing."
   codexUnlocked: 0
-  baseSellValue: 110
+  baseSellValue: 1190
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

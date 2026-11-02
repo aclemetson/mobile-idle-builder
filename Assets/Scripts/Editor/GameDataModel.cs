@@ -103,7 +103,7 @@ namespace MobileIdleBuilder.Editor
         public string   branch                 = "Nuclear";
         public string[] prerequisites          = Array.Empty<string>();
         public int      depth_in_tree          = 0;
-        public int      cost_base_currency     = 100;
+        public long     cost_base_currency     = 100;   // long: derived late-game research costs pass 2^31 (scripts/rebalance_curve.py)
         public int      cost_prestige_currency = 0;
         public int      duration_seconds       = 0;
         public float    field_cooldown_mult    = 1f;

@@ -17,7 +17,7 @@ namespace MobileIdleBuilder
         public int depthInTree;             // used for UI layout
 
         [Header("Cost")]
-        public int costBaseCurrency;
+        public long costBaseCurrency;       // long: late research costs pass 2^31 under the derived economy
         public int costPrestigeCurrency;    // 0 for most research
 
         [Header("Timer")]

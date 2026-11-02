@@ -22,7 +22,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   depthInTree: 3
-  costBaseCurrency: 40000
+  costBaseCurrency: 4040000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1

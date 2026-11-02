@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Teach the Atom Generator to build Helium-4 from 2 protons, 2 neutrons
     and 2 electrons. Heavier atoms need fusion.
   icon: {fileID: 0}
-  branch: 0
+  branch: 1
   prerequisites:
   - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   depthInTree: 1

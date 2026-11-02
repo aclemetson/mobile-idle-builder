@@ -36,6 +36,6 @@ MonoBehaviour:
     decay turns it into Radium. Add a neutron (Isotopic Manipulator) to make Thorium-233,
     which decays into Protactinium.'
   codexUnlocked: 0
-  baseSellValue: 413
+  baseSellValue: 21700
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

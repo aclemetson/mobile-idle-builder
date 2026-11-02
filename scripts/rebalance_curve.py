@@ -10,9 +10,11 @@ The rule, in unlock order (the order scripts/progression_curve.py reports):
    building-second. A recipe it unlocks that makes a not-yet-priced item is priced so that
        outputs = MARKUP x inputs + w(n) x craft time
    so every craft gains at least MARKUP and one building on the newest recipe earns about w(n) a second.
-3. Research costs come from a timeline: the cumulative hours at which a player running BUILDINGS of their best
-   building reaches each node rise from the tutorial end to IRON_HOURS at Fusion III and END_HOURS at the last
-   node (log-spaced). cost(n) = minutes it should take x 60 x the best earning rate just before n.
+3. Research costs come from the research blocks (game phases, `research_blocks` in game_data.json). Each block
+   has target_hours: how long a player running BUILDINGS of their best building should spend clearing it. The
+   block's budget is spread over its nodes in unlock order, each node's share BLOCK_RAMP x the one before, and
+   cost(n) = that share in minutes x 60 x the best earning rate just before n. Anchor blocks (the tutorial) keep
+   their hand-tuned costs. A node never costs less than 1.05 x its most expensive prerequisite.
 """
 import json
 import math
@@ -26,10 +28,9 @@ from gamedata_edit import GameData       # noqa: E402
 ANCHOR = "fusion_i"
 IRON = "fusion_iii"
 MARKUP = 1.00          # value added comes from the wage alone, so a long chain does not compound
-WAGE_GROWTH = 1.19     # x per research node; 1.19 keeps the last research cost inside a C# int (2,147,483,647)
-INT_MAX = 2_147_483_647
-IRON_HOURS = 24.0
-END_HOURS = 168.0
+WAGE_GROWTH = 1.19     # x per research node
+COST_MAX = 2 ** 53     # research cost is a C# long, stored in JSON as a double: keep it exactly representable
+BLOCK_RAMP = 1.20      # within a block, each research takes this many times longer to pay for than the one before
 BUILDINGS = pc.BUILDINGS
 WORLD_BRANCHES = {"Chemistry", "Biology"}
 FIXED = {"alpha_particle", "beta_particle", "neutron", "proton", "electron", "neutrino", "gamma_photon",
@@ -53,6 +54,7 @@ def derive(gd):
         recipes_by_node.setdefault(r.get("required_research"), []).append(r)
 
     priced = set(FIXED)
+    anchored = set()      # items the tutorial prices; nothing later may change them
     new = dict(value)
     wage_at_anchor = order[a]["new_best_rate"] or order[a]["best_rate_before"]
     pending = list(free)
@@ -83,7 +85,7 @@ def derive(gd):
                 if not unpriced:
                     continue
                 if n <= a and branch.get(r.get("required_research"), "") not in WORLD_BRANCHES:
-                    priced.update(i for i, _ in unpriced); continue
+                    priced.update(i for i, _ in unpriced); anchored.update(i for i, _ in unpriced); continue
                 t = float(r.get("base_craft_time") or 1.0)
                 target = MARKUP * sum(new[i["item"]] * i["quantity"] for i in r["inputs"]) + w * t
                 known = sum(new[i] * q for i, q in outs_of(r) if i in priced)
@@ -94,6 +96,25 @@ def derive(gd):
     for r in pending:
         print(f"  unpriced (inputs never available): {r['id']}", file=sys.stderr)
 
+    # Back-pricing: a recipe whose products were priced by a dearer route (Plutonium fission makes the same
+    # fragments as U-235 fission) would earn far more than its wage. When one earns over twice the wage, raise its
+    # harvested (raw) inputs so it earns the wage; the collect-time rule below then slows their harvesters to match.
+    raw = {r["output_item"] for r in gd["recipes"] if not r["inputs"]} - FIXED - anchored   # harvested, not tutorial-priced
+    for r in gd["recipes"]:
+        gate = r.get("required_research")
+        if not r["inputs"] or gate not in ids or ids.index(gate) <= a:
+            continue
+        w = wage_at_anchor * WAGE_GROWTH ** (ids.index(gate) - a)
+        t = float(r.get("base_craft_time") or 1.0)
+        out = sum(new.get(i, 0) * q for i, q in outs_of(r))
+        inp = sum(new.get(i["item"], 0) * i["quantity"] for i in r["inputs"])
+        excess = out - inp - w * t
+        mine = [i for i in r["inputs"] if i["item"] in raw]
+        if excess > w * t and mine:
+            per = excess / sum(i["quantity"] for i in mine)
+            for i in mine:
+                new[i["item"]] = nice(new[i["item"]] + per)
+
     # Raw collection (no inputs) must not out-earn the wage of the research that unlocks it (#332: the
     # Chemistry world mined Iron every 2s). Stretch its craft time to value / wage.
     times = {}
@@ -102,37 +123,39 @@ def derive(gd):
         if r["inputs"] or not gate or gate not in ids or ids.index(gate) <= a:
             continue
         w = wage_at_anchor * WAGE_GROWTH ** (ids.index(gate) - a)
-        t0 = float(r.get("base_craft_time") or 1.0)
+        t0 = float(_ORIG_TIME.get(r["id"]) or r.get("base_craft_time") or 1.0)   # against the file, not a prior pass
         need = new.get(r["output_item"], 0) * (r.get("output_quantity") or 1) / w
         if need > t0 * 1.05:
             times[r["id"]] = float(round(need)) if need < 100 else nice(need)
     return order, ids, a, iron, new, times
 
 
-def costs(gd, ids, a, iron):
-    """Second pass: research costs from the timeline, using the best earning rate under the new values."""
+def costs(gd):
+    """Research costs from the block budgets, using the best earning rate under the current values."""
     order, *_ = pc.analyse(gd)
-    assert [o["id"] for o in order] == ids, "unlock order changed; re-run"
-    t_a = sum(o["payback_min"] for o in order[: a + 1]) / BUILDINGS / 60
-
-    # Payback ramps geometrically from twice the tutorial's recent payback up to a plateau, reached at Fusion III;
-    # the plateau is the payback that spreads the nodes after iron evenly up to END_HOURS. The ramp's length
-    # then lands Iron near IRON_HOURS (printed as a check).
-    tutorial = sorted(o["payback_min"] for o in order[max(0, a - 4): a + 1] if o["cost"] > 0)
-    p0 = 2 * tutorial[len(tutorial) // 2]
-    m1, m2 = iron - a, len(ids) - 1 - iron
-    plateau = (END_HOURS - IRON_HOURS) * 60 * BUILDINGS / m2
-    r1 = (plateau / p0) ** (1 / m1)
-    def payback(n):
-        return p0 * r1 ** (n - a - 1) if n <= iron else plateau
-
-    out, prev_cost = {}, order[a]["cost"]
-    for n in range(a + 1, len(ids)):
-        c = nice(payback(n) * 60 * order[n]["best_rate_before"])
-        c = max(c, nice(prev_cost * 1.05))            # keep the unlock order: never cheaper than the node before
-        out[ids[n]] = int(c)
-        prev_cost = c
-    return out
+    blocks = {b["id"]: b for b in gd.get("research_blocks") or []}
+    research = {r["id"]: r for r in gd["research"]}
+    by_block = {}
+    for n, o in enumerate(order):
+        by_block.setdefault(o["block"], []).append(n)
+    out = {}
+    for bid, members in by_block.items():
+        b = blocks.get(bid)
+        if b is None or b.get("anchor"):
+            continue
+        budget = float(b["target_hours"]) * 60 * BUILDINGS          # building-minutes
+        weights = [BLOCK_RAMP ** k for k in range(len(members))]
+        for n, w in zip(members, weights):
+            out[order[n]["id"]] = budget * w / sum(weights) * 60 * order[n]["best_rate_before"]
+    # A node never costs less than its prerequisites (walk in unlock order so prerequisites are final first).
+    final = {}
+    for o in order:
+        rid = o["id"]
+        c = out.get(rid, research[rid].get("cost_base_currency") or 0)
+        floor = max((final.get(p, research[p].get("cost_base_currency") or 0) for p in research[rid].get("prerequisites") or []
+                     if p in research), default=0) * 1.05
+        final[rid] = int(nice(max(c, floor))) if rid in out else c
+    return {k: v for k, v in final.items() if k in out}
 
 
 def apply_values(g, gd, new):
@@ -147,17 +170,35 @@ def apply_values(g, gd, new):
 def main():
     apply = "--apply" in sys.argv
     gd = pc.load()
-    order, ids, a, iron, new, times = derive(gd)
-    for it in gd["items"]:                      # second pass needs the new values and times in place
-        if it["id"] in new: it["base_sell_value"] = new[it["id"]]
-    for r in gd["recipes"]:
-        if r["id"] in times: r["base_craft_time"] = times[r["id"]]
-    research_cost = costs(gd, ids, a, iron)
-    too_big = {k: v for k, v in research_cost.items() if v > INT_MAX}
-    assert not too_big, f"research cost overflows the int field: {too_big}; lower WAGE_GROWTH or END_HOURS"
-    for r in gd["research"]:
-        if r["id"] in research_cost: r["cost_base_currency"] = research_cost[r["id"]]
+    # Values depend on unlock order and costs depend on values, and new costs can reorder unlocks; iterate to a
+    # fixed point (it settles in two or three passes).
+    pristine = pc.load()
+    prev = None
+    for _ in range(8):
+        order, ids, a, iron, new, times = derive(gd)
+        gd = pc.load()
+        for it in gd["items"]:
+            if it["id"] in new: it["base_sell_value"] = new[it["id"]]
+        for r in gd["recipes"]:
+            if r["id"] in times: r["base_craft_time"] = times[r["id"]]
+        for r in gd["research"]:
+            if prev and r["id"] in prev: r["cost_base_currency"] = prev[r["id"]]
+        research_cost = costs(gd)
+        for r in gd["research"]:
+            if r["id"] in research_cost: r["cost_base_currency"] = research_cost[r["id"]]
+        if research_cost == prev:
+            break
+        prev = research_cost
+    too_big = {k: v for k, v in research_cost.items() if v > COST_MAX}
+    assert not too_big, f"research cost too large to store exactly: {too_big}; lower WAGE_GROWTH or a block's target_hours"
     final, *_ = pc.analyse(gd)
+    blocks = gd.get("research_blocks") or []
+    if blocks:
+        print(f"{'block':22} {'target h':>9} {'model h':>9}")
+        for b in blocks:
+            h = sum(o["payback_min"] for o in final if o["block"] == b["id"]) / BUILDINGS / 60
+            print(f"{b['name']:22} {b['target_hours']:>9} {h:>9.1f}")
+        print()
 
     print(f"{'#':>3} {'research':28} {'cost':>16} {'payback':>10} {'hours':>8} {'best e/s':>12} {'top new item':>14}")
     for o in final:
@@ -181,6 +222,7 @@ def main():
 
 
 _orig = {i["id"]: i["base_sell_value"] for i in pc.load()["items"]}
+_ORIG_TIME = {r["id"]: r.get("base_craft_time") for r in pc.load()["recipes"]}
 def gd_value(k): return _orig.get(k, 0)
 
 

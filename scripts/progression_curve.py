@@ -6,8 +6,8 @@ Reads Assets/Data/game_data.json (the single source of truth) and writes docs/pr
     python scripts/progression_curve.py --report   # print the table and the anomalies instead
 
 Model (deliberately simple, so the numbers are easy to reason about):
-- Unlock order: starting from the free recipes, repeatedly buy the cheapest research whose prerequisites
-  are met. Worlds (Chemistry, Biology) are research nodes like any other.
+- Unlock order: starting from the free recipes, repeatedly buy the research whose prerequisites are met, from
+  the earliest research block (game phase, `research_blocks`) first, cheapest first within it. Worlds (Chemistry, Biology) are research nodes like any other.
 - A recipe counts from the moment it is unlocked AND its inputs can be made; one unlocked before its inputs
   (Water before Oxygen) is listed under the research that makes its last input available.
 - Value added by a recipe = (output + byproducts - inputs) sell value per craft, divided by craft time:
@@ -37,6 +37,7 @@ def analyse(gd):
     items = {i["id"]: i for i in gd["items"]}
     value = {k: float(v.get("base_sell_value") or 0) for k, v in items.items()}
     research = {r["id"]: r for r in gd["research"]}
+    block_order = {b["id"]: b.get("order", i) for i, b in enumerate(gd.get("research_blocks") or [])}
     recipes = gd["recipes"]
 
     by_research = {}
@@ -84,7 +85,7 @@ def analyse(gd):
                  and all(p in owned or p not in research for p in r.get("prerequisites") or [])]
         if not ready:
             break
-        node = min(ready, key=lambda r: (r.get("cost_base_currency") or 0, r["id"]))
+        node = min(ready, key=lambda r: (block_order.get(r.get("block"), 0), r.get("cost_base_currency") or 0, r["id"]))
         cost = float(node.get("cost_base_currency") or 0)
         payback = cost / best["rate"] / 60 if best["rate"] > 0 else math.inf
         elapsed += payback / BUILDINGS
@@ -94,7 +95,7 @@ def analyse(gd):
         top_value = max((x["value"] for x in rows), default=0)
         order.append({
             "n": len(order) + 1, "id": node["id"], "name": node.get("display_name", node["id"]),
-            "branch": node.get("branch", ""), "cost": cost, "payback_min": payback,
+            "branch": node.get("branch", ""), "block": node.get("block", ""), "cost": cost, "payback_min": payback,
             "elapsed_h": elapsed / 60, "best_rate_before": best["rate"], "best_recipe_before": best["id"],
             "recipes": rows, "top_value": top_value, "best_value_before": best_value,
             "new_best_rate": new_best["rate"] if new_best else 0,

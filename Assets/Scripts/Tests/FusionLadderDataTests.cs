@@ -80,7 +80,10 @@ namespace MobileIdleBuilder.Tests
             // The cheap fission floor (Francium..Uranium, under 200e for 300+ particles) stays early: it
             // feeds the isotope and fission branches and is no shortcut. Anything worth more waits until
             // Explosive Burning has completed every element up to Iron.
+            // Uranium is the documented decay-chain on-ramp (#322 phase 1, Heavy Elements): its value comes from
+            // the derived economy (inputs + wage x 238s), so it earns the wage of its block, not a shortcut.
             var bad = _gd.recipes.Where(r => BuiltIn(r, "atomic_assembler") && Z(r) > 26
+                                             && r.output_item != "uranium"
                                              && _items[r.output_item].base_sell_value > 1000f
                                              && !Requires(r.required_research, "explosive_burning"))
                                  .Select(r => $"{r.id} ({r.required_research})").ToList();

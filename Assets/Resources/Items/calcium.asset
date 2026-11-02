@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Calcium (Ca), element number 20 with mass number 40. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 18300
+  baseSellValue: 14400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

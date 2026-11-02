@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Argon (Ar), element number 18 with mass number 40. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 13400
+  baseSellValue: 11100
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Molybdenum (Mo), element number 42 with mass number 98. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 2770
+  baseSellValue: 17200
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

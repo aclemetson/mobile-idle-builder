@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: A polymer of sugars. The cell's fuel store and structural fiber, from
     starch to cellulose.
   codexUnlocked: 0
-  baseSellValue: 894000
+  baseSellValue: 1630000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

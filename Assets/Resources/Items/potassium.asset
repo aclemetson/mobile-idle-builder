@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Potassium (K), element number 19 with mass number 39. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 21100
+  baseSellValue: 14800
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

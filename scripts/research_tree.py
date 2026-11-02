@@ -2,12 +2,14 @@
 
     python scripts/research_tree.py
 
-The page draws every research node with its prerequisites, lets you drag nodes, edit names, costs, times,
-branches, descriptions and prerequisites, add or delete nodes, and Save. Saved trees live in the published
+The page draws every research node with its prerequisites inside its research block (game phase), lets you drag
+nodes, edit names, costs, times, branches, blocks, descriptions and prerequisites, add or delete nodes, rename,
+re-time and reorder blocks, and Save. Saved trees live in the published
 artifact's database (doc `trees/working`, history in `versions`); scripts/apply_research_tree.py writes a saved
 tree back into game_data.json.
 """
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,6 +26,7 @@ def build(gd):
             "id": r["id"],
             "name": r.get("display_name", r["id"]),
             "branch": r.get("branch", ""),
+            "block": r.get("block", ""),
             "cost": r.get("cost_base_currency", 0),
             "duration": r.get("duration_seconds", 0),
             "description": r.get("description", ""),
@@ -36,7 +39,10 @@ def build(gd):
             **({"x": r["tree_x"], "y": r["tree_y"]} if "tree_x" in r and "tree_y" in r else {}),
         })
     branches = sorted({n["branch"] for n in nodes if n["branch"]})
-    return {"nodes": nodes, "branches": branches, "version": gd.get("_meta", {}).get("version", "")}
+    blocks = [{k: b.get(k) for k in ("id", "name", "order", "target_hours", "anchor", "description")}
+              for b in sorted(gd.get("research_blocks") or [], key=lambda b: b.get("order", 0))]
+    return {"nodes": nodes, "branches": branches, "blocks": blocks, "version": gd.get("_meta", {}).get("version", ""),
+            "generated": datetime.now(timezone.utc).isoformat()}
 
 
 def main():
