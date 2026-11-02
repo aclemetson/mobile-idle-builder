@@ -36,7 +36,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 1
   simplificationNote: One neutron is absorbed, then a beta decay turns a neutron

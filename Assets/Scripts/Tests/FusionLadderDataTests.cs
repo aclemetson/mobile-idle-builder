@@ -88,6 +88,15 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void AtomGenerator_BuildsNothingFromCobaltToProtactinium()
+        {
+            // #322 phase 4: past iron, everything up to Uranium comes from decay, fission or neutron capture.
+            var bad = _gd.recipes.Where(r => BuiltIn(r, "atomic_assembler") && Z(r) >= 27 && Z(r) <= 91)
+                                 .Select(r => r.id).ToList();
+            CollectionAssert.IsEmpty(bad);
+        }
+
+        [Test]
         public void ExplosiveBurning_UnlocksTheOddRungsChlorineToManganese()
         {
             var odd = new[] { "chlorine", "potassium", "scandium", "vanadium", "manganese" };

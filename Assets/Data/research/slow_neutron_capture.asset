@@ -26,75 +26,23 @@ MonoBehaviour:
   durationSeconds: 1800
   fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: 3a2da077bc6cc0143a8daf8a8e159dea, type: 2}
-  - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
-  - {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
-  - {fileID: 11400000, guid: b28f1a8061c3b71459a2610eb4b6845d, type: 2}
-  - {fileID: 11400000, guid: 7a4f4bd0ff4598c41a3333cd60fab9db, type: 2}
-  - {fileID: 11400000, guid: 949b7487c47f6eb4cab3b5e207c6a8a0, type: 2}
-  - {fileID: 11400000, guid: 9ffbf013a224d3947b74fb8730a66349, type: 2}
-  - {fileID: 11400000, guid: a44f5b0f14e5c0947a0e3505237d6976, type: 2}
-  - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
+  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
   - {fileID: 11400000, guid: d33431e9cab622546bd9ce5c288ab98f, type: 2}
   - {fileID: 11400000, guid: 51eae1268595286478aec2d848b53f87, type: 2}
   - {fileID: 11400000, guid: f13668c429e4b6e48aeb6ad248b56403, type: 2}
   - {fileID: 11400000, guid: 250a835e60fc5d54598f0179762dba83, type: 2}
-  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
   - {fileID: 11400000, guid: 036a492c504f104499b967dbe6f05f7b, type: 2}
   - {fileID: 11400000, guid: 739f2682a5e7a2342a6c603969edf42c, type: 2}
   - {fileID: 11400000, guid: 3b6bb56b48796b149bb956fec342028d, type: 2}
-  - {fileID: 11400000, guid: 09365550bf87ecc4ab58ed4ce231ae58, type: 2}
-  - {fileID: 11400000, guid: 3559203236c93ea40b88a2eecb663790, type: 2}
-  - {fileID: 11400000, guid: 36999beebf5026d428597008f4af5fcc, type: 2}
-  - {fileID: 11400000, guid: 891a5a472ac25b745952379dd1c2c584, type: 2}
-  - {fileID: 11400000, guid: 6abd3e5ca342ac14ba81a0c4424cc898, type: 2}
-  - {fileID: 11400000, guid: b8f816885aeef9b468f0ac814ca9c10c, type: 2}
-  - {fileID: 11400000, guid: e2ba3301ea3d71c48ae4afa51dc14afb, type: 2}
-  - {fileID: 11400000, guid: 7cbf57a91c018df4880885ce83c729d7, type: 2}
-  - {fileID: 11400000, guid: 2d107c787bc3ed3419df58a5e6eab014, type: 2}
-  - {fileID: 11400000, guid: 84ac4c5dcb5353240a87209cfe9ff3c7, type: 2}
-  - {fileID: 11400000, guid: 7d178368ea70d6e48b31e036000c77ee, type: 2}
-  - {fileID: 11400000, guid: c95a666dd713d4547902ee0d477feef7, type: 2}
-  - {fileID: 11400000, guid: aa28db57f21966c4a8e83f8e24d93c0f, type: 2}
-  - {fileID: 11400000, guid: 54e1be32f8019c0439fd8701f11665a9, type: 2}
-  - {fileID: 11400000, guid: 833a0def7293a3b4da63df48e83593e1, type: 2}
-  - {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
-  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 4993166b625eefb4ea709019fa5409c6, type: 2}
-  - {fileID: 11400000, guid: accbf0b97a2dfd048ab5980532cc26ed, type: 2}
-  - {fileID: 11400000, guid: 1a1f8799d6c57af40bb23a7873859a42, type: 2}
-  - {fileID: 11400000, guid: cbd042a1fb6d7d540a6b9c9cd947e5dd, type: 2}
-  - {fileID: 11400000, guid: ac7a48118c1de4b45b5c1fc6ac74e8ab, type: 2}
-  - {fileID: 11400000, guid: e9efeaa09773fe44080a0d328fbab4e7, type: 2}
-  - {fileID: 11400000, guid: 6d58746f79cdd2643b9050776a46bc61, type: 2}
-  - {fileID: 11400000, guid: c536b8e7923582942be21d6c522f2e8b, type: 2}
-  - {fileID: 11400000, guid: 2df787a5cd7ef9949ae94b976941cc2c, type: 2}
+  - {fileID: 11400000, guid: 647e88b107442014e8aac9b358712330, type: 2}
   - {fileID: 11400000, guid: 0e94f18aaa8ba8541b963a8500a7462b, type: 2}
   - {fileID: 11400000, guid: ba26ecf3cb5f02c4f801abe502611bbe, type: 2}
   - {fileID: 11400000, guid: 66554c6849d134e4fbda12551c818102, type: 2}
   - {fileID: 11400000, guid: e9b23353ed98c614b9d349d135f108e5, type: 2}
-  - {fileID: 11400000, guid: 647e88b107442014e8aac9b358712330, type: 2}
   - {fileID: 11400000, guid: 0850b0e7b69a8db4fafcecb0b62a0431, type: 2}
   - {fileID: 11400000, guid: 5372911317f43b5419285310384b5c4e, type: 2}
   - {fileID: 11400000, guid: fcf2b255a7e46ed4d94a4dae0a7cba38, type: 2}
-  - {fileID: 11400000, guid: 366cde23b9f42ff4eb27362f9d25b395, type: 2}
-  - {fileID: 11400000, guid: f16bbc81835b31448b3c4f6ad7b27857, type: 2}
-  - {fileID: 11400000, guid: f3466836512be2d4fa83cd5e90677c53, type: 2}
-  - {fileID: 11400000, guid: ed636e5e47015ff4e850b6f6d0a2df5b, type: 2}
-  - {fileID: 11400000, guid: 814bc6309c745c640aab5d5e4e7fa02a, type: 2}
-  - {fileID: 11400000, guid: fce32c01b750fa7428e7171ba5c4ff43, type: 2}
-  - {fileID: 11400000, guid: 3f807af68efefb847afe2e79953e8c1d, type: 2}
-  - {fileID: 11400000, guid: b625182c9a397c649a859fb735f0adde, type: 2}
-  - {fileID: 11400000, guid: 9c1b09b5877f5eb4c815e2bdfa5cb712, type: 2}
-  - {fileID: 11400000, guid: d2ccc893985a70d4aab137e947739326, type: 2}
-  - {fileID: 11400000, guid: a3da424e40a61c045aa14f36d0c2f05c, type: 2}
-  - {fileID: 11400000, guid: 7a60dbe29b190cd4c9177975cd97a0cf, type: 2}
-  - {fileID: 11400000, guid: 06368f52d399dd64ebe5fb4ae75ebd71, type: 2}
-  - {fileID: 11400000, guid: 054883ddea8164c40a85c606d83d5e8f, type: 2}
-  - {fileID: 11400000, guid: be4d4efbb269a894393ab8e80f216fb5, type: 2}
-  - {fileID: 11400000, guid: 5ca742bbee3a9bf4597da1c46ce9b0e2, type: 2}
-  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
   unlocksGridExpansion: 0
