@@ -49,6 +49,8 @@ MonoBehaviour:
   isEntropySink: 0
   isItemFilter: 0
   assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
   structureKind: 4
   ports:

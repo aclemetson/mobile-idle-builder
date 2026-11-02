@@ -36,6 +36,20 @@ Working back from Uranium (the Actinide Vein site, which now also spawns `neutro
 - **Real second outputs:** `RecipeSO.ProducedOutputs()` fills `RecipeOutputSlot` with the main output plus every non-escaping byproduct, so existing fission fragments/neutrons and the U-235 alpha are now produced too. Offline earnings still count only the main output.
 - **Per-side outputs on any building:** `assignable_outputs` gives a building the Filter's `OutputPortFilter` rules (no `ItemFilterTag`), so the player picks which side each product leaves by. Guarded by `DecayChainTests`.
 
+### Actinide map phase 4: stopgap recipes retired (2026-11-02, #322)
+
+- The Atom Generator no longer builds anything from Cobalt to Protactinium (54 recipes + assets removed; `FusionLadderDataTests` guards it). It keeps H, D, He, Uranium and the post-uranium synthetics (Np..Og) until the Breeder Reactor / Particle Accelerator are designed.
+- The old element-group nodes keep their names, costs and tree positions (so Materials Science, Advanced Materials and Transuranic Synthesis keep their prerequisites) but now gate Neutron Capture groups: `slow_neutron_capture` Tc..In + La; `transition_metals` Co..Br; `heavy_transition_metals` Pr..Sm; `lanthanides_and_heavy_metals` Gd..Re + Hg; `rapid_neutron_capture` Eu; `precious_metals` Pt, Au; `exotic_metals` Os, Ir.
+- `precious_metals` now also requires `rapid_neutron_capture`, so the fast-only elements stay behind the r-Process (this also pushes Advanced Materials and Transuranic Synthesis behind it).
+
+### Actinide map phase 3: neutron capture (2026-11-02, #322)
+
+- **Neutron Capture** (`neutron_capture`, building 26, 20k, gate `slow_neutron_capture`): element + neutrons → the next element up (beta decay after capture, a neutrino escapes). Two recipe groups shown one at a time by a mode switch (`recipe_mode_labels` / `recipe_mode_prefixes`):
+  - **Slow (s-process)** `s_capture_<el>`: 1 neutron, 12s, 40 eV, research `slow_neutron_capture` (120k, after `fission_i`). 34 steps filling Co→Br (from Iron), Tc→In (from Mo), La (from Ba), Pr→Sm (from Ce), Gd→Re (from Eu), Hg (from Au).
+  - **Fast (r-process)** `r_capture_<el>`: 3 neutrons, 30s, 180 eV, research `rapid_neutron_capture` (300k). The only route to Eu, Os, Ir, Pt, Au.
+- The building's draw follows its recipe (`power_cost_is_dynamic`, `BuildingSO.PowerDrawFor`).
+- With phases 1-3 every element Z27–92 has a route other than the Atom Generator. Guarded by `NeutronCaptureTests`.
+
 ### Actinide map phase 2: fission (2026-11-02, #322)
 
 - **Fission Reactor:** one input (from the west), three assignable output sides. Ten splits, each into two real fragments whose protons add up to the fuel's, plus 2 released neutrons: U-235 → Ba+Kr, Xe+Sr, Cs+Rb, I+Y, Te+Zr, Sb+Nb, Sn+Mo; 2 Plutonium → Xe+Zr, Ba+Sr, Ce+Kr. 20s, 200 eV, gate `fission_i`. Gains ×4.5 (U-235) / ×5.5 (Pu) under the rescaled values (see the entropy-yield ladder). Bromine/Selenium splits are left out: they would land in the steep band next to iron.

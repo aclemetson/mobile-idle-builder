@@ -458,6 +458,8 @@ namespace MobileIdleBuilder.Editor
             so.isEntropySink       = data.is_entropy_sink;
             so.isItemFilter        = data.is_item_filter;
             so.assignableOutputs   = data.assignable_outputs;
+            so.recipeModeLabels    = data.recipe_mode_labels;
+            so.recipeModePrefixes  = data.recipe_mode_prefixes;
             so.entropyCost                = data.entropy_cost;
             so.baseMaxOutputItems         = data.base_max_output_items;
             so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;
