@@ -100,6 +100,12 @@ namespace MobileIdleBuilder
                 new[]{ 30, 60, 120, 240, 480 },
                 new[]{ ("efficient_layouts", 1) }),
 
+            new UpgradeDef(
+                "surplus_resale", "Surplus Brokerage",
+                "Items a building can't use are sold automatically for +10% more of the Demon price per level (base 50%, max 100%).",
+                UpgradeEffectType.SurplusResale, 0.10f, 5,
+                new[]{ 20, 40, 80, 160, 320 }),
+
             // ── Tier 3: require deeper investment ────────────────────────────
             new UpgradeDef(
                 "turnkey_builder", "Turnkey Builder",

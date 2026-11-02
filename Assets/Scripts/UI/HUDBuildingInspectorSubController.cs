@@ -990,6 +990,8 @@ namespace MobileIdleBuilder
                     Quantity = recipe.outputQuantity
                 });
 
+            SellInputsTheRecipeDoesNotUse(entity);
+
             // Drives the tutorial's "set the Combiner to Proton" step (combiner_recipe_set).
             _hud?.NotifyBuildingRecipeSet();
         }
@@ -1170,6 +1172,24 @@ namespace MobileIdleBuilder
             outBuf.Clear();
 
             RefreshInspectorContent();
+        }
+
+        /// <summary>
+        /// After a recipe change, inputs the new recipe doesn't use would sit in the buffer forever. Sell
+        /// them at the surplus price (#312) and say so.
+        /// </summary>
+        private void SellInputsTheRecipeDoesNotUse(Entity entity)
+        {
+            if (!_em.HasBuffer<BuildingInputSlot>(entity) || _playerQuery.IsEmpty) return;
+            long earned = SurplusSale.SellUnusedInputs(_em.GetBuffer<BuildingInputSlot>(entity),
+                                                       _em.GetBuffer<RecipeInputSlot>(entity),
+                                                       SurplusSale.DemonPrice, SurplusSale.CurrentFraction());
+            if (earned <= 0) return;
+
+            var progress = _playerQuery.GetSingleton<PlayerProgressData>();
+            progress.BaseCurrency += earned;
+            _playerQuery.SetSingleton(progress);
+            InventoryPopupController.Notify("entropy", (int)System.Math.Min(earned, int.MaxValue));
         }
 
         private void EmptyInputToInventory(Entity building)

@@ -138,8 +138,11 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 2h, max 12h) | per-lvl |
 | `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 50%, max 100%) | per-lvl |
 | `salvage_protocols` | Salvage Protocols | +10% removal refund (base 50%, max 100%; prereq Efficient Layouts 1) | 5 |
+| `surplus_resale` | Surplus Brokerage | +10% of the Demon price for auto-sold unused items (base 50%, max 100%) | 5 |
 
 **Removal refunds** (`DemolishRefund`, applied by `DeconstructController`): removing a building returns `Fraction × spent`, where spent = placement cost after the prestige discount + every speed/storage/input upgrade bought. The building's whole spent amount leaves `TotalEntropySpent`, so net worth drops by the unrefunded part and place/remove loops can't farm prestige. Belts are free (no refund). The grid's only Maxwell's Demon can't be removed, and every removal asks to confirm (`ConfirmPrompt`).
+
+**Surplus sales** (`SurplusSale`, #312): items a building can't use never pile up unseen. A belt's front item jamming a needed item (`ConveyorSystem` overflow) and inputs a newly set recipe no longer uses (`HUDBuildingInspectorSubController.SetBuildingRecipe`) are sold at `Fraction × Demon price` (base 50%, + `surplus_resale`). Fractions of entropy carry over between belt sales. Offline, items stuck at a starved building sell at the same rate (`IdleGraphAnalyzer`'s `surplusSaleFraction`).
 
 **Wiring caveat:** `assembly_line` (craft speed) and `quantum_yield` (output) currently affect **idle earnings + UI display only, NOT live ECS production** — they flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` does not read. See the gap map in `ecs-patterns.md` before building anything on top of them. (Megastructure Output/Speed bonuses, by contrast, ARE live — they go through `GlobalProductionBonus`, not `PrestigeData`.)
 
