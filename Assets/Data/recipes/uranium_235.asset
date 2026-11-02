@@ -24,8 +24,8 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: 2c22aaf8536bf9544b99e1c40b04d0df, type: 2}
   outputQuantity: 1
   byproducts:
-  - item: {fileID: 11400000, guid: e2aba8074061d6a43b06898f28397f3e, type: 2}
-    quantity: 1
+  - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
+    quantity: 3
   baseCraftTime: 24
   manualCraftTime: 24
   powerCostIsDynamic: 0
@@ -37,4 +37,5 @@ MonoBehaviour:
   requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: Real enrichment separates U-235 from U-238; here the Manipulator
+    strips three neutrons, which come out as items.

@@ -74,6 +74,8 @@ namespace MobileIdleBuilder
         public bool isEntropySink;          // true = Maxwell's Demon; items in input buffer are consumed for entropy
         public bool isItemFilter;           // true = Filter (#321): routes each item to the output side its rules pick
         public bool assignableOutputs;      // true = the player picks which output side each product leaves by (#322)
+        public string[] recipeModeLabels;   // e.g. Slow / Fast: the inspector shows one recipe group at a time (#322)
+        public string[] recipeModePrefixes; // recipe id prefix for each mode, same order as recipeModeLabels
 
         [Header("Placement")]
         public Vector2Int footprint = Vector2Int.one; // width x height in grid cells
@@ -175,6 +177,27 @@ namespace MobileIdleBuilder
         /// Level 1 = so.basePowerCostEV. Higher levels look up powerCostEV from upgradeLevels,
         /// falling back to the base when the upgrade entry leaves it at 0.
         /// </summary>
+        /// <summary>
+        /// The eV draw with <paramref name="recipe"/> active: when <see cref="powerCostIsDynamic"/>, the recipe's
+        /// fixed power cost if it is higher than the level's draw (Neutron Capture: Slow 40 eV, Fast 180 eV).
+        /// </summary>
+        public static float PowerDrawFor(BuildingSO so, int level, RecipeSO recipe)
+        {
+            float draw = PowerDrawForLevel(so, level);
+            if (so != null && so.powerCostIsDynamic && recipe != null && recipe.fixedPowerCostEV > draw)
+                draw = recipe.fixedPowerCostEV;
+            return draw;
+        }
+
+        /// <summary>Index into <see cref="recipeModePrefixes"/> whose prefix <paramref name="recipeId"/> starts with, or -1.</summary>
+        public int RecipeModeOf(string recipeId)
+        {
+            if (recipeModePrefixes == null || string.IsNullOrEmpty(recipeId)) return -1;
+            for (int i = 0; i < recipeModePrefixes.Length; i++)
+                if (!string.IsNullOrEmpty(recipeModePrefixes[i]) && recipeId.StartsWith(recipeModePrefixes[i])) return i;
+            return -1;
+        }
+
         public static float PowerDrawForLevel(BuildingSO so, int level)
         {
             if (so == null) return 0f;

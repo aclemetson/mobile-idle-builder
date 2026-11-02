@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: exotic_metals
   displayName: Exotic Metals
-  description: "Unlock platinum and tungsten \u2014 extreme performance metals for
-    high-temperature and catalytic applications."
+  description: Fast neutron capture for Osmium and Iridium, the densest metals there
+    are.
   icon: {fileID: 0}
   branch: 2
   prerequisites:
@@ -26,11 +26,11 @@ MonoBehaviour:
   durationSeconds: 3600
   fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
-  - {fileID: 11400000, guid: 833a0def7293a3b4da63df48e83593e1, type: 2}
+  - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
+  - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 6e60aa6cbdbca1345b59ff49d49fdcf0, type: 2}
-  - {fileID: 11400000, guid: a3b0c7e808c0c304ca35b14ce515dc4e, type: 2}
+  - {fileID: 11400000, guid: 20187d3a2a78d704aa1611fd15cfdca8, type: 2}
+  - {fileID: 11400000, guid: 70c5d5a2ccbcec048ab53d7a44ab9b69, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

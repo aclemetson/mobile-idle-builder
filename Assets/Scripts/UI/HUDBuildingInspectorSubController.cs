@@ -359,6 +359,7 @@ namespace MobileIdleBuilder
                     var available = new List<RecipeSO>();
                     foreach (var r in buildingSO.supportedRecipes)
                         if (IsRecipeAvailable(r)) available.Add(r);
+                    available = FilterByRecipeMode(_inspectorEntity, buildingSO, available);
 
                     // Exactly one usable recipe and none set yet: assign it instead of leaving the
                     // building idle at "No recipe" with no chooser to fix it (#186).
@@ -676,7 +677,7 @@ namespace MobileIdleBuilder
             else if (so.requiresPower && _em.HasComponent<PowerConsumer>(entity))
             {
                 var pc = _em.GetComponentData<PowerConsumer>(entity);
-                pc.DrawEV = BuildingSO.PowerDrawForLevel(so, nextLevel);
+                pc.DrawEV = BuildingSO.PowerDrawFor(so, nextLevel, CurrentRecipe(entity, so));
                 _em.SetComponentData(entity, pc);
             }
 
@@ -801,6 +802,71 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Recipe modes (#322: Neutron Capture Slow / Fast) ───────────────────
+
+        // The mode each building's picker shows. Not saved: it opens on the mode of the building's recipe.
+        private readonly Dictionary<Entity, int> _recipeMode = new();
+
+        /// <summary>
+        /// For a building with recipe modes, adds a row of mode buttons and returns only that mode's recipes.
+        /// Modes with nothing researched yet are hidden; with one mode left there is no row at all.
+        /// </summary>
+        private List<RecipeSO> FilterByRecipeMode(Entity entity, BuildingSO so, List<RecipeSO> available)
+        {
+            if (so.recipeModePrefixes == null || so.recipeModePrefixes.Length == 0) return available;
+
+            var modes = new List<int>();
+            for (int m = 0; m < so.recipeModePrefixes.Length; m++)
+                if (available.Exists(r => so.RecipeModeOf(r.id) == m)) modes.Add(m);
+            if (modes.Count == 0) return available;
+
+            if (!_recipeMode.TryGetValue(entity, out int mode) || !modes.Contains(mode))
+            {
+                int current = so.RecipeModeOf(CurrentRecipe(entity, so)?.id);
+                mode = modes.Contains(current) ? current : modes[0];
+                _recipeMode[entity] = mode;
+            }
+
+            if (modes.Count > 1)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("filter-row");
+                foreach (int m in modes)
+                {
+                    int captured = m;
+                    string label = so.recipeModeLabels != null && m < so.recipeModeLabels.Length ? so.recipeModeLabels[m] : $"Mode {m + 1}";
+                    var btn = new Button { text = label };
+                    btn.AddToClassList("filter-side-btn");
+                    btn.AddToClassList("recipe-mode-btn");
+                    btn.EnableInClassList("filter-side-btn--on", m == mode);
+                    ListTapRouter.Register(_inspectorRecipes, btn, () =>
+                    {
+                        _recipeMode[entity] = captured;
+                        RefreshInspectorContent();
+                    });
+                    row.Add(btn);
+                }
+                _inspectorRecipes?.Add(row);
+            }
+            return available.FindAll(r => so.RecipeModeOf(r.id) == mode);
+        }
+
+        private RecipeSO CurrentRecipe(Entity entity, BuildingSO so)
+        {
+            if (so?.supportedRecipes == null || !_em.HasComponent<RecipeProcessData>(entity)) return null;
+            int id = _em.GetComponentData<RecipeProcessData>(entity).RecipeID;
+            return System.Array.Find(so.supportedRecipes, r => r != null && r.recipeId == id);
+        }
+
+        private BuildingSO FindBuildingSOForEntity(Entity entity)
+        {
+            if (!_em.HasComponent<BuildingData>(entity) || _placement?.availableBuildings == null) return null;
+            int type = _em.GetComponentData<BuildingData>(entity).BuildingType;
+            foreach (var entry in _placement.availableBuildings)
+                if (entry.building != null && entry.building.buildingId == type) return entry.building;
+            return null;
         }
 
         // ── Filter (#321) ─────────────────────────────────────────────────────
@@ -1079,6 +1145,15 @@ namespace MobileIdleBuilder
                 outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
             SellInputsTheRecipeDoesNotUse(entity);
+
+            // A building whose draw follows its recipe (Neutron Capture Slow/Fast) re-reads it now.
+            var so = FindBuildingSOForEntity(entity);
+            if (so != null && so.powerCostIsDynamic && _em.HasComponent<PowerConsumer>(entity))
+            {
+                var pc = _em.GetComponentData<PowerConsumer>(entity);
+                pc.DrawEV = BuildingSO.PowerDrawFor(so, _em.GetComponentData<BuildingData>(entity).UpgradeLevel, recipe);
+                _em.SetComponentData(entity, pc);
+            }
 
             // Drives the tutorial's "set the Combiner to Proton" step (combiner_recipe_set).
             _hud?.NotifyBuildingRecipeSet();

@@ -175,7 +175,7 @@ namespace MobileIdleBuilder
             {
                 _em.AddComponentData(entity, new PowerConsumer
                 {
-                    DrawEV = BuildingSO.PowerDrawForLevel(building, speedLevel)
+                    DrawEV = BuildingSO.PowerDrawFor(building, speedLevel, recipe)
                 });
                 _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
             }
