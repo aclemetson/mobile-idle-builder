@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d1a109e3f4550607082930a1a2b3c4, type: 3}
+  m_Name: upgrade_complete_context
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
+  lines:
+  - speakerName: The Architect
+    text: Two times throughput. The Atom Generator now produces hydrogen at twice
+      the rate for the same input cost. Your entropy income just doubled.
+    portrait: {fileID: 0}
+    pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "The Storage track works the same way \u2014 tap the building again and
+      you will see it below the Speed upgrade. A larger output buffer means the line
+      keeps running while you are offline."
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: "Both tracks reset on prestige. The entropy you invest here comes back
+      as a discount on your next run \u2014 every upgrade makes the next cycle faster."
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 

@@ -85,6 +85,7 @@ GoogleService-Info.plist
 GoogleService-Info.plist.meta
 *.alf
 *.ulf
+*.pem
 
 # TestRunner generated files
 InitTestScene*.unity*
@@ -94,6 +95,9 @@ InitTestScene*.unity*
 
 # Test run output
 /TestResults/
+
+# Local scratch/sandbox docs — never commit
+/docs/tmp/
 
 # Unity editor scene dependency cache — auto-generated
 /[Aa]ssets/SceneDependencyCache/
@@ -116,3 +120,14 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Python bytecode cache (from scripts/*.py)
+__pycache__/
+*.pyc
+
+# AI playtest harness: MCP screenshots and per-run reports are generated output
+/[Aa]ssets/[Ss]creenshots/
+/[Aa]ssets/[Ss]creenshots.meta
+/Playtests/reports/
+# Benchmark timings stay on the machine that ran them
+/Playtests/benchmarks/

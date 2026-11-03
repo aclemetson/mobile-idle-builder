@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: slow_neutron_capture
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: slow_neutron_capture
+  displayName: s-Process
+  description: 'Unlock Neutron Capture in Slow mode: add neutrons to an element to
+    make the next one up, filling the gaps fission and decay leave.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
+  depthInTree: 5
+  block: actinide_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 11700000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
+  - {fileID: 11400000, guid: d33431e9cab622546bd9ce5c288ab98f, type: 2}
+  - {fileID: 11400000, guid: 51eae1268595286478aec2d848b53f87, type: 2}
+  - {fileID: 11400000, guid: f13668c429e4b6e48aeb6ad248b56403, type: 2}
+  - {fileID: 11400000, guid: 250a835e60fc5d54598f0179762dba83, type: 2}
+  - {fileID: 11400000, guid: 036a492c504f104499b967dbe6f05f7b, type: 2}
+  - {fileID: 11400000, guid: 739f2682a5e7a2342a6c603969edf42c, type: 2}
+  - {fileID: 11400000, guid: 3b6bb56b48796b149bb956fec342028d, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 647e88b107442014e8aac9b358712330, type: 2}
+  - {fileID: 11400000, guid: 0e94f18aaa8ba8541b963a8500a7462b, type: 2}
+  - {fileID: 11400000, guid: ba26ecf3cb5f02c4f801abe502611bbe, type: 2}
+  - {fileID: 11400000, guid: 66554c6849d134e4fbda12551c818102, type: 2}
+  - {fileID: 11400000, guid: e9b23353ed98c614b9d349d135f108e5, type: 2}
+  - {fileID: 11400000, guid: 0850b0e7b69a8db4fafcecb0b62a0431, type: 2}
+  - {fileID: 11400000, guid: 5372911317f43b5419285310384b5c4e, type: 2}
+  - {fileID: 11400000, guid: fcf2b255a7e46ed4d94a4dae0a7cba38, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: In red giant stars, free neutrons trickle into heavy nuclei one at
+    a time, slowly enough for each unstable result to decay before the next arrives.

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 810c6fcf4d6b7844eaaa1559e7d18a5f, type: 3}
+  m_Name: tier_3
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TierSO
+  tierNumber: 3
+  displayName: Molecular
+  description: Combining atoms into molecules and simple compounds. Chemistry at
+    the scale of bonds and reactions.
+  tierColor: {r: 0.27058825, g: 0.7176471, b: 0.81960785, a: 1}
+  tierIcon: {fileID: 0}
+  unlockResearch:
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  starterItems: []

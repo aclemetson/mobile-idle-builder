@@ -241,5 +241,95 @@ namespace MobileIdleBuilder.Tests
             var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
             Assert.IsFalse(process.IsCrafting, "Full output buffer must pause production");
         }
+
+        // ── Power gating ──────────────────────────────────────────────────────
+
+        [Test]
+        public void WhenDisconnectedFromPower_CraftingDoesNotStart()
+        {
+            _em.AddComponentData(_buildingEntity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick();
+
+            var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            Assert.IsFalse(process.IsCrafting, "Unpowered building must not start crafting");
+            Assert.AreEqual(0f, process.Progress, 0.001f, "Unpowered building must not accumulate progress");
+        }
+
+        [Test]
+        public void WhenBrownout_ProgressAdvancesAtThrottledRate()
+        {
+            _em.AddComponentData(_buildingEntity, new PowerStatus { IsConnected = 1, ThrottleRatio = 0.5f });
+            AddToGlobalInventory(InputItemId, InputQty);
+            _em.SetComponentData(_buildingEntity, new RecipeProcessData
+            {
+                RecipeID   = 1,
+                CraftTime  = CraftTime,
+                IsCrafting = true,
+                Progress   = 0f
+            });
+
+            Tick(deltaTime: 0.5f);
+
+            var process = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            Assert.AreEqual(0.5f * Speed * 0.5f, process.Progress, 0.001f,
+                "Brownout must scale progress by ThrottleRatio");
+        }
+
+        // ── Escaping byproducts (fusion neutrinos / gamma) ───────────────────
+
+        private Entity AddProgress(long currency)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new PlayerProgressData { BaseCurrency = currency });
+            return e;
+        }
+
+        private void SetByproductEntropy(float perCraft)
+        {
+            var p = _em.GetComponentData<RecipeProcessData>(_buildingEntity);
+            p.ByproductEntropy = perCraft;
+            _em.SetComponentData(_buildingEntity, p);
+        }
+
+        [Test]
+        public void CompletedCraft_PaysByproductEntropy()
+        {
+            var progress = AddProgress(100);
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime);
+
+            Assert.AreEqual(105, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency,
+                "A finished craft pays its escaping byproducts' entropy");
+        }
+
+        [Test]
+        public void UnfinishedCraft_PaysNoByproductEntropy()
+        {
+            var progress = AddProgress(100);
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime * 0.5f);
+
+            Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
+
+        [Test]
+        public void ByproductEntropy_ScalesWithGlobalOutputBonus()
+        {
+            var progress = AddProgress(0);
+            var bonus = _em.CreateEntity();
+            _em.AddComponentData(bonus, new GlobalProductionBonus { SpeedMult = 1f, OutputMult = 2f });
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime);
+
+            Assert.AreEqual(10, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
     }
 }

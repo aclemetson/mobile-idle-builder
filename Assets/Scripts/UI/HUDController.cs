@@ -22,6 +22,22 @@ namespace MobileIdleBuilder
         private HUDStatusBarController              _statusBar;
         private HUDBuildingInspectorSubController   _inspector;
         private HUDBannerController                 _banner;
+        private PrestigeShopSubController           _prestigeShop;
+        private ManagersSubController               _managers;
+        private MegastructureSubController          _megastructure;
+        private DailyEventsSubController            _daily;
+        private RewardedAdsSubController            _rewards;
+        private IdleReturnSubController             _idleReturn;
+        private GameUpdateNoticeSubController       _gameUpdate;
+        private HUDPremiumShopSubController         _shop;
+        private HUDSettingsSubController            _settings;
+        private SitesSubController                  _sites;
+        private WorldsSubController                 _worlds;
+
+        // ---- Power-connection overlay toggle ----
+        private Button                              _btnPowerToggle;
+        private PowerConnectionOverlayController    _powerOverlay;
+        private bool                                _powerConnectionsShown;
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -35,35 +51,92 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay;
+                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
                            _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+        // Research timer UI (live countdown + skip on the in-progress card)
+        private Label      _researchCountdownLabel;
+        // Research tree (#337): shown instead of the list once the tutorial is done; the list stays one tap away.
+        private ResearchTreeView _researchTree;
+        private Button     _researchModeBtn;
+        private bool       _researchTreeMode = true;
+        private string     _researchSelectedId;
+        private bool       _researchFocusPending;
+        private ResearchBlock[] _researchBlocks;
+        private const string ResearchViewPref = "research_view_mode";
+        private Button     _researchSkipBtn;
+        private bool       _researchSkipConfirming;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
         private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
+
+        // Live affordability refresh: automation can raise entropy past a building's cost while
+        // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
+        // panel-open. Rows captured in BuildBuildingsList; re-evaluated in Update.
+        private readonly List<(Button btn, Label costLabel, long cost)> _buildingAffordRows = new();
+        private long _lastAffordEntropy = long.MinValue;
+        private FieldGenerator _fieldGenerator; // source of the fields sold in the Build menu
+
+        // Same problem in the Research panel, which had no live refresh at all: a Start button that
+        // was unaffordable at panel-open stayed dead until the panel was reopened. Rows captured in
+        // BuildResearchList; re-evaluated by the 1 Hz research ticker. The research is stored rather
+        // than a precomputed bool because CanPurchase() is the authority on unlocked + prereqs +
+        // affordability, and labBusy is tracked too so buttons revive when the lab frees up.
+        private readonly List<(Button btn, Label costLabel, ResearchSO research)> _researchAffordRows = new();
+        private long _lastResearchAffordEntropy = long.MinValue;
+        private bool _lastResearchAffordLabBusy;
         private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
         private VisualElement _drawerPanel;
         private VisualElement _drawerBackdrop;
         private bool          _drawerOpen;
+        private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
+
+        // ---- Back button (#205) ----
+        // Mode flags mirror the controllers' OnPlacingChanged / OnConveyorPlacingChanged /
+        // OnDeconstructingChanged events. _modeEndedFrame lets the back handler yield on the frame a
+        // controller cancelled its mode on the same Escape press, so one press never closes two layers.
+        private bool _placingMode, _conveyorMode, _deconstructMode;
+        private int  _modeEndedFrame = -1;
+        private DialogueController _dialogue;
 
         // ---- Placement controls ----
-        private Button _btnRotateOutput;
-        private Button _btnFlipBuilding;
+        private Button        _btnRotateOutput;
+        private Button        _btnFlipBuilding;
+        private VisualElement _placementConfirmPopup;
+        private VisualElement _placementBar;
+        private Button        _btnConfirmPlace;
+        private Button        _btnCancelCandidate;
+        private Button        _btnRotateCandidate;
 
         // ---- Conveyor placement ----
         private VisualElement _conveyorOverlay;
+        private VisualElement _conveyorBar;
+        private Label         _conveyorLabel;
+        private Button        _btnConveyorRotate;
+        private Button        _btnConveyorConfirm;
+        private Button        _btnConveyorCancelCandidate;
+        private Button        _btnConveyorNewStart;
+        private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
         private VisualElement _deconstructOverlay;
+
+        // ---- Recipe-menu craft queue (#310) ----
+        private CraftQueueView _craftQueueView;
+        private bool IsRecipePanelOpen => _recipePanel != null && !_recipePanel.ClassListContains("hidden");
 
         // ---- Tutorial events ----
         public event System.Action OnDrawerOpened;
         public event System.Action OnResearchPanelOpened;
         public event System.Action OnRecipePanelOpened;
+        public event System.Action OnConveyorPlaced;
+        public event System.Action OnBuildingRecipeSet;
 
         // ---- Output selector ----
         private VisualElement _outputSelector;
@@ -73,6 +146,22 @@ namespace MobileIdleBuilder
         // ---- Tooltip ----
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
+
+        // ---- Achievements category tabs ----
+        private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
+        private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
+        private Label  _achResetLabel;
+        private Button _achClaimAllBtn;
+
+        // ---- Achievements gate ----
+        private Button    _btnAchievements;
+        private Label     _achievementsLockedHint;
+        private bool      _achievementsUnlocked;
+
+        // ---- Megastructure gate (nav button hidden until megastructure_theory is researched) ----
+        private Button    _btnMegastructure;
+        private Coroutine _achievementsHintPulse;
+        private Button    _achievementsHintPulseTarget;
 
 
         // ============================================================
@@ -84,9 +173,21 @@ namespace MobileIdleBuilder
             if (deconstructController == null)
                 deconstructController = FindAnyObjectByType<DeconstructController>();
 
-            _statusBar = GetComponent<HUDStatusBarController>();
-            _inspector = GetComponent<HUDBuildingInspectorSubController>();
-            _banner    = GetComponent<HUDBannerController>();
+            _statusBar    = GetComponent<HUDStatusBarController>();
+            _inspector    = GetComponent<HUDBuildingInspectorSubController>();
+            _banner       = GetComponent<HUDBannerController>();
+            _prestigeShop = GetComponent<PrestigeShopSubController>();
+            _managers     = GetComponent<ManagersSubController>();
+            _megastructure = GetComponent<MegastructureSubController>();
+            _daily        = GetComponent<DailyEventsSubController>();
+            // Added in code (not the scene) so the Free Rewards panel works without manual wiring.
+            _rewards      = GetComponent<RewardedAdsSubController>() ?? gameObject.AddComponent<RewardedAdsSubController>();
+            _idleReturn   = GetComponent<IdleReturnSubController>();
+            _gameUpdate   = GetComponent<GameUpdateNoticeSubController>() ?? gameObject.AddComponent<GameUpdateNoticeSubController>();
+            _shop         = GetComponent<HUDPremiumShopSubController>();
+            _settings     = GetComponent<HUDSettingsSubController>();
+            _sites        = GetComponent<SitesSubController>();
+            _worlds       = GetComponent<WorldsSubController>();
         }
 
         void OnEnable()
@@ -115,17 +216,36 @@ namespace MobileIdleBuilder
                 };
             }
 
+            UIInputBlocker.Register(GetComponent<UIDocument>());
+
             QueryElements(root);
             _statusBar?.Init(root);
-            _inspector?.Init(root, placementController);
+            _inspector?.Init(root, placementController, this);
             _banner?.Init(root);
+            _prestigeShop?.Init(root, this);
+            _managers?.Init(root, this);
+            _megastructure?.Init(root, this);
+            _daily?.Init(root, this);
+            _rewards?.Init(root, this);
+            _idleReturn?.Init(root, this);
+            _gameUpdate?.Init(root, this);
+            _shop?.Initialize(root);
+            _settings?.Initialize(root);
+            _sites?.Init(root, this);
+            _worlds?.Init(root, this);
             BindButtons(root);
+            ApplyAchievementsGate();
+            ApplyMegastructureGate();
+            ApplyFeatureFlagGates(root);
+            _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
             SetElementVisible(_placementOverlay,   false);
+            SetElementVisible(_placementConfirmPopup, false);
             SetElementVisible(_conveyorOverlay,    false);
             SetElementVisible(_deconstructOverlay, false);
-            SetElementVisible(root.Q("notification-banner"),   false);
+            // notification-banner starts hidden via CSS translate (no .hidden class needed)
             SetElementVisible(root.Q("tutorial-hint-banner"),  false);
             SetElementVisible(root.Q("field-proximity-banner"), false);
             SetElementVisible(_outputSelector, false);
@@ -137,10 +257,19 @@ namespace MobileIdleBuilder
                 placementController.OnPlacingChanged         += OnPlacingChanged;
                 placementController.OnOutputSelectionRequired += ShowOutputSelector;
                 placementController.OnBuildingPlaced         += OnBuildingPlaced;
+                placementController.OnCandidateChanged       += OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = IsPointerOverPlacementUI;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged += OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      += OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     += OnConveyorStartChanged;
+                conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
@@ -153,19 +282,41 @@ namespace MobileIdleBuilder
 
             if (researchService != null)
                 researchService.OnResearchUnlocked += OnResearchUnlocked;
+
+            if (craftService != null)
+            {
+                _craftQueueView = new CraftQueueView(craftService);
+                // Floats over the bottom of the panel (added last so it draws and picks on top) instead
+                // of sitting above the list: above it, every show/hide shoved the rows ~230px, so a quick
+                // second tap on a 1s Proton landed on a label and did nothing on a phone.
+                _recipeList?.parent?.Add(_craftQueueView.Root);
+                _craftQueueView.Root.RegisterCallback<GeometryChangedEvent>(_ => UpdateRecipeListClearance());
+                craftService.QueueChanged += OnCraftQueueChanged;
+            }
         }
 
         void OnDisable()
         {
+            UIInputBlocker.Unregister(GetComponent<UIDocument>());
+
             if (placementController != null)
             {
                 placementController.OnPlacingChanged         -= OnPlacingChanged;
                 placementController.OnOutputSelectionRequired -= ShowOutputSelector;
                 placementController.OnBuildingPlaced         -= OnBuildingPlaced;
+                placementController.OnCandidateChanged       -= OnCandidateChanged;
+                placementController.IsPointerOverPlacementUI  = null;
             }
 
             if (conveyorController != null)
-                conveyorController.OnPlacingChanged -= OnConveyorPlacingChanged;
+            {
+                conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
+                conveyorController.OnModeChanged      -= OnConveyorModeChanged;
+                conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
+                conveyorController.OnStartChanged     -= OnConveyorStartChanged;
+                conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
+                conveyorController.IsPointerOverConveyorUI = null;
+            }
 
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
@@ -178,6 +329,11 @@ namespace MobileIdleBuilder
 
             if (researchService != null)
                 researchService.OnResearchUnlocked -= OnResearchUnlocked;
+
+            if (craftService != null)
+                craftService.QueueChanged -= OnCraftQueueChanged;
+            _craftQueueView?.Root.RemoveFromHierarchy();
+            _craftQueueView = null;
         }
 
         void Start()
@@ -191,7 +347,7 @@ namespace MobileIdleBuilder
             _em             = world.EntityManager;
             _progressQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
             _prestigeQuery  = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
-            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>());
+            _powerQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<PowerGridState>());
             _inventoryQuery = _em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerInventoryTag>(),
                 ComponentType.ReadWrite<InventorySlot>()
@@ -201,12 +357,35 @@ namespace MobileIdleBuilder
 
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
+            _prestigeShop?.SetECSContext(_em);
+            _sites?.SetECSContext(_em);
+            _worlds?.SetECSContext(_em);
         }
 
         void Update()
         {
             _statusBar?.Tick();
             _inspector?.Tick();
+            HandleBackButton();
+            UpdatePlacementConfirmPopup();
+            RefreshBuildingAffordabilityIfChanged();
+            RefreshBannerClearance();
+            if (_craftQueueView != null && IsRecipePanelOpen) _craftQueueView.Tick(GameClock.UtcNow);
+
+            // One-shot: detect first prestige in the same session and re-apply the gate
+            if (!_achievementsUnlocked)
+            {
+                bool firstRunNow = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+                if (firstRunNow)
+                {
+                    GameLogger.Info($"[HUD] Achievements gate flipped — showing unlock hint. _banner={_banner != null}");
+                    _achievementsUnlocked = true;
+                    ApplyAchievementsGate();
+                    achievementService?.InitPostPrestige();
+                    ShowTutorialHint("🏆 Achievements unlocked! Open the drawer and tap Achievements to get started.");
+                    StartAchievementsHintPulse();
+                }
+            }
         }
 
         // ============================================================
@@ -218,6 +397,10 @@ namespace MobileIdleBuilder
             // HUD chrome
             _drawerPanel    = root.Q("left-drawer");
             _drawerBackdrop = root.Q("drawer-backdrop");
+            // Closed drawer is hidden, not just slid off-screen, so its ScrollView scroller
+            // can never peek in at the left edge (#196). See OpenDrawer / CloseDrawer.
+            if (_drawerPanel != null) _drawerPanel.style.visibility = Visibility.Hidden;
+            _drawerTapGuard.Attach(_drawerPanel);
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -225,15 +408,24 @@ namespace MobileIdleBuilder
             _codexPanel        = root.Q("codex-panel");
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
+            _managersPanel     = root.Q("managers-panel");
+            _megastructurePanel = root.Q("megastructure-panel");
+            _dailyPanel        = root.Q("daily-panel");
+            _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
             _prestigePanel     = root.Q("prestige-panel");
+            _shopPanel         = root.Q("shop-panel");
+            _settingsPanel     = root.Q("settings-panel");
+            _sitesPanel        = root.Q("sites-panel");
+            _worldsPanel       = root.Q("worlds-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _achievementsPanel, _pvpPanel, _prestigePanel
+                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
             // Panel content
@@ -241,9 +433,23 @@ namespace MobileIdleBuilder
             _buildingsList    = root.Q<ScrollView>("buildings-list");
             _codexList        = root.Q<ScrollView>("codex-list");
             _researchList     = root.Q<ScrollView>("research-list");
+            SetUpResearchTree();
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievementsList    = root.Q<ScrollView>("achievements-list");
             _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
+
+            // Achievements category tabs
+            _achTabDaily       = root.Q<Button>("ach-tab-daily");
+            _achTabWeekly      = root.Q<Button>("ach-tab-weekly");
+            _achTabMonthly     = root.Q<Button>("ach-tab-monthly");
+            _achTabProgression = root.Q<Button>("ach-tab-progression");
+            _achResetLabel     = root.Q<Label>("ach-reset-label");
+            _achClaimAllBtn    = root.Q<Button>("ach-claim-all-btn");
+
+            // Achievements gate
+            _btnAchievements        = root.Q<Button>("btn-achievements");
+            _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
+            _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
             _pvpStateLabel     = root.Q<Label>("pvp-state-label");
             _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
@@ -256,6 +462,11 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _placementConfirmPopup = root.Q("placement-confirm-popup");
+            _placementBar          = root.Q("placement-bar");
+            _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
+            _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
+            _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
             _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
@@ -264,10 +475,18 @@ namespace MobileIdleBuilder
             _outputSelectorTitle   = root.Q<Label>("output-selector__title");
 
             // Conveyor placement
-            _conveyorOverlay = root.Q("conveyor-overlay");
+            _conveyorOverlay            = root.Q("conveyor-overlay");
+            _conveyorBar                = root.Q("conveyor-bar");
+            _conveyorLabel              = root.Q<Label>("conveyor-label");
+            _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
+            _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
+            _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
+            _btnConveyorNewStart        = root.Q<Button>("btn-conveyor-new-start");
+            _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
+            ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -289,12 +508,43 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-codex").clicked        += () => TryOpenPanel(OpenCodexPanel);
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
+            root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
+            root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
+            var btnDaily = root.Q<Button>("btn-daily");
+            if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
+            // Free Rewards (rewarded ads) — nav button hidden by ApplyFeatureFlagGates when ads.enabled is off.
+            var btnRewards = root.Q<Button>("btn-rewards");
+            if (btnRewards != null)
+                btnRewards.clicked += () => TryOpenPanel(OpenRewardsPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
+
+            // Achievement category tabs
+            if (_achTabDaily       != null) _achTabDaily.clicked       += () => SwitchAchCategory(AchievementCategory.Daily);
+            if (_achTabWeekly      != null) _achTabWeekly.clicked      += () => SwitchAchCategory(AchievementCategory.Weekly);
+            if (_achTabMonthly     != null) _achTabMonthly.clicked     += () => SwitchAchCategory(AchievementCategory.Monthly);
+            if (_achTabProgression != null) _achTabProgression.clicked += () => SwitchAchCategory(AchievementCategory.Progression);
+            if (_achClaimAllBtn    != null) _achClaimAllBtn.clicked    += () =>
+            {
+                achievementService?.ClaimAllRewards();
+                BuildAchievementsList();
+            };
+            root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
+            root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
             root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
+            root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
-            root.Q<Button>("btn-settings").clicked += () => GameLogger.Debug("[HUD] Settings — coming soon");
+            root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
+
+            // Power-connection overlay toggle (⚡ button). Restores its persisted on/off state.
+            _btnPowerToggle = root.Q<Button>("btn-power-toggle");
+            if (_btnPowerToggle != null)
+            {
+                _powerConnectionsShown = SettingsService.Instance?.Current?.showPowerConnections ?? false;
+                ApplyPowerConnectionState();
+                _btnPowerToggle.clicked += TogglePowerConnections;
+            }
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -302,9 +552,17 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-codex").clicked        += () => SetElementVisible(_codexPanel,        false);
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
+            root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
+            root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
+            var btnCloseDaily = root.Q<Button>("btn-close-daily");
+            if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
+            var btnCloseRewards = root.Q<Button>("btn-close-rewards");
+            if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
+            root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
+            root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
 
             // PVP actions (queried after _btnEnterPVP is set in QueryElements)
             if (_btnEnterPVP != null)
@@ -330,10 +588,28 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnConfirmPlace != null)
+                _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
+            if (_btnCancelCandidate != null)
+                _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
+            if (_btnRotateCandidate != null)
+                _btnRotateCandidate.clicked += () => placementController?.Rotate();
 
-            // Conveyor cancel (button inside the conveyor overlay)
+            // Conveyor "Finished" (button inside the conveyor overlay)
             root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
                 conveyorController?.CancelConveyorMode());
+
+            // Conveyor candidate controls + Create/Destroy toggle
+            if (_btnConveyorRotate != null)
+                _btnConveyorRotate.clicked += () => conveyorController?.RotatePath();
+            if (_btnConveyorConfirm != null)
+                _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
+            if (_btnConveyorCancelCandidate != null)
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+            if (_btnConveyorNewStart != null)
+                _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
+            if (_btnConveyorMode != null)
+                _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
             // Deconstruct cancel
             root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
@@ -377,22 +653,210 @@ namespace MobileIdleBuilder
         private void OpenCodexPanel()
         {
             CloseAllPanels();
-            // Content is populated externally as codex entries are discovered
+            BuildCodexList();
             SetElementVisible(_codexPanel, true);
+        }
+
+        /// <summary>
+        /// Populates the codex with an entry (tile icon + name + lore) for every item whose
+        /// crafting recipe the player has discovered, using the same known-recipe gate as the
+        /// recipe list. Rebuilt each time the panel opens.
+        /// </summary>
+        private void BuildCodexList()
+        {
+            if (_codexList == null) return;
+            _codexList.Clear();
+
+            var recipes = RecipeDatabase.Instance?.Recipes;
+            if (recipes == null) return;
+
+            var seen = new HashSet<int>();
+            int shown = 0;
+            foreach (var recipe in recipes)
+            {
+                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)) continue;
+
+                var item = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                if (item == null || !seen.Add(item.itemId)) continue;
+
+                var row = new VisualElement();
+                row.AddToClassList("codex-row");
+
+                var icon = MakeItemIcon(item.icon, "codex-icon");
+                if (icon != null) row.Add(icon);
+
+                var infoCol = new VisualElement();
+                infoCol.AddToClassList("codex-info");
+
+                var name = new Label(item.displayName ?? item.symbol ?? item.id);
+                name.AddToClassList("codex-name");
+                infoCol.Add(name);
+
+                if (!string.IsNullOrEmpty(item.codexEntry))
+                {
+                    var entry = new Label(item.codexEntry);
+                    entry.AddToClassList("codex-entry");
+                    infoCol.Add(entry);
+                }
+
+                row.Add(infoCol);
+                _codexList.Add(row);
+                shown++;
+            }
+
+            if (shown == 0)
+                _codexList.Add(new Label("Craft items to fill your codex."));
+        }
+
+        /// <summary>
+        /// Builds a background-image VisualElement for an item's tile sprite, or null when the
+        /// item has no icon yet (callers skip adding it so nothing breaks). Shared by the recipe
+        /// list, ingredient chips, codex, and the building inspector's recipe picker.
+        /// </summary>
+        internal static VisualElement MakeItemIcon(Sprite icon, string ussClass)
+        {
+            if (icon == null) return null;
+            var el = new VisualElement();
+            el.AddToClassList(ussClass);
+            el.style.backgroundImage = new StyleBackground(icon);
+            return el;
+        }
+
+        private void SetUpResearchTree()
+        {
+            if (_researchPanel == null || _researchList == null) return;
+            _researchTreeMode = PlayerPrefs.GetInt(ResearchViewPref, 1) == 1;
+            _researchBlocks   = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.blocks ?? System.Array.Empty<ResearchBlock>();
+
+            _researchTree = new ResearchTreeView();
+            _researchTree.NodeSelected += r => { _researchSelectedId = r.id; BuildResearchList(); };
+            int at = _researchPanel.IndexOf(_researchList);
+            _researchPanel.Insert(at + 1, _researchTree);
+
+            // Tree / List toggle in the panel header, left of the close button.
+            var header = _researchPanel.Q("panel-header");
+            _researchModeBtn = new Button { name = "btn-research-view" };
+            _researchModeBtn.AddToClassList("research-view-btn");
+            _researchModeBtn.clicked += () =>
+            {
+                _researchTreeMode = !_researchTreeMode;
+                PlayerPrefs.SetInt(ResearchViewPref, _researchTreeMode ? 1 : 0);
+                _researchFocusPending = _researchTreeMode;
+                BuildResearchList();
+            };
+            var close = header?.Q<Button>("btn-close-research");
+            if (header != null) header.Insert(close != null ? header.IndexOf(close) : header.childCount, _researchModeBtn);
         }
 
         private void OpenResearchPanel()
         {
             CloseAllPanels();
+            _researchFocusPending = true;
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
+
+            // Drive the live research countdown while the panel is open (paused when it closes).
+            if (_researchTicker == null)
+                _researchTicker = _researchList.schedule.Execute(UpdateResearchCountdown).Every(1000);
+            else
+                _researchTicker.Resume();
+
             OnResearchPanelOpened?.Invoke();
+        }
+
+        // Updates just the active card's countdown + skip cost each second, so an open inline
+        // skip confirm is not blown away by a full rebuild.
+        private void UpdateResearchCountdown()
+        {
+            if (_researchPanel == null || _researchPanel.ClassListContains("hidden"))
+            {
+                _researchTicker?.Pause();
+                return;
+            }
+
+            // MUST run before the HasActiveResearch guard below: "no research running" is exactly
+            // the state where Start buttons matter, so a refresh placed after that early return
+            // would never fire in the case it exists to fix.
+            RefreshResearchAffordability();
+
+            if (researchService == null || !researchService.HasActiveResearch) return;
+
+            double rem = researchService.ActiveRemainingSeconds;
+            if (_researchCountdownLabel != null)
+                _researchCountdownLabel.text = $"⏳ {FormatResearchTimer(rem)}";
+
+            if (_researchSkipBtn != null && !_researchSkipConfirming)
+            {
+                long cost     = researchService.ActiveSkipCost;
+                long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.SetEnabled(crystals >= cost);
+            }
+        }
+
+        /// <summary>
+        /// Re-evaluates Start-button state for the open Research panel. Without this a Start button
+        /// that was unaffordable when the panel opened stayed dead forever, because BuildResearchList
+        /// only runs on open / purchase / skip / cancel / research-unlock — never on an entropy
+        /// change — so automation earning the cost had no visible effect until the panel was reopened.
+        ///
+        /// Driven by the existing 1 Hz research ticker rather than Update(): it is already scoped to
+        /// the open panel and already live-refreshes the Skip button the same way.
+        /// </summary>
+        private void RefreshResearchAffordability()
+        {
+            if (researchService == null || _researchAffordRows.Count == 0) return;
+            if (!_ecsReady || _progressQuery.IsEmpty) return;
+
+            long entropy = _em.GetComponentData<PlayerProgressData>(
+                _progressQuery.GetSingletonEntity()).BaseCurrency;
+            bool labBusy = researchService.HasActiveResearch;
+
+            // labBusy is part of the key, not just entropy: when a research finishes the lab frees
+            // up and every other Start button becomes live again at unchanged entropy.
+            if (entropy == _lastResearchAffordEntropy && labBusy == _lastResearchAffordLabBusy) return;
+            _lastResearchAffordEntropy = entropy;
+            _lastResearchAffordLabBusy = labBusy;
+
+            foreach (var (btn, costLabel, research) in _researchAffordRows)
+            {
+                if (btn == null || research == null) continue;
+
+                // CanPurchase is the authority — it covers already-unlocked, prerequisites and
+                // affordability together, so this cannot drift from what Purchase() will accept.
+                btn.SetEnabled(!labBusy && researchService.CanPurchase(research));
+                btn.text = labBusy ? "Lab busy" : "Start";
+
+                // Research cost has only an --unaffordable class; there is no --affordable pair.
+                costLabel?.EnableInClassList("research-card-cost--unaffordable",
+                                             entropy < research.costBaseCurrency);
+            }
+        }
+
+        public static string FormatResearchTimer(double seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = System.TimeSpan.FromSeconds(System.Math.Ceiling(seconds));
+            if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes:D2}m {ts.Seconds:D2}s";
+            if (ts.TotalMinutes >= 1) return $"{ts.Minutes}m {ts.Seconds:D2}s";
+            return $"{ts.Seconds}s";
         }
 
         private void BuildResearchList()
         {
             if (_researchList == null) return;
             _researchList.Clear();
+
+            // Reset per-build references for the active-research card (reassigned below if present).
+            _researchCountdownLabel = null;
+            _researchSkipBtn        = null;
+            _researchSkipConfirming = false;
+
+            // The rows about to be discarded must not be refreshed after their elements are gone,
+            // and the entropy cache is reset so the next tick re-evaluates rather than short-circuiting
+            // on an unchanged value (same reason BuildBuildingsList resets _lastAffordEntropy).
+            _researchAffordRows.Clear();
+            _lastResearchAffordEntropy = long.MinValue;
 
             if (researchService == null || researchService.AllResearch == null ||
                 researchService.AllResearch.Count == 0)
@@ -406,88 +870,233 @@ namespace MobileIdleBuilder
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
-            // Collect research IDs gated by the current tutorial step.
-            System.Collections.Generic.HashSet<string> tutorialLockedResearch = null;
-            var flow = TutorialFlowSO.Current;
-            if (flow != null && _ecsReady && !_tutorialQuery.IsEmpty)
+            bool tutorialActive = false;
+            if (_ecsReady && !_tutorialQuery.IsEmpty)
+                tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
+
+            // The tutorial's steps and highlights are built on the list, so the tree waits until it is done.
+            bool treeMode = _researchTree != null && _researchTreeMode && !tutorialActive;
+            SetElementVisible(_researchList, !treeMode);
+            if (_researchTree != null) SetElementVisible(_researchTree, treeMode);
+            if (_researchModeBtn != null)
             {
-                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
-                if (tutState.IsActive && tutState.CurrentStepIndex < flow.steps.Length)
-                {
-                    var ids = flow.steps[tutState.CurrentStepIndex].lockedResearchIds;
-                    if (ids != null && ids.Length > 0)
-                        tutorialLockedResearch = new System.Collections.Generic.HashSet<string>(ids);
-                }
+                SetElementVisible(_researchModeBtn, !tutorialActive && _researchTree != null);
+                _researchModeBtn.text = treeMode ? "List" : "Tree";
+            }
+
+            if (treeMode)
+            {
+                BuildResearchTree(currentEntropy);
+                return;
             }
 
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
+                bool unlocked   = researchService.IsUnlocked(research.id);
+                bool prereqsMet = PrereqsMet(research);
 
-                bool unlocked        = researchService.IsUnlocked(research.id);
-                bool tutorialGated   = tutorialLockedResearch != null &&
-                                       tutorialLockedResearch.Contains(research.id);
-                bool canPurchase     = !unlocked && !tutorialGated && researchService.CanPurchase(research);
+                // During the tutorial, only show research that is already unlocked
+                // or whose prerequisites are all satisfied (the immediate frontier).
+                if (tutorialActive && !unlocked && !prereqsMet) continue;
+
+                _researchList.Add(BuildResearchCard(research, currentEntropy));
+            }
+        }
+
+        private bool PrereqsMet(ResearchSO research) =>
+            research.prerequisites == null || research.prerequisites.Length == 0 ||
+            System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id));
+
+        private void BuildResearchTree(long currentEntropy)
+        {
+            var all = researchService.AllResearch;
+            ResearchTreeView.NodeState State(ResearchSO r) =>
+                researchService.IsUnlocked(r.id) ? ResearchTreeView.NodeState.Done
+                : researchService.HasActiveResearch && researchService.ActiveResearchId == r.id ? ResearchTreeView.NodeState.Active
+                : PrereqsMet(r) ? ResearchTreeView.NodeState.Available
+                : ResearchTreeView.NodeState.Locked;
+            string Meta(ResearchSO r) => State(r) switch
+            {
+                ResearchTreeView.NodeState.Done   => "Researched",
+                ResearchTreeView.NodeState.Active => $"In progress · {FormatResearchTimer(researchService.ActiveRemainingSeconds)}",
+                ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(r.costBaseCurrency)}" + (currentEntropy >= r.costBaseCurrency ? "  Ready" : ""),
+                _ => $"Locked · ◈ {ShortNumber(r.costBaseCurrency)}",
+            };
+
+            // Open on the research the player is working toward: the one in progress, else the first available.
+            if (_researchFocusPending)
+            {
+                _researchFocusPending = false;
+                var target = all.FirstOrDefault(r => r != null && State(r) == ResearchTreeView.NodeState.Active)
+                          ?? all.Where(r => r != null && State(r) == ResearchTreeView.NodeState.Available)
+                                .OrderBy(r => System.Array.FindIndex(_researchBlocks, b => b.id == r.block)).ThenBy(r => r.costBaseCurrency)
+                                .FirstOrDefault();
+                if (target != null) { _researchSelectedId ??= target.id; _researchTree.FocusOn(target.id); }
+            }
+
+            _researchTree.Rebuild(all, _researchBlocks, State, Meta, _researchSelectedId);
+
+            var detail = _researchTree.Detail;
+            detail.Clear();
+            var selected = all.FirstOrDefault(r => r != null && r.id == _researchSelectedId);
+            if (selected == null)
+            {
+                var hint = new Label("Tap a research to see what it unlocks and start it. Drag to move around, pinch to zoom.");
+                hint.AddToClassList("research-card-desc");
+                detail.Add(hint);
+                return;
+            }
+            var block = System.Array.Find(_researchBlocks, b => b.id == selected.block);
+            if (block != null)
+            {
+                var phase = new Label(block.displayName);
+                phase.AddToClassList("rt-detail-phase");
+                detail.Add(phase);
+            }
+            detail.Add(BuildResearchCard(selected, currentEntropy));
+        }
+
+        internal static string ShortNumber(long v)
+        {
+            if (v >= 1_000_000_000_000) return (v / 1e12).ToString(v >= 100_000_000_000_000 ? "0" : "0.#") + "T";
+            if (v >= 1_000_000_000)     return (v / 1e9).ToString(v >= 100_000_000_000 ? "0" : "0.#") + "B";
+            if (v >= 1_000_000)         return (v / 1e6).ToString(v >= 100_000_000 ? "0" : "0.#") + "M";
+            if (v >= 10_000)            return (v / 1e3).ToString(v >= 100_000 ? "0" : "0.#") + "k";
+            return v.ToString("N0");
+        }
+
+        /// <summary>One research card: name, description, and cost/Start, the live timer + skip, or what it requires.
+        /// The list shows one per research; the tree shows the selected node's.</summary>
+        private VisualElement BuildResearchCard(ResearchSO research, long currentEntropy)
+        {
+            {
+                bool unlocked   = researchService.IsUnlocked(research.id);
+                bool prereqsMet = PrereqsMet(research);
+                bool canPurchase = !unlocked && prereqsMet && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
-                card.AddToClassList("building-card");
+                card.AddToClassList("research-card");
                 if (unlocked) card.AddToClassList("research-card--unlocked");
 
-                // Name row
-                var nameLabel = new Label(unlocked ? $"✓  {research.displayName}" : research.displayName);
-                nameLabel.AddToClassList("building-card-name");
-                card.Add(nameLabel);
+                // Name
+                var nameLabel = new Label(research.displayName);
+                nameLabel.AddToClassList("research-card-name");
+                card.Add(unlocked ? GlyphIcon.TitleRow(GlyphIcon.Kind.Check, nameLabel) : nameLabel);
 
-                // Description
+                // Description (wrapping)
                 if (!string.IsNullOrEmpty(research.description))
                 {
                     var descLabel = new Label(research.description);
-                    descLabel.AddToClassList("building-card-recipe");
+                    descLabel.AddToClassList("research-card-desc");
                     card.Add(descLabel);
                 }
 
+                bool isActive    = researchService.HasActiveResearch &&
+                                   researchService.ActiveResearchId == research.id;
+                bool labBusy     = researchService.HasActiveResearch && !isActive;
+
+                if (isActive) card.AddToClassList("research-card--in-progress");
+
                 if (!unlocked)
                 {
-                    // Cost
-                    bool affordable = currentEntropy >= research.costBaseCurrency;
-                    var costLabel = new Label($"◈ {research.costBaseCurrency:N0}");
-                    costLabel.AddToClassList("building-card-recipe");
-                    if (!affordable)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
-                    card.Add(costLabel);
+                    var footer = new VisualElement();
+                    footer.AddToClassList("research-card-footer");
 
-                    // Prerequisites (if locked)
-                    if (research.prerequisites != null && research.prerequisites.Length > 0)
+                    if (!prereqsMet)
                     {
-                        bool prereqsMet = canPurchase || unlocked;
-                        if (!prereqsMet)
+                        // Show what's blocking this research
+                        var prereqNames = string.Join(", ",
+                            System.Array.ConvertAll(research.prerequisites,
+                                p => p != null ? p.displayName : "?"));
+                        var prereqLabel = new Label($"Requires: {prereqNames}");
+                        prereqLabel.AddToClassList("research-card-prereq");
+                        footer.Add(prereqLabel);
+                    }
+                    else if (isActive)
+                    {
+                        // In-progress: live countdown + skip-for-crystals
+                        _researchCountdownLabel = new Label($"⏳ {FormatResearchTimer(researchService.ActiveRemainingSeconds)}");
+                        _researchCountdownLabel.AddToClassList("research-card-cost");
+                        footer.Add(_researchCountdownLabel);
+                        BuildResearchSkipUi(footer, research);
+                    }
+                    else
+                    {
+                        // Cost + effective research time (after the Research Overdrive discount),
+                        // stacked so the Start button stays on the right.
+                        var info = new VisualElement();
+                        info.AddToClassList("research-card-info");
+
+                        bool affordable = currentEntropy >= research.costBaseCurrency;
+                        var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
+                        costLabel.AddToClassList("research-card-cost");
+                        if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
+                        info.Add(costLabel);
+
+                        int effSecs    = researchService.EffectiveDurationSeconds(research);
+                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        timeLabel.AddToClassList("research-card-time");
+                        info.Add(timeLabel);
+
+                        footer.Add(info);
+
+                        // Start button (disabled while the lab is busy with another research)
+                        var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
+                        startBtn.AddToClassList("craft-btn");
+                        startBtn.SetEnabled(!labBusy && canPurchase);
+
+                        // Track for the live affordability refresh (see RefreshResearchAffordability).
+                        _researchAffordRows.Add((startBtn, costLabel, research));
+
+                        var captured = research;
+                        startBtn.clicked += () =>
                         {
-                            var prereqNames = string.Join(", ",
-                                System.Array.ConvertAll(research.prerequisites,
-                                    p => p != null ? p.displayName : "?"));
-                            var prereqLabel = new Label($"Requires: {prereqNames}");
-                            prereqLabel.AddToClassList("building-card-recipe");
-                            prereqLabel.style.color = new UnityEngine.Color(0.6f, 0.6f, 0.6f);
-                            card.Add(prereqLabel);
-                        }
+                            researchService.Purchase(captured);
+                            BuildResearchList();
+                        };
+                        footer.Add(startBtn);
                     }
 
-                    // Purchase button
-                    var purchaseBtn = new Button { text = "Research" };
-                    purchaseBtn.AddToClassList("craft-btn");
-                    purchaseBtn.SetEnabled(canPurchase);
-
-                    var captured = research;
-                    purchaseBtn.clicked += () =>
-                    {
-                        researchService.Purchase(captured);
-                        BuildResearchList(); // refresh after purchase
-                    };
-                    card.Add(purchaseBtn);
+                    card.Add(footer);
                 }
 
-                _researchList.Add(card);
+                return card;
             }
+        }
+
+        // Skip button for the in-progress research. First tap reveals a Confirm/Cancel row so
+        // spending crystals is always a deliberate two-tap action (no generic confirm modal exists).
+        private void BuildResearchSkipUi(VisualElement footer, ResearchSO research)
+        {
+            long cost     = researchService.ActiveSkipCost;
+            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
+
+            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn.AddToClassList("craft-btn");
+            _researchSkipBtn.SetEnabled(crystals >= cost);
+            _researchSkipBtn.clicked += () =>
+            {
+                _researchSkipConfirming = true;
+                footer.Remove(_researchSkipBtn);
+
+                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                confirm.AddToClassList("craft-btn");
+                confirm.clicked += () =>
+                {
+                    researchService.SkipActive(); // completion fires OnResearchUnlocked → rebuild
+                    BuildResearchList();
+                };
+
+                var cancel = new Button();
+                cancel.AddToClassList("craft-btn");
+                GlyphIcon.SetOn(cancel, GlyphIcon.Kind.Close);
+                cancel.clicked += () => BuildResearchList();
+
+                footer.Add(confirm);
+                footer.Add(cancel);
+            };
+            footer.Add(_researchSkipBtn);
         }
 
         private void OnResearchUnlocked(ResearchSO research)
@@ -503,25 +1112,154 @@ namespace MobileIdleBuilder
             // Refresh recipe panel — newly learned recipes will appear
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
                 BuildRecipeList();
+
+            // One-shot Quantum Domains introduction when its gate research is unlocked.
+            _sites?.NotifyResearchUnlocked(research);
+
+            // Reveal the megastructure nav button when its gating research lands.
+            ApplyMegastructureGate();
         }
 
         private void OpenUpgradesPanel()
         {
             CloseAllPanels();
-            // Content is populated when SpecialUpgradeSO data is wired in
+            _prestigeShop?.Refresh();
             SetElementVisible(_upgradesPanel, true);
+        }
+
+        private void OpenManagersPanel()
+        {
+            CloseAllPanels();
+            _managers?.Refresh();
+            SetElementVisible(_managersPanel, true);
+        }
+
+        private void OpenMegastructurePanel()
+        {
+            CloseAllPanels();
+            _megastructure?.Refresh();
+            SetElementVisible(_megastructurePanel, true);
+        }
+
+        /// <summary>Shows the megastructure nav button only once its gating research is unlocked.</summary>
+        private void ApplyMegastructureGate()
+        {
+            if (_btnMegastructure == null) return;
+            bool unlocked = MegastructureService.Instance?.IsUnlocked() ?? false;
+            SetElementVisible(_btnMegastructure, unlocked);
+        }
+
+        /// <summary>
+        /// Hides nav buttons for features turned off by remote feature flags. Flags resolve from the
+        /// cache at this point (last session's values); a change takes effect on the next launch.
+        /// </summary>
+        private void ApplyFeatureFlagGates(VisualElement root)
+        {
+            if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
+            if (!FeatureFlags.DailyEventsEnabled) SetElementVisible(root.Q<Button>("btn-daily"), false);
+            if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
+        }
+
+        private void OpenSitesPanel()
+        {
+            CloseAllPanels();
+            _sites?.ClearNavHighlight();
+            _sites?.Refresh();
+            SetElementVisible(_sitesPanel, true);
+        }
+
+        private void OpenWorldsPanel()
+        {
+            CloseAllPanels();
+            _worlds?.Refresh();
+            SetElementVisible(_worldsPanel, true);
+        }
+
+        private void OpenDailyPanel()
+        {
+            CloseAllPanels();
+            _daily?.Refresh();
+            SetElementVisible(_dailyPanel, true);
+        }
+
+        private void OpenRewardsPanel()
+        {
+            CloseAllPanels();
+            _rewards?.Refresh();
+            SetElementVisible(_rewardsPanel, true);
+        }
+
+        private void OpenShopPanel()
+        {
+            CloseAllPanels();
+            _shop?.Open();
+        }
+
+        private void OpenSettingsPanel()
+        {
+            CloseAllPanels();
+            _settings?.Open();
+        }
+
+        private void ApplyAchievementsGate()
+        {
+            bool unlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+            if (_btnAchievements != null)
+                _btnAchievements.SetEnabled(unlocked);
+            SetElementVisible(_achievementsLockedHint, !unlocked);
         }
 
         private void OpenAchievementsPanel()
         {
+            DismissAchievementsHint();
             CloseAllPanels();
+            _achActiveCategory = AchievementCategory.Daily;
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
         }
 
+        private void StartAchievementsHintPulse() =>
+            SwapAchievementsHintPulse("btn-drawer-handle");
+
+        private void SwapAchievementsHintPulse(string buttonId)
+        {
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+            var root = GetComponent<UIDocument>()?.rootVisualElement;
+            var btn  = root?.Q<Button>(buttonId);
+            if (btn == null) return;
+            _achievementsHintPulseTarget = btn;
+            _achievementsHintPulse       = StartCoroutine(PulseAchievementsHint(btn));
+        }
+
+        private void DismissAchievementsHint()
+        {
+            HideTutorialHint();
+            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
+            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
+            _achievementsHintPulseTarget = null;
+        }
+
+        private IEnumerator PulseAchievementsHint(Button btn)
+        {
+            while (true)
+            {
+                btn.AddToClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+                btn.RemoveFromClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+            }
+        }
+
+        private void SwitchAchCategory(AchievementCategory category)
+        {
+            _achActiveCategory = category;
+            BuildAchievementsList();
+        }
+
         private void OnAchievementUnlocked(AchievementSO _)
         {
-            // Refresh the title counter whenever a new achievement completes
             if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
                 BuildAchievementsList();
         }
@@ -684,6 +1422,8 @@ namespace MobileIdleBuilder
         {
             _recipeList.Clear();
 
+            var inventoryCounts = craftService?.GetInventoryCounts() ?? new Dictionary<int, int>();
+
             var recipes = RecipeDatabase.Instance?.Recipes;
             if (recipes == null) return;
 
@@ -701,7 +1441,8 @@ namespace MobileIdleBuilder
 
                 bool isGated = !string.IsNullOrEmpty(recipe.requires_research);
                 bool isLocked = isGated && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
-                bool canCraft = !isLocked && (craftService?.CanCraft(recipe) ?? false);
+                int  max      = isLocked ? 0 : (craftService?.MaxCraftable(recipe) ?? 0);
+                bool canCraft = max >= 1;
 
                 var row = new VisualElement();
                 row.AddToClassList("recipe-row");
@@ -711,11 +1452,14 @@ namespace MobileIdleBuilder
                 var info = new VisualElement();
                 info.AddToClassList("recipe-info");
 
+                var outputItem = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
+                var outputIcon = MakeItemIcon(outputItem?.icon, "item-icon");
+                if (outputIcon != null) info.Add(outputIcon);
+
                 var nameLabel = new Label(recipe.name);
                 nameLabel.AddToClassList("recipe-name");
 
-                var inputsLabel = new Label(BuildInputsText(recipe));
-                inputsLabel.AddToClassList("recipe-inputs");
+                var inputsContainer = BuildIngredientsUI(recipe, inventoryCounts);
 
                 if (recipe.requiresBuilding)
                 {
@@ -732,35 +1476,137 @@ namespace MobileIdleBuilder
                 }
 
                 info.Add(nameLabel);
-                info.Add(inputsLabel);
+                info.Add(inputsContainer);
 
-                var craftBtn = new Button { text = isLocked ? "Locked" : "Craft" };
-                craftBtn.AddToClassList("craft-btn");
-                craftBtn.SetEnabled(!isLocked);
-                var captured = recipe;
-                if (!isLocked)
-                    craftBtn.clicked += () => OnCraftPressed(captured);
+                // A building-only recipe needs one of its buildings placed (any recipe, busy or idle, #309).
+                // Its speed sets the craft time, same as the building takes.
+                float speed = 1f;
+                string missingBuilding = null;
+                bool hasBuilding = craftService == null
+                    || craftService.HasCraftingBuilding(recipe, out speed, out missingBuilding);
+                if (!isLocked && !hasBuilding)
+                {
+                    var needLabel = new Label($"Place {AOrAn(missingBuilding)} to craft this");
+                    needLabel.AddToClassList("recipe-lock-hint");
+                    info.Add(needLabel);
+                }
+
+                var timeLabel = new Label($"Craft time: {ManualCraftService.UnitSeconds(recipe, speed):0.#}s");
+                timeLabel.style.fontSize = 11;
+                timeLabel.style.opacity  = 0.7f;
+                info.Add(timeLabel);
+
+                float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
+                if (bonus > 0f)
+                {
+                    var bonusLabel = new Label(EscapeBonusText(bonus));
+                    bonusLabel.style.fontSize = 11;
+                    bonusLabel.AddToClassList("recipe-bonus-hint");
+                    info.Add(bonusLabel);
+                }
 
                 row.Add(info);
-                row.Add(craftBtn);
+                row.Add(BuildCraftButtons(recipe, isLocked, hasBuilding, max));
                 _recipeList.Add(row);
             }
         }
 
-        private void OnCraftPressed(RecipeJson recipe)
+        /// <summary>Recipe-row / inspector line for fusion byproducts that escape as entropy.</summary>
+        internal static string EscapeBonusText(float entropyPerCraft) =>
+            $"Releases particles: +{entropyPerCraft:0.#} entropy per craft";
+
+        // x1 / x5 / x10 / Max (#310). One the inventory can't pay for (or with no building placed) is
+        // styled unavailable but stays tappable: ListTapRouter swallows taps on disabled buttons, so a
+        // disabled one looked pressed and did nothing. Tapping it says what is missing instead.
+        private VisualElement BuildCraftButtons(RecipeJson recipe, bool isLocked, bool hasBuilding, int max)
         {
-            if (recipe.requiresBuilding)
+            var group = new VisualElement();
+            group.AddToClassList("craft-qty-group");
+
+            if (isLocked)
             {
-                if (!craftService.TriggerBuildingCraft(recipe))
-                    InventoryPopupController.NotifyWarning("No eligible building");
+                var locked = new Button { text = "Locked" };
+                locked.AddToClassList("craft-btn");
+                locked.SetEnabled(false);
+                group.Add(locked);
+                return group;
             }
-            else
+
+            foreach (int qty in CraftQuantities)
             {
-                if (!craftService.TryCraft(recipe))
-                    InventoryPopupController.NotifyWarning("Not enough materials");
-                else
-                    BuildRecipeList();
+                bool isMax = qty == CraftMax;
+                var btn = new Button { text = isMax ? "Max" : $"x{qty}" };
+                btn.AddToClassList("craft-btn");
+                btn.AddToClassList("craft-qty-btn");
+                btn.EnableInClassList("craft-btn--unavailable", !(hasBuilding && (isMax ? max >= 1 : max >= qty)));
+                // Routed from the list, not the button: a Button's own Clickable consumes the
+                // pointer-down before any manipulator added later. See ListTapRouter.
+                ListTapRouter.Register(_recipeList, btn, () => OnCraftPressed(recipe, qty));
+                group.Add(btn);
             }
+            return group;
+        }
+
+        private const int CraftMax = -1;
+        private static readonly int[] CraftQuantities = { 1, 5, 10, CraftMax };
+
+        private void OnCraftPressed(RecipeJson recipe, int count)
+        {
+            if (craftService == null) return;
+            if (count == CraftMax) count = craftService.MaxCraftable(recipe);
+            // Max with nothing affordable: report what one craft needs.
+            int wanted = Mathf.Max(1, count);
+
+            switch (craftService.TryEnqueue(recipe, wanted, out string missingBuilding))
+            {
+                case ManualCraftService.EnqueueResult.NoBuilding:
+                    InventoryPopupController.NotifyWarning($"Place {AOrAn(missingBuilding)} first");
+                    break;
+                case ManualCraftService.EnqueueResult.NotEnoughMaterials:
+                case ManualCraftService.EnqueueResult.NotReady:
+                    string missing = craftService.DescribeMissing(recipe, wanted);
+                    InventoryPopupController.NotifyWarning(missing != null
+                        ? $"Need {missing} in your inventory"
+                        : "Not enough materials");
+                    break;
+            }
+        }
+
+        // Rebuild the queue strip, and the recipe list (counts and button states moved) unless a
+        // finger is down on it: replacing a button mid-press drops the tap (see ListTapRouter).
+        private void OnCraftQueueChanged()
+        {
+            _craftQueueView?.Rebuild();
+            UpdateRecipeListClearance();
+            if (IsRecipePanelOpen && !ListTapRouter.GestureInProgress)
+            {
+                float scroll = _recipeList.scrollOffset.y;
+                BuildRecipeList();
+                _recipeList.scrollOffset = new Vector2(0f, scroll);
+            }
+        }
+
+        // Matches .recipe-list .unity-scroll-view__content-container padding-bottom in GameHUD.uss.
+        private const float RecipeListEndPadding = 56f;
+
+        // While the queue strip floats over the bottom of the panel, pad the end of the list by its
+        // height so the last rows can still scroll clear of it. Padding the end never moves the rows
+        // above, unlike the strip pushing the whole list down.
+        private void UpdateRecipeListClearance()
+        {
+            var content = _recipeList?.contentContainer;
+            var strip   = _craftQueueView?.Root;
+            if (content == null) return;
+            bool shown = strip != null && !strip.ClassListContains("hidden") && !float.IsNaN(strip.layout.height);
+            content.style.paddingBottom = shown
+                ? new StyleLength(RecipeListEndPadding + strip.layout.height)
+                : new StyleLength(StyleKeyword.Null);
+        }
+
+        private static string AOrAn(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "a building";
+            return ("AEIOU".IndexOf(char.ToUpperInvariant(name[0])) >= 0 ? "an " : "a ") + name;
         }
 
         // ============================================================
@@ -770,6 +1616,8 @@ namespace MobileIdleBuilder
         private void BuildBuildingsList()
         {
             _buildingsList.Clear();
+            _buildingAffordRows.Clear();
+            _lastAffordEntropy = long.MinValue; // force a re-evaluate next Update
 
             long currentEntropy = 0;
             if (_ecsReady && !_progressQuery.IsEmpty)
@@ -779,30 +1627,21 @@ namespace MobileIdleBuilder
             // ---- Conveyor Belt entry (always first, always free) ----
             if (conveyorController != null)
             {
-                var conveyorCard = new VisualElement();
-                conveyorCard.AddToClassList("building-card");
-
-                var nameLabel = new Label("Conveyor Belt");
-                nameLabel.AddToClassList("building-card-name");
-
-                var descLabel = new Label("Draw paths to move items between buildings");
-                descLabel.AddToClassList("building-card-recipe");
-
-                var placeBtn = new Button { text = "Place" };
-                placeBtn.AddToClassList("craft-btn");
-                placeBtn.clicked += () =>
+                // Named so tutorial steps can point at it (TutorialPulseResolver).
+                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName("conveyor") };
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     conveyorController.BeginConveyorMode();
-                };
+                });
 
-                conveyorCard.Add(nameLabel);
-                conveyorCard.Add(descLabel);
-                conveyorCard.Add(placeBtn);
-                _buildingsList.Add(conveyorCard);
+                _buildingsList.Add(MakeBuildingCard("Conveyor Belt",
+                    "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
             }
 
             if (placementController == null) return;
+
+            AddFieldPurchaseRows(currentEntropy);
 
             foreach (var entry in placementController.availableBuildings)
             {
@@ -814,56 +1653,170 @@ namespace MobileIdleBuilder
                         continue;
                 }
 
-                var card = new VisualElement();
-                card.AddToClassList("building-card");
-
-                var nameLabel = new Label(entry.building?.displayName ?? "Building");
-                nameLabel.AddToClassList("building-card-name");
-
-                var recipeLabel = new Label(entry.defaultRecipe != null
+                string detail = entry.defaultRecipe != null
                     ? $"Produces: {entry.defaultRecipe.displayName}"
-                    : "No recipe");
-                recipeLabel.AddToClassList("building-card-recipe");
+                    : bso?.description ?? "";
+                if (IsObsolete(bso))
+                    detail = $"Obsolete. {bso.obsoleteCondition}";
 
-                int cost = entry.building?.entropyCost ?? 0;
+                int rawCost = entry.building?.entropyCost ?? 0;
+                float reduction = !_prestigeQuery.IsEmpty
+                    ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                    : 0f;
+                long cost = EntropyWallet.ReducedCost(rawCost, reduction);
                 bool canAfford = currentEntropy >= cost;
 
-                if (cost > 0)
-                {
-                    var costLabel = new Label($"◈ {cost:N0}");
-                    costLabel.AddToClassList("building-card-recipe");
-                    if (!canAfford)
-                        costLabel.style.color = new UnityEngine.Color(1f, 0.3f, 0.3f);
-                    card.Add(costLabel);
-                }
+                var costLabel = MakeCostLabel(cost, canAfford);
 
                 var placeBtn = new Button { text = "Place" };
-                placeBtn.AddToClassList("craft-btn");
+                if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
                 placeBtn.SetEnabled(canAfford);
 
+                // Track cost rows so Update() can re-enable them the moment entropy catches up.
+                if (cost > 0)
+                    _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
                 var captured = entry;
-                placeBtn.clicked += () =>
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
                 {
                     SetElementVisible(_buildingsPanel, false);
                     placementController.BeginPlacement(captured);
-                };
+                });
 
-                card.Add(nameLabel);
-                card.Add(recipeLabel);
-                card.Add(placeBtn);
-                _buildingsList.Add(card);
+                _buildingsList.Add(MakeBuildingCard(entry.building?.displayName ?? "Building",
+                    detail, costLabel, placeBtn));
+            }
+        }
+
+        /// <summary>
+        /// Fields for sale after Field Synthesis (see <see cref="FieldPurchaseService"/>). Quark fields
+        /// sell as a pair. The price shown is the next one; it climbs steeply with every purchase.
+        /// </summary>
+        private void AddFieldPurchaseRows(long currentEntropy)
+        {
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            if (_fieldGenerator == null) return;
+
+            foreach (var field in _fieldGenerator.KnownFields)
+            {
+                if (!FieldPurchaseService.IsAvailable(field)) continue;
+
+                long cost      = FieldPurchaseService.NextPrice(field);
+                bool canAfford = currentEntropy >= cost;
+                var costLabel  = MakeCostLabel(cost, canAfford);
+
+                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName(field.id) };
+                placeBtn.SetEnabled(canAfford);
+                _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
+                var captured = field;
+                ListTapRouter.Register(_buildingsList, placeBtn, () =>
+                {
+                    SetElementVisible(_buildingsPanel, false);
+                    placementController.BeginFieldPlacement(captured);
+                });
+
+                _buildingsList.Add(MakeBuildingCard(FieldPurchaseName(field), FieldPurchaseDetail(field),
+                    costLabel, placeBtn));
+            }
+        }
+
+        internal static string FieldPurchaseName(FieldSO field)
+            => field.purchaseGroupSize > 1 ? $"{field.displayName} Pair" : field.displayName;
+
+        internal static string FieldPurchaseDetail(FieldSO field)
+        {
+            string what = field.purchaseGroupSize > 1
+                ? $"{field.purchaseGroupSize} fields side by side"
+                : "One field on an empty tile";
+            return $"{what}. Each one costs {field.purchaseCostMultiplier:0.#}x the last.";
+        }
+
+        // Every build-menu row has the same three columns so rows line up whatever the text
+        // length: [name + wrapping detail] [fixed-width cost] [Place button that never shrinks].
+        private static VisualElement MakeBuildingCard(string name, string detail, Label costLabel, Button placeBtn)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("building-card");
+
+            var info = new VisualElement();
+            info.AddToClassList("building-card-info");
+            var nameLabel = new Label(name);
+            nameLabel.AddToClassList("building-card-name");
+            info.Add(nameLabel);
+            if (!string.IsNullOrEmpty(detail))
+            {
+                var detailLabel = new Label(detail);
+                detailLabel.AddToClassList("building-card-recipe");
+                info.Add(detailLabel);
+            }
+
+            placeBtn.AddToClassList("craft-btn");
+            placeBtn.AddToClassList("building-card-place");
+
+            card.Add(info);
+            card.Add(costLabel);
+            card.Add(placeBtn);
+            return card;
+        }
+
+        // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
+        // cost column blank (#197).
+        /// <summary>True once the research that replaces <paramref name="bso"/> is done (e.g. Nucleon Harvesting
+        /// for the Strong Force Combiner). The building stays placeable; the Build menu just says so.</summary>
+        private bool IsObsolete(BuildingSO bso) =>
+            bso != null && bso.isObsoleteable && !string.IsNullOrEmpty(bso.obsoletedByResearch)
+            && researchService != null && researchService.IsUnlocked(bso.obsoletedByResearch);
+
+        internal static string FormatBuildCost(long cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
+
+        private static Label MakeCostLabel(long cost, bool canAfford)
+        {
+            var costLabel = new Label(FormatBuildCost(cost));
+            costLabel.AddToClassList("building-card-cost");
+            costLabel.AddToClassList(canAfford
+                ? "building-card-recipe--affordable"
+                : "building-card-recipe--unaffordable");
+            return costLabel;
+        }
+
+        /// <summary>
+        /// Re-evaluates entropy affordability for the open Build panel whenever the player's
+        /// entropy changes, so a button that was unaffordable at open becomes clickable the
+        /// instant automation earns enough — no need to close and reopen the panel.
+        /// </summary>
+        private void RefreshBuildingAffordabilityIfChanged()
+        {
+            if (_buildingsPanel == null || _buildingsPanel.ClassListContains("hidden")) return;
+            if (!_ecsReady || _progressQuery.IsEmpty || _buildingAffordRows.Count == 0) return;
+
+            long entropy = _em.GetComponentData<PlayerProgressData>(
+                _progressQuery.GetSingletonEntity()).BaseCurrency;
+            if (entropy == _lastAffordEntropy) return;
+            _lastAffordEntropy = entropy;
+
+            foreach (var (btn, costLabel, cost) in _buildingAffordRows)
+            {
+                bool afford = entropy >= cost;
+                btn.SetEnabled(afford);
+                costLabel.EnableInClassList("building-card-recipe--affordable", afford);
+                costLabel.EnableInClassList("building-card-recipe--unaffordable", !afford);
             }
         }
 
         private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
         {
-            int cost = entry.building?.entropyCost ?? 0;
-            if (cost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
+            int rawCost = entry.building?.entropyCost ?? 0;
+            if (rawCost <= 0 || !_ecsReady || _progressQuery.IsEmpty) return;
 
-            var entity   = _progressQuery.GetSingletonEntity();
-            var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.BaseCurrency = System.Math.Max(0, progress.BaseCurrency - cost);
-            _em.SetComponentData(entity, progress);
+            float reduction = !_prestigeQuery.IsEmpty
+                ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                : 0f;
+            long cost = EntropyWallet.ReducedCost(rawCost, reduction);
+
+            // The building is already placed when this event fires, so charge what the player has
+            // rather than refusing (refusing would make it free). See EntropyWallet.SpendUpTo.
+            EntropyWallet.SpendUpTo(_progressQuery, cost);
         }
 
         // ============================================================
@@ -875,10 +1828,22 @@ namespace MobileIdleBuilder
             if (_achievementsList == null) return;
             _achievementsList.Clear();
 
+            // Update category tab highlights
+            UpdateAchievementTabHighlights();
+
+            // Update reset countdown
+            if (_achResetLabel != null)
+            {
+                _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                    ? ""
+                    : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
+            }
+
             var all = achievementService?.GetAll();
             if (all == null || all.Count == 0)
             {
                 _achievementsList.Add(new Label("No achievements defined."));
+                if (_achievementsTitle != null) _achievementsTitle.text = "Achievements (0 / 0)";
                 return;
             }
 
@@ -888,53 +1853,117 @@ namespace MobileIdleBuilder
 
             foreach (var achievement in all)
             {
-                bool isDone   = achievementService.IsCompleted(achievement.id);
-                bool isHidden = achievement.isHidden && !isDone;
+                if (achievement == null || achievement.category != _achActiveCategory) continue;
+
+                bool isDone      = achievementService.IsCompleted(achievement.id);
+                bool isClaimable = achievementService.IsClaimable(achievement.id);
+                bool isHidden    = achievement.isHidden && !isDone;
 
                 var row = new VisualElement();
-                row.AddToClassList("achievement-row");
-                if (isDone) row.AddToClassList("achievement-row--completed");
+                row.AddToClassList("ach-card");
+                if (isDone && !isClaimable) row.AddToClassList("ach-card--completed");
+                else if (isClaimable)       row.AddToClassList("ach-card--claimable");
 
-                // Check / lock indicator
-                var checkLabel = new Label(isDone ? "✓" : "○");
-                checkLabel.AddToClassList("achievement-row__check");
+                var innerRow = new VisualElement();
+                innerRow.AddToClassList("ach-card-row");
 
-                // Body
+                var checkLabel = new Label(isDone ? "" : "○");
+                checkLabel.AddToClassList("ach-card-check");
+                if (isDone) GlyphIcon.SetOn(checkLabel, GlyphIcon.Kind.Check);
+                if (isDone) checkLabel.AddToClassList("ach-card-check--done");
+
                 var body = new VisualElement();
-                body.AddToClassList("achievement-row__body");
+                body.AddToClassList("ach-card-body");
 
                 var nameLabel = new Label(isHidden ? "???" : achievement.displayName);
-                nameLabel.AddToClassList("achievement-row__name");
+                nameLabel.AddToClassList("ach-card-name");
 
                 var descLabel = new Label(isHidden ? "Complete a hidden objective to reveal." : achievement.description);
-                descLabel.AddToClassList("achievement-row__description");
+                descLabel.AddToClassList("ach-card-desc");
 
                 body.Add(nameLabel);
                 body.Add(descLabel);
 
-                // Progress (only for quantity > 1 and not hidden)
-                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                // Currency reward hint
+                if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
                 {
-                    int progress = achievementService.GetProgress(achievement.id);
-                    var progLabel = new Label($"{progress} / {achievement.triggerQuantity}");
-                    progLabel.AddToClassList("achievement-row__progress");
-                    body.Add(progLabel);
-                }
-
-                // Rewards (only if not hidden)
-                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
-                {
-                    var rewardNames = string.Join(", ", System.Array.ConvertAll(
-                        achievement.rewards, r => r != null ? r.displayName : "?"));
-                    var rewardLabel = new Label($"Reward: {rewardNames}");
-                    rewardLabel.AddToClassList("achievement-row__rewards");
+                    var parts = new System.Collections.Generic.List<string>();
+                    if (achievement.paidCurrencyReward    > 0) parts.Add($"◆ {achievement.paidCurrencyReward}");
+                    if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
+                    var rewardLabel = new Label(string.Join("  ", parts));
+                    rewardLabel.AddToClassList("ach-card-reward");
                     body.Add(rewardLabel);
                 }
 
-                row.Add(checkLabel);
-                row.Add(body);
+                // Cosmetic rewards (legacy)
+                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
+                {
+                    var cosmeticNames = string.Join(", ", System.Array.ConvertAll(
+                        achievement.rewards, r => r != null ? r.displayName : "?"));
+                    var cosmeticLabel = new Label($"Unlocks: {cosmeticNames}");
+                    cosmeticLabel.AddToClassList("ach-card-desc");
+                    body.Add(cosmeticLabel);
+                }
+
+                innerRow.Add(checkLabel);
+                innerRow.Add(body);
+
+                // Claim button
+                if (isClaimable)
+                {
+                    var claimBtn = new Button { text = "Claim" };
+                    claimBtn.AddToClassList("ach-claim-btn");
+                    string capturedId = achievement.id;
+                    claimBtn.clicked += () =>
+                    {
+                        achievementService?.ClaimReward(capturedId);
+                        BuildAchievementsList();
+                    };
+                    innerRow.Add(claimBtn);
+                }
+
+                row.Add(innerRow);
+
+                // Progress bar (in-progress achievements with quantity > 1)
+                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
+                {
+                    int progress = achievementService.GetProgress(achievement.id);
+                    float ratio  = Mathf.Clamp01((float)progress / achievement.triggerQuantity);
+
+                    var barWrap = new VisualElement();
+                    barWrap.AddToClassList("ach-progress-bar");
+                    var fill = new VisualElement();
+                    fill.AddToClassList("ach-progress-fill");
+                    fill.style.width = new StyleLength(new Length(ratio * 100f, LengthUnit.Percent));
+                    barWrap.Add(fill);
+                    row.Add(barWrap);
+
+                    var progLabel = new Label($"{progress:N0} / {achievement.triggerQuantity:N0}");
+                    progLabel.AddToClassList("ach-card-desc");
+                    row.Add(progLabel);
+                }
+
                 _achievementsList.Add(row);
             }
+
+            // Claim All button visibility
+            bool anyClaimable = achievementService?.ClaimableCount > 0;
+            SetElementVisible(_achClaimAllBtn, anyClaimable);
+        }
+
+        private void UpdateAchievementTabHighlights()
+        {
+            AchievementTabActive(_achTabDaily,       _achActiveCategory == AchievementCategory.Daily);
+            AchievementTabActive(_achTabWeekly,      _achActiveCategory == AchievementCategory.Weekly);
+            AchievementTabActive(_achTabMonthly,     _achActiveCategory == AchievementCategory.Monthly);
+            AchievementTabActive(_achTabProgression, _achActiveCategory == AchievementCategory.Progression);
+        }
+
+        private static void AchievementTabActive(Button tab, bool active)
+        {
+            if (tab == null) return;
+            if (active) tab.AddToClassList("achievements-tab--active");
+            else        tab.RemoveFromClassList("achievements-tab--active");
         }
 
         // ============================================================
@@ -943,7 +1972,15 @@ namespace MobileIdleBuilder
 
         private void OnPlacingChanged(bool isPlacing)
         {
+            TrackMode(ref _placingMode, isPlacing);
             SetElementVisible(_placementOverlay, isPlacing);
+            if (!isPlacing)
+            {
+                SetElementVisible(_placementConfirmPopup, false);
+                // The output selector only exists inside placement; a cancel from Escape/back used to
+                // leave it on screen.
+                SetElementVisible(_outputSelector, false);
+            }
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
@@ -952,23 +1989,197 @@ namespace MobileIdleBuilder
 
             if (isPlacing && _placementLabel != null)
             {
-                bool isField = placementController?.RequiresOutputDirection ?? false;
-                _placementLabel.text = isField
-                    ? "Tap a field tile to place  ·  R rotate  ·  Esc cancel"
-                    : canRotate
-                        ? "Tap a tile to place  ·  R rotate  ·  F flip  ·  Esc cancel"
-                        : "Tap an empty tile to place  ·  Esc to cancel";
+                string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
+                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
             }
+        }
+
+        // ============================================================
+        // Placement confirm popup (world-anchored ✓ / ✕ at the candidate cell)
+        // ============================================================
+
+        private void OnCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_placementConfirmPopup, hasCandidate);
+            // Surface the rotate (↻) action on the confirm popup itself for rotatable buildings,
+            // so the player can re-orient in-context next to ✓/✕ instead of reaching for the bottom bar.
+            SetElementVisible(_btnRotateCandidate,
+                hasCandidate && (placementController?.CanRotate ?? false));
+            if (hasCandidate) UpdatePlacementConfirmPopup();
+        }
+
+        private void UpdatePlacementConfirmPopup()
+        {
+            if (_placementConfirmPopup == null || placementController == null) return;
+            if (!placementController.HasCandidate) return;
+
+            var panel = _placementConfirmPopup.panel;
+            var cam   = Camera.main;
+            if (panel == null || cam == null) return;
+
+            Vector2 panelPoint = RuntimePanelUtils.CameraTransformWorldToPanel(
+                panel, placementController.CandidateWorldPosition, cam);
+
+            float w = _placementConfirmPopup.resolvedStyle.width;
+            float h = _placementConfirmPopup.resolvedStyle.height;
+            if (float.IsNaN(w)) w = 0f;
+            if (float.IsNaN(h)) h = 0f;
+
+            // Centre horizontally over the cell and float above it.
+            _placementConfirmPopup.style.left = panelPoint.x - w * 0.5f;
+            _placementConfirmPopup.style.top  = panelPoint.y - h - 24f;
+
+            _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
+        }
+
+        /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
+        /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
+        private bool IsPointerOverPlacementUI(Vector2 screenPos)
+            => ScreenPointInElement(_placementConfirmPopup, screenPos)
+            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
+
+        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
+        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
+        private bool IsPointerOverConveyorUI(Vector2 screenPos)
+        {
+            return ScreenPointInElement(_conveyorBar, screenPos);  // the bar strip, NOT the full-screen overlay
+        }
+
+        private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
+        {
+            if (el == null || el.ClassListContains("hidden")) return false;
+            var panel = el.panel;
+            if (panel == null) return false;
+            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
+            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
+            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
+            // panel and never registers as "over UI", leaking taps to the grid behind it.
+            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
+            return el.worldBound.Contains(panelPos);
         }
 
         private void OnConveyorPlacingChanged(bool isPlacing)
         {
+            TrackMode(ref _conveyorMode, isPlacing);
             SetElementVisible(_conveyorOverlay, isPlacing);
+
+            if (isPlacing)
+            {
+                // Mode always re-enters in Create with no pending start or candidate.
+                OnConveyorModeChanged(false);
+                OnConveyorCandidateChanged(false);
+                OnConveyorStartChanged(false);
+            }
         }
+
+        /// <summary>Updates the Create/Destroy toggle look and the bar's instructional text.</summary>
+        private void OnConveyorModeChanged(bool isDestroy)
+        {
+            if (_btnConveyorMode != null)
+            {
+                _btnConveyorMode.text = isDestroy ? "Destroy" : "Create";
+                if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
+                else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
+            }
+
+            if (_conveyorLabel != null)
+                _conveyorLabel.text = isDestroy
+                    ? "Tap a belt to remove"
+                    : "Tap a start, then an end";
+
+            // Switching mode always clears any pending candidate.
+            if (isDestroy) OnConveyorCandidateChanged(false);
+        }
+
+        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
+        private void OnConveyorCandidateChanged(bool hasCandidate)
+        {
+            SetElementVisible(_btnConveyorRotate,          hasCandidate);
+            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
+
+            // The label is a short instruction only — it must not repeat the button names.
+            if (_conveyorLabel != null && !IsDestroyModeActive())
+                _conveyorLabel.text = hasCandidate
+                    ? "Place the belt, or adjust it"
+                    : "Tap a start, then an end";
+        }
+
+        /// <summary>Shows the "start from a new cell" reset button whenever a start anchor is pending
+        /// (e.g. after auto-chaining), so the player can begin a fresh run without leaving build mode.</summary>
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            SetElementVisible(_btnConveyorNewStart, hasStart && !IsDestroyModeActive());
+        }
+
+        private bool IsDestroyModeActive() =>
+            conveyorController != null && conveyorController.IsDestroyMode;
+
+        /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
+        private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
+
+        /// <summary>Raised by the building inspector when the player sets a building's recipe.
+        /// Drives the tutorial's "set the Combiner to Proton" step.</summary>
+        public void NotifyBuildingRecipeSet() => OnBuildingRecipeSet?.Invoke();
 
         private void OnDeconstructingChanged(bool isDeconstructing)
         {
+            TrackMode(ref _deconstructMode, isDeconstructing);
             SetElementVisible(_deconstructOverlay, isDeconstructing);
+        }
+
+        // ============================================================
+        // Back button (#205)
+        // ============================================================
+
+        private void TrackMode(ref bool flag, bool active)
+        {
+            if (flag && !active) _modeEndedFrame = Time.frameCount;
+            flag = active;
+        }
+
+        /// <summary>
+        /// Android back / Escape closes the top-most UI layer, one per press. Order and rules live in
+        /// <see cref="BackNavigation"/>; this only reads the live state and applies the result.
+        /// </summary>
+        private void HandleBackButton()
+        {
+            if (!InputUtils.WasBackPressed()) return;
+
+            if (_dialogue == null) _dialogue = FindAnyObjectByType<DialogueController>();
+
+            bool panelOpen = false;
+            if (_allPanels != null)
+                foreach (var p in _allPanels)
+                    if (p != null && !p.ClassListContains("hidden")) { panelOpen = true; break; }
+
+            var state = new BackNavigation.State
+            {
+                ModeActiveOrJustEnded = _placingMode || _conveyorMode || _deconstructMode
+                                        || _modeEndedFrame == Time.frameCount,
+                DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
+                ConfirmOpen      = ConfirmPrompt.IsOpen,
+                IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
+                UpdateNoticeOpen = _gameUpdate != null && _gameUpdate.IsOpen,
+                InspectorOpen    = _inspector != null && _inspector.IsOpen,
+                PanelOpen        = panelOpen,
+                DrawerOpen       = _drawerOpen,
+            };
+
+            switch (BackNavigation.TopLayer(state))
+            {
+                case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
+                case BackNavigation.Layer.IdleReturn:    _idleReturn.Close();            break;
+                case BackNavigation.Layer.UpdateNotice:  _gameUpdate.Close();            break;
+                case BackNavigation.Layer.Inspector:     _inspector.HideBuildingInspector(); break;
+                case BackNavigation.Layer.Panel:
+                    foreach (var p in _allPanels)
+                        if (p != null) SetElementVisible(p, false);   // same as each panel's close button
+                    break;
+                case BackNavigation.Layer.Drawer:        CloseDrawer();                  break;
+                // YieldToMode / SwallowDialogue / None: nothing to do here.
+            }
         }
 
         // ============================================================
@@ -982,6 +2193,7 @@ namespace MobileIdleBuilder
         public void HideFieldBanner()                => _banner?.HideFieldBanner();
         public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
         public void HideTutorialHint()               => _banner?.HideTutorialHint();
+        public void SetTutorialHintProgress(string progress) => _banner?.SetTutorialHintProgress(progress);
 
         // ============================================================
         // Output selector
@@ -1051,13 +2263,74 @@ namespace MobileIdleBuilder
         public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
 
         // ============================================================
+        // Power-connection overlay toggle (⚡ top-bar button)
+        // ============================================================
+
+        private void TogglePowerConnections()
+        {
+            _powerConnectionsShown = !_powerConnectionsShown;
+            ApplyPowerConnectionState();
+            SettingsService.Instance?.SetShowPowerConnections(_powerConnectionsShown);
+        }
+
+        /// <summary>Syncs the button's on/off look and the map overlay to the current toggle state.</summary>
+        private void ApplyPowerConnectionState()
+        {
+            EnsurePowerOverlay()?.SetVisible(_powerConnectionsShown);
+
+            if (_btnPowerToggle == null) return;
+            if (_powerConnectionsShown) _btnPowerToggle.AddToClassList("power-toggle-btn--active");
+            else                        _btnPowerToggle.RemoveFromClassList("power-toggle-btn--active");
+        }
+
+        /// <summary>
+        /// Finds the map power-connection overlay, creating a runtime one if the scene has none (self-wires
+        /// to the GridRenderer via FindAnyObjectByType), so no manual scene wiring is required.
+        /// </summary>
+        private PowerConnectionOverlayController EnsurePowerOverlay()
+        {
+            if (_powerOverlay != null) return _powerOverlay;
+            _powerOverlay = FindAnyObjectByType<PowerConnectionOverlayController>();
+            if (_powerOverlay == null)
+                _powerOverlay = new GameObject("PowerConnectionOverlay").AddComponent<PowerConnectionOverlayController>();
+            return _powerOverlay;
+        }
+
+        // ============================================================
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
         // ============================================================
 
-        public void ShowBuildingInspector(Entity entity, string buildingName) =>
+        public void ShowBuildingInspector(Entity entity, string buildingName)
+        {
+            GameLogger.Develop($"[HUD] ShowBuildingInspector called: building='{buildingName}' inspector={((_inspector == null) ? "NULL" : "ok")}");
             _inspector?.ShowBuildingInspector(entity, buildingName);
+        }
 
         public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
+
+        // Idle-return modal pass-through (delegated to IdleReturnSubController)
+        public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
+
+        /// <summary>
+        /// Shows the game-data update notice once if the remote <c>gamedata.updatedUtc</c> stamp is
+        /// newer than the saved marker, then records the marker so it fires once per published stamp.
+        /// Called by ECSLoadBridge after the save is applied. No-op (silent) on any blank/stale stamp.
+        /// </summary>
+        public void MaybeShowGameUpdateNotice()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
+                return;
+
+            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save != null)
+            {
+                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+                SaveManager.Instance.SaveLocal();
+            }
+        }
 
         private void PositionTooltip(VisualElement anchor)
         {
@@ -1087,6 +2360,21 @@ namespace MobileIdleBuilder
             open();
         }
 
+        /// <summary>
+        /// Keeps the tutorial hint clear of any open menu. The left drawer and every slide panel sit over the
+        /// banner's bottom bar, which hides their bottom rows (the Place buttons). Derived from what is on
+        /// screen each frame, so every open path is covered and no caller can leave the banner expanded.
+        /// </summary>
+        private void RefreshBannerClearance()
+        {
+            if (_banner == null || _allPanels == null) return;
+            bool menuOpen = _drawerOpen;
+            if (!menuOpen)
+                foreach (var panel in _allPanels)
+                    if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            _banner.SetMenuOpen(menuOpen);
+        }
+
         private void CloseAllPanels()
         {
             foreach (var panel in _allPanels)
@@ -1094,6 +2382,9 @@ namespace MobileIdleBuilder
             CloseDrawer();
             CancelActiveModes();
         }
+
+        // Matches .left-drawer transition-duration (0.2s) in GameHUD.uss, plus a frame of slack.
+        private const long DrawerSlideMs = 250;
 
         private void ToggleDrawer()
         {
@@ -1105,9 +2396,14 @@ namespace MobileIdleBuilder
         {
             if (_drawerPanel == null) return;
             _drawerOpen = true;
+            _drawerTapGuard.MarkOpened();
+            _drawerPanel.style.visibility = Visibility.Visible;
             _drawerPanel.AddToClassList("left-drawer--open");
             SetElementVisible(_drawerBackdrop, true);
             OnDrawerOpened?.Invoke();
+            // Hint active: btn-achievements is now visible — pulse it instead of the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-achievements");
         }
 
         private void CloseDrawer()
@@ -1115,10 +2411,23 @@ namespace MobileIdleBuilder
             if (_drawerPanel == null) return;
             _drawerOpen = false;
             _drawerPanel.RemoveFromClassList("left-drawer--open");
+            // Hide once the 0.2 s slide-out transition has finished (unless reopened meanwhile).
+            _drawerPanel.schedule.Execute(() =>
+            {
+                if (!_drawerOpen) _drawerPanel.style.visibility = Visibility.Hidden;
+            }).StartingIn(DrawerSlideMs);
             SetElementVisible(_drawerBackdrop, false);
+            // Hint still active but drawer hidden: swap back to pulsing the drawer handle
+            if (_achievementsHintPulse != null)
+                SwapAchievementsHintPulse("btn-drawer-handle");
         }
 
-        private void CancelActiveModes()
+        /// <summary>
+        /// Cancels any active building-placement, conveyor, or deconstruct mode (and their
+        /// overlays). Public so sub-controllers (e.g. site travel) can clear placement before
+        /// an action that swaps the grid out from under it.
+        /// </summary>
+        public void CancelActiveModes()
         {
             placementController?.CancelPlacement();
             conveyorController?.CancelConveyorMode();
@@ -1131,9 +2440,19 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Calculates how much prestige currency a prestige would award.
-        /// Must stay in sync with the rate constant in <see cref="PrestigeSystem"/>.
+        /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth) => (long)(netWorth * 1f);
+        internal static long CalculatePrestigePreview(float netWorth)
+        {
+            var cfg    = GameBootstrap.Instance?.gameConfig;
+            float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
+            float pscale = cfg != null ? cfg.prestigeCurrencyScale : 50f;
+            if (pbase <= 0f || netWorth <= 0f) return 0L;
+            long earned = (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(netWorth / pbase) * pscale));
+            float gainBonus = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.PrestigeGainMultiplier) ?? 0f;
+            if (gainBonus > 0f) earned = (long)(earned * (1f + gainBonus));
+            return earned;
+        }
 
         internal static void SetElementVisible(VisualElement el, bool visible)
         {
@@ -1152,6 +2471,44 @@ namespace MobileIdleBuilder
                 return $"{i.quantity}× {sym}";
             });
             return string.Join("  +  ", parts);
+        }
+
+        internal static VisualElement BuildIngredientsUI(
+            RecipeJson recipe,
+            Dictionary<int, int> inventoryCounts)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("recipe-inputs-row");
+
+            if (recipe.inputs == null || recipe.inputs.Count == 0)
+                return row;
+
+            bool first = true;
+            foreach (var input in recipe.inputs)
+            {
+                if (!first)
+                {
+                    var sep = new Label("+");
+                    sep.AddToClassList("recipe-input-sep");
+                    row.Add(sep);
+                }
+                first = false;
+
+                var item   = ItemDatabase.Instance?.Get(input.id);
+                string sym = item?.symbol ?? item?.displayName ?? input.id;
+
+                int itemId = ItemDatabase.Instance?.GetItemId(input.id) ?? -1;
+                int count  = (itemId >= 0 && inventoryCounts.TryGetValue(itemId, out int c)) ? c : 0;
+
+                var inputIcon = MakeItemIcon(item?.icon, "recipe-input-icon");
+                if (inputIcon != null) row.Add(inputIcon);
+
+                var lbl = new Label($"{count}/{input.quantity} {sym}");
+                lbl.AddToClassList(count >= input.quantity ? "recipe-input-met" : "recipe-input-missing");
+                row.Add(lbl);
+            }
+
+            return row;
         }
     }
 }

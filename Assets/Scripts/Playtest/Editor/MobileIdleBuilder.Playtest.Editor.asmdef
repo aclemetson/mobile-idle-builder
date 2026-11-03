@@ -1,0 +1,29 @@
+{
+    "name": "MobileIdleBuilder.Playtest.Editor",
+    "rootNamespace": "MobileIdleBuilder.Playtest.Editor",
+    "references": [
+        "MobileIdleBuilder",
+        "MCPForUnity.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "MCP_FOR_UNITY_PRESENT"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.coplaydev.unity-mcp",
+            "expression": "",
+            "define": "MCP_FOR_UNITY_PRESENT"
+        }
+    ],
+    "noEngineReferences": false
+}

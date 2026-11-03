@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Select the Combiner, then drag a power link to the Generator. The Combiner
-      draws 10 eV \u2014 well within the Generator's 50 eV output. It will come online
-      immediately."
+    text: "No wiring needed \u2014 the Combiner is already inside the Generator's
+      power field, so it comes online the moment a generator is in range. It draws
+      10 eV, well within the Generator's 50 eV output. Watch the power readout up
+      top: if total draw ever exceeds supply, everything slows down."
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

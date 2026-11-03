@@ -7,34 +7,50 @@ using UnityEngine;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Creates ECS conveyor segment entities at runtime from a list of grid cells.
-    /// Called by ConveyorPlacementController after the player releases the drag.
+    /// Creates and links ECS conveyor segment entities at runtime from a list of grid cells.
+    /// Called by ConveyorPlacementController after the player confirms a run, and by
+    /// GridSaveService when replaying saved chains on load.
     ///
-    /// Connection rules:
-    ///   - If path[0] is an existing conveyor TAIL (NextSegment == Null), the new belt
-    ///     appends after it. The existing segment's ExitDir is updated for any turn.
-    ///   - If path[last] is an existing conveyor HEAD (IsChainHead == true), the new belt
-    ///     feeds into it. The existing segment's EntryDir is updated for any turn.
-    ///   - Intermediate cells must all be free (enforced by ConveyorPlacementController).
+    /// Connectivity model (see ConveyorData.cs): a cell's single output is its <c>ExitDir</c>.
+    /// Everything else — NextSegment, PrevSegment, EntryDir, IsChainHead — is DERIVED from the
+    /// ExitDir geometry of every segment by <see cref="RelinkAll"/>. This makes arbitrary graphs,
+    /// including 2-3 input merges into one output, correct by construction:
+    ///   - A cell may take flow from multiple inbound segments (any segment whose ExitDir points at
+    ///     it), but it always has exactly one output. Placement REJECTS a second output on a cell.
+    ///   - Merge inbound count is capped at 3.
+    ///
+    /// After (re)linking, <see cref="TryAutoTurnEnds"/> orients dead-end cells toward adjacent
+    /// building ports so the river always visually flows INTO a building input / OUT of an output.
     /// </summary>
     public class ConveyorPlacer : MonoBehaviour
     {
+        private const int MaxInbounds = 3;
+
         [SerializeField] private ConveyorVisualizer conveyorVisualizer;
 
         private EntityManager _em;
         private EntityQuery   _segmentQuery;
+        private EntityQuery   _buildingQuery;
+        private bool          _queryReady;
 
         void Start()
         {
-            _em           = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _segmentQuery = _em.CreateEntityQuery(typeof(ConveyorSegmentData));
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null) return;
+            _em            = world.EntityManager;
+            _segmentQuery  = _em.CreateEntityQuery(typeof(ConveyorSegmentData));
+            _buildingQuery = _em.CreateEntityQuery(typeof(BuildingData), typeof(GridPosition));
+            _queryReady    = true;
         }
 
         void OnDestroy()
         {
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world != null && world.IsCreated)
+            if (_queryReady && world != null && world.IsCreated)
+            {
                 _segmentQuery.Dispose();
+                _buildingQuery.Dispose();
+            }
         }
 
         // ----------------------------------------------------------------
@@ -42,231 +58,356 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Places conveyor segment entities for each cell in the path.
-        /// Handles connections to existing chain tails (at start) or chain heads (at end).
+        /// Lays down conveyor segments along <paramref name="path"/> (upstream → downstream): the
+        /// segment at path[i] outputs toward path[i+1]. Existing cells anywhere in the path are
+        /// reused (so a run can merge into an existing belt, and saved merge routes replay cleanly).
+        /// Rejects a run that would fork a cell's output or push a merge past 3 inbounds.
         /// </summary>
-        public void PlaceConveyorChain(List<Vector2Int> path)
+        public void PlaceConveyorChain(List<Vector2Int> path, OutputDirection? singleDir = null)
         {
-            if (path == null || path.Count == 0) return;
+            if (!_queryReady || path == null || path.Count == 0) return;
 
             int count = path.Count;
 
-            Dictionary<Vector2Int, Entity> segMap = BuildSegmentMap();
-
-            bool startIsExisting = segMap.ContainsKey(path[0]);
-            bool endIsExisting   = count > 1 && segMap.ContainsKey(path[count - 1]);
-
-
-            int firstNew = startIsExisting ? 1 : 0;
-            int lastNew  = endIsExisting   ? count - 2 : count - 1;
-
-            // Single existing cell — nothing to do
-            if (count == 1 && startIsExisting) return;
-
-            var entities = new Entity[count];
-            if (startIsExisting) entities[0]          = segMap[path[0]];
-            if (endIsExisting)   entities[count - 1]  = segMap[path[count - 1]];
-
-            // Two adjacent existing segments — link them directly
-            if (firstNew > lastNew)
+            // Snapshot existing geometry: cell→entity (to reuse cells) and cell→ExitDir (to validate).
+            var cellMap  = new Dictionary<Vector2Int, Entity>();
+            var cellExit = new Dictionary<int2, int>();
+            var existing = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < existing.Length; i++)
             {
-                if (startIsExisting && endIsExisting && count == 2)
-                    LinkExistingSegments(entities[0], entities[1], path[0], path[1]);
-                conveyorVisualizer?.Refresh();
+                var seg = _em.GetComponentData<ConveyorSegmentData>(existing[i]);
+                cellMap[new Vector2Int(seg.Cell.x, seg.Cell.y)] = existing[i];
+                cellExit[seg.Cell] = seg.ExitDir;
+            }
+            existing.Dispose();
+
+            var pathCells = new int2[count];
+            for (int i = 0; i < count; i++) pathCells[i] = new int2(path[i].x, path[i].y);
+
+            if (!ConveyorTopology.CanPlace(cellExit, pathCells, MaxInbounds, out string reason))
+            {
+                GameLogger.Warning($"[ConveyorPlacer] Placement rejected: {reason}.");
                 return;
             }
 
-            // ----------------------------------------------------------------
-            // Pass 1 — create new segment entities
-            // ----------------------------------------------------------------
-            for (int i = firstNew; i <= lastNew; i++)
+            var newCells = new HashSet<int2>();
+
+            for (int i = 0; i < count; i++)
             {
                 var cell = path[i];
 
-                OutputDirection entryDir = i > 0
-                    ? TravelDir(path[i - 1], path[i])
-                    : TravelDir(path[0], count > 1 ? path[1] : path[0]);
-
-                OutputDirection exitDir;
-                if (i == lastNew && !endIsExisting)
-                    // Chain tail: continue straight (same as entry)
-                    exitDir = i > 0 ? TravelDir(path[i - 1], path[i]) : entryDir;
-                else
-                    // Mid-chain or connecting to existing head: aim toward next cell
-                    exitDir = TravelDir(path[i], path[i + 1]);
-
-                bool isHead = (i == firstNew) && !startIsExisting;
-
-                var e = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
-                _em.SetComponentData(e, new GridPosition { Cell = new int2(cell.x, cell.y) });
-                _em.SetComponentData(e, new ConveyorSegmentData
+                if (!cellMap.TryGetValue(cell, out var e))
                 {
-                    Cell          = new int2(cell.x, cell.y),
-                    EntryDir      = (int)entryDir,
-                    ExitDir       = (int)exitDir,
-                    NextSegment   = Entity.Null,
-                    PrevSegment   = Entity.Null,
-                    TransportTime = 1f,
-                    IsChainHead   = isHead
-                });
+                    // Default output: continue in the travel direction (straight). Non-terminal
+                    // cells get overwritten just below; a lone belt honours the chosen singleDir.
+                    OutputDirection exit;
+                    if (count == 1)             exit = singleDir ?? OutputDirection.North;
+                    else if (i < count - 1)     exit = TravelDir(path[i], path[i + 1]);
+                    else                        exit = TravelDir(path[i - 1], path[i]);
 
-                GridOccupancy.Instance?.RegisterConveyor(cell.x, cell.y);
-                entities[i] = e;
-            }
-
-            // ----------------------------------------------------------------
-            // Pass 2 — link new segments to each other
-            // ----------------------------------------------------------------
-            for (int i = firstNew; i <= lastNew; i++)
-            {
-                var seg = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
-                if (i < lastNew)  seg.NextSegment = entities[i + 1];
-                if (i > firstNew) seg.PrevSegment = entities[i - 1];
-                _em.SetComponentData(entities[i], seg);
-            }
-
-            // ----------------------------------------------------------------
-            // Pass 3 — connect to existing segments and update their directions
-            // ----------------------------------------------------------------
-            if (startIsExisting)
-            {
-                // Connect new chain after the existing segment.
-                // If the existing segment already had a successor, sever that link first
-                // (the old downstream chain becomes its own independent chain head).
-                var existingEnt = entities[0];
-                var firstNewEnt = entities[firstNew];
-
-                var existingSeg = _em.GetComponentData<ConveyorSegmentData>(existingEnt);
-                var firstNewSeg = _em.GetComponentData<ConveyorSegmentData>(firstNewEnt);
-
-                if (existingSeg.NextSegment != Entity.Null && _em.Exists(existingSeg.NextSegment))
-                {
-                    var oldNext = _em.GetComponentData<ConveyorSegmentData>(existingSeg.NextSegment);
-                    oldNext.PrevSegment = Entity.Null;
-                    oldNext.IsChainHead = true;
-                    _em.SetComponentData(existingSeg.NextSegment, oldNext);
+                    e = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
+                    _em.SetComponentData(e, new GridPosition { Cell = new int2(cell.x, cell.y) });
+                    _em.SetComponentData(e, new ConveyorSegmentData
+                    {
+                        Cell          = new int2(cell.x, cell.y),
+                        EntryDir      = (int)exit,
+                        ExitDir       = (int)exit,
+                        NextSegment   = Entity.Null,
+                        PrevSegment   = Entity.Null,
+                        TransportTime = 1f,
+                        IsChainHead   = true,
+                        MergeCursor   = 0
+                    });
+                    GridOccupancy.Instance?.RegisterConveyor(cell.x, cell.y);
+                    cellMap[cell] = e;
+                    newCells.Add(new int2(cell.x, cell.y));
                 }
-
-                var exitToNew = TravelDir(path[0], path[firstNew]);
-
-                existingSeg.ExitDir     = (int)exitToNew;
-                existingSeg.NextSegment = firstNewEnt;
-                _em.SetComponentData(existingEnt, existingSeg);
-
-                firstNewSeg.EntryDir    = (int)exitToNew;
-                firstNewSeg.PrevSegment = existingEnt;
-                firstNewSeg.IsChainHead = false;
-                _em.SetComponentData(firstNewEnt, firstNewSeg);
-
-                conveyorVisualizer?.RefreshBelt(path[0].x, path[0].y,
-                    existingSeg.EntryDir, existingSeg.ExitDir);
-            }
-
-            if (endIsExisting)
-            {
-                // Connect new chain into the existing segment.
-                // If the existing segment had a predecessor, sever it first —
-                // that upstream tail becomes a dead end (NextSegment cleared).
-                var lastNewEnt  = entities[lastNew];
-                var existingEnt = entities[count - 1];
-
-                var lastNewSeg  = _em.GetComponentData<ConveyorSegmentData>(lastNewEnt);
-                var existingSeg = _em.GetComponentData<ConveyorSegmentData>(existingEnt);
-
-                if (existingSeg.PrevSegment != Entity.Null && _em.Exists(existingSeg.PrevSegment))
+                else if (i < count - 1)
                 {
-                    var oldPrev = _em.GetComponentData<ConveyorSegmentData>(existingSeg.PrevSegment);
-                    oldPrev.NextSegment = Entity.Null;
-                    _em.SetComponentData(existingSeg.PrevSegment, oldPrev);
+                    // Existing, non-terminal: redirect its output along the path (extending from an
+                    // existing tail, or a load-replay re-asserting identical geometry — a no-op). The
+                    // forward link is now an INTENTIONAL part of this run, so clear any dead-end block.
+                    var s = _em.GetComponentData<ConveyorSegmentData>(e);
+                    s.ExitDir       = (int)TravelDir(path[i], path[i + 1]);
+                    s.OutputBlocked = false;
+                    _em.SetComponentData(e, s);
                 }
-
-                var exitToExisting = TravelDir(path[lastNew], path[count - 1]);
-
-                lastNewSeg.ExitDir     = (int)exitToExisting;
-                lastNewSeg.NextSegment = existingEnt;
-                _em.SetComponentData(lastNewEnt, lastNewSeg);
-
-                existingSeg.EntryDir    = (int)exitToExisting;
-                existingSeg.PrevSegment = lastNewEnt;
-                existingSeg.IsChainHead = false;
-                _em.SetComponentData(existingEnt, existingSeg);
-
-                conveyorVisualizer?.RefreshBelt(path[count - 1].x, path[count - 1].y,
-                    existingSeg.EntryDir, existingSeg.ExitDir);
+                // Existing terminal cell keeps its own ExitDir (and downstream / output).
             }
 
-            int newCount = lastNew - firstNew + 1;
-            GameLogger.Develop($"[ConveyorPlacer] Placed {newCount} segment(s) from {path[firstNew]} to {path[lastNew]}. " +
-                      $"startConnected={startIsExisting} endConnected={endIsExisting}");
+            // A run that merely runs UP TO an existing belt (without an endpoint landing on it) must
+            // not auto-merge: block the offending output so the belts stay separate dead-ends.
+            BlockAdjacencyMerges(path, cellMap, newCells);
 
-            conveyorVisualizer?.Refresh();
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
+
+            GameLogger.Develop($"[ConveyorPlacer] Placed run {path[0]} -> {path[count - 1]} ({count} cell(s)).");
         }
-
-        // ----------------------------------------------------------------
-        // Private helpers
-        // ----------------------------------------------------------------
 
         /// <summary>
-        /// Directly links two adjacent existing segments (tail→head).
-        /// Updates ExitDir/EntryDir for any turn and refreshes their visuals.
+        /// Marks each cell in <paramref name="cells"/> as a blocked dead-end (its forward output stays
+        /// disconnected), then rebuilds connectivity. Called on load to restore the "ran up to but did
+        /// not merge with" relationships that the saved chain geometry alone cannot express.
         /// </summary>
-        private void LinkExistingSegments(Entity tail, Entity head, Vector2Int tailCell, Vector2Int headCell)
+        public void ApplyBlockedOutputs(IReadOnlyList<Vector2Int> cells)
         {
-            var tailSeg = _em.GetComponentData<ConveyorSegmentData>(tail);
-            var headSeg = _em.GetComponentData<ConveyorSegmentData>(head);
+            if (!_queryReady || cells == null || cells.Count == 0) return;
 
-            // Sever the tail's old successor (if any) before linking the new head
-            if (tailSeg.NextSegment != Entity.Null && _em.Exists(tailSeg.NextSegment))
+            var blockedSet = new HashSet<int2>();
+            foreach (var c in cells) blockedSet.Add(new int2(c.x, c.y));
+
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
             {
-                var oldNext = _em.GetComponentData<ConveyorSegmentData>(tailSeg.NextSegment);
-                oldNext.PrevSegment = Entity.Null;
-                oldNext.IsChainHead = true;
-                _em.SetComponentData(tailSeg.NextSegment, oldNext);
+                var s = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (!blockedSet.Contains(s.Cell)) continue;
+                s.OutputBlocked = true;
+                _em.SetComponentData(entities[i], s);
             }
+            entities.Dispose();
 
-            // Sever the head's old predecessor (if any) before linking the new tail
-            if (headSeg.PrevSegment != Entity.Null && _em.Exists(headSeg.PrevSegment))
-            {
-                var oldPrev = _em.GetComponentData<ConveyorSegmentData>(headSeg.PrevSegment);
-                oldPrev.NextSegment = Entity.Null;
-                _em.SetComponentData(headSeg.PrevSegment, oldPrev);
-            }
-
-            var dir = TravelDir(tailCell, headCell);
-
-            tailSeg.ExitDir     = (int)dir;
-            tailSeg.NextSegment = head;
-            _em.SetComponentData(tail, tailSeg);
-
-            headSeg.EntryDir    = (int)dir;
-            headSeg.PrevSegment = tail;
-            headSeg.IsChainHead = false;
-            _em.SetComponentData(head, headSeg);
-
-            conveyorVisualizer?.RefreshBelt(tailCell.x, tailCell.y, tailSeg.EntryDir, tailSeg.ExitDir);
-            conveyorVisualizer?.RefreshBelt(headCell.x, headCell.y, headSeg.EntryDir, headSeg.ExitDir);
-
-            GameLogger.Develop($"[ConveyorPlacer] Directly linked existing segments {tailCell} → {headCell}.");
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
         }
 
-        /// <summary>Builds a cell→entity lookup from all existing conveyor segments.</summary>
-        private Dictionary<Vector2Int, Entity> BuildSegmentMap()
+        /// <summary>
+        /// After a run is placed, blocks the output crossing the boundary between a NEWLY CREATED cell
+        /// of this run and a PRE-EXISTING belt outside the run — in either direction (the new cell
+        /// pointing into an existing belt, or an existing belt pointing into the new cell). This enforces
+        /// "merge only where an endpoint coincides": adjacency alone never connects belts.
+        ///
+        /// Only boundaries touching a brand-new cell are blocked. Reused/pre-existing cells keep their
+        /// links, so a run that ends ON an existing belt still merges, and an existing belt that already
+        /// merges into a reused cell is never severed when a second branch joins it.
+        /// </summary>
+        private void BlockAdjacencyMerges(List<Vector2Int> path, Dictionary<Vector2Int, Entity> cellMap,
+                                          HashSet<int2> newCells)
         {
+            if (newCells.Count == 0) return;
+
+            var pathSet = new HashSet<int2>();
+            foreach (var c in path) pathSet.Add(new int2(c.x, c.y));
+
+            foreach (var p in newCells)
+            {
+                if (!cellMap.TryGetValue(new Vector2Int(p.x, p.y), out var pe)) continue;
+                var pSeg = _em.GetComponentData<ConveyorSegmentData>(pe);
+
+                for (int d = 0; d < 4; d++)
+                {
+                    int2 q = AdjacentCell(p, d);
+                    if (pathSet.Contains(q)) continue;          // same run — an intentional link
+                    if (!cellMap.TryGetValue(new Vector2Int(q.x, q.y), out var qe)) continue; // not a conveyor
+
+                    var qSeg = _em.GetComponentData<ConveyorSegmentData>(qe);
+
+                    // The new cell points forward into the existing belt — block the new cell's output.
+                    int2 pExitCell = AdjacentCell(p, pSeg.ExitDir);
+                    if (pExitCell.x == q.x && pExitCell.y == q.y && !pSeg.OutputBlocked)
+                    {
+                        pSeg.OutputBlocked = true;
+                        _em.SetComponentData(pe, pSeg);
+                    }
+
+                    // The existing belt points into the new cell — block the existing belt's output.
+                    int2 qExitCell = AdjacentCell(q, qSeg.ExitDir);
+                    if (qExitCell.x == p.x && qExitCell.y == p.y && !qSeg.OutputBlocked)
+                    {
+                        qSeg.OutputBlocked = true;
+                        _em.SetComponentData(qe, qSeg);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes the conveyor segment at (x, y), if one exists, then rebuilds connectivity so the
+        /// remaining segments re-derive their tails/heads (inbounds of the removed cell become
+        /// tails; its successor becomes a head only if it has no other inbound). Returns true if a
+        /// segment was removed. Single source of truth for conveyor removal — shared by
+        /// DeconstructController and the placement controller's Destroy mode.
+        /// </summary>
+        public bool RemoveSegmentAt(int x, int y)
+        {
+            if (!_queryReady) return false;
+
             var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
-            var map      = new Dictionary<Vector2Int, Entity>(entities.Length);
+            Entity target = Entity.Null;
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var s = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (s.Cell.x == x && s.Cell.y == y) { target = entities[i]; break; }
+            }
+            entities.Dispose();
+
+            if (target == Entity.Null) return false;
+
+            _em.DestroyEntity(target);
+            GridOccupancy.Instance?.UnregisterConveyor(x, y);
+            conveyorVisualizer?.RemoveBelt(x, y);
+
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
+
+            GameLogger.Develop($"[ConveyorPlacer] Removed conveyor segment at ({x},{y}).");
+            return true;
+        }
+
+        // ----------------------------------------------------------------
+        // Topology — derive all links from per-cell ExitDir geometry
+        // ----------------------------------------------------------------
+
+        private void RebuildTopology()
+        {
+            RelinkAll();
+            TryAutoTurnEnds();
+        }
+
+        /// <summary>
+        /// Rebuilds NextSegment / PrevSegment / EntryDir / IsChainHead for every segment from each
+        /// cell's ExitDir, via the pure <see cref="ConveyorTopology"/> solver. A cell outputs to the
+        /// segment in its ExitDir neighbour (if any); its inbounds are the segments whose ExitDir
+        /// points back at it. A cell with no inbound is a chain head. The primary (first) inbound
+        /// drives EntryDir and PrevSegment; heads default to EntryDir == ExitDir (straight) until
+        /// auto-turn adjusts them.
+        /// </summary>
+        private void RelinkAll()
+        {
+            if (!_queryReady) return;
+
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            var cellMap  = new Dictionary<int2, Entity>(entities.Length);
+            var data     = new Dictionary<Entity, ConveyorSegmentData>(entities.Length);
+            var cellExit = new Dictionary<int2, int>(entities.Length);
+            var blocked  = new HashSet<int2>();
 
             for (int i = 0; i < entities.Length; i++)
             {
-                var seg  = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
-                map[new Vector2Int(seg.Cell.x, seg.Cell.y)] = entities[i];
+                var s = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                cellMap[s.Cell]   = entities[i];
+                data[entities[i]] = s;
+                cellExit[s.Cell]  = s.ExitDir;
+                if (s.OutputBlocked) blocked.Add(s.Cell);
+            }
+
+            var links = ConveyorTopology.Compute(cellExit, blocked);
+
+            foreach (var kv in data)
+            {
+                Entity e = kv.Key;
+                var    s = kv.Value;
+                var    l = links[s.Cell];
+
+                s.NextSegment = (l.HasOutput && cellMap.TryGetValue(l.OutputCell, out var ne)) ? ne : Entity.Null;
+
+                if (l.InboundCount > MaxInbounds)
+                    GameLogger.Warning($"[ConveyorPlacer] Cell {s.Cell} has {l.InboundCount} inbound " +
+                        $"conveyors (>{MaxInbounds}); merge cap exceeded.");
+
+                if (l.IsHead)
+                {
+                    s.IsChainHead = true;
+                    s.PrevSegment = Entity.Null;
+                    s.EntryDir    = s.ExitDir;             // straight by default
+                }
+                else
+                {
+                    s.IsChainHead = false;
+                    s.PrevSegment = (l.HasPrimaryInbound && cellMap.TryGetValue(l.PrimaryInboundCell, out var pe))
+                        ? pe : Entity.Null;
+                    s.EntryDir    = l.PrimaryInboundExitDir; // travel dir of the primary inbound
+                }
+
+                _em.SetComponentData(e, s);
             }
 
             entities.Dispose();
-            return map;
+        }
+
+        /// <summary>
+        /// Orients dead-end cells toward adjacent building ports so the flow always looks natural:
+        ///   - a TAIL (no conveyor successor) whose neighbour is a building Input facing it turns its
+        ///     ExitDir toward that input (90° if the flow was perpendicular);
+        ///   - a HEAD whose neighbour is a building Output facing it sets its EntryDir from that side
+        ///     so the current visually emerges from the building.
+        /// The matching convention mirrors ConveyorSystem (input Facing == approach dir; output
+        /// Facing == OppositeDir of the head's approach). Deterministic, so it re-runs identically on
+        /// load. Must run AFTER RelinkAll (it only adjusts ExitDir/EntryDir, never the links).
+        /// </summary>
+        private void TryAutoTurnEnds()
+        {
+            if (!_queryReady) return;
+
+            var bldgEntities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            if (bldgEntities.Length == 0) { bldgEntities.Dispose(); return; }
+
+            var buildingMap = new Dictionary<int2, Entity>(bldgEntities.Length * 2);
+            for (int i = 0; i < bldgEntities.Length; i++)
+            {
+                var pos = _em.GetComponentData<GridPosition>(bldgEntities[i]).Cell;
+                buildingMap[pos] = bldgEntities[i];
+                if (_em.HasComponent<BuildingFootprint>(bldgEntities[i]))
+                {
+                    var fp = _em.GetComponentData<BuildingFootprint>(bldgEntities[i]);
+                    for (int dx = 0; dx < fp.Width;  dx++)
+                    for (int dy = 0; dy < fp.Height; dy++)
+                        buildingMap[new int2(pos.x + dx, pos.y + dy)] = bldgEntities[i];
+                }
+            }
+            bldgEntities.Dispose();
+
+            var segEntities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < segEntities.Length; i++)
+            {
+                var e = segEntities[i];
+                var s = _em.GetComponentData<ConveyorSegmentData>(e);
+                int2 cell = s.Cell;
+                bool changed = false;
+
+                // Tail: turn output toward an adjacent building input facing this cell.
+                if (s.NextSegment == Entity.Null)
+                {
+                    int newExit = ConveyorAutoTurn.TailExit(s.ExitDir, dir =>
+                    {
+                        int2 cand = AdjacentCell(cell, dir);
+                        return buildingMap.TryGetValue(cand, out var b) && HasMatchingPort(b, cand, dir, PortType.Input);
+                    });
+                    if (newExit != s.ExitDir) { s.ExitDir = newExit; changed = true; }
+                }
+
+                // Head: receive flow from an adjacent building output facing this cell.
+                if (s.IsChainHead)
+                {
+                    int newEntry = ConveyorAutoTurn.HeadEntry(s.EntryDir, dir =>
+                    {
+                        int2 cand = AdjacentCell(cell, dir);
+                        return buildingMap.TryGetValue(cand, out var b) && HasMatchingPort(b, cand, OppositeDir(dir), PortType.Output);
+                    });
+                    if (newEntry != s.EntryDir) { s.EntryDir = newEntry; changed = true; }
+                }
+
+                if (changed) _em.SetComponentData(e, s);
+            }
+            segEntities.Dispose();
+        }
+
+        private bool HasMatchingPort(Entity building, int2 portCell, int dir, PortType required)
+        {
+            if (!_em.HasBuffer<PlacedPortData>(building)) return false;
+            var ports = _em.GetBuffer<PlacedPortData>(building, isReadOnly: true);
+            for (int i = 0; i < ports.Length; i++)
+            {
+                var p = ports[i];
+                if (p.PortType != (int)required) continue;
+                if (p.CellX != portCell.x || p.CellY != portCell.y) continue;
+                if (p.Facing == dir) return true;
+            }
+            return false;
         }
 
         // ----------------------------------------------------------------
-        // Direction helpers
+        // Helpers
         // ----------------------------------------------------------------
 
         /// <summary>Returns the OutputDirection of the step from 'from' to 'to'.</summary>
@@ -280,5 +421,19 @@ namespace MobileIdleBuilder
             else
                 return dy >= 0 ? OutputDirection.North : OutputDirection.South;
         }
+
+        private static int2 AdjacentCell(int2 cell, int dir)
+        {
+            return (OutputDirection)dir switch
+            {
+                OutputDirection.North => new int2(cell.x,     cell.y + 1),
+                OutputDirection.East  => new int2(cell.x + 1, cell.y    ),
+                OutputDirection.South => new int2(cell.x,     cell.y - 1),
+                OutputDirection.West  => new int2(cell.x - 1, cell.y    ),
+                _                    => cell
+            };
+        }
+
+        private static int OppositeDir(int dir) => (dir + 2) % 4;
     }
 }

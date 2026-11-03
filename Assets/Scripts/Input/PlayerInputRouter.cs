@@ -14,8 +14,8 @@ namespace MobileIdleBuilder
     ///
     /// Taps fire on RELEASE (not press) so swipes never accidentally trigger gameplay.
     ///
-    /// Scene setup: attach to any GameObject, wire placementController, buildingInspector,
-    /// gridRenderer, and hudDocument. CharacterMover is no longer needed.
+    /// Scene setup: attach to any GameObject, wire placementController, buildingInspector and
+    /// gridRenderer. CharacterMover is no longer needed.
     /// </summary>
     [DefaultExecutionOrder(-10)]
     public class PlayerInputRouter : MonoBehaviour
@@ -26,12 +26,12 @@ namespace MobileIdleBuilder
         [SerializeField] private BuildingInspectorController  buildingInspector;
         private ManualFieldCollector         fieldCollector;
         [SerializeField] private GridRenderer                 gridRenderer;
-        [SerializeField] private UIDocument                   hudDocument;
         [SerializeField] private Transform                    tapAnchor;
 
         private Vector2 _pressStart;
         private float   _dragAccum;
         private bool    _pressWasOnUI;
+        private bool    _warnedMissingCollectorWiring;
 
         void Awake()
         {
@@ -75,9 +75,9 @@ namespace MobileIdleBuilder
             if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
-            if (buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos))
+            bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);
+            if (inspectorHit)
             {
-                fieldCollector?.DeactivateField();
                 AnchorPresence(screenPos);
                 return;
             }
@@ -87,15 +87,14 @@ namespace MobileIdleBuilder
             if (fieldCollector != null && gridRenderer != null)
             {
                 if (ScreenToGridCell(screenPos, out int cx, out int cy))
-                {
-                    GameLogger.Develop($"[InputRouter] Tap → grid cell ({cx},{cy}), field={FieldGenerator.GetFieldAt(cx,cy)?.displayName ?? "none"}");
                     collectedByCell = fieldCollector.TryCollectAtGridCell(cx, cy);
-                    GameLogger.Develop($"[InputRouter] TryCollectAtGridCell={collectedByCell}");
-                }
             }
-            else
+            else if (!_warnedMissingCollectorWiring)
             {
-                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}");
+                // One-shot: this is a wiring fault, so it is the same message every tap forever.
+                // Left un-gated it was a release-tier Warning firing on every single tap.
+                _warnedMissingCollectorWiring = true;
+                GameLogger.Warning($"[InputRouter] Field collection skipped — fieldCollector={fieldCollector}, gridRenderer={gridRenderer}. Further occurrences suppressed.");
             }
 
             if (!collectedByCell && fieldCollector != null && fieldCollector.TryCollect(screenPos))
@@ -111,7 +110,6 @@ namespace MobileIdleBuilder
             }
 
             // Tap on empty ground — clear any building selection and anchor presence
-            fieldCollector?.DeactivateField();
             buildingInspector?.ClearSelection();
             AnchorPresence(screenPos);
         }
@@ -170,20 +168,14 @@ namespace MobileIdleBuilder
             if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
             float   t     = -ray.origin.y / ray.direction.y;
             Vector3 world = ray.origin + ray.direction * t;
-            float   cs    = gridRenderer.CellSize;
-            cx = Mathf.FloorToInt(world.x / cs + 0.5f);
-            cy = Mathf.FloorToInt(world.z / cs + 0.5f);
+            var     cell  = GridRenderer.WorldToCell(world, gridRenderer.CellSize);
+            cx = cell.x;
+            cy = cell.y;
             return true;
         }
 
-        private bool IsPointerOverUI(Vector2 screenPos)
-        {
-            if (hudDocument == null) return false;
-            var panel = hudDocument.rootVisualElement?.panel;
-            if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
-                panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            return panel.Pick(panelPos) != null;
-        }
+        // UI hit-testing lives in the shared UIInputBlocker so the camera, this router, and the
+        // placement/conveyor/deconstruct controllers all agree on what counts as "over UI".
+        private static bool IsPointerOverUI(Vector2 screenPos) => UIInputBlocker.IsPointerOverUI(screenPos);
     }
 }

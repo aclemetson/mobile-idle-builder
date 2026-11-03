@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using MobileIdleBuilder;
@@ -32,10 +33,13 @@ namespace MobileIdleBuilder.Editor
         private const string SettingsDir   = "Assets/Data/settings";
         private const string TiersDir      = "Assets/Data/tiers";
         private const string ResearchDir   = "Assets/Data/research";
-        private const string ItemsDir      = "Assets/Data/items";
+        private const string ItemsDir      = "Assets/Resources/Items";
         private const string RecipesDir    = "Assets/Data/recipes";
         private const string BuildingsDir  = "Assets/Data/buildings";
         private const string FieldsDir     = "Assets/Data/fields";
+        private const string SitesDir      = "Assets/Data/sites";
+        private const string WorldsDir     = "Assets/Data/worlds";
+        private const string ManagersDir   = "Assets/Data/managers";
         private const string DialogueDir   = "Assets/Data/dialogue";
         private const string TutorialDir   = "Assets/Data/tutorial";
         private const string ResourcesDir  = "Assets/Resources";
@@ -56,6 +60,16 @@ namespace MobileIdleBuilder.Editor
             if (AssetDatabase.LoadAssetAtPath<TutorialFlowSO>($"{TutorialDir}/tutorial_flow.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ResearchDatabaseSO>($"{ResourcesDir}/ResearchDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<SiteDatabaseSO>($"{ResourcesDir}/SiteDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<WorldDatabaseSO>($"{ResourcesDir}/WorldDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<BuildingDatabaseSO>($"{ResourcesDir}/BuildingDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
+                needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
                 needsImport = true;
 
             // Check if game_data.json is newer than the tutorial flow asset (proxy for last full import)
@@ -123,6 +137,9 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(RecipesDir);
             EnsureDirectory(BuildingsDir);
             EnsureDirectory(FieldsDir);
+            EnsureDirectory(SitesDir);
+            EnsureDirectory(WorldsDir);
+            EnsureDirectory(ManagersDir);
             EnsureDirectory(DialogueDir);
             EnsureDirectory(TutorialDir);
             EnsureDirectory(ResourcesDir);
@@ -170,13 +187,22 @@ namespace MobileIdleBuilder.Editor
                     ResolveResearchCrossRefs(so, r, itemLookup, recipeLookup, buildingLookup, researchLookup);
 
             // ── Step 8: FieldSO ──────────────────────────────────────────────
+            var fieldLookup = new Dictionary<string, FieldSO>();
             foreach (var field in data.fields)
-                GenerateField(field, itemLookup);
+                fieldLookup[field.id] = GenerateField(field, itemLookup);
+
+            // ── Step 8.5: SiteSO (resolves field_overrides → FieldSO) ────────
+            var siteLookup = new Dictionary<string, SiteSO>();
+            foreach (var site in data.sites)
+                siteLookup[site.id] = GenerateSite(site, fieldLookup);
 
             // ── Step 9: DialogueSO ───────────────────────────────────────────
             var dialogueLookup = new Dictionary<string, DialogueSO>();
             foreach (var dlg in data.dialogues)
+            {
+                if (string.IsNullOrEmpty(dlg.id)) continue;
                 dialogueLookup[dlg.id] = GenerateDialogue(dlg);
+            }
 
             // ── Step 10: TierSO (pass 2 — cross-refs) ───────────────────────
             foreach (var t in data.tiers)
@@ -184,10 +210,42 @@ namespace MobileIdleBuilder.Editor
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
-            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
+            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
-            GenerateResearchDatabase(data.research, researchLookup);
+            GenerateResearchDatabase(data.research, data.research_blocks, researchLookup);
+
+            // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
+            GenerateSiteDatabase(data.sites, siteLookup);
+
+            // ── Step 12.51: WorldSO + WorldDatabaseSO (resolves site_ids / prereq_unlock_ids) ──
+            // Worlds cross-ref site ids (from Step 8.5) and prereq research/item ids, so this
+            // must run after those lookups are populated.
+            var worldPrereqIds = new HashSet<string>();
+            foreach (var key in researchLookup.Keys) worldPrereqIds.Add(key);
+            foreach (var key in itemLookup.Keys)     worldPrereqIds.Add(key);
+            var worldLookup = new Dictionary<string, WorldSO>();
+            foreach (var world in data.worlds)
+                worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
+            GenerateWorldDatabase(data.worlds, worldLookup);
+
+            // ── Step 12.6: BuildingDatabaseSO (data-driven build menu) ───────
+            GenerateBuildingDatabase(data.buildings, buildingLookup);
+
+            // ── Step 12.55: ManagerSO + ManagerDatabaseSO (no cross-refs) ────
+            var managerLookup = new Dictionary<string, ManagerSO>();
+            foreach (var m in data.managers)
+                managerLookup[m.id] = GenerateManager(m);
+            GenerateManagerDatabase(data.managers, managerLookup);
+
+            // ── Step 12.6: DialogueDatabaseSO ────────────────────────────────
+            GenerateDialogueDatabase(data.dialogues, dialogueLookup);
+
+            // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
+            GenerateDailyContent(data.daily_rewards, data.daily_challenges);
+
+            // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
+            GenerateMegastructure(data.megastructure, itemLookup);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -196,8 +254,11 @@ namespace MobileIdleBuilder.Editor
                 $"[GameDataImporter] Done — " +
                 $"{data.tiers.Count} tiers, {data.research.Count} research, {data.items.Count} items, " +
                 $"{data.recipes.Count} recipes, {data.buildings.Count} buildings, " +
-                $"{data.fields.Count} fields, {data.dialogues.Count} dialogues, " +
-                $"{data.tutorial_steps.Count} tutorial steps."
+                $"{data.fields.Count} fields, {data.sites.Count} sites, {data.worlds.Count} worlds, " +
+                $"{data.managers.Count} managers, " +
+                $"{data.dialogues.Count} dialogues, " +
+                $"{data.tutorial_steps.Count} tutorial steps, " +
+                $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
             );
         }
 
@@ -209,15 +270,20 @@ namespace MobileIdleBuilder.Editor
             string path = $"{SettingsDir}/game_config.asset";
             var so = LoadOrCreate<GameConfigSO>(path);
 
-            so.baseCraftTimeMultiplier         = data.base_craft_time_multiplier;
-            so.manualCraftTimeBase             = data.manual_craft_time_base;
-            so.atomicAssemblerEVPerMassUnit    = data.atomic_assembler_ev_per_mass_unit;
-            so.isotopicManipulatorEVPerNeutron = data.isotopic_manipulator_ev_per_neutron;
-            so.netWorthToPrestigeCurrencyRate  = data.net_worth_to_prestige_currency_rate;
-            so.prestigeWallMultiplier          = data.prestige_wall_multiplier;
-            so.alphaParticleEVValue            = data.alpha_particle_ev_value;
-            so.betaParticleEVValue             = data.beta_particle_ev_value;
-            so.startingEntropy                 = data.starting_entropy;
+            so.baseCraftTimeMultiplier            = data.base_craft_time_multiplier;
+            so.manualCraftTimeBase                = data.manual_craft_time_base;
+            so.atomicAssemblerEVPerMassUnit       = data.atomic_assembler_ev_per_mass_unit;
+            so.isotopicManipulatorEVPerNeutron    = data.isotopic_manipulator_ev_per_neutron;
+            so.netWorthToPrestigeCurrencyRate     = data.net_worth_to_prestige_currency_rate;
+            so.prestigeBaseValue                  = data.prestige_base_value;
+            so.prestigeWallMultiplier             = data.prestige_wall_multiplier;
+            so.prestigeCurrencyScale              = data.prestige_currency_scale;
+            so.alphaParticleEVValue               = data.alpha_particle_ev_value;
+            so.betaParticleEVValue                = data.beta_particle_ev_value;
+            so.startingEntropy                    = data.starting_entropy;
+            so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
+            so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
+            so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;
@@ -263,10 +329,15 @@ namespace MobileIdleBuilder.Editor
             so.depthInTree          = data.depth_in_tree;
             so.costBaseCurrency     = data.cost_base_currency;
             so.costPrestigeCurrency = data.cost_prestige_currency;
+            so.durationSeconds      = data.duration_seconds;
+            so.fieldCooldownMult    = data.field_cooldown_mult;
             so.unlocksGridExpansion = data.unlocks_grid_expansion;
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;
             so.codexEntry           = data.codex_entry;
+            so.block                = data.block ?? "";
+            so.treeX                = data.tree_x;
+            so.treeY                = data.tree_y;
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -310,15 +381,16 @@ namespace MobileIdleBuilder.Editor
             so.codexEntry          = data.codex_entry;
             so.baseSellValue       = data.base_sell_value;
             so.isotopeSellMultiplier = data.isotope_sell_multiplier;
+            so.escapesAsEntropy    = data.escapes_as_entropy;
 
-            so.icon = LoadAssetOrWarn<Sprite>(data.icon_path, $"ItemSO '{data.id}'.icon");
+            so.icon = LoadAssetOrWarn<Sprite>(data.icon_path, $"ItemSO '{data.id}'.icon")
+                      ?? LoadGeneratedIcon(data.id);
 
             if (TryParseEnum<ItemCategory>(data.category, $"ItemSO '{data.id}'.category", out var cat))
                 so.category = cat;
             if (TryParseEnum<DecayType>(data.decay_type, $"ItemSO '{data.id}'.decayType", out var decay))
                 so.decayType = decay;
-            if (TryParseEnum<FieldType>(data.field_type, $"ItemSO '{data.id}'.fieldType", out var ft))
-                so.fieldType = ft;
+            so.fieldType = FieldTypes.Normalize(data.field_type);
 
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
@@ -376,6 +448,7 @@ namespace MobileIdleBuilder.Editor
             so.tier                = data.tier;
             so.isObsoleteable      = data.is_obsoleteable;
             so.obsoleteCondition   = data.obsolete_condition;
+            so.obsoletedByResearch = data.obsoleted_by_research;
             so.requiresPower       = data.requires_power;
             so.isPowerSource       = data.is_power_source;
             so.basePowerCostEV     = data.base_power_cost_ev;
@@ -387,8 +460,14 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
-            so.entropyCost         = data.entropy_cost;
-            so.availableFromStart  = data.available_from_start;
+            so.isItemFilter        = data.is_item_filter;
+            so.assignableOutputs   = data.assignable_outputs;
+            so.recipeModeLabels    = data.recipe_mode_labels;
+            so.recipeModePrefixes  = data.recipe_mode_prefixes;
+            so.entropyCost                = data.entropy_cost;
+            so.baseMaxOutputItems         = data.base_max_output_items;
+            so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;
+            so.availableFromStart         = data.available_from_start;
             so.tutorialNote        = data.tutorial_note;
             so.collectsDecayParticles = data.collects_decay_particles;
             so.decayCollectionRate = data.decay_collection_rate;
@@ -406,10 +485,14 @@ namespace MobileIdleBuilder.Editor
             if (data.footprint?.Length >= 2)
                 so.footprint = new Vector2Int(data.footprint[0], data.footprint[1]);
 
+            so.structureKind = BuildingStructureKind.None;
+            if (!string.IsNullOrEmpty(data.structure_kind) &&
+                TryParseEnum<BuildingStructureKind>(data.structure_kind, $"BuildingSO '{data.id}'.structureKind", out var sk))
+                so.structureKind = sk;
+
             so.compatibleAdjacentCategories = ParseEnumArray<BuildingCategory>(
                 data.compatible_adjacent_categories, $"BuildingSO '{data.id}'.compatibleAdjacentCategories");
-            so.compatibleFields = ParseEnumArray<FieldType>(
-                data.compatible_fields, $"BuildingSO '{data.id}'.compatibleFields");
+            so.compatibleFields = data.compatible_fields ?? System.Array.Empty<string>();
 
             if (data.upgrade_levels != null)
             {
@@ -424,8 +507,41 @@ namespace MobileIdleBuilder.Editor
                         powerCostEV          = ul.power_cost_ev,
                         outputEV             = ul.output_ev,
                         influenceRadiusTiles = ul.influence_radius_tiles,
+                        linkRadiusTiles      = ul.link_radius_tiles,
                         costBaseCurrency     = ul.cost_base_currency,
                         costPrestigeCurrency = ul.cost_prestige_currency
+                    };
+                }
+            }
+
+            if (data.storage_upgrade_levels != null)
+            {
+                so.storageUpgradeLevels = new BuildingStorageUpgradeLevel[data.storage_upgrade_levels.Count];
+                for (int i = 0; i < data.storage_upgrade_levels.Count; i++)
+                {
+                    var sl = data.storage_upgrade_levels[i];
+                    so.storageUpgradeLevels[i] = new BuildingStorageUpgradeLevel
+                    {
+                        level                = sl.level,
+                        maxOutputItems       = sl.max_output_items,
+                        costBaseCurrency     = sl.cost_base_currency,
+                        costPrestigeCurrency = sl.cost_prestige_currency
+                    };
+                }
+            }
+
+            if (data.input_upgrade_levels != null)
+            {
+                so.inputUpgradeLevels = new BuildingInputUpgradeLevel[data.input_upgrade_levels.Count];
+                for (int i = 0; i < data.input_upgrade_levels.Count; i++)
+                {
+                    var il = data.input_upgrade_levels[i];
+                    so.inputUpgradeLevels[i] = new BuildingInputUpgradeLevel
+                    {
+                        level                = il.level,
+                        maxInputItems        = il.max_input_items,
+                        costBaseCurrency     = il.cost_base_currency,
+                        costPrestigeCurrency = il.cost_prestige_currency
                     };
                 }
             }
@@ -454,18 +570,22 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
+        private static FieldSO GenerateField(FieldJson data, Dictionary<string, ItemSO> itemLookup)
         {
             string path = $"{FieldsDir}/{Sanitize(data.id)}.asset";
             var so = LoadOrCreate<FieldSO>(path);
 
             so.id            = data.id;
             so.displayName   = data.display_name;
-            so.collectionRate= data.collection_rate;
+            so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
-            if (TryParseEnum<FieldType>(data.field_type, $"FieldSO '{data.id}'.fieldType", out var ft))
-                so.fieldType = ft;
+            so.purchaseResearchId     = data.purchase_research ?? "";
+            so.purchaseCostBase       = data.purchase_cost_base;
+            so.purchaseCostMultiplier = data.purchase_cost_multiplier;
+            so.purchaseGroupSize      = Mathf.Max(1, data.purchase_group_size);
+
+            so.fieldType = FieldTypes.Normalize(data.field_type);
             if (ColorUtility.TryParseHtmlString(data.field_color, out var color))
                 so.fieldColor = color;
             so.fieldIcon = LoadAssetOrWarn<Sprite>(data.field_icon_path, $"FieldSO '{data.id}'.fieldIcon");
@@ -482,6 +602,169 @@ namespace MobileIdleBuilder.Editor
             }
 
             EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static SiteSO GenerateSite(SiteJson data, Dictionary<string, FieldSO> fieldLookup)
+        {
+            string path = $"{SitesDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<SiteSO>(path);
+
+            so.id          = data.id;
+            so.displayName = data.display_name;
+            so.unlockCost  = data.unlock_cost;
+
+            so.fieldOverrides.Clear();
+            if (data.field_overrides != null)
+                foreach (var ov in data.field_overrides)
+                    so.fieldOverrides.Add(new SiteFieldOverride
+                    {
+                        field             = ResolveRef(ov.field, fieldLookup, $"SiteSO '{data.id}' field_override '{ov.field}'"),
+                        densityMultiplier = ov.density_multiplier
+                    });
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static ManagerSO GenerateManager(ManagerJson data)
+        {
+            string path = $"{ManagersDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<ManagerSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.description      = data.description;
+            so.bonusValue       = data.bonus_value;
+            so.hireCostPrestige = data.hire_cost_prestige;
+            so.starBonusValues  = data.star_bonus_values ?? new[] { data.bonus_value };
+            so.starCosts        = data.star_costs        ?? new[] { 0 };
+
+            if (so.starBonusValues.Length != so.starCosts.Length)
+                Debug.LogWarning($"ManagerSO '{data.id}': star_bonus_values ({so.starBonusValues.Length}) " +
+                                 $"and star_costs ({so.starCosts.Length}) lengths differ; star upgrades may misbehave.");
+
+            if (TryParseEnum<ManagerBonusType>(data.bonus_type, $"ManagerSO '{data.id}'.bonusType", out var bt))
+                so.bonusType = bt;
+            so.portrait = LoadAssetOrWarn<Sprite>(data.portrait_path, $"ManagerSO '{data.id}'.portrait");
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateManagerDatabase(List<ManagerJson> managers,
+            Dictionary<string, ManagerSO> managerLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/ManagerDatabase.asset";
+            var db = LoadOrCreate<ManagerDatabaseSO>(path);
+
+            var list = new List<ManagerSO>(managers.Count);
+            foreach (var m in managers)
+                if (managerLookup.TryGetValue(m.id, out var so))
+                    list.Add(so);
+
+            db.allManagers = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateSiteDatabase(List<SiteJson> sites,
+            Dictionary<string, SiteSO> siteLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/SiteDatabase.asset";
+            var db = LoadOrCreate<SiteDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<SiteSO>(sites.Count);
+            foreach (var s in sites)
+                if (siteLookup.TryGetValue(s.id, out var so))
+                    list.Add(so);
+
+            db.allSites = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static WorldSO GenerateWorld(WorldJson data,
+            Dictionary<string, SiteSO> siteLookup, HashSet<string> validPrereqIds)
+        {
+            string path = $"{WorldsDir}/{Sanitize(data.id)}.asset";
+            var so = LoadOrCreate<WorldSO>(path);
+
+            so.id          = data.id;
+            so.displayName = data.display_name;
+            so.unlockCost  = data.unlock_cost;
+
+            so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
+            foreach (var pid in so.prereqUnlockIds)
+                if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
+                    GameLogger.Warning($"[GameDataImporter] WorldSO '{data.id}' prereq_unlock_id '{pid}' " +
+                                       "matches no research or item id.");
+
+            so.siteIds = new List<string>(data.site_ids ?? new List<string>());
+            foreach (var sid in so.siteIds)
+                if (!string.IsNullOrEmpty(sid) && !siteLookup.ContainsKey(sid))
+                    GameLogger.Warning($"[GameDataImporter] WorldSO '{data.id}' site_id '{sid}' matches no site.");
+
+            // Phase 5: per-world map theme. Empty/invalid hex keeps the WorldTheme default (Physics look).
+            so.theme ??= new WorldTheme();
+            if (data.theme != null)
+            {
+                if (ColorUtility.TryParseHtmlString(data.theme.background_color, out var bg))   so.theme.backgroundColor = bg;
+                if (ColorUtility.TryParseHtmlString(data.theme.tile_color, out var tile))       so.theme.tileColor       = tile;
+                if (ColorUtility.TryParseHtmlString(data.theme.field_tint, out var tint))       so.theme.fieldTint       = tint;
+            }
+
+            EditorUtility.SetDirty(so);
+            return so;
+        }
+
+        private static void GenerateWorldDatabase(List<WorldJson> worlds,
+            Dictionary<string, WorldSO> worldLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/WorldDatabase.asset";
+            var db = LoadOrCreate<WorldDatabaseSO>(path);
+
+            var list = new List<WorldSO>(worlds.Count);
+            foreach (var w in worlds)
+                if (worldLookup.TryGetValue(w.id, out var so))
+                    list.Add(so);
+
+            db.allWorlds = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateBuildingDatabase(List<BuildingJson> buildings,
+            Dictionary<string, BuildingSO> buildingLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/BuildingDatabase.asset";
+            var db = LoadOrCreate<BuildingDatabaseSO>(path);
+
+            var list = new System.Collections.Generic.List<BuildingSO>(buildings.Count);
+            foreach (var b in buildings)
+                if (buildingLookup.TryGetValue(b.id, out var so))
+                    list.Add(so);
+
+            db.allBuildings = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateDialogueDatabase(List<DialogueJson> dialogues,
+            Dictionary<string, DialogueSO> dialogueLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DialogueDatabase.asset";
+            var db = LoadOrCreate<DialogueDatabaseSO>(path);
+
+            var list = new List<DialogueDatabaseSO.Entry>(dialogues?.Count ?? 0);
+            if (dialogues != null)
+                foreach (var d in dialogues)
+                    if (!string.IsNullOrEmpty(d.id) && dialogueLookup.TryGetValue(d.id, out var so))
+                        list.Add(new DialogueDatabaseSO.Entry { id = d.id, dialogue = so });
+
+            db.entries = list.ToArray();
+            EditorUtility.SetDirty(db);
         }
 
         private static DialogueSO GenerateDialogue(DialogueJson data)
@@ -512,21 +795,25 @@ namespace MobileIdleBuilder.Editor
         }
 
         private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
-            Dictionary<string, DialogueSO> dialogueLookup)
+            Dictionary<string, DialogueSO> dialogueLookup,
+            Dictionary<string, BuildingSO> buildingLookup)
         {
             if (steps == null || steps.Count == 0) return;
 
             string path = $"{TutorialDir}/tutorial_flow.asset";
             var so = LoadOrCreate<TutorialFlowSO>(path);
 
-            so.steps = new TutorialStepDef[steps.Count];
-            for (int i = 0; i < steps.Count; i++)
+            var realSteps = steps.FindAll(s => !string.IsNullOrEmpty(s.id));
+            so.steps = new TutorialStepDef[realSteps.Count];
+            for (int i = 0; i < realSteps.Count; i++)
             {
-                var s = steps[i];
+                var s = realSteps[i];
                 var def = new TutorialStepDef
                 {
-                    id       = s.id,
-                    hintText = s.hint,
+                    id        = s.id,
+                    hintText  = s.hint,
+                    isSubstep = s.is_substep,
+                    rewardEntropy = s.reward_entropy,
                 };
 
                 // Advance condition
@@ -534,14 +821,48 @@ namespace MobileIdleBuilder.Editor
                 {
                     def.advanceCondition = new TutorialConditionDef
                     {
-                        anyOf      = s.advance_condition.any_of,
-                        uiEventId  = s.advance_condition.ui_event_id  ?? "",
-                        researchId = s.advance_condition.research_id  ?? "",
-                        minCount   = s.advance_condition.min_count,
+                        anyOf        = s.advance_condition.any_of,
+                        uiEventId    = s.advance_condition.ui_event_id  ?? "",
+                        researchId   = s.advance_condition.research_id  ?? "",
+                        minCount     = s.advance_condition.min_count,
+                        minLevel     = s.advance_condition.min_level,
+                        fieldId      = s.advance_condition.field_id     ?? "",
+                        recipeId     = s.advance_condition.recipe_id,
+                        buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,
                             $"TutorialStep '{s.id}'.advance_condition.type", out var ct))
                         def.advanceCondition.type = ct;
+
+                    // UiEvent steps advance in TutorialOverlayController, which never pays the reward.
+                    if (s.reward_entropy > 0 && def.advanceCondition.type == ConditionType.UiEvent)
+                        GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': reward_entropy " +
+                            "is ignored on a UiEvent step; put it on a state-driven step.");
+
+                    // Resolve BuildingMin's building_id string to the int BuildingType so the
+                    // ECS system can filter the count. Empty/unknown id leaves buildingType at
+                    // -1 (count all buildings).
+                    if (!string.IsNullOrEmpty(s.advance_condition.building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.building_id, out var bso))
+                        {
+                            def.advanceCondition.buildingType          = bso.buildingId;
+                            def.advanceCondition.buildingIsEntropySink = bso.isEntropySink;
+                        }
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.building_id '{s.advance_condition.building_id}' not found.");
+                    }
+
+                    // ConveyorLinked's source building (empty = any building).
+                    if (!string.IsNullOrEmpty(s.advance_condition.from_building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.from_building_id, out var fso))
+                            def.advanceCondition.fromBuildingType = fso.buildingId;
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.from_building_id '{s.advance_condition.from_building_id}' not found.");
+                    }
 
                     if (s.advance_condition.items != null && s.advance_condition.items.Count > 0)
                     {
@@ -578,9 +899,7 @@ namespace MobileIdleBuilder.Editor
                             $"TutorialStep '{s.id}'.on_enter.highlight_mode", out var hm))
                         def.onEnter.highlightMode = hm;
 
-                    if (TryParseEnum<FieldType>(s.on_enter.collection_filter,
-                            $"TutorialStep '{s.id}'.on_enter.collection_filter", out var ft))
-                        def.onEnter.collectionFilter = ft;
+                    def.onEnter.collectionFilter = FieldTypes.Normalize(s.on_enter.collection_filter);
 
                     if (TryParseEnum<BuildingInteractionGate>(s.on_enter.building_interaction_gate,
                             $"TutorialStep '{s.id}'.on_enter.building_interaction_gate", out var big))
@@ -629,7 +948,88 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateResearchDatabase(List<ResearchJson> research,
+        private static void GenerateDailyContent(List<DailyRewardJson> rewards,
+            List<DailyChallengeJson> challenges)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/DailyContent.asset";
+            var so = LoadOrCreate<DailyContentSO>(path);
+
+            var rewardList = new List<DailyRewardEntry>(rewards?.Count ?? 0);
+            if (rewards != null)
+                foreach (var r in rewards)
+                    rewardList.Add(new DailyRewardEntry
+                    {
+                        day              = r.day,
+                        crystals         = r.crystals,
+                        entropy          = r.entropy,
+                        prestigeCurrency = r.prestige_currency
+                    });
+            rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
+            so.loginRewards = rewardList.ToArray();
+
+            var challengeList = new List<DailyChallengeEntry>(challenges?.Count ?? 0);
+            if (challenges != null)
+                foreach (var c in challenges)
+                    challengeList.Add(new DailyChallengeEntry
+                    {
+                        id          = c.id,
+                        description = c.description,
+                        trigger     = c.trigger,
+                        target      = c.target,
+                        crystals    = c.crystals
+                    });
+            so.challengePool = challengeList.ToArray();
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateMegastructure(MegastructureJson data,
+            Dictionary<string, ItemSO> itemLookup)
+        {
+            if (data == null || string.IsNullOrEmpty(data.id)) return;
+
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/Megastructure.asset";
+            var so = LoadOrCreate<MegastructureSO>(path);
+
+            so.id               = data.id;
+            so.displayName      = data.display_name;
+            so.requiredResearch = data.required_research;
+
+            var stages = data.stages ?? new List<MegastructureStageJson>();
+            so.stages = new MegastructureStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.costs ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"Megastructure stage '{sd.id}' cost[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+
+                var stage = new MegastructureStage
+                {
+                    id             = sd.id,
+                    displayName    = sd.display_name,
+                    costItems      = items,
+                    costQuantities = qtys,
+                    rewardValue    = sd.reward_value,
+                };
+                if (TryParseEnum<MegastructureRewardType>(sd.reward_type,
+                        $"Megastructure stage '{sd.id}'.rewardType", out var rt))
+                    stage.rewardType = rt;
+
+                so.stages[i] = stage;
+            }
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateResearchDatabase(List<ResearchJson> research, List<ResearchBlockJson> blocks,
             Dictionary<string, ResearchSO> researchLookup)
         {
             EnsureDirectory(ResourcesDir);
@@ -642,6 +1042,19 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allResearch = list.ToArray();
+            db.blocks = (blocks ?? new List<ResearchBlockJson>())
+                .OrderBy(b => b.order)
+                .Select(b => new ResearchBlock
+                {
+                    id = b.id, displayName = b.name, order = b.order, targetHours = b.target_hours, anchor = b.anchor,
+                    description = b.description,
+                    startPrestigeCount          = b.start_prestige_count,
+                    startPrestigeCurrencyEarned = b.start_prestige_currency_earned,
+                    startEntropy                = b.start_entropy,
+                    startPermanentUpgrades      = b.start_permanent_upgrades ?? System.Array.Empty<string>(),
+                    startSites                  = b.start_sites ?? System.Array.Empty<string>(),
+                })
+                .ToArray();
             EditorUtility.SetDirty(db);
         }
 
@@ -736,5 +1149,15 @@ namespace MobileIdleBuilder.Editor
 
         internal static bool IsTodo(string value) =>
             string.IsNullOrEmpty(value) || value.Equals("TODO", StringComparison.OrdinalIgnoreCase);
+
+        // Convention fallback: when an item's icon_path is still "TODO", pick up a tile
+        // sprite generated by ElementIconGenerator at Assets/Art/Icons/Elements/{id}.png.
+        // Durable across re-imports without editing the hand-maintained game_data.json.
+        internal const string GeneratedIconsDir = "Assets/Art/Icons/Elements";
+
+        private static Sprite LoadGeneratedIcon(string id) =>
+            string.IsNullOrEmpty(id)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Sprite>($"{GeneratedIconsDir}/{Sanitize(id)}.png");
     }
 }

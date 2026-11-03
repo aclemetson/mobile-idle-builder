@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: lanthanides_and_heavy_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: lanthanides_and_heavy_metals
+  displayName: Lanthanides and Heavy Metals
+  description: Neutron capture from Europium up to Rhenium, and Gold into Mercury
+    (Slow mode).
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
+  depthInTree: 6
+  block: actinide_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 69700000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 833a0def7293a3b4da63df48e83593e1, type: 2}
+  - {fileID: 11400000, guid: 6abd3e5ca342ac14ba81a0c4424cc898, type: 2}
+  - {fileID: 11400000, guid: b8f816885aeef9b468f0ac814ca9c10c, type: 2}
+  - {fileID: 11400000, guid: e2ba3301ea3d71c48ae4afa51dc14afb, type: 2}
+  - {fileID: 11400000, guid: 7cbf57a91c018df4880885ce83c729d7, type: 2}
+  - {fileID: 11400000, guid: 2d107c787bc3ed3419df58a5e6eab014, type: 2}
+  - {fileID: 11400000, guid: 84ac4c5dcb5353240a87209cfe9ff3c7, type: 2}
+  - {fileID: 11400000, guid: 7d178368ea70d6e48b31e036000c77ee, type: 2}
+  - {fileID: 11400000, guid: c95a666dd713d4547902ee0d477feef7, type: 2}
+  - {fileID: 11400000, guid: aa28db57f21966c4a8e83f8e24d93c0f, type: 2}
+  - {fileID: 11400000, guid: 54e1be32f8019c0439fd8701f11665a9, type: 2}
+  - {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
+  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: be4d4efbb269a894393ab8e80f216fb5, type: 2}
+  - {fileID: 11400000, guid: 814bc6309c745c640aab5d5e4e7fa02a, type: 2}
+  - {fileID: 11400000, guid: fce32c01b750fa7428e7171ba5c4ff43, type: 2}
+  - {fileID: 11400000, guid: 3f807af68efefb847afe2e79953e8c1d, type: 2}
+  - {fileID: 11400000, guid: b625182c9a397c649a859fb735f0adde, type: 2}
+  - {fileID: 11400000, guid: 9c1b09b5877f5eb4c815e2bdfa5cb712, type: 2}
+  - {fileID: 11400000, guid: d2ccc893985a70d4aab137e947739326, type: 2}
+  - {fileID: 11400000, guid: a3da424e40a61c045aa14f36d0c2f05c, type: 2}
+  - {fileID: 11400000, guid: 7a60dbe29b190cd4c9177975cd97a0cf, type: 2}
+  - {fileID: 11400000, guid: 06368f52d399dd64ebe5fb4ae75ebd71, type: 2}
+  - {fileID: 11400000, guid: 054883ddea8164c40a85c606d83d5e8f, type: 2}
+  - {fileID: 11400000, guid: 5ca742bbee3a9bf4597da1c46ce9b0e2, type: 2}
+  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: The rare earths power magnets, lasers, and phosphors; the heavy metals
+    below them mark the edge of stability where the first natural radioactivity appears.

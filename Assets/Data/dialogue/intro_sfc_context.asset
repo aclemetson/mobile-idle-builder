@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Your electron pipeline is running. You already have Recombination I \u2014
-      the Strong Force Combiner is available to place. Keep accumulating entropy
+    text: "Your quark Harvesters are running. You already have Recombination I \u2014
+      the Strong Force Combiner fuses quarks into protons. Keep accumulating entropy
       and we will put those quarks to work."
     portrait: {fileID: 0}
     pauseGame: 0

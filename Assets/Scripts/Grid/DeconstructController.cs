@@ -12,8 +12,10 @@ namespace MobileIdleBuilder
     ///
     /// Flow:
     ///   1. HUDController calls BeginDeconstructMode() from the Buildings panel.
-    ///   2. While IsDeconstructing, tapping any occupied cell destroys the building or
-    ///      conveyor segment there. Mode stays active for repeated removals.
+    ///   2. While IsDeconstructing, tapping a conveyor segment removes it; tapping a building asks to
+    ///      confirm (ConfirmPrompt), then destroys it. Mode stays active for repeated removals.
+    ///      A removed building refunds part of the entropy spent on it (DemolishRefund); the grid's
+    ///      only Maxwell's Demon cannot be removed.
     ///   3. CancelDeconstructMode() exits (cancel button or Escape).
     ///
     /// When a conveyor segment is removed its chain neighbors are re-linked:
@@ -26,6 +28,7 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer       gridRenderer;
         [SerializeField] private BuildingVisualizer buildingVisualizer;
         [SerializeField] private ConveyorVisualizer conveyorVisualizer;
+        [SerializeField] private ConveyorPlacer     conveyorPlacer;
         [SerializeField] private UIDocument         hudDocument;
 
         public bool IsDeconstructing { get; private set; }
@@ -34,6 +37,9 @@ namespace MobileIdleBuilder
         private EntityManager _em;
         private EntityQuery   _buildingQuery;
         private EntityQuery   _conveyorQuery;
+        private EntityQuery   _sinkQuery;
+        private EntityQuery   _progressQuery;
+        private EntityQuery   _prestigeQuery;
         private bool          _ecsReady;
         private Vector2Int    _hoveredCell = new(-1, -1);
 
@@ -46,6 +52,7 @@ namespace MobileIdleBuilder
             if (gridRenderer       == null) gridRenderer       = FindAnyObjectByType<GridRenderer>();
             if (buildingVisualizer == null) buildingVisualizer = FindAnyObjectByType<BuildingVisualizer>();
             if (conveyorVisualizer == null) conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
+            if (conveyorPlacer     == null) conveyorPlacer     = FindAnyObjectByType<ConveyorPlacer>();
             if (hudDocument        == null) hudDocument        = FindAnyObjectByType<UIDocument>();
         }
 
@@ -63,6 +70,10 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<ConveyorSegmentData>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
+            _sinkQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<EntropySinkTag>(),
+                                                   ComponentType.ReadOnly<BuildingData>());
+            _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+            _prestigeQuery = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
             _ecsReady = true;
         }
 
@@ -73,6 +84,9 @@ namespace MobileIdleBuilder
             {
                 _buildingQuery.Dispose();
                 _conveyorQuery.Dispose();
+                _sinkQuery.Dispose();
+                _progressQuery.Dispose();
+                _prestigeQuery.Dispose();
             }
         }
 
@@ -88,6 +102,7 @@ namespace MobileIdleBuilder
 
         public void CancelDeconstructMode()
         {
+            ConfirmPrompt.Dismiss();
             gridRenderer?.ClearDeconstructHover();
             _hoveredCell = new(-1, -1);
             IsDeconstructing = false;
@@ -107,6 +122,9 @@ namespace MobileIdleBuilder
                 CancelDeconstructMode();
                 return;
             }
+
+            // Waiting on "Remove?": keep the target highlighted and ignore the grid.
+            if (ConfirmPrompt.IsOpen) return;
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
             bool    overUI    = IsPointerOverUI(screenPos);
@@ -175,15 +193,7 @@ namespace MobileIdleBuilder
             return (x, y, 1, 1); // conveyor or unknown — 1×1
         }
 
-        private bool IsPointerOverUI(Vector2 screenPos)
-        {
-            if (hudDocument == null) return false;
-            var panel = hudDocument.rootVisualElement?.panel;
-            if (panel == null) return false;
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
-                panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
-            return panel.Pick(panelPos) != null;
-        }
+        private static bool IsPointerOverUI(Vector2 screenPos) => UIInputBlocker.IsPointerOverUI(screenPos);
 
         // ================================================================
         // Private helpers
@@ -197,69 +207,127 @@ namespace MobileIdleBuilder
             var bldgEntities = _buildingQuery.ToEntityArray(Allocator.Temp);
             for (int i = 0; i < bldgEntities.Length; i++)
             {
-                var e   = bldgEntities[i];
-                var pos = _em.GetComponentData<GridPosition>(e);
-                int fx = pos.Cell.x, fy = pos.Cell.y;
-                int fw = 1, fh = 1;
-
-                if (_em.HasComponent<BuildingFootprint>(e))
-                {
-                    var fp = _em.GetComponentData<BuildingFootprint>(e);
-                    fw = fp.Width;
-                    fh = fp.Height;
-                }
-
-                // Check if the tapped cell falls within this building's footprint
+                var e = bldgEntities[i];
+                var (fx, fy, fw, fh) = Footprint(e);
                 if (x < fx || x >= fx + fw || y < fy || y >= fy + fh) continue;
-
-                _em.DestroyEntity(e);
-                GridOccupancy.Instance.ReleaseRect(fx, fy, fw, fh);
-                buildingVisualizer?.RemoveBuilding(fx, fy);
-                gridRenderer?.ClearDeconstructHover();
-                _hoveredCell = new(-1, -1);
                 bldgEntities.Dispose();
-                GameLogger.Develop($"[Deconstruct] Removed building at ({fx},{fy}).");
+                ConfirmBuildingRemoval(e);
                 return;
             }
             bldgEntities.Dispose();
 
-            // ---- Conveyor segments ----
-            var convEntities = _conveyorQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < convEntities.Length; i++)
+            // ---- Conveyor segments (shared removal logic) ----
+            // Belts are free to replace, so they go without a confirmation (only buildings ask).
+            if (IsConveyorAt(x, y)) RemoveConveyorAt(x, y);
+        }
+
+        private void ConfirmBuildingRemoval(Entity e)
+        {
+            var bd = _em.GetComponentData<BuildingData>(e);
+            var so = FindBuildingSO(bd.BuildingType);
+            string name = so != null && !string.IsNullOrEmpty(so.displayName) ? so.displayName : "this building";
+
+            if (DemolishRefund.IsProtected(_em.HasComponent<EntropySinkTag>(e), _sinkQuery.CalculateEntityCount()))
             {
-                var e   = convEntities[i];
-                var pos = _em.GetComponentData<GridPosition>(e);
-                if (pos.Cell.x != x || pos.Cell.y != y) continue;
-
-                var seg = _em.GetComponentData<ConveyorSegmentData>(e);
-
-                // Unlink from predecessor — it becomes the new tail
-                if (seg.PrevSegment != Entity.Null && _em.Exists(seg.PrevSegment))
-                {
-                    var prev = _em.GetComponentData<ConveyorSegmentData>(seg.PrevSegment);
-                    prev.NextSegment = Entity.Null;
-                    _em.SetComponentData(seg.PrevSegment, prev);
-                }
-
-                // Unlink from successor — it becomes the new chain head
-                if (seg.NextSegment != Entity.Null && _em.Exists(seg.NextSegment))
-                {
-                    var next = _em.GetComponentData<ConveyorSegmentData>(seg.NextSegment);
-                    next.PrevSegment = Entity.Null;
-                    next.IsChainHead = true;
-                    _em.SetComponentData(seg.NextSegment, next);
-                }
-
-                _em.DestroyEntity(e);
-                GridOccupancy.Instance.UnregisterConveyor(x, y);
-                conveyorVisualizer?.RemoveBelt(x, y);
-                gridRenderer?.ClearDeconstructHover();
-                _hoveredCell = new(-1, -1);
-                convEntities.Dispose();
-                GameLogger.Develop($"[Deconstruct] Removed conveyor segment at ({x},{y}).");
+                InventoryPopupController.NotifyWarning(
+                    $"{name} can't be removed: it's your only way to turn items into entropy.");
+                ClearHover();
                 return;
             }
-            convEntities.Dispose();
+
+            long  spent  = DemolishRefund.EntropySpent(so, bd.UpgradeLevel, bd.StorageUpgradeLevel,
+                                                       bd.InputUpgradeLevel, CostReduction());
+            float frac   = DemolishRefund.Fraction(
+                PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.DemolishRefund) ?? 0f);
+            long  refund = DemolishRefund.Amount(spent, frac);
+
+            string message = refund > 0
+                ? $"You get back {refund:N0} entropy ({Mathf.RoundToInt(frac * 100f)}% of the {spent:N0} spent on it)."
+                : "Nothing was spent on it, so there is nothing to refund.";
+            ConfirmPrompt.Show($"Remove {name}?", message, "Remove",
+                () => RemoveBuilding(e, spent, refund), ClearHover);
+        }
+
+        private void RemoveBuilding(Entity e, long spent, long refund)
+        {
+            if (!_ecsReady || !_em.Exists(e)) return; // gone while the prompt was open
+            var (fx, fy, fw, fh) = Footprint(e);
+
+            _em.DestroyEntity(e);
+            GridOccupancy.Instance.ReleaseRect(fx, fy, fw, fh);
+            buildingVisualizer?.RemoveBuilding(fx, fy);
+            // A belt tail that fed this building now feeds something else or nothing: redraw it (#223).
+            conveyorVisualizer?.RefreshAll();
+            ApplyRefund(spent, refund);
+            if (refund > 0) InventoryPopupController.Notify("entropy", (int)System.Math.Min(refund, int.MaxValue));
+            ClearHover();
+            SaveManager.Instance?.SaveLocal();
+            GameLogger.Develop($"[Deconstruct] Removed building at ({fx},{fy}), refund {refund} of {spent}.");
+        }
+
+        /// <summary>
+        /// Gives back the refund and takes the building's whole cost out of TotalEntropySpent, so net
+        /// worth (BaseCurrency + TotalEntropySpent) drops by exactly the unrefunded part: placing and
+        /// removing can never raise it.
+        /// </summary>
+        private void ApplyRefund(long spent, long refund)
+        {
+            if (_progressQuery.IsEmpty) return;
+            var entity   = _progressQuery.GetSingletonEntity();
+            var progress = _em.GetComponentData<PlayerProgressData>(entity);
+            progress.BaseCurrency      += refund;
+            progress.TotalEntropySpent  = System.Math.Max(0L, progress.TotalEntropySpent - spent);
+            _em.SetComponentData(entity, progress);
+        }
+
+        private void RemoveConveyorAt(int x, int y)
+        {
+            if (conveyorPlacer != null && conveyorPlacer.RemoveSegmentAt(x, y))
+            {
+                SaveManager.Instance?.SaveLocal();
+                GameLogger.Develop($"[Deconstruct] Removed conveyor segment at ({x},{y}).");
+            }
+            ClearHover();
+        }
+
+        private bool IsConveyorAt(int x, int y)
+        {
+            using var cells = _conveyorQuery.ToComponentDataArray<GridPosition>(Allocator.Temp);
+            foreach (var p in cells)
+                if (p.Cell.x == x && p.Cell.y == y) return true;
+            return false;
+        }
+
+        private (int fx, int fy, int fw, int fh) Footprint(Entity e)
+        {
+            var pos = _em.GetComponentData<GridPosition>(e);
+            int fw = 1, fh = 1;
+            if (_em.HasComponent<BuildingFootprint>(e))
+            {
+                var fp = _em.GetComponentData<BuildingFootprint>(e);
+                fw = fp.Width;
+                fh = fp.Height;
+            }
+            return (pos.Cell.x, pos.Cell.y, fw, fh);
+        }
+
+        private float CostReduction() =>
+            _prestigeQuery.IsEmpty ? 0f
+                : _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction;
+
+        private void ClearHover()
+        {
+            gridRenderer?.ClearDeconstructHover();
+            _hoveredCell = new(-1, -1);
+        }
+
+        private static BuildingSO FindBuildingSO(int buildingId)
+        {
+            var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            if (db == null || db.allBuildings == null) return null;
+            foreach (var b in db.allBuildings)
+                if (b != null && b.buildingId == buildingId) return b;
+            return null;
         }
 
         private Vector2Int WorldToCell(Vector2 screenPos)
@@ -270,9 +338,7 @@ namespace MobileIdleBuilder
             float t     = -ray.origin.y / ray.direction.y;
             var   world = ray.origin + ray.direction * t;
 
-            int cx = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
-            int cy = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
-            return new(cx, cy);
+            return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
     }
 }

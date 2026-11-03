@@ -28,18 +28,21 @@ public static class GoogleSignInBridge
     {
         GoogleSignInUser user;
 
-        try
+        if (AuthSessionPolicy.RequiresInteractiveSignIn())
         {
-            // Silent on repeat launches — no UI shown if session is cached
+            // Policy requires full account picker (inactivity ≥30d or full-auth ≥90d)
+            user = await Wrap(GoogleSignIn.DefaultInstance.SignIn());
+            AuthSessionPolicy.RecordFullAuth();
+        }
+        else
+        {
+            // Silent only — if the credential is gone, throw so the caller can fall
+            // back to an anonymous UGS session without showing any UI.  The 30/90-day
+            // policy will trigger a full interactive sign-in at the appropriate time.
             user = await Wrap(GoogleSignIn.DefaultInstance.SignInSilently());
         }
-        catch
-        {
-            // First launch or expired session — shows Google account picker
-            user = await Wrap(GoogleSignIn.DefaultInstance.SignIn());
-        }
 
-        if (string.IsNullOrEmpty(user.IdToken))
+        if (string.IsNullOrEmpty(user?.IdToken))
             throw new Exception("[GoogleSignIn] IdToken is null — verify RequestIdToken = true in configuration.");
 
         return user.IdToken;

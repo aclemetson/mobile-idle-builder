@@ -30,7 +30,7 @@ namespace MobileIdleBuilder
 
         [Header("Harvesting")]
         public bool isHarvested;        // true = raw resource, no recipe
-        public FieldType fieldType;
+        public string fieldType = FieldTypes.None;   // free-form field-type id (see FieldTypes)
 
         [Header("Secondary Particle")]
         public bool isSecondaryParticle;
@@ -44,5 +44,11 @@ namespace MobileIdleBuilder
         [Header("Economy")]
         public float baseSellValue;
         public float isotopeSellMultiplier;
+
+        /// <summary>
+        /// True for particles that fly off a reaction instead of staying in the building (neutrinos,
+        /// gamma photons). As a recipe byproduct they pay their sell value as entropy on every craft.
+        /// </summary>
+        public bool escapesAsEntropy;
     }
 }

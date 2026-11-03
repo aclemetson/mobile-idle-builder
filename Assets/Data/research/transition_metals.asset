@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: transition_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: transition_metals
+  displayName: Transition Metals
+  description: 'Neutron capture next to iron: Cobalt, Nickel, Copper, Zinc and on
+    to Bromine (Slow mode). The steepest climb in value on the Actinide map.'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
+  depthInTree: 7
+  block: stellar_forge
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 11800000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+  - {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
+  - {fileID: 11400000, guid: b28f1a8061c3b71459a2610eb4b6845d, type: 2}
+  - {fileID: 11400000, guid: 3a2da077bc6cc0143a8daf8a8e159dea, type: 2}
+  - {fileID: 11400000, guid: 7a4f4bd0ff4598c41a3333cd60fab9db, type: 2}
+  - {fileID: 11400000, guid: 949b7487c47f6eb4cab3b5e207c6a8a0, type: 2}
+  - {fileID: 11400000, guid: 9ffbf013a224d3947b74fb8730a66349, type: 2}
+  - {fileID: 11400000, guid: a44f5b0f14e5c0947a0e3505237d6976, type: 2}
+  - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: accbf0b97a2dfd048ab5980532cc26ed, type: 2}
+  - {fileID: 11400000, guid: 1a1f8799d6c57af40bb23a7873859a42, type: 2}
+  - {fileID: 11400000, guid: cbd042a1fb6d7d540a6b9c9cd947e5dd, type: 2}
+  - {fileID: 11400000, guid: 4993166b625eefb4ea709019fa5409c6, type: 2}
+  - {fileID: 11400000, guid: ac7a48118c1de4b45b5c1fc6ac74e8ab, type: 2}
+  - {fileID: 11400000, guid: e9efeaa09773fe44080a0d328fbab4e7, type: 2}
+  - {fileID: 11400000, guid: 6d58746f79cdd2643b9050776a46bc61, type: 2}
+  - {fileID: 11400000, guid: c536b8e7923582942be21d6c522f2e8b, type: 2}
+  - {fileID: 11400000, guid: 2df787a5cd7ef9949ae94b976941cc2c, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.15
+  codexEntry: Copper carries electricity better than any common metal. Zinc prevents
+    corrosion and is half of brass. Together they defined the Bronze and Brass Ages.

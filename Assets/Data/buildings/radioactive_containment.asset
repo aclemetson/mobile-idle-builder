@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: radioactive_containment
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: radioactive_containment
-  displayName: Radioactive Containment
-  description: Required housing for any building producing radioactive isotopes.
-    Safely contains decay events and harvests alpha and beta particles.
+  displayName: Decay Chamber
+  description: 'Lets unstable isotopes decay: one isotope in, the element it becomes
+    out, plus the particle it releases. Choose which output side each product leaves
+    by.'
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 6
@@ -23,6 +24,7 @@ MonoBehaviour:
   category: 0
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 1
   isPowerSource: 0
   basePowerCostEV: 30
@@ -31,22 +33,54 @@ MonoBehaviour:
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
   baseOutputRate: 0
-  supportedRecipes: []
-  inputSlotCount: 0
-  inputSlotLabels: []
+  supportedRecipes:
+  - {fileID: 11400000, guid: a45e4066c94f02f4bab8378055410bd1, type: 2}
+  - {fileID: 11400000, guid: 33adc2805c9fd24429efd467220c7873, type: 2}
+  - {fileID: 11400000, guid: 24ad2ce01e38b8143a9fa295cc3e0d18, type: 2}
+  - {fileID: 11400000, guid: 720ec7710915cfd48bc6ba4b2d8812cc, type: 2}
+  - {fileID: 11400000, guid: 61da60bd071e2124dabf8572d535f6ac, type: 2}
+  - {fileID: 11400000, guid: f21f6382df7ab644e9b26d64ef8d10d6, type: 2}
+  - {fileID: 11400000, guid: 3e3cb8392d542c04598095bfddfa48e5, type: 2}
+  - {fileID: 11400000, guid: 75c204f95e4ac5846a85c37473612011, type: 2}
+  - {fileID: 11400000, guid: 30ae2468216d07b4caa5a67ce71d95b2, type: 2}
+  - {fileID: 11400000, guid: 00faaece528abf442861728a2083689a, type: 2}
+  - {fileID: 11400000, guid: 3bf13c90228c0294fbd20e57bc1692c1, type: 2}
+  inputSlotCount: 1
+  inputSlotLabels:
+  - Isotope
   isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 1
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 2, y: 2}
-  ports: []
+  structureKind: 7
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 0
+    localCell: {x: 0, y: 1}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 1, y: 1}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 1, y: 0}
+    localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 2500
+  baseMaxOutputItems: 30
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 0
     powerCostEV: 50
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 3000
     costPrestigeCurrency: 0
   - level: 3
@@ -54,8 +88,19 @@ MonoBehaviour:
     powerCostEV: 80
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 12000
     costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 200
+    costBaseCurrency: 2000
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 1000
+    costBaseCurrency: 8000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
   requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}

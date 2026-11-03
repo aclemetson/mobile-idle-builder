@@ -9,8 +9,9 @@ namespace MobileIdleBuilder
     ///   - Flip is applied first (horizontal mirror: E ↔ W, cell x → (W-1-x))
     ///   - Rotation is applied after (90° CW steps)
     ///
-    /// Rotation CW cell rule in a footprint (W x H):
-    ///   (x, y)  →  (H-1-y, x)  and new footprint becomes (H, W)
+    /// Rotation CW cell rule in a footprint (W x H), y = North:
+    ///   (x, y)  →  (y, W-1-x)  and new footprint becomes (H, W)
+    ///   (the same turn as the facing: East → South)
     /// </summary>
     public static class PortUtils
     {
@@ -58,11 +59,14 @@ namespace MobileIdleBuilder
                 dir = FlipDir(dir);
             }
 
-            // 2. Rotation (90° CW, 'rotation' times)
+            // 2. Rotation (90° CW, 'rotation' times). The cell must turn the same way as the facing
+            // (East -> South): (x, y) -> (y, W-1-x) with y = North. The old (H-1-y, x) turned cells
+            // counter-clockwise, so on a 2x1 stood upright each end port faced into the other cell and
+            // the short ends took no belts (#306). Rotations 0 and 2 are the same under both.
             for (int i = 0; i < rotation; i++)
             {
-                int nx = (h - 1) - y;
-                int ny = x;
+                int nx = y;
+                int ny = (w - 1) - x;
                 x = nx;
                 y = ny;
                 int tmp = w; w = h; h = tmp;

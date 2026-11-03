@@ -53,3 +53,11 @@
     color: var(--color-text-secondary);
     -unity-text-align: middle-center;
 }
+
+/* Centered under the bar rather than in a screen corner, where curved phone edges clip it */
+.loading-version {
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+}

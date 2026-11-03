@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Export options for the App Store / TestFlight build.
+  __APPLE_TEAM_ID__ is substituted at build time by scripts/archive-upload-ios.sh
+  so the team id stays a CI variable rather than being committed.
+  Signing is automatic (cloud-managed) via the App Store Connect API key passed
+  to xcodebuild with -allowProvisioningUpdates, so no profile is named here.
+-->
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>destination</key>
+    <string>export</string>
+    <key>teamID</key>
+    <string>__APPLE_TEAM_ID__</string>
+    <key>generateAppStoreInformation</key>
+    <true/>
+    <key>uploadSymbols</key>
+    <true/>
+</dict>
+</plist>

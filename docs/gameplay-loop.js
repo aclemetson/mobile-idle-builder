@@ -75,9 +75,21 @@ document.querySelectorAll('.tab').forEach(btn => {
       window._balChartsInit = true;
       if (typeof Chart !== 'undefined') updateBalCharts();
     }
+    if (btn.dataset.tab === 'prestige' && !window._prestigeInit) {
+      window._prestigeInit = true;
+      renderPrestigeTab();
+    }
     if (btn.dataset.tab === 'simple' && !window._simpleInit) {
       window._simpleInit = true;
       renderSimpleOverview();
+    }
+    if (btn.dataset.tab === 'elements' && !window._nuclearInit) {
+      window._nuclearInit = true;
+      renderNuclearTab();
+    }
+    if (btn.dataset.tab === 'worlds' && !window._worldsInit) {
+      window._worldsInit = true;
+      renderWorldsTab();
     }
   });
 });
@@ -358,8 +370,12 @@ function renderRecipesTable() {
 function renderBuildingsTable() {
   const tbody = document.getElementById('bal-buildings-body');
   if (!tbody) return;
+  const fmt = n => n > 0 ? n.toLocaleString() + 'e' : '—';
   tbody.innerHTML = BAL_BUILDINGS.map(b => {
-    const [up2, up3, up4] = [0, 1, 2].map(i => b.ups?.[i] ? b.ups[i].e.toLocaleString() + 'e' : '—');
+    const [sp2, sp3, sp4] = [0, 1, 2].map(i => b.ups?.[i] ? fmt(b.ups[i].e) : '—');
+    const [st2, st3, st4] = [0, 1, 2].map(i => b.sus?.[i] ? fmt(b.sus[i].e) : '—');
+    const outBuf = b.buf?.out > 0 ? b.buf.out : '—';
+    const inBuf  = b.buf?.in  > 0 ? b.buf.in  : '—';
     return `<tr>
       <td style="font-weight:600;color:#e6edf3;">${b.label}</td>
       <td style="text-align:center;">${b.tier}</td>
@@ -368,9 +384,14 @@ function renderBuildingsTable() {
       <td class="power-cost" style="text-align:right;">${b.draw}</td>
       <td class="reward" style="text-align:right;">${b.out}</td>
       <td style="color:#8b949e;font-size:12px;">${b.rate}</td>
-      <td class="time" style="text-align:right;">${up2}</td>
-      <td class="time" style="text-align:right;">${up3}</td>
-      <td class="time" style="text-align:right;">${up4}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${outBuf}</td>
+      <td style="text-align:right;color:#8b949e;font-size:12px;">${inBuf}</td>
+      <td class="time" style="text-align:right;">${sp2}</td>
+      <td class="time" style="text-align:right;">${sp3}</td>
+      <td class="time" style="text-align:right;">${sp4}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st2}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st3}</td>
+      <td style="text-align:right;color:#58a6ff;font-size:12px;">${st4}</td>
     </tr>`;
   }).join('');
 }
@@ -760,10 +781,556 @@ document.getElementById('s-reset-btn')?.addEventListener('click', () => {
   renderSimpleOverview();
 });
 
+// ─── SECTION 8b: PRESTIGE SHOP TAB ──────────────────────────────────────
+
+const PC_DATA = (D.prestige || {});
+let   _pcChart = null;
+
+// ── Formula helpers ──
+
+function pcEarned(netWorth, base, scale) {
+  if (base <= 0 || netWorth <= 0) return 0;
+  return Math.max(0, Math.floor(Math.log10(netWorth / base) * scale));
+}
+
+// ── §1 — Formula section ──
+
+function updatePrestigeFormula() {
+  const base  = parseFloat(document.getElementById('pc-base')?.value)  || 5000;
+  const scale = parseFloat(document.getElementById('pc-scale')?.value) || 50;
+  const mult  = parseFloat(document.getElementById('pc-wall-mult')?.value) || 10;
+  const wall  = base * mult;
+
+  const wallEl = document.getElementById('pc-wall-display');
+  const firstEl = document.getElementById('pc-first-earn');
+  if (wallEl)  wallEl.textContent  = wall.toLocaleString() + ' e';
+  if (firstEl) firstEl.textContent = pcEarned(wall, base, scale) + ' ✦';
+
+  // Earnings table
+  const netWorthPoints = [
+    wall,
+    wall * 2,
+    wall * 10,
+    wall * 100,
+    wall * 1000,
+    wall * 10000,
+    wall * 100000,
+    wall * 1000000,
+  ];
+
+  const tbody = document.getElementById('pc-earnings-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+    let prev = 0;
+    netWorthPoints.forEach(nw => {
+      const earned = pcEarned(nw, base, scale);
+      const delta  = earned - prev;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding:3px 8px;color:#c9d1d9;">${formatNW(nw)}</td>
+        <td style="padding:3px 8px;text-align:right;color:#d2a8ff;">${earned} ✦</td>
+        <td style="padding:3px 8px;text-align:right;color:#58a6ff;">+${delta}</td>`;
+      tbody.appendChild(tr);
+      prev = earned;
+    });
+  }
+
+  // Chart
+  updatePrestigeChart(netWorthPoints, base, scale);
+
+  // Keep simulator max in sync
+  const simInput = document.getElementById('sim-pc');
+  if (simInput) {
+    const maxPc = pcEarned(netWorthPoints[netWorthPoints.length - 1], base, scale);
+    simInput.max = Math.max(maxPc, 30000);
+  }
+}
+
+function formatNW(n) {
+  if (n >= 1e12) return (n / 1e12).toPrecision(3) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toPrecision(3)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toPrecision(3)  + 'M';
+  if (n >= 1e3)  return (n / 1e3).toPrecision(3)  + 'K';
+  return n.toLocaleString();
+}
+
+function updatePrestigeChart(netWorthPoints, base, scale) {
+  const canvas = document.getElementById('pc-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (_pcChart) { _pcChart.destroy(); _pcChart = null; }
+
+  const labels = netWorthPoints.map(formatNW);
+  const values = netWorthPoints.map(nw => pcEarned(nw, base, scale));
+
+  _pcChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'PC Earned (✦)',
+        data: values,
+        backgroundColor: 'rgba(210,168,255,0.55)',
+        borderColor:     '#d2a8ff',
+        borderWidth:     1,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.raw} ✦` } },
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+      },
+    },
+  });
+}
+
+// ── §2 — Upgrades table ──
+
+function renderPrestigeUpgradesTable() {
+  const tbody = document.getElementById('prestige-upgrades-body');
+  if (!tbody || !PC_DATA.upgrades) return;
+
+  const TIER_COLOR = { 1: '#3fb950', 2: '#58a6ff', 3: '#f0883e' };
+
+  tbody.innerHTML = '';
+  PC_DATA.upgrades.forEach((up, i) => {
+    const total    = up.costs.reduce((a, b) => a + b, 0);
+    const prereqStr = up.prereqs.length === 0 ? '—' :
+      up.prereqs.map(p => {
+        const pd = PC_DATA.upgrades.find(u => u.id === p.id);
+        return `${pd ? pd.name : p.id} L${p.minLevel}`;
+      }).join(', ');
+
+    const tierColor = TIER_COLOR[up.tier] || '#8b949e';
+    const costStr   = up.costs.join(' · ');
+    const effectStr = `+${up.effectPerLevel} ${up.unit} / lv`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="step-num">${i + 1}</td>
+      <td style="font-weight:600;color:#e6edf3;">${up.name}</td>
+      <td style="text-align:center;"><span style="color:${tierColor};font-size:11px;font-weight:700;">T${up.tier}</span></td>
+      <td style="font-size:12px;color:#8b949e;">${effectStr}</td>
+      <td style="text-align:center;">${up.maxLevel}</td>
+      <td style="font-size:11px;color:#d2a8ff;font-family:monospace;">${costStr}</td>
+      <td style="text-align:right;color:#d2a8ff;font-weight:600;">${total.toLocaleString()}</td>
+      <td style="font-size:11px;color:#8b949e;">${prereqStr}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── §4 — Simulator ──
+
+function updatePrestigeSimulator(totalPC) {
+  const statusEl  = document.getElementById('sim-upgrade-status');
+  const effectEl  = document.getElementById('sim-effect-summary');
+  if (!statusEl || !effectEl || !PC_DATA.upgrades) return;
+
+  // Greedily purchase upgrades in order (respecting prereqs) with the given budget
+  const levels = {};
+  const getBought = id => levels[id] || 0;
+
+  // Iterate until no more purchases are possible with remaining budget
+  let remaining = totalPC;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const up of PC_DATA.upgrades) {
+      const cur = getBought(up.id);
+      if (cur >= up.maxLevel) continue;
+      // Check prereqs
+      const prereqsMet = up.prereqs.every(p => getBought(p.id) >= p.minLevel);
+      if (!prereqsMet) continue;
+      const cost = up.costs[cur];
+      if (remaining >= cost) {
+        remaining -= cost;
+        levels[up.id] = cur + 1;
+        changed = true;
+      }
+    }
+  }
+
+  // Render status
+  const TIER_COLOR = { 1: '#3fb950', 2: '#58a6ff', 3: '#f0883e' };
+  let statusHtml = '';
+  for (const up of PC_DATA.upgrades) {
+    const cur = getBought(up.id);
+    if (cur === 0) continue;
+    const isMax = cur >= up.maxLevel;
+    const color = isMax ? '#3fb950' : '#d2a8ff';
+    const badge = isMax ? '★ MAX' : `Lv ${cur}/${up.maxLevel}`;
+    statusHtml += `<div style="margin-bottom:3px;color:${color};">${up.name} — ${badge}</div>`;
+  }
+  const lockedCount = PC_DATA.upgrades.filter(up => getBought(up.id) === 0).length;
+  if (lockedCount > 0) {
+    statusHtml += `<div style="color:#484f58;margin-top:4px;">${lockedCount} upgrade${lockedCount > 1 ? 's' : ''} locked</div>`;
+  }
+  statusEl.innerHTML = statusHtml || '<span style="color:#484f58;">No upgrades yet</span>';
+
+  // Render effect summary
+  const effectMap = {};
+  for (const up of PC_DATA.upgrades) {
+    const cur = getBought(up.id);
+    if (cur === 0) continue;
+    const total = up.effectPerLevel * cur;
+    effectMap[up.effectType] = (effectMap[up.effectType] || 0) + total;
+  }
+
+  const EFFECT_LABEL = {
+    StartingEntropyBonus:     (v) => `+${v} e starting entropy`,
+    GlobalResearchDiscount:   (v) => `−${v}% all research costs`,
+    CraftSpeedMultiplier:     (v) => `+${v}% craft speed`,
+    VaultCapacity:            (v) => `+${v} inventory slots`,
+    OutputQuantityMultiplier: (v) => `+${v}% output quantity`,
+    BuildingCostReduction:    (v) => `−${v}% building costs`,
+    FieldCooldownReduction:   (v) => `−${v}% field tap cooldown`,
+    BuildingStartPrePlaced:   (v) => `+${v} pre-placed Harvester${v > 1 ? 's' : ''}`,
+    ResearchSpeed:            (v) => `+${v}% research speed`,
+    PrestigeGainMultiplier:   (v) => `+${v}% prestige currency earned`,
+  };
+
+  let effectHtml = '<strong style="color:#3fb950;display:block;margin-bottom:6px;">Combined Effects</strong>';
+  let hasEffect = false;
+  for (const [type, val] of Object.entries(effectMap)) {
+    if (!val) continue;
+    hasEffect = true;
+    const label = EFFECT_LABEL[type] ? EFFECT_LABEL[type](val) : `${type}: +${val}`;
+    effectHtml += `<div style="margin-bottom:3px;">✓ ${label}</div>`;
+  }
+  if (!hasEffect) effectHtml += '<span style="color:#484f58;">No active effects</span>';
+  effectEl.innerHTML = effectHtml;
+}
+
+function renderPrestigeTab() {
+  updatePrestigeFormula();
+  renderPrestigeUpgradesTable();
+  updatePrestigeSimulator(0);
+}
+
+// ── Prestige tab event wiring ──
+
+['pc-base', 'pc-scale', 'pc-wall-mult'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', updatePrestigeFormula);
+});
+
+document.getElementById('sim-pc')?.addEventListener('input', e => {
+  const v = parseInt(e.target.value) || 0;
+  const el = document.getElementById('sim-pc-display');
+  if (el) el.textContent = v.toLocaleString() + ' ✦';
+  updatePrestigeSimulator(v);
+});
+
+// ─── SECTION 8c: NUCLEAR / ELEMENTS TAB ─────────────────────────────────
+// Periodic table (118) colored by creation regime + nuclear design tables.
+// Yields/regimes derived here so the data stays a list of facts (see nuclear.* in
+// LOOP_DATA). The ~20 implemented elements use authoritative game_data.json values.
+
+const NUC = (D.nuclear || {});
+const NUC_COLOR = Object.fromEntries((NUC.regimes || []).map(r => [r.key, r.color]));
+
+function nucRegime(z) {
+  if (z === 1)  return 'genesis';
+  if (z <= 26)  return 'fusion';
+  if (z <= 80)  return 'fission';
+  if (z <= 92)  return 'field';
+  if (z <= 100) return 'breeding';
+  return 'synthesis';
+}
+
+// Entropy yield (= base_sell_value). Three regions:
+//  * Fusion (Z1-26): doubles per Z to the NATURAL peak iron = 5*2^25 (~168M e),
+//    preserving the tutorial H=5..O=640 rungs.
+//  * Fission descent (Z27-92): falls from iron to a cheap uranium floor (~64 e).
+//  * Post-iron synthesis (Z93-118): a SECOND endgame unlocked after iron — value
+//    rises AGAIN above iron, doubling per Z up to Oganesson (~11.3 quadrillion,
+//    the global max). Neutron breeding (93-100) then accelerator synthesis (101-118).
+// See docs/agents/elements-and-isotopes.md "Entropy-yield ladder" / "Post-iron synthesis".
+function nucYield(z) {
+  if (z <= 26) return 5 * Math.pow(2, z - 1);                              // fusion -> iron (natural peak)
+  if (z <= 92) return Math.max(1, Math.round(64 * Math.pow(2621440, (92 - z) / 66))); // fission descent -> U
+  return Math.round(167772160 * Math.pow(2, z - 92));                      // synthetic climb past iron -> Og
+}
+
+function nucFmt(n) {
+  if (n >= 1e15) return (n / 1e15).toFixed(1).replace(/\.0$/, '') + 'Q';
+  if (n >= 1e12) return (n / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+  return '' + n;
+}
+
+function nucElByZ(z) { return (NUC.els || []).find(e => e[0] === z); }
+
+function renderNuclearTab() {
+  renderPeriodicGrid();
+  renderNuclearTables();
+}
+
+function renderPeriodicGrid() {
+  const host = document.getElementById('nuclear-grid');
+  if (!host || !NUC.layout) return;
+  const implSet = new Set(NUC.impl || []);
+
+  let cells = '';
+  NUC.layout.forEach(row => {
+    row.forEach(z => {
+      if (z === 0) { cells += '<div class="pt-empty"></div>'; return; }
+      if (z < 0) {
+        const lbl = z === -1 ? '57-71' : '89-103';
+        const sub = z === -1 ? 'La-Lu' : 'Ac-Lr';
+        cells += `<div class="pt-cell pt-ph" title="${sub}"><span class="pt-sym">${lbl}</span></div>`;
+        return;
+      }
+      const el = nucElByZ(z);
+      if (!el) return;
+      const [, sym, name, a] = el;
+      const reg  = nucRegime(z);
+      const col  = NUC_COLOR[reg] || '#6e7681';
+      const y    = nucYield(z);
+      const impl = implSet.has(z);
+      const tip  = `${name} (Z${z}, A${a}) — ${reg}, yield ${y.toLocaleString()}e [${impl ? 'implemented' : 'design'}]`;
+      cells += `<div class="pt-cell" style="background:${col}" title="${tip}">`
+             + `<span class="pt-z">${z}</span><span class="pt-sym">${sym}</span>`
+             + `<span class="pt-y">${nucFmt(y)}</span>`
+             + (impl ? '<span class="pt-impl">●</span>' : '') + '</div>';
+    });
+  });
+
+  const legend = (NUC.regimes || [])
+    .map(r => `<span class="pt-leg"><span class="pt-swatch" style="background:${r.color}"></span>${r.label}</span>`)
+    .join('') + '<span class="pt-leg"><span class="pt-swatch" style="background:#21262d">●</span>● = implemented today</span>';
+
+  host.innerHTML = `<div class="pt-grid">${cells}</div><div class="pt-legend">${legend}</div>`;
+}
+
+function renderNuclearTables() {
+  const b = document.getElementById('nuclear-buildings-body');
+  if (b && NUC.buildings) {
+    b.innerHTML = NUC.buildings.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.id}</td>
+      <td style="text-align:center;">${x.tier}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.inputs}</td>
+      <td style="font-size:12px;color:#3fb950;">${x.output}</td>
+      <td style="font-size:12px;color:#f0883e;">${x.byproducts}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td></tr>`).join('');
+  }
+
+  const p = document.getElementById('nuclear-particles-body');
+  if (p && NUC.particles) {
+    p.innerHTML = NUC.particles.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="text-align:center;font-family:monospace;color:#f0883e;">${x.sym}</td>
+      <td style="text-align:center;color:#8b949e;">${x.charge}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.source}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.use}</td>
+      <td style="text-align:right;color:#79c0ff;">${x.yield}e</td>
+      <td style="text-align:center;">${x.status === 'impl'
+        ? '<span class="tag tag-milestone">impl</span>'
+        : '<span class="tag tag-silent">design</span>'}</td></tr>`).join('');
+  }
+
+  const r = document.getElementById('nuclear-research-body');
+  if (r && NUC.research) {
+    r.innerHTML = NUC.research.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td><span class="tag tag-silent">${x.branch}</span></td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.prereq}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.unlocks}</td></tr>`).join('');
+  }
+}
+
+// ─── WORLDS TAB (Chem/Bio Track/World layer) ─────────────────────────────
+// Data-driven from LOOP_DATA.worlds. Lazily rendered on first tab open.
+
+const WLD = (D.worlds || {});
+
+function wldStatusTag(status) {
+  if (status === 'live')     return '<span class="tag tag-milestone">live</span>';
+  if (status === 'building') return '<span class="tag tag-milestone">building</span>';
+  if (status === 'impl')     return '<span class="tag tag-milestone">impl</span>';
+  return '<span class="tag tag-silent">design</span>';
+}
+
+function renderWorldsTab() {
+  const L = document.getElementById('worlds-layers-body');
+  if (L && WLD.layers) {
+    L.innerHTML = WLD.layers.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}<div style="font-family:monospace;color:#6e7681;font-size:11px;">${x.id}</div></td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.tiers}</td>
+      <td style="font-size:12px;color:#3fb950;">${x.produces}</td>
+      <td style="font-size:11px;color:#8b949e;">${x.note}</td></tr>`).join('');
+  }
+
+  const F = document.getElementById('worlds-fields-body');
+  if (F && WLD.fields) {
+    F.innerHTML = WLD.fields.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td style="text-align:center;font-family:monospace;color:#d2a8ff;">${x.type}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.drops}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const B = document.getElementById('worlds-buildings-body');
+  if (B && WLD.buildings) {
+    B.innerHTML = WLD.buildings.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.name}</td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.id}</td>
+      <td style="text-align:center;">${x.tier}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.place}</td>
+      <td style="text-align:center;font-size:12px;color:#f0883e;">${x.power}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.does}</td>
+      <td style="font-family:monospace;color:#79c0ff;font-size:12px;">${x.gate}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const R = document.getElementById('worlds-recipes-body');
+  if (R && WLD.recipes) {
+    R.innerHTML = WLD.recipes.map(x => `<tr>
+      <td style="font-weight:600;color:#e6edf3;">${x.label}</td>
+      <td style="font-size:12px;color:#8b949e;">${x.building}</td>
+      <td style="font-family:monospace;font-size:12px;color:#c9d1d9;">${x.inputs}</td>
+      <td style="text-align:right;color:#8b949e;">${x.time}s</td>
+      <td style="text-align:right;color:#f0883e;">${x.powerEV} eV</td>
+      <td style="text-align:right;color:#3fb950;">${x.sell.toLocaleString()}e</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+
+  const RS = document.getElementById('worlds-research-body');
+  if (RS && WLD.research) {
+    RS.innerHTML = WLD.research.map(x => `<tr>
+      <td style="font-family:monospace;font-weight:600;color:#e6edf3;">${x.id}</td>
+      <td><span class="tag tag-silent">${x.branch}</span></td>
+      <td style="font-family:monospace;color:#8b949e;font-size:12px;">${x.prereq}</td>
+      <td style="text-align:right;font-family:monospace;color:#79c0ff;font-size:12px;">${x.cost}</td>
+      <td style="font-size:12px;color:#c9d1d9;">${x.unlocks}</td>
+      <td style="text-align:center;">${wldStatusTag(x.status)}</td></tr>`).join('');
+  }
+}
+
+// ─── SECTION 8e: TUTORIAL TIMING TAB ────────────────────────────────────
+// Simulates the entropy balance step by step: a step that costs more than the
+// balance waits (cost - balance) / rate seconds; every second of reading, acting
+// or waiting earns the current passive rate.
+
+function tutTimeFmt(sec) {
+  sec = Math.round(sec);
+  if (sec < 60) return sec + 's';
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h) return `${h}h ${m}m`;
+  return s ? `${m}m ${s}s` : `${m}m`;
+}
+
+function simulateTutorialTiming(opts) {
+  const T = D.tutorial_timing;
+  let balance = T.starting_entropy, clock = 0, aiClock = 0;
+  const phases = T.phases.map(ph => {
+    let rate = ph.rate, phaseSec = 0;
+    const rows = ph.steps.map(s => {
+      const read = opts.skipDialogue ? Math.min(s.read, 2) : s.read;
+      const r    = rate * opts.incomeMult;
+      // Detour legs run in order before the step itself, so their research timers earn toward the next leg.
+      const legs = (opts.detour && s.detour ? s.detour : []).concat([{ cost: s.cost || 0, act: s.act }]);
+      let wait = 0, act = 0, cost = 0;
+      legs.forEach(leg => {
+        const w = leg.cost > balance ? (r > 0 ? (leg.cost - balance) / r : Infinity) : 0;
+        balance += (w + leg.act) * r - leg.cost;
+        wait += w; act += leg.act; cost += leg.cost;
+      });
+      balance += read * r + (s.gain || 0);
+      if (s.rate !== undefined) rate = s.rate;   // income unlocked by this step applies afterwards
+      const total = wait + read + act;
+      clock += total; phaseSec += total;
+      if (s.meas !== undefined) aiClock += s.meas;
+      return { s, read, act, wait, cost, total, clock, balance };
+    });
+    return { ph, rows, phaseSec };
+  });
+  return { phases, total: clock, aiClock };
+}
+
+function renderTutorialTimingTab() {
+  const container = document.getElementById('timing-phases');
+  if (!container || !D.tutorial_timing) return;
+
+  const opts = {
+    incomeMult:   parseFloat(document.getElementById('tt-income')?.value) || 1,
+    skipDialogue: !!document.getElementById('tt-skip')?.checked,
+    detour:       !!document.getElementById('tt-detour')?.checked,
+  };
+  const sim = simulateTutorialTiming(opts);
+
+  const at = num => sim.phases.flatMap(p => p.rows).find(x => x.s.num === num)?.clock || 0;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('tt-total',       tutTimeFmt(sim.total));
+  set('tt-to-auto',     tutTimeFmt(at(33)));
+  set('tt-to-hydrogen', tutTimeFmt(at(47)));
+  set('tt-to-uranium',  tutTimeFmt(at(59)));
+
+  const THEAD = `<thead><tr>
+    <th style="width:28px">#</th>
+    <th style="width:200px">Step</th>
+    <th>What the player does</th>
+    <th style="width:70px">Read</th>
+    <th style="width:70px">Do</th>
+    <th style="width:80px">Wait for e</th>
+    <th style="width:80px">Est. total</th>
+    <th style="width:80px">AI median</th>
+    <th style="width:80px">Elapsed</th>
+  </tr></thead>`;
+
+  container.innerHTML = sim.phases.map(({ ph, rows, phaseSec }) => {
+    const body = rows.map(x => {
+      const s = x.s;
+      const cls = s.gate ? ' class="row-gate"' : s.milestone ? ' class="row-milestone"' : '';
+      let dir = s.dir;
+      if (x.cost) dir += ` <span class="cost" style="font-size:11px;">(−${x.cost.toLocaleString()}e)</span>`;
+      if (s.warn) dir += `<br><em style="font-size:11px;color:#f0883e;">⚠ ${s.warn}</em>`;
+      const meas = s.meas !== undefined ? `${tutTimeFmt(s.meas)}<br><span style="font-size:10px;color:#6e7681;">n=${s.n}</span>` : '—';
+      const wait = x.wait === Infinity ? '∞' : x.wait ? tutTimeFmt(x.wait) : '—';
+      return `<tr${cls}>
+        <td class="step-num">${s.num}</td>
+        <td class="step-id">${s.id}</td>
+        <td style="font-size:12px;">${dir}</td>
+        <td class="time">${x.read ? tutTimeFmt(x.read) : '—'}</td>
+        <td class="time">${x.act ? tutTimeFmt(x.act) : '—'}</td>
+        <td class="time" style="color:${x.wait > 300 ? '#f0883e' : ''}">${wait}</td>
+        <td class="time" style="font-weight:600;color:#e6edf3;">${tutTimeFmt(x.total)}</td>
+        <td class="time" style="color:#8b949e;">${meas}</td>
+        <td class="time">${tutTimeFmt(x.clock)}</td>
+      </tr>`;
+    }).join('');
+    return `
+      <div class="phase" style="border-left:4px solid ${ph.color}">
+        <div class="phase-header" style="background:${ph.color}18">
+          <h2>${ph.label}</h2>
+          <span class="phase-meta">Steps ${ph.steps[0].num}–${ph.steps[ph.steps.length - 1].num} · income ${ph.rate ? ph.rate * opts.incomeMult + ' e/s' : 'manual only'}</span>
+          <span class="phase-entropy" style="color:#d2a8ff">${tutTimeFmt(phaseSec)}</span>
+        </div>
+        <table>${THEAD}<tbody>${body}</tbody></table>
+      </div>`;
+  }).join('');
+
+  const f = document.getElementById('timing-findings');
+  if (f) f.innerHTML = D.tutorial_timing.findings.map(x => `<li>${x}</li>`).join('');
+}
+
+['tt-income', 'tt-skip', 'tt-detour'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', renderTutorialTimingTab);
+});
+
 // ─── SECTION 9: INIT ─────────────────────────────────────────────────────
 // Runs once at page load. DOM is ready because this script is at end of body.
 
 renderOverviewTab();
+renderTutorialTimingTab();
 renderDialogueTab();
 renderGapsTab();
 renderItemsTable();

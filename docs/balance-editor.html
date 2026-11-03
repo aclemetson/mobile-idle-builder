@@ -1,0 +1,333 @@
+<!-- Interactive editor for Assets/Data/game_data.json (the real source of truth).
+     Logic lives in balance-editor.js. Base theme is shared with gameplay-loop.css.
+     MUST be served from a localhost origin (e.g. `python -m http.server 8080` in docs/)
+     and opened in Chrome/Edge - the File System Access API does not run on file://. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Foundry — Balance Editor</title>
+  <link rel="stylesheet" href="gameplay-loop.css">
+  <style>
+    /* ── Editor-specific styles (base theme comes from gameplay-loop.css) ── */
+    .tab-content { max-width: 1400px; }
+
+    /* Toolbar */
+    .editor-toolbar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 10px 24px; background: #161b22; border-bottom: 1px solid #30363d;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .editor-toolbar .tb-btn {
+      background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+      border-radius: 6px; font-size: 13px; font-weight: 500; padding: 6px 14px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .editor-toolbar .tb-btn:hover:not(:disabled) { border-color: #58a6ff; color: #58a6ff; }
+    .editor-toolbar .tb-btn:disabled { opacity: 0.4; cursor: default; }
+    .editor-toolbar .tb-btn.primary { background: #238636; border-color: #238636; color: #fff; }
+    .editor-toolbar .tb-btn.primary:hover:not(:disabled) { background: #2ea043; border-color: #2ea043; color: #fff; }
+    .editor-toolbar .tb-spacer { flex: 1; }
+    .editor-toolbar .tb-meta { font-size: 12px; color: #8b949e; font-family: monospace; }
+    .dirty-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f0883e; margin-right: 6px; vertical-align: middle; }
+    .dirty-dot.clean { background: #3fb950; }
+
+    /* Banner */
+    .editor-banner { padding: 10px 24px; font-size: 13px; display: none; }
+    .editor-banner.show { display: block; }
+    .editor-banner.info  { background: #0d2a4a; color: #58a6ff; border-bottom: 1px solid #1a5c8a; }
+    .editor-banner.warn  { background: #3a2a0a; color: #f0883e; border-bottom: 1px solid #8a4a00; }
+    .editor-banner.ok    { background: #0d2018; color: #3fb950; border-bottom: 1px solid #1a6e40; }
+    .editor-banner code  { background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; font-family: monospace; }
+
+    /* Empty state */
+    .empty-state { text-align: center; color: #8b949e; padding: 80px 20px; }
+    .empty-state h2 { font-size: 18px; color: #e6edf3; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; margin-bottom: 8px; }
+    .empty-state .browser-warn { color: #f0883e; margin-top: 20px; }
+
+    /* Editor tables */
+    .etable { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .etable thead th {
+      background: #0d1117; padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600;
+      color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 1; white-space: nowrap;
+    }
+    .etable thead th[title] { cursor: help; text-decoration: underline dotted rgba(139,148,158,0.45); text-underline-offset: 3px; }
+    .etable tbody tr { border-bottom: 1px solid #21262d; }
+    .etable tbody tr:hover { background: #161b22; }
+    .etable td { padding: 5px 8px; vertical-align: middle; }
+    .etable td.id-cell { font-family: monospace; color: #8b949e; white-space: nowrap; }
+    .etable td.num-id { color: #484f58; text-align: right; width: 36px; }
+
+    /* Inputs inside editor tables */
+    .e-in {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #c9d1d9;
+      font-size: 12px; padding: 3px 6px; outline: none; width: 100%; max-width: 100%;
+    }
+    .e-in:focus { border-color: #388bfd; }
+    .e-in.num { font-family: monospace; color: #79c0ff; text-align: right; width: 100px; }
+    .e-in.wide { min-width: 160px; }
+    select.e-in { min-width: 90px; cursor: pointer; }
+    .e-check { width: 15px; height: 15px; cursor: pointer; accent-color: #3fb950; }
+
+    /* multi-select building tags */
+    .bldg-tags { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; max-width: 220px; }
+    .bldg-tag { background: #21262d; border: 1px solid #30363d; border-radius: 10px; font-size: 11px; padding: 1px 7px; display: inline-flex; align-items: center; gap: 4px; }
+    .bldg-tag .rm { cursor: pointer; color: #8b949e; font-weight: 700; }
+    .bldg-tag .rm:hover { color: #f85149; }
+
+    .reorder { display: flex; flex-direction: column; gap: 1px; }
+    .reorder button { background: none; border: none; color: #6e7681; cursor: pointer; font-size: 9px; line-height: 1; padding: 0 2px; }
+    .reorder button:hover { color: #58a6ff; }
+    .reorder button:disabled { opacity: 0.25; cursor: default; }
+
+    .badge-yes { color: #3fb950; font-weight: 600; }
+    .badge-no  { color: #484f58; }
+
+    /* Section controls */
+    .section-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .section-bar h2 { font-size: 15px; color: #e6edf3; font-weight: 600; }
+    .section-bar .count { font-size: 12px; color: #8b949e; }
+    .filter-in { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 12px; padding: 5px 10px; outline: none; width: 200px; }
+    .filter-in:focus { border-color: #388bfd; }
+    .add-btn { background: none; border: 1px dashed #30363d; border-radius: 6px; color: #8b949e; font-size: 12px; padding: 5px 12px; cursor: pointer; }
+    .add-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    .table-scroll { overflow-x: auto; border: 1px solid #21262d; border-radius: 8px; }
+
+    /* Config grid */
+    .config-grid { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; max-width: 640px; align-items: center; }
+    .config-grid .cfg-label { font-size: 13px; color: #c9d1d9; font-family: monospace; }
+    .config-grid .cfg-label small { display: block; color: #6e7681; font-family: -apple-system, sans-serif; font-size: 11px; }
+
+    /* Rebalance / diff */
+    .rebal-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px 18px; margin-bottom: 18px; }
+    .rebal-card h3 { font-size: 13px; color: #58a6ff; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .rebal-card p { font-size: 12px; color: #8b949e; margin-bottom: 10px; }
+    .rebal-card textarea { width: 100%; min-height: 120px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: monospace; font-size: 12px; padding: 8px 10px; outline: none; resize: vertical; }
+    .rebal-card textarea:focus { border-color: #388bfd; }
+    .rebal-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .rebal-row label { font-size: 12px; color: #c9d1d9; display: flex; align-items: center; gap: 6px; }
+    .rebal-row input[type=number], .rebal-row select { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #79c0ff; font-family: monospace; font-size: 12px; padding: 4px 8px; outline: none; }
+
+    .diff-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    .diff-table th { background: #0d1117; padding: 6px 10px; text-align: left; font-size: 10px; color: #8b949e; text-transform: uppercase; border-bottom: 1px solid #21262d; }
+    .diff-table td { padding: 5px 10px; border-bottom: 1px solid #21262d; }
+    .diff-old { color: #f85149; font-family: monospace; }
+    .diff-new { color: #3fb950; font-family: monospace; }
+    .diff-arrow { color: #6e7681; }
+    .diff-path { font-family: monospace; color: #79c0ff; }
+    .diff-empty { color: #6e7681; font-size: 12px; padding: 12px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Quantum Foundry — <span>Balance Editor</span></h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="progression">Progression</button>
+    <button class="tab" data-tab="recipes">Recipes</button>
+    <button class="tab" data-tab="buildings">Buildings</button>
+    <button class="tab" data-tab="research">Research</button>
+    <button class="tab" data-tab="config">Config</button>
+    <button class="tab" data-tab="rebalance">Rebalance</button>
+  </nav>
+</header>
+
+<!-- Toolbar -->
+<div class="editor-toolbar">
+  <button id="tb-open"   class="tb-btn">Open game_data.json</button>
+  <button id="tb-save"   class="tb-btn primary" disabled>Save</button>
+  <button id="tb-reload" class="tb-btn" disabled>Reload from disk</button>
+  <span class="tb-spacer"></span>
+  <span id="tb-status" class="tb-meta"><span class="dirty-dot clean"></span>No file loaded</span>
+  <span id="tb-version" class="tb-meta"></span>
+</div>
+
+<!-- Banner (save reminders / warnings) -->
+<div id="editor-banner" class="editor-banner"></div>
+
+<!-- Progression (primary join view) -->
+<div id="progression" class="tab-content active">
+  <div id="progression-empty" class="empty-state">
+    <h2>No data loaded</h2>
+    <p>Click <strong>Open game_data.json</strong> above and choose
+       <code>Assets/Data/game_data.json</code>.</p>
+    <p>Edits are held in memory until you click <strong>Save</strong>, which writes back to the same
+       file (preserving all <code>_comment</code> documentation). Re-run
+       <code>MobileIdleBuilder &rarr; Import Game Data</code> in Unity afterward.</p>
+    <p class="browser-warn" id="fsapi-warn"></p>
+  </div>
+  <div id="progression-view" style="display:none;">
+    <div class="section-bar">
+      <h2>Progression</h2>
+      <span class="count" id="prog-count"></span>
+      <input type="text" id="prog-filter" class="filter-in" placeholder="Filter by id / name / category...">
+      <span class="tb-spacer"></span>
+      <button id="prog-add" class="add-btn">+ Add item</button>
+    </div>
+    <div id="prog-addform"></div>
+    <div class="table-scroll">
+      <table class="etable">
+        <thead>
+          <tr>
+            <th title="Reorder this item up/down within items[] (display order only; does not affect the game)"></th>
+            <th title="Numeric item_id — assigned automatically. Used by save files, the ECS runtime, and tutorial_steps.">#</th>
+            <th title="String id — the cross-reference key used everywhere else in game_data.json.">id</th>
+            <th title="Player-facing name (items[].display_name).">Display name</th>
+            <th title="Progression tier number (items[].tier). Also updates tier_ref to the matching tier.">Tier</th>
+            <th title="ItemCategory (items[].category) — e.g. Element, Isotope, Molecule. Drives grouping/behavior.">Category</th>
+            <th title="Base entropy earned when one unit is sold (items[].base_sell_value).">Base sell</th>
+            <th title="Isotope sell multiplier applied on top of base value (items[].isotope_sell_multiplier).">Iso &times;</th>
+            <th title="Idle/auto craft time in seconds for the recipe that produces this item (recipe.base_craft_time).">Craft s</th>
+            <th title="Manual (tap) craft time in seconds (recipe.manual_craft_time).">Manual s</th>
+            <th title="Buildings that can craft this item (recipe.valid_buildings). Use the dropdown to add, &times; to remove.">Built in</th>
+            <th title="Research that reveals this item (research.unlocks_items). Changing it moves the item to that node.">Unlocked by</th>
+            <th title="Design flag: mark this item as intended for the tutorial. Writes a doc-only _in_tutorial key the importer ignores.">Tutorial</th>
+            <th title="Read-only: whether any tutorial_steps entry actually references this item's item_id.">In steps</th>
+          </tr>
+        </thead>
+        <tbody id="prog-body"><!-- renderProgressionTable() --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Recipes -->
+<div id="recipes" class="tab-content">
+  <div class="section-bar">
+    <h2>Recipes</h2><span class="count" id="rec-count"></span>
+    <input type="text" id="rec-filter" class="filter-in" placeholder="Filter...">
+  </div>
+  <div class="table-scroll">
+    <table class="etable">
+      <thead><tr>
+        <th title="Numeric recipe_id — assigned automatically.">#</th>
+        <th title="String recipe id.">id</th>
+        <th title="Item this recipe produces (output_item).">Output</th>
+        <th title="Units produced per craft (output_quantity).">Qty</th>
+        <th title="Idle/auto craft time in seconds (base_craft_time).">Craft s</th>
+        <th title="Manual (tap) craft time in seconds (manual_craft_time).">Manual s</th>
+        <th title="Fixed power cost in eV per craft (fixed_power_cost_ev). Ignored when Dyn pow is on.">Fixed eV</th>
+        <th title="Power cost scales dynamically instead of using the fixed eV value (power_cost_is_dynamic).">Dyn pow</th>
+        <th title="Buildings that can run this recipe (valid_buildings). Edit membership on the Progression tab.">Valid buildings</th>
+        <th title="Research required before this recipe is available (required_research).">Req research</th>
+        <th title="Read-only ingredient list (inputs). Edit inputs directly in the JSON for now.">Inputs</th>
+      </tr></thead>
+      <tbody id="rec-body"><!-- renderRecipesTable() --></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Buildings -->
+<div id="buildings" class="tab-content">
+  <div class="section-bar">
+    <h2>Buildings</h2><span class="count" id="bld-count"></span>
+    <input type="text" id="bld-filter" class="filter-in" placeholder="Filter...">
+  </div>
+  <div class="table-scroll">
+    <table class="etable">
+      <thead><tr>
+        <th title="Numeric building_id — assigned automatically.">#</th>
+        <th title="String building id.">id</th>
+        <th title="Player-facing name (display_name).">Display name</th>
+        <th title="Progression tier number (tier).">Tier</th>
+        <th title="BuildingCategory: Core, Transient, Power, or Megastructure.">Category</th>
+        <th title="Base placement cost in entropy (entropy_cost). Successive placements scale up per game_config multipliers.">Entropy cost</th>
+        <th title="Base production rate multiplier (base_output_rate).">Output rate</th>
+        <th title="Base power draw/cost in eV (base_power_cost_ev).">Base power eV</th>
+        <th title="Research required to unlock this building (required_research).">Req research</th>
+        <th title="Whether the building is available with no research at game start (available_from_start).">From start</th>
+      </tr></thead>
+      <tbody id="bld-body"><!-- renderBuildingsTable() --></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Research -->
+<div id="research" class="tab-content">
+  <div class="section-bar">
+    <h2>Research</h2><span class="count" id="res-count"></span>
+    <input type="text" id="res-filter" class="filter-in" placeholder="Filter...">
+  </div>
+  <div class="table-scroll">
+    <table class="etable">
+      <thead><tr>
+        <th title="String research id.">id</th>
+        <th title="Player-facing name (display_name).">Display name</th>
+        <th title="Tech-tree branch (branch): Nuclear, Chemistry, Materials, Engineering, Astrophysics, Biology.">Branch</th>
+        <th title="Depth in the tech tree (depth_in_tree). Seeds the research-timer curve in Rebalance.">Depth</th>
+        <th title="Entropy cost to research (cost_base_currency).">Cost (e)</th>
+        <th title="Prestige-currency cost, if any (cost_prestige_currency).">Prestige cost</th>
+        <th title="Real-time research duration in seconds (duration_seconds). 0 = instant.">Duration s</th>
+        <th title="Read-only prerequisite research ids (prerequisites).">Prereqs</th>
+        <th title="Read-only count of items this research unlocks (unlocks_items). Reassign per item on the Progression tab.">Unlocks items</th>
+      </tr></thead>
+      <tbody id="res-body"><!-- renderResearchTable() --></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Config -->
+<div id="config" class="tab-content">
+  <div class="section-bar"><h2>Game config scalars</h2></div>
+  <div id="config-grid" class="config-grid"><!-- renderConfigTab() --></div>
+</div>
+
+<!-- Rebalance -->
+<div id="rebalance" class="tab-content">
+  <div class="rebal-card">
+    <h3>Apply house rules (deterministic)</h3>
+    <p>Recompute values from the formulas in <code>docs/agents/economy-balance.md</code>. Nothing is
+       written until you review the diff and click <strong>Apply selected</strong>.</p>
+    <div class="rebal-row">
+      <label><input type="checkbox" id="hr-sell" checked> Sell-value ladder</label>
+      <label>anchor item <input type="text" id="hr-anchor" value="hydrogen" style="font-family:monospace;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;padding:4px 8px;width:120px;"></label>
+      <label>anchor value <input type="number" id="hr-anchor-val" value="5"></label>
+      <label>ratio &times;<input type="number" id="hr-ratio" value="2" step="0.1"></label>
+    </div>
+    <div class="rebal-row">
+      <label><input type="checkbox" id="hr-research"> Research timer depth curve (10s@0 &rarr; 4h@8)</label>
+    </div>
+    <div class="rebal-row">
+      <button id="hr-preview" class="tb-btn">Preview changes</button>
+      <button id="hr-apply" class="tb-btn primary" disabled>Apply selected</button>
+    </div>
+    <div id="hr-diff"></div>
+  </div>
+
+  <div class="rebal-card">
+    <h3>Ask Claude to rebalance (copy / paste bridge)</h3>
+    <p>Describe the balancing goal, copy the generated prompt into a Claude conversation, then paste
+       Claude's returned JSON patch below to preview and apply it. (A live one-click API call would
+       need a local proxy - out of scope here.)</p>
+    <div class="rebal-row" style="width:100%;">
+      <textarea id="claude-goal" placeholder="e.g. Tier 3 feels too slow relative to tier 2 - stretch the sell-value gap and shorten early research timers. Keep the prestige wall at 50,000e."></textarea>
+    </div>
+    <div class="rebal-row">
+      <label>Include sections:
+        <select id="claude-scope" style="min-width:160px;">
+          <option value="items">items (sell values)</option>
+          <option value="items,recipes">items + recipes</option>
+          <option value="items,recipes,buildings,research,game_config">full balance surface</option>
+        </select>
+      </label>
+      <button id="claude-copy" class="tb-btn">Copy prompt to clipboard</button>
+    </div>
+    <p>Paste Claude's JSON patch here:</p>
+    <div class="rebal-row" style="width:100%;">
+      <textarea id="claude-patch" placeholder='[{ "path": "items.hydrogen.base_sell_value", "value": 6 }, ...]'></textarea>
+    </div>
+    <div class="rebal-row">
+      <button id="claude-preview" class="tb-btn">Preview patch</button>
+      <button id="claude-apply" class="tb-btn primary" disabled>Apply selected</button>
+    </div>
+    <div id="claude-diff"></div>
+  </div>
+</div>
+
+<script src="balance-editor.js"></script>
+</body>
+</html>

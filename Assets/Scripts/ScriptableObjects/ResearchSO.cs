@@ -15,10 +15,21 @@ namespace MobileIdleBuilder
         public ResearchBranch branch;
         public ResearchSO[] prerequisites;  // must be completed before this unlocks
         public int depthInTree;             // used for UI layout
+        public string block;                // research block (game phase) id, ResearchDatabaseSO.blocks
+        public int treeX = -1;              // research tree position from the editor (docs/research-tree.html); -1 = auto
+        public int treeY = -1;
 
         [Header("Cost")]
-        public int costBaseCurrency;
+        public long costBaseCurrency;       // long: late research costs pass 2^31 under the derived economy
         public int costPrestigeCurrency;    // 0 for most research
+
+        [Header("Timer")]
+        public int durationSeconds;         // research time in seconds; 0 = instant unlock
+
+        [Header("Modifiers")]
+        [Tooltip("Multiplier applied to the field tap cooldown while this research is unlocked.\n" +
+                 "1 = no effect; 0.85 = 15% shorter. Stacks multiplicatively across unlocked research.")]
+        public float fieldCooldownMult = 1f;
 
         [Header("Unlocks")]
         public ItemSO[] unlocksItems;

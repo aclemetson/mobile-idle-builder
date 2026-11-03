@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab7224ecdaed471bb7b54aadf0d99ed0, type: 3}
+  m_Name: world_biology
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldSO
+  id: world_biology
+  displayName: Biology
+  unlockCost: 0
+  prereqUnlockIds:
+  - biology_lab
+  siteIds:
+  - site_bio_lab
+  theme:
+    backgroundColor: {r: 0.039215688, g: 0.08627451, b: 0.050980393, a: 1}
+    tileColor: {r: 0.09019608, g: 0.1882353, b: 0.10980392, a: 1}
+    fieldTint: {r: 0.8117647, g: 0.93333334, b: 0.6901961, a: 1}

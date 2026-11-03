@@ -1,0 +1,246 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace MobileIdleBuilder.PlayModeTests
+{
+    /// <summary>
+    /// Edit Mode test for the cloud-vs-ECS load ordering fix. When the cloud save is newer,
+    /// SaveManager must replace Current with it AND flip CloudReconcileDone — the flag
+    /// ECSLoadBridge waits on before copying Current into ECS. Without that wait, ECS would
+    /// be seeded from stale local data and the next flush would clobber the newer cloud save.
+    ///
+    /// Drives the reconcile coroutine manually (this assembly runs in edit mode, so the
+    /// MonoBehaviour Start lifecycle does not fire) and uses a fake ICloudSaveService so no
+    /// live UGS auth / network is required.
+    /// </summary>
+    public class CloudReconcileTests
+    {
+        string _savePath, _bakPath, _saveBackup, _bakBackup;
+        GameObject _go;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
+            _bakPath    = _savePath + ".bak";
+            _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
+            _bakBackup  = File.Exists(_bakPath)  ? File.ReadAllText(_bakPath)  : null;
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
+            if (File.Exists(_bakPath))  File.Delete(_bakPath);
+            PlayerPrefs.DeleteKey(SaveManager.k_WipePending);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (_go != null) { UnityEngine.Object.DestroyImmediate(_go); _go = null; }
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
+            if (File.Exists(_bakPath))  File.Delete(_bakPath);
+            if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
+            if (_bakBackup  != null) File.WriteAllText(_bakPath,  _bakBackup);
+        }
+
+        class FakeCloud : ICloudSaveService
+        {
+            public SaveData ToReturn;
+            public bool Available = true;
+            public bool FailPushes;
+            public int PushCount;
+            public SaveData LastPushed;
+            public bool IsAvailable => Available;
+            public Task InitializeAsync()                     => Task.CompletedTask;
+            public Task<SaveData> FetchAsync(string playerId) => Task.FromResult(ToReturn);
+            public Task<bool> PushAsync(SaveData data)        { PushCount++; LastPushed = data; return Task.FromResult(Available && !FailPushes); }
+            public Task DeleteAsync()                         => Task.CompletedTask;
+        }
+
+        [Test]
+        public void Reconcile_CloudNewer_ReplacesCurrentAndSetsFlag()
+        {
+            _go = new GameObject("SaveManager");
+            var sm = _go.AddComponent<SaveManager>();
+            RunAwake(sm);   // fresh new-game Current (no save file); creates the real cloud service
+
+            // Cloud copy is "newer" (local lastSaved is empty for a new game) and carries a
+            // different tutorial step. Inject the fake before reconciling.
+            var cloudSave = new SaveData { lastSaved = DateTime.UtcNow.ToString("o") };
+            cloudSave.tutorial.currentStepId = "cloud_step";
+            sm.SetCloudServiceForTesting(new FakeCloud { ToReturn = cloudSave });
+
+            Pump(sm.InitialCloudReconcile());
+
+            Assert.IsTrue(sm.CloudReconcileDone, "InitialCloudReconcile should set the flag");
+            Assert.AreEqual("cloud_step", SaveManager.Instance.Current.tutorial.currentStepId,
+                "Newer cloud save should replace local Current before ECS reads it");
+        }
+
+        [Test]
+        public void OnApplicationPause_Backgrounded_PushesToCloud()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationPause", true);
+
+            Assert.AreEqual(1, cloud.PushCount, "Backgrounding should push the local save to cloud");
+            Assert.AreSame(sm.Current, cloud.LastPushed, "Should push the current SaveData");
+        }
+
+        [Test]
+        public void OnApplicationQuit_PushesToCloud()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationQuit");
+
+            Assert.AreEqual(1, cloud.PushCount, "Quitting should push the local save to cloud");
+        }
+
+        [Test]
+        public void OnApplicationQuit_CloudUnavailable_DoesNotPush()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud { Available = false };
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationQuit");
+
+            Assert.AreEqual(0, cloud.PushCount, "Must not push when cloud is unavailable (local stays source of truth)");
+        }
+
+        // ── Autosave cloud throttling (#280) ──────────────────────────────────
+
+        [Test]
+        public void AutoSave_PushesOnlyWhenStateChangedAndIntervalElapsed()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            float now = 1000f;
+            sm.RealtimeNow = () => now;
+
+            Pump(sm.AutoSaveTick());                       // t=1000
+            Assert.AreEqual(1, cloud.PushCount, "First autosave pushes");
+
+            sm.Current.prestigeCount++;
+            now += 60f;                                    // t=1060: 60s after the last push started
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(1, cloud.PushCount, "Changed, but within the push interval: local save only");
+
+            now += 240f;                                   // t=1300: 300s after the last push started
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "Changed and interval elapsed: push");
+
+            now += 1000f;                                  // long after, but nothing changed since
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "Nothing changed: no push even after the interval");
+        }
+
+        [Test]
+        public void AutoSave_AlwaysWritesLocally()
+        {
+            var sm = NewSaveManager();
+            sm.SetCloudServiceForTesting(new FakeCloud());
+            sm.RealtimeNow = () => 0f;
+
+            Pump(sm.AutoSaveTick());
+            sm.Current.prestigeCount = 7;
+            Pump(sm.AutoSaveTick());   // throttled for the cloud...
+
+            var onDisk = JsonUtility.FromJson<SaveData>(File.ReadAllText(_savePath));
+            Assert.AreEqual(7, onDisk.prestigeCount, "...but the local file is still written every autosave");
+        }
+
+        [Test]
+        public void AutoSave_FailedPush_IsRetriedEvenIfUnchanged()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            float now = 0f;
+            sm.RealtimeNow = () => now;
+
+            cloud.Available = true;
+            cloud.FailPushes = true;
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(1, cloud.PushCount);
+
+            cloud.FailPushes = false;
+            now += 300f;
+            Pump(sm.AutoSaveTick());
+            Assert.AreEqual(2, cloud.PushCount, "A failed push must not mark the content as uploaded");
+        }
+
+        [Test]
+        public void SaveToCloud_ExplicitSave_AlwaysPushes()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            sm.RealtimeNow = () => 0f;
+
+            Pump(sm.SaveToCloud());
+            Pump(sm.SaveToCloud());
+
+            Assert.AreEqual(2, cloud.PushCount, "Explicit saves (e.g. maintenance) are never throttled");
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        SaveManager NewSaveManager()
+        {
+            _go = new GameObject("SaveManager");
+            var sm = _go.AddComponent<SaveManager>();
+            RunAwake(sm);   // fresh new-game Current (no save file); creates the real cloud service
+            return sm;
+        }
+
+        static void InvokePrivate(MonoBehaviour mb, string name, params object[] args)
+        {
+            var m = mb.GetType().GetMethod(name,
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            Assert.IsNotNull(m, $"{name} not found on {mb.GetType().Name}");
+            m.Invoke(mb, args);
+        }
+
+
+        // Synchronously drives a coroutine, recursing into nested yields. WaitUntil and other
+        // CustomYieldInstructions implement IEnumerator (MoveNext returns keepWaiting), so they
+        // are driven the same way. Safe here because the fake cloud's tasks complete
+        // immediately, so no yield ever blocks.
+        static void Pump(IEnumerator routine)
+        {
+            var stack = new Stack<IEnumerator>();
+            stack.Push(routine);
+            int guard = 0;
+            while (stack.Count > 0 && guard++ < 100000)
+            {
+                var top = stack.Peek();
+                if (!top.MoveNext()) { stack.Pop(); continue; }
+                if (top.Current is IEnumerator nested) stack.Push(nested);
+            }
+            Assert.Less(guard, 100000, "Coroutine pump did not terminate");
+        }
+
+        static void RunAwake(MonoBehaviour mb)
+        {
+            var t = mb.GetType();
+            while (t != null && t != typeof(MonoBehaviour))
+            {
+                var m = t.GetMethod("Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                if (m != null) { m.Invoke(mb, null); return; }
+                t = t.BaseType;
+            }
+        }
+    }
+}

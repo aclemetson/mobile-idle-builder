@@ -15,13 +15,20 @@ namespace MobileIdleBuilder.Editor
     {
         public GameConfigJson            game_config     = new();
         public List<TierJson>            tiers           = new();
+        public List<ResearchBlockJson>   research_blocks = new();
         public List<ResearchJson>        research        = new();
         public List<ItemJson>            items           = new();
         public List<RecipeJson>          recipes         = new();
         public List<BuildingJson>        buildings       = new();
         public List<FieldJson>           fields          = new();
+        public List<SiteJson>            sites           = new();
+        public List<WorldJson>           worlds          = new();
+        public List<ManagerJson>         managers        = new();
         public List<DialogueJson>        dialogues       = new();
+        public List<DailyRewardJson>     daily_rewards   = new();
+        public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
+        public MegastructureJson         megastructure   = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
@@ -33,13 +40,22 @@ namespace MobileIdleBuilder.Editor
             recipes         ??= new List<RecipeJson>();
             buildings       ??= new List<BuildingJson>();
             fields          ??= new List<FieldJson>();
+            sites           ??= new List<SiteJson>();
+            worlds          ??= new List<WorldJson>();
+            managers        ??= new List<ManagerJson>();
             dialogues       ??= new List<DialogueJson>();
+            daily_rewards   ??= new List<DailyRewardJson>();
+            daily_challenges??= new List<DailyChallengeJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
+            megastructure   ??= new MegastructureJson();
+            megastructure.Initialize();
 
             foreach (var r in research)       r?.Initialize();
             foreach (var rec in recipes)      rec?.Initialize();
             foreach (var b in buildings)      b?.Initialize();
             foreach (var f in fields)         f?.Initialize();
+            foreach (var s in sites)          s?.Initialize();
+            foreach (var w in worlds)         w?.Initialize();
             foreach (var d in dialogues)      d?.Initialize();
             foreach (var s in tutorial_steps) s?.Initialize();
         }
@@ -53,12 +69,17 @@ namespace MobileIdleBuilder.Editor
         public float  atomic_assembler_ev_per_mass_unit  = 5f;
         public float  isotopic_manipulator_ev_per_neutron= 8f;
         public float  net_worth_to_prestige_currency_rate= 1f;
+        public float  prestige_base_value                = 5000f;
         public float  prestige_wall_multiplier           = 10f;
+        public float  prestige_currency_scale            = 50f;
         public float  alpha_particle_ev_value            = 20f;
         public float  beta_particle_ev_value             = 10f;
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
         public long   starting_entropy                   = 0;
+        public float  building_purchase_multiplier_t1       = 1.5f;
+        public float  building_purchase_multiplier_t2       = 1.4f;
+        public float  building_purchase_multiplier_t3_plus  = 1.3f;
     }
 
     [Serializable]
@@ -74,6 +95,23 @@ namespace MobileIdleBuilder.Editor
         public string[] starter_items   = Array.Empty<string>();
     }
 
+    /// <summary>A research block: one game phase (game_data.json research_blocks).</summary>
+    [Serializable]
+    internal class ResearchBlockJson
+    {
+        public string   id                              = "";
+        public string   name                            = "";
+        public int      order                           = 0;
+        public float    target_hours                    = 0f;
+        public bool     anchor                          = false;
+        public string   description                     = "";
+        public int      start_prestige_count            = 0;
+        public long     start_prestige_currency_earned  = 0;
+        public long     start_entropy                   = 0;
+        public string[] start_permanent_upgrades        = Array.Empty<string>();   // "id:level"
+        public string[] start_sites                     = Array.Empty<string>();
+    }
+
     [Serializable]
     internal class ResearchJson
     {
@@ -83,8 +121,10 @@ namespace MobileIdleBuilder.Editor
         public string   branch                 = "Nuclear";
         public string[] prerequisites          = Array.Empty<string>();
         public int      depth_in_tree          = 0;
-        public int      cost_base_currency     = 100;
+        public long     cost_base_currency     = 100;   // long: derived late-game research costs pass 2^31 (scripts/rebalance_curve.py)
         public int      cost_prestige_currency = 0;
+        public int      duration_seconds       = 0;
+        public float    field_cooldown_mult    = 1f;
         public string[] unlocks_items          = Array.Empty<string>();
         public string[] unlocks_recipes        = Array.Empty<string>();
         public string[] unlocks_buildings      = Array.Empty<string>();
@@ -94,6 +134,9 @@ namespace MobileIdleBuilder.Editor
         public float    prestige_memory_discount = 0.1f;
         public string   codex_entry            = "";
         public string   icon_path              = "TODO";
+        public string   block                  = "";    // research_blocks id (game phase)
+        public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
+        public int      tree_y                 = -1;
 
         public void Initialize()
         {
@@ -130,6 +173,7 @@ namespace MobileIdleBuilder.Editor
         public string codex_entry          = "";
         public float  base_sell_value      = 1f;
         public float  isotope_sell_multiplier = 1f;
+        public bool   escapes_as_entropy   = false;
     }
 
     [Serializable]
@@ -181,8 +225,27 @@ namespace MobileIdleBuilder.Editor
         public float power_cost_ev        = 0f;
         public float output_ev            = 0f;
         public float influence_radius_tiles = 0f;
+        public float link_radius_tiles    = 0f;
         public int   cost_base_currency   = 0;
         public int   cost_prestige_currency = 0;
+    }
+
+    [Serializable]
+    internal class StorageUpgradeLevelJson
+    {
+        public int level               = 2;
+        public int max_output_items    = 0;
+        public int cost_base_currency  = 0;
+        public int cost_prestige_currency = 0;
+    }
+
+    [Serializable]
+    internal class InputUpgradeLevelJson
+    {
+        public int level               = 2;
+        public int max_input_items     = 0;
+        public int cost_base_currency  = 0;
+        public int cost_prestige_currency = 0;
     }
 
     [Serializable]
@@ -206,6 +269,7 @@ namespace MobileIdleBuilder.Editor
         public string                 category                   = "Core";
         public bool                   is_obsoleteable            = false;
         public string                 obsolete_condition         = "";
+        public string                 obsoleted_by_research      = "";
         public bool                   requires_power             = false;
         public bool                   is_power_source            = false;
         public float                  base_power_cost_ev         = 0f;
@@ -218,13 +282,22 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public bool                   is_item_filter             = false;
+        public bool                   assignable_outputs         = false;
+        public string[]               recipe_mode_labels         = null;
+        public string[]               recipe_mode_prefixes       = null;
         public int[]                  footprint                  = { 1, 1 };
+        public string                 structure_kind             = "None";
         public List<PortJson>         ports                      = new();
         public string                 placement_rule             = "Anywhere";
         public string[]               compatible_adjacent_categories = Array.Empty<string>();
         public string[]               compatible_fields          = Array.Empty<string>();
         public int                    entropy_cost               = 0;
+        public int                    base_max_output_items      = 0;
+        public int                    base_max_input_items_per_slot = 0;
         public List<UpgradeLevelJson> upgrade_levels             = new();
+        public List<StorageUpgradeLevelJson> storage_upgrade_levels = new();
+        public List<InputUpgradeLevelJson>   input_upgrade_levels   = new();
         public bool                   has_special_upgrade        = false;
         public string                 special_upgrade_id         = "";
         public string                 required_research          = "";
@@ -243,6 +316,8 @@ namespace MobileIdleBuilder.Editor
             compatible_adjacent_categories ??= Array.Empty<string>();
             compatible_fields          ??= Array.Empty<string>();
             upgrade_levels             ??= new List<UpgradeLevelJson>();
+            storage_upgrade_levels     ??= new List<StorageUpgradeLevelJson>();
+            input_upgrade_levels       ??= new List<InputUpgradeLevelJson>();
         }
     }
 
@@ -260,12 +335,73 @@ namespace MobileIdleBuilder.Editor
         public string             display_name  = "";
         public string             field_type    = "Quark";
         public List<FieldDropJson>drops         = new();
-        public float              collection_rate = 1f;
+        public float              tap_cooldown_seconds = 1.5f;
         public string             field_color   = "#FFFFFF";
         public string             field_icon_path = "TODO";
         public string             codex_entry   = "";
+        public string             purchase_research        = "";
+        public long               purchase_cost_base       = 0;
+        public float              purchase_cost_multiplier = 10f;
+        public int                purchase_group_size      = 1;
 
         public void Initialize() { drops ??= new List<FieldDropJson>(); }
+    }
+
+    [Serializable]
+    internal class SiteFieldOverrideJson
+    {
+        public string field              = "";
+        public float  density_multiplier = 1f;
+    }
+
+    [Serializable]
+    internal class SiteJson
+    {
+        public string                        id              = "";
+        public string                        display_name    = "";
+        public long                          unlock_cost     = 0;
+        public List<SiteFieldOverrideJson>   field_overrides = new();
+
+        public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
+    }
+
+    [Serializable]
+    internal class WorldThemeJson
+    {
+        public string background_color = "";  // hex, e.g. "#0d1117" (empty = keep WorldTheme default)
+        public string tile_color       = "";  // hex base tile colour
+        public string field_tint       = "";  // hex multiplier applied to field-tile colours
+    }
+
+    [Serializable]
+    internal class WorldJson
+    {
+        public string         id                = "";
+        public string         display_name      = "";
+        public long           unlock_cost       = 0;
+        public List<string>   prereq_unlock_ids = new();  // research/item ids that gate the unlock
+        public List<string>   site_ids          = new();  // member site ids (flat global site list), in order
+        public WorldThemeJson theme;                       // map palette/tint (optional; null = defaults)
+
+        public void Initialize()
+        {
+            prereq_unlock_ids ??= new List<string>();
+            site_ids          ??= new List<string>();
+        }
+    }
+
+    [Serializable]
+    internal class ManagerJson
+    {
+        public string id                 = "";
+        public string display_name       = "";
+        public string description        = "";
+        public string bonus_type         = "";   // CraftSpeed | OutputQuantity | PowerDiscount
+        public float  bonus_value        = 1f;
+        public int    hire_cost_prestige = 0;
+        public string portrait_path      = "TODO";
+        public float[] star_bonus_values = null;  // effective bonus per star (index 0 == star 1 == bonus_value)
+        public int[]   star_costs        = null;  // ✦ cost to upgrade to each star (index 0 == 0)
     }
 
     [Serializable]
@@ -291,6 +427,64 @@ namespace MobileIdleBuilder.Editor
         public void Initialize() { lines ??= new List<DialogueLineJson>(); }
     }
 
+    // ── Daily-event JSON models ───────────────────────────────────────────────
+
+    [Serializable]
+    internal class DailyRewardJson
+    {
+        public int  day               = 0;
+        public int  crystals          = 0;
+        public long entropy           = 0;
+        public int  prestige_currency = 0;
+    }
+
+    [Serializable]
+    internal class DailyChallengeJson
+    {
+        public string id          = "";
+        public string description = "";
+        public string trigger     = "";
+        public int    target      = 1;
+        public int    crystals    = 0;
+    }
+
+    // ── Megastructure JSON models ─────────────────────────────────────────────
+
+    [Serializable]
+    internal class StageCostJson
+    {
+        public string item     = "";
+        public int    quantity = 1;
+    }
+
+    [Serializable]
+    internal class MegastructureStageJson
+    {
+        public string             id           = "";
+        public string             display_name = "";
+        public List<StageCostJson> costs       = new();
+        /// <summary>Must match a MegastructureRewardType enum value: OutputMultiplier | SpeedMultiplier | PrestigeGainMultiplier.</summary>
+        public string             reward_type  = "OutputMultiplier";
+        public float              reward_value = 0f;
+
+        public void Initialize() { costs ??= new List<StageCostJson>(); }
+    }
+
+    [Serializable]
+    internal class MegastructureJson
+    {
+        public string                       id                = "";
+        public string                       display_name      = "";
+        public string                       required_research = "";
+        public List<MegastructureStageJson> stages            = new();
+
+        public void Initialize()
+        {
+            stages ??= new List<MegastructureStageJson>();
+            foreach (var s in stages) s?.Initialize();
+        }
+    }
+
     // ── Tutorial step JSON models ─────────────────────────────────────────────
 
     [Serializable]
@@ -302,6 +496,13 @@ namespace MobileIdleBuilder.Editor
         public TutorialSkipJson       skip_condition;
         public TutorialOnEnterJson    on_enter             = new();
         public string[]               locked_research_ids  = new string[0];
+        /// <summary>Marks a step as a substep of a larger beat. Within a contiguous run of
+        /// substeps, TutorialSystem may skip forward when a LATER substep's advance condition
+        /// is already satisfied (e.g. protons already consumed into hydrogen). Non-substep
+        /// ("major") steps bound the run and are never auto-skipped.</summary>
+        public bool                   is_substep           = false;
+        /// <summary>Entropy granted once when this step advances. 0 = none.</summary>
+        public long                   reward_entropy       = 0;
 
         public void Initialize()
         {
@@ -322,6 +523,17 @@ namespace MobileIdleBuilder.Editor
         public string   ui_event_id  = "";
         public string   research_id  = "";
         public int      min_count    = 0;
+        /// <summary>BuildingMin only: restrict the count to buildings of this building id
+        /// (e.g. "strong_force_combiner"). Empty = count all buildings.</summary>
+        public string   building_id  = "";
+        /// <summary>ConveyorLinked only: source building id. Empty = any building.</summary>
+        public string   from_building_id = "";
+        /// <summary>BuildingUpgradeMin only: speed upgrade level to reach.</summary>
+        public int      min_level    = 0;
+        /// <summary>FieldPurchasedMin only: FieldSO id whose purchases are counted.</summary>
+        public string   field_id     = "";
+        /// <summary>BuildingRecipeSet only: recipe_id the building_id building must be set to.</summary>
+        public int      recipe_id    = -1;
     }
 
     [Serializable]

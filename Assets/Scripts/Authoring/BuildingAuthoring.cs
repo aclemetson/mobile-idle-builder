@@ -59,7 +59,8 @@ namespace MobileIdleBuilder
                     CraftTime       = craftTime,
                     Progress        = 0f,
                     InputsSatisfied = false,
-                    IsCrafting      = false
+                    IsCrafting      = false,
+                    ByproductEntropy = r != null ? r.EscapeEntropyPerCraft : 0f
                 });
 
                 // Recipe input/output slots
@@ -78,22 +79,19 @@ namespace MobileIdleBuilder
                 }
 
                 var recipeOutputBuf = AddBuffer<RecipeOutputSlot>(entity);
-                if (r != null && r.outputItem != null)
-                {
-                    recipeOutputBuf.Add(new RecipeOutputSlot
-                    {
-                        ItemID   = r.outputItem.itemId,
-                        Quantity = r.outputQuantity
-                    });
-                }
+                if (r != null)
+                    foreach (var (item, qty) in r.ProducedOutputs())
+                        recipeOutputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
                 // Local inventory buffers (required for conveyor connectivity)
                 AddBuffer<BuildingInputSlot>(entity);
                 AddBuffer<BuildingOutputSlot>(entity);
+                // Crafts are recorded here by ProductionSystem and drained by ProductionAchievementBridge.
+                AddBuffer<CraftedOutputEvent>(entity);
                 AddComponent(entity, new BuildingInventoryConfig
                 {
-                    OutputCapacity = 20,
-                    InputCapacity  = 20
+                    OutputCapacity = BuildingSO.OutputCapacityForLevel(so, 1),
+                    InputCapacity  = BuildingSO.InputCapacityForLevel(so, 1)
                 });
 
                 // Footprint

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,8 +32,37 @@ namespace MobileIdleBuilder
             public RecipeSO   defaultRecipe;
         }
 
-        [Header("Available buildings (shown in the selection panel)")]
-        public BuildingEntry[] availableBuildings;
+        private BuildingEntry[] _availableBuildings;
+
+        /// <summary>
+        /// Every placeable building, built from the generated <see cref="BuildingDatabaseSO"/>
+        /// (Resources/BuildingDatabase) rather than hand-wired in the scene — a building added to
+        /// game_data.json appears here automatically once imported. <c>defaultRecipe</c> is left null;
+        /// buildings are placed recipe-less and the player picks the recipe in the inspector (the same
+        /// behaviour the scene list had, where every entry's defaultRecipe was null). Cached after first
+        /// access. Also serves as the buildingId -> BuildingSO registry for save/load and the dev console.
+        /// </summary>
+        public BuildingEntry[] availableBuildings
+        {
+            get
+            {
+                if (_availableBuildings != null) return _availableBuildings;
+
+                var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+                if (db?.allBuildings == null)
+                {
+                    GameLogger.Warning("[BuildingPlacementController] BuildingDatabase missing — run MobileIdleBuilder > Import Game Data.");
+                    return _availableBuildings = Array.Empty<BuildingEntry>();
+                }
+
+                var list = new List<BuildingEntry>(db.allBuildings.Length);
+                foreach (var b in db.allBuildings)
+                    if (b != null)
+                        list.Add(new BuildingEntry { building = b, defaultRecipe = null });
+
+                return _availableBuildings = list.ToArray();
+            }
+        }
 
         [Header("Scene references")]
         [SerializeField] private GridRenderer        gridRenderer;
@@ -46,15 +76,32 @@ namespace MobileIdleBuilder
         private int  _rotation; // 0-3, applied CW
         private bool _flipped;
 
+        /// <summary>Current CW rotation step (0-3) of the pending building. Exposed for tests.</summary>
+        public int CurrentRotation => _rotation;
+
+        /// <summary>Advances a 0-3 CW rotation step by one, wrapping 3 → 0.</summary>
+        public static int NextRotation(int rotation) => (rotation + 1) % 4;
+
         /// <summary>True if the pending building defines its own port layout.</summary>
         public bool HasPortLayout =>
             IsPlacing && _pending.building?.ports != null && _pending.building.ports.Length > 0;
 
-        /// <summary>True when the rotate button / R key should be shown (port layout OR legacy field collector).</summary>
+        /// <summary>True when the rotate button / R key should be shown (port layout, legacy field collector, or a field pair).</summary>
         public bool CanRotate =>
-            IsPlacing && (HasPortLayout ||
+            IsPlacing && (HasPortLayout || IsPlacingFieldGroup ||
                           (_pending.building != null &&
                            _pending.building.placementRule == PlacementRule.MustBeOnField));
+
+        // ---- Field purchase state (Field Synthesis) ----
+        private FieldSO        _pendingField;
+        private FieldGenerator _fieldGenerator;
+        private ConveyorVisualizer _conveyorVisualizer;
+
+        /// <summary>The field being bought and placed, or null while placing a building.</summary>
+        public FieldSO PendingField => IsPlacing ? _pendingField : null;
+
+        /// <summary>True while placing a multi-tile field purchase (a quark pair), which can turn 90°.</summary>
+        private bool IsPlacingFieldGroup => _pendingField != null && _pendingField.purchaseGroupSize > 1;
 
         /// <summary>True when the flip button / F key should be shown.</summary>
         public bool CanFlip => HasPortLayout;
@@ -71,16 +118,28 @@ namespace MobileIdleBuilder
 
         public void Rotate()
         {
-            if (HasPortLayout)
+            if (IsPlacing && IsPlacingFieldGroup)
             {
-                _rotation = (_rotation + 1) % 4;
-                // Force ghost refresh
-                _lastGhostCell = new(-1, -1);
+                // A pair only has two distinct orientations: side by side, or one above the other.
+                _rotation = (_rotation + 1) % 2;
+                RefreshCandidateGhost();
+            }
+            else if (HasPortLayout)
+            {
+                _rotation = NextRotation(_rotation);
+                RefreshCandidateGhost();
             }
             else
             {
                 RotateOutputDirection();
             }
+        }
+
+        /// <summary>Re-draw the ghost after a rotate/flip — at the locked candidate, or force a hover refresh.</summary>
+        private void RefreshCandidateGhost()
+        {
+            if (_hasCandidate) { UpdateGhostAt(_candidateCell); RecomputeCandidateWorld(); }
+            else               { _lastGhostCell = new(-1, -1); }
         }
 
         /// <summary>Kept for backward compatibility — the rotate button wired before port system existed.</summary>
@@ -95,7 +154,7 @@ namespace MobileIdleBuilder
         {
             if (!HasPortLayout) return;
             _flipped = !_flipped;
-            _lastGhostCell = new(-1, -1);
+            RefreshCandidateGhost();
         }
 
         // ================================================================
@@ -107,6 +166,32 @@ namespace MobileIdleBuilder
         private Vector2Int      _selectionCell;
         private bool            _awaitingSelection;
 
+        // ---- Candidate / confirm state ----
+        private bool       _hasCandidate;
+        private Vector2Int _candidateCell;
+        private bool       _pointerDown;
+        private Vector2    _pointerPrev;
+        private float      _dragAccum;
+        private bool       _pressOverUI;
+
+        /// <summary>True once the player has tapped a cell and is being asked to confirm placement.</summary>
+        public bool HasCandidate => _hasCandidate;
+
+        /// <summary>World-space centre of the candidate footprint (for anchoring the confirm popup).</summary>
+        public Vector3 CandidateWorldPosition { get; private set; }
+
+        /// <summary>True when the current candidate cell is a legal placement.</summary>
+        public bool CandidateValid => _hasCandidate && IsCellValidForPending(_candidateCell.x, _candidateCell.y);
+
+        /// <summary>Raised when a candidate cell is set (true) or cleared (false). Drives the confirm popup.</summary>
+        public event Action<bool> OnCandidateChanged;
+
+        /// <summary>
+        /// Assigned by the HUD: returns true if a screen-space point is over the confirm popup, so a tap
+        /// on the popup is not also treated as a map tap. Null-safe (treated as "not over UI").
+        /// </summary>
+        public System.Func<Vector2, bool> IsPointerOverPlacementUI;
+
         // Legacy single-output arrow (field collectors)
         private OutputDirection _outputDirection;
         private GameObject      _ghostArrowGO;
@@ -114,6 +199,14 @@ namespace MobileIdleBuilder
 
         // Port-layout ghost arrows
         private readonly List<GameObject> _ghostPortArrows = new();
+
+        // Circular influence-radius preview for power buildings (built in code, no scene wiring).
+        private PlacementRadiusIndicator _radiusIndicator;
+        private static readonly Color RadiusRingColor = new Color(0.35f, 1f, 0.75f, 0.9f); // matches BuildingVisualizer's in-range tint
+
+        // Dashed lines to the power buildings the pending power source would link to (built in code).
+        private PowerConnectionRenderer _connectionRenderer;
+        private static readonly Color ConnectionLineColor = new Color(1f, 0.9f, 0.3f, 0.95f); // warm amber, reads as "wired"
 
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
@@ -141,16 +234,33 @@ namespace MobileIdleBuilder
         // Public API
         // ================================================================
 
-        public void BeginPlacement(BuildingEntry entry)
+        public void BeginPlacement(BuildingEntry entry) => BeginPlacementCore(entry, null);
+
+        /// <summary>
+        /// Starts placing a field bought with Field Synthesis. Same ghost, confirm popup and rotate
+        /// button as a building; confirming charges the price via <see cref="FieldPurchaseService"/>.
+        /// </summary>
+        public void BeginFieldPlacement(FieldSO field)
+        {
+            if (field == null) return;
+            BeginPlacementCore(default, field);
+        }
+
+        private void BeginPlacementCore(BuildingEntry entry, FieldSO field)
         {
             _pending           = entry;
+            _pendingField      = field;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             _outputDirection   = OutputDirection.North;
             _rotation          = 0;
             _flipped           = false;
             IsPlacing          = true;
-            cameraController?.SetPanLocked(true);
+            _hasCandidate      = false;
+            _pointerDown       = false;
+            _dragAccum         = 0f;
+            // Leave the camera unlocked so the player can press-and-drag to pan while positioning.
+            cameraController?.SetPanLocked(false);
 
             DestroyGhostArrow();
             DestroyGhostPortArrows();
@@ -172,11 +282,14 @@ namespace MobileIdleBuilder
         public void CancelPlacement()
         {
             gridRenderer.HideGhost();
+            HideRadiusPreview();
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             IsPlacing          = false;
+            _pendingField      = null;
+            if (_hasCandidate) { _hasCandidate = false; OnCandidateChanged?.Invoke(false); }
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
         }
@@ -197,16 +310,17 @@ namespace MobileIdleBuilder
         {
             if (_awaitingSelection)
             {
-                if (InputUtils.WasCancelPressed())
-                    CancelPlacement();
+                if (InputUtils.WasCancelPressed()) CancelPlacement();
                 return;
             }
 
             if (!IsPlacing) return;
 
+            // Cancel: back out of a pending candidate first, otherwise exit placement entirely.
             if (InputUtils.WasCancelPressed())
             {
-                CancelPlacement();
+                if (_hasCandidate) ClearCandidate();
+                else               CancelPlacement();
                 return;
             }
 
@@ -217,51 +331,109 @@ namespace MobileIdleBuilder
                 if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
             }
 
-            Vector2    pointerPos = GetPointerPosition();
-            Vector2Int cell       = WorldToCell(pointerPos);
+            // ---- Tap vs. drag detection ----
+            // A drag (movement beyond the tap threshold) is a camera pan and must NOT place a building;
+            // only a stationary tap that did not begin on the confirm popup selects a cell.
+            bool    tapped      = false;
+            Vector2 tapPosition = default;
 
-            // Update ghost when hovered cell changes
-            if (cell != _lastGhostCell)
+            if (InputUtils.WasPointerPressed())
             {
-                var fp    = GetEffectiveFootprint();
-                bool valid = IsCellValidForPending(cell.x, cell.y);
-                gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
-                _lastGhostCell = cell;
-
-                if (HasPortLayout)
-                {
-                    RefreshGhostPortArrows(cell.x, cell.y, valid);
-                }
-                else if (_ghostArrowGO != null)
-                {
-                    // Legacy: move single ghost arrow
-                    if (gridRenderer.IsInBounds(cell.x, cell.y))
-                    {
-                        _ghostArrowGO.SetActive(true);
-                        _ghostArrowGO.transform.localPosition = new Vector3(
-                            cell.x * gridRenderer.CellSize, 0.1f, cell.y * gridRenderer.CellSize);
-                    }
-                    else
-                    {
-                        _ghostArrowGO.SetActive(false);
-                    }
-                }
+                _pointerDown = true;
+                _pointerPrev = InputUtils.GetPointerPosition();
+                _dragAccum   = 0f;
+                _pressOverUI = (IsPointerOverPlacementUI?.Invoke(_pointerPrev) ?? false)
+                               || UIInputBlocker.IsPointerOverUI(_pointerPrev);
+            }
+            if (_pointerDown && InputUtils.IsPointerHeld())
+            {
+                Vector2 cur = InputUtils.GetPointerPosition();
+                _dragAccum += Vector2.Distance(cur, _pointerPrev);
+                _pointerPrev = cur;
+            }
+            if (_pointerDown && InputUtils.WasPointerReleased())
+            {
+                _pointerDown = false;
+                tapPosition  = InputUtils.GetPointerPosition();
+                tapped       = _dragAccum <= CameraController.TapThreshold && !_pressOverUI;
             }
 
-            if (!WasPointerPressed()) return;
-            if (!IsCellValidForPending(cell.x, cell.y)) return;
+            // Desktop hover preview while no candidate is locked in (mobile has no hover).
+            if (!_hasCandidate && Touchscreen.current == null && Mouse.current != null)
+            {
+                Vector2Int hoverCell = WorldToCell(InputUtils.GetPointerPosition());
+                if (hoverCell != _lastGhostCell) UpdateGhostAt(hoverCell);
+            }
 
+            // A tap sets (or moves) the candidate cell; the confirm popup then asks for confirmation.
+            if (tapped)
+            {
+                Vector2Int cell = WorldToCell(tapPosition);
+                if (gridRenderer.IsInBounds(cell.x, cell.y)) SetCandidate(cell);
+            }
+        }
+
+        // ================================================================
+        // Candidate / confirm flow
+        // ================================================================
+
+        private void SetCandidate(Vector2Int cell)
+        {
+            _candidateCell = cell;
+            UpdateGhostAt(cell);
+            RecomputeCandidateWorld();
+
+            if (!_hasCandidate)
+            {
+                _hasCandidate = true;
+                OnCandidateChanged?.Invoke(true);
+            }
+
+            // ✓ is disabled on an invalid cell; say why, once per tap.
+            string reason = BlockMessage(BlockAt(cell.x, cell.y), _pending.building?.displayName, _pendingField != null);
+            if (reason != null)
+                InventoryPopupController.NotifyWarning(reason);
+        }
+
+        /// <summary>Drops the pending candidate and returns to positioning (called by the popup's ✕).</summary>
+        public void ClearCandidate()
+        {
+            if (!_hasCandidate) return;
+            _hasCandidate  = false;
+            _lastGhostCell = new(-1, -1);
+            gridRenderer.HideGhost();
+            HideRadiusPreview();
+            DestroyGhostPortArrows();
+            if (_ghostArrowGO != null) _ghostArrowGO.SetActive(false);
+            OnCandidateChanged?.Invoke(false);
+        }
+
+        /// <summary>Commits the candidate cell (called by the popup's ✓). No-op if the cell is invalid.</summary>
+        public void ConfirmCandidate()
+        {
+            if (!_hasCandidate) return;
+            int x = _candidateCell.x, y = _candidateCell.y;
+            if (!IsCellValidForPending(x, y)) return;
+
+            _hasCandidate = false;
+            OnCandidateChanged?.Invoke(false);
             gridRenderer.HideGhost();
 
-            // Field-collector output selector
-            var field = FieldGenerator.GetFieldAt(cell.x, cell.y);
+            if (_pendingField != null)
+            {
+                ConfirmFieldPurchase(x, y);
+                return;
+            }
+
+            // Field-collector output selector (multiple harvestable items on the field).
+            var field = FieldGenerator.GetFieldAt(x, y);
             if (field != null && _pending.building != null && _pending.building.supportedRecipes != null)
             {
                 var options = GetMatchingRecipes(field);
                 if (options.Count > 1)
                 {
                     _awaitingSelection = true;
-                    _selectionCell     = cell;
+                    _selectionCell     = new Vector2Int(x, y);
                     IsPlacing          = false;
                     if (_ghostArrowGO != null) _ghostArrowGO.SetActive(false);
                     DestroyGhostPortArrows();
@@ -271,12 +443,73 @@ namespace MobileIdleBuilder
                 }
                 if (options.Count == 1)
                 {
-                    ConfirmPlacement(cell.x, cell.y, options[0]);
+                    ConfirmPlacement(x, y, options[0]);
                     return;
                 }
             }
 
-            ConfirmPlacement(cell.x, cell.y, _pending.defaultRecipe);
+            // Off-field buildings with exactly one usable recipe start producing right away (#186).
+            var recipe = _pending.defaultRecipe;
+            if (recipe == null && field == null)
+                recipe = RecipeAvailability.SoleAvailable(_pending.building);
+            ConfirmPlacement(x, y, recipe);
+        }
+
+        /// <summary>Draws the ghost (and port arrows / power coverage) at a cell without locking it in.</summary>
+        private void UpdateGhostAt(Vector2Int cell)
+        {
+            var  fp    = GetEffectiveFootprint();
+            bool valid = IsCellValidForPending(cell.x, cell.y);
+
+            // Preview the power radius for power buildings: a circular ring on the ground plus lighting up
+            // the placed buildings that fall inside it (instead of the old square tile wash).
+            if (_pending.building != null && _pending.building.isPowerSource)
+            {
+                float radius = BuildingSO.InfluenceRadiusForLevel(_pending.building, 1);
+                float cs     = gridRenderer.CellSize;
+                // Centre of the footprint in world space; ring radius reaches from the footprint edge.
+                var center = new Vector3(
+                    (cell.x + (fp.x - 1) * 0.5f) * cs, 0f, (cell.y + (fp.y - 1) * 0.5f) * cs);
+                float worldRadius = radius * cs + Mathf.Max(fp.x, fp.y) * 0.5f * cs;
+                EnsureRadiusIndicator().Show(center, worldRadius, RadiusRingColor);
+                buildingVisualizer?.HighlightBuildingsInRange(cell.x, cell.y, fp.x, fp.y, radius);
+                ShowConnectionPreview(cell, fp, center, cs);
+            }
+            else
+            {
+                HideRadiusPreview();
+            }
+
+            gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
+            _lastGhostCell = cell;
+
+            if (HasPortLayout)
+            {
+                RefreshGhostPortArrows(cell.x, cell.y, valid);
+            }
+            else if (_ghostArrowGO != null)
+            {
+                if (gridRenderer.IsInBounds(cell.x, cell.y))
+                {
+                    _ghostArrowGO.SetActive(true);
+                    _ghostArrowGO.transform.localPosition = new Vector3(
+                        cell.x * gridRenderer.CellSize, 0.1f, cell.y * gridRenderer.CellSize);
+                }
+                else
+                {
+                    _ghostArrowGO.SetActive(false);
+                }
+            }
+        }
+
+        private void RecomputeCandidateWorld()
+        {
+            var   fp = GetEffectiveFootprint();
+            float cs = gridRenderer.CellSize;
+            CandidateWorldPosition = new Vector3(
+                (_candidateCell.x + (fp.x - 1) * 0.5f) * cs,
+                0f,
+                (_candidateCell.y + (fp.y - 1) * 0.5f) * cs);
         }
 
         // ================================================================
@@ -302,14 +535,44 @@ namespace MobileIdleBuilder
                     for (int dy = 0; dy < fp.y; dy++)
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
+                // A new building can give a belt tail an input to feed: redraw so the tail points at it (#223).
+                (_conveyorVisualizer ??= FindAnyObjectByType<ConveyorVisualizer>())?.RefreshAll();
                 OnBuildingPlaced?.Invoke(_pending);
+                AchievementService.Instance?.NotifyBuildingPlaced(_pending.building?.id ?? _pending.building?.name ?? "");
+                SaveManager.Instance?.SaveLocal();
             }
 
+            HideRadiusPreview();
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             IsPlacing          = false;
             _awaitingSelection = false;
+            cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
+        }
+
+        private void ConfirmFieldPurchase(int x, int y)
+        {
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            var cells = FootprintCells(x, y);
+            if (!FieldPurchaseService.TryPurchase(_pendingField, _fieldGenerator, cells))
+                InventoryPopupController.NotifyWarning("Not enough entropy");
+
+            _pendingField = null;
+            IsPlacing     = false;
+            cameraController?.SetPanLocked(false);
+            OnPlacingChanged?.Invoke(false);
+        }
+
+        /// <summary>Every cell the pending footprint covers when anchored at (x, y).</summary>
+        internal List<Vector2Int> FootprintCells(int x, int y)
+        {
+            var fp    = GetEffectiveFootprint();
+            var cells = new List<Vector2Int>(fp.x * fp.y);
+            for (int dx = 0; dx < fp.x; dx++)
+                for (int dy = 0; dy < fp.y; dy++)
+                    cells.Add(new Vector2Int(x + dx, y + dy));
+            return cells;
         }
 
         // ---- Ghost port arrows ----
@@ -360,10 +623,74 @@ namespace MobileIdleBuilder
             _ghostArrow = null;
         }
 
+        // ---- Power-radius preview ----
+
+        /// <summary>Lazily creates the radius ring indicator (runtime GameObject, no scene wiring).</summary>
+        private PlacementRadiusIndicator EnsureRadiusIndicator()
+        {
+            if (_radiusIndicator == null)
+            {
+                var go = new GameObject("PowerRadiusIndicator");
+                go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+                _radiusIndicator = go.AddComponent<PlacementRadiusIndicator>();
+            }
+            return _radiusIndicator;
+        }
+
+        /// <summary>Hides the ring and reverts any building lit by the radius preview.</summary>
+        private void HideRadiusPreview()
+        {
+            _radiusIndicator?.Hide();
+            _connectionRenderer?.Hide();
+            buildingVisualizer?.ClearRangeHighlight();
+        }
+
+        /// <summary>Lazily creates the dashed power-connection renderer (runtime GameObject, no scene wiring).</summary>
+        private PowerConnectionRenderer EnsureConnectionRenderer()
+        {
+            if (_connectionRenderer == null)
+            {
+                var go = new GameObject("PowerConnectionPreview");
+                go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+                _connectionRenderer = go.AddComponent<PowerConnectionRenderer>();
+            }
+            return _connectionRenderer;
+        }
+
+        /// <summary>
+        /// Draws dashed lines from the pending power source (ghost) to every already-placed power building it
+        /// would link to (within max of the two link ranges). Cleared on placement/cancel via
+        /// <see cref="HideRadiusPreview"/>.
+        /// </summary>
+        private void ShowConnectionPreview(Vector2Int cell, Vector2Int fp, Vector3 center, float cs)
+        {
+            float linkRange = BuildingSO.LinkRadiusForLevel(_pending.building, 1);
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (linkRange <= 0f || world == null || !world.IsCreated) { _connectionRenderer?.Hide(); return; }
+
+            var nodes = PowerConnectionGraph.GatherFromEcs(world.EntityManager, cs);
+            var lines = new List<(Vector3, Vector3, Color)>();
+            int gMinX = cell.x, gMinY = cell.y, gMaxX = cell.x + fp.x - 1, gMaxY = cell.y + fp.y - 1;
+
+            foreach (var n in nodes)
+            {
+                if (PowerCoverageMath.NodesLinked(
+                        gMinX, gMinY, gMaxX, gMaxY,
+                        n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
+                        linkRange, n.LinkRange))
+                {
+                    lines.Add((center, n.WorldCenter, ConnectionLineColor));
+                }
+            }
+
+            EnsureConnectionRenderer().Show(lines);
+        }
+
         // ---- Footprint helpers ----
 
         private Vector2Int GetBaseFootprint()
         {
+            if (_pendingField != null) return new Vector2Int(Mathf.Max(1, _pendingField.purchaseGroupSize), 1);
             if (_pending.building == null) return Vector2Int.one;
             var fp = _pending.building.footprint;
             return new Vector2Int(Mathf.Max(1, fp.x), Mathf.Max(1, fp.y));
@@ -375,12 +702,28 @@ namespace MobileIdleBuilder
             return PortUtils.RotatedFootprint(GetBaseFootprint(), _rotation);
         }
 
-        private bool IsCellValidForPending(int x, int y)
+        private bool IsCellValidForPending(int x, int y) => BlockAt(x, y) == PlacementBlock.None;
+
+        /// <summary>Why the pending placement can't go at (x, y), or None when it can.</summary>
+        private PlacementBlock BlockAt(int x, int y)
         {
+            if (_pendingField != null)
+            {
+                // A bought field needs bare ground: no building, belt or existing field.
+                foreach (var c in FootprintCells(x, y))
+                {
+                    if (!gridRenderer.IsInBounds(c.x, c.y)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return PlacementBlock.Occupied;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return PlacementBlock.OnField;
+                }
+                return PlacementBlock.None;
+            }
+
             if (_pending.building == null)
             {
-                return gridRenderer.IsInBounds(x, y) &&
-                       (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(x, y));
+                if (!gridRenderer.IsInBounds(x, y)) return PlacementBlock.OffGrid;
+                return GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
+                    ? PlacementBlock.Occupied : PlacementBlock.None;
             }
 
             var fp = GetEffectiveFootprint();
@@ -390,45 +733,55 @@ namespace MobileIdleBuilder
                 for (int dy = 0; dy < fp.y; dy++)
                 {
                     int cx = x + dx, cy = y + dy;
-                    if (!gridRenderer.IsInBounds(cx, cy)) return false;
-                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return false;
+                    if (!gridRenderer.IsInBounds(cx, cy)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return PlacementBlock.Occupied;
 
                     var fieldAtCell = FieldGenerator.GetFieldAt(cx, cy);
 
                     if (_pending.building.placementRule == PlacementRule.MustBeOnField)
                     {
-                        if (fieldAtCell == null) return false;
+                        if (fieldAtCell == null) return PlacementBlock.NeedsField;
                         if (_pending.building.compatibleFields != null && _pending.building.compatibleFields.Length > 0)
                         {
                             bool compatible = System.Array.Exists(_pending.building.compatibleFields,
                                                                   ft => ft == fieldAtCell.fieldType);
-                            if (!compatible) return false;
+                            if (!compatible) return PlacementBlock.WrongField;
                         }
                     }
                     else if (fieldAtCell != null)
                     {
-                        return false;
+                        return PlacementBlock.OnField;
                     }
                 }
             }
 
-            return true;
+            return PlacementBlock.None;
         }
 
-        private List<RecipeSO> GetMatchingRecipes(FieldSO field)
+        internal enum PlacementBlock { None, OffGrid, Occupied, NeedsField, WrongField, OnField }
+
+        /// <summary>
+        /// One-line reason shown in the notification banner when a tap picks a cell the ✓ can't confirm,
+        /// so a disabled ✓ never goes unexplained (#258). Null for None. The banner does not wrap: keep it short.
+        /// </summary>
+        internal static string BlockMessage(PlacementBlock block, string buildingName, bool isField)
         {
-            var result = new List<RecipeSO>();
-            if (field.outputItems == null || field.outputItems.Count == 0) return result;
-            if (_pending.building.supportedRecipes == null) return result;
-
-            foreach (var recipe in _pending.building.supportedRecipes)
+            string name = string.IsNullOrEmpty(buildingName) ? "it" : "the " + buildingName;
+            switch (block)
             {
-                if (recipe == null) continue;
-                if (field.outputItems.Contains(recipe.outputItem))
-                    result.Add(recipe);
+                case PlacementBlock.OffGrid:    return "Doesn't fit: part of it is off the grid.";
+                case PlacementBlock.Occupied:   return "That spot is taken.";
+                case PlacementBlock.NeedsField: return $"Place {name} on a field tile.";
+                case PlacementBlock.WrongField: return $"{Capitalize(name)} can't harvest this field.";
+                case PlacementBlock.OnField:    return isField ? "A new field needs empty ground."
+                                                               : "Fields are for Harvesters. Pick an empty tile.";
+                default:                        return null;
             }
-            return result;
         }
+
+        private static string Capitalize(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
+
+        private List<RecipeSO> GetMatchingRecipes(FieldSO field) => FieldRecipes.For(_pending.building, field);
 
         private static Vector3 FacingEdgeOffset(OutputDirection dir, float cellSize)
         {
@@ -443,10 +796,6 @@ namespace MobileIdleBuilder
             };
         }
 
-        // ---- Input helpers ----
-        private static Vector2 GetPointerPosition() => InputUtils.GetPointerPosition();
-        private static bool    WasPointerPressed()  => InputUtils.WasPointerPressed();
-
         // ---- Grid helpers ----
         private Vector2Int WorldToCell(Vector2 screenPos)
         {
@@ -456,9 +805,7 @@ namespace MobileIdleBuilder
             float t     = -ray.origin.y / ray.direction.y;
             var   world = ray.origin + ray.direction * t;
 
-            int x = Mathf.FloorToInt(world.x / gridRenderer.CellSize);
-            int y = Mathf.FloorToInt(world.z / gridRenderer.CellSize);
-            return new(x, y);
+            return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
     }
 }

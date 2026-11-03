@@ -19,6 +19,10 @@
     --color-success:        #00e676;   /* Unlock, completion */
     --color-border:         #1e3a5f;   /* Subtle panel borders */
 
+    /* ---- Currency colours ---- */
+    --color-currency-entropy: #00e5ff;  /* ◈ Entropy — matches research cost labels */
+    --color-currency-crystal: #FFD700;  /* ◆ Crystals (paid) — gold */
+
     /* ---- Spacing ---- */
     --spacing-xs: 6px;
     --spacing-sm: 12px;

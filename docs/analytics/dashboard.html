@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idle Builder — Balancing Telemetry</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --bg:#0f1115; --panel:#171a21; --ink:#e6e8ee; --muted:#9aa3b2; --accent:#5ec8f8; --line:#262b35; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+    header { padding:18px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+    h1 { font-size:18px; margin:0; font-weight:600; }
+    .sub { color:var(--muted); font-size:13px; }
+    label.btn { background:var(--accent); color:#04202e; padding:7px 14px; border-radius:6px; font-weight:600; cursor:pointer; }
+    label.btn input { display:none; }
+    #status { color:var(--muted); }
+    main { padding:20px 24px; }
+    .hint { color:var(--muted); max-width:780px; }
+    .hint code { background:var(--panel); padding:1px 5px; border-radius:4px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:18px; margin-top:18px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+    .card h2 { font-size:14px; margin:0 0 10px; font-weight:600; color:var(--ink); }
+    .card .note { color:var(--muted); font-size:12px; margin-top:8px; }
+    .pill { display:inline-block; background:var(--line); color:var(--muted); border-radius:999px; padding:2px 10px; font-size:12px; }
+    .empty { color:var(--muted); padding:40px 0; text-align:center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Idle Builder — Balancing Telemetry</h1>
+      <div class="sub">Load a CSV exported from Unity Data Explorer. Everything runs locally in your browser.</div>
+    </div>
+    <label class="btn">Load CSV<input id="file" type="file" accept=".csv" /></label>
+    <span id="status">No file loaded</span>
+  </header>
+
+  <main>
+    <p class="hint" id="intro">
+      Export a query from <strong>Unity Dashboard → Analytics → Data Explorer → Export CSV</strong> (the free
+      dashboard export), then load it here. The page detects which event the CSV holds by its columns and draws
+      the matching charts. Supported events: <code>prestige_completed</code>, <code>player_snapshot</code>,
+      <code>building_placed</code>. See <code>data-dictionary.md</code> for what each metric means.
+    </p>
+    <div id="meta"></div>
+    <div id="charts" class="grid"></div>
+    <div id="empty" class="empty" hidden>No recognizable telemetry columns found in this CSV.</div>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

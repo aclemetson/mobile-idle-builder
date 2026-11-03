@@ -19,12 +19,24 @@ namespace MobileIdleBuilder
         {
             if (Instance != null && Instance != this)
             {
-                GameLogger.Error($"[{typeof(T).Name}] DUPLICATE detected — destroying on '{gameObject.name}', keeping '{Instance.gameObject.name}'");
-                Destroy(this);
+                // A duplicate is expected when a PersistAcrossScenes singleton survives a scene reload:
+                // the kept instance lives in Unity's special "DontDestroyOnLoad" scene and the freshly
+                // loaded scene's copy is redundant. Only a same-scene double-placement is a wiring bug
+                // worth an error.
+                string msg = $"[{typeof(T).Name}] DUPLICATE detected — destroying on '{gameObject.name}', keeping '{Instance.gameObject.name}'";
+                if (Instance.gameObject.scene.name == "DontDestroyOnLoad")
+                    GameLogger.Debug(msg + " (expected on scene reload)");
+                else
+                    GameLogger.Error(msg);
+
+                if (Application.isPlaying)
+                    Destroy(this);
+                else
+                    DestroyImmediate(this);
                 return;
             }
             Instance = this as T;
-            if (PersistAcrossScenes)
+            if (PersistAcrossScenes && Application.isPlaying)
                 DontDestroyOnLoad(gameObject);
         }
 

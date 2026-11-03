@@ -1,0 +1,184 @@
+/* ================================================================
+   AchievementsMenu.uss
+   Styles for the full-screen achievements overlay used on the main
+   menu. References tokens from tokens.uss.
+   ================================================================ */
+
+.achievements-overlay {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 12, 20, 0.97);
+    flex-direction: column;
+    padding: var(--spacing-md);
+}
+
+/* ---- Header ---- */
+.achievements-overlay-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.achievements-overlay-title {
+    flex-grow: 1;
+    font-size: 20px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+}
+
+.achievements-crystal-balance {
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-lg);
+    margin-right: var(--spacing-md);
+}
+
+.achievements-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    padding: 0;
+    -unity-text-align: middle-center;
+}
+
+/* ---- Category tabs ---- */
+.achievements-tabs {
+    flex-direction: row;
+    margin-bottom: var(--spacing-sm);
+}
+
+.achievements-tab {
+    flex-grow: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-right: 2px;
+    border-radius: var(--border-radius);
+}
+
+.achievements-tab--active {
+    background-color: rgba(0, 230, 118, 0.12);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+/* ---- Reset countdown ---- */
+.achievements-reset-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-sm);
+    -unity-text-align: upper-right;
+}
+
+/* ---- Achievement list ---- */
+.achievements-scroll {
+    flex-grow: 1;
+}
+
+/* ---- Achievement card ---- */
+.ach-card {
+    flex-direction: column;
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.ach-card--completed {
+    border-color: var(--color-success);
+    background-color: rgba(0, 230, 118, 0.06);
+}
+
+.ach-card--claimable {
+    border-color: var(--color-currency-crystal);
+    background-color: rgba(255, 215, 0, 0.08);
+}
+
+.ach-card-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ach-card-check {
+    width: 20px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    -unity-text-align: middle-center;
+    margin-right: var(--spacing-sm);
+}
+
+.ach-card-check--done {
+    color: var(--color-success);
+}
+
+.ach-card-body {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.ach-card-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.ach-card-desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    margin-top: 2px;
+}
+
+.ach-card-reward {
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-xs);
+    margin-top: 2px;
+}
+
+/* ---- Progress bar ---- */
+.ach-progress-bar {
+    height: 4px;
+    background-color: var(--color-surface);
+    border-radius: 2px;
+    margin-top: var(--spacing-xs);
+    overflow: hidden;
+}
+
+.ach-progress-fill {
+    height: 100%;
+    background-color: var(--color-success);
+    border-radius: 2px;
+}
+
+/* ---- Claim button ---- */
+.ach-claim-btn {
+    padding: 4px var(--spacing-sm);
+    background-color: rgba(255, 215, 0, 0.15);
+    border-width: 1px;
+    border-color: var(--color-currency-crystal);
+    border-radius: var(--border-radius);
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-xs);
+    margin-left: var(--spacing-sm);
+}
+
+/* ---- Claim All button ---- */
+.achievements-claim-all-btn {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: rgba(255, 215, 0, 0.15);
+    border-width: 1px;
+    border-color: var(--color-currency-crystal);
+    border-radius: var(--border-radius);
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}

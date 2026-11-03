@@ -238,3 +238,27 @@ tr.row-milestone td.step-id { color: #3fb950; }
 /* Shared confirm/cancel button style used by both inline forms */
 .sif-confirm { background: #238636; border: none; color: #fff; border-radius: 4px; font-size: 12px; padding: 4px 10px; cursor: pointer; }
 .sif-cancel  { background: none; border: 1px solid #30363d; color: #8b949e; border-radius: 4px; font-size: 12px; padding: 4px 10px; cursor: pointer; }
+
+/* ── Elements & Nuclear tab: periodic table ── */
+#nuclear-grid { overflow-x: auto; padding-bottom: 4px; }
+.pt-grid { display: grid; grid-template-columns: repeat(18, 1fr); gap: 3px; min-width: 820px; margin: 10px 0 6px; }
+.pt-empty { min-height: 40px; }
+.pt-cell {
+  position: relative; min-height: 40px; padding: 3px 1px; border-radius: 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1.05; border: 1px solid rgba(0, 0, 0, 0.25); overflow: hidden;
+}
+.pt-cell .pt-z    { position: absolute; top: 1px; left: 3px; font-size: 7px; color: rgba(13, 17, 23, 0.7); }
+.pt-cell .pt-sym  { font-size: 13px; font-weight: 700; color: #0d1117; }
+.pt-cell .pt-y    { font-size: 7px; color: rgba(13, 17, 23, 0.78); margin-top: 1px; }
+.pt-cell .pt-impl { position: absolute; top: 0; right: 2px; font-size: 8px; color: #0d1117; }
+.pt-ph { background: #161b22; border: 1px dashed #30363d; }
+.pt-ph .pt-sym { color: #8b949e; font-size: 9px; }
+.pt-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px; font-size: 12px; color: #8b949e; }
+.pt-leg { display: flex; align-items: center; gap: 5px; }
+.pt-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; text-align: center; line-height: 12px; font-size: 9px; color: #0d1117; }
+.pt-diagram, .pt-spine {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px;
+  color: #c9d1d9; background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+  padding: 10px 12px; overflow-x: auto; margin: 8px 0; line-height: 1.5;
+}

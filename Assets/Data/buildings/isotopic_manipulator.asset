@@ -23,10 +23,11 @@ MonoBehaviour:
   category: 1
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 1
   isPowerSource: 0
-  basePowerCostEV: 0
-  powerCostIsDynamic: 1
+  basePowerCostEV: 25
+  powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
@@ -36,38 +37,89 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 320d8f44744963e479aa45bce808200f, type: 2}
   - {fileID: 11400000, guid: 534588c4ae9e1be4ea3e6db25bf28162, type: 2}
   - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
+  - {fileID: 11400000, guid: 6966f8f8699f998428149392eacfb28f, type: 2}
+  - {fileID: 11400000, guid: bb5ca4790c0140040b816372a7f24335, type: 2}
+  - {fileID: 11400000, guid: 0391eec11b827fb4382791ec1fd1b846, type: 2}
+  - {fileID: 11400000, guid: 8aeb67e5e6833c247b314632493b03da, type: 2}
+  - {fileID: 11400000, guid: b3ccdeea14324e64aa912819440eba25, type: 2}
+  - {fileID: 11400000, guid: fda950d3c5d2fe14c991f08b25f7e940, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Base Element
   - Neutrons
   isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
-  ports: []
+  structureKind: 3
+  ports:
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 3
+  - portType: 0
+    localCell: {x: 0, y: 0}
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 2
   placementRule: 0
   compatibleAdjacentCategories: 
-  compatibleFields: 
+  compatibleFields: []
   entropyCost: 1500
+  baseMaxOutputItems: 15
+  baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 1
-    powerCostEV: 0
+    powerCostEV: 40
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 2000
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 2
-    powerCostEV: 0
+    powerCostEV: 60
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 8000
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 4
-    powerCostEV: 0
+    powerCostEV: 90
     outputEV: 0
     influenceRadiusTiles: 0
+    linkRadiusTiles: 0
     costBaseCurrency: 32000
+    costPrestigeCurrency: 0
+  storageUpgradeLevels:
+  - level: 2
+    maxOutputItems: 100
+    costBaseCurrency: 1500
+    costPrestigeCurrency: 0
+  - level: 3
+    maxOutputItems: 500
+    costBaseCurrency: 6000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxOutputItems: 2500
+    costBaseCurrency: 24000
+    costPrestigeCurrency: 0
+  inputUpgradeLevels:
+  - level: 2
+    maxInputItems: 120
+    costBaseCurrency: 1500
+    costPrestigeCurrency: 0
+  - level: 3
+    maxInputItems: 400
+    costBaseCurrency: 6000
+    costPrestigeCurrency: 0
+  - level: 4
+    maxInputItems: 1500
+    costBaseCurrency: 24000
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}

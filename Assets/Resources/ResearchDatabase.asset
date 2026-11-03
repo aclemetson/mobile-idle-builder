@@ -16,8 +16,189 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
   - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   - {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}
+  - {fileID: 11400000, guid: 9ab356751cf66ae43bdbfc91ac9bdfb7, type: 2}
   - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
+  - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
+  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
+  - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
+  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
+  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
+  - {fileID: 11400000, guid: 395c3af752d2b7a4cac0c7811dff3a78, type: 2}
+  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
+  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
+  - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
+  - {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
+  - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
+  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
+  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
+  - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
+  - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
+  - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
+  - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
+  blocks:
+  - id: ignition
+    displayName: Ignition
+    order: 1
+    targetHours: 1
+    anchor: 1
+    description: 'The tutorial: quarks to the first Carbon from fusion.'
+    startPrestigeCount: 0
+    startPrestigeCurrencyEarned: 0
+    startEntropy: 0
+    startPermanentUpgrades: []
+    startSites: []
+  - id: foundations
+    displayName: Foundations
+    order: 2
+    targetHours: 3
+    anchor: 0
+    description: 'Broaden the base after the tutorial: faster belts and harvesters,
+      isotopes, the first molecules and the Uranium on-ramp.'
+    startPrestigeCount: 0
+    startPrestigeCurrencyEarned: 0
+    startEntropy: 52000
+    startPermanentUpgrades: []
+    startSites: []
+  - id: stellar_forge
+    displayName: Stellar Forge
+    order: 3
+    targetHours: 12
+    anchor: 0
+    description: Climb the fusion ladder to Iron, then past it with explosive burning.
+    startPrestigeCount: 1
+    startPrestigeCurrencyEarned: 150
+    startEntropy: 2350000
+    startPermanentUpgrades:
+    - assembly_line:1
+    - memory_resonance:1
+    - entropy_headstart:2
+    - quantum_yield:1
+    - idle_time_cap:1
+    - efficient_layouts:1
+    startSites: []
+  - id: actinide_frontier
+    displayName: Actinide Frontier
+    order: 4
+    targetHours: 20
+    anchor: 0
+    description: 'Work back from Uranium: decay, fission and neutron capture to the
+      precious metals.'
+    startPrestigeCount: 4
+    startPrestigeCurrencyEarned: 700
+    startEntropy: 4040000
+    startPermanentUpgrades:
+    - assembly_line:2
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:1
+    - surplus_resale:2
+    - expanded_vault:1
+    - field_cooldown:1
+    - salvage_protocols:1
+    startSites: []
+  - id: chemistry_world
+    displayName: Chemistry World
+    order: 5
+    targetHours: 20
+    anchor: 0
+    description: Molecules, the Chemistry world and engineered materials.
+    startPrestigeCount: 8
+    startPrestigeCurrencyEarned: 2000
+    startEntropy: 39900000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:4
+    - quantum_yield:3
+    - idle_time_cap:3
+    - research_overdrive:2
+    - idle_collection_rate:3
+    - efficient_layouts:3
+    - surplus_resale:3
+    - expanded_vault:3
+    - field_cooldown:3
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites:
+    - site_actinide_vein
+  - id: synthetic_frontier
+    displayName: Synthetic Frontier
+    order: 6
+    targetHours: 30
+    anchor: 0
+    description: Elements past Uranium, components and the megastructure.
+    startPrestigeCount: 15
+    startPrestigeCurrencyEarned: 5000
+    startEntropy: 315000000
+    startPermanentUpgrades:
+    - assembly_line:4
+    - memory_resonance:5
+    - entropy_headstart:4
+    - quantum_yield:4
+    - idle_time_cap:4
+    - research_overdrive:3
+    - idle_collection_rate:4
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:4
+    - field_cooldown:4
+    - salvage_protocols:4
+    - turnkey_builder:2
+    - entropy_echo:1
+    startSites:
+    - site_actinide_vein
+  - id: biology_world
+    displayName: Biology World
+    order: 7
+    targetHours: 40
+    anchor: 0
+    description: Biochemistry to cells, organisms and ecosystems.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 647000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:6
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:4
+    - field_cooldown:4
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein

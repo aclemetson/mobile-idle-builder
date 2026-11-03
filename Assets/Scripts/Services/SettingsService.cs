@@ -8,7 +8,7 @@ namespace MobileIdleBuilder
     {
         protected override bool PersistAcrossScenes => true;
 
-        const string FileName = "settings.json";
+        internal const string FileName = "settings.json";
 
         string       _filePath;
         SettingsData _current;
@@ -20,7 +20,7 @@ namespace MobileIdleBuilder
             base.Awake();
             if (Instance != this) return;
 
-            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+            _filePath = Path.Combine(LocalSaveService.SaveDirectory, FileName);
             _current  = Load() ?? new SettingsData();
             Apply();
         }
@@ -32,6 +32,20 @@ namespace MobileIdleBuilder
         public void SetMusicVolume(float v)          { _current.musicVolume         = v; Apply(); Save(); }
         public void SetGraphicsQuality(int quality)  { _current.graphicsQuality     = quality; Apply(); Save(); }
         public void SetNotifications(bool enabled)   { _current.notificationsEnabled = enabled; Save(); }
+        public void SetShowPowerConnections(bool on) { _current.showPowerConnections = on; Save(); }
+        public void SetPanSensitivity(float v)       { _current.panSensitivity = v; Save(); }
+        public void SetInvertTilt(bool on)           { _current.invertTilt = on; Save(); }
+
+        /// <summary>
+        /// Drops every setting back to its default and applies it. This service survives scene loads,
+        /// so a save wipe must reset it explicitly — otherwise the old preferences stay in memory and
+        /// the next setter writes settings.json straight back out.
+        /// </summary>
+        public void ResetToDefaults()
+        {
+            _current = new SettingsData();
+            Apply();
+        }
 
         // ── Internal ──────────────────────────────────────────────────────
 

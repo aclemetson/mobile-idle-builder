@@ -1,0 +1,19 @@
+{
+  "_comment": "REFERENCE ONLY - not loaded at runtime. Paste the live blob (without this _comment) into the Remote Config String setting 'gamedata.overrides', then bump 'gamedata.updatedUtc' (ISO-8601 UTC) and 'gamedata.version' to notify players. Overrides overlay the baked game_data.json values at boot for the next cold start. Only allow-listed SCALAR fields are honored (see GameDataOverrides.cs); ids/refs/arrays are never overridable. Empty {} = run the baked baseline. Buildings and fields are NOT yet overridable (no central runtime registry - see follow-up note).",
+  "config": [
+    { "field": "prestigeBaseValue", "value": 5000 },
+    { "field": "prestigeCurrencyScale", "value": 50 },
+    { "field": "atomicAssemblerEVPerMassUnit", "value": 5 },
+    { "field": "isotopicManipulatorEVPerNeutron", "value": 8 },
+    { "field": "startingEntropy", "value": 250 },
+    { "field": "idleBaseCollectionRate", "value": 0.20 },
+    { "field": "buildingPurchaseMultiplierT1", "value": 1.5 }
+  ],
+  "items": [
+    { "id": "iron", "field": "baseSellValue", "value": 1.0 }
+  ],
+  "research": [
+    { "id": "automation_1", "field": "costBaseCurrency", "value": 1200 },
+    { "id": "automation_1", "field": "durationSeconds", "value": 300 }
+  ]
+}

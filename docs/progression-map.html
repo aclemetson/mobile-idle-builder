@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idle Builder — Whole-Game Progression Map</title>
+<meta name="description" content="Physics, Chemistry, and Biology worlds broken into tiers with research walls, plus a best-case playthrough timeline (active vs idle time). Draft v0.2.">
+</head>
+<body>
+<style>
+  :root {
+    /* neutrals — cool, blue-biased (chosen, not default grey) */
+    --bg: #eceff6;
+    --panel: #ffffff;
+    --panel-2: #f4f6fc;
+    --line: #d6dce9;
+    --line-strong: #b6c0d6;
+    --ink: #121826;
+    --ink-2: #46526d;
+    --ink-3: #79849f;
+    /* world accents */
+    --phys: #0d8bd0;
+    --chem: #c26e12;
+    --bio:  #0f8a4c;
+    --cosmic: #6f4ee6;
+    --gold: #bd8410;
+    --lock: #8a94ab;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #090c12;
+      --panel: #111725;
+      --panel-2: #171f30;
+      --line: #232f43;
+      --line-strong: #35435f;
+      --ink: #e9eef8;
+      --ink-2: #a1adc6;
+      --ink-3: #67738e;
+      --phys: #4cc4f5;
+      --chem: #f6a545;
+      --bio:  #43dd88;
+      --cosmic: #a78bfa;
+      --gold: #f4c04a;
+      --lock: #6b7690;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #090c12; --panel: #111725; --panel-2: #171f30; --line: #232f43;
+    --line-strong: #35435f; --ink: #e9eef8; --ink-2: #a1adc6; --ink-3: #67738e;
+    --phys: #4cc4f5; --chem: #f6a545; --bio: #43dd88; --cosmic: #a78bfa;
+    --gold: #f4c04a; --lock: #6b7690; color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #eceff6; --panel: #ffffff; --panel-2: #f4f6fc; --line: #d6dce9;
+    --line-strong: #b6c0d6; --ink: #121826; --ink-2: #46526d; --ink-3: #79849f;
+    --phys: #0d8bd0; --chem: #c26e12; --bio: #0f8a4c; --cosmic: #6f4ee6;
+    --gold: #bd8410; --lock: #8a94ab; color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---- typographic system ---- */
+  .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    text-transform: uppercase; letter-spacing: .22em; font-size: 11px;
+    color: var(--ink-3); font-weight: 600;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 700; letter-spacing: -.02em; }
+
+  /* ---- masthead ---- */
+  .masthead { padding: 56px 0 30px; border-bottom: 1px solid var(--line); }
+  .masthead h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.02; }
+  .masthead h1 .sub { display: block; color: var(--ink-3); font-weight: 600; font-size: clamp(15px, 2vw, 20px); letter-spacing: -.01em; margin-top: 12px; }
+  .thesis { max-width: 62ch; margin: 22px 0 0; color: var(--ink-2); font-size: 16px; }
+  .thesis b { color: var(--ink); font-weight: 600; }
+
+  /* arc chips */
+  .arc { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 26px; }
+  .arc .step {
+    font-family: ui-monospace, monospace; font-size: 12.5px; font-weight: 600;
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-strong);
+    background: var(--panel); white-space: nowrap;
+  }
+  .arc .step.p { color: var(--phys); border-color: color-mix(in srgb, var(--phys) 45%, var(--line)); }
+  .arc .step.c { color: var(--chem); border-color: color-mix(in srgb, var(--chem) 45%, var(--line)); }
+  .arc .step.b { color: var(--bio); border-color: color-mix(in srgb, var(--bio) 45%, var(--line)); }
+  .arc .step.x { color: var(--cosmic); border-color: color-mix(in srgb, var(--cosmic) 45%, var(--line)); }
+  .arc .sep { color: var(--ink-3); font-size: 13px; }
+
+  /* ---- legend ---- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 26px; padding: 16px 0 0; margin-top: 26px;
+    border-top: 1px dashed var(--line); font-size: 12.5px; color: var(--ink-2);
+  }
+  .legend .grp { display: flex; align-items: center; gap: 8px; }
+  .legend .swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .legend .cur { font-family: ui-monospace, monospace; font-weight: 700; }
+
+  /* ---- sticky nav ---- */
+  nav {
+    position: sticky; top: 0; z-index: 20; margin-top: 30px;
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+  }
+  nav a {
+    font-family: ui-monospace, monospace; font-size: 12px; font-weight: 600;
+    text-decoration: none; color: var(--ink-2); padding: 6px 12px; border-radius: 8px;
+    border: 1px solid transparent;
+  }
+  nav a:hover { color: var(--ink); background: var(--panel-2); border-color: var(--line); }
+  nav a:focus-visible { outline: 2px solid var(--phys); outline-offset: 2px; }
+  nav a .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+
+  /* ---- world section ---- */
+  .world { margin-top: 46px; scroll-margin-top: 64px; }
+  .world-head { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 6px; }
+  .world-idx {
+    font-family: ui-monospace, monospace; font-weight: 700; font-size: 13px;
+    color: var(--wc); border: 1.5px solid color-mix(in srgb, var(--wc) 55%, var(--line));
+    border-radius: 9px; padding: 8px 10px; line-height: 1; flex: none;
+    background: color-mix(in srgb, var(--wc) 9%, var(--panel));
+  }
+  .world-head h2 { font-size: clamp(21px, 3vw, 27px); color: var(--ink); }
+  .world-head h2 em { font-style: normal; color: var(--wc); }
+  .world-meta { color: var(--ink-2); font-size: 13.5px; margin-top: 5px; }
+  .world-meta .tag {
+    font-family: ui-monospace, monospace; font-size: 11px; color: var(--wc);
+    background: color-mix(in srgb, var(--wc) 12%, transparent); padding: 2px 7px;
+    border-radius: 5px; margin-right: 8px; white-space: nowrap;
+  }
+
+  /* world-open gate (cross-world wall) */
+  .world-gate {
+    --wc: currentColor;
+    margin: 18px 0 4px; border-radius: 14px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--wc) 40%, var(--line));
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--wc) 12%, var(--panel)), var(--panel));
+  }
+  .world-gate .bar {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    border-left: 4px solid var(--wc);
+  }
+  .world-gate .lockicon { width: 20px; height: 20px; flex: none; color: var(--wc); }
+  .world-gate .g-label { font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--wc); font-weight: 700; }
+  .world-gate .g-name { font-weight: 700; font-size: 15px; color: var(--ink); }
+  .world-gate .g-cost { margin-left: auto; text-align: right; }
+  .world-gate .g-cost .n { font-family: ui-monospace, monospace; font-weight: 700; font-size: 17px; color: var(--wc); font-variant-numeric: tabular-nums; }
+  .world-gate .g-req { display: block; font-size: 11px; color: var(--ink-3); font-family: ui-monospace, monospace; margin-top: 2px; }
+
+  /* field strip */
+  .fields {
+    display: flex; flex-wrap: wrap; gap: 7px; padding: 12px 16px 14px;
+    border-top: 1px dashed color-mix(in srgb, var(--wc) 30%, var(--line));
+  }
+  .fields .flabel { font-family: ui-monospace, monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); align-self: center; margin-right: 4px; }
+  .fields .chip {
+    font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--ink-2);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px;
+  }
+  .fields .chip b { color: var(--wc); font-weight: 600; }
+
+  /* ---- lane of tiers ---- */
+  .lane { position: relative; margin-top: 12px; padding-left: 34px; }
+  .lane::before {
+    content: ""; position: absolute; left: 12px; top: 6px; bottom: 6px; width: 2px;
+    background: linear-gradient(var(--wc), color-mix(in srgb, var(--wc) 20%, var(--line)));
+    opacity: .5;
+  }
+  .node { position: relative; margin-bottom: 12px; }
+  .node::before {
+    content: ""; position: absolute; left: -28px; top: 22px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--panel); border: 2px solid var(--wc);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--wc) 14%, transparent);
+  }
+
+  .tier {
+    border: 1px solid var(--line); border-radius: 13px; background: var(--panel);
+    padding: 15px 17px; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  }
+  .tier:hover { transform: translateX(2px); border-color: color-mix(in srgb, var(--wc) 45%, var(--line)); box-shadow: 0 6px 22px -14px color-mix(in srgb, var(--wc) 70%, transparent); }
+  .tier.cap { border-color: color-mix(in srgb, var(--wc) 42%, var(--line)); background: linear-gradient(180deg, color-mix(in srgb, var(--wc) 7%, var(--panel)), var(--panel)); }
+  .tier-top { display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; }
+  .code {
+    font-family: ui-monospace, monospace; font-weight: 700; font-size: 12px; color: var(--wc);
+    background: color-mix(in srgb, var(--wc) 13%, transparent); border: 1px solid color-mix(in srgb, var(--wc) 32%, var(--line));
+    border-radius: 6px; padding: 2px 7px; line-height: 1.4; flex: none;
+  }
+  .tier-top h3 { font-size: 16px; color: var(--ink); }
+  .tier-top .flag {
+    margin-left: auto; font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+    color: var(--gold); background: color-mix(in srgb, var(--gold) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line));
+  }
+  .produces { margin: 9px 0 0; font-size: 13.5px; color: var(--ink-2); }
+  .produces b { color: var(--ink); font-weight: 600; }
+  .tier-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-3); }
+  .tier-meta span { display: inline-flex; gap: 6px; }
+  .tier-meta .k { font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; padding-top: 1px; }
+  .tier-meta .v { color: var(--ink-2); font-family: ui-monospace, monospace; }
+
+  /* inline wall between tiers */
+  .wall {
+    position: relative; margin: 0 0 12px; padding: 8px 14px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border: 1px dashed color-mix(in srgb, var(--wc) 50%, var(--line)); border-radius: 10px;
+    background: color-mix(in srgb, var(--wc) 6%, var(--panel));
+  }
+  .wall::before {
+    content: ""; position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px; border-radius: 3px; background: var(--panel);
+    border: 2px solid var(--wc); rotate: 45deg;
+  }
+  .wall .w-tag { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--wc); font-weight: 700; }
+  .wall .w-id { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; }
+  .wall .w-cost { margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; font-size: 14px; color: var(--wc); font-variant-numeric: tabular-nums; }
+
+  /* prestige marker */
+  .prestige {
+    position: relative; margin: 2px 0 12px; padding: 9px 14px; border-radius: 10px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--gold) 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--line));
+  }
+  .prestige::before {
+    content: "✦"; position: absolute; left: -32px; top: 50%; transform: translateY(-50%);
+    color: var(--gold); font-size: 17px; line-height: 1;
+  }
+  .prestige .pt { font-weight: 700; font-size: 13px; color: var(--ink); }
+  .prestige .pd { font-size: 12.5px; color: var(--ink-2); }
+  .prestige .pc { margin-left: auto; font-family: ui-monospace, monospace; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+  /* deferred tail (Act IV) */
+  .deferred .tier { border-style: dashed; opacity: .96; }
+  .deferred-note {
+    margin-top: 12px; padding: 13px 16px; border-radius: 12px; font-size: 13px; color: var(--ink-2);
+    background: color-mix(in srgb, var(--cosmic) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--cosmic) 32%, var(--line)); border-left: 4px solid var(--cosmic);
+  }
+  .deferred-note b { color: var(--ink); }
+
+  /* flags panel */
+  .flags { margin-top: 52px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .flags h2 { font-size: 20px; }
+  .flag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 18px; }
+  .flagcard { border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; background: var(--panel); }
+  .flagcard .fh { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
+  .flagcard.warn { border-left: 3px solid var(--gold); }
+  .flagcard.info { border-left: 3px solid var(--phys); }
+  .flagcard.defer { border-left: 3px solid var(--cosmic); }
+  .flagcard p { margin: 8px 0 0; font-size: 13px; color: var(--ink-2); }
+  .flagcard p b { color: var(--ink); }
+
+  footer { margin-top: 46px; padding-top: 18px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-3); font-family: ui-monospace, monospace; }
+
+  /* section heading */
+  .sec-head { margin-top: 46px; }
+  .sec-head h2 { font-size: clamp(20px, 3vw, 26px); }
+  .sec-head p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; max-width: 68ch; }
+
+  /* model assumptions */
+  .assume { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 18px 20px; margin-top: 16px; }
+  .assume .fh { font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
+  .const-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 11px 20px; margin-top: 13px; }
+  .const { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+  .const b { font-family: ui-monospace, monospace; color: var(--ink); font-weight: 600; }
+  .assume .caveat { margin-top: 15px; font-size: 12px; color: var(--ink-3); border-top: 1px dashed var(--line); padding-top: 13px; }
+  .assume .caveat b { color: var(--ink-2); }
+
+  /* per-world expectation bar */
+  .expect { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 1px; margin: 15px 0 4px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--line); }
+  .expect .cell { background: var(--panel); padding: 11px 13px; }
+  .expect .cell .k { font-family: ui-monospace, monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .expect .cell .v { font-family: ui-monospace, monospace; font-weight: 700; font-size: 14.5px; color: var(--wc); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .expect .cell .s { font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+
+  /* playthrough timeline table */
+  .tl-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; }
+  table.tl { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 12.5px; }
+  table.tl th { text-align: left; font-family: ui-monospace, monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); padding: 12px; border-bottom: 1px solid var(--line-strong); background: var(--panel-2); }
+  table.tl td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; background: var(--panel); }
+  table.tl tr:last-child td { border-bottom: none; }
+  table.tl .ms { font-weight: 700; color: var(--ink); min-width: 132px; }
+  table.tl .ms .code2 { font-family: ui-monospace, monospace; font-size: 10px; color: var(--rc); display: block; margin-bottom: 3px; letter-spacing: .06em; }
+  table.tl .ms::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--rc); margin-right: 7px; vertical-align: middle; }
+  table.tl .num { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.tl .active { color: var(--phys); font-weight: 700; }
+  table.tl .idle { color: var(--ink-2); }
+  table.tl ul { margin: 0; padding-left: 15px; color: var(--ink-2); }
+  table.tl li { margin: 2px 0; }
+  table.tl li b { color: var(--ink); font-weight: 600; }
+  .tl-note { font-size: 12px; color: var(--ink-3); margin-top: 11px; display: flex; gap: 8px; align-items: baseline; }
+  .tl-note .grounded { color: var(--bio); } .tl-note .target { color: var(--chem); }
+
+  /* load-in */
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .world, .masthead, .flags { animation: rise .5s ease both; }
+  @media (prefers-reduced-motion: reduce) { .world, .masthead, .flags { animation: none; } }
+
+  @media (max-width: 620px) {
+    .g-cost { margin-left: 0 !important; }
+    .world-gate .bar { flex-wrap: wrap; }
+    .world-gate .g-cost { width: 100%; text-align: left; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Idle Builder &middot; Whole-Game Progression Map &middot; Draft v0.1</div>
+    <h1>From Quarks to Life
+      <span class="sub">Three research worlds, one economy &mdash; and where every wall stands.</span>
+    </h1>
+    <p class="thesis">The game grows from one <b>Particle Physics</b> track into three stacked worlds. Physics builds the first elements; <b>Chemistry</b> opens mid-game to mine those elements and refine them into organic compounds; <b>Biology</b> opens later to grow compounds into life. Threading these through the middle lets the <b>heavy-element / cosmic endgame move to the back</b>, giving a clean arc instead of a front-loaded one.</p>
+
+    <div class="arc" aria-label="Lifecycle order">
+      <span class="step p">Physics early</span><span class="sep">&rarr;</span>
+      <span class="step c">Chemistry</span><span class="sep">&rarr;</span>
+      <span class="step b">Biology</span><span class="sep">&rarr;</span>
+      <span class="step x">Heavy / Cosmic Physics</span><span class="sep">&rarr;</span>
+      <span class="step x">Megastructure</span>
+    </div>
+
+    <div class="legend">
+      <span class="grp"><span class="cur" style="color:var(--ink-2)">e</span> Entropy &mdash; per-run soft currency (walls)</span>
+      <span class="grp"><span class="cur" style="color:var(--gold)">&#10022;</span> Prestige currency &mdash; meta, survives runs</span>
+      <span class="grp"><span class="cur" style="color:var(--ink-2)">&#9670;</span> Crystals &mdash; premium</span>
+      <span class="grp"><span class="swatch" style="background:var(--phys)"></span>Physics</span>
+      <span class="grp"><span class="swatch" style="background:var(--chem)"></span>Chemistry</span>
+      <span class="grp"><span class="swatch" style="background:var(--bio)"></span>Biology</span>
+      <span class="grp"><span class="swatch" style="background:var(--cosmic)"></span>Deferred re-tier</span>
+    </div>
+  </header>
+
+  <nav aria-label="Jump to world">
+    <a href="#playthrough"><span class="dot" style="background:var(--gold)"></span>Playthrough</a>
+    <a href="#physics"><span class="dot" style="background:var(--phys)"></span>World 1 &middot; Physics</a>
+    <a href="#chemistry"><span class="dot" style="background:var(--chem)"></span>World 2 &middot; Chemistry</a>
+    <a href="#biology"><span class="dot" style="background:var(--bio)"></span>World 3 &middot; Biology</a>
+    <a href="#endgame"><span class="dot" style="background:var(--cosmic)"></span>Act IV &middot; Endgame</a>
+    <a href="#flags"><span class="dot" style="background:var(--gold)"></span>Open questions</a>
+  </nav>
+
+  <!-- ============ PLAYTHROUGH TIMELINE ============ -->
+  <section id="playthrough">
+    <div class="sec-head">
+      <div class="eyebrow">Best-case pacing model</div>
+      <h2>The expected playthrough</h2>
+      <p>What an efficient player unlocks, how much entropy they gather, and how long it takes &mdash; split into <b style="color:var(--phys)">continuous active play</b> vs. <b>mostly-idle</b> calendar time. Early rows are grounded in <span class="mono">game_data.json</span>; deeper rows are order-of-magnitude design targets to validate with the existing TelemetryService.</p>
+    </div>
+
+    <div class="assume">
+      <div class="fh">Model constants &amp; reference build</div>
+      <div class="const-grid">
+        <div class="const">Start <b>250e</b> per run; prestige wall at <b>50,000e</b> net worth.</div>
+        <div class="const">Prestige payout <b>floor(log10(nw/5000)&times;50)</b> &mdash; ~+50&#10022; per &times;10 net worth.</div>
+        <div class="const">Harvester <b>1/s</b> &rarr; 2 / 4 / 8 by upgrade; sink pays <b>sell&times;qty</b>.</div>
+        <div class="const">Crafter rates: Atom&nbsp;Gen <b>1/s</b>, Molecular <b>1/s</b>, Materials&nbsp;Forge <b>0.5/s</b>, Component <b>0.25/s</b>.</div>
+        <div class="const">Idle = <b>20%</b> of active output, capped <b>2h</b> base &rarr; up to <b>12h</b>.</div>
+        <div class="const">Reference build &asymp; <b>8&ndash;12 terminal crafters</b> + harvesters + a generator, power &asymp;1.0.</div>
+      </div>
+      <div class="caveat"><b>Best case = optimal continuous play:</b> full grid of current-tier crafters, no downtime, ✦ reinvested each run. Output scales across runs through <b>OutputQuantity managers + megastructure</b> (the live path) &mdash; NOT the prestige-shop multipliers, which are idle/display only. Numbers below are anchors to argue with, not commitments.</div>
+    </div>
+
+    <div class="tl-wrap">
+      <table class="tl">
+        <thead>
+          <tr>
+            <th>Milestone</th><th>Prestige</th><th>Entropy target</th><th>You unlock</th><th>Ref income</th><th>Active</th><th>Mostly-idle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="--rc: var(--phys);">
+            <td class="ms"><span class="code2">RUN 1</span>Onboarding &amp; first prestige</td>
+            <td class="num">0 &rarr; 1</td>
+            <td class="num">50,000e<br><span style="color:var(--ink-3)">net worth</span></td>
+            <td><ul><li><b>Research:</b> recombination_i &rarr; hydrogen_synthesis &rarr; automation_i &rarr; atomic_assembly &rarr; light/mid_elements</li><li><b>Builds:</b> Harvester, Strong Force Combiner, Basic Generator, Atom Generator</li><li>First prestige &asymp; <b>50&#10022;</b></li></ul></td>
+            <td class="num">1 &rarr; ~30 e/s</td>
+            <td class="num active">~1.5 h</td>
+            <td class="num idle">~1&ndash;2 days</td>
+          </tr>
+          <tr style="--rc: var(--phys);">
+            <td class="ms"><span class="code2">RUNS 2&ndash;6</span>Physics ramp</td>
+            <td class="num">1 &rarr; ~6</td>
+            <td class="num">grow to<br>~150,000e</td>
+            <td><ul><li><b>Research:</b> molecular_synthesis, surplus_containment, power_distribution</li><li><b>Upgrades:</b> prestige shop (Entropy Headstart, Assembly Line) + managers (Tinker, Packrat &times;2 output)</li><li><b>Unlockable:</b> first Quantum Domain site (250,000e)</li></ul></td>
+            <td class="num">50 &rarr; ~1K e/s</td>
+            <td class="num active">~8&ndash;12 h</td>
+            <td class="num idle">~1&ndash;2 wk</td>
+          </tr>
+          <tr style="--rc: var(--chem);">
+            <td class="ms"><span class="code2">CHEM &middot; OPEN</span>Chemistry world opens</td>
+            <td class="num">~6 &rarr; 8</td>
+            <td class="num">~150,000e<br><span style="color:var(--ink-3)">chemistry_lab</span></td>
+            <td><ul><li><b>World 2 + Chemistry map</b> (element fields: light / metal / mineral)</li><li><b>Build:</b> Compound Synthesizer &middot; <b>C1</b> oxides, salts, acids (H&#8322;O, NaCl, NH&#8323;)</li></ul></td>
+            <td class="num">1 &rarr; 5K e/s</td>
+            <td class="num active">+~6&ndash;10 h</td>
+            <td class="num idle">~3&ndash;7 days</td>
+          </tr>
+          <tr style="--rc: var(--chem);">
+            <td class="ms"><span class="code2">CHEM &middot; C2&ndash;C4</span>Up to organic compounds</td>
+            <td class="num">~8 &rarr; 16</td>
+            <td class="num">500K &rarr; 2M<br>&rarr; 5M</td>
+            <td><ul><li><b>Research:</b> reaction_engineering, organic_chemistry, biochem_precursors</li><li><b>Builds:</b> Catalytic Reactor, Organic Synthesizer</li><li><b>Culmination:</b> glucose, amino acid, fatty acid, nucleotide</li></ul></td>
+            <td class="num">5K &rarr; 100K e/s</td>
+            <td class="num active">+~20&ndash;35 h</td>
+            <td class="num idle">~2&ndash;3 wk</td>
+          </tr>
+          <tr style="--rc: var(--bio);">
+            <td class="ms"><span class="code2">BIO &middot; OPEN</span>Biology world opens</td>
+            <td class="num">~16 &rarr; 20</td>
+            <td class="num">~10&ndash;25M e<br><span style="color:var(--ink-3)">biology_lab</span></td>
+            <td><ul><li><b>World 3 + Biology map</b> (organic-compound fields) + new ResearchBranch.Biology</li><li><b>Build:</b> Biosynthesizer &middot; <b>B1</b> proteins, carbs, lipids, nucleic acids</li></ul></td>
+            <td class="num">100K &rarr; 1M e/s</td>
+            <td class="num active">+~15&ndash;25 h</td>
+            <td class="num idle">~1&ndash;2 wk</td>
+          </tr>
+          <tr style="--rc: var(--bio);">
+            <td class="ms"><span class="code2">BIO &middot; B2&ndash;B4</span>Cells &rarr; life</td>
+            <td class="num">~20 &rarr; 40</td>
+            <td class="num">50M &rarr; 250M<br>&rarr; 1B</td>
+            <td><ul><li><b>Research:</b> cell_biology, multicellular_life, ecosystems</li><li><b>Builds:</b> Cell Assembler, Tissue Culture, Bioreactor</li><li>cells &rarr; tissues &rarr; organisms &rarr; ecosystems</li></ul></td>
+            <td class="num">1M &rarr; 100M e/s</td>
+            <td class="num active">+~60&ndash;100 h</td>
+            <td class="num idle">~1&ndash;2 mo</td>
+          </tr>
+          <tr style="--rc: var(--cosmic);">
+            <td class="ms"><span class="code2">ACT IV</span>Heavy / cosmic endgame</td>
+            <td class="num">~40+</td>
+            <td class="num">re-cost<br>&gt; 1B</td>
+            <td><ul><li><b>Deferred re-tier:</b> heavy elements &rarr; transuranics &rarr; materials &rarr; components</li><li><b>Endgame:</b> Megastructure (Dyson Sphere), 5 stages</li></ul></td>
+            <td class="num">100M &rarr; 10T+ e/s</td>
+            <td class="num active">100s of h</td>
+            <td class="num idle">months</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tl-note"><span class="grounded">&#9679;</span> Runs 1&ndash;2 grounded in current data. <span class="target">&#9679;</span> Chemistry onward = design targets. Cumulative best-case active to Biology's top &asymp; <b class="mono">~150 h</b> across ~40 prestiges (&ldquo;a month-plus&rdquo;); full clear = hundreds of hours / several months.</div>
+  </section>
+
+  <!-- ============ WORLD 1 : PHYSICS ============ -->
+  <section class="world" id="physics" style="--wc: var(--phys);">
+    <div class="world-head">
+      <div class="world-idx">W1</div>
+      <div>
+        <h2>Particle&nbsp;Physics <em>&mdash; the on-ramp</em></h2>
+        <div class="world-meta"><span class="tag">EXISTING</span>Synthesize matter upward from subatomic particles. Fields yield <b>quarks &amp; electrons</b>; buildings <em>craft</em> everything above. First few prestiges live here. Early tiers stay as-is; the heavy tail moves to Act IV.</div>
+      </div>
+    </div>
+
+    <div class="expect">
+      <div class="cell"><div class="k">Opens</div><div class="v">start</div><div class="s">250e / run</div></div>
+      <div class="cell"><div class="k">Hands off at</div><div class="v">~150K e</div><div class="s">to Chemistry</div></div>
+      <div class="cell"><div class="k">Prestige window</div><div class="v">0 &rarr; ~6</div><div class="s">first prestige ~1.5h</div></div>
+      <div class="cell"><div class="k">Best-case active</div><div class="v">~8&ndash;12 h</div><div class="s">continuous play</div></div>
+      <div class="cell"><div class="k">Mostly-idle</div><div class="v">~1&ndash;2 wk</div><div class="s">calendar time</div></div>
+    </div>
+
+    <div class="fields" style="--wc: var(--phys); border-top:none; padding-top:2px;">
+      <span class="flabel">Fields</span>
+      <span class="chip"><b>quark_field</b> &rarr; up / down quark</span>
+      <span class="chip"><b>electron_field</b> &rarr; electron</span>
+    </div>
+
+    <div class="lane" style="--wc: var(--phys);">
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">P1</span><h3>Subatomic</h3></div>
+          <p class="produces">Tap fields for <b>up quark, down quark, electron</b>; sink for entropy.</p>
+          <div class="tier-meta"><span><span class="k">start</span><span class="v">no research</span></span><span><span class="k">builds</span><span class="v">Basic Generator &middot; Strong Force Combiner</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">recombination_i &rarr; hydrogen_synthesis &rarr; atomic_assembly</span><span class="w-cost">100e &middot; 500e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">P2</span><h3>Atomic &mdash; light &amp; mid elements</h3></div>
+          <p class="produces">Protons/neutrons &rarr; <b>H, He, Li, C, N, O, Si, Fe, Cu, Al&hellip;</b> via the Atom Generator.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">light_elements 1K &middot; mid_elements 2K</span></span><span><span class="k">builds</span><span class="v">Atom Generator</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">molecular_synthesis</span><span class="w-cost">3K e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">P3</span><h3>Basic Molecules</h3></div>
+          <p class="produces">Combine elements into <b>water, methane, ammonia, silica</b>.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">molecular_synthesis 3K</span></span><span><span class="k">builds</span><span class="v">Molecular Synthesizer</span></span></div>
+        </div>
+      </div>
+
+      <div class="prestige">
+        <span class="pt">Prestige loop begins</span>
+        <span class="pd">First prestiges land across P2&ndash;P3. Research resets each run; unlocks re-bought cheaper.</span>
+        <span class="pc">wall 50,000e net worth</span>
+      </div>
+
+      <div class="wall" style="--wc: var(--cosmic);"><span class="w-tag">Deferred</span><span class="w-id">heavy elements &amp; everything above &rarr; Act IV</span><span class="w-cost">see below</span></div>
+    </div>
+  </section>
+
+  <!-- ============ WORLD 2 : CHEMISTRY ============ -->
+  <section class="world" id="chemistry" style="--wc: var(--chem);">
+    <div class="world-head">
+      <div class="world-idx">W2</div>
+      <div>
+        <h2>Chemistry <em>&mdash; mine &amp; react</em></h2>
+        <div class="world-meta"><span class="tag">NEW</span>A second map whose fields <b>yield elements directly</b> (mined, not synthesized). Refine them up compounds toward organic chemistry. Opens once Physics can supply the mid elements.</div>
+      </div>
+    </div>
+
+    <div class="expect">
+      <div class="cell"><div class="k">Opens at</div><div class="v">~150K e</div><div class="s">chemistry_lab</div></div>
+      <div class="cell"><div class="k">Tops out at</div><div class="v">~5M e</div><div class="s">organic compounds</div></div>
+      <div class="cell"><div class="k">Prestige window</div><div class="v">~6 &rarr; 16</div><div class="s">~10 runs</div></div>
+      <div class="cell"><div class="k">Best-case active</div><div class="v">+~25&ndash;45 h</div><div class="s">continuous play</div></div>
+      <div class="cell"><div class="k">Mostly-idle</div><div class="v">~2&ndash;4 wk</div><div class="s">calendar time</div></div>
+    </div>
+
+    <div class="world-gate" style="--wc: var(--chem);">
+      <div class="bar">
+        <svg class="lockicon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+        <div>
+          <div class="g-label">World unlock</div>
+          <div class="g-name">Chemistry Lab &mdash; opens the Chemistry world &amp; map</div>
+        </div>
+        <div class="g-cost">
+          <span class="n">~150,000e</span>
+          <span class="g-req">prereq: mid_elements &middot; research: chemistry_lab</span>
+        </div>
+      </div>
+      <div class="fields">
+        <span class="flabel">Fields</span>
+        <span class="chip"><b>element_field_light</b> &rarr; H C N O</span>
+        <span class="chip"><b>element_field_metal</b> &rarr; Fe Cu Al Ni</span>
+        <span class="chip"><b>element_field_mineral</b> &rarr; Si Na Cl S P Ca</span>
+      </div>
+    </div>
+
+    <div class="lane" style="--wc: var(--chem);">
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">C1</span><h3>Inorganic Chemistry</h3></div>
+          <p class="produces">React mined elements into <b>oxides, salts, acids &amp; bases</b> &mdash; H&#8322;O, CO&#8322;, NaCl, NH&#8323;, H&#8322;SO&#8324;.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">chemistry_lab (opens world)</span></span><span><span class="k">builds</span><span class="v">Compound Synthesizer</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">reaction_engineering</span><span class="w-cost">~500K e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">C2</span><h3>Reactions &amp; Catalysis</h3></div>
+          <p class="produces">Industrial chemicals + <b>catalysts</b>: Cl&#8322;, NaOH, HNO&#8323;.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">reaction_engineering ~500K</span></span><span><span class="k">builds</span><span class="v">Catalytic Reactor</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">organic_chemistry</span><span class="w-cost">~2M e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">C3</span><h3>Organic Chemistry</h3></div>
+          <p class="produces"><b>Hydrocarbons &amp; alcohols</b>: methane, ethane, octane, ethanol, polymer precursor.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">organic_chemistry ~2M</span></span><span><span class="k">builds</span><span class="v">Organic Synthesizer</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">biochem_precursors</span><span class="w-cost">~5M e</span></div>
+
+      <div class="node">
+        <div class="tier cap">
+          <div class="tier-top"><span class="code">C4</span><h3>Biochemistry</h3><span class="flag">culmination</span></div>
+          <p class="produces"><b>Basic organic compounds</b> &mdash; glucose, amino acid, fatty acid, nucleotide. These become Biology's field feedstock.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">biochem_precursors ~5M</span></span><span><span class="k">feeds</span><span class="v">&rarr; World 3 Biology</span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORLD 3 : BIOLOGY ============ -->
+  <section class="world" id="biology" style="--wc: var(--bio);">
+    <div class="world-head">
+      <div class="world-idx">W3</div>
+      <div>
+        <h2>Biology <em>&mdash; grow life</em></h2>
+        <div class="world-meta"><span class="tag">NEW</span>A third map whose fields yield <b>organic compounds</b>. Assemble them into biomolecules, cells, and whole organisms. Needs a new <span class="mono">ResearchBranch.Biology</span> and a new <span class="mono">OrganicCompound</span> item category.</div>
+      </div>
+    </div>
+
+    <div class="expect">
+      <div class="cell"><div class="k">Opens at</div><div class="v">~10&ndash;25M e</div><div class="s">biology_lab</div></div>
+      <div class="cell"><div class="k">Tops out at</div><div class="v">~1B e</div><div class="s">ecosystems</div></div>
+      <div class="cell"><div class="k">Prestige window</div><div class="v">~16 &rarr; 40</div><div class="s">many runs</div></div>
+      <div class="cell"><div class="k">Best-case active</div><div class="v">+~80&ndash;140 h</div><div class="s">continuous play</div></div>
+      <div class="cell"><div class="k">Mostly-idle</div><div class="v">~1&ndash;2 mo</div><div class="s">calendar time</div></div>
+    </div>
+
+    <div class="world-gate" style="--wc: var(--bio);">
+      <div class="bar">
+        <svg class="lockicon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+        <div>
+          <div class="g-label">World unlock</div>
+          <div class="g-name">Biology Lab &mdash; opens the Biology world &amp; map</div>
+        </div>
+        <div class="g-cost">
+          <span class="n">~10&ndash;25M e</span>
+          <span class="g-req">prereq: biochem_precursors &middot; research: biology_lab</span>
+        </div>
+      </div>
+      <div class="fields">
+        <span class="flabel">Fields</span>
+        <span class="chip"><b>amino_acid_field</b></span>
+        <span class="chip"><b>sugar_field</b></span>
+        <span class="chip"><b>lipid_field</b></span>
+        <span class="chip"><b>nucleotide_field</b></span>
+      </div>
+    </div>
+
+    <div class="lane" style="--wc: var(--bio);">
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">B1</span><h3>Biomolecules</h3></div>
+          <p class="produces">Polymerize field organics into <b>proteins, carbohydrates, lipids, nucleic acids</b> (DNA/RNA).</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">biology_lab (opens world)</span></span><span><span class="k">builds</span><span class="v">Biosynthesizer</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">cell_biology</span><span class="w-cost">~50M e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">B2</span><h3>Cellular Biology</h3></div>
+          <p class="produces"><b>Organelles</b> &rarr; cell: ribosome, mitochondria, membrane, prokaryotic cell.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">cell_biology ~50M</span></span><span><span class="k">builds</span><span class="v">Cell Assembler</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">multicellular_life</span><span class="w-cost">~250M e</span></div>
+
+      <div class="node">
+        <div class="tier">
+          <div class="tier-top"><span class="code">B3</span><h3>Multicellular Life</h3></div>
+          <p class="produces"><b>Eukaryotic cell &rarr; tissue &rarr; organ</b>.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">multicellular_life ~250M</span></span><span><span class="k">builds</span><span class="v">Tissue Culture</span></span></div>
+        </div>
+      </div>
+
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">ecosystems</span><span class="w-cost">~1B e</span></div>
+
+      <div class="node">
+        <div class="tier cap">
+          <div class="tier-top"><span class="code">B4</span><h3>Ecosystems</h3><span class="flag">bio endgame</span></div>
+          <p class="produces"><b>Organism &rarr; population &rarr; ecosystem</b> &mdash; the top of the Biology climb.</p>
+          <div class="tier-meta"><span><span class="k">gate</span><span class="v">ecosystems ~1B</span></span><span><span class="k">builds</span><span class="v">Bioreactor / Biosphere</span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ACT IV : ENDGAME (DEFERRED) ============ -->
+  <section class="world deferred" id="endgame" style="--wc: var(--cosmic);">
+    <div class="world-head">
+      <div class="world-idx">A4</div>
+      <div>
+        <h2>Heavy &amp; Cosmic Physics <em>&mdash; the back half</em></h2>
+        <div class="world-meta"><span class="tag" style="color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent)">DESIGNED &middot; RE-TIER DEFERRED</span>Physics content that currently unlocks too early, moved <b>behind</b> Biology. Shown here for shape only &mdash; the actual gate/cost moves ship in a follow-up.</div>
+      </div>
+    </div>
+
+    <div class="expect">
+      <div class="cell"><div class="k">Opens at</div><div class="v">post-Bio</div><div class="s">re-cost &gt; 1B</div></div>
+      <div class="cell"><div class="k">Tops out at</div><div class="v">Dyson</div><div class="s">graviton_lens 100T</div></div>
+      <div class="cell"><div class="k">Prestige window</div><div class="v">~40+</div><div class="s">long tail</div></div>
+      <div class="cell"><div class="k">Best-case active</div><div class="v">100s of h</div><div class="s">continuous play</div></div>
+      <div class="cell"><div class="k">Mostly-idle</div><div class="v">months</div><div class="s">calendar time</div></div>
+    </div>
+
+    <div class="lane" style="--wc: var(--cosmic);">
+      <div class="node"><div class="tier"><div class="tier-top"><span class="code">H1</span><h3>Heavy Elements &amp; Isotopes</h3></div><p class="produces">Uranium, deuterium/tritium, C-14 &mdash; today at depth-2/3K, intended <b>post-Biology</b>.</p></div></div>
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">transuranic / superheavy (fusion &amp; fission)</span><span class="w-cost">re-cost</span></div>
+      <div class="node"><div class="tier"><div class="tier-top"><span class="code">H2</span><h3>Transuranics &amp; Superheavies</h3></div><p class="produces">Fusion/fission reactors climb to <b>Oganesson</b>; the new net-worth ceiling.</p></div></div>
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">advanced_materials &rarr; component_engineering</span><span class="w-cost">re-cost</span></div>
+      <div class="node"><div class="tier"><div class="tier-top"><span class="code">H3</span><h3>Materials &amp; Components</h3></div><p class="produces">Steel &rarr; superconductor &rarr; quantum processor, antimatter cell.</p></div></div>
+      <div class="wall"><span class="w-tag">Gate</span><span class="w-id">megastructure_theory</span><span class="w-cost">re-cost &gt; 1B</span></div>
+      <div class="node"><div class="tier cap"><div class="tier-top"><span class="code">H4</span><h3>Megastructure &mdash; Dyson Sphere</h3><span class="flag">game endgame</span></div><p class="produces">Existing 5-stage endgame. Costs must be lifted <b>above Biology's ~1B</b>.</p></div></div>
+    </div>
+
+    <div class="deferred-note"><b>Why deferred:</b> re-slotting heavy elements coordinates with the in-flight <span class="mono">elements-and-isotopes.md</span> redesign and must lift the whole heavy-physics tail above Biology's ~1B gates &mdash; a balance change best done as its own pass, not bundled with the world-building work.</div>
+  </section>
+
+  <!-- ============ OPEN QUESTIONS / FLAGS ============ -->
+  <section class="flags" id="flags">
+    <div class="eyebrow">To resolve together</div>
+    <h2>Open questions &amp; risks</h2>
+    <div class="flag-grid">
+      <div class="flagcard warn">
+        <div class="fh">Prestige payout</div>
+        <p>✦ scales flat-log (~+50✦ per &times;10 net worth). Biology's 1B ceiling raises net worth but <b>not the ✦ faucet</b> &mdash; deep runs risk feeling ✦-starved. May need a higher <span class="mono">prestige_scale</span> or new faucets.</p>
+      </div>
+      <div class="flagcard info">
+        <div class="fh">Gate costs are first-pass</div>
+        <p>Every cost here (150K / 500K / 2M / 5M / 10&ndash;25M / 50M / 250M / 1B) is a <b>starting anchor</b> off the phase table. This map exists so we can slide them together before committing numbers to <span class="mono">game_data.json</span>.</p>
+      </div>
+      <div class="flagcard info">
+        <div class="fh">Field taxonomy</div>
+        <p>New element/organic fields need either a <span class="mono">FieldType</span> enum extension or a data-driven refactor. The refactor is cleaner long-term but touches more call sites &mdash; a Phase 2 decision.</p>
+      </div>
+      <div class="flagcard defer">
+        <div class="fh">Overlap to fix</div>
+        <p>Biology gates (50M&ndash;1B) currently <b>overlap Megastructure's 50M</b>. The deferred re-tier must push the heavy-physics endgame above Biology so the sequence reads cleanly.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Draft v0.1 &middot; costs are proposals, not committed &middot; built to be argued with. Tell me what to slide.
+  </footer>
+
+</div>
+</body>
+</html>

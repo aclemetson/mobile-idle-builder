@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: heavy_transition_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: heavy_transition_metals
+  displayName: Heavy Transition Metals
+  description: 'Neutron capture from Cerium: Praseodymium, Neodymium, Promethium
+    and Samarium (Slow mode).'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  depthInTree: 5
+  block: actinide_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 28500000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: 09365550bf87ecc4ab58ed4ce231ae58, type: 2}
+  - {fileID: 11400000, guid: 3559203236c93ea40b88a2eecb663790, type: 2}
+  - {fileID: 11400000, guid: 36999beebf5026d428597008f4af5fcc, type: 2}
+  - {fileID: 11400000, guid: 891a5a472ac25b745952379dd1c2c584, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 366cde23b9f42ff4eb27362f9d25b395, type: 2}
+  - {fileID: 11400000, guid: f16bbc81835b31448b3c4f6ad7b27857, type: 2}
+  - {fileID: 11400000, guid: f3466836512be2d4fa83cd5e90677c53, type: 2}
+  - {fileID: 11400000, guid: ed636e5e47015ff4e850b6f6d0a2df5b, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.1
+  codexEntry: 'The second row of transition metals: catalytic, refractory, and the
+    rare-earth precursors. Bridging the periodic table from the everyday metals toward
+    the lanthanides.'

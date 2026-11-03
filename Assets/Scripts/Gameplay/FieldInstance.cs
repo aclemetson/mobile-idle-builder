@@ -11,6 +11,13 @@ namespace MobileIdleBuilder
         public FieldSO Field { get; private set; }
 
         private FieldEffect _effect;
+        private FieldCooldownIndicator _cooldown;
+
+        /// <summary>
+        /// This field's tap-cooldown + radial wheel. Resolved lazily because the indicator is added
+        /// to the GameObject after Initialize() runs.
+        /// </summary>
+        public FieldCooldownIndicator Cooldown => _cooldown ??= GetComponent<FieldCooldownIndicator>();
 
         public void Initialize(FieldSO field)
         {

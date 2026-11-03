@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: polymer_precursor
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: polymer_precursor
+  displayName: Polymer Precursor
+  recipeId: 184
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: 3b1015f7ab166d544b25c573a87307af, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 05230edc5404f6548aaafdeb9037ae12, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: 331fa66d95e168347a3e7ff618e90a8d, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 50
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 250
+  validBuildings:
+  - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

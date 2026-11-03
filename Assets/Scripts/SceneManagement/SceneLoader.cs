@@ -18,9 +18,18 @@ namespace MobileIdleBuilder
 
         public static void GoTo(string sceneName)
         {
-            _targetScene      = sceneName;
-            IsTransitioning   = true;
+            GameLogger.Info($"[SceneLoader] GoTo('{sceneName}') — IsTransitioning was {IsTransitioning}");
+            // Normalize time before transitioning. timeScale is a global that survives scene loads,
+            // so if we leave a paused scene (e.g. a pauseGame dialogue set it to 0), the loading
+            // screen's Phase-1 fill — driven by Time.deltaTime — stalls at 0% forever and the
+            // destination scene loads frozen. The incoming scene's DialogueController re-pauses if
+            // it genuinely needs to. Repros via dev-console 'snapshot load' of a tutorial state.
+            Time.timeScale  = 1f;
+            _targetScene    = sceneName;
+            IsTransitioning = true;
+            GameLogger.Info($"[SceneLoader] Calling LoadScene('{LoadingSceneName}')");
             SceneManager.LoadScene(LoadingSceneName);
+            GameLogger.Info($"[SceneLoader] LoadScene('{LoadingSceneName}') returned");
         }
 
         internal static void CompleteTransition()

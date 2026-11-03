@@ -12,7 +12,11 @@
         "Unity.TextMeshPro",
         "Unity.Services.Core",
         "Unity.Services.Authentication",
-        "Unity.Services.CloudSave"
+        "Unity.Services.CloudSave",
+        "Unity.Services.Analytics",
+        "Unity.Purchasing",
+        "Unity.Services.RemoteConfig",
+        "Unity.LevelPlay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -21,6 +25,27 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "",
+            "define": "UNITY_PURCHASING"
+        },
+        {
+            "name": "com.unity.remote-config",
+            "expression": "",
+            "define": "REMOTE_CONFIG"
+        },
+        {
+            "name": "com.unity.services.analytics",
+            "expression": "",
+            "define": "ANALYTICS"
+        },
+        {
+            "name": "com.unity.services.levelplay",
+            "expression": "",
+            "define": "LEVELPLAY_ADS"
+        }
+    ],
     "noEngineReferences": false
 }

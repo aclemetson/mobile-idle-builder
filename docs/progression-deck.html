@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>From Quarks to Life — Game Overview Deck</title>
+<meta name="description" content="A slide-deck overview of the idle builder for newcomers: the core loop, the three worlds, and an interactive roadmap of the playthrough.">
+</head>
+<body>
+<style>
+  :root {
+    --bg: #05070f;
+    --bg2: #0a0f1f;
+    --ink: #eef2fc;
+    --ink-2: #aab6d6;
+    --ink-3: #6c789c;
+    --line: rgba(160,180,220,.16);
+    --panel: rgba(255,255,255,.035);
+    --panel-2: rgba(255,255,255,.06);
+    --phys: #52c7f6;
+    --chem: #f9ad4f;
+    --bio:  #4ee08e;
+    --cosmic: #b198fb;
+    --gold: #f6c556;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f8;
+    --bg2: #e2e7f3;
+    --ink: #10152a;
+    --ink-2: #3f4a68;
+    --ink-3: #6f7a97;
+    --line: rgba(30,50,90,.16);
+    --panel: rgba(20,30,60,.04);
+    --panel-2: rgba(20,30,60,.07);
+    --phys: #0d80c4;
+    --chem: #bd6a10;
+    --bio:  #0e8348;
+    --cosmic: #6244d0;
+    --gold: #a9780c;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  /* ambient particle field */
+  #field { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--accent, #52c7f6) 16%, transparent), transparent 60%),
+      radial-gradient(100% 100% at 50% 120%, var(--bg2), transparent 70%);
+    transition: background .6s ease;
+  }
+
+  /* deck */
+  .deck { position: fixed; inset: 0; z-index: 2; touch-action: pan-y; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: clamp(24px, 6vw, 96px);
+    opacity: 0; visibility: hidden; transform: translateY(22px) scale(.995);
+    transition: opacity .55s ease, transform .55s ease, visibility .55s;
+    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+  .slide.active { opacity: 1; visibility: visible; transform: none; }
+  /* margin:auto (not justify-content) centers the single child AND stays scrollable
+     when content is taller than the viewport — avoids the flexbox top-clip bug on short screens */
+  .wrap { width: 100%; max-width: 1000px; margin: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide { transition: opacity .2s ease, visibility .2s; transform: none; }
+  }
+
+  /* typographic system */
+  .eyebrow {
+    font-family: ui-monospace, monospace; text-transform: uppercase; letter-spacing: .28em;
+    font-size: clamp(10px, 1.4vw, 13px); font-weight: 600; color: var(--accent, var(--ink-3));
+    display: flex; align-items: center; gap: 12px;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--accent, var(--ink-3)); flex: none; }
+  h1 { font-size: clamp(38px, 8.5vw, 92px); line-height: .98; letter-spacing: -.03em; margin: 20px 0 0; font-weight: 800; text-wrap: balance; }
+  h2 { font-size: clamp(28px, 5.5vw, 56px); line-height: 1.02; letter-spacing: -.025em; margin: 16px 0 0; font-weight: 800; text-wrap: balance; }
+  .lede { font-size: clamp(16px, 2.4vw, 23px); line-height: 1.5; color: var(--ink-2); max-width: 40ch; margin: 22px 0 0; }
+  .lede.wide { max-width: 54ch; }
+  .lede b { color: var(--ink); font-weight: 600; }
+  .accent { color: var(--accent); }
+
+  .kicker { font-size: clamp(15px, 2vw, 19px); color: var(--ink-2); margin-top: 26px; max-width: 52ch; line-height: 1.55; }
+  .kicker b { color: var(--ink); }
+
+  /* cover */
+  .cover h1 .grad {
+    background: linear-gradient(100deg, var(--phys), var(--chem) 42%, var(--bio) 68%, var(--cosmic));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .cover .sub { margin-top: 26px; font-size: clamp(15px, 2.2vw, 21px); color: var(--ink-2); letter-spacing: .01em; }
+  .cover .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+  .tag { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; background: var(--panel); }
+
+  /* step loop */
+  .loop { display: grid; gap: 12px; margin-top: 32px; }
+  .step { display: flex; gap: 16px; align-items: flex-start; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  .step .n { font-family: ui-monospace, monospace; font-weight: 700; font-size: 13px; color: var(--accent); border: 1.5px solid color-mix(in srgb, var(--accent) 50%, var(--line)); border-radius: 9px; width: 34px; height: 34px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .step .t { font-weight: 700; font-size: 16px; }
+  .step .d { color: var(--ink-2); font-size: 14px; margin-top: 2px; line-height: 1.45; }
+  .step .d b { color: var(--ink); }
+
+  /* worlds row (thesis) */
+  .worlds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 34px; }
+  .wtile { border: 1px solid var(--line); border-radius: 16px; padding: 20px 18px; background: var(--panel); position: relative; overflow: hidden; }
+  .wtile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--wc); }
+  .wtile .wn { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--wc); }
+  .wtile .wt { font-weight: 800; font-size: clamp(17px, 2.2vw, 22px); margin-top: 8px; letter-spacing: -.01em; }
+  .wtile .wd { color: var(--ink-2); font-size: 13.5px; margin-top: 8px; line-height: 1.45; }
+  .wtile .wfrom { font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--ink-3); margin-top: 14px; }
+  .wtile .wfrom b { color: var(--wc); }
+  @media (max-width: 760px) { .worlds { grid-template-columns: repeat(2, 1fr); } }
+
+  /* content-world split */
+  .split { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(24px, 5vw, 60px); align-items: center; }
+  @media (max-width: 820px) { .split { grid-template-columns: 1fr; gap: 26px; } }
+  .chain { display: grid; gap: 10px; }
+  .link { display: flex; align-items: center; gap: 13px; }
+  .link .badge { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line)); border-radius: 8px; padding: 8px 11px; background: var(--panel); min-width: 118px; text-align: center; }
+  .link .arr { color: var(--ink-3); }
+  .link .lbl { color: var(--ink-2); font-size: 14px; }
+  .link .lbl b { color: var(--ink); }
+  .newpill { display: inline-block; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 4px 11px; margin-left: 14px; vertical-align: middle; }
+  :root[data-theme="light"] .newpill { color: #fff; }
+
+  /* pacing timeline */
+  .timeline { margin-top: 38px; }
+  .track { position: relative; height: 3px; background: var(--line); border-radius: 3px; margin: 60px 0 0; }
+  .track .fill { position: absolute; inset: 0 40% 0 0; background: linear-gradient(90deg, var(--phys), var(--chem), var(--bio)); border-radius: 3px; }
+  .stops { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 0; }
+  .stop { position: relative; padding-top: 22px; }
+  .stop::before { content: ""; position: absolute; top: -6px; left: 0; width: 13px; height: 13px; border-radius: 50%; background: var(--bg); border: 3px solid var(--sc); }
+  .stop .st { font-weight: 700; font-size: 14px; }
+  .stop .sv { font-family: ui-monospace, monospace; font-size: 12px; color: var(--sc); margin-top: 4px; }
+  .stop .sd { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.4; }
+  @media (max-width: 760px) { .stops { grid-template-columns: 1fr 1fr; gap: 16px 12px; } .track { display: none; } .stop::before { display: none; } .stop { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); } }
+
+  .twocol { display: flex; gap: 30px; flex-wrap: wrap; margin-top: 28px; }
+  .stat { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; }
+  .stat .sk { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .stat .sn { font-family: ui-monospace, monospace; font-size: clamp(22px, 3vw, 30px); font-weight: 800; margin-top: 6px; color: var(--ink); }
+  .stat .ss { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+
+  .closing-arc { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 30px; font-family: ui-monospace, monospace; font-weight: 700; font-size: clamp(16px, 2.6vw, 26px); }
+  .closing-arc .a1 { color: var(--phys); } .closing-arc .a2 { color: var(--chem); }
+  .closing-arc .a3 { color: var(--bio); } .closing-arc .a4 { color: var(--cosmic); }
+  .closing-arc .sep { color: var(--ink-3); font-weight: 400; }
+
+  /* interactive roadmap */
+  .rmap-intro { font-size: clamp(14px, 2vw, 17px); color: var(--ink-2); margin-top: 16px; }
+  .rmap-intro b { color: var(--ink); }
+  .rail { display: flex; gap: 6px; margin-top: 24px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; touch-action: pan-x; }
+  .rnode { flex: 1 0 108px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--rc); border-radius: 12px; padding: 12px 13px 13px; cursor: pointer; text-align: left; color: var(--ink); font: inherit; transition: background .2s, transform .2s, border-color .2s; }
+  .rnode:hover { background: var(--panel-2); }
+  .rnode.sel { background: color-mix(in srgb, var(--rc) 15%, var(--panel)); border-color: color-mix(in srgb, var(--rc) 55%, var(--line)); transform: translateY(-3px); }
+  .rnode:focus-visible { outline: 2px solid var(--rc); outline-offset: 2px; }
+  .rnode .rn-w { font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--rc); }
+  .rnode .rn-t { font-weight: 700; font-size: 13px; margin-top: 5px; line-height: 1.15; }
+  .rnode .rn-p { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--ink-3); margin-top: 7px; font-variant-numeric: tabular-nums; }
+
+  .rdetail { margin-top: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); padding: 20px 22px; border-left: 4px solid var(--rc); }
+  .rd-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .rd-head .rd-code { font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--rc); font-weight: 700; }
+  .rd-head h3 { font-size: clamp(18px, 2.6vw, 24px); font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .rd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 15px 20px; margin-top: 17px; }
+  .rd-stat .k { font-family: ui-monospace, monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .rd-stat .v { font-family: ui-monospace, monospace; font-weight: 700; font-size: 16px; margin-top: 5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .rd-stat .v.active { color: var(--phys); }
+  .rd-stat .v.idle { color: var(--ink-2); }
+  .rd-unlocks { margin-top: 17px; padding-top: 15px; border-top: 1px dashed var(--line); }
+  .rd-unlocks .k { font-family: ui-monospace, monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .rd-unlocks ul { margin: 9px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
+  .rd-unlocks li { margin: 3px 0; }
+  .rd-unlocks li b { color: var(--ink); font-weight: 600; }
+
+  /* chrome */
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent, var(--phys)); z-index: 10; transition: width .5s ease, background .5s ease; box-shadow: 0 0 12px color-mix(in srgb, var(--accent, #52c7f6) 70%, transparent); }
+  .controls { position: fixed; z-index: 10; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(10px); }
+  .controls button { background: none; border: none; color: var(--ink-2); cursor: pointer; padding: 6px; border-radius: 8px; display: grid; place-items: center; line-height: 0; touch-action: manipulation; }
+  .controls button:hover { color: var(--ink); background: var(--panel-2); }
+  .controls button:focus-visible { outline: 2px solid var(--accent, var(--phys)); outline-offset: 2px; }
+  .controls svg { width: 20px; height: 20px; }
+  .dots { display: flex; gap: 8px; align-items: center; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); cursor: pointer; transition: transform .2s, background .2s; }
+  .dots i.on { background: var(--accent, var(--phys)); transform: scale(1.35); }
+  .counter { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-3); min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+  .hint { position: fixed; z-index: 10; bottom: 26px; right: 24px; font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-3); }
+  @media (max-width: 620px) {
+    .slide { padding-bottom: 96px; }        /* keep bottom content clear of the floating controls */
+    .hint { bottom: 22px; right: 16px; }
+  }
+  @media (max-width: 560px) {
+    .dots { display: none; }                /* on phones: use prev/next, the counter, tap, and swipe */
+    .controls { gap: 10px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px; }
+    .controls button { padding: 9px 13px; }
+    .controls svg { width: 22px; height: 22px; }
+    h1 { font-size: clamp(34px, 12vw, 60px); }
+  }
+  @media (max-width: 480px) {
+    .draft { display: none; }
+  }
+
+  .draft { position: fixed; z-index: 10; top: 16px; right: 18px; font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+</style>
+
+<div class="progress" id="progress"></div>
+<canvas id="field"></canvas>
+<div class="vignette" id="vignette"></div>
+<div class="draft">Overview deck &middot; draft</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 COVER -->
+  <section class="slide cover active" style="--accent: var(--phys);">
+    <div class="wrap">
+      <div class="eyebrow">A mobile idle game &middot; working overview</div>
+      <h1>From <span class="grad">Quarks to Life</span></h1>
+      <div class="sub">Build automated factories that transmute the universe &mdash; from the smallest particles all the way up to living organisms.</div>
+      <div class="tags">
+        <span class="tag">Idle / incremental</span>
+        <span class="tag">Build &amp; automate</span>
+        <span class="tag">Real-science theme</span>
+        <span class="tag">Plays in bursts, earns while away</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 WHAT IS IT -->
+  <section class="slide" style="--accent: var(--phys);">
+    <div class="wrap">
+      <div class="eyebrow">What is it?</div>
+      <h2>A factory-builder where the product is <span class="accent">the universe itself</span>.</h2>
+      <p class="kicker">You place machines on a grid. They harvest raw matter and craft it into more complex matter, which you sell for currency and reinvest into bigger, faster machines. It&rsquo;s an <b>idle game</b>: play in short active bursts, and your factory keeps producing while your phone is in your pocket &mdash; you collect the earnings when you return.</p>
+      <p class="kicker">The hook: you&rsquo;re not making widgets. You&rsquo;re climbing <b>the actual ladder of matter</b>, one scientific rung at a time.</p>
+    </div>
+  </section>
+
+  <!-- 3 CORE LOOP -->
+  <section class="slide" style="--accent: var(--phys);">
+    <div class="wrap">
+      <div class="eyebrow">The core loop &middot; five verbs</div>
+      <h2>Harvest, build, sell, research, reset.</h2>
+      <div class="loop">
+        <div class="step"><div class="n">1</div><div><div class="t">Harvest</div><div class="d">Place machines on resource <b>fields</b> to pull in raw matter automatically.</div></div></div>
+        <div class="step"><div class="n">2</div><div><div class="t">Build &amp; craft</div><div class="d">Chain machines together to combine raw matter into higher forms &mdash; each step more valuable.</div></div></div>
+        <div class="step"><div class="n">3</div><div><div class="t">Sell for Entropy</div><div class="d">Feed surplus into a sink for <b>Entropy</b>, the game&rsquo;s core currency.</div></div></div>
+        <div class="step"><div class="n">4</div><div><div class="t">Research</div><div class="d">Spend Entropy to unlock new machines, recipes, and whole new areas of the game.</div></div></div>
+        <div class="step"><div class="n">5</div><div><div class="t">Prestige (reset)</div><div class="d">Once you&rsquo;ve grown big, <b>reset for a permanent speed-up</b> &mdash; and climb again, faster. This is the heartbeat of the genre.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 THESIS: THREE WORLDS -->
+  <section class="slide" style="--accent: var(--gold);">
+    <div class="wrap">
+      <div class="eyebrow">The big idea</div>
+      <h2>One journey up the scale of matter &mdash; across three worlds.</h2>
+      <p class="lede wide">Each world is its own map, its own resources, and its own tech tree. You unlock the next only after mastering the last. Then a cosmic-scale endgame caps it off.</p>
+      <div class="worlds">
+        <div class="wtile" style="--wc: var(--phys);"><div class="wn">World 1</div><div class="wt">Particle Physics</div><div class="wd">Assemble matter from subatomic particles up to the periodic table.</div><div class="wfrom"><b>quarks</b> &rarr; atoms</div></div>
+        <div class="wtile" style="--wc: var(--chem);"><div class="wn">World 2 &middot; new</div><div class="wt">Chemistry</div><div class="wd">Mine elements and react them into compounds and organics.</div><div class="wfrom"><b>elements</b> &rarr; molecules</div></div>
+        <div class="wtile" style="--wc: var(--bio);"><div class="wn">World 3 &middot; new</div><div class="wt">Biology</div><div class="wd">Grow organic compounds into cells, tissues, and life.</div><div class="wfrom"><b>organics</b> &rarr; organisms</div></div>
+        <div class="wtile" style="--wc: var(--cosmic);"><div class="wn">Endgame</div><div class="wt">Cosmic</div><div class="wd">Heavy elements and a star-scale megastructure.</div><div class="wfrom"><b>Dyson Sphere</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 WORLD 1 PHYSICS -->
+  <section class="slide" style="--accent: var(--phys);">
+    <div class="wrap split">
+      <div>
+        <div class="eyebrow">World 1 &middot; Particle Physics</div>
+        <h2>Build matter from scratch.</h2>
+        <p class="kicker">You start with the universe&rsquo;s raw ingredients &mdash; <b>quarks and electrons</b> &mdash; and bind them into protons, then atoms, then the whole periodic table, then simple molecules. This is where players learn the loop and take their first prestige resets.</p>
+      </div>
+      <div class="chain">
+        <div class="link"><span class="badge">Quarks</span><span class="arr">&rarr;</span><span class="lbl"><b>Protons &amp; neutrons</b></span></div>
+        <div class="link"><span class="badge">Nucleons</span><span class="arr">&rarr;</span><span class="lbl"><b>Hydrogen &amp; atoms</b></span></div>
+        <div class="link"><span class="badge">Atoms</span><span class="arr">&rarr;</span><span class="lbl"><b>The periodic table</b></span></div>
+        <div class="link"><span class="badge">Elements</span><span class="arr">&rarr;</span><span class="lbl"><b>Simple molecules</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 WORLD 2 CHEMISTRY -->
+  <section class="slide" style="--accent: var(--chem);">
+    <div class="wrap split">
+      <div>
+        <div class="eyebrow">World 2 &middot; Chemistry <span class="newpill">new</span></div>
+        <h2>Mine the elements. Run the reactions.</h2>
+        <p class="kicker">A whole new map unlocks &mdash; and here the elements you painstakingly built in World 1 are simply <b>dug out of the ground</b>. Now the challenge is chemistry: combine them into salts, acids, and fuels, climbing all the way up to the first <b>organic compounds</b> &mdash; sugars and amino acids, the stuff of life.</p>
+      </div>
+      <div class="chain">
+        <div class="link"><span class="badge">Element fields</span><span class="arr">&rarr;</span><span class="lbl"><b>Oxides, salts, acids</b></span></div>
+        <div class="link"><span class="badge">Reactions</span><span class="arr">&rarr;</span><span class="lbl"><b>Industrial chemicals</b></span></div>
+        <div class="link"><span class="badge">Organics</span><span class="arr">&rarr;</span><span class="lbl"><b>Hydrocarbons &amp; alcohols</b></span></div>
+        <div class="link"><span class="badge">Biochem</span><span class="arr">&rarr;</span><span class="lbl"><b>Sugars, amino acids</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 WORLD 3 BIOLOGY -->
+  <section class="slide" style="--accent: var(--bio);">
+    <div class="wrap split">
+      <div>
+        <div class="eyebrow">World 3 &middot; Biology <span class="newpill">new</span></div>
+        <h2>Assemble life itself.</h2>
+        <p class="kicker">The organic compounds from Chemistry become the raw material for a third map. Here you build <b>proteins, cells, tissues, organisms</b> &mdash; and finally whole ecosystems. It&rsquo;s the top of the ladder that began with a single quark.</p>
+      </div>
+      <div class="chain">
+        <div class="link"><span class="badge">Organic fields</span><span class="arr">&rarr;</span><span class="lbl"><b>Proteins, DNA, lipids</b></span></div>
+        <div class="link"><span class="badge">Biomolecules</span><span class="arr">&rarr;</span><span class="lbl"><b>Cells &amp; organelles</b></span></div>
+        <div class="link"><span class="badge">Cells</span><span class="arr">&rarr;</span><span class="lbl"><b>Tissues &amp; organs</b></span></div>
+        <div class="link"><span class="badge">Organisms</span><span class="arr">&rarr;</span><span class="lbl"><b>Whole ecosystems</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 ENDGAME -->
+  <section class="slide" style="--accent: var(--cosmic);">
+    <div class="wrap">
+      <div class="eyebrow">The endgame</div>
+      <h2>Back to physics &mdash; at the scale of stars.</h2>
+      <p class="kicker">The long tail returns to the hardest physics: forging the <b>heaviest and most exotic elements</b>, then constructing a <b>Dyson Sphere</b> &mdash; a star-enclosing megastructure built in stages, each granting a permanent boost. This is the content players chase for hundreds of hours.</p>
+      <div class="twocol">
+        <div class="stat"><div class="sk">Culminates in</div><div class="sn">Dyson Sphere</div><div class="ss">5-stage star-scale megastructure</div></div>
+        <div class="stat"><div class="sk">Powered by</div><div class="sn">Everything</div><div class="ss">every earlier world feeds the top</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 PACING -->
+  <section class="slide" style="--accent: var(--gold);">
+    <div class="wrap">
+      <div class="eyebrow">How long is the journey?</div>
+      <h2>Minutes to your first win. Months to the summit.</h2>
+      <p class="lede wide">Progress is designed to always feel one rung away &mdash; and it respects your time, because the factory earns whether you&rsquo;re playing or not.</p>
+      <div class="timeline">
+        <div class="track"><div class="fill"></div></div>
+        <div class="stops">
+          <div class="stop" style="--sc: var(--phys);"><div class="st">First hour</div><div class="sv">first reset</div><div class="sd">learn the loop, prestige once</div></div>
+          <div class="stop" style="--sc: var(--phys);"><div class="st">First days</div><div class="sv">Physics mastered</div><div class="sd">managers &amp; upgrades ramp up</div></div>
+          <div class="stop" style="--sc: var(--chem);"><div class="st">Week 1&ndash;2</div><div class="sv">Chemistry opens</div><div class="sd">a second world &amp; map</div></div>
+          <div class="stop" style="--sc: var(--bio);"><div class="st">Month 1+</div><div class="sv">Biology &amp; life</div><div class="sd">the third world</div></div>
+          <div class="stop" style="--sc: var(--cosmic);"><div class="st">Long tail</div><div class="sv">Megastructure</div><div class="sd">hundreds of hours</div></div>
+        </div>
+      </div>
+      <div class="twocol">
+        <div class="stat" style="--accent: var(--phys);"><div class="sk">Continuous play</div><div class="sn">short bursts</div><div class="ss">active sessions of minutes, not hours</div></div>
+        <div class="stat" style="--accent: var(--gold);"><div class="sk">Idle earnings</div><div class="sn">always on</div><div class="ss">the grid keeps producing while away</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 INTERACTIVE ROADMAP -->
+  <section class="slide" data-roadmap style="--accent: var(--gold);">
+    <div class="wrap">
+      <div class="eyebrow">Explore the roadmap</div>
+      <h2>What to expect, stage by stage.</h2>
+      <p class="rmap-intro">Tap any stage to see the <b>prestige window</b>, the <b>entropy goal</b>, exactly <b>what unlocks</b>, and how long it takes &mdash; playing actively vs. mostly idle.</p>
+      <div class="no-advance">
+        <div class="rail" id="rail" role="tablist" aria-label="Progression stages"></div>
+        <div class="rdetail" id="rdetail" role="tabpanel" aria-live="polite" style="--rc: var(--phys);"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 CLOSING -->
+  <section class="slide" style="--accent: var(--cosmic);">
+    <div class="wrap">
+      <div class="eyebrow">Why it works</div>
+      <h2>A single, legible arc &mdash; from the smallest thing to the grandest.</h2>
+      <div class="closing-arc">
+        <span class="a1">Matter</span><span class="sep">&rarr;</span>
+        <span class="a2">Chemistry</span><span class="sep">&rarr;</span>
+        <span class="a3">Life</span><span class="sep">&rarr;</span>
+        <span class="a4">Cosmos</span>
+      </div>
+      <p class="kicker">There is always a next rung, the theme teaches real science as you climb, and the idle format fits a phone. Chemistry and Biology are the two new worlds that turn a single tech tree into a journey.</p>
+      <p class="kicker" style="color:var(--ink-3)">Working overview &mdash; numbers and content still in design. Let&rsquo;s discuss and refine.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls" role="group" aria-label="Slide navigation">
+  <button id="prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="dots" id="dots"></div>
+  <button id="next" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <span class="counter" id="counter">1 / 10</span>
+</div>
+<div class="hint">Tap or swipe &middot; or use &larr; &rarr;</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var deck = document.getElementById('deck');
+  var progress = document.getElementById('progress');
+  var vignette = document.getElementById('vignette');
+  var counter = document.getElementById('counter');
+  var dotsWrap = document.getElementById('dots');
+  var i = 0;
+
+  // build dots
+  slides.forEach(function (s, k) {
+    var d = document.createElement('i');
+    d.setAttribute('role', 'button');
+    d.setAttribute('aria-label', 'Go to slide ' + (k + 1));
+    d.addEventListener('click', function (e) { e.stopPropagation(); go(k); });
+    dotsWrap.appendChild(d);
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  function accentOf(el) {
+    return getComputedStyle(el).getPropertyValue('--accent').trim() || '#52c7f6';
+  }
+
+  function update() {
+    slides.forEach(function (s, k) { s.classList.toggle('active', k === i); });
+    dots.forEach(function (d, k) { d.classList.toggle('on', k === i); });
+    var acc = accentOf(slides[i]);
+    document.documentElement.style.setProperty('--accent', acc);
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    slides[i].focus && slides[i].setAttribute('tabindex', '-1');
+  }
+
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    update();
+  }
+
+  document.getElementById('prev').addEventListener('click', function (e) { e.stopPropagation(); go(i - 1); });
+  document.getElementById('next').addEventListener('click', function (e) { e.stopPropagation(); go(i + 1); });
+
+  // --- navigation: touch-first (tap + swipe), with mouse click as a fallback ---
+  function interactive(el) { return el && el.closest && el.closest('a, button, .controls, .dots, .no-advance'); }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length - 1); }
+  });
+
+  // Shared decision: swipe left/right moves, a clean tap advances, a vertical drag scrolls.
+  function decideNav(dx, dy, dt, target) {
+    if (interactive(target)) return;                      // buttons / roadmap handle their own taps
+    if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) go(i + (dx < 0 ? 1 : -1));
+    else if (Math.abs(dx) < 16 && Math.abs(dy) < 16 && dt < 600) go(i + 1);
+  }
+
+  // Pointer Events are the reliable cross-device path (touch + mouse + pen).
+  if (window.PointerEvent) {
+    var down = null;
+    deck.addEventListener('pointerdown', function (e) {
+      down = { x: e.clientX, y: e.clientY, t: Date.now(), target: e.target };
+    });
+    deck.addEventListener('pointerup', function (e) {
+      if (!down) return;
+      var d = down; down = null;
+      decideNav(e.clientX - d.x, e.clientY - d.y, Date.now() - d.t, d.target);
+    });
+    deck.addEventListener('pointercancel', function () { down = null; });
+  } else {
+    // Fallback for the rare browser without Pointer Events.
+    var usedTouch = false, tx = 0, ty = 0, tt = 0;
+    deck.addEventListener('touchstart', function (e) { usedTouch = true; var t = e.touches[0]; tx = t.clientX; ty = t.clientY; tt = Date.now(); }, { passive: true });
+    deck.addEventListener('touchend', function (e) { var t = e.changedTouches[0]; decideNav(t.clientX - tx, t.clientY - ty, Date.now() - tt, e.target); }, { passive: true });
+    deck.addEventListener('click', function (e) { if (!usedTouch && !interactive(e.target)) go(i + 1); });
+  }
+
+  update();
+
+  // ---- ambient particle field ----
+  var canvas = document.getElementById('field');
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var pts = [], W, H, raf;
+  function resize() {
+    W = canvas.width = window.innerWidth * devicePixelRatio;
+    H = canvas.height = window.innerHeight * devicePixelRatio;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+  function seed() {
+    var n = Math.min(70, Math.floor(window.innerWidth / 22));
+    pts = [];
+    for (var k = 0; k < n; k++) {
+      pts.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - .5) * 0.12 * devicePixelRatio,
+        vy: (Math.random() - .5) * 0.12 * devicePixelRatio,
+        r: (Math.random() * 1.4 + 0.6) * devicePixelRatio
+      });
+    }
+  }
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    var acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#52c7f6';
+    for (var a = 0; a < pts.length; a++) {
+      var p = pts[a];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      for (var b = a + 1; b < pts.length; b++) {
+        var q = pts[b], dx = p.x - q.x, dy = p.y - q.y, d2 = dx * dx + dy * dy;
+        var max = 130 * devicePixelRatio;
+        if (d2 < max * max) {
+          ctx.globalAlpha = (1 - Math.sqrt(d2) / max) * 0.14;
+          ctx.strokeStyle = acc; ctx.lineWidth = devicePixelRatio * 0.6;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 0.5; ctx.fillStyle = acc;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.29); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(tick);
+  }
+  function start() { resize(); seed(); if (reduce) { tick(); cancelAnimationFrame(raf); } else { cancelAnimationFrame(raf); tick(); } }
+  window.addEventListener('resize', function () { resize(); seed(); });
+  start();
+})();
+
+// ---- interactive roadmap (data mirrors docs/progression-map.html timeline) ----
+(function () {
+  var rail = document.getElementById('rail');
+  var detail = document.getElementById('rdetail');
+  if (!rail || !detail) return;
+
+  var stages = [
+    { world: 'phys', wlabel: 'World 1 · Physics', label: 'Onboarding', code: 'Run 1 · Prestige 0→1',
+      title: 'Onboarding & first prestige', prestige: '0 → 1', target: '50,000e net worth', income: '1 → ~30 e/s',
+      active: '~1.5 h', idle: '~1–2 days',
+      unlocks: ['<b>Research</b> recombination → hydrogen synthesis → automation → atomic assembly → elements',
+                '<b>Builds</b> Harvester, Strong Force Combiner, Generator, Atom Generator',
+                'Your first <b>prestige reset</b> (≈ 50 ✦)'] },
+    { world: 'phys', wlabel: 'World 1 · Physics', label: 'Physics ramp', code: 'Runs 2–6',
+      title: 'Physics ramp', prestige: '1 → ~6', target: 'grow to ~150,000e', income: '50 → ~1K e/s',
+      active: '~8–12 h', idle: '~1–2 wk',
+      unlocks: ['<b>Research</b> molecular synthesis, storage & power upgrades',
+                '<b>Upgrades</b> permanent prestige perks + hireable managers',
+                '<b>Unlockable</b> a second build site (Quantum Domain)'] },
+    { world: 'chem', wlabel: 'World 2 · Chemistry', label: 'Chemistry opens', code: 'Chemistry · unlock',
+      title: 'Chemistry world opens', prestige: '~6 → 8', target: '~150,000e wall', income: '1 → 5K e/s',
+      active: '+~6–10 h', idle: '~3–7 days',
+      unlocks: ['<b>A new world & map</b> where you <b>mine elements</b> from fields',
+                '<b>Build</b> Compound Synthesizer',
+                '<b>Make</b> water, salts, acids (inorganic chemistry)'] },
+    { world: 'chem', wlabel: 'World 2 · Chemistry', label: 'Up to organics', code: 'Chemistry · climb',
+      title: 'Reactions up to organic compounds', prestige: '~8 → 16', target: '500K → 5M e', income: '5K → 100K e/s',
+      active: '+~20–35 h', idle: '~2–3 wk',
+      unlocks: ['<b>Research</b> reaction engineering, organic chemistry',
+                '<b>Build</b> Catalytic Reactor, Organic Synthesizer',
+                '<b>Culmination</b> sugars & amino acids — the first building blocks of life'] },
+    { world: 'bio', wlabel: 'World 3 · Biology', label: 'Biology opens', code: 'Biology · unlock',
+      title: 'Biology world opens', prestige: '~16 → 20', target: '~10–25M e wall', income: '100K → 1M e/s',
+      active: '+~15–25 h', idle: '~1–2 wk',
+      unlocks: ['<b>A third world & map</b> with organic-compound fields',
+                '<b>Build</b> Biosynthesizer',
+                '<b>Make</b> proteins, carbohydrates, lipids, DNA'] },
+    { world: 'bio', wlabel: 'World 3 · Biology', label: 'Cells → life', code: 'Biology · climb',
+      title: 'From cells to ecosystems', prestige: '~20 → 40', target: '50M → 1B e', income: '1M → 100M e/s',
+      active: '+~60–100 h', idle: '~1–2 mo',
+      unlocks: ['<b>Research</b> cell biology, multicellular life, ecosystems',
+                '<b>Build</b> Cell Assembler, Tissue Culture, Bioreactor',
+                'cells → tissues → organisms → whole ecosystems'] },
+    { world: 'cosmic', wlabel: 'Endgame · Cosmic', label: 'Cosmic endgame', code: 'Act IV · endgame',
+      title: 'Heavy elements & the megastructure', prestige: '~40+', target: '> 1 billion e', income: '100M → 10T+ e/s',
+      active: '100s of h', idle: 'months',
+      unlocks: ['<b>Heavy & exotic elements</b> (the hardest physics)',
+                '<b>Advanced materials & components</b>',
+                '<b>Dyson Sphere</b> — a 5-stage star-scale megastructure'] }
+  ];
+
+  var css = getComputedStyle(document.documentElement);
+  function col(world) { return css.getPropertyValue('--' + world).trim() || '#52c7f6'; }
+
+  stages.forEach(function (s, idx) {
+    var b = document.createElement('button');
+    b.className = 'rnode';
+    b.setAttribute('role', 'tab');
+    b.style.setProperty('--rc', col(s.world));
+    b.innerHTML = '<div class="rn-w">' + s.wlabel + '</div><div class="rn-t">' + s.label + '</div><div class="rn-p">P ' + s.prestige + '</div>';
+    b.addEventListener('click', function (e) { e.stopPropagation(); select(idx); });
+    rail.appendChild(b);
+  });
+  var nodes = Array.prototype.slice.call(rail.children);
+
+  function stat(k, v, cls) {
+    return '<div class="rd-stat"><div class="k">' + k + '</div><div class="v ' + (cls || '') + '">' + v + '</div></div>';
+  }
+
+  function select(idx) {
+    var s = stages[idx], c = col(s.world);
+    nodes.forEach(function (n, k) {
+      n.classList.toggle('sel', k === idx);
+      n.setAttribute('aria-selected', k === idx ? 'true' : 'false');
+    });
+    detail.style.setProperty('--rc', c);
+    var unl = s.unlocks.map(function (u) { return '<li>' + u + '</li>'; }).join('');
+    detail.innerHTML =
+      '<div class="rd-head"><span class="rd-code">' + s.code + '</span><h3>' + s.title + '</h3></div>' +
+      '<div class="rd-stats">' +
+        stat('Prestige runs', s.prestige) +
+        stat('Entropy goal', s.target) +
+        stat('Income rate', s.income) +
+        stat('Continuous play', s.active, 'active') +
+        stat('Mostly-idle', s.idle, 'idle') +
+      '</div>' +
+      '<div class="rd-unlocks"><div class="k">What you unlock</div><ul>' + unl + '</ul></div>';
+    // recolor ambient field only while the roadmap slide is on screen
+    var slide = document.querySelector('[data-roadmap]');
+    if (slide && slide.classList.contains('active')) {
+      document.documentElement.style.setProperty('--accent', c);
+    }
+  }
+
+  // keep rail horizontal-scroll/taps from triggering the deck's swipe-to-navigate
+  ['touchstart', 'touchend', 'touchmove'].forEach(function (ev) {
+    rail.addEventListener(ev, function (e) { e.stopPropagation(); }, { passive: true });
+  });
+
+  select(0);
+})();
+</script>
+</body>
+</html>

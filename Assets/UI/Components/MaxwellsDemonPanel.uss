@@ -25,6 +25,9 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-sm) var(--spacing-md);
+    /* Reserve the top-right corner for the absolutely-pinned close button (see .close-btn). */
+    padding-right: 60px;
+    position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-surface-raised);
 }

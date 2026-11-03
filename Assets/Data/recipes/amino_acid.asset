@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: amino_acid
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: amino_acid
+  displayName: Amino Acid
+  recipeId: 186
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
+    quantity: 5
+  - item: {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+    quantity: 2
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: 5a7f8e0ea59460a46a008208dd7c527d, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 50
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 250
+  validBuildings:
+  - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

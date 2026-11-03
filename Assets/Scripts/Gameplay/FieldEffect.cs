@@ -24,38 +24,28 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Dims particles and light when the field is locked by the tutorial.
-        /// Call with locked=false to restore full visuals when the field becomes available.
+        /// Dims the field light when the field is locked by the tutorial. Particles are now spawned
+        /// only as a tap burst (see <see cref="Burst"/>), so there is no continuous stream to dim.
+        /// Call with locked=false to restore full brightness when the field becomes available.
         /// </summary>
         public void SetLocked(bool locked)
         {
             if (_locked == locked) return;
             _locked = locked;
 
-            if (_particles != null)
-            {
-                var emission = _particles.emission;
-                emission.rateOverTime = locked ? 2f : 15f;
-
-                var main = _particles.main;
-                if (locked)
-                {
-                    var grey = Color.grey * 0.35f;
-                    main.startColor = new ParticleSystem.MinMaxGradient(grey, grey);
-                }
-                else
-                {
-                    var bright  = new Color(_fieldColor.r, _fieldColor.g, _fieldColor.b, 0.9f);
-                    var lighter = new Color(
-                        Mathf.Clamp01(_fieldColor.r + 0.15f),
-                        Mathf.Clamp01(_fieldColor.g + 0.15f),
-                        Mathf.Clamp01(_fieldColor.b + 0.15f), 0.6f);
-                    main.startColor = new ParticleSystem.MinMaxGradient(bright, lighter);
-                }
-            }
-
             if (_light != null)
                 _light.intensity = locked ? 0.2f : 1.5f;
+        }
+
+        /// <summary>
+        /// Emits a one-shot particle burst from the tile — the particle "born" when the field is
+        /// tapped. Safe to call before initialization (no-ops if the system is missing).
+        /// </summary>
+        public void Burst(int count)
+        {
+            if (_particles == null || count <= 0) return;
+            if (_locked) return; // a locked field gives no tap feedback
+            _particles.Emit(count);
         }
 
         private void ConfigureParticles(Color baseColor, Material particleMaterialTemplate)
@@ -78,9 +68,10 @@ namespace MobileIdleBuilder
             main.maxParticles        = 80;
 
             // ---- Emission ----
+            // No continuous stream: particles are born only as a burst on tap (see Burst()).
             var emission = _particles.emission;
             emission.enabled      = true;
-            emission.rateOverTime = 15f;
+            emission.rateOverTime = 0f;
 
             // ---- Shape: hemisphere rising from the tile ----
             var shape = _particles.shape;
@@ -116,16 +107,13 @@ namespace MobileIdleBuilder
             rend.renderMode = ParticleSystemRenderMode.Billboard;
             rend.sortingOrder = 1;
 
-            // Instance from the serialized template so the shader is guaranteed included in builds.
+            // Instance from the serialized template so the shader/variant is guaranteed in builds.
+            // Additive-transparent blend state is baked into FieldParticleMaterial.mat, so only the
+            // per-field tint is set here. Do NOT enable GPU instancing: the template ships with
+            // m_EnableInstancingVariants:0, so URP Lit's INSTANCING_ON variant is stripped from
+            // device builds; requesting it on a billboard particle renders magenta on Android.
             var mat = new Material(particleMaterialTemplate);
-            mat.SetFloat("_Surface", 1f);           // transparent
-            mat.SetFloat("_Blend", 2f);             // additive
-            mat.SetFloat("_BlendOp", (float)UnityEngine.Rendering.BlendOp.Add);
-            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
-            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
-            mat.SetFloat("_ZWrite", 0f);
             mat.SetColor("_BaseColor", baseColor);
-            mat.enableInstancing = true;
             rend.material = mat;
 
             _particles.Play();

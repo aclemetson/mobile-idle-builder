@@ -1,0 +1,308 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System.Collections.Generic;
+
+namespace MobileIdleBuilder.Dev
+{
+    /// <summary>
+    /// Static preset data used by the "tutorial skip" dev console command.
+    /// Entropy values are derived from gameplay-loop.html economy documentation.
+    /// Building/conveyor presets for grid checkpoints (steps 31+) start as null
+    /// until captured from a real playthrough — see comments below for how to fill them in.
+    /// </summary>
+    internal static class TutorialStepPresets
+    {
+        // ── Entropy lookup ────────────────────────────────────────────────────
+        // Maps step ID → entropy to grant when skipping TO that step.
+        // GetEntropy walks backward from stepIndex to find the nearest preceding entry.
+        // All values derived from gameplay-loop.html economy notes.
+
+        static readonly Dictionary<string, long> s_EntropyTable = new()
+        {
+            { "intro_dialogue",               250 },
+            { "buy_recombination_i",          265 },   // enough to afford 100e purchase
+            { "recombination_unlocked",       165 },   // after -100e
+            { "collect_quarks_for_nucleons",  165 },
+            { "buy_hydrogen_synthesis",       177 },   // enough to afford 50e purchase
+            { "gather_for_hydrogen",          127 },   // after -50e
+            { "buy_automation_i",             137 },   // enough to afford 25e purchase
+            { "place_first_building",         112 },   // after -25e; enough for 100e Harvester
+            { "place_conveyor",                12 },   // after -100e Harvester
+            { "automation_started",          387 },   // 12 + place_conveyor reward 375 (#274)
+            { "place_quark_harvester",        375 },   // two more Harvesters: 150e + 225e (1.5x purchase scaling)
+            { "intro_sfc",                   350 },   // after -375e Harvesters; place_quark_harvester reward 350 (#274)
+            { "place_sfc",                   350 },   // Combiner 200e + Generator 150e, both covered by the reward
+            { "place_generator",             150 },   // after -200e Combiner
+            { "link_generator",               150 },   // enough for 150e Generator
+            { "route_quarks_to_sfc",           50 },
+            { "configure_sfc_recipes",         50 },
+            { "route_nucleons_to_demon",        50 },
+            { "nucleon_loop_complete",         100 },
+            { "intro_atom_gen",               350 },   // enough for 350e Atom Generator
+            { "place_atom_generator",         350 },
+            { "connect_atom_gen_inputs",        50 },
+            { "route_hydrogen_to_demon",        50 },
+            { "hydrogen_loop_complete",         50 },
+            { "buy_field_synthesis",          250 },   // enough for 250e Field Synthesis
+            { "place_quark_field_pair",       300 },   // after -250e; enough for the first 300e quark pair
+            { "field_pair_placed",             50 },
+            { "place_neutron_harvesters",     850 },   // two more Harvesters: 337e + 506e
+            { "place_neutron_combiner",       300 },   // after -843e; enough for the second 300e Combiner
+            { "route_quarks_to_neutron_combiner", 0 },
+            { "post_tutorial_intro",          200 },
+            { "buy_atomic_assembly",          500 },   // enough for 500e Nucleosynthesis
+            { "atomic_assembly_unlocked",      50 },
+            { "reroute_neutrons_to_atom_gen",  50 },
+            { "first_element_context",       6550 },   // craft_first_helium rewards 6,500e
+            { "craft_first_deuterium",       5350 },   // after -1200e Deuterium Synthesis
+            { "buy_fusion_i",                5350 },   // enough for 4000e Stellar Fusion
+            { "place_fusion_reactor",        1500 },   // after -4000e; enough for the 1500e Fusion Reactor
+            { "power_for_fusion",             225 },   // after -1500e; enough for the second 225e Basic Generator
+            { "fusion_explained",              50 },
+            { "place_carbon_reactor",        1850 },   // fuse_first_helium rewards 1,800e for the second reactor
+            { "power_for_carbon_reactor",     340 },   // after -1500e; enough for the third Basic Generator
+            { "set_carbon_recipe",             50 },
+        };
+
+        /// <summary>
+        /// Returns the entropy to grant when skipping to stepIndex.
+        /// Walks backward from stepIndex to find the nearest entry in the table.
+        /// Falls back to 250 (default start) if no entry precedes the target step.
+        /// </summary>
+        public static long GetEntropy(TutorialFlowSO flow, int stepIndex)
+        {
+            long result = 250;
+            int count = flow.steps?.Length ?? 0;
+            for (int i = 0; i <= stepIndex && i < count; i++)
+            {
+                if (s_EntropyTable.TryGetValue(flow.steps[i].id, out long e))
+                    result = e;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the cumulative entropy spent reaching stepIndex, derived from
+        /// s_EntropyTable by summing every downward step (each drop = a purchase).
+        /// </summary>
+        public static long GetTotalEntropySpent(TutorialFlowSO flow, int stepIndex)
+        {
+            long current     = 0;
+            long totalSpent  = 0;
+            bool initialized = false;
+            int  count       = flow.steps?.Length ?? 0;
+
+            for (int i = 0; i <= stepIndex && i < count; i++)
+            {
+                if (!s_EntropyTable.TryGetValue(flow.steps[i].id, out long e)) continue;
+                if (!initialized) { current = e; initialized = true; continue; }
+                if (e < current) totalSpent += current - e;
+                current = e;
+            }
+            return totalSpent;
+        }
+
+        // ── Net worth lookup ──────────────────────────────────────────────────
+        // Expected inventory net worth at each phase entry point.
+        // Set as PlayerProgressData.BaseNetWorth so NetWorthSystem adds it to
+        // the live inventory sum — gives meaningful show-progress output after a skip.
+        // Calibrated against the economy docs; update after captured playthroughs.
+
+        static readonly Dictionary<string, float> s_NetWorthTable = new()
+        {
+            { "intro_dialogue",                   0f },
+            { "place_conveyor",                 100f },   // automation just started
+            { "automation_started",             200f },
+            { "place_quark_harvester",          250f },
+            { "intro_sfc",                      300f },
+            { "place_sfc",                      500f },
+            { "place_generator",                700f },
+            { "link_generator",               1_000f },
+            { "route_quarks_to_sfc",          2_000f },
+            { "configure_sfc_recipes",        2_500f },
+            { "route_nucleons_to_demon",      3_000f },
+            { "nucleon_loop_complete",        4_000f },
+            { "intro_atom_gen",               5_000f },
+            { "place_atom_generator",         6_000f },
+            { "connect_atom_gen_inputs",      7_000f },
+            { "route_hydrogen_to_demon",      8_000f },
+            { "hydrogen_loop_complete",      10_000f },
+            { "buy_field_synthesis",         12_000f },
+            { "place_quark_field_pair",      14_000f },
+            { "field_pair_placed",           16_000f },
+            { "post_tutorial_intro",         20_000f },
+            { "buy_atomic_assembly",         22_000f },
+            { "atomic_assembly_unlocked",    24_000f },
+            { "reroute_neutrons_to_atom_gen", 25_000f },
+            { "craft_first_helium",          26_000f },
+            { "first_element_context",       28_000f },
+            { "craft_first_deuterium",       29_000f },
+            { "intro_nuclear_reactors",      30_000f },
+            { "place_fusion_reactor",        35_000f },
+            { "route_deuterium_to_reactor",  37_000f },
+            { "place_carbon_reactor",        38_000f },
+            { "craft_first_carbon",          40_000f },
+            { "tutorial_complete",           45_000f },
+        };
+
+        /// <summary>
+        /// Returns the BaseNetWorth floor to set when skipping to stepIndex.
+        /// Walks backward from stepIndex to find the nearest entry, falls back to 0.
+        /// </summary>
+        public static float GetNetWorth(TutorialFlowSO flow, int stepIndex)
+        {
+            float result = 0f;
+            int count = flow.steps?.Length ?? 0;
+            for (int i = 0; i <= stepIndex && i < count; i++)
+            {
+                if (s_NetWorthTable.TryGetValue(flow.steps[i].id, out float nw))
+                    result = nw;
+            }
+            return result;
+        }
+
+        // ── Grid presets ──────────────────────────────────────────────────────
+        // Building and conveyor presets for each grid checkpoint.
+        //
+        // HOW TO FILL THESE IN:
+        //   1. Play through the tutorial to the target step normally.
+        //   2. Type "save" in the dev console to flush state to disk.
+        //   3. Open the local save file (find path via SaveManager.SavePath or PlayerPrefs key).
+        //   4. Copy the "grid.buildings" and "grid.conveyors" arrays into the constants below.
+        //   5. Remove the "null" assignment and replace with the array literal.
+        //
+        // Building ID reference (confirmed from save data / game_data.json): 1=Harvester 2=SFC 3=BasicGenerator 7=MaxwellsDemon
+        // outputDirection: -1=none 0=North 1=East 2=South 3=West
+        // outputDirection: -1=none 0=North 1=East 2=South 3=West
+
+        // ── Field presets ─────────────────────────────────────────────────────
+        // Field positions must match the harvester positions in the building presets above.
+        // fieldId values: "quark_field", "electron_field"
+
+        static readonly FieldSaveData[] k_PlaceConveyor_Fields = new[]
+        {
+            new FieldSaveData { fieldId = "electron_field", position = new[] {  6, 10 } }, // electron harvester
+            new FieldSaveData { fieldId = "quark_field",    position = new[] {  5,  8 } }, // quark harvester
+            new FieldSaveData { fieldId = "quark_field",    position = new[] {  4,  8 } }, // quark harvester
+        };
+
+        static readonly Dictionary<string, FieldSaveData[]> s_FieldTable = new()
+        {
+            { "place_conveyor",     k_PlaceConveyor_Fields },
+            { "automation_started",    k_PlaceConveyor_Fields },
+            { "place_quark_harvester", k_PlaceConveyor_Fields },
+            { "intro_sfc",             k_PlaceConveyor_Fields },
+        };
+
+        public static FieldSaveData[] GetFields(string stepId)
+        {
+            return s_FieldTable.TryGetValue(stepId, out var fields) ? fields : null;
+        }
+
+        // ── Step 34: intro_sfc (also the source of the electron-only layout below)
+        // State: electron Harvester + one Harvester per quark field (Up / Down recipes), Maxwell's Demon present.
+        // Maxwell's Demon (buildingId=7) is intentionally excluded — it is an entropy sink that
+        // ClearGrid preserves in place. Including it here would cause LoadGrid to attempt a duplicate.
+        static readonly BuildingSaveData[] k_PlaceConveyor_Buildings = new[]
+        {
+            // A Harvester's output port exists only when it has an outputDirection (BuildingPlacer), so -1
+            // left skipped-to Harvesters unable to feed any belt. Electron faces East toward the Demon;
+            // the quark pair faces South, onto free tiles a belt can start from.
+            new BuildingSaveData { buildingId = 1, recipeId =  3, position = new[] {  6, 10 }, level = 1, rotation = 0, flipped = false, outputDirection = 1 }, // Harvester (electron)
+            new BuildingSaveData { buildingId = 1, recipeId =  1, position = new[] {  5,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = 2 }, // Harvester (quark)
+            new BuildingSaveData { buildingId = 1, recipeId =  2, position = new[] {  4,  8 }, level = 1, rotation = 0, flipped = false, outputDirection = 2 }, // Harvester (quark)
+        };
+        static readonly ConveyorSaveData[] k_PlaceConveyor_Conveyors = new ConveyorSaveData[0];
+        // From automation_started on, the electron belt place_conveyor built: Harvester (6,10) East
+        // -> (7,10) -> (8,10), the tile in front of the Demon's west-edge input at (9,10).
+        static readonly ConveyorSaveData[] k_ElectronBelt_Conveyors = new[]
+        {
+            new ConveyorSaveData { cells = new[] { 7, 10, 8, 10 } },
+        };
+
+        // ── Steps 31-33: place_conveyor .. place_quark_harvester
+        // Only the electron Harvester exists yet: the quark Harvesters are placed at step 33 (#192),
+        // so a preset that already had them would auto-complete that step on skip.
+        static readonly BuildingSaveData[] k_ElectronHarvester_Buildings = new[]
+        {
+            k_PlaceConveyor_Buildings[0],
+        };
+
+        // ── Step 34: place_sfc
+        // State: Harvester + Demon connected via conveyor; player places SFC.
+        static readonly BuildingSaveData[] k_PlaceSfc_Buildings        = null; // TODO
+        static readonly ConveyorSaveData[] k_PlaceSfc_Conveyors         = null;
+
+        // ── Step 41: nucleon_loop_complete
+        // State: Harvester(e) + Harvester(q) + SFC + Generator + Maxwell's Demon + full nucleon pipeline.
+        static readonly BuildingSaveData[] k_NucleonLoop_Buildings     = null; // TODO
+        static readonly ConveyorSaveData[] k_NucleonLoop_Conveyors      = null;
+
+        // ── Step 43: place_atom_generator
+        // State: Full nucleon pipeline running; player places Atom Generator.
+        static readonly BuildingSaveData[] k_PlaceAtomGen_Buildings    = null; // TODO
+        static readonly ConveyorSaveData[] k_PlaceAtomGen_Conveyors     = null;
+
+        // ── Step 46: hydrogen_loop_complete
+        // State: Nucleon pipeline + Atom Generator + full hydrogen loop to Maxwell's Demon.
+        static readonly BuildingSaveData[] k_HydrogenLoop_Buildings    = null; // TODO
+        static readonly ConveyorSaveData[] k_HydrogenLoop_Conveyors     = null;
+
+        // ── post_tutorial_intro onward (the upgrade_atom_generator_speed step was removed)
+        // State: Full hydrogen loop; Atom Generator at level 1.
+        static readonly BuildingSaveData[] k_UpgradeSpeed_Buildings    = null; // TODO
+        static readonly ConveyorSaveData[] k_UpgradeSpeed_Conveyors     = null;
+
+        // Lookup table: stepId → (buildings, conveyors) pair
+        // Steps not listed here will use the nearest preceding defined checkpoint.
+        static readonly Dictionary<string, (BuildingSaveData[] buildings, ConveyorSaveData[] conveyors)> s_GridTable = new()
+        {
+            { "place_conveyor",               (k_ElectronHarvester_Buildings, k_PlaceConveyor_Conveyors) },
+            { "automation_started",           (k_ElectronHarvester_Buildings, k_ElectronBelt_Conveyors) },
+            { "place_quark_harvester",        (k_ElectronHarvester_Buildings, k_ElectronBelt_Conveyors) },
+            { "intro_sfc",                    (k_PlaceConveyor_Buildings,  k_ElectronBelt_Conveyors) },
+            { "place_sfc",                    (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "place_generator",              (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "link_generator",               (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "route_quarks_to_sfc",          (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "configure_sfc_recipes",        (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "route_nucleons_to_demon",      (k_PlaceSfc_Buildings,       k_PlaceSfc_Conveyors) },
+            { "nucleon_loop_complete",        (k_NucleonLoop_Buildings,    k_NucleonLoop_Conveyors) },
+            { "intro_atom_gen",               (k_NucleonLoop_Buildings,    k_NucleonLoop_Conveyors) },
+            { "place_atom_generator",         (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
+            { "connect_atom_gen_inputs",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
+            { "route_hydrogen_to_demon",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
+            { "hydrogen_loop_complete",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "buy_field_synthesis",          (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_quark_field_pair",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "field_pair_placed",            (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_neutron_harvesters",     (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "place_neutron_combiner",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "set_neutron_recipe",           (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "route_quarks_to_neutron_combiner", (k_HydrogenLoop_Buildings, k_HydrogenLoop_Conveyors) },
+            { "route_neutrons_to_demon",      (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "reroute_neutrons_to_atom_gen", (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "craft_first_helium",           (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "first_element_context",        (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+        };
+
+        /// <summary>
+        /// Returns the preset buildings for this step, or null if no grid preset is defined.
+        /// </summary>
+        public static BuildingSaveData[] GetBuildings(string stepId)
+        {
+            return s_GridTable.TryGetValue(stepId, out var pair) ? pair.buildings : null;
+        }
+
+        /// <summary>
+        /// Returns the preset conveyors for this step, or null if no grid preset is defined.
+        /// </summary>
+        public static ConveyorSaveData[] GetConveyors(string stepId)
+        {
+            return s_GridTable.TryGetValue(stepId, out var pair) ? pair.conveyors : null;
+        }
+    }
+}
+#endif

@@ -13,6 +13,9 @@ namespace MobileIdleBuilder
         public Sprite icon;
         public bool isHidden;               // hidden until unlocked
 
+        [Header("Category")]
+        public AchievementCategory category; // Progression, Daily, Weekly, or Monthly
+
         [Header("Trigger")]
         public AchievementTrigger triggerType;
         public string triggerTargetId;      // item/building/research id if applicable
@@ -20,6 +23,8 @@ namespace MobileIdleBuilder
 
         [Header("Rewards")]
         public CosmeticSO[] rewards;        // cosmetics unlocked on completion
+        public int paidCurrencyReward;      // Crystals (◆) awarded when claimed
+        public int prestigeCurrencyReward;  // prestige currency awarded when claimed
 
         [Header("Platform")]
         public string platformAchievementId; // Apple Game Center / Google Play id

@@ -7,8 +7,8 @@ namespace MobileIdleBuilder
     /// Singleton service for surfacing "locked action" feedback to the player.
     /// Auto-creates itself at startup — no manual scene placement required.
     ///
-    /// Feedback is delivered through InventoryPopupController.NotifyWarning so it
-    /// appears as amber floating text at the same anchor as "+1 Item" pickups.
+    /// Feedback is delivered through InventoryPopupController.NotifyWarning, which shows it
+    /// in the HUD's warning banner (#238).
     ///
     /// Two calling patterns:
     ///   1. ToastService.Instance?.Post("quark_field")
@@ -63,6 +63,16 @@ namespace MobileIdleBuilder
             foreach (var msg in msgs)
                 if (msg?.triggerId == triggerId) return true;
             return false;
+        }
+
+        /// <summary>
+        /// Like <see cref="Post(string)"/>, but shows <paramref name="fallback"/> when the step has no
+        /// message for <paramref name="triggerId"/>, so a blocked action is never silent.
+        /// </summary>
+        public void Post(string triggerId, string fallback)
+        {
+            if (IsLocked(triggerId)) Post(triggerId);
+            else if (!string.IsNullOrEmpty(fallback)) InventoryPopupController.NotifyWarning(fallback);
         }
 
         /// <summary>

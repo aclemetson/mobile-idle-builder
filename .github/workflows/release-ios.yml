@@ -1,0 +1,117 @@
+name: Release iOS
+
+# iOS / TestFlight lane.
+#
+# Trigger: a push to develop, which happens when a release/** branch is merged
+# down. That is far less often than the Android per-release-merge lane, by design
+# -- iOS builds once per release cycle. The bump-version bot commit on develop
+# carries [skip ci], so it does not re-trigger this workflow.
+#
+# Split, following GameCI's recommended iOS flow:
+#   1. build   (ubuntu) - game-ci/unity-builder generates the Xcode project. Unity
+#                         activation works here via Docker (Personal license).
+#   2. release (macos)  - xcodebuild archive + export + TestFlight upload. Only the
+#                         Xcode steps need macOS, keeping the 10x-billed mac job small.
+#
+# Tests are NOT re-run: pr-tests.yml already gated the PRs into the release branch
+# and into develop. TestFlight rejecting a duplicate build number is the backstop,
+# mirroring the Google Play upload on the Android side.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: release-ios
+  cancel-in-progress: true
+
+jobs:
+  # -- Compile the Unity iOS Xcode project on Linux (cheap, Docker activation) ----
+  build:
+    name: Unity iOS Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      # Hosted Ubuntu runners ship with only ~14 GB free, which is not enough to
+      # pull the multi-GB Unity iOS editor image alongside the LFS checkout and
+      # the Library cache -- the docker pull intermittently fails with "no space
+      # left on device". Reclaim ~25 GB by deleting large preinstalled toolchains
+      # this job never uses (Android SDK, .NET, GHC/Haskell, CodeQL) plus any
+      # preloaded docker images.
+      - name: Free disk space
+        run: |
+          echo "Disk before cleanup:"; df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force || true
+          echo "Disk after cleanup:"; df -h /
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-iOS-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-iOS-
+
+      - name: Build Unity iOS Xcode project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        with:
+          unityVersion: 6000.3.6f1
+          targetPlatform: iOS
+          buildMethod: MobileIdleBuilder.Editor.BuildScript.BuildIOS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcode-project
+          path: build/iOS
+          retention-days: 3
+          include-hidden-files: true
+
+  # -- Archive, sign (ASC API key, automatic), and upload to TestFlight ----------
+  release:
+    name: Archive and Upload to TestFlight
+    needs: build
+    runs-on: macos-latest
+    # 90 (not 60): the Unity + 9-pod CocoaPods workspace archive can take ~50 min
+    # on some Xcode versions, leaving little headroom at 60.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-xcode-project
+          path: build/iOS
+
+      # Pin Xcode for reproducible build times. `latest-stable` drifted the
+      # runner to Xcode 26.5, which made the archive ~3x slower (~50 min) and
+      # nearly hit the timeout. 26.3 is the known-good, fast version that
+      # archived this project in ~17 min. Bump deliberately, not implicitly.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.3'
+
+      - name: Archive, sign, and upload to TestFlight
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          chmod +x scripts/archive-upload-ios.sh
+          scripts/archive-upload-ios.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-archive-log-${{ github.run_number }}
+          path: archive-ios.log
+          retention-days: 14
+          if-no-files-found: ignore

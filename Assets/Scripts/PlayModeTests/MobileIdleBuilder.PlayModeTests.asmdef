@@ -7,7 +7,7 @@
         "Unity.Entities",
         "Unity.Collections"
     ],
-    "includePlatforms": [],
+    "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
@@ -15,6 +15,7 @@
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
+    "isTestAssembly": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

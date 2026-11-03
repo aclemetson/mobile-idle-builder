@@ -1,0 +1,161 @@
+/* ================================================================
+   PremiumShop.uss
+   Styles for the full-screen premium shop overlay on the main menu.
+   References tokens from tokens.uss.
+   ================================================================ */
+
+.shop-overlay {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 12, 20, 0.97);
+    flex-direction: column;
+    padding: var(--spacing-md);
+}
+
+/* ---- Header ---- */
+.shop-overlay-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.shop-overlay-title {
+    flex-grow: 1;
+    font-size: 20px;
+    color: var(--color-text-primary);
+    -unity-font-style: bold;
+}
+
+.shop-crystal-balance {
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-lg);
+    margin-right: var(--spacing-md);
+}
+
+.shop-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    padding: 0;
+    -unity-text-align: middle-center;
+}
+
+/* ---- Tabs ---- */
+.shop-tabs {
+    flex-direction: row;
+    margin-bottom: var(--spacing-sm);
+}
+
+.shop-tab {
+    flex-grow: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-right: 2px;
+    border-radius: var(--border-radius);
+}
+
+.shop-tab--active {
+    background-color: rgba(255, 215, 0, 0.12);
+    border-color: var(--color-currency-crystal);
+    color: var(--color-currency-crystal);
+}
+
+/* ---- Context label (e.g. "Based on net worth: X") ---- */
+.shop-context-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-sm);
+    -unity-font-style: italic;
+}
+
+/* ---- Tier list ---- */
+.shop-tier-list {
+    flex-grow: 1;
+}
+
+/* ---- Tier card ---- */
+.shop-tier-card {
+    flex-direction: column;
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.shop-tier-card--boost-active {
+    border-color: var(--color-success);
+    background-color: rgba(0, 230, 118, 0.06);
+}
+
+.shop-tier-card__header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.shop-tier-card__name {
+    flex-grow: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.shop-tier-card__badge {
+    color: var(--color-success);
+    font-size: var(--font-size-xs);
+    margin-left: var(--spacing-sm);
+}
+
+.shop-tier-card__desc {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.shop-tier-card__footer {
+    flex-direction: row;
+    align-items: center;
+}
+
+.shop-tier-card__cost {
+    flex-grow: 1;
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+}
+
+.shop-tier-card__cost--unaffordable {
+    color: var(--color-danger);
+}
+
+/* ---- Buy button ---- */
+.shop-buy-btn {
+    padding: 6px var(--spacing-md);
+    background-color: rgba(255, 215, 0, 0.15);
+    border-width: 1px;
+    border-color: var(--color-currency-crystal);
+    border-radius: var(--border-radius);
+    color: var(--color-currency-crystal);
+    font-size: var(--font-size-sm);
+}
+
+.shop-buy-btn--iap {
+    background-color: rgba(130, 80, 255, 0.15);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+}
+
+.shop-buy-btn--disabled {
+    opacity: 0.4;
+}

@@ -5,6 +5,7 @@
             <ui:Label name="loading-label" text="Loading..." class="loading-label"/>
             <ui:ProgressBar name="progress-bar" low-value="0" high-value="100" value="0" class="loading-progress"/>
             <ui:Label name="percent-label" text="0%" class="percent-label"/>
+            <ui:Label name="loading-version" text="" class="loading-version"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

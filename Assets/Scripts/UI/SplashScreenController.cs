@@ -1,0 +1,101 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace MobileIdleBuilder
+{
+    [RequireComponent(typeof(UIDocument))]
+    public class SplashScreenController : MonoBehaviour
+    {
+        // Minimum time the splash stays up. The maintenance gate runs in parallel, so the splash
+        // ends at max(totalDuration, gate finished) instead of totalDuration + gate (#190).
+        [SerializeField] private float totalDuration  = 1.25f;
+        [SerializeField] private float fadeInDuration = 0.5f;
+        [SerializeField] private float maintenanceTimeoutSeconds = 4f;
+
+        private void Awake()
+        {
+            // SplashScene shares gamePanelSettings with LoadingScreen and GameScene, whose UIScaler
+            // components set its scale at runtime. Without this the splash (and its maintenance
+            // overlay) rendered at the asset's saved 1x on a fresh launch but at the scaled size
+            // after a mid-session maintenance kick-out (#195).
+            var doc = GetComponent<UIDocument>();
+            if (doc != null && doc.panelSettings != null)
+                doc.panelSettings.scale = UIScaler.ComputeScale(Screen.width);
+        }
+
+        private IEnumerator Start()
+        {
+            var root    = GetComponent<UIDocument>().rootVisualElement;
+            var content = root.Q("splash-content");
+            float started = Time.realtimeSinceStartup;
+
+            // Maintenance gate: never load GameScene while maintenance is enabled and reachable.
+            // Fail-open inside the gate keeps offline players from being locked out. Started now so
+            // UGS init + Remote Config fetch overlap the splash instead of following it.
+            var maintTask = MaintenanceGate.IsUnderMaintenanceAsync(maintenanceTimeoutSeconds);
+
+            // Background is immediately visible; only text fades in
+            float elapsed = 0f;
+            while (elapsed < fadeInDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeInDuration);
+                if (content != null) content.style.opacity = t;
+                yield return null;
+            }
+
+            if (content != null) content.style.opacity = 1f;
+
+            // Hand off once both the minimum splash time has passed and the gate has answered.
+            yield return new WaitUntil(() =>
+                maintTask.IsCompleted && Time.realtimeSinceStartup - started >= totalDuration);
+            GameLogger.Info($"[Splash] Leaving after {Time.realtimeSinceStartup - started:F2}s");
+
+            if (maintTask.Result)
+                ShowMaintenance(root);
+            else
+                SceneLoader.GoTo("GameScene");
+        }
+
+        private void ShowMaintenance(VisualElement root)
+        {
+            GameLogger.Info("[Maintenance] Active — showing maintenance screen, not loading GameScene.");
+
+            var content = root.Q("splash-content");
+            var panel   = root.Q("maintenance-panel");
+            var message = root.Q<Label>("maintenance-message");
+            var time    = root.Q<Label>("maintenance-time");
+            var retry   = root.Q<Button>("btn-maintenance-retry");
+
+            if (content != null) content.style.display = DisplayStyle.None;
+
+            if (message != null) message.text = FeatureFlags.MaintenanceMessage;
+            if (time != null)
+            {
+                string t = MaintenanceGate.FormatEstimatedReturn(FeatureFlags.MaintenanceUntilUtc);
+                time.text = t;
+                time.style.display = string.IsNullOrEmpty(t) ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+
+            if (retry != null)
+                retry.clicked += () => StartCoroutine(RetryRoutine(root));
+
+            if (panel != null) panel.RemoveFromClassList("hidden");
+        }
+
+        private IEnumerator RetryRoutine(VisualElement root)
+        {
+            var retry = root.Q<Button>("btn-maintenance-retry");
+            if (retry != null) retry.SetEnabled(false);
+
+            var task = MaintenanceGate.IsUnderMaintenanceAsync(maintenanceTimeoutSeconds);
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            if (!task.Result)
+                SceneLoader.GoTo("GameScene");
+            else if (retry != null)
+                retry.SetEnabled(true); // still under maintenance — allow another retry
+        }
+    }
+}

@@ -10,5 +10,7 @@ namespace MobileIdleBuilder
         public bool InputsSatisfied;
         /// <summary>Set true by the player to start one production cycle; cleared on completion.</summary>
         public bool IsCrafting;
+        /// <summary>Entropy paid per completed craft by escaping byproducts (RecipeSO.EscapeEntropyPerCraft).</summary>
+        public float ByproductEntropy;
     }
 }

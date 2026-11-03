@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Foundry — Crystal Economy &amp; Time Warp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --surface-alt:  #21262d;
+      --border:       #30363d;
+      --border-soft:  #21262d;
+      --text:         #c9d1d9;
+      --text-muted:   #8b949e;
+      --text-heading: #e6edf3;
+      --blue:         #58a6ff;
+      --green:        #3fb950;
+      --orange:       #f0883e;
+      --purple:       #d2a8ff;
+      --red:          #f85149;
+      --yellow:       #d29922;
+      --mono:         "Cascadia Code", "Fira Code", "Consolas", monospace;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Sticky header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+    }
+    .site-header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+    .site-header h1 span { color: var(--blue); }
+    .site-header .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .site-header .sub code {
+      font-family: var(--mono); font-size: 11px;
+      background: var(--bg); padding: 1px 5px; border-radius: 3px; color: #ffa657;
+    }
+
+    /* ── Layout ── */
+    .main { padding: 24px; max-width: 920px; margin: 0 auto; }
+
+    /* ── TL;DR callout ── */
+    .anchor {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--purple);
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .anchor .tag {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--purple); margin-bottom: 8px;
+    }
+    .anchor .formula {
+      font-family: var(--mono); font-size: 15px; color: var(--text-heading);
+      margin: 6px 0;
+    }
+    .anchor .formula b { color: var(--green); }
+
+    /* ── Sections ── */
+    section { margin-bottom: 34px; }
+    section > h2 {
+      font-size: 15px; font-weight: 600; color: var(--text-heading);
+      padding-bottom: 8px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    section > h2 .ico { font-size: 16px; }
+    section > p { margin-bottom: 12px; color: var(--text-muted); }
+    section > p strong { color: var(--text); }
+
+    /* ── Tables ── */
+    table {
+      width: 100%; border-collapse: collapse; margin: 6px 0 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; font-size: 13px;
+    }
+    thead th {
+      background: var(--surface-alt); color: var(--text-heading);
+      text-align: left; font-weight: 600; font-size: 12px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+    }
+    tbody td { padding: 8px 12px; border-bottom: 1px solid var(--border-soft); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-alt); }
+    td.name { color: var(--text-heading); font-weight: 500; }
+    .old { color: var(--text-muted); text-decoration: line-through; }
+    .new { color: var(--green); font-weight: 600; }
+    .crystal { color: var(--purple); font-family: var(--mono); }
+    .num { font-family: var(--mono); white-space: nowrap; }
+
+    /* ── Pills ── */
+    .pill {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 1px 8px; border-radius: 10px; line-height: 1.6;
+    }
+    .pill.up   { background: rgba(248,81,73,0.12);  color: var(--red); }
+    .pill.down { background: rgba(63,185,80,0.12);  color: var(--green); }
+    .pill.same { background: rgba(139,148,158,0.12); color: var(--text-muted); }
+
+    /* ── Flow / steps ── */
+    ol.flow { list-style: none; counter-reset: step; padding-left: 0; }
+    ol.flow li {
+      position: relative; padding: 8px 0 8px 38px; border-bottom: 1px solid var(--border-soft);
+    }
+    ol.flow li:last-child { border-bottom: none; }
+    ol.flow li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 0; top: 8px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--surface-alt); color: var(--blue);
+      font-family: var(--mono); font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+    }
+    code {
+      font-family: var(--mono); font-size: 12px;
+      background: var(--bg); padding: 1px 5px; border-radius: 3px; color: #ffa657;
+    }
+
+    /* ── File list ── */
+    .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+    .file {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px;
+    }
+    .file .path { font-family: var(--mono); font-size: 12px; color: var(--blue); word-break: break-all; }
+    .file .what { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Note callout ── */
+    .note {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 4px solid var(--yellow); border-radius: 6px;
+      padding: 12px 16px; margin-top: 14px; font-size: 13px;
+    }
+    .note .tag {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--yellow); margin-bottom: 4px;
+    }
+
+    footer {
+      max-width: 920px; margin: 0 auto; padding: 20px 24px 50px;
+      color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border);
+    }
+    footer code { font-size: 11px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <h1><span>Quantum Foundry</span> — Crystal Economy &amp; Time Warp</h1>
+    <div class="sub">
+      Rebalance of the crystal (&#9670; paid currency) economy + the new Time Warp sink.
+      Source of truth: <code>PremiumShopCalculator.cs</code>, <code>docs/agents/economy-balance.md</code>. &middot; PR #83
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- TL;DR -->
+    <div class="anchor">
+      <div class="tag">The value anchor</div>
+      <div class="formula">$1 &approx; 4 hours of progress &nbsp;&rarr;&nbsp; <b>150&#9670; = 1 "skip-hour"</b></div>
+      <p style="color:var(--text-muted); margin:6px 0 0;">
+        Crystals buy <strong style="color:var(--text)">time</strong>, not raw power. The non-time sinks
+        (entropy, prestige currency) grant a <strong style="color:var(--text)">% of the current build</strong>,
+        so their real-money value self-scales as the player progresses. Skips are priced to feel
+        <em>earned</em> &mdash; a dollar buys a meaningful chunk of an idle day, not a whole one.
+      </p>
+    </div>
+
+    <!-- Why -->
+    <section>
+      <h2><span class="ico">&#129513;</span> Why we did this</h2>
+      <p>
+        The four IAP packs were being finalized in Google Play Console, but the crystal economy had been
+        tuned in three disconnected pieces &mdash; the free faucet, the sinks, and the pack sizes &mdash;
+        with no consistent idea of what a crystal is worth. Three concrete problems:
+      </p>
+      <ul style="margin:0 0 4px 20px; color:var(--text-muted);">
+        <li><strong>Faucet too generous:</strong> a completionist earned ~5,000&#9670;/month free &mdash; more than the $4.99 pack.</li>
+        <li><strong>Sinks mispriced:</strong> the priciest single sink cost more than the $4.99 pack delivered, and the prestige grant was a flat amount that ignored progress.</li>
+        <li><strong>No unifying model:</strong> speed-ups, entropy, and prestige currency sat on unrelated scales.</li>
+      </ul>
+    </section>
+
+    <!-- Packs -->
+    <section>
+      <h2><span class="ico">&#128176;</span> IAP packs (unchanged)</h2>
+      <p>Pack amounts and prices did <strong>not</strong> change &mdash; they are well-laddered, and the Google Play setup is unaffected. Bigger packs give better per-dollar value.</p>
+      <table>
+        <thead><tr><th>Product ID</th><th>Name</th><th>Crystals</th><th>Price</th><th>Skip value</th><th>&#9670;/$</th></tr></thead>
+        <tbody>
+          <tr><td class="num">crystals_tier1</td><td class="name">Starter Pack</td><td class="crystal">600</td><td class="num">$0.99</td><td class="num">~4 h</td><td class="num">606</td></tr>
+          <tr><td class="num">crystals_tier2</td><td class="name">Explorer Pack</td><td class="crystal">3,200</td><td class="num">$4.99</td><td class="num">~21 h</td><td class="num">641 <span class="pill down">+6%</span></td></tr>
+          <tr><td class="num">crystals_tier3</td><td class="name">Founder Pack</td><td class="crystal">7,500</td><td class="num">$9.99</td><td class="num">~50 h</td><td class="num">751 <span class="pill down">+24%</span></td></tr>
+          <tr><td class="num">crystals_tier4</td><td class="name">Quantum Pack</td><td class="crystal">20,000</td><td class="num">$19.99</td><td class="num">~133 h</td><td class="num">1,001 <span class="pill down">+65%</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sinks -->
+    <section>
+      <h2><span class="ico">&#9889;</span> Sinks (re-priced to the anchor)</h2>
+      <p>All tier tables live in <code>PremiumShopCalculator.cs</code>. Old &rarr; new crystal costs:</p>
+
+      <h3 style="font-size:13px;color:var(--text-heading);margin:6px 0;">Speed boost &mdash; 2&times; offline production</h3>
+      <table>
+        <thead><tr><th>Tier</th><th>Duration</th><th>Old</th><th>New</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Quick Burst</td><td>30 min</td><td class="old">50</td><td class="new">75</td></tr>
+          <tr><td class="name">Production Surge</td><td>2 h</td><td class="old">175</td><td class="new">270</td></tr>
+          <tr><td class="name">Overclocked</td><td>8 h</td><td class="old">600</td><td class="new">950</td></tr>
+          <tr><td class="name">Hyperdrive</td><td>24 h</td><td class="old">1,500</td><td class="new">2,500</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size:13px;color:var(--text-heading);margin:6px 0;">Entropy &mdash; % of net worth (self-scaling)</h3>
+      <table>
+        <thead><tr><th>Tier</th><th>% net worth</th><th>Old &#9670;</th><th>New &#9670;</th><th>Floor</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Trickle</td><td>5% &rarr; <b style="color:var(--green)">10%</b></td><td class="old">80</td><td class="new">300</td><td class="num">1,000</td></tr>
+          <tr><td class="name">Infusion</td><td>15% &rarr; <b style="color:var(--green)">25%</b></td><td class="old">220</td><td class="new">650</td><td class="num">2,500</td></tr>
+          <tr><td class="name">Cascade</td><td>40% &rarr; <b style="color:var(--green)">50%</b></td><td class="old">500</td><td class="new">1,200</td><td class="num">5,000</td></tr>
+          <tr><td class="name">Flood</td><td>100%</td><td class="old">1,100</td><td class="new">2,000</td><td class="num">10,000</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size:13px;color:var(--text-heading);margin:6px 0;">Prestige currency &mdash; flat grant (permanent power)</h3>
+      <p>
+        Prestige currency <strong>persists across prestige runs</strong>, so it is permanent power rather than a
+        time-skip. A flat &#10022; grant is clearer than a net-worth percentage; bigger tiers give better value per crystal.
+      </p>
+      <table>
+        <thead><tr><th>Tier</th><th>Grant</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Residue</td><td class="new">50 &#10022;</td><td class="crystal">500</td></tr>
+          <tr><td class="name">Fragment</td><td class="new">150 &#10022;</td><td class="crystal">900</td></tr>
+          <tr><td class="name">Cache</td><td class="new">500 &#10022;</td><td class="crystal">1,900</td></tr>
+          <tr><td class="name">Reservoir</td><td class="new">1,500 &#10022;</td><td class="crystal">3,600</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Time Warp -->
+    <section>
+      <h2><span class="ico">&#9193;</span> New sink: Time Warp</h2>
+      <p>
+        Instant offline collection &mdash; the purest expression of the anchor. Banks N hours of offline
+        production at the player's current rate with <strong>no waiting</strong> (unlike the speed boost, which you
+        wait out). New <strong>"&#9193; Warp"</strong> tab in the in-game shop.
+      </p>
+      <table>
+        <thead><tr><th>Tier</th><th>Banks</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Time Warp I</td><td>2 hours of production</td><td class="crystal">350</td></tr>
+          <tr><td class="name">Time Warp II</td><td>8 hours of production</td><td class="crystal">1,300</td></tr>
+          <tr><td class="name">Time Warp III</td><td>24 hours of production</td><td class="crystal">3,500</td></tr>
+        </tbody>
+      </table>
+      <p>How a purchase resolves (<code>PremiumShopService.TryBuyTimeWarp</code>):</p>
+      <ol class="flow">
+        <li>Validate affordability (pure, cheap) before touching save/ECS.</li>
+        <li><code>SaveLocal()</code> &mdash; refreshes the idle snapshot from the live world so the payout reflects <em>current</em> production.</li>
+        <li><code>OfflineCollectionService.ComputeForDuration()</code> &mdash; computes N hours of payout at the idle collection rate, no cap, no mutation.</li>
+        <li>If nothing is producing &rarr; <code>NothingToCollect</code>, the player is not charged.</li>
+        <li>Deduct crystals; apply entropy + items to the live ECS world (<code>AddEntropy</code> / new <code>AddInventoryItems</code>); <code>SaveLocal()</code> to persist.</li>
+      </ol>
+      <p>
+        It reuses the exact offline-collection math &mdash; Time Warp pays precisely what N hours offline would,
+        so there is no separate balance model to keep in sync.
+      </p>
+    </section>
+
+    <!-- Faucet -->
+    <section>
+      <h2><span class="ico">&#128167;</span> Faucet (free crystal income)</h2>
+      <p>
+        The 6&times; anchor increase already tightened the real economy hard (a completionist's free income now buys
+        ~33 skip-hours instead of ~200), so the faucet needed only a light touch. We fixed the one structural flaw:
+        <strong>daily achievements and daily challenges double-paid the same actions</strong> (craft / research / spend / login / prestige).
+      </p>
+      <table>
+        <thead><tr><th>Source</th><th>Change</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td class="name">28-day login calendar</td><td><span class="pill same">kept</span></td><td>Retention anchor, ~750&#9670;/cycle</td></tr>
+          <tr><td class="name">Daily challenges (3/day)</td><td><span class="pill same">kept</span></td><td>15&#9670; each &mdash; the primary daily faucet</td></tr>
+          <tr><td class="name">Daily achievements</td><td><span class="pill down">cut ~40%</span></td><td>3/5/5/10/15 + 25 &rarr; <b style="color:var(--green)">2/3/3/6/10 + 15</b></td></tr>
+          <tr><td class="name">Weekly / Monthly</td><td><span class="pill same">kept</span></td><td>Unchanged</td></tr>
+          <tr><td class="name">Progression (one-time)</td><td><span class="pill same">kept</span></td><td>Fine as onboarding rewards</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-bottom:0;">Target (Balanced stance): completionist <strong>~3,500&#9670;/mo</strong> (~23 skip-hr), casual ~1,000&#9670;/mo.</p>
+    </section>
+
+    <!-- Files -->
+    <section>
+      <h2><span class="ico">&#128193;</span> What changed in code</h2>
+      <div class="files">
+        <div class="file"><div class="path">Services/PremiumShopCalculator.cs</div><div class="what">All tier tables; net-worth prestige math; TimeWarp tiers; <code>NothingToCollect</code>.</div></div>
+        <div class="file"><div class="path">Services/PremiumShopService.cs</div><div class="what">Net-worth/config plumbing; <code>TryBuyTimeWarp</code> purchase flow.</div></div>
+        <div class="file"><div class="path">IdleCollection/OfflineCollectionService.cs</div><div class="what">Extracted shared payout; new <code>ComputeForDuration</code> for on-demand collection.</div></div>
+        <div class="file"><div class="path">SaveSystem/ECSLoadBridge.cs</div><div class="what">New <code>AddInventoryItems</code> live ECS item write-through.</div></div>
+        <div class="file"><div class="path">UI/HUDPremiumShopSubController.cs</div><div class="what">Net-worth prestige cards; new Warp tab + cards.</div></div>
+        <div class="file"><div class="path">UI/GameHUD.uxml</div><div class="what">"&#9193; Warp" tab button.</div></div>
+        <div class="file"><div class="path">Data/achievements.json + assets</div><div class="what">Trimmed daily rewards (re-imported assets).</div></div>
+        <div class="file"><div class="path">docs/agents/economy-balance.md</div><div class="what">Anchor, sink table, faucet summary.</div></div>
+      </div>
+      <div class="note">
+        <div class="tag">Verification</div>
+        Full Unity suite green: <strong>533 / 533 passing</strong>. Covers the new entropy %, net-worth prestige math,
+        Time Warp tiers, and <code>ComputeForDuration</code> (no-mutation, cap-ignored, no-production&rarr;null).
+      </div>
+    </section>
+
+    <!-- Follow-ups -->
+    <section>
+      <h2><span class="ico">&#128203;</span> Follow-ups</h2>
+      <ul style="margin:0 0 0 20px; color:var(--text-muted);">
+        <li>In-Editor visual check of the new Warp tab (5 tabs now share the tab row).</li>
+        <li>Remaining proposed sinks, not yet built: <strong>Instant Research</strong> and <strong>Cosmetics</strong> (pure money sink, zero balance impact).</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer>
+    Generated for PR #83 &mdash; crystal economy rebalance + Time Warp. For authoritative numbers always trust
+    <code>PremiumShopCalculator.cs</code> and <code>docs/agents/economy-balance.md</code>; this page is a human-readable summary.
+  </footer>
+</body>
+</html>

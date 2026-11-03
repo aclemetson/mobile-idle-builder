@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ac6ddf8ef533a41a1ddb3508cfbf90, type: 3}
+  m_Name: site_bio_lab
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteSO
+  id: site_bio_lab
+  displayName: Biology Lab
+  unlockCost: 0
+  fieldOverrides:
+  - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: ab748e778f7080a4b884daa9c1e3c6c4, type: 2}
+    densityMultiplier: 3
+  - field: {fileID: 11400000, guid: 9149a77e043f7b44d846a8d462e01b95, type: 2}
+    densityMultiplier: 3
+  - field: {fileID: 11400000, guid: 56c0c291154b29648887f6223bc49f07, type: 2}
+    densityMultiplier: 2
+  - field: {fileID: 11400000, guid: 088707f7d1806ef468a7d7be79f3eb92, type: 2}
+    densityMultiplier: 2

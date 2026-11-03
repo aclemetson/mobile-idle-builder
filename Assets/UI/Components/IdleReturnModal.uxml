@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Idle collection welcome-back modal. Shown once per session after offline time. -->
+    <ui:VisualElement name="idle-return-modal" class="idle-return-modal hidden"
+                      style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 100;">
+        <!-- Dimmed backdrop — absorbs taps outside the card -->
+        <ui:VisualElement name="idle-return-backdrop" class="idle-return-backdrop" />
+
+        <!-- Centred card -->
+        <ui:VisualElement name="idle-return-card" class="idle-return-card">
+            <ui:VisualElement class="panel-header">
+                <ui:Label name="idle-return-title" text="Welcome Back!" class="panel-title" />
+            </ui:VisualElement>
+
+            <ui:Label name="idle-return-time" text="" class="recipe-inputs" />
+            <ui:Label name="idle-return-max"  text="" class="idle-return-max-label" />
+
+            <ui:ScrollView name="idle-return-item-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden" />
+
+            <ui:Label name="idle-return-entropy" text="" class="recipe-inputs" />
+
+            <ui:Button name="btn-idle-return-claim" text="Claim" class="craft-btn" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

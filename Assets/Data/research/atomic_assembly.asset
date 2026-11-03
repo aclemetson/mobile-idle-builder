@@ -13,35 +13,33 @@ MonoBehaviour:
   m_Name: atomic_assembly
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: atomic_assembly
-  displayName: Atomic Assembly
-  description: Unlock the Atomic Assembler and the ability to build complete atoms
-    from nucleons and electrons.
+  displayName: Nucleosynthesis
+  description: Teach the Atom Generator to build Helium-4 from 2 protons, 2 neutrons
+    and 2 electrons. Heavier atoms need fusion.
   icon: {fileID: 0}
-  branch: 0
+  branch: 1
   prerequisites:
   - {fileID: 11400000, guid: 21b86d5a9577aae4f85eabee0a23af96, type: 2}
   depthInTree: 1
+  block: ignition
+  treeX: -1
+  treeY: -1
   costBaseCurrency: 500
   costPrestigeCurrency: 0
+  durationSeconds: 30
+  fieldCooldownMult: 1
   unlocksItems:
-  - {fileID: 11400000, guid: 9e0c03f047215524aad47b723303b846, type: 2}
-  - {fileID: 11400000, guid: 9175e5c02c5515442b3a8cdb8a4b45cf, type: 2}
-  - {fileID: 11400000, guid: 74c51589e2cf91841a0aef457979c16c, type: 2}
-  - {fileID: 11400000, guid: b28aee0cd61586e47a89417f3b61b964, type: 2}
-  - {fileID: 11400000, guid: 6419644aa3f969548953ea855ede642c, type: 2}
-  - {fileID: 11400000, guid: 4096f1369dd6541428f3443846931679, type: 2}
+  - {fileID: 11400000, guid: 06518bba2d1ed46478d8250e3ed0edcb, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: b1c7db86db5ca8c48ad6413a15432273, type: 2}
-  - {fileID: 11400000, guid: 6eeeec7bd1cf4934da06177d3d4bc52f, type: 2}
-  - {fileID: 11400000, guid: 0b604021efe0659479f9ac160bdca66b, type: 2}
-  - {fileID: 11400000, guid: 5c01084f0c6a99a4d82ae683ba1c3ce0, type: 2}
-  - {fileID: 11400000, guid: 19cdd73aafa3f1444b12fc175d583eb8, type: 2}
-  - {fileID: 11400000, guid: 32f9d6720a129a843920a5bc954ab542, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
+  - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
   - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: "Combining protons, neutrons, and electrons into stable atoms. Each

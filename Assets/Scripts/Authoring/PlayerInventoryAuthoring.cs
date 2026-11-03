@@ -33,13 +33,24 @@ namespace MobileIdleBuilder
                 {
                     BaseCurrency = authoring.config != null
                         ? authoring.config.startingEntropy
-                        : authoring.startingEntropy
+                        : authoring.startingEntropy,
+                    PrestigeWallValue = authoring.config != null
+                        ? authoring.config.prestigeBaseValue * authoring.config.prestigeWallMultiplier
+                        : 0f
                 });
 
                 AddComponent(entity, new PrestigeData
                 {
                     SpeedMultiplier  = 1f,
                     OutputMultiplier = 1f,
+                });
+
+                // Global production multipliers (megastructure stage rewards). Default to no-op;
+                // MegastructureService overwrites these on load / stage completion.
+                AddComponent(entity, new GlobalProductionBonus
+                {
+                    OutputMult = 1f,
+                    SpeedMult  = 1f,
                 });
 
                 var buffer = AddBuffer<InventorySlot>(entity);

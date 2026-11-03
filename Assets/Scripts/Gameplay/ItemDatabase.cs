@@ -5,7 +5,8 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// Builds a runtime lookup from string id → ItemSO and int itemId → ItemSO.
-    /// Assign all ItemSO assets in the Inspector. Place on the same GameObject as GameBootstrap.
+    /// Items are loaded automatically from Assets/Resources/Items/ — no Inspector wiring needed.
+    /// Re-run MobileIdleBuilder > Import Game Data to pick up new items from game_data.json.
     ///
     /// The lookup dictionaries are static so they survive even if Unity destroys the
     /// MonoBehaviour (e.g. when Bootstrap lives inside a SubScene that bakes at runtime).
@@ -13,8 +14,6 @@ namespace MobileIdleBuilder
     [DefaultExecutionOrder(-90)]
     public class ItemDatabase : SingletonMonoBehaviour<ItemDatabase>
     {
-        [SerializeField] private ItemSO[] items;
-
         // Static so the data outlives the MonoBehaviour if it gets destroyed.
         private static readonly Dictionary<string, ItemSO> _byId     = new();
         private static readonly Dictionary<int,    ItemSO> _byItemId = new();
@@ -27,9 +26,9 @@ namespace MobileIdleBuilder
 
             _byId.Clear();
             _byItemId.Clear();
-            _allItems = items;
+            _allItems = Resources.LoadAll<ItemSO>("Items");
 
-            foreach (var item in items)
+            foreach (var item in _allItems)
             {
                 if (item == null) continue;
                 if (string.IsNullOrEmpty(item.id))
@@ -42,6 +41,9 @@ namespace MobileIdleBuilder
             }
 
             GameLogger.Info($"[ItemDatabase] Registered on '{gameObject.name}' with {_byItemId.Count} items.");
+
+            // Overlay any cached remote balance overrides onto the loaded items (no-op when none published).
+            GameDataOverrides.ApplyItems(_allItems);
         }
 
         public IReadOnlyList<ItemSO> All => _allItems;
@@ -54,5 +56,21 @@ namespace MobileIdleBuilder
         // Static accessors — work even after the MonoBehaviour is destroyed.
         public static ItemSO GetStatic(string id)   => _byId.TryGetValue(id, out var v)     ? v : null;
         public static ItemSO GetStatic(int itemId)  => _byItemId.TryGetValue(itemId, out var v) ? v : null;
+
+#if UNITY_EDITOR
+        // Bypasses Resources.LoadAll so play-mode tests can inject fake SOs directly.
+        public static void InjectForTesting(ItemSO[] testItems)
+        {
+            _byId.Clear();
+            _byItemId.Clear();
+            _allItems = testItems;
+            foreach (var item in testItems)
+            {
+                if (item == null || string.IsNullOrEmpty(item.id)) continue;
+                _byId[item.id]         = item;
+                _byItemId[item.itemId] = item;
+            }
+        }
+#endif
     }
 }
