@@ -212,15 +212,17 @@
 
 /* ---- Left drawer ---- */
 
-/* Full-height anchor column on the left edge — holds the handle, doesn't intercept input */
+/* Full-height anchor column on the left edge — holds the handle, doesn't intercept input.
+   The handle sits near the top, not centred: centred, it covered the starting quark field tile (#257). */
 .drawer-handle-anchor {
     position: absolute;
     left: 0;
     top: var(--top-bar-height);
     bottom: 0;
     width: 44px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
+    padding-top: 24px;
 }
 
 .drawer-handle {
