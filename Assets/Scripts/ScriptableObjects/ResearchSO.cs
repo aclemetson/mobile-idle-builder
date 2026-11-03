@@ -15,6 +15,9 @@ namespace MobileIdleBuilder
         public ResearchBranch branch;
         public ResearchSO[] prerequisites;  // must be completed before this unlocks
         public int depthInTree;             // used for UI layout
+        public string block;                // research block (game phase) id, ResearchDatabaseSO.blocks
+        public int treeX = -1;              // research tree position from the editor (docs/research-tree.html); -1 = auto
+        public int treeY = -1;
 
         [Header("Cost")]
         public long costBaseCurrency;       // long: late research costs pass 2^31 under the derived economy

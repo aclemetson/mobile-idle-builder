@@ -1155,6 +1155,25 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("snapshot list", "List all saved snapshots",
                 _ => SnapshotList());
 
+            // ── research blocks (game phases): start any phase as a first-time arrival ───────
+            _registry.Register("block list", "List research blocks (game phases) and what 'block load' gives you",
+                _ => BlockList());
+
+            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists",
+                args => BlockLoad(args[0], preferCapture: true));
+
+            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point",
+                args => BlockLoad(args[0], preferCapture: false));
+
+            _registry.Register("block capture <id>", "Save the current game as the save point for a research block",
+                args =>
+                {
+                    var block = BlockStartPresets.Find(Resources.Load<ResearchDatabaseSO>("ResearchDatabase"), args[0]);
+                    if (block == null) return $"Unknown block '{args[0]}'. Type 'block list'.";
+                    return SnapshotSave(BlockStartPresets.CapturePrefix + block.id) +
+                           $" 'block load {block.id}' now restores it; 'block fresh {block.id}' still builds from data.";
+                });
+
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
 
@@ -1221,6 +1240,62 @@ namespace MobileIdleBuilder.Dev
             string step   = sm.Current.tutorial?.currentStepId;
             return $"Snapshot '{name}' saved — {buildings} building(s), " +
                    $"{sm.Current.currentRun?.baseCurrency ?? 0}e, tutorial '{step}'.";
+        }
+
+        private static string BlockList()
+        {
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            if (db?.blocks == null || db.blocks.Length == 0)
+                return "Error: no research blocks. Run MobileIdleBuilder > Import Game Data.";
+            var sb = new StringBuilder("Research blocks (load with 'block load <n|id>'):\n");
+            int n = 1;
+            foreach (var b in System.Linq.Enumerable.OrderBy(db.blocks, b => b.order))
+            {
+                int research = 0;
+                foreach (var r in db.allResearch) if (r != null && r.block == b.id) research++;
+                bool captured = File.Exists(Path.Combine(SnapshotDir, BlockStartPresets.CapturePrefix + b.id + ".json"));
+                int ups = b.startPermanentUpgrades?.Length ?? 0;
+                sb.AppendLine($"  [{n++}] {b.id,-20} {b.displayName,-20} {b.targetHours,5:0.#}h  {research,2} research  " +
+                              $"start: {b.startPrestigeCount} prestiges, {ups} upgrades, {b.startEntropy:N0}e" +
+                              (captured ? "  [captured save point]" : ""));
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        private string BlockLoad(string key, bool preferCapture)
+        {
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            var block = BlockStartPresets.Find(db, key);
+            if (block == null) return $"Unknown block '{key}'. Type 'block list'.";
+            var sm = SaveManager.Instance;
+            if (sm?.Current == null) return "Error: SaveManager not ready.";
+
+            SaveData data = null;
+            string source = "data definition";
+            if (preferCapture && File.Exists(Path.Combine(SnapshotDir, BlockStartPresets.CapturePrefix + block.id + ".json")))
+            {
+                data = SnapshotRead(BlockStartPresets.CapturePrefix + block.id, out string err);
+                if (data == null) return err;
+                source = "captured save point";
+            }
+            data ??= BlockStartPresets.Build(sm.Current, db, Resources.Load<WorldDatabaseSO>("WorldDatabase"), block);
+            if (data == null) return "Error: could not build the block's save.";
+
+            // The Recipes panel lists only recipes the player has learned; research learns them.
+            var knowledge = RecipeKnowledgeService.Instance;
+            var recipes   = RecipeDatabase.Instance?.Recipes;
+            if (knowledge != null && recipes != null)
+                foreach (var rid in data.unlockedResearch)
+                    foreach (var recipeId in ResearchService.RecipesGatedBy(recipes, rid))
+                        knowledge.MarkKnown(recipeId);
+
+            sm.DevReplaceCurrent(data);
+            GridSaveService.Instance?.ClearGrid();
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            return $"Starting '{block.displayName}' from its {source}: {data.unlockedResearch.Count} research done, " +
+                   $"{data.prestigeCount} prestiges, {data.permanentUpgrades.Count} permanent upgrades, " +
+                   $"{data.currentRun.baseCurrency:N0}e. Reloading...";
         }
 
         private static SaveData SnapshotRead(string name, out string error)

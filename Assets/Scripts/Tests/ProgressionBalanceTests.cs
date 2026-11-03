@@ -14,7 +14,7 @@ namespace MobileIdleBuilder.Tests
     public class ProgressionBalanceTests
     {
         [Serializable] class GdResearch { public string id; public List<string> prerequisites; public long cost_base_currency; public string block; }
-        [Serializable] class GdBlock    { public string id; public float target_hours; }
+        [Serializable] class GdBlock    { public string id; public float target_hours; public int order; }
         [Serializable] class GdIng      { public string item; public int quantity; }
         [Serializable] class GdRecipe   { public string id; public List<GdIng> inputs; public string output_item; public List<string> valid_buildings; public string required_research; public float base_craft_time; }
         [Serializable] class GameData   { public List<GdResearch> research; public List<GdRecipe> recipes; public List<GdBlock> research_blocks; }
@@ -61,6 +61,18 @@ namespace MobileIdleBuilder.Tests
                 Assert.Greater(b.target_hours, 0f, $"block {b.id} needs target_hours");
             foreach (var r in _gd.research)
                 Assert.IsTrue(ids.Contains(r.block), $"{r.id} names block '{r.block}', which does not exist");
+        }
+
+        [Test]
+        public void Prerequisites_NeverSitInALaterBlock()
+        {
+            // A block start (dev console 'block load') unlocks every earlier block; a prerequisite in a later block
+            // would leave an earlier node unreachable and the phase order meaningless.
+            var order = _gd.research_blocks.ToDictionary(b => b.id, b => b.order);
+            foreach (var r in _gd.research)
+                foreach (var p in r.prerequisites ?? new List<string>())
+                    if (_research.TryGetValue(p, out var pre))
+                        Assert.LessOrEqual(order[pre.block], order[r.block], $"{r.id} ({r.block}) requires {p} from the later block {pre.block}");
         }
 
         [Test]

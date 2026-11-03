@@ -15,6 +15,7 @@ namespace MobileIdleBuilder.Editor
     {
         public GameConfigJson            game_config     = new();
         public List<TierJson>            tiers           = new();
+        public List<ResearchBlockJson>   research_blocks = new();
         public List<ResearchJson>        research        = new();
         public List<ItemJson>            items           = new();
         public List<RecipeJson>          recipes         = new();
@@ -94,6 +95,23 @@ namespace MobileIdleBuilder.Editor
         public string[] starter_items   = Array.Empty<string>();
     }
 
+    /// <summary>A research block: one game phase (game_data.json research_blocks).</summary>
+    [Serializable]
+    internal class ResearchBlockJson
+    {
+        public string   id                              = "";
+        public string   name                            = "";
+        public int      order                           = 0;
+        public float    target_hours                    = 0f;
+        public bool     anchor                          = false;
+        public string   description                     = "";
+        public int      start_prestige_count            = 0;
+        public long     start_prestige_currency_earned  = 0;
+        public long     start_entropy                   = 0;
+        public string[] start_permanent_upgrades        = Array.Empty<string>();   // "id:level"
+        public string[] start_sites                     = Array.Empty<string>();
+    }
+
     [Serializable]
     internal class ResearchJson
     {
@@ -116,6 +134,9 @@ namespace MobileIdleBuilder.Editor
         public float    prestige_memory_discount = 0.1f;
         public string   codex_entry            = "";
         public string   icon_path              = "TODO";
+        public string   block                  = "";    // research_blocks id (game phase)
+        public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
+        public int      tree_y                 = -1;
 
         public void Initialize()
         {

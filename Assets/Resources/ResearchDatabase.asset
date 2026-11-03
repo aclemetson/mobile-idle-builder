@@ -60,3 +60,145 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
   - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
   - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
+  blocks:
+  - id: ignition
+    displayName: Ignition
+    order: 1
+    targetHours: 1
+    anchor: 1
+    description: 'The tutorial: quarks to the first Carbon from fusion.'
+    startPrestigeCount: 0
+    startPrestigeCurrencyEarned: 0
+    startEntropy: 0
+    startPermanentUpgrades: []
+    startSites: []
+  - id: foundations
+    displayName: Foundations
+    order: 2
+    targetHours: 3
+    anchor: 0
+    description: 'Broaden the base after the tutorial: faster belts and harvesters,
+      isotopes, the first molecules and the Uranium on-ramp.'
+    startPrestigeCount: 0
+    startPrestigeCurrencyEarned: 0
+    startEntropy: 52000
+    startPermanentUpgrades: []
+    startSites: []
+  - id: stellar_forge
+    displayName: Stellar Forge
+    order: 3
+    targetHours: 12
+    anchor: 0
+    description: Climb the fusion ladder to Iron, then past it with explosive burning.
+    startPrestigeCount: 1
+    startPrestigeCurrencyEarned: 150
+    startEntropy: 2350000
+    startPermanentUpgrades:
+    - assembly_line:1
+    - memory_resonance:1
+    - entropy_headstart:2
+    - quantum_yield:1
+    - idle_time_cap:1
+    - efficient_layouts:1
+    startSites: []
+  - id: actinide_frontier
+    displayName: Actinide Frontier
+    order: 4
+    targetHours: 20
+    anchor: 0
+    description: 'Work back from Uranium: decay, fission and neutron capture to the
+      precious metals.'
+    startPrestigeCount: 4
+    startPrestigeCurrencyEarned: 700
+    startEntropy: 4040000
+    startPermanentUpgrades:
+    - assembly_line:2
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:1
+    - surplus_resale:2
+    - expanded_vault:1
+    - field_cooldown:1
+    - salvage_protocols:1
+    startSites: []
+  - id: chemistry_world
+    displayName: Chemistry World
+    order: 5
+    targetHours: 20
+    anchor: 0
+    description: Molecules, the Chemistry world and engineered materials.
+    startPrestigeCount: 8
+    startPrestigeCurrencyEarned: 2000
+    startEntropy: 39900000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:4
+    - quantum_yield:3
+    - idle_time_cap:3
+    - research_overdrive:2
+    - idle_collection_rate:3
+    - efficient_layouts:3
+    - surplus_resale:3
+    - expanded_vault:3
+    - field_cooldown:3
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites:
+    - site_actinide_vein
+  - id: synthetic_frontier
+    displayName: Synthetic Frontier
+    order: 6
+    targetHours: 30
+    anchor: 0
+    description: Elements past Uranium, components and the megastructure.
+    startPrestigeCount: 15
+    startPrestigeCurrencyEarned: 5000
+    startEntropy: 315000000
+    startPermanentUpgrades:
+    - assembly_line:4
+    - memory_resonance:5
+    - entropy_headstart:4
+    - quantum_yield:4
+    - idle_time_cap:4
+    - research_overdrive:3
+    - idle_collection_rate:4
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:4
+    - field_cooldown:4
+    - salvage_protocols:4
+    - turnkey_builder:2
+    - entropy_echo:1
+    startSites:
+    - site_actinide_vein
+  - id: biology_world
+    displayName: Biology World
+    order: 7
+    targetHours: 40
+    anchor: 0
+    description: Biochemistry to cells, organisms and ecosystems.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 647000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:6
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:4
+    - field_cooldown:4
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
