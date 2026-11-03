@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Lead-208 plus one neutron. It beta-decays into Bismuth-209, the heaviest
     element with a near-stable isotope.
   codexUnlocked: 0
-  baseSellValue: 180
-  isotopeSellMultiplier: 1
+  baseSellValue: 2070
+  isotopeSellMultiplier: 1.139
   escapesAsEntropy: 0

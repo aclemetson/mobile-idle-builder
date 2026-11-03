@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: A strong base, the alkaline counterpart to the acids. Caustic soda
     dissolves, saponifies, and neutralizes across all of chemistry.
   codexUnlocked: 0
-  baseSellValue: 1000000
+  baseSellValue: 28800
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

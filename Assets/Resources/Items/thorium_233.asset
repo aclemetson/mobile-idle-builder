@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Thorium-232 that has caught one neutron. It beta-decays within minutes
     into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.
   codexUnlocked: 0
-  baseSellValue: 79
-  isotopeSellMultiplier: 1
+  baseSellValue: 656
+  isotopeSellMultiplier: 1.163
   escapesAsEntropy: 0

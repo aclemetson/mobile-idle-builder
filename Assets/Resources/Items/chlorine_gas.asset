@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Two chlorine atoms, paired. A reactive green gas and the reagent behind
     countless industrial chlorinations.
   codexUnlocked: 0
-  baseSellValue: 700000
+  baseSellValue: 50200
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

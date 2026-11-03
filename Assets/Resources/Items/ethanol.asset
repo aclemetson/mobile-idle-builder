@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: "A hydrocarbon with an oxygen-hydrogen head \u2014 the first alcohol.
     Solvent, fuel, and a stepping stone to more complex organics."
   codexUnlocked: 0
-  baseSellValue: 3000000
+  baseSellValue: 129000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

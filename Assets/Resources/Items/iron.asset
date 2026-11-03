@@ -35,6 +35,6 @@ MonoBehaviour:
     fusion \u2014 stars cannot fuse elements heavier than iron without consuming
     more energy than they produce."
   codexUnlocked: 0
-  baseSellValue: 167772160
+  baseSellValue: 37200
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

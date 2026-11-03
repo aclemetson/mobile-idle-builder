@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Heavy Elements research acquired. Uranium synthesis is now available in
-      the Atom Generator. Check your power grid before you begin \u2014 the draw
-      is 1,190 eV per cycle."
+    text: Heavy Elements research acquired. Set an Atom Generator to Uranium. Later,
+      Fissile Extraction opens Uranium fields on the Actinide Vein, a far cheaper
+      source.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

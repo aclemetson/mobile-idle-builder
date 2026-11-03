@@ -35,6 +35,6 @@ MonoBehaviour:
     electrolysis was discovered. Lightweight and corrosion-resistant \u2014 the backbone
     of aerospace and packaging."
   codexUnlocked: 0
-  baseSellValue: 20480
+  baseSellValue: 5080
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

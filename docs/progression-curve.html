@@ -1,0 +1,272 @@
+<title>Progression Curve</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of stacked chart panels, summary first, tables last. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #14161a; --ink-2: #4c5361; --ink-3: #7a8190;
+  --rule: #dfe3ea; --grid: #eceff3; --accent: #2a78d6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s-other: #9aa1ad;
+  --good: #1f8a4c; --warn: #b7791f; --crit: #c53030; --band: rgba(31,138,76,.10);
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111317; --panel: #1a1d22; --ink: #eceef2; --ink-2: #b4bac6; --ink-3: #868d9a;
+  --rule: #2c313a; --grid: #23272e; --accent: #3987e5;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s-other: #6c7380;
+  --good: #3fb36f; --warn: #d69e2e; --crit: #f0605d; --band: rgba(63,179,111,.12); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111317; --panel: #1a1d22; --ink: #eceef2; --ink-2: #b4bac6; --ink-3: #868d9a;
+  --rule: #2c313a; --grid: #23272e; --accent: #3987e5;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s-other: #6c7380;
+  --good: #3fb36f; --warn: #d69e2e; --crit: #f0605d; --band: rgba(63,179,111,.12); color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px; }
+h1 { font: 600 clamp(26px, 5vw, 36px)/1.1 var(--f-display); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h2 { font: 600 19px/1.25 var(--f-display); margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; color: var(--ink-2); }
+.eyebrow { font: 500 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+header { display: grid; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.stat { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat b { font: 600 22px var(--f-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--ink-2); }
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { fill: var(--ink-3); font: 11px var(--f-mono); }
+.ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.ctrl input { accent-color: var(--accent); }
+.ctrl output { font: 500 14px var(--f-mono); color: var(--ink); min-width: 2ch; }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font: 500 12px var(--f-mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; }
+td.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 7px; border-radius: 99px; border: 1px solid currentColor; }
+.pill.free { color: var(--warn); } .pill.wall { color: var(--crit); } .pill.ok { color: var(--good); }
+.pill.loses, .pill.late { color: var(--crit); }
+.tip { position: fixed; pointer-events: none; z-index: 20; background: var(--panel); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.18); max-width: 280px; }
+.tip b { font-family: var(--f-display); }
+.tip .m { font-family: var(--f-mono); color: var(--ink-2); }
+.foot { font-size: 13px; color: var(--ink-3); }
+code { font-family: var(--f-mono); font-size: .92em; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Quantum Foundry · economy</div>
+    <h1>Progression Curve</h1>
+    <p>Every research node in the order a player unlocks it, with what it costs, what it unlocks, and how fast the best building can pay for it. Generated from <code>Assets/Data/game_data.json</code> by <code>scripts/progression_curve.py</code>; rerun it after any balance change.</p>
+  </header>
+  <section class="stats" id="stats"></section>
+
+  <section class="panel">
+    <div class="eyebrow">Pacing</div>
+    <h2>Minutes for one building to pay for each research</h2>
+    <p>Research cost divided by the best earning rate available just before it. A healthy curve rises smoothly. A node far above the trend of the ones before it is a wall; one far below it is effectively free.</p>
+    <div class="legend"><span><i style="background:var(--good)"></i>On trend</span><span><i style="background:var(--crit)"></i>Wall</span><span><i style="background:var(--warn)"></i>Free</span></div>
+    <svg id="payback" viewBox="0 0 900 300" role="img" aria-label="Payback minutes per research, log scale"></svg>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Time</div>
+    <h2>Estimated playtime to reach each unlock</h2>
+    <div class="ctrl"><label for="nb">Buildings working the best recipe</label>
+      <input id="nb" type="range" min="1" max="40" step="1"><output id="nbv"></output></div>
+    <svg id="time" viewBox="0 0 900 260" role="img" aria-label="Cumulative hours by unlock"></svg>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Earning</div>
+    <h2>Best value added per building-second</h2>
+    <p>The highest (output − inputs) ÷ craft time among every recipe unlocked so far. A healthy game climbs this steadily; one cliff means one recipe outgrows everything after it.</p>
+    <svg id="rate" viewBox="0 0 900 260" role="img" aria-label="Best earning rate by unlock, log scale"></svg>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Values</div>
+    <h2>Sell value of every item, by the research that unlocks it</h2>
+    <div class="legend" id="vlegend"></div>
+    <svg id="values" viewBox="0 0 900 320" role="img" aria-label="Item sell values by unlock order, log scale"></svg>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Flags</div>
+    <h2>What the curve says needs fixing</h2>
+    <div class="scroll"><table id="flags"><thead><tr><th>Kind</th><th>What</th><th>Why</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Table</div>
+    <h2>Unlock order</h2>
+    <div class="scroll"><table id="order"><thead><tr><th>#</th><th>Research</th><th style="text-align:right">Cost</th><th style="text-align:right">Payback</th><th style="text-align:right">Hours</th><th style="text-align:right">Best e/s</th><th style="text-align:right">Top new item</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D = {"rows":[{"n":1,"id":"recombination_i","name":"Recombination I","cost":100.0,"payback":1.6666666666666667,"rate":1.0,"rateRecipe":"collect_up_quark","top":3.0,"items":[{"id":"proton","name":"Proton","v":3.0,"g":"Particles & nucleons","gain":1.0,"recipe":"proton"},{"id":"neutron","name":"Neutron","v":3.0,"g":"Particles & nucleons","gain":1.0,"recipe":"neutron"}]},{"n":2,"id":"hydrogen_synthesis","name":"Hydrogen Synthesis","cost":50.0,"payback":0.8333333333333334,"rate":1.0,"rateRecipe":"collect_up_quark","top":5.0,"items":[{"id":"hydrogen","name":"Hydrogen","v":5.0,"g":"Elements","gain":1.25,"recipe":"hydrogen"}]},{"n":3,"id":"automation_i","name":"Automation I","cost":25.0,"payback":0.4166666666666667,"rate":1.0,"rateRecipe":"collect_up_quark","top":0,"items":[]},{"n":4,"id":"rapid_extraction_i","name":"Rapid Extraction I","cost":150.0,"payback":2.5,"rate":1.0,"rateRecipe":"collect_up_quark","top":0,"items":[]},{"n":5,"id":"field_synthesis","name":"Field Synthesis","cost":250.0,"payback":4.166666666666667,"rate":1.0,"rateRecipe":"collect_up_quark","top":0,"items":[]},{"n":6,"id":"atomic_assembly","name":"Nucleosynthesis","cost":500.0,"payback":8.333333333333334,"rate":1.0,"rateRecipe":"collect_up_quark","top":15.0,"items":[{"id":"helium_4","name":"Helium-4","v":15.0,"g":"Elements","gain":1.0714285714285714,"recipe":"helium_4"}]},{"n":7,"id":"power_distribution","name":"Power Distribution","cost":600.0,"payback":10.0,"rate":1.0,"rateRecipe":"collect_up_quark","top":0,"items":[]},{"n":8,"id":"rapid_extraction_ii","name":"Rapid Extraction II","cost":600.0,"payback":10.0,"rate":1.0,"rateRecipe":"collect_up_quark","top":0,"items":[]},{"n":9,"id":"nucleon_harvesting","name":"Nucleon Harvesting","cost":800.0,"payback":13.333333333333334,"rate":1.0,"rateRecipe":"collect_up_quark","top":3.0,"items":[{"id":"proton","name":"Proton","v":3.0,"g":"Particles & nucleons","gain":null,"recipe":"harvest_proton"},{"id":"neutron","name":"Neutron","v":3.0,"g":"Particles & nucleons","gain":null,"recipe":"harvest_neutron"}]},{"n":10,"id":"deuterium_synthesis","name":"Deuterium Synthesis","cost":1200.0,"payback":6.666666666666667,"rate":3.0,"rateRecipe":"harvest_proton","top":4.0,"items":[{"id":"deuterium","name":"Deuterium","v":4.0,"g":"Elements","gain":0.5714285714285714,"recipe":"assemble_deuterium"}]},{"n":11,"id":"isotopes","name":"Isotope Engineering","cost":1500.0,"payback":8.333333333333334,"rate":3.0,"rateRecipe":"harvest_proton","top":13.0,"items":[{"id":"deuterium","name":"Deuterium","v":4.0,"g":"Elements","gain":0.5,"recipe":"deuterium"},{"id":"tritium","name":"Tritium","v":13.0,"g":"Elements","gain":1.1818181818181819,"recipe":"tritium"}]},{"n":12,"id":"surplus_containment","name":"Surplus Containment","cost":2000.0,"payback":11.11111111111111,"rate":3.0,"rateRecipe":"harvest_proton","top":0,"items":[]},{"n":13,"id":"heavy_elements","name":"Heavy Elements","cost":3000.0,"payback":16.666666666666668,"rate":3.0,"rateRecipe":"harvest_proton","top":64.0,"items":[{"id":"uranium","name":"Uranium","v":64.0,"g":"Elements","gain":0.0794044665012407,"recipe":"uranium"}]},{"n":14,"id":"molecular_synthesis","name":"Molecular Synthesis","cost":3000.0,"payback":16.666666666666668,"rate":3.0,"rateRecipe":"harvest_proton","top":110.0,"items":[{"id":"liquid_hydrogen","name":"Liquid Hydrogen","v":110.0,"g":"Chemistry & biology","gain":2.2,"recipe":"liquid_hydrogen"}]},{"n":15,"id":"fusion_i","name":"Stellar Fusion","cost":4000.0,"payback":22.22222222222222,"rate":3.0,"rateRecipe":"harvest_proton","top":1980.0,"items":[{"id":"helium_4","name":"Helium-4","v":15.0,"g":"Elements","gain":1.55,"recipe":"fuse_helium"},{"id":"carbon","name":"Carbon","v":160.0,"g":"Elements","gain":3.6666666666666665,"recipe":"fuse_carbon"},{"id":"helium_4","name":"Helium-4","v":15.0,"g":"Elements","gain":2.5,"recipe":"fuse_deuterium"},{"id":"carbon_14","name":"Carbon-14","v":240.0,"g":"Elements","gain":1.4457831325301205,"recipe":"carbon_14"},{"id":"methane","name":"Methane","v":1980.0,"g":"Chemistry & biology","gain":2.020408163265306,"recipe":"methane"}]},{"n":16,"id":"radioactive_isotopes","name":"Radioactive Isotopes","cost":40000.0,"payback":33.333333333333336,"rate":20.0,"rateRecipe":"fuse_carbon","top":2520.0,"items":[{"id":"uranium_235","name":"Uranium-235","v":1500.0,"g":"Elements","gain":23.578125,"recipe":"uranium_235"},{"id":"neutron","name":"Neutron","v":3.0,"g":"Particles & nucleons","gain":null,"recipe":"collect_neutron"},{"id":"thorium","name":"Thorium","v":413.0,"g":"Elements","gain":6.609375,"recipe":"decay_uranium"},{"id":"radium","name":"Radium","v":762.0,"g":"Elements","gain":1.8692493946731235,"recipe":"decay_thorium"},{"id":"radon","name":"Radon","v":1120.0,"g":"Elements","gain":1.4829396325459319,"recipe":"decay_radium"},{"id":"polonium","name":"Polonium","v":1470.0,"g":"Elements","gain":1.3214285714285714,"recipe":"decay_radon"},{"id":"lead","name":"Lead","v":1820.0,"g":"Elements","gain":1.2448979591836735,"recipe":"decay_polonium"},{"id":"thorium_233","name":"Thorium-233","v":656.0,"g":"Elements","gain":1.5769230769230769,"recipe":"irradiate_thorium"},{"id":"radium_227","name":"Radium-227","v":1010.0,"g":"Elements","gain":1.3202614379084967,"recipe":"irradiate_radium"},{"id":"radon_223","name":"Radon-223","v":1370.0,"g":"Elements","gain":1.219946571682992,"recipe":"irradiate_radon"},{"id":"lead_209","name":"Lead-209","v":2070.0,"g":"Elements","gain":1.1354909489851892,"recipe":"irradiate_lead"},{"id":"radon_211","name":"Radon-211","v":1570.0,"g":"Elements","gain":1.43125,"recipe":"strip_radon"},{"id":"lead_201","name":"Lead-201","v":2280.0,"g":"Elements","gain":1.2642857142857142,"recipe":"strip_lead"},{"id":"protactinium","name":"Protactinium","v":893.0,"g":"Elements","gain":1.3658536585365855,"recipe":"decay_thorium_233"},{"id":"actinium","name":"Actinium","v":1250.0,"g":"Elements","gain":1.2405940594059406,"recipe":"decay_radium_227"},{"id":"francium","name":"Francium","v":1610.0,"g":"Elements","gain":1.1773722627737226,"recipe":"decay_radon_223"},{"id":"bismuth","name":"Bismuth","v":2310.0,"g":"Elements","gain":1.117391304347826,"recipe":"decay_lead_209"},{"id":"astatine","name":"Astatine","v":1810.0,"g":"Elements","gain":1.1547770700636943,"recipe":"decay_radon_211"},{"id":"thallium","name":"Thallium","v":2520.0,"g":"Elements","gain":1.106578947368421,"recipe":"decay_lead_201"}]},{"n":17,"id":"light_elements","name":"Light Elements","cost":195000.0,"payback":52.631578947368425,"rate":61.75,"rateRecipe":"irradiate_radon","top":869.0,"items":[{"id":"lithium","name":"Lithium","v":228.0,"g":"Elements","gain":12.263157894736842,"recipe":"capture_lithium"},{"id":"beryllium","name":"Beryllium","v":513.0,"g":"Elements","gain":2.223175965665236,"recipe":"capture_beryllium"},{"id":"boron","name":"Boron","v":869.0,"g":"Elements","gain":1.6872586872586872,"recipe":"capture_boron"}]},{"n":18,"id":"feedstock_buffers","name":"Feedstock Buffers","cost":353000.0,"payback":82.4766355140187,"rate":71.33333333333333,"rateRecipe":"capture_lithium","top":0,"items":[]},{"n":19,"id":"fusion_ii","name":"Alpha Process","cost":556000.0,"payback":129.90654205607478,"rate":71.33333333333333,"rateRecipe":"capture_lithium","top":13900.0,"items":[{"id":"oxygen","name":"Oxygen","v":977.0,"g":"Elements","gain":5.611428571428571,"recipe":"fuse_oxygen"},{"id":"neon","name":"Neon","v":2000.0,"g":"Elements","gain":2.0211693548387095,"recipe":"fuse_neon"},{"id":"magnesium","name":"Magnesium","v":3220.0,"g":"Elements","gain":1.6004962779156326,"recipe":"fuse_magnesium"},{"id":"silicon","name":"Silicon","v":4650.0,"g":"Elements","gain":1.4389489953632149,"recipe":"fuse_silicon"},{"id":"water","name":"Water","v":13900.0,"g":"Chemistry & biology","gain":1.7738642164369576,"recipe":"water"}]},{"n":20,"id":"fissile_extraction","name":"Fissile Extraction","cost":1250000.0,"payback":205.39906103286384,"rate":101.42857142857143,"rateRecipe":"fuse_silicon","top":240.0,"items":[{"id":"uranium","name":"Uranium","v":64.0,"g":"Elements","gain":null,"recipe":"collect_uranium"},{"id":"plutonium","name":"Plutonium","v":240.0,"g":"Elements","gain":null,"recipe":"collect_plutonium"}]},{"n":21,"id":"mid_elements","name":"Mid-Period Elements","cost":2320000.0,"payback":322.22222222222223,"rate":120.0,"rateRecipe":"collect_plutonium","top":21000.0,"items":[{"id":"nitrogen","name":"Nitrogen","v":1160.0,"g":"Elements","gain":7.0606060606060606,"recipe":"capture_nitrogen"},{"id":"fluorine","name":"Fluorine","v":2270.0,"g":"Elements","gain":2.3167006109979633,"recipe":"capture_fluorine"},{"id":"sodium","name":"Sodium","v":3570.0,"g":"Elements","gain":1.7830423940149627,"recipe":"capture_sodium"},{"id":"aluminum","name":"Aluminum","v":5080.0,"g":"Elements","gain":1.5767441860465117,"recipe":"capture_aluminum"},{"id":"phosphorus","name":"Phosphorus","v":6800.0,"g":"Elements","gain":1.4618689581095596,"recipe":"capture_phosphorus"},{"id":"ammonia","name":"Ammonia","v":21000.0,"g":"Chemistry & biology","gain":2.581438229870928,"recipe":"ammonia"}]},{"n":22,"id":"advanced_molecules","name":"Advanced Molecules","cost":4360000.0,"payback":505.800464037123,"rate":143.66666666666666,"rateRecipe":"capture_fluorine","top":106000.0,"items":[{"id":"silica","name":"Silica","v":58500.0,"g":"Chemistry & biology","gain":1.7716535433070866,"recipe":"silica"},{"id":"uranium_hexafluoride","name":"Uranium Hexafluoride","v":106000.0,"g":"Chemistry & biology","gain":2.8396913844834977,"recipe":"uranium_hexafluoride"}]},{"n":23,"id":"fission_i","name":"Nuclear Fission","cost":8180000.0,"payback":794.1130785958372,"rate":171.68,"rateRecipe":"uranium_hexafluoride","top":4050.0,"items":[{"id":"barium","name":"Barium","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235"},{"id":"xenon","name":"Xenon","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_xe_sr"},{"id":"cesium","name":"Cesium","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_cs_rb"},{"id":"iodine","name":"Iodine","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_i_y"},{"id":"tellurium","name":"Tellurium","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_te_zr"},{"id":"antimony","name":"Antimony","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_sb_nb"},{"id":"tin","name":"Tin","v":2770.0,"g":"Elements","gain":3.6973333333333334,"recipe":"fission_u235_sn_mo"},{"id":"xenon","name":"Xenon","v":2770.0,"g":"Elements","gain":11.554166666666667,"recipe":"fission_pu239"},{"id":"barium","name":"Barium","v":2770.0,"g":"Elements","gain":11.554166666666667,"recipe":"fission_pu239_ba_sr"},{"id":"cerium","name":"Cerium","v":4050.0,"g":"Elements","gain":14.220833333333333,"recipe":"fission_pu239_ce_kr"}]},{"n":24,"id":"fusion_iii","name":"Silicon Burning","cost":23800000.0,"payback":1250.1313163147388,"rate":317.3,"rateRecipe":"fission_pu239_ce_kr","top":203000.0,"items":[{"id":"sulfur","name":"Sulfur","v":8510.0,"g":"Elements","gain":1.82529474812433,"recipe":"fuse_sulfur"},{"id":"argon","name":"Argon","v":13400.0,"g":"Elements","gain":1.572434017595308,"recipe":"fuse_argon"},{"id":"calcium","name":"Calcium","v":18300.0,"g":"Elements","gain":1.3645173313455088,"recipe":"fuse_calcium"},{"id":"titanium","name":"Titanium","v":24100.0,"g":"Elements","gain":1.3161343161343162,"recipe":"fuse_titanium"},{"id":"chromium","name":"Chromium","v":30400.0,"g":"Elements","gain":1.260833506116525,"recipe":"fuse_chromium"},{"id":"iron","name":"Iron","v":37200.0,"g":"Elements","gain":1.2232451093210588,"recipe":"fuse_iron"},{"id":"iron_oxide","name":"Iron Oxide","v":203000.0,"g":"Chemistry & biology","gain":1.312539602488006,"recipe":"iron_oxide"}]},{"n":25,"id":"slow_neutron_capture","name":"s-Process","cost":37400000.0,"payback":1964.4920684945898,"rate":317.3,"rateRecipe":"fission_pu239_ce_kr","top":27100.0,"items":[{"id":"technetium","name":"Technetium","v":6210.0,"g":"Elements","gain":2.240533717994951,"recipe":"s_capture_technetium"},{"id":"ruthenium","name":"Ruthenium","v":9650.0,"g":"Elements","gain":1.5536777724126831,"recipe":"s_capture_ruthenium"},{"id":"rhodium","name":"Rhodium","v":13100.0,"g":"Elements","gain":1.3574018439863256,"recipe":"s_capture_rhodium"},{"id":"palladium","name":"Palladium","v":16600.0,"g":"Elements","gain":1.2671144012821491,"recipe":"s_capture_palladium"},{"id":"silver","name":"Silver","v":20100.0,"g":"Elements","gain":1.2108052761549117,"recipe":"s_capture_silver"},{"id":"cadmium","name":"Cadmium","v":23600.0,"g":"Elements","gain":1.1741033676565686,"recipe":"s_capture_cadmium"},{"id":"indium","name":"Indium","v":27100.0,"g":"Elements","gain":1.1482862348006608,"recipe":"s_capture_indium"},{"id":"lanthanum","name":"Lanthanum","v":6210.0,"g":"Elements","gain":2.240533717994951,"recipe":"s_capture_lanthanum"}]},{"n":26,"id":"chemistry_lab","name":"Chemistry Lab","cost":39300000.0,"payback":2064.2924676961866,"rate":317.3,"rateRecipe":"fission_pu239_ce_kr","top":31200.0,"items":[{"id":"hydrogen","name":"Hydrogen","v":5.0,"g":"Elements","gain":null,"recipe":"collect_hydrogen"},{"id":"carbon","name":"Carbon","v":160.0,"g":"Elements","gain":null,"recipe":"collect_carbon"},{"id":"oxygen","name":"Oxygen","v":977.0,"g":"Elements","gain":null,"recipe":"collect_oxygen"},{"id":"sodium","name":"Sodium","v":3570.0,"g":"Elements","gain":null,"recipe":"collect_sodium"},{"id":"chlorine","name":"Chlorine","v":15400.0,"g":"Elements","gain":null,"recipe":"collect_chlorine"},{"id":"sulfur","name":"Sulfur","v":8510.0,"g":"Elements","gain":null,"recipe":"collect_sulfur"},{"id":"carbon_dioxide","name":"Carbon Dioxide","v":8930.0,"g":"Chemistry & biology","gain":4.224219489120151,"recipe":"carbon_dioxide"},{"id":"table_salt","name":"Table Salt","v":31200.0,"g":"Chemistry & biology","gain":1.6447021613073274,"recipe":"table_salt"},{"id":"sulfuric_acid","name":"Sulfuric Acid","v":26100.0,"g":"Chemistry & biology","gain":2.1000965561635017,"recipe":"sulfuric_acid"}]},{"n":27,"id":"explosive_burning","name":"Explosive Burning","cost":48100000.0,"payback":1966.4758789860998,"rate":407.6666666666667,"rateRecipe":"table_salt","top":40600.0,"items":[{"id":"chlorine","name":"Chlorine","v":15400.0,"g":"Elements","gain":1.8091603053435115,"recipe":"capture_chlorine"},{"id":"potassium","name":"Potassium","v":21100.0,"g":"Elements","gain":1.5744125326370757,"recipe":"capture_potassium"},{"id":"scandium","name":"Scandium","v":26900.0,"g":"Elements","gain":1.4698169898934716,"recipe":"capture_scandium"},{"id":"vanadium","name":"Vanadium","v":33500.0,"g":"Elements","gain":1.3899605890894005,"recipe":"capture_vanadium"},{"id":"manganese","name":"Manganese","v":40600.0,"g":"Elements","gain":1.3354711396151948,"recipe":"capture_manganese"}]},{"n":28,"id":"transition_metals","name":"Transition Metals","cost":50600000.0,"payback":2059.3023255813955,"rate":409.5238095238095,"rateRecipe":"capture_scandium","top":89400.0,"items":[{"id":"cobalt","name":"Cobalt","v":43000.0,"g":"Elements","gain":1.1559014058006074,"recipe":"s_capture_cobalt"},{"id":"nickel","name":"Nickel","v":48800.0,"g":"Elements","gain":1.1348743110945747,"recipe":"s_capture_nickel"},{"id":"copper","name":"Copper","v":54600.0,"g":"Elements","gain":1.1188451529619081,"recipe":"s_capture_copper"},{"id":"zinc","name":"Zinc","v":60400.0,"g":"Elements","gain":1.1062212698935956,"recipe":"s_capture_zinc"},{"id":"gallium","name":"Gallium","v":66200.0,"g":"Elements","gain":1.0960217207754581,"recipe":"s_capture_gallium"},{"id":"germanium","name":"Germanium","v":72000.0,"g":"Elements","gain":1.0876093228403547,"recipe":"s_capture_germanium"},{"id":"arsenic","name":"Arsenic","v":77800.0,"g":"Elements","gain":1.0805521992139215,"recipe":"s_capture_arsenic"},{"id":"selenium","name":"Selenium","v":83600.0,"g":"Elements","gain":1.0745472539619294,"recipe":"s_capture_selenium"},{"id":"bromine","name":"Bromine","v":89400.0,"g":"Elements","gain":1.069375500879155,"recipe":"s_capture_bromine"}]},{"n":29,"id":"rapid_neutron_capture","name":"r-Process","cost":57000000.0,"payback":1965.5172413793105,"rate":483.3333333333333,"rateRecipe":"s_capture_cobalt","top":0,"items":[]},{"n":30,"id":"materials_science","name":"Materials Science","cost":59900000.0,"payback":2065.5172413793102,"rate":483.3333333333333,"rateRecipe":"s_capture_cobalt","top":1330000.0,"items":[{"id":"steel","name":"Steel","v":1230000.0,"g":"Chemistry & biology","gain":1.2071131349611368,"recipe":"steel"},{"id":"carbon_fiber","name":"Carbon Fiber","v":457000.0,"g":"Chemistry & biology","gain":2.491549449351216,"recipe":"carbon_fiber"},{"id":"titanium_alloy","name":"Titanium Alloy","v":1330000.0,"g":"Chemistry & biology","gain":1.3468354430379748,"recipe":"titanium_alloy"}]},{"n":31,"id":"precious_metals","name":"Precious Metals","cost":82900000.0,"payback":1964.0826383623958,"rate":703.4666666666667,"rateRecipe":"steel","top":0,"items":[]},{"n":32,"id":"reaction_engineering","name":"Reaction Engineering","cost":87100000.0,"payback":2063.589840788476,"rate":703.4666666666667,"rateRecipe":"steel","top":130000.0,"items":[{"id":"iron","name":"Iron","v":37200.0,"g":"Elements","gain":null,"recipe":"collect_iron"},{"id":"copper","name":"Copper","v":54600.0,"g":"Elements","gain":null,"recipe":"collect_copper"},{"id":"aluminum","name":"Aluminum","v":5080.0,"g":"Elements","gain":null,"recipe":"collect_aluminum"},{"id":"nickel","name":"Nickel","v":48800.0,"g":"Elements","gain":null,"recipe":"collect_nickel"},{"id":"chlorine_gas","name":"Chlorine Gas","v":50200.0,"g":"Chemistry & biology","gain":1.62987012987013,"recipe":"chlorine_gas"},{"id":"sodium_hydroxide","name":"Sodium Hydroxide","v":28800.0,"g":"Chemistry & biology","gain":6.3268892794376095,"recipe":"sodium_hydroxide"},{"id":"nitric_acid","name":"Nitric Acid","v":33200.0,"g":"Chemistry & biology","gain":8.10546875,"recipe":"nitric_acid"},{"id":"catalyst","name":"Catalyst","v":130000.0,"g":"Chemistry & biology","gain":1.5116279069767442,"recipe":"catalyst"}]},{"n":33,"id":"exotic_metals","name":"Exotic Metals","cost":120000000.0,"payback":1968.503937007874,"rate":1016.0,"rateRecipe":"collect_aluminum","top":0,"items":[]},{"n":34,"id":"heavy_transition_metals","name":"Heavy Transition Metals","cost":126000000.0,"payback":2066.9291338582675,"rate":1016.0,"rateRecipe":"collect_aluminum","top":134000.0,"items":[{"id":"praseodymium","name":"Praseodymium","v":26000.0,"g":"Elements","gain":6.415741426104121,"recipe":"s_capture_praseodymium"},{"id":"neodymium","name":"Neodymium","v":48000.0,"g":"Elements","gain":1.8460562242818137,"recipe":"s_capture_neodymium"},{"id":"promethium","name":"Promethium","v":70000.0,"g":"Elements","gain":1.4583046892902527,"recipe":"s_capture_promethium"},{"id":"samarium","name":"Samarium","v":92000.0,"g":"Elements","gain":1.3142722454751938,"recipe":"s_capture_samarium"},{"id":"europium","name":"Europium","v":134000.0,"g":"Elements","gain":1.4564118727515787,"recipe":"r_capture_europium"}]},{"n":35,"id":"advanced_materials","name":"Advanced Materials","cost":165000000.0,"payback":1964.5663666238036,"rate":1399.8,"rateRecipe":"r_capture_europium","top":12900000.0,"items":[{"id":"semiconductor_wafer","name":"Semiconductor Wafer","v":1280000.0,"g":"Chemistry & biology","gain":4.372779447936595,"recipe":"semiconductor_wafer"},{"id":"aerogel","name":"Aerogel","v":1360000.0,"g":"Chemistry & biology","gain":6.252873563218391,"recipe":"aerogel"},{"id":"superconductor","name":"Superconductor","v":4350000.0,"g":"Chemistry & biology","gain":1.4318630678077682,"recipe":"superconductor"},{"id":"metamaterial","name":"Metamaterial","v":12900000.0,"g":"Chemistry & biology","gain":1.1456483126110124,"recipe":"metamaterial"}]},{"n":36,"id":"lanthanides_and_heavy_metals","name":"Lanthanides and Heavy Metals","cost":194000000.0,"payback":1964.9947330038085,"rate":1645.4666666666667,"rateRecipe":"semiconductor_wafer","top":991000.0,"items":[{"id":"gadolinium","name":"Gadolinium","v":173000.0,"g":"Elements","gain":1.291038260337455,"recipe":"s_capture_gadolinium"},{"id":"terbium","name":"Terbium","v":212000.0,"g":"Elements","gain":1.2254296168274539,"recipe":"s_capture_terbium"},{"id":"dysprosium","name":"Dysprosium","v":251000.0,"g":"Elements","gain":1.1839596609481942,"recipe":"s_capture_dysprosium"},{"id":"holmium","name":"Holmium","v":290000.0,"g":"Elements","gain":1.1553766289645941,"recipe":"s_capture_holmium"},{"id":"erbium","name":"Erbium","v":329000.0,"g":"Elements","gain":1.13448136743413,"recipe":"s_capture_erbium"},{"id":"thulium","name":"Thulium","v":368000.0,"g":"Elements","gain":1.1185399525232294,"recipe":"s_capture_thulium"},{"id":"ytterbium","name":"Ytterbium","v":407000.0,"g":"Elements","gain":1.1059773969233946,"recipe":"s_capture_ytterbium"},{"id":"lutetium","name":"Lutetium","v":446000.0,"g":"Elements","gain":1.0958223895155563,"recipe":"s_capture_lutetium"},{"id":"hafnium","name":"Hafnium","v":485000.0,"g":"Elements","gain":1.0874433580043184,"recipe":"s_capture_hafnium"},{"id":"tantalum","name":"Tantalum","v":524000.0,"g":"Elements","gain":1.0804118737409871,"recipe":"s_capture_tantalum"},{"id":"tungsten","name":"Tungsten","v":563000.0,"g":"Elements","gain":1.0744270548069381,"recipe":"s_capture_tungsten"},{"id":"rhenium","name":"Rhenium","v":602000.0,"g":"Elements","gain":1.0692713893176413,"recipe":"s_capture_rhenium"},{"id":"osmium","name":"Osmium","v":699000.0,"g":"Elements","gain":1.1611171926001107,"recipe":"r_capture_osmium"},{"id":"iridium","name":"Iridium","v":796000.0,"g":"Elements","gain":1.1387593006670873,"recipe":"r_capture_iridium"},{"id":"platinum","name":"Platinum","v":874000.0,"g":"Elements","gain":1.0979813042314848,"recipe":"r_capture_platinum"},{"id":"gold","name":"Gold","v":952000.0,"g":"Elements","gain":1.0892370673528533,"recipe":"r_capture_gold"},{"id":"mercury","name":"Mercury","v":991000.0,"g":"Elements","gain":1.0409662574592726,"recipe":"s_capture_mercury"}]},{"n":37,"id":"organic_chemistry","name":"Organic Chemistry","cost":230000000.0,"payback":1965.8119658119658,"rate":1950.0,"rateRecipe":"s_capture_gadolinium","top":571000.0,"items":[{"id":"ethane","name":"Ethane","v":58100.0,"g":"Chemistry & biology","gain":166.0,"recipe":"ethane"},{"id":"octane","name":"Octane","v":325000.0,"g":"Chemistry & biology","gain":1.3984509466437178,"recipe":"octane"},{"id":"ethanol","name":"Ethanol","v":129000.0,"g":"Chemistry & biology","gain":2.1835909067826735,"recipe":"ethanol"},{"id":"polymer_precursor","name":"Polymer Precursor","v":571000.0,"g":"Chemistry & biology","gain":1.254945054945055,"recipe":"polymer_precursor"}]},{"n":38,"id":"transuranic_elements","name":"Transuranic Synthesis","cost":275000000.0,"payback":1966.4488079744858,"rate":2330.766666666667,"rateRecipe":"ethanol","top":707000.0,"items":[{"id":"plutonium","name":"Plutonium","v":240.0,"g":"Elements","gain":0.29055690072639223,"recipe":"plutonium"},{"id":"neptunium","name":"Neptunium","v":652000.0,"g":"Elements","gain":810.9452736318408,"recipe":"neptunium"},{"id":"americium","name":"Americium","v":669000.0,"g":"Elements","gain":811.8932038834952,"recipe":"americium"},{"id":"curium","name":"Curium","v":680000.0,"g":"Elements","gain":812.4253285543608,"recipe":"curium"},{"id":"berkelium","name":"Berkelium","v":680000.0,"g":"Elements","gain":811.4558472553699,"recipe":"berkelium"},{"id":"californium","name":"Californium","v":691000.0,"g":"Elements","gain":811.9858989424207,"recipe":"californium"},{"id":"einsteinium","name":"Einsteinium","v":693000.0,"g":"Elements","gain":810.5263157894736,"recipe":"einsteinium"},{"id":"fermium","name":"Fermium","v":707000.0,"g":"Elements","gain":811.7106773823192,"recipe":"fermium"}]},{"n":39,"id":"superheavy_synthesis","name":"Superheavy Synthesis","cost":324000000.0,"payback":1963.853834917746,"rate":2749.695473251029,"rateRecipe":"americium","top":962000.0,"items":[{"id":"mendelevium","name":"Mendelevium","v":844000.0,"g":"Elements","gain":964.5714285714286,"recipe":"mendelevium"},{"id":"nobelium","name":"Nobelium","v":848000.0,"g":"Elements","gain":964.7326507394766,"recipe":"nobelium"},{"id":"lawrencium","name":"Lawrencium","v":871000.0,"g":"Elements","gain":966.7036625971143,"recipe":"lawrencium"},{"id":"rutherfordium","name":"Rutherfordium","v":874000.0,"g":"Elements","gain":965.7458563535912,"recipe":"rutherfordium"},{"id":"dubnium","name":"Dubnium","v":877000.0,"g":"Elements","gain":964.7964796479648,"recipe":"dubnium"},{"id":"seaborgium","name":"Seaborgium","v":880000.0,"g":"Elements","gain":963.855421686747,"recipe":"seaborgium"},{"id":"bohrium","name":"Bohrium","v":884000.0,"g":"Elements","gain":964.0130861504907,"recipe":"bohrium"},{"id":"hassium","name":"Hassium","v":880000.0,"g":"Elements","gain":961.7486338797814,"recipe":"hassium"},{"id":"meitnerium","name":"Meitnerium","v":910000.0,"g":"Elements","gain":965.0053022269353,"recipe":"meitnerium"},{"id":"darmstadtium","name":"Darmstadtium","v":920000.0,"g":"Elements","gain":965.3725078698845,"recipe":"darmstadtium"},{"id":"roentgenium","name":"Roentgenium","v":923000.0,"g":"Elements","gain":964.4723092998955,"recipe":"roentgenium"},{"id":"copernicium","name":"Copernicium","v":933000.0,"g":"Elements","gain":964.8397104446742,"recipe":"copernicium"},{"id":"nihonium","name":"Nihonium","v":936000.0,"g":"Elements","gain":963.9546858908342,"recipe":"nihonium"},{"id":"flerovium","name":"Flerovium","v":946000.0,"g":"Elements","gain":964.322120285423,"recipe":"flerovium"},{"id":"moscovium","name":"Moscovium","v":949000.0,"g":"Elements","gain":963.4517766497462,"recipe":"moscovium"},{"id":"livermorium","name":"Livermorium","v":959000.0,"g":"Elements","gain":963.8190954773869,"recipe":"livermorium"},{"id":"tennessine","name":"Tennessine","v":962000.0,"g":"Elements","gain":962.9629629629629,"recipe":"tennessine"},{"id":"oganesson","name":"Oganesson","v":962000.0,"g":"Elements","gain":962.0,"recipe":"oganesson"}]},{"n":40,"id":"biochem_precursors","name":"Biochemical Precursors","cost":386000000.0,"payback":1966.7493775612504,"rate":3271.0488721804513,"rateRecipe":"lawrencium","top":866000.0,"items":[{"id":"glucose","name":"Glucose","v":182000.0,"g":"Chemistry & biology","gain":26.445800639349027,"recipe":"glucose"},{"id":"amino_acid","name":"Amino Acid","v":198000.0,"g":"Chemistry & biology","gain":57.24197745013009,"recipe":"amino_acid"},{"id":"fatty_acid","name":"Fatty Acid","v":866000.0,"g":"Chemistry & biology","gain":1.3283145743411344,"recipe":"fatty_acid"},{"id":"nucleotide","name":"Nucleotide","v":425000.0,"g":"Chemistry & biology","gain":2.2237337798241943,"recipe":"nucleotide"}]},{"n":41,"id":"component_engineering","name":"Component Engineering","cost":460000000.0,"payback":1966.8205917564562,"rate":3898.0,"rateRecipe":"nucleotide","top":61300000.0,"items":[{"id":"quantum_processor","name":"Quantum Processor","v":18100000.0,"g":"Chemistry & biology","gain":1.4433811802232854,"recipe":"quantum_processor"},{"id":"plasma_containment_ring","name":"Plasma Containment Ring","v":61300000.0,"g":"Chemistry & biology","gain":1.1297456690011058,"recipe":"plasma_containment_ring"},{"id":"antimatter_cell","name":"Antimatter Cell","v":50700000.0,"g":"Chemistry & biology","gain":1.2240463544181555,"recipe":"antimatter_cell"}]},{"n":42,"id":"biology_lab","name":"Biology Lab","cost":553000000.0,"payback":1963.7784090909092,"rate":4693.333333333333,"rateRecipe":"plasma_containment_ring","top":3630000.0,"items":[{"id":"glucose","name":"Glucose","v":182000.0,"g":"Chemistry & biology","gain":null,"recipe":"collect_glucose"},{"id":"amino_acid","name":"Amino Acid","v":198000.0,"g":"Chemistry & biology","gain":null,"recipe":"collect_amino_acid"},{"id":"fatty_acid","name":"Fatty Acid","v":866000.0,"g":"Chemistry & biology","gain":null,"recipe":"collect_fatty_acid"},{"id":"nucleotide","name":"Nucleotide","v":425000.0,"g":"Chemistry & biology","gain":null,"recipe":"collect_nucleotide"},{"id":"protein","name":"Protein","v":958000.0,"g":"Chemistry & biology","gain":1.2095959595959596,"recipe":"protein"},{"id":"carbohydrate","name":"Carbohydrate","v":894000.0,"g":"Chemistry & biology","gain":1.228021978021978,"recipe":"carbohydrate"},{"id":"lipid_membrane","name":"Lipid Membrane","v":3630000.0,"g":"Chemistry & biology","gain":1.047921478060046,"recipe":"lipid_membrane"},{"id":"nucleic_acid","name":"Nucleic Acid","v":1900000.0,"g":"Chemistry & biology","gain":1.1176470588235294,"recipe":"nucleic_acid"}]},{"n":43,"id":"cell_biology","name":"Cell Biology","cost":674000000.0,"payback":1965.833333333333,"rate":5714.285714285715,"rateRecipe":"nucleic_acid","top":18800000.0,"items":[{"id":"ribosome","name":"Ribosome","v":4080000.0,"g":"Chemistry & biology","gain":1.069182389937107,"recipe":"ribosome"},{"id":"mitochondria","name":"Mitochondria","v":5810000.0,"g":"Chemistry & biology","gain":1.0476018752253877,"recipe":"mitochondria"},{"id":"cell_membrane","name":"Cell Membrane","v":8450000.0,"g":"Chemistry & biology","gain":1.0282307130688733,"recipe":"cell_membrane"},{"id":"prokaryotic_cell","name":"Prokaryotic Cell","v":18800000.0,"g":"Chemistry & biology","gain":1.025081788440567,"recipe":"prokaryotic_cell"}]},{"n":44,"id":"megastructure_theory","name":"Megastructure Theory","cost":904000000.0,"payback":1965.2173913043478,"rate":7666.666666666667,"rateRecipe":"prokaryotic_cell","top":945000000.0,"items":[{"id":"dyson_node","name":"Dyson Node","v":183000000.0,"g":"Chemistry & biology","gain":1.1523929471032746,"recipe":"dyson_node"},{"id":"orbital_frame","name":"Orbital Frame","v":402000000.0,"g":"Chemistry & biology","gain":1.086515851779778,"recipe":"orbital_frame"},{"id":"graviton_lens","name":"Graviton Lens","v":945000000.0,"g":"Chemistry & biology","gain":1.0437375745526838,"recipe":"graviton_lens"}]},{"n":45,"id":"multicellular_life","name":"Multicellular Life","cost":951000000.0,"payback":1964.8760330578511,"rate":8066.666666666667,"rateRecipe":"dyson_node","top":409000000.0,"items":[{"id":"eukaryotic_cell","name":"Eukaryotic Cell","v":25200000.0,"g":"Chemistry & biology","gain":1.0239739943112556,"recipe":"eukaryotic_cell"},{"id":"tissue","name":"Tissue","v":102000000.0,"g":"Chemistry & biology","gain":1.0119047619047619,"recipe":"tissue"},{"id":"organ","name":"Organ","v":409000000.0,"g":"Chemistry & biology","gain":1.0024509803921569,"recipe":"organ"}]},{"n":46,"id":"ecosystems","name":"Ecosystems","cost":2020000000.0,"payback":1963.8888888888891,"rate":17142.85714285714,"rateRecipe":"tissue","top":41100000000.0,"items":[{"id":"organism","name":"Organism","v":1640000000.0,"g":"Chemistry & biology","gain":1.0024449877750612,"recipe":"organism"},{"id":"population","name":"Population","v":8210000000.0,"g":"Chemistry & biology","gain":1.001219512195122,"recipe":"population"},{"id":"ecosystem","name":"Ecosystem","v":41100000000.0,"g":"Chemistry & biology","gain":1.0012180267965896,"recipe":"ecosystem"}]}],"status":{"recombination_i":"ok","hydrogen_synthesis":"ok","automation_i":"ok","rapid_extraction_i":"ok","field_synthesis":"ok","atomic_assembly":"ok","power_distribution":"ok","rapid_extraction_ii":"ok","nucleon_harvesting":"ok","deuterium_synthesis":"ok","isotopes":"ok","surplus_containment":"ok","heavy_elements":"ok","molecular_synthesis":"ok","fusion_i":"ok","radioactive_isotopes":"ok","light_elements":"ok","feedstock_buffers":"ok","fusion_ii":"ok","fissile_extraction":"ok","mid_elements":"ok","advanced_molecules":"ok","fission_i":"ok","fusion_iii":"ok","slow_neutron_capture":"ok","chemistry_lab":"ok","explosive_burning":"ok","transition_metals":"ok","rapid_neutron_capture":"ok","materials_science":"ok","precious_metals":"ok","reaction_engineering":"ok","exotic_metals":"ok","heavy_transition_metals":"ok","advanced_materials":"ok","lanthanides_and_heavy_metals":"ok","organic_chemistry":"ok","transuranic_elements":"ok","superheavy_synthesis":"ok","biochem_precursors":"ok","component_engineering":"ok","biology_lab":"ok","cell_biology":"ok","megastructure_theory":"ok","multicellular_life":"ok","ecosystems":"ok"},"jump":4,"buildings":5,"anomalies":[{"kind":"loses value","what":"assemble_deuterium","why":"x0.57 per craft"},{"kind":"loses value","what":"deuterium","why":"x0.50 per craft"},{"kind":"loses value","what":"uranium","why":"x0.08 per craft"},{"kind":"loses value","what":"plutonium","why":"x0.29 per craft"}],"version":"0.3.16"};
+const NS = "http://www.w3.org/2000/svg";
+const SUF = [[1e18,"Qi"],[1e15,"Q"],[1e12,"T"],[1e9,"B"],[1e6,"M"],[1e3,"k"]];
+function fmt(v) {
+  if (!isFinite(v)) return "∞";
+  const a = Math.abs(v);
+  for (const [d, s] of SUF) if (a >= d) return (v / d).toFixed(a / d >= 100 ? 0 : 1).replace(/\.0$/, "") + s;
+  if (a >= 10 || a === 0) return Math.round(v).toLocaleString();
+  if (a >= 0.01) return v.toFixed(2);
+  return v.toExponential(0);
+}
+function minutes(m) {
+  if (!isFinite(m)) return "∞";
+  if (m < 1 / 60) return "<1 s";
+  if (m < 1) return Math.round(m * 60) + " s";
+  if (m < 120) return m.toFixed(m < 10 ? 1 : 0) + " min";
+  return (m / 60).toFixed(m < 6000 ? 1 : 0) + " h";
+}
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const tip = document.getElementById("tip");
+function showTip(ev, html) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect(), x = ev.clientX + 14, y = ev.clientY + 14;
+  tip.style.left = Math.min(x, innerWidth - r.width - 8) + "px";
+  tip.style.top = Math.min(y, innerHeight - r.height - 8) + "px";
+}
+function hideTip() { tip.hidden = true; }
+document.addEventListener("scroll", hideTip, { passive: true });
+
+// One frame per chart: x = unlock index, y = log10 or linear.
+function frame(svg, opts) {
+  svg.innerHTML = "";
+  const W = 900, H = +svg.getAttribute("viewBox").split(" ")[3];
+  const L = 58, R = 12, T = 12, B = 30;
+  const n = D.rows.length;
+  const x = i => L + (i - 0.5) * (W - L - R) / n;
+  let y, ticks;
+  if (opts.log) {
+    const lo = Math.floor(Math.log10(opts.min)), hi = Math.ceil(Math.log10(opts.max));
+    y = v => T + (H - T - B) * (1 - (Math.log10(Math.max(v, opts.min)) - lo) / (hi - lo));
+    const step = Math.max(1, Math.ceil((hi - lo) / 6));
+    ticks = []; for (let p = lo; p <= hi; p += step) ticks.push(Math.pow(10, p));
+  } else {
+    y = v => T + (H - T - B) * (1 - v / opts.max);
+    ticks = []; const s = niceStep(opts.max / 5); for (let v = 0; v <= opts.max + 1e-9; v += s) ticks.push(v);
+  }
+  for (const t of ticks) {
+    el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }, svg);
+    el("text", { x: L - 8, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = opts.fmt ? opts.fmt(t) : fmt(t);
+  }
+  el("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, stroke: "var(--rule)", "stroke-width": 1 }, svg);
+  for (let i = 1; i <= n; i += 5) el("text", { x: x(i), y: H - B + 16, "text-anchor": "middle" }, svg).textContent = i;
+  el("text", { x: W - R, y: H - 2, "text-anchor": "end" }, svg).textContent = "unlock #";
+  return { x, y, W, H, L, R, T, B, n };
+}
+function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw || 1))); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+function hitbar(svg, f, i, html) {
+  const w = (f.W - f.L - f.R) / f.n;
+  const r = el("rect", { x: f.x(i) - w / 2, y: f.T, width: w, height: f.H - f.T - f.B, fill: "transparent" }, svg);
+  r.addEventListener("pointermove", ev => showTip(ev, html));
+  r.addEventListener("pointerleave", hideTip);
+}
+
+function status(r) { return D.status[r.id] || "ok"; }
+const COLOR = { ok: "var(--good)", wall: "var(--crit)", free: "var(--warn)" };
+
+function drawPayback() {
+  const svg = document.getElementById("payback");
+  const vals = D.rows.map(r => r.payback).filter(v => v > 0 && isFinite(v));
+  const f = frame(svg, { log: true, min: Math.max(1e-4, Math.min(...vals)), max: Math.max(...vals), fmt: minutes });
+  const w = Math.max(3, (f.W - f.L - f.R) / f.n - 4);
+  D.rows.forEach(r => {
+    const top = f.y(Math.max(r.payback, 1e-4)), base = f.H - f.B;
+    el("rect", { x: f.x(r.n) - w / 2, y: Math.min(top, base - 2), width: w, height: Math.max(2, base - top), rx: 2, fill: COLOR[status(r)] }, svg);
+  });
+  D.rows.forEach(r => hitbar(svg, f, r.n, `<b>${r.n}. ${r.name}</b><br><span class="m">cost ${fmt(r.cost)} · payback ${minutes(r.payback)}<br>best before: ${r.rateRecipe} (${fmt(r.rate)}/s)</span>`));
+}
+
+function drawTime(nb) {
+  const svg = document.getElementById("time");
+  let acc = 0; const pts = D.rows.map(r => { acc += (isFinite(r.payback) ? r.payback : 0) / nb; return acc / 60; });
+  const f = frame(svg, { log: false, max: Math.max(1, ...pts) * 1.05, fmt: v => v.toFixed(v < 10 ? 1 : 0) + " h" });
+  const d = pts.map((h, i) => (i ? "L" : "M") + f.x(i + 1).toFixed(1) + " " + f.y(h).toFixed(1)).join(" ");
+  el("path", { d, fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  const last = pts.length - 1;
+  el("circle", { cx: f.x(last + 1), cy: f.y(pts[last]), r: 4, fill: "var(--s1)", stroke: "var(--panel)", "stroke-width": 2 }, svg);
+  D.rows.forEach((r, i) => hitbar(svg, f, r.n, `<b>${r.n}. ${r.name}</b><br><span class="m">reached after ${pts[i].toFixed(2)} h with ${nb} building${nb > 1 ? "s" : ""}</span>`));
+  document.getElementById("nbv").value = nb;
+  document.getElementById("statTime").textContent = pts[last].toFixed(1) + " h";
+}
+
+function drawRate() {
+  const svg = document.getElementById("rate");
+  const vals = D.rows.map(r => r.rate).filter(v => v > 0);
+  const f = frame(svg, { log: true, min: Math.min(...vals), max: Math.max(...vals) });
+  const d = D.rows.map((r, i) => (i ? "L" : "M") + f.x(r.n).toFixed(1) + " " + f.y(r.rate).toFixed(1)).join(" ");
+  el("path", { d, fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  D.rows.forEach(r => hitbar(svg, f, r.n, `<b>${r.n}. ${r.name}</b><br><span class="m">best before it: ${fmt(r.rate)} e/s<br>${r.rateRecipe}</span>`));
+}
+
+const GROUPS = ["Elements", "Chemistry & biology", "Particles & nucleons"];
+const GCOL = { "Elements": "var(--s1)", "Chemistry & biology": "var(--s2)", "Particles & nucleons": "var(--s3)" };
+function drawValues() {
+  const svg = document.getElementById("values");
+  const all = D.rows.flatMap(r => r.items.map(it => ({ ...it, n: r.n, node: r.name })));
+  const f = frame(svg, { log: true, min: Math.max(1, Math.min(...all.map(a => a.v))), max: Math.max(...all.map(a => a.v)) });
+  document.getElementById("vlegend").innerHTML = GROUPS.map(g => `<span><i style="background:${GCOL[g]}"></i>${g}</span>`).join("");
+  const seen = {};
+  for (const a of all) {
+    const k = a.n + "|" + a.id; if (seen[k]) continue; seen[k] = 1;
+    const c = el("circle", { cx: f.x(a.n), cy: f.y(a.v), r: 4.5, fill: GCOL[a.g] || "var(--s-other)", stroke: "var(--panel)", "stroke-width": 1.5 }, svg);
+    c.addEventListener("pointermove", ev => showTip(ev, `<b>${a.name}</b> · ${fmt(a.v)} e<br><span class="m">${a.recipe}${a.gain != null ? " · ×" + a.gain.toFixed(2) + " per craft" : ""}<br>unlock ${a.n}: ${a.node}</span>`));
+    c.addEventListener("pointerleave", hideTip);
+  }
+}
+
+function tables() {
+  const fb = document.querySelector("#flags tbody");
+  const KIND = { "wall": "wall", "free": "free", "loses value": "loses", "late but cheap": "late" };
+  fb.innerHTML = D.anomalies.map(a => `<tr><td><span class="pill ${KIND[a.kind] || ""}">${a.kind}</span></td><td><code>${a.what}</code></td><td>${a.why}</td></tr>`).join("")
+    || `<tr><td colspan="3">Nothing flagged.</td></tr>`;
+  let acc = 0;
+  document.querySelector("#order tbody").innerHTML = D.rows.map(r => {
+    acc += (isFinite(r.payback) ? r.payback : 0) / D.buildings;
+    const s = status(r);
+    return `<tr><td class="num">${r.n}</td><td>${r.name} <span class="pill ${s}">${s === "ok" ? "on trend" : s}</span></td><td class="num">${fmt(r.cost)}</td><td class="num">${minutes(r.payback)}</td><td class="num">${(acc / 60).toFixed(2)}</td><td class="num">${fmt(r.rate)}</td><td class="num">${r.top ? fmt(r.top) : "–"}</td></tr>`;
+  }).join("");
+}
+
+function stats() {
+  const counts = { ok: 0, wall: 0, free: 0 }; D.rows.forEach(r => counts[status(r)]++);
+  const firstFree = D.rows.find(r => status(r) === "free" && r.n > 5);
+  document.getElementById("stats").innerHTML = [
+    [D.rows.length, "research nodes"],
+    [counts.free, "effectively free"],
+    [counts.wall, "walls"],
+    ['<span id="statTime">–</span>', "to unlock everything"],
+    [firstFree ? firstFree.name : "–", "first node that is free"],
+  ].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+  document.getElementById("foot").textContent =
+    `game_data.json ${D.version} · a node is a wall or free when its payback is over ${D.jump}x (or under 1/${D.jump}) the trend of the nodes before it · value added assumes inputs are supplied by the rest of the chain.`;
+}
+
+let nb = D.buildings;
+try { const s = +localStorage.getItem("pc.buildings"); if (s >= 1 && s <= 40) nb = s; } catch (e) {}
+const slider = document.getElementById("nb"); slider.value = nb;
+slider.addEventListener("input", () => { nb = +slider.value; try { localStorage.setItem("pc.buildings", nb); } catch (e) {} drawTime(nb); });
+stats(); drawPayback(); drawTime(nb); drawRate(); drawValues(); tables();
+</script>

@@ -59,18 +59,36 @@ namespace MobileIdleBuilder.Tests
                 double outV = _items[r.output_item].base_sell_value
                               + r.byproducts.Sum(b => _items[b.item].base_sell_value * b.quantity);
                 double gain = outV / inV;
-                Assert.That(gain, Is.InRange(2.0, 8.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})");
+                Assert.That(gain, Is.InRange(2.0, 20.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})");
             }
         }
 
         [Test]
-        public void ValueRisesTowardIron_FromPlutoniumDownToCobalt()
+        public void DecayChain_ValueRisesFromUraniumDownToLead()
         {
-            var byZ = _gd.items.Where(i => i.category == "Element" && i.atomic_number >= 26 && i.atomic_number <= 94)
-                               .ToDictionary(i => i.atomic_number);
-            for (int z = 27; z <= 94; z++)
-                Assert.Greater(byZ[z - 1].base_sell_value, byZ[z].base_sell_value,
-                    $"Z{z - 1} {byZ[z - 1].id} must be worth more than Z{z} {byZ[z].id} (iron is the peak)");
+            // The natural alpha chain U -> Th -> Ra -> Rn -> Po -> Pb: each daughter is worth more.
+            var chain = new[] { "uranium", "thorium", "radium", "radon", "polonium", "lead" };
+            for (int i = 1; i < chain.Length; i++)
+                Assert.Greater(_items[chain[i]].base_sell_value, _items[chain[i - 1]].base_sell_value, chain[i]);
+        }
+
+        /// <summary>
+        /// Every nuclear processing step is worth doing on its own (scripts/rebalance_curve.py prices each recipe
+        /// as inputs + wage x craft time). Before 2026-11-02 values peaked at iron and every neutron capture lost value.
+        /// </summary>
+        [Test]
+        public void EveryNuclearStep_GainsValue()
+        {
+            var buildings = new[] { "fusion_reactor", "fission_reactor", "neutron_capture", "radioactive_containment", "isotopic_manipulator" };
+            // Hydrogen + neutron in the Manipulator stays cheap on purpose: the Atom Generator is the Deuterium route (#320).
+            var exempt = new HashSet<string> { "deuterium" };
+            foreach (var r in _gd.recipes.Where(r => buildings.Contains(r.valid_buildings[0]) && !exempt.Contains(r.id)))
+            {
+                double inV  = r.inputs.Sum(i => _items[i.item].base_sell_value * i.quantity);
+                double outV = _items[r.output_item].base_sell_value
+                              + (r.byproducts ?? new List<GdIng>()).Sum(b => _items[b.item].base_sell_value * b.quantity);
+                Assert.Greater(outV / inV, 1.0, $"{r.id}: {inV} -> {outV}");
+            }
         }
 
         [Test]

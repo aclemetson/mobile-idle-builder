@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Heavy Elements research unlocks Uranium \u2014 92 protons, 146 neutrons,
-      92 electrons. Atomic mass 238. Craft time: nearly four minutes. Power cost:
-      1,190 electron volts. Sell value: 1,000 entropy."
+    text: 'Heavy Elements research teaches the Atom Generator to build Uranium: 92
+      protons, 146 neutrons, 92 electrons. Atomic mass 238. One atom takes nearly
+      four minutes and sells for 64 entropy.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: Your current generators likely cannot sustain 1,190 eV. A fully upgraded
-      Basic Generator outputs 400 eV. You will need multiple before attempting Uranium
-      synthesis.
+    text: 'Uranium is not worth building for its own sake. It is where the decay
+      chain begins: Radioactive Isotopes lets it decay step by step down to Lead,
+      and every step is worth more than the last.'
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

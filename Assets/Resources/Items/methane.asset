@@ -35,6 +35,6 @@ MonoBehaviour:
     engine burns it with oxygen. A key carbon feedstock for synthesising carbon fibre
     and polymers.
   codexUnlocked: 0
-  baseSellValue: 5000
+  baseSellValue: 1980
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

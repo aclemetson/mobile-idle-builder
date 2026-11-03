@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Californium (Cf), element number 98 with mass number 251. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 2.6843546e+9
+  baseSellValue: 691000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

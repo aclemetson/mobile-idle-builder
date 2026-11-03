@@ -25,14 +25,28 @@ The Assembler built Iron from 82 particles behind the 500e Nucleosynthesis node 
 - **Deuterium value 4e** (`isotope_sell_multiplier` 0.8) so 2 D (8e) → He (10e) + γ (5e) is worth fusing, and 2 D cost 3s of Atom Generator time vs 4s for one He.
 - Guarded by `FusionLadderDataTests`.
 
+### Balance pass: tier value (2026-11-02, integration/2026-11-02)
+
+> **Superseded the same day** by the derived economy (`economy-balance.md` "Derived economy"): the rules below (every nuclear step gains, alpha 10 / beta 2, Helium 15, capture time by tier, no research cheaper than its prerequisite) still hold, but the specific values quoted here were replaced by generated ones.
+
+Every nuclear processing step now gains value on its own, like the fusion ladder (guarded by `FissionDataTests.EveryNuclearStep_GainsValue`, ratio > 1.05). Before it, values peaked at iron like binding energy, so every neutron capture lost value (Fe→Co ×0.60, Co→…→Br ×0.24 a step, Tc→Hg ×0.99, r-process ×0.96) and Gold was worth less than the Platinum it is made from.
+
+- **Neutron capture:** `V(out) = gain × V(inputs) − V(escaping neutrino)`, slow `gain` 1.12, fast 1.6, computed down each chain from its seed (Iron, or the fission fragments Mo, Ba, Ce). Results: Co 188M … Br 465M (climbing from iron), Ag 522, In 656, La 287, Sm 396, Eu 645, Re 2,520, Pt 10,379, **Au 16,618**, Hg 18,613. No closed loop: capture never reaches Uranium, and nothing else consumes these elements.
+- **Irradiate → beta side branches:** irradiated isotopes are worth `1.12 × (parent + neutron)` (Th-233 92, Ra-227 112, Rn-223 137, Pb-209 205); their beta-minus products `1.12 × isotope − neutrino` (Pa 100, Ac 122, Fr 150, Bi 227). Stripped isotopes (Rn-211, Pb-201) keep their parent's value: the released neutrons already make stripping pay.
+- **Particles:** alpha 50 → **10** (a bare Helium nucleus), beta 30 → **2** (an electron). The alpha decay chain now gains ×1.3 a step, not ×1.6–2. Particle energy recovery (`ParticleUse.EnergyRecovery`) was never implemented; the dialogue no longer promises it.
+- **Helium-4 10 → 15** (#270): per proton it now beats Hydrogen (7.5 vs 5), so the tutorial's Helium upgrade pays. Tritium 8 → 13.
+- **Capture time by unlock tier:** slow 12s (`slow_neutron_capture`, `transition_metals`), 16s (`heavy_transition_metals`), 20s (`lanthanides_and_heavy_metals`); fast 30s (`rapid_neutron_capture`), 40s (`precious_metals`), 50s (`exotic_metals`). Guarded by `ProgressionBalanceTests`.
+- **Research cost inversions fixed** (a node never costs less than a prerequisite, except the tutorial's Hydrogen Synthesis and Automation I): Advanced Molecules 40k, Materials Science 400k, Precious Metals 500k, Exotic Metals 750k, Heavy Transition Metals 750k, Lanthanides 1.5M, Transuranic 2M, Superheavy 4M.
+- **Known gap, not addressed:** two value scales. The capture and decay products sell for hundreds to tens of thousands, while Iron sells for 167M, so the Actinide branch is an unlock path rather than an income path once the player has Iron. The Chemistry world's mines (`collect_iron/nickel/copper`, 2s) are the separate Phase 6 re-tier.
+
 ### Actinide map phase 1: decay chain (shipped 2026-11-01, #322)
 
 Working back from Uranium (the Actinide Vein site, which now also spawns `neutron_field` for the Harvester's `collect_neutron`). All gated by `radioactive_isotopes`:
 
 - **Decay Chamber** = the repurposed `radioactive_containment` (2x2, inputs on the west, outputs East and South, `assignable_outputs`): one isotope in, the element it decays into out, plus its particle. Alpha decays U → Th → Ra → Rn → Po → Pb release a real `alpha_particle`; beta decays release a `neutrino` (paid as entropy).
 - **Isotopic Manipulator** gains `irradiate_<el>` (+1 neutron: Th-233, Ra-227, Rn-223, Pb-209 → beta-minus to Pa, Ac, Fr, Bi) and `strip_<el>` (Rn → Rn-211 + 11 n, Pb → Pb-201 + 7 n → electron capture to At, Tl). Stripped neutrons come out as items: the intended neutron source.
-- New named isotope items (`item_id` 181–186) carry `decay_type` (`BetaPlus` added for electron capture) and sell at their parent element's value.
-- The Atom Generator no longer builds Tl..Pa (Z81–91); Uranium stays (Atom Gen + harvest). Value rises toward iron, so alpha decays and stripping (lower Z) gain value, adding a neutron (higher Z) loses it.
+- New named isotope items (`item_id` 181–186) carry `decay_type` (`BetaPlus` added for electron capture) and sold at their parent element's value (irradiated ones now earn a premium: see the tier-value balance pass).
+- The Atom Generator no longer builds Tl..Pa (Z81–91); Uranium stays (Atom Gen + harvest). Alpha decays and stripping (lower Z) gain value; since the tier-value pass, irradiating and the beta decays that follow gain too.
 - **Real second outputs:** `RecipeSO.ProducedOutputs()` fills `RecipeOutputSlot` with the main output plus every non-escaping byproduct, so existing fission fragments/neutrons and the U-235 alpha are now produced too. Offline earnings still count only the main output.
 - **Per-side outputs on any building:** `assignable_outputs` gives a building the Filter's `OutputPortFilter` rules (no `ItemFilterTag`), so the player picks which side each product leaves by. Guarded by `DecayChainTests`.
 
@@ -45,8 +59,8 @@ Working back from Uranium (the Actinide Vein site, which now also spawns `neutro
 ### Actinide map phase 3: neutron capture (2026-11-02, #322)
 
 - **Neutron Capture** (`neutron_capture`, building 26, 20k, gate `slow_neutron_capture`): element + neutrons → the next element up (beta decay after capture, a neutrino escapes). Two recipe groups shown one at a time by a mode switch (`recipe_mode_labels` / `recipe_mode_prefixes`):
-  - **Slow (s-process)** `s_capture_<el>`: 1 neutron, 12s, 40 eV, research `slow_neutron_capture` (120k, after `fission_i`). 34 steps filling Co→Br (from Iron), Tc→In (from Mo), La (from Ba), Pr→Sm (from Ce), Gd→Re (from Eu), Hg (from Au).
-  - **Fast (r-process)** `r_capture_<el>`: 3 neutrons, 30s, 180 eV, research `rapid_neutron_capture` (300k). The only route to Eu, Os, Ir, Pt, Au.
+  - **Slow (s-process)** `s_capture_<el>`: 1 neutron, 12–20s by unlock tier, 40 eV, research `slow_neutron_capture` (120k, after `fission_i`). 34 steps filling Co→Br (from Iron), Tc→In (from Mo), La (from Ba), Pr→Sm (from Ce), Gd→Re (from Eu), Hg (from Au).
+  - **Fast (r-process)** `r_capture_<el>`: 3 neutrons, 30–50s by unlock tier, 180 eV, research `rapid_neutron_capture` (300k). The only route to Eu, Os, Ir, Pt, Au.
 - The building's draw follows its recipe (`power_cost_is_dynamic`, `BuildingSO.PowerDrawFor`).
 - With phases 1-3 every element Z27–92 has a route other than the Atom Generator. Guarded by `NeutronCaptureTests`.
 
@@ -78,6 +92,8 @@ The Fusion + Fission reactors were introduced as **additive shortcuts** next to 
 - **Tutorial:** a Phase ⑫ reactor beat is appended after the existing nuclear steps (intro → research `fusion_i` → place Fusion Reactor → research `fissile_extraction`/`fission_i` → place Fission Reactor → finale), gated only on `ResearchUnlocked`/`BuildingMin` (robust) + 4 new dialogues. Crafting/input-routing is explained in dialogue rather than gated, since a craft gate would either auto-complete on leftover inventory or require reactor-specific connection events that don't exist yet.
 
 ## Creation regimes — the natural tent, then the post-iron climb
+
+> **Superseded for numbers (2026-11-02):** item values after the tutorial are now generated from one progression curve by `scripts/rebalance_curve.py` (see `economy-balance.md` "Derived economy" and `docs/progression-curve.html`). The formulas below explain the original physics-motivated shape; the live values in `game_data.json` no longer follow them (e.g. Iron 37,200, not 167,772,160).
 
 Binding energy per nucleon peaks at iron-56. The **natural** economy (fusion + fission, Z1–92) is therefore a tent that peaks at iron (~168M e) — both feedstocks (hydrogen, uranium) are cheap and both directions climb toward iron. Past uranium, elements **no longer occur naturally**; they must be **synthesized with energy input** — a *second* endgame unlocked only after iron, whose value climbs **again, past iron**, to the global peak at Oganesson (~11.3 quadrillion e).
 
@@ -183,13 +199,13 @@ Fissile fields are gated behind a **map purchase**, reusing the multi-grid build
 
 ## Exotic particles
 
-Extend the existing particle set (`ItemCategory.Particle`, with `is_secondary_particle`, `particle_uses` flags, `decay_type`). Current values: alpha = 50e, beta = 30e, neutron = 3e (a Nucleon).
+Extend the existing particle set (`ItemCategory.Particle`, with `is_secondary_particle`, `particle_uses` flags, `decay_type`). Current values: alpha = 10e, beta = 2e, neutron = 3e (a Nucleon).
 
 | Particle | id | Symbol | Charge | Source reaction | Use(s) | Entropy yield | Status |
 |---|---|---|---|---|---|---|---|
 | Neutron | `neutron` | n⁰ | 0 | fusion/fission byproduct | fission trigger input; isotope building (Isotopic Manipulator) | 3 | impl |
-| Alpha | `alpha_particle` | α | +2 | alpha decay (U, Pu, Ra…) | recipe input; energy recovery | 50 | impl |
-| Beta (β⁻) | `beta_particle` | β | −1 | beta-minus decay (tritium, C-14, fission fragments) | energy recovery | 30 | impl |
+| Alpha | `alpha_particle` | α | +2 | alpha decay (U, Pu, Ra…) | recipe input; energy recovery (not implemented) | 10 | impl |
+| Beta (β⁻) | `beta_particle` | β | −1 | beta-minus decay (tritium, C-14, fission fragments) | energy recovery (not implemented) | 2 | impl |
 | **Positron (β⁺)** | `positron` | e⁺ | +1 | beta-plus / p-p chain | annihilates with `electron` → 2× gamma (energy recovery) | 30 (design) | design |
 | **Gamma photon** | `gamma_photon` | γ | 0 | emitted by nearly every fusion/fission/decay step | **energy recovery → eV** (feeds the power grid); recipe catalyst | 20 (design) | design |
 | **Neutrino** | `neutrino` | ν | 0 | beta decay & fusion | *educational:* barely interacts — mostly escapes; near-zero capture value | 1 (design) | design |
@@ -204,7 +220,7 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 | Z | Sym | Name | A | Path | Yield (e) | St |
 |---|---|---|---|---|---|---|
 | 1 | H | Hydrogen | 1 | ASM | 5 | ✅ |
-| 2 | He | Helium | 4 | FUS | 10 | ✅ |
+| 2 | He | Helium | 4 | FUS | 15 | ✅ |
 | 3 | Li | Lithium | 7 | FUS | 20 | ✅ |
 | 4 | Be | Beryllium | 9 | FUS | 40 | ✅ |
 | 5 | B | Boron | 11 | FUS | 80 | ✅ |
@@ -373,7 +389,7 @@ e :  5  10  20  40   80  160  320  640 1280  2560   40,960  2,621,440  83,886,08
 
 - **Decay band, Z81–92:** `64 × 1.1091^(92 − Z)`: U 64 → Tl 200 (the decay chain gains ~3× end to end).
 - **Fission-fragment band, Z36–80:** `200 × 1.01^(81 − Z)`: nearly flat, Hg 202 … Ba 256 … Kr 313. Every fission pair lands here, so U-235 (128) → two fragments + 2 neutrons ≈ 575 (×4.5).
-- **Next to iron, Z27–35:** `V(36) × 4.089^(36 − Z)`: Br 1,280 … Zn 1.46M, Cu 5.98M, Ni 24.5M, **Co 100M** (Fe 167,772,160 stays the peak).
+- **Next to iron, Z27–35:** superseded by the tier-value pass: Co..Br come only from neutron capture starting at Iron, so they climb from it (Co 188M … Br 465M).
 - **Np, Pu (93–94):** continue below uranium (`64 / 1.1091^(Z − 92)`: Np 58, Pu 52) because Plutonium is harvested on the Actinide Vein.
 
 ```
@@ -390,13 +406,15 @@ el:     Am          Cm           Fm             Ds              Og
 e : 335,544,320 671,088,640 10,737,418,240 10,995,116,277,760 2,814,749,767,106,560
 ```
 
-So the curve **rises to iron from both sides, is cheapest around uranium/plutonium, then jumps the natural/synthetic cliff (Pu 52 → Am 336M) and rises far past iron to Og.** Gold, Platinum and the other r-process elements sit in the flat fragment band by value; their trophy status comes from being reachable only by fast neutron capture (phase 3), not from price.
+So the curve **rises to iron from both sides, is cheapest around uranium/plutonium, then jumps the natural/synthetic cliff (Pu 52 → Am 336M) and rises far past iron to Og.** Since the tier-value pass, everything made by neutron capture is priced by its chain, not by this curve: Gold (16,618) and Platinum (10,379) are the most valuable natural elements below iron's band because they sit at the end of the longest capture chain.
 
 > **Migration note:** every implemented element follows OLD thinned/monotonic values in `game_data.json` and must be **re-derived from the three formulas above** — e.g. Si 1,280→40,960, Fe 5,120→167,772,160, Ni 10,240→~107M, U 1,310,720→64, Pu (rescaled again 2026-11-02 to 52: harvested, so cheap). H..O are unchanged. Downstream tier-3+ recipes that consume heavy/iron elements (`uranium_hexafluoride`, `steel`/`iron_oxide`) need their cost basis re-reviewed; the synthetic elements (up to ~10^16) now exceed even the megastructure component tier, so they sit at the very top of the entropy economy.
 
 > **Balance caveat:** Oganesson at ~10^16 is the new netWorth ceiling, far above the old element economy. It is reachable only after the full post-iron endgame (iron first, then both synthesis branches), so it should not distort early/mid pacing — but re-check prestige `✦` (≈log10 netWorth) and the megastructure interaction, since synthetics now out-value tier-5 components. Final constants need an idle-sim pass.
 
 ## Pacing & gating — iron is ~a month away
+
+> **Superseded (2026-11-02):** the chosen pace is Iron in about half a day to a day and the whole tree in about a week of active play (5 buildings, before idle multipliers and prestige). The curve that produces it is in `economy-balance.md` "Derived economy".
 
 Iron must read as a **long-term apex**: the player should reach it only after **a month-plus of regular play and a healthy stack of prestiges + prestige upgrades**, not in the first few sessions. The ~168M e value is one half of that; the other half is *gating the climb* so the value is earned, not farmed early. Four compounding gates meter each rung toward iron (no single wall — they stack):
 
