@@ -1,0 +1,548 @@
+<title>Research Tree Editor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a full-height workspace. Toolbar on top, pannable tree canvas, editor panel at the right
+   (a bottom sheet on phones). Branch colours mark identity; every card also prints its branch name. */
+:root {
+  --bg: #eef1f5; --canvas: #f7f9fb; --panel: #ffffff; --ink: #141820; --ink-2: #4b5363; --ink-3: #7b8394;
+  --rule: #d9dee7; --grid: #e4e8ee; --edge: #9aa3b2; --edge-hot: #2a78d6; --accent: #2a78d6; --accent-ink: #ffffff;
+  --b1: #2a78d6; --b2: #eb6834; --b3: #1baf7a; --b4: #c98500; --b5: #d55181; --b6: #6250d6; --b0: #8a93a3;
+  --warn: #b7791f; --crit: #c53030; --good: #1f8a4c; --changed: #eb6834;
+  --band-a: rgba(42,120,214,.06); --band-b: rgba(98,80,214,.07);
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --canvas: #14181d; --panel: #1b2027; --ink: #e9edf3; --ink-2: #b2bac7; --ink-3: #848d9b;
+  --rule: #2b323c; --grid: #1d232a; --edge: #5b6575; --edge-hot: #5aa0ef; --accent: #3987e5; --accent-ink: #ffffff;
+  --b1: #3987e5; --b2: #d95926; --b3: #199e70; --b4: #c98500; --b5: #d55181; --b6: #9085e9; --b0: #6c7380;
+  --warn: #d69e2e; --crit: #f0605d; --good: #3fb36f; --changed: #e8753f;
+  --band-a: rgba(90,160,239,.07); --band-b: rgba(144,133,233,.09); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --canvas: #14181d; --panel: #1b2027; --ink: #e9edf3; --ink-2: #b2bac7; --ink-3: #848d9b;
+  --rule: #2b323c; --grid: #1d232a; --edge: #5b6575; --edge-hot: #5aa0ef; --accent: #3987e5; --accent-ink: #ffffff;
+  --b1: #3987e5; --b2: #d95926; --b3: #199e70; --b4: #c98500; --b5: #d55181; --b6: #9085e9; --b0: #6c7380;
+  --warn: #d69e2e; --crit: #f0605d; --good: #3fb36f; --changed: #e8753f;
+  --band-a: rgba(90,160,239,.07); --band-b: rgba(144,133,233,.09); color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); overflow: hidden; }
+.app { height: 100%; display: grid; grid-template-rows: auto 1fr; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--panel); border-bottom: 1px solid var(--rule); }
+.bar h1 { font: 600 18px var(--f-display); margin: 0 6px 0 0; letter-spacing: .01em; }
+.bar .meta { font: 12px var(--f-mono); color: var(--ink-3); }
+.bar .spacer { flex: 1; }
+.status { font-size: 13px; color: var(--ink-2); min-width: 0; }
+.status.dirty { color: var(--changed); } .status.ok { color: var(--good); } .status.err { color: var(--crit); }
+button, .btn { font: 500 13px var(--f-body); border-radius: 6px; border: 1px solid var(--rule); background: var(--panel);
+  color: var(--ink); padding: 6px 11px; cursor: pointer; }
+button:hover { border-color: var(--ink-3); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.danger { color: var(--crit); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+input[type=search] { font: 13px var(--f-body); padding: 6px 9px; border-radius: 6px; border: 1px solid var(--rule);
+  background: var(--canvas); color: var(--ink); width: 180px; max-width: 40vw; }
+.work { position: relative; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+.stage { position: relative; overflow: hidden; background: var(--canvas); touch-action: none; cursor: grab;
+  background-image: radial-gradient(var(--grid) 1px, transparent 1px); background-size: 20px 20px; }
+.stage.panning { cursor: grabbing; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.world svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+.edge.hot { stroke: var(--edge-hot); stroke-width: 2.5; }
+.edge.dim { opacity: .25; }
+.band { fill: var(--band-a); stroke: var(--rule); stroke-width: 1; }
+.band.alt { fill: var(--band-b); }
+.band-label { font: 600 17px var(--f-display); fill: var(--ink); }
+.band-sub { font: 12px var(--f-mono); fill: var(--ink-3); }
+.brow { display: grid; grid-template-columns: auto 1fr 64px auto; gap: 6px; align-items: center; }
+.brow input { font: 13px var(--f-body); padding: 5px 7px; border-radius: 6px; border: 1px solid var(--rule); background: var(--canvas); color: var(--ink); min-width: 0; }
+.brow .ord { display: flex; flex-direction: column; gap: 2px; }
+.brow .ord button { padding: 0 6px; font-size: 10px; line-height: 14px; }
+.brow .count { font: 12px var(--f-mono); color: var(--ink-3); white-space: nowrap; }
+.blocks { display: grid; gap: 8px; }
+.node { position: absolute; width: 196px; min-height: 64px; box-sizing: border-box; padding: 8px 10px 8px 14px; border-radius: 8px;
+  background: var(--panel); border: 1px solid var(--rule); box-shadow: 0 1px 2px rgba(0,0,0,.08); cursor: pointer; user-select: none; }
+.node::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 8px 0 0 8px; background: var(--bc, var(--b0)); }
+.node .n { font: 600 13px var(--f-body); line-height: 1.25; color: var(--ink); }
+.node .m { display: flex; justify-content: space-between; gap: 6px; margin-top: 4px; font: 11px var(--f-mono); color: var(--ink-3); }
+.node.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.node.dim { opacity: .35; }
+.node.changed .n::after { content: " •"; color: var(--changed); }
+.node.new { border-style: dashed; }
+.node.warn .m b { color: var(--warn); }
+.side { background: var(--panel); border-left: 1px solid var(--rule); overflow-y: auto; min-width: 0;
+  padding-block: 14px 24px; padding-left: 16px; padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; align-content: start; }
+.side h2 { font: 600 16px var(--f-display); margin: 0; text-wrap: balance; }
+.side h3 { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: 12px; color: var(--ink-2); }
+.field input, .field select, .field textarea { font: 14px var(--f-body); padding: 7px 9px; border-radius: 6px; border: 1px solid var(--rule);
+  background: var(--canvas); color: var(--ink); width: 100%; box-sizing: border-box; }
+.field textarea { min-height: 76px; resize: vertical; }
+.field .hint { font-size: 12px; color: var(--ink-3); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 4px 3px 9px; border-radius: 99px; border: 1px solid var(--rule); background: var(--canvas); }
+.chip button { border: 0; padding: 0 6px; background: none; color: var(--ink-3); font-size: 14px; line-height: 1; }
+.list { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+.list li { margin: 2px 0; }
+.warnings li { color: var(--warn); }
+.changes li b { font-weight: 600; color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.muted { color: var(--ink-3); font-size: 13px; }
+.zoom { position: absolute; right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; }
+.zoom button { width: 34px; height: 34px; padding: 0; font-size: 16px; }
+@media (max-width: 760px) {
+  .work { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .side { border-left: 0; border-top: 1px solid var(--rule); max-height: 46vh; }
+  .bar h1 { font-size: 16px; }
+  .zoom { bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <div class="bar">
+    <h1>Research Tree</h1>
+    <span class="meta" id="meta"></span>
+    <input type="search" id="find" placeholder="Find research" aria-label="Find research">
+    <span class="spacer"></span>
+    <span class="status" id="status" role="status">Loading saved edits…</span>
+    <button id="addBtn">Add research</button>
+    <button id="layoutBtn" title="Lay every node out again by prerequisite depth">Tidy layout</button>
+    <button id="resetBtn" class="danger">Reset to game data</button>
+    <button id="saveBtn" class="primary">Save</button>
+  </div>
+  <div class="work">
+    <div class="stage" id="stage">
+      <div class="world" id="world"><svg id="edges"></svg></div>
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit the tree" title="Fit">⤢</button></div>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+</div>
+
+<script>
+const BASE = /*BASELINE*/null;
+const W = 196, H = 64, COLW = 250, ROWH = 84;
+const clone = o => JSON.parse(JSON.stringify(o));
+const BCOLORS = ["--b1", "--b2", "--b3", "--b4", "--b5", "--b6"];
+const branchColor = b => { const i = BASE.branches.indexOf(b); return i < 0 ? "var(--b0)" : `var(${BCOLORS[i % BCOLORS.length]})`; };
+const fmt = v => { v = +v || 0; for (const [d, s] of [[1e9, "B"], [1e6, "M"], [1e3, "k"]]) if (v >= d) return (v / d).toFixed(v / d >= 100 ? 0 : 1).replace(/\.0$/, "") + s; return String(v); };
+const fmtTime = s => { s = +s || 0; if (s < 60) return s + "s"; if (s < 3600) return Math.round(s / 60) + "m"; return (s / 3600).toFixed(s < 36000 ? 1 : 0).replace(/\.0$/, "") + "h"; };
+
+let nodes = [];                 // working copy
+let blocks = [];                // working copy of the research blocks (game phases)
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sortedBlocks = () => [...blocks].sort((a, b) => a.order - b.order);
+let byId = new Map();
+let selected = null, savedSignature = "", db = null, view = { x: 40, y: 40, k: 0.8 };
+const baseById = new Map(BASE.nodes.map(n => [n.id, n]));
+
+function index() { byId = new Map(nodes.map(n => [n.id, n])); }
+function depthOf(id, memo = {}, stack = new Set()) {
+  if (id in memo) return memo[id];
+  if (stack.has(id)) return 0;
+  stack.add(id);
+  const n = byId.get(id), ps = (n?.prereqs || []).filter(p => byId.has(p));
+  memo[id] = ps.length ? 1 + Math.max(...ps.map(p => depthOf(p, memo, stack))) : 0;
+  stack.delete(id);
+  return memo[id];
+}
+// Blocks sit left to right in order; inside a block, columns follow prerequisites within that block.
+function tidy(all) {
+  let bx = 0;
+  const groups = sortedBlocks().map(b => nodes.filter(n => n.block === b.id));
+  const loose = nodes.filter(n => !blocks.some(b => b.id === n.block));
+  if (loose.length) groups.push(loose);
+  for (const g of groups) {
+    if (!g.length) continue;
+    const ids = new Set(g.map(n => n.id)), local = {}, cols = {};
+    const ld = id => {
+      if (id in local) return local[id];
+      local[id] = 0;
+      const ps = (byId.get(id)?.prereqs || []).filter(p => ids.has(p));
+      return (local[id] = ps.length ? 1 + Math.max(...ps.map(ld)) : 0);
+    };
+    let maxD = 0;
+    for (const n of g) { const d = ld(n.id); maxD = Math.max(maxD, d); (cols[d] = cols[d] || []).push(n); }
+    for (const d in cols) {
+      cols[d].sort((a, b) => BASE.branches.indexOf(a.branch) - BASE.branches.indexOf(b.branch) || a.cost - b.cost);
+      cols[d].forEach((n, i) => { if (all || n.x == null) { n.x = bx + d * COLW; n.y = 70 + i * ROWH; } });
+    }
+    bx += (maxD + 1) * COLW + 90;
+  }
+}
+function signature() {
+  return JSON.stringify([blocks.map(b => [b.id, b.name, b.order, b.target_hours]),
+    nodes.map(n => [n.id, n.name, n.branch, n.block, n.cost, n.duration, n.description, n.prereqs, Math.round(n.x), Math.round(n.y)])]);
+}
+function descendants(id) { const out = new Set(), q = [id]; while (q.length) { const c = q.pop(); for (const n of nodes) if (n.prereqs.includes(c) && !out.has(n.id)) { out.add(n.id); q.push(n.id); } } return out; }
+function ancestors(id) { const out = new Set(), q = [id]; while (q.length) { const c = byId.get(q.pop()); for (const p of c?.prereqs || []) if (!out.has(p) && byId.has(p)) { out.add(p); q.push(p); } } return out; }
+
+function changesOf(n) {
+  const b = baseById.get(n.id);
+  if (!b) return ["new"];
+  const c = [];
+  for (const k of ["name", "branch", "block", "cost", "duration", "description"]) if (String(b[k] ?? "") !== String(n[k] ?? "")) c.push(k);
+  if (JSON.stringify([...b.prereqs].sort()) !== JSON.stringify([...n.prereqs].sort())) c.push("prerequisites");
+  return c;
+}
+function warningsOf(n) {
+  const w = [];
+  for (const p of n.prereqs) {
+    const pn = byId.get(p);
+    if (!pn) w.push(`requires ${p}, which no longer exists`);
+    else if (+n.cost < +pn.cost) w.push(`costs less than its prerequisite ${pn.name}`);
+  }
+  return w;
+}
+
+// ── Rendering ─────────────────────────────────────────────
+const world = document.getElementById("world"), svg = document.getElementById("edges"), stage = document.getElementById("stage");
+function applyView() { world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`; }
+function render() {
+  index();
+  for (const el of [...world.querySelectorAll(".node")]) el.remove();
+  const hot = selected ? new Set([selected, ...ancestors(selected), ...descendants(selected)]) : null;
+  const q = document.getElementById("find").value.trim().toLowerCase();
+  let maxX = 0, maxY = 0;
+  for (const n of nodes) {
+    const el = document.createElement("div");
+    el.className = "node";
+    el.dataset.id = n.id;
+    el.style.left = n.x + "px"; el.style.top = n.y + "px";
+    el.style.setProperty("--bc", branchColor(n.branch));
+    const ch = changesOf(n), wn = warningsOf(n);
+    if (n.id === selected) el.classList.add("sel");
+    if (ch.length) el.classList.add(ch[0] === "new" ? "new" : "changed");
+    if (wn.length) el.classList.add("warn");
+    if ((hot && !hot.has(n.id)) || (q && !(n.name.toLowerCase().includes(q) || n.id.includes(q)))) el.classList.add("dim");
+    el.innerHTML = `<div class="n"></div><div class="m"><span></span><span>${wn.length ? "<b>⚠ </b>" : ""}${fmt(n.cost)}e · ${fmtTime(n.duration)}</span></div>`;
+    el.querySelector(".n").textContent = n.name;
+    el.querySelector(".m span").textContent = n.branch || "No branch";
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", `${n.name}, ${n.branch}, costs ${n.cost} entropy`);
+    world.appendChild(el);
+    maxX = Math.max(maxX, n.x + W); maxY = Math.max(maxY, n.y + H);
+  }
+  svg.setAttribute("width", maxX + 40); svg.setAttribute("height", maxY + 40);
+  let paths = "";
+  for (const n of nodes) for (const p of n.prereqs) {
+    const a = byId.get(p); if (!a) continue;
+    const x1 = a.x + W, y1 = a.y + H / 2, x2 = n.x, y2 = n.y + H / 2, dx = Math.max(30, (x2 - x1) / 2);
+    const cls = hot ? (hot.has(n.id) && hot.has(a.id) ? "edge hot" : "edge dim") : "edge";
+    paths += `<path class="${cls}" d="M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}"/>`;
+  }
+  let bands = "";
+  const bottom = nodes.length ? Math.max(...nodes.map(n => n.y + H)) + 30 : 200;
+  sortedBlocks().forEach((b, i) => {
+    const ms = nodes.filter(n => n.block === b.id); if (!ms.length) return;
+    const x0 = Math.min(...ms.map(n => n.x)) - 24, x1 = Math.max(...ms.map(n => n.x + W)) + 24;
+    const y0 = Math.min(0, Math.min(...ms.map(n => n.y)) - 70);
+    bands += `<rect class="band${i % 2 ? " alt" : ""}" x="${x0}" y="${y0}" width="${x1 - x0}" height="${bottom - y0}" rx="12"/>`
+           + `<text class="band-label" x="${x0 + 14}" y="${y0 + 28}">${esc(b.name)}</text>`
+           + `<text class="band-sub" x="${x0 + 14}" y="${y0 + 48}">${esc(b.target_hours)}h target${b.anchor ? " · tutorial, costs kept" : ""} · ${ms.length} research</text>`;
+  });
+  svg.innerHTML = bands + paths;
+  renderSide();
+  updateStatus();
+}
+
+function renderSide() {
+  const side = document.getElementById("side");
+  const n = selected && byId.get(selected);
+  if (!n) { side.innerHTML = overviewHTML(); bindOverview(); return; }
+  const ch = changesOf(n), wn = warningsOf(n), isNew = !baseById.has(n.id);
+  const others = nodes.filter(o => o.id !== n.id && !n.prereqs.includes(o.id) && !descendants(n.id).has(o.id))
+                      .sort((a, b) => a.name.localeCompare(b.name));
+  const u = n.unlocks || { items: [], buildings: [], recipes: 0 };
+  side.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><h2 id="sTitle"></h2><button id="closeSel" aria-label="Close">✕</button></div>
+    <div class="field"><label for="fName">Name</label><input id="fName"></div>
+    <div class="field"><label for="fId">Id</label><input id="fId" ${isNew ? "" : "readonly"}><span class="hint">${isNew ? "Lowercase with underscores. Saves and recipes refer to it, so pick it carefully." : "Fixed: saves and recipes refer to it."}</span></div>
+    <div class="row2">
+      <div class="field"><label for="fBranch">Branch</label><select id="fBranch">${BASE.branches.map(b => `<option>${b}</option>`).join("")}</select></div>
+      <div class="field"><label for="fBlock">Block</label><select id="fBlock">${sortedBlocks().map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("")}</select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fCost">Cost (entropy)</label><input id="fCost" type="number" min="0" step="1"></div>
+      <div class="field"><label for="fDur">Research time (s)</label><input id="fDur" type="number" min="0" step="1"></div>
+    </div>
+    <div class="field"><label for="fDesc">Description</label><textarea id="fDesc"></textarea></div>
+    <div class="field"><label>Requires</label>
+      <div class="chips" id="pre"></div>
+      <select id="addPre" aria-label="Add a prerequisite"><option value="">Add a prerequisite…</option>${others.map(o => `<option value="${o.id}"></option>`).join("")}</select>
+      <span class="hint">Nodes that already depend on this one are left out, so the tree can't loop.</span></div>
+    <div><h3>Unlocks</h3><p class="muted" id="unl"></p></div>
+    ${wn.length ? `<div><h3>Check</h3><ul class="list warnings">${wn.map(w => `<li></li>`).join("")}</ul></div>` : ""}
+    ${ch.length ? `<div><h3>Changed from game data</h3><p class="muted">${ch.join(", ")}</p></div>` : ""}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${!isNew && ch.length ? `<button id="revert">Revert this node</button>` : ""}<button id="del" class="danger">Delete research</button></div>`;
+  side.querySelector("#sTitle").textContent = n.name;
+  const set = (id, v) => { side.querySelector(id).value = v; };
+  set("#fName", n.name); set("#fId", n.id); set("#fBranch", n.branch); set("#fBlock", n.block || ""); set("#fCost", n.cost); set("#fDur", n.duration); set("#fDesc", n.description || "");
+  [...side.querySelectorAll("#addPre option[value]")].forEach(o => { if (o.value) o.textContent = byId.get(o.value).name; });
+  side.querySelector("#unl").textContent = [u.items.length ? `Items: ${u.items.join(", ")}` : "", u.buildings.length ? `Buildings: ${u.buildings.join(", ")}` : "", u.recipes ? `${u.recipes} recipe${u.recipes > 1 ? "s" : ""}` : ""].filter(Boolean).join(". ") || "Nothing listed. Unlocks are edited in game_data.json.";
+  wn.forEach((w, i) => { side.querySelectorAll(".warnings li")[i].textContent = w; });
+  const pre = side.querySelector("#pre");
+  if (!n.prereqs.length) pre.innerHTML = `<span class="muted">None: available from the start.</span>`;
+  for (const p of n.prereqs) {
+    const c = document.createElement("span"); c.className = "chip";
+    c.textContent = byId.get(p)?.name || p;
+    const x = document.createElement("button"); x.textContent = "×"; x.setAttribute("aria-label", "Remove " + c.textContent);
+    x.onclick = () => { n.prereqs = n.prereqs.filter(q => q !== p); render(); };
+    c.appendChild(x); pre.appendChild(c);
+  }
+  const bind = (id, key, num) => side.querySelector(id).addEventListener("change", e => { n[key] = num ? Math.max(0, Math.round(+e.target.value || 0)) : e.target.value; render(); });
+  bind("#fName", "name"); bind("#fBranch", "branch"); bind("#fBlock", "block"); bind("#fCost", "cost", true); bind("#fDur", "duration", true); bind("#fDesc", "description");
+  side.querySelector("#fId").addEventListener("change", e => {
+    const v = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    if (!v || byId.has(v)) { e.target.value = n.id; flash("That id is empty or already used.", "err"); return; }
+    for (const o of nodes) o.prereqs = o.prereqs.map(p => p === n.id ? v : p);
+    n.id = v; selected = v; render();
+  });
+  side.querySelector("#addPre").addEventListener("change", e => { if (e.target.value) { n.prereqs.push(e.target.value); render(); } });
+  side.querySelector("#closeSel").onclick = () => { selected = null; render(); };
+  const rv = side.querySelector("#revert");
+  if (rv) rv.onclick = () => { const b = baseById.get(n.id); Object.assign(n, clone({ ...b, x: n.x, y: n.y })); render(); };
+  const del = side.querySelector("#del");
+  del.onclick = () => {
+    if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Tap again to delete"; return; }
+    nodes = nodes.filter(o => o.id !== n.id);
+    for (const o of nodes) o.prereqs = o.prereqs.filter(p => p !== n.id);
+    selected = null; render();
+  };
+}
+
+function overviewHTML() {
+  const added = nodes.filter(n => !baseById.has(n.id));
+  const removed = BASE.nodes.filter(b => !byId.has(b.id));
+  const changed = nodes.filter(n => baseById.has(n.id) && changesOf(n).length);
+  const warn = nodes.flatMap(n => warningsOf(n).map(w => `${n.name} ${w}`));
+  const li = arr => arr.map(() => "<li></li>").join("");
+  return `
+    <h2>How to use it</h2>
+    <p class="muted">Drag the background to pan, pinch or scroll to zoom, drag a card to move it. Tap a card to edit it. Positions are saved too, so the in-game tree can use your layout. Save when you're done and tell Claude to apply it.</p>
+    <div><h3>Blocks</h3>
+      <p class="muted">Game phases, left to right. Target time is how long a player running 5 buildings should spend clearing the block; Claude's rebalance derives the research costs from it. Use Tidy layout after moving research between blocks.</p>
+      <div class="blocks" id="blk"></div>
+      <div style="margin-top:8px"><button id="addBlock">Add block</button></div></div>
+    <div><h3>Branches</h3><div class="legend">${BASE.branches.map(b => `<span><i style="background:${branchColor(b)}"></i>${b}</span>`).join("")}</div></div>
+    <div><h3>Changes from game data</h3>
+      ${added.length + removed.length + changed.length === 0 ? `<p class="muted">None yet.</p>` : `<ul class="list changes" id="chg">${li(added)}${li(removed)}${li(changed)}</ul>`}</div>
+    ${warn.length ? `<div><h3>Check (${warn.length})</h3><ul class="list warnings" id="wrn">${li(warn)}</ul></div>` : ""}
+    <div><h3>Saved versions</h3><ul class="list" id="vers"><li class="muted">Loading…</li></ul></div>`;
+}
+let versionRows = null;
+function bindOverview() {
+  const added = nodes.filter(n => !baseById.has(n.id)), removed = BASE.nodes.filter(b => !byId.has(b.id));
+  const changed = nodes.filter(n => baseById.has(n.id) && changesOf(n).length);
+  const items = [...added.map(n => ["Added", n.name, ""]), ...removed.map(n => ["Removed", n.name, ""]), ...changed.map(n => ["Changed", n.name, changesOf(n).join(", ")])];
+  const chg = document.getElementById("chg");
+  if (chg) [...chg.children].forEach((li, i) => { const [k, name, what] = items[i]; li.innerHTML = "<b></b> "; li.firstChild.textContent = k + ":"; li.append(name + (what ? ` (${what})` : "")); });
+  const warn = nodes.flatMap(n => warningsOf(n).map(w => `${n.name} ${w}`));
+  const wrn = document.getElementById("wrn");
+  if (wrn) [...wrn.children].forEach((li, i) => li.textContent = warn[i]);
+  renderBlocks();
+  renderVersions();
+}
+function renderBlocks() {
+  const host = document.getElementById("blk"); if (!host) return;
+  host.innerHTML = "";
+  const list = sortedBlocks();
+  list.forEach((b, i) => {
+    const count = nodes.filter(n => n.block === b.id).length;
+    const row = document.createElement("div"); row.className = "brow";
+    row.innerHTML = `<div class="ord"><button aria-label="Move earlier" ${i ? "" : "disabled"}>▲</button><button aria-label="Move later" ${i < list.length - 1 ? "" : "disabled"}>▼</button></div>
+      <input id="bn_${esc(b.id)}" aria-label="Block name"><input id="bh_${esc(b.id)}" type="number" min="0.1" step="0.5" aria-label="Target hours" title="Target hours">
+      <span class="count">${count}${count ? "" : ` <button aria-label="Delete block">✕</button>`}</span>`;
+    const [nameIn, hoursIn] = row.querySelectorAll("input");
+    nameIn.value = b.name; hoursIn.value = b.target_hours;
+    nameIn.addEventListener("change", () => { b.name = nameIn.value.trim() || b.name; render(); });
+    hoursIn.addEventListener("change", () => { const v = +hoursIn.value; if (v > 0) b.target_hours = v; render(); });
+    const [up, down] = row.querySelectorAll(".ord button");
+    const swap = j => { const o = list[j]; [b.order, o.order] = [o.order, b.order]; tidy(true); render(); };
+    up.onclick = () => swap(i - 1); down.onclick = () => swap(i + 1);
+    const del = row.querySelector(".count button");
+    if (del) del.onclick = () => { blocks = blocks.filter(x => x !== b); render(); };
+    host.appendChild(row);
+  });
+  const add = document.getElementById("addBlock");
+  if (add) add.onclick = () => {
+    let k = 1; while (blocks.some(b => b.id === "block_" + k)) k++;
+    blocks.push({ id: "block_" + k, name: "New block " + k, order: Math.max(0, ...blocks.map(b => b.order)) + 1, target_hours: 10, anchor: false, description: "" });
+    render();
+  };
+}
+function renderVersions() {
+  const ul = document.getElementById("vers"); if (!ul) return;
+  if (!db) { ul.innerHTML = `<li class="muted">Saving isn't available in this view.</li>`; return; }
+  if (!versionRows) return;
+  if (!versionRows.length) { ul.innerHTML = `<li class="muted">Nothing saved yet.</li>`; return; }
+  ul.innerHTML = "";
+  for (const v of versionRows.slice(0, 8)) {
+    const li = document.createElement("li");
+    li.textContent = `${new Date(v.savedAt).toLocaleString()} · ${v.count} nodes`;
+    ul.appendChild(li);
+  }
+}
+
+// ── Status, save, load ─────────────────────────────────────
+function updateStatus(msg, kind) {
+  const s = document.getElementById("status");
+  const dirty = signature() !== savedSignature;
+  if (msg) { s.textContent = msg; s.className = "status " + (kind || ""); return; }
+  s.textContent = dirty ? "Unsaved changes" : (db ? "All changes saved" : "Viewing only: saving isn't available here");
+  s.className = "status " + (dirty ? "dirty" : db ? "ok" : "");
+  document.getElementById("saveBtn").disabled = !db || !dirty;
+}
+let flashTimer = null;
+function flash(msg, kind) { updateStatus(msg, kind); clearTimeout(flashTimer); flashTimer = setTimeout(() => updateStatus(), 3500); }
+
+async function save() {
+  if (!db) return;
+  const btn = document.getElementById("saveBtn"); btn.disabled = true;
+  const body = { savedAt: new Date().toISOString(), baselineVersion: BASE.version, count: nodes.length,
+    blocks: sortedBlocks().map((b, i) => ({ id: b.id, name: b.name, order: i + 1, target_hours: b.target_hours, anchor: !!b.anchor, description: b.description || "" })),
+    nodes: nodes.map(n => ({ id: n.id, name: n.name, branch: n.branch, block: n.block || "", cost: n.cost, duration: n.duration, description: n.description || "",
+                             prereqs: n.prereqs, x: Math.round(n.x), y: Math.round(n.y) })) };
+  try {
+    await db.doc("trees/working").set(body);
+    await db.collection("versions").add(body);
+    savedSignature = signature();
+    flash("Saved. Ask Claude to apply it to the game data.", "ok");
+    loadVersions();
+  } catch (e) {
+    flash(e?.code === "quota_exceeded" ? "The save store is full. Ask Claude to clear old versions." : "Couldn't save. Check your connection and try again.", "err");
+    btn.disabled = false;
+  }
+}
+async function loadVersions() {
+  if (!db) return;
+  try { const snap = await db.collection("versions").orderBy("savedAt", "desc").limit(8).get(); versionRows = snap.docs.map(d => d.data()); }
+  catch (e) { versionRows = []; }
+  renderVersions();
+}
+function fromSaved(saved) {
+  const meta = new Map(BASE.nodes.map(n => [n.id, n]));
+  return saved.nodes.map(s => ({ ...clone(meta.get(s.id) || { unlocks: { items: [], buildings: [], recipes: 0 } }), ...clone(s) }));
+}
+
+// ── Pan, zoom, drag ────────────────────────────────────────
+const pointers = new Map();
+let drag = null, pinch = null;
+stage.addEventListener("pointerdown", e => {
+  if (e.target.closest(".zoom")) return;            // let the zoom buttons get their own click
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  stage.setPointerCapture(e.pointerId);
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), k: view.k, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 }; drag = null; return; }
+  const card = e.target.closest(".node");
+  if (card) { const n = byId.get(card.dataset.id); drag = { kind: "node", n, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, moved: false, el: card }; }
+  else { drag = { kind: "pan", sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y, moved: false }; stage.classList.add("panning"); }
+});
+stage.addEventListener("pointermove", e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size === 2) {
+    const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    zoomAt(pinch.cx, pinch.cy, Math.min(2.5, Math.max(0.15, pinch.k * d / pinch.d)) / view.k); return;
+  }
+  if (!drag) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+  if (drag.kind === "pan") { view.x = drag.ox + dx; view.y = drag.oy + dy; applyView(); }
+  else if (drag.moved) { drag.n.x = Math.round((drag.ox + dx / view.k) / 10) * 10; drag.n.y = Math.round((drag.oy + dy / view.k) / 10) * 10; drag.el.style.left = drag.n.x + "px"; drag.el.style.top = drag.n.y + "px"; }
+});
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  stage.classList.remove("panning");
+  if (!drag) return;
+  if (drag.kind === "node") { if (!drag.moved) selected = drag.n.id; render(); }
+  else if (!drag.moved && selected) { selected = null; render(); }
+  drag = null;
+}
+stage.addEventListener("pointerup", endPointer);
+stage.addEventListener("pointercancel", endPointer);
+stage.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+function zoomAt(cx, cy, f) {
+  const r = stage.getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
+  const k = Math.min(2.5, Math.max(0.15, view.k * f)); f = k / view.k;
+  view.x = px - (px - view.x) * f; view.y = py - (py - view.y) * f; view.k = k; applyView();
+}
+function fit() {
+  if (!nodes.length) return;
+  const r = stage.getBoundingClientRect();
+  const minX = Math.min(...nodes.map(n => n.x)), minY = Math.min(...nodes.map(n => n.y));
+  const maxX = Math.max(...nodes.map(n => n.x + W)), maxY = Math.max(...nodes.map(n => n.y + H));
+  view.k = Math.min(1.2, Math.max(0.15, Math.min((r.width - 40) / (maxX - minX), (r.height - 40) / (maxY - minY))));
+  view.x = 20 - minX * view.k + Math.max(0, (r.width - 40 - (maxX - minX) * view.k) / 2); view.y = 20 - minY * view.k; applyView();
+}
+document.getElementById("zin").onclick = () => { const r = stage.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25); };
+document.getElementById("zout").onclick = () => { const r = stage.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.8); };
+document.getElementById("zfit").onclick = fit;
+stage.addEventListener("keydown", e => { const c = e.target.closest?.(".node"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); selected = c.dataset.id; render(); } });
+
+// ── Toolbar ───────────────────────────────────────────────
+document.getElementById("find").addEventListener("input", () => {
+  render();
+  const q = document.getElementById("find").value.trim().toLowerCase(); if (!q) return;
+  const hit = nodes.find(n => n.name.toLowerCase().includes(q) || n.id.includes(q)); if (!hit) return;
+  const r = stage.getBoundingClientRect(); view.x = r.width / 2 - (hit.x + W / 2) * view.k; view.y = r.height / 2 - (hit.y + H / 2) * view.k; applyView();
+});
+document.getElementById("addBtn").onclick = () => {
+  let i = 1; while (byId.has("new_research_" + i)) i++;
+  const anchor = selected && byId.get(selected);
+  const n = { id: "new_research_" + i, name: "New research " + i, branch: anchor?.branch || BASE.branches[0],
+              block: anchor?.block || (sortedBlocks().find(b => !b.anchor) || sortedBlocks()[0] || {}).id || "", cost: anchor ? anchor.cost : 1000,
+              duration: anchor ? anchor.duration : 60, description: "", prereqs: anchor ? [anchor.id] : [], unlocks: { items: [], buildings: [], recipes: 0 },
+              x: anchor ? anchor.x + COLW : 0, y: anchor ? anchor.y + ROWH : 0 };
+  nodes.push(n); selected = n.id; render();
+};
+document.getElementById("layoutBtn").onclick = () => { index(); tidy(true); render(); fit(); };
+const resetBtn = document.getElementById("resetBtn");
+resetBtn.onclick = () => {
+  if (resetBtn.dataset.armed !== "1") { resetBtn.dataset.armed = "1"; resetBtn.textContent = "Tap again to reset"; setTimeout(() => { resetBtn.dataset.armed = ""; resetBtn.textContent = "Reset to game data"; }, 4000); return; }
+  resetBtn.dataset.armed = ""; resetBtn.textContent = "Reset to game data";
+  nodes = clone(BASE.nodes); blocks = clone(BASE.blocks); index(); tidy(false); selected = null; render(); fit();
+  flash("Back to the game data. Save to keep it.", "dirty");
+};
+document.getElementById("saveBtn").onclick = save;
+document.getElementById("meta").textContent = `${BASE.nodes.length} nodes · game data ${BASE.version}`;
+
+// ── Start ─────────────────────────────────────────────────
+nodes = clone(BASE.nodes); blocks = clone(BASE.blocks || []); index(); tidy(false);
+savedSignature = signature();
+render(); fit();
+(async () => {
+  try { db = window.claude?.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { updateStatus(); renderVersions(); return; }
+  const timer = setTimeout(() => flash("Still waiting for your saved edits…", "dirty"), 10000);
+  try {
+    const snap = await db.doc("trees/working").get();
+    clearTimeout(timer);
+    const savedDoc = snap.exists ? snap.data() : null;
+    if (savedDoc && BASE.generated && savedDoc.savedAt < BASE.generated) {
+      // The game data was regenerated after this save (Claude applied it, then rebalanced): show the game data.
+      flash(`Showing the current game data. Your save from ${new Date(savedDoc.savedAt).toLocaleString()} was applied.`, "ok");
+    } else if (savedDoc) {
+      const saved = savedDoc;
+      nodes = fromSaved(saved);
+      blocks = clone(saved.blocks || BASE.blocks);
+      index();
+      tidy(!saved.blocks);   // a save from before blocks existed: lay it out again inside the blocks
+      savedSignature = saved.blocks ? signature() : "";
+      render(); fit();
+      flash(`Loaded your save from ${new Date(saved.savedAt).toLocaleString()}`, "ok");
+    } else { updateStatus(); }
+  } catch (e) { clearTimeout(timer); flash("Couldn't load your saved edits. Showing the game data.", "err"); }
+  loadVersions();
+})();
+</script>

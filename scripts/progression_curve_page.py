@@ -20,13 +20,15 @@ def write_page(path, gd, order, anomalies, status, buildings, jump):
     rows = []
     for o in order:
         rows.append({
-            "n": o["n"], "id": o["id"], "name": o["name"], "cost": o["cost"], "payback": o["payback_min"],
+            "n": o["n"], "id": o["id"], "name": o["name"], "block": o.get("block", ""), "cost": o["cost"], "payback": o["payback_min"],
             "rate": o["best_rate_before"], "rateRecipe": o["best_recipe_before"], "top": o["top_value"],
             "items": [{"id": r["out"], "name": items.get(r["out"], {}).get("display_name", r["out"]),
                        "v": r["value"], "g": _group(items.get(r["out"])), "gain": r["gain"], "recipe": r["id"]}
                       for r in o["recipes"] if r["value"] > 0],
         })
-    payload = {"rows": rows, "status": status, "jump": jump, "buildings": buildings,
+    blocks = [{"id": b["id"], "name": b["name"], "target": b["target_hours"], "anchor": bool(b.get("anchor"))}
+              for b in sorted(gd.get("research_blocks") or [], key=lambda b: b.get("order", 0))]
+    payload = {"rows": rows, "blocks": blocks, "status": status, "jump": jump, "buildings": buildings,
                "anomalies": [{"kind": k, "what": w, "why": y} for k, w, y in anomalies],
                "version": gd.get("_meta", {}).get("version", "")}
     html = TEMPLATE.replace("/*DATA*/null", json.dumps(payload, separators=(",", ":")))
@@ -76,6 +78,7 @@ header { display: grid; gap: 10px; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
 svg { width: 100%; height: auto; display: block; overflow: visible; }
 svg text { fill: var(--ink-3); font: 11px var(--f-mono); }
+svg text.band-name { fill: var(--ink-2); font: 500 10px var(--f-body); letter-spacing: .02em; }
 .ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
 .ctrl input { accent-color: var(--accent); }
 .ctrl output { font: 500 14px var(--f-mono); color: var(--ink); min-width: 2ch; }
@@ -103,6 +106,13 @@ code { font-family: var(--f-mono); font-size: .92em; }
     <p>Every research node in the order a player unlocks it, with what it costs, what it unlocks, and how fast the best building can pay for it. Generated from <code>Assets/Data/game_data.json</code> by <code>scripts/progression_curve.py</code>; rerun it after any balance change.</p>
   </header>
   <section class="stats" id="stats"></section>
+
+  <section class="panel">
+    <div class="eyebrow">Phases</div>
+    <h2>Research blocks: target time against the model</h2>
+    <p>Each block is a game phase. Its target is how long a player should spend clearing it; the model is the payback of its research for the number of buildings set below. Edit blocks and targets in the research tree editor.</p>
+    <div class="scroll"><table id="blocks"><thead><tr><th>Block</th><th style="text-align:right">Research</th><th style="text-align:right">Target</th><th style="text-align:right">Model</th><th style="text-align:right">Reached at</th><th style="text-align:right">Costs</th></tr></thead><tbody></tbody></table></div>
+  </section>
 
   <section class="panel">
     <div class="eyebrow">Pacing</div>
@@ -209,6 +219,18 @@ function frame(svg, opts) {
   el("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, stroke: "var(--rule)", "stroke-width": 1 }, svg);
   for (let i = 1; i <= n; i += 5) el("text", { x: x(i), y: H - B + 16, "text-anchor": "middle" }, svg).textContent = i;
   el("text", { x: W - R, y: H - 2, "text-anchor": "end" }, svg).textContent = "unlock #";
+  // Research blocks: alternate a faint band behind each block's run of unlocks, with its name on top.
+  let start = 1, k = 0;
+  for (let i = 1; i <= n + 1; i++) {
+    const cur = D.rows[i - 1]?.block, prev = D.rows[i - 2]?.block;
+    if (i > 1 && (i === n + 1 || cur !== prev)) {
+      const x0 = x(start) - (W - L - R) / n / 2, x1 = x(i - 1) + (W - L - R) / n / 2;
+      if (k % 2) el("rect", { x: x0, y: T, width: x1 - x0, height: H - T - B, fill: "var(--grid)", opacity: 0.6 }, svg);
+      const b = (D.blocks || []).find(b => b.id === prev);
+      if (b && x1 - x0 > 30) el("text", { x: (x0 + x1) / 2, y: T + 11, "text-anchor": "middle", class: "band-name" }, svg).textContent = b.name;
+      start = i; k++;
+    }
+  }
   return { x, y, W, H, L, R, T, B, n };
 }
 function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw || 1))); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
@@ -302,7 +324,20 @@ function stats() {
 let nb = D.buildings;
 try { const s = +localStorage.getItem("pc.buildings"); if (s >= 1 && s <= 40) nb = s; } catch (e) {}
 const slider = document.getElementById("nb"); slider.value = nb;
-slider.addEventListener("input", () => { nb = +slider.value; try { localStorage.setItem("pc.buildings", nb); } catch (e) {} drawTime(nb); });
-stats(); drawPayback(); drawTime(nb); drawRate(); drawValues(); tables();
+slider.addEventListener("input", () => { nb = +slider.value; try { localStorage.setItem("pc.buildings", nb); } catch (e) {} drawTime(nb); blockTable(nb); });
+function blockTable(nb) {
+  const tb = document.querySelector("#blocks tbody"); if (!tb) return;
+  let acc = 0; const reach = {};
+  D.rows.forEach(r => { acc += (isFinite(r.payback) ? r.payback : 0) / nb; reach[r.block] = acc / 60; });
+  tb.innerHTML = (D.blocks || []).map(b => {
+    const rs = D.rows.filter(r => r.block === b.id);
+    const h = rs.reduce((s, r) => s + (isFinite(r.payback) ? r.payback : 0), 0) / nb / 60;
+    const ratio = h / b.target, st = b.anchor ? "ok" : ratio > 1.25 ? "wall" : ratio < 0.8 ? "free" : "ok";
+    const costs = rs.length ? `${fmt(Math.min(...rs.map(r => r.cost)))}–${fmt(Math.max(...rs.map(r => r.cost)))}` : "–";
+    return `<tr><td>${b.name}${b.anchor ? ' <span class="pill ok">tutorial</span>' : ""}</td><td class="num">${rs.length}</td><td class="num">${b.target} h</td>`
+         + `<td class="num"><span class="pill ${st}">${h.toFixed(1)} h</span></td><td class="num">${(reach[b.id] ?? 0).toFixed(1)} h</td><td class="num">${costs}</td></tr>`;
+  }).join("") || `<tr><td colspan="6">No research blocks in game_data.json.</td></tr>`;
+}
+stats(); drawPayback(); drawTime(nb); drawRate(); drawValues(); tables(); blockTable(nb);
 </script>
 """

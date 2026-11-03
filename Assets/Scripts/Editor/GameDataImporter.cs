@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using MobileIdleBuilder;
@@ -212,7 +213,7 @@ namespace MobileIdleBuilder.Editor
             GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
-            GenerateResearchDatabase(data.research, researchLookup);
+            GenerateResearchDatabase(data.research, data.research_blocks, researchLookup);
 
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
@@ -334,6 +335,9 @@ namespace MobileIdleBuilder.Editor
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;
             so.codexEntry           = data.codex_entry;
+            so.block                = data.block ?? "";
+            so.treeX                = data.tree_x;
+            so.treeY                = data.tree_y;
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -1025,7 +1029,7 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateResearchDatabase(List<ResearchJson> research,
+        private static void GenerateResearchDatabase(List<ResearchJson> research, List<ResearchBlockJson> blocks,
             Dictionary<string, ResearchSO> researchLookup)
         {
             EnsureDirectory(ResourcesDir);
@@ -1038,6 +1042,19 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allResearch = list.ToArray();
+            db.blocks = (blocks ?? new List<ResearchBlockJson>())
+                .OrderBy(b => b.order)
+                .Select(b => new ResearchBlock
+                {
+                    id = b.id, displayName = b.name, order = b.order, targetHours = b.target_hours, anchor = b.anchor,
+                    description = b.description,
+                    startPrestigeCount          = b.start_prestige_count,
+                    startPrestigeCurrencyEarned = b.start_prestige_currency_earned,
+                    startEntropy                = b.start_entropy,
+                    startPermanentUpgrades      = b.start_permanent_upgrades ?? System.Array.Empty<string>(),
+                    startSites                  = b.start_sites ?? System.Array.Empty<string>(),
+                })
+                .ToArray();
             EditorUtility.SetDirty(db);
         }
 

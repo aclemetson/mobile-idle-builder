@@ -155,7 +155,7 @@ namespace MobileIdleBuilder
         {
             switch (field)
             {
-                case "costBaseCurrency":     r.costBaseCurrency = Mathf.RoundToInt(v); return true;
+                case "costBaseCurrency":     r.costBaseCurrency = (long)System.Math.Round((double)v); return true;
                 case "costPrestigeCurrency": r.costPrestigeCurrency = Mathf.RoundToInt(v); return true;
                 case "durationSeconds":      r.durationSeconds = Mathf.RoundToInt(v); return true;
                 case "fieldCooldownMult":    r.fieldCooldownMult = v; return true;

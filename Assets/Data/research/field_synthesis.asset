@@ -21,6 +21,9 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}
   depthInTree: 3
+  block: ignition
+  treeX: -1
+  treeY: -1
   costBaseCurrency: 250
   costPrestigeCurrency: 0
   durationSeconds: 20

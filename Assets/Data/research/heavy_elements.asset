@@ -19,11 +19,14 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   depthInTree: 2
-  costBaseCurrency: 3000
+  block: foundations
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 631000
   costPrestigeCurrency: 0
-  durationSeconds: 120
+  durationSeconds: 300
   fieldCooldownMult: 1
   unlocksItems:
   - {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}

@@ -61,6 +61,14 @@ namespace MobileIdleBuilder
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
         // Research timer UI (live countdown + skip on the in-progress card)
         private Label      _researchCountdownLabel;
+        // Research tree (#337): shown instead of the list once the tutorial is done; the list stays one tap away.
+        private ResearchTreeView _researchTree;
+        private Button     _researchModeBtn;
+        private bool       _researchTreeMode = true;
+        private string     _researchSelectedId;
+        private bool       _researchFocusPending;
+        private ResearchBlock[] _researchBlocks;
+        private const string ResearchViewPref = "research_view_mode";
         private Button     _researchSkipBtn;
         private bool       _researchSkipConfirming;
         private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
@@ -425,6 +433,7 @@ namespace MobileIdleBuilder
             _buildingsList    = root.Q<ScrollView>("buildings-list");
             _codexList        = root.Q<ScrollView>("codex-list");
             _researchList     = root.Q<ScrollView>("research-list");
+            SetUpResearchTree();
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievementsList    = root.Q<ScrollView>("achievements-list");
             _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
@@ -713,9 +722,36 @@ namespace MobileIdleBuilder
             return el;
         }
 
+        private void SetUpResearchTree()
+        {
+            if (_researchPanel == null || _researchList == null) return;
+            _researchTreeMode = PlayerPrefs.GetInt(ResearchViewPref, 1) == 1;
+            _researchBlocks   = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.blocks ?? System.Array.Empty<ResearchBlock>();
+
+            _researchTree = new ResearchTreeView();
+            _researchTree.NodeSelected += r => { _researchSelectedId = r.id; BuildResearchList(); };
+            int at = _researchPanel.IndexOf(_researchList);
+            _researchPanel.Insert(at + 1, _researchTree);
+
+            // Tree / List toggle in the panel header, left of the close button.
+            var header = _researchPanel.Q("panel-header");
+            _researchModeBtn = new Button { name = "btn-research-view" };
+            _researchModeBtn.AddToClassList("research-view-btn");
+            _researchModeBtn.clicked += () =>
+            {
+                _researchTreeMode = !_researchTreeMode;
+                PlayerPrefs.SetInt(ResearchViewPref, _researchTreeMode ? 1 : 0);
+                _researchFocusPending = _researchTreeMode;
+                BuildResearchList();
+            };
+            var close = header?.Q<Button>("btn-close-research");
+            if (header != null) header.Insert(close != null ? header.IndexOf(close) : header.childCount, _researchModeBtn);
+        }
+
         private void OpenResearchPanel()
         {
             CloseAllPanels();
+            _researchFocusPending = true;
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
 
@@ -838,19 +874,105 @@ namespace MobileIdleBuilder
             if (_ecsReady && !_tutorialQuery.IsEmpty)
                 tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
 
+            // The tutorial's steps and highlights are built on the list, so the tree waits until it is done.
+            bool treeMode = _researchTree != null && _researchTreeMode && !tutorialActive;
+            SetElementVisible(_researchList, !treeMode);
+            if (_researchTree != null) SetElementVisible(_researchTree, treeMode);
+            if (_researchModeBtn != null)
+            {
+                SetElementVisible(_researchModeBtn, !tutorialActive && _researchTree != null);
+                _researchModeBtn.text = treeMode ? "List" : "Tree";
+            }
+
+            if (treeMode)
+            {
+                BuildResearchTree(currentEntropy);
+                return;
+            }
+
             foreach (var research in researchService.AllResearch)
             {
                 if (research == null) continue;
-
                 bool unlocked   = researchService.IsUnlocked(research.id);
-                bool prereqsMet = research.prerequisites == null || research.prerequisites.Length == 0 ||
-                                  System.Array.TrueForAll(research.prerequisites,
-                                      p => p == null || researchService.IsUnlocked(p.id));
+                bool prereqsMet = PrereqsMet(research);
 
                 // During the tutorial, only show research that is already unlocked
                 // or whose prerequisites are all satisfied (the immediate frontier).
                 if (tutorialActive && !unlocked && !prereqsMet) continue;
 
+                _researchList.Add(BuildResearchCard(research, currentEntropy));
+            }
+        }
+
+        private bool PrereqsMet(ResearchSO research) =>
+            research.prerequisites == null || research.prerequisites.Length == 0 ||
+            System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id));
+
+        private void BuildResearchTree(long currentEntropy)
+        {
+            var all = researchService.AllResearch;
+            ResearchTreeView.NodeState State(ResearchSO r) =>
+                researchService.IsUnlocked(r.id) ? ResearchTreeView.NodeState.Done
+                : researchService.HasActiveResearch && researchService.ActiveResearchId == r.id ? ResearchTreeView.NodeState.Active
+                : PrereqsMet(r) ? ResearchTreeView.NodeState.Available
+                : ResearchTreeView.NodeState.Locked;
+            string Meta(ResearchSO r) => State(r) switch
+            {
+                ResearchTreeView.NodeState.Done   => "Researched",
+                ResearchTreeView.NodeState.Active => $"In progress · {FormatResearchTimer(researchService.ActiveRemainingSeconds)}",
+                ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(r.costBaseCurrency)}" + (currentEntropy >= r.costBaseCurrency ? "  Ready" : ""),
+                _ => $"Locked · ◈ {ShortNumber(r.costBaseCurrency)}",
+            };
+
+            // Open on the research the player is working toward: the one in progress, else the first available.
+            if (_researchFocusPending)
+            {
+                _researchFocusPending = false;
+                var target = all.FirstOrDefault(r => r != null && State(r) == ResearchTreeView.NodeState.Active)
+                          ?? all.Where(r => r != null && State(r) == ResearchTreeView.NodeState.Available)
+                                .OrderBy(r => System.Array.FindIndex(_researchBlocks, b => b.id == r.block)).ThenBy(r => r.costBaseCurrency)
+                                .FirstOrDefault();
+                if (target != null) { _researchSelectedId ??= target.id; _researchTree.FocusOn(target.id); }
+            }
+
+            _researchTree.Rebuild(all, _researchBlocks, State, Meta, _researchSelectedId);
+
+            var detail = _researchTree.Detail;
+            detail.Clear();
+            var selected = all.FirstOrDefault(r => r != null && r.id == _researchSelectedId);
+            if (selected == null)
+            {
+                var hint = new Label("Tap a research to see what it unlocks and start it. Drag to move around, pinch to zoom.");
+                hint.AddToClassList("research-card-desc");
+                detail.Add(hint);
+                return;
+            }
+            var block = System.Array.Find(_researchBlocks, b => b.id == selected.block);
+            if (block != null)
+            {
+                var phase = new Label(block.displayName);
+                phase.AddToClassList("rt-detail-phase");
+                detail.Add(phase);
+            }
+            detail.Add(BuildResearchCard(selected, currentEntropy));
+        }
+
+        internal static string ShortNumber(long v)
+        {
+            if (v >= 1_000_000_000_000) return (v / 1e12).ToString(v >= 100_000_000_000_000 ? "0" : "0.#") + "T";
+            if (v >= 1_000_000_000)     return (v / 1e9).ToString(v >= 100_000_000_000 ? "0" : "0.#") + "B";
+            if (v >= 1_000_000)         return (v / 1e6).ToString(v >= 100_000_000 ? "0" : "0.#") + "M";
+            if (v >= 10_000)            return (v / 1e3).ToString(v >= 100_000 ? "0" : "0.#") + "k";
+            return v.ToString("N0");
+        }
+
+        /// <summary>One research card: name, description, and cost/Start, the live timer + skip, or what it requires.
+        /// The list shows one per research; the tree shows the selected node's.</summary>
+        private VisualElement BuildResearchCard(ResearchSO research, long currentEntropy)
+        {
+            {
+                bool unlocked   = researchService.IsUnlocked(research.id);
+                bool prereqsMet = PrereqsMet(research);
                 bool canPurchase = !unlocked && prereqsMet && researchService.CanPurchase(research);
 
                 var card = new VisualElement();
@@ -939,7 +1061,7 @@ namespace MobileIdleBuilder
                     card.Add(footer);
                 }
 
-                _researchList.Add(card);
+                return card;
             }
         }
 

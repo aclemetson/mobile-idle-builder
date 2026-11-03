@@ -12,7 +12,8 @@
 ## Single source of truth
 
 `Assets/Data/game_data.json` (~5,400 lines). Top-level keys:
-`_meta`, `game_config`, `tiers`, `research`, `items`, `recipes`, `buildings`, `fields`, `sites`, `worlds`, `managers`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`, `megastructure`.
+`_meta`, `game_config`, `tiers`, `research_blocks`, `research`, `items`, `recipes`, `buildings`, `fields`, `sites`, `worlds`, `managers`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`, `megastructure`.
+- **Research blocks** (`research_blocks`, 2026-11-02): game phases with `id`, `name`, `order`, `target_hours`, `anchor`. Every `research[]` node names its `block`. Imported into `ResearchDatabaseSO.blocks` (with each block's first-arrival state for the dev console's `block load`) and `ResearchSO.block` / `treeX` / `treeY` (the in-game research tree). They also drive `scripts/rebalance_curve.py`, `scripts/progression_curve.py` and the research tree editor. `research[].cost_base_currency` is a `long`.
 
 Separate file: `Assets/Data/achievements.json` → imported by `Assets/Scripts/Editor/AchievementImporter.cs`.
 

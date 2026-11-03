@@ -22,7 +22,10 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
   depthInTree: 6
-  costBaseCurrency: 386000000
+  block: biology_world
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 647000000
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1

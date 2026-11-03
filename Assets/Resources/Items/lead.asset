@@ -36,6 +36,6 @@ MonoBehaviour:
     of the uranium decay chain. Add a neutron for Lead-209 (decays into Bismuth),
     or remove seven for Lead-201 (decays into Thallium).'
   codexUnlocked: 0
-  baseSellValue: 1820
+  baseSellValue: 28500
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

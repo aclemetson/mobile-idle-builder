@@ -346,7 +346,7 @@ namespace MobileIdleBuilder.Editor
             r.description  = TextArea("Description",   r.description);
             r.branch       = StringPopup("Branch",     r.branch, BranchOptions);
             r.depth_in_tree          = IntField("Depth in Tree",        r.depth_in_tree);
-            r.cost_base_currency     = IntField("Cost (Base Currency)", r.cost_base_currency);
+            r.cost_base_currency     = LongField("Cost (Base Currency)", r.cost_base_currency);
             r.cost_prestige_currency = IntField("Cost (Prestige)",      r.cost_prestige_currency);
             r.resets_on_prestige     = Toggle("Resets on Prestige",     r.resets_on_prestige);
             r.prestige_memory_discount = FloatField("Prestige Discount %", r.prestige_memory_discount);
@@ -742,6 +742,15 @@ namespace MobileIdleBuilder.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(label, GUILayout.Width(labelWidth));
             int result = EditorGUILayout.IntField(value);
+            EditorGUILayout.EndHorizontal();
+            return result;
+        }
+
+        private static long LongField(string label, long value, float labelWidth = 160)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(label, GUILayout.Width(labelWidth));
+            long result = EditorGUILayout.LongField(value);
             EditorGUILayout.EndHorizontal();
             return result;
         }

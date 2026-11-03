@@ -22,7 +22,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   depthInTree: 7
-  costBaseCurrency: 460000000
+  block: synthetic_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 643000000
   costPrestigeCurrency: 0
   durationSeconds: 10800
   fieldCooldownMult: 1

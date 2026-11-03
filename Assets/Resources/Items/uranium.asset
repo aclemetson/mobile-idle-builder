@@ -36,6 +36,6 @@ MonoBehaviour:
     Requires advanced assembly techniques. Decays: alpha decay turns it into Thorium
     (Decay Chamber)."
   codexUnlocked: 0
-  baseSellValue: 64
+  baseSellValue: 20000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

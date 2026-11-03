@@ -59,7 +59,7 @@ namespace MobileIdleBuilder.Tests
                 double outV = _items[r.output_item].base_sell_value
                               + r.byproducts.Sum(b => _items[b.item].base_sell_value * b.quantity);
                 double gain = outV / inV;
-                Assert.That(gain, Is.InRange(2.0, 20.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})");
+                Assert.That(gain, Is.InRange(1.0, 20.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})"); // gains, never thousands (derived economy: inputs + wage)
             }
         }
 

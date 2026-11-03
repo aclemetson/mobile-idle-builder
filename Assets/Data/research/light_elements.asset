@@ -21,7 +21,10 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
   depthInTree: 4
-  costBaseCurrency: 195000
+  block: foundations
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 442000
   costPrestigeCurrency: 0
   durationSeconds: 120
   fieldCooldownMult: 1

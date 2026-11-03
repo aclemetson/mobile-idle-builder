@@ -35,6 +35,6 @@ MonoBehaviour:
     Its production here enables isotope separation and is a prerequisite for superconductor
     synthesis."
   codexUnlocked: 0
-  baseSellValue: 106000
+  baseSellValue: 603000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0
