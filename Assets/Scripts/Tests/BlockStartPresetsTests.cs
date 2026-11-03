@@ -71,8 +71,10 @@ namespace MobileIdleBuilder.Tests
 
             Assert.AreEqual(forge.startPrestigeCount, save.prestigeCount);
             CollectionAssert.AreEquivalent(forge.startPermanentUpgrades, save.permanentUpgrades);
+            // prestigeCurrency is lifetime earned (held = earned - spent), never negative held.
             Assert.LessOrEqual(save.prestigeCurrencySpent, forge.startPrestigeCurrencyEarned);
-            Assert.AreEqual(forge.startPrestigeCurrencyEarned, save.prestigeCurrency + save.prestigeCurrencySpent);
+            Assert.AreEqual(forge.startPrestigeCurrencyEarned, save.prestigeCurrency);
+            Assert.GreaterOrEqual(save.prestigeCurrency - save.prestigeCurrencySpent, 0);
             Assert.Greater(save.prestigeSpeedMultiplier, 1f, "Assembly Line is part of the expected upgrades");
             Assert.GreaterOrEqual(save.currentRun.baseCurrency, forge.startEntropy);
 

@@ -67,6 +67,26 @@ This guide covers manual verification of every dev-console testing feature. Work
 
 ---
 
+## Part 1.4 — Research Blocks: start any game phase
+
+Each research block (game phase) can be started as a **first arrival**: every research in earlier blocks done, the
+block's expected prestiges and permanent upgrades bought, worlds and sites that earlier research opened, an empty run
+(like right after a prestige) and enough entropy for the block's first research. The definitions live in
+`game_data.json` `research_blocks` (`start_prestige_count`, `start_prestige_currency_earned`; the upgrade levels,
+`start_entropy` and `start_sites` come from `python scripts/block_starts.py --apply`).
+
+| Command | What it does |
+|---|---|
+| `block list` | Every block with its target hours, research count and first-arrival state; marks captured save points |
+| `block load <n\|id\|name>` | Start the block. Uses a captured save point if one exists, otherwise builds it from data |
+| `block fresh <n\|id\|name>` | Start the block from its data definition, ignoring any captured save point |
+| `block capture <n\|id\|name>` | Save the current game as that block's save point (e.g. after laying out a starter factory) |
+
+- `block load 1` is a fresh game (the tutorial).
+- Wait for the game to finish loading before running `block load`; it refuses while a scene transition is running.
+- Back up first with `snapshot save <name>` if you want your current save back (`snapshot load <name>`).
+- Captured save points live in `persistentDataPath/snapshots/block_<id>.json`, per device.
+
 ## Part 1.5 — Building Spawn (visual / structure testing)
 
 Spawns buildings through the real `BuildingPlacer`, so they get the same components, ports, holes, and

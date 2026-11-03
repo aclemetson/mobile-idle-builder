@@ -1269,6 +1269,9 @@ namespace MobileIdleBuilder.Dev
             if (block == null) return $"Unknown block '{key}'. Type 'block list'.";
             var sm = SaveManager.Instance;
             if (sm?.Current == null) return "Error: SaveManager not ready.";
+            // A second scene transition stacked on one in progress leaves the loading screen stuck over the game.
+            if (SceneLoader.IsTransitioning || !(ECSLoadBridge.Instance?.SaveApplied ?? false))
+                return "The game is still loading. Try again once it has finished.";
 
             SaveData data = null;
             string source = "data definition";

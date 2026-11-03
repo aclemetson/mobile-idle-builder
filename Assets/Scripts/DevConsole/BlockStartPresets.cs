@@ -94,8 +94,9 @@ namespace MobileIdleBuilder.Dev
             var levels = ParseLevels(block.startPermanentUpgrades);
             save.prestigeCount            = block.startPrestigeCount;
             save.permanentUpgrades        = levels.Select(kv => $"{kv.Key}:{kv.Value}").ToList();
+            // prestigeCurrency is the lifetime total earned; what the player holds is total minus spent.
             save.prestigeCurrencySpent    = CurrencySpent(levels);
-            save.prestigeCurrency         = System.Math.Max(0, block.startPrestigeCurrencyEarned - save.prestigeCurrencySpent);
+            save.prestigeCurrency         = System.Math.Max(block.startPrestigeCurrencyEarned, save.prestigeCurrencySpent);
             save.prestigeSpeedMultiplier  = 1f + Effect(levels, UpgradeEffectType.CraftSpeedMultiplier);
             save.prestigeOutputMultiplier = 1f + Effect(levels, UpgradeEffectType.OutputQuantityMultiplier);
             save.prestigeCostReduction    = Effect(levels, UpgradeEffectType.BuildingCostReduction);
