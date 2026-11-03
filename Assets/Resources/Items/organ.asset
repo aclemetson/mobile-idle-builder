@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: "Several tissues combined into a functional unit \u2014 a heart, a
     leaf, a liver. The machinery of a body."
   codexUnlocked: 0
-  baseSellValue: 1e+9
+  baseSellValue: 658000000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -69,8 +69,9 @@ namespace MobileIdleBuilder
                     fh = fp.Height;
                 }
 
-                // Preserve entropy sinks (Maxwell's Demon) — they're baked/auto-placed and
-                // cannot be recreated through the normal LoadGrid path.
+                // Preserve entropy sinks (Maxwell's Demon) — they're baked from the SubScene, and
+                // LoadGrid deliberately refuses to re-place them, so destroying one here would
+                // leave the grid with no Demon at all.
                 if (_em.HasComponent<EntropySinkTag>(e))
                 {
                     GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
@@ -119,6 +120,44 @@ namespace MobileIdleBuilder
                     total += cost;
 
             return total;
+        }
+
+        // ── Restore eligibility ───────────────────────────────────────────
+
+        /// <summary>
+        /// True if a saved building entry may be re-placed on load.
+        ///
+        /// The entropy sink (Maxwell's Demon) is baked from the SubScene on every launch, so it must
+        /// never be restored from save data: the save's entry records whatever cell the bake used when
+        /// it was written, and re-placing it stands a SECOND Demon up alongside the baked one — at a
+        /// different cell the moment the bake moves. It is still WRITTEN to the save (FlushToSave), both
+        /// because its entry mirrors the live baked entity and because IdleGraphAnalyzer needs it to
+        /// mark the chains that end at the Demon for offline earnings.
+        /// </summary>
+        internal static bool IsRestorable(BuildingSO building) =>
+            building != null && !building.isEntropySink;
+
+        /// <summary>
+        /// A saved building that no longer fits anywhere near its old anchor (its footprint grew) is
+        /// dropped and its placement cost returned, so the player loses nothing. Every LoadGrid caller
+        /// runs after ECSLoadBridge.ApplyLoadedSave has copied the currency into ECS (SaveApplied is only
+        /// raised after LoadGrid), and the next flush writes ECS back over the save, so the refund must
+        /// land in ECS. The save gets it too, in case the app closes before that flush.
+        /// </summary>
+        private void RefundUnplaceable(SaveData save, BuildingSO building, Vector2Int anchor)
+        {
+            long refund = building.entropyCost;
+            GameLogger.Warning($"[GridSaveService] {building.id} at ({anchor.x},{anchor.y}) no longer fits " +
+                               $"its {building.footprint.x}x{building.footprint.y} footprint; removed and refunded {refund}e.");
+
+            if (save?.currentRun != null)
+                save.currentRun.baseCurrency += refund;
+
+            using var q = _em.CreateEntityQuery(typeof(PlayerProgressData));
+            if (q.CalculateEntityCount() != 1) return;
+            var p = q.GetSingleton<PlayerProgressData>();
+            p.BaseCurrency += refund;
+            q.SetSingleton(p);
         }
 
         // ── Multi-grid migration ──────────────────────────────────────────
@@ -182,6 +221,9 @@ namespace MobileIdleBuilder
             grid.blockedOutputs = null;
 
             // --- Buildings ---
+            // The entropy sink IS persisted (its entry mirrors the live baked entity, and the idle
+            // graph needs it to mark chains that end at the Demon) but it is never restored — see
+            // the isEntropySink skip in LoadGrid.
             var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
             foreach (var e in entities)
             {
@@ -211,6 +253,10 @@ namespace MobileIdleBuilder
 
                 if (_em.HasComponent<OutputDirectionData>(e))
                     bsd.outputDirection = _em.GetComponentData<OutputDirectionData>(e).Direction;
+
+                if (_em.HasBuffer<OutputPortFilter>(e))
+                    bsd.portFilters = PortFilterRules.Flatten(
+                        FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(e, isReadOnly: true)));
 
                 grid.buildings.Add(bsd);
             }
@@ -310,11 +356,40 @@ namespace MobileIdleBuilder
             // --- Restore buildings ---
             if (hasBuildings && buildingPlacer != null)
             {
+                // Cells already claimed, so a building whose footprint grew since the save (#275: the
+                // Atom Generator went 1x1 -> 2x1) can't land on a neighbour. Belts, fields and the baked
+                // Demon are known up front; restored buildings add theirs as they go.
+                var claimed = new HashSet<Vector2Int>();
+                if (grid.conveyors != null)
+                    foreach (var csd in grid.conveyors)
+                        for (int i = 0; csd.cells != null && i + 1 < csd.cells.Length; i += 2)
+                            claimed.Add(new Vector2Int(csd.cells[i], csd.cells[i + 1]));
+                var fieldCells = new HashSet<Vector2Int>();
+                if (grid.fields != null)
+                    foreach (var f in grid.fields)
+                        if (f.position != null && f.position.Length >= 2)
+                            fieldCells.Add(new Vector2Int(f.position[0], f.position[1]));
+                foreach (var bsd in grid.buildings)
+                    if (buildingLookup.TryGetValue(bsd.buildingId, out var sinkEntry) && !IsRestorable(sinkEntry.building))
+                        foreach (var c in FootprintFit.Cells(new Vector2Int(bsd.position[0], bsd.position[1]),
+                                                             sinkEntry.building.footprint, bsd.rotation))
+                            claimed.Add(c);
+                bool InBounds(Vector2Int c) => c.x >= 0 && c.y >= 0
+                    && (grid.size == null || grid.size.x <= 0 || c.x < grid.size.x)
+                    && (grid.size == null || grid.size.y <= 0 || c.y < grid.size.y);
+
                 foreach (var bsd in grid.buildings)
                 {
                     if (!buildingLookup.TryGetValue(bsd.buildingId, out var entry))
                     {
                         GameLogger.Warning($"[GridSaveService] buildingId {bsd.buildingId} not in availableBuildings — skipped.");
+                        continue;
+                    }
+
+                    if (!IsRestorable(entry.building))
+                    {
+                        GameLogger.Debug($"[GridSaveService] Skipped entropy-sink entry at " +
+                                         $"({bsd.position[0]},{bsd.position[1]}) — the Demon is baked, not restored.");
                         continue;
                     }
 
@@ -326,13 +401,32 @@ namespace MobileIdleBuilder
 
                     int? outputDir = bsd.outputDirection >= 0 ? (int?)bsd.outputDirection : null;
 
+                    var anchor = new Vector2Int(bsd.position[0], bsd.position[1]);
+                    bool collector = entry.building.placementRule == PlacementRule.MustBeOnField;
+                    if (!collector)
+                    {
+                        if (!FootprintFit.TryFit(anchor, entry.building.footprint, bsd.rotation,
+                                c => InBounds(c) && !claimed.Contains(c) && !fieldCells.Contains(c), out var fitted))
+                        {
+                            RefundUnplaceable(save, entry.building, anchor);
+                            continue;
+                        }
+                        if (fitted != anchor)
+                            GameLogger.Info($"[GridSaveService] {entry.building.id} at ({anchor.x},{anchor.y}) " +
+                                            $"no longer fits its footprint; restored at ({fitted.x},{fitted.y}).");
+                        anchor = fitted;
+                    }
+                    foreach (var c in FootprintFit.Cells(anchor, entry.building.footprint, bsd.rotation))
+                        claimed.Add(c);
+
                     buildingPlacer.PlaceBuilding(
-                        bsd.position[0], bsd.position[1],
+                        anchor.x, anchor.y,
                         entry.building, recipe,
                         outputDir, bsd.rotation, bsd.flipped,
                         speedLevel:   Mathf.Max(1, bsd.level),
                         storageLevel: Mathf.Max(1, bsd.storageLevel),
-                        inputLevel:   Mathf.Max(1, bsd.inputLevel));
+                        inputLevel:   Mathf.Max(1, bsd.inputLevel),
+                        portFilters:  bsd.portFilters);
                 }
             }
 
@@ -526,7 +620,8 @@ namespace MobileIdleBuilder
                     OutputQuantity   = recipe.outputQuantity > 0 ? recipe.outputQuantity : 1,
                     CraftTimeSeconds = recipe.baseCraftTime > 0f ? recipe.baseCraftTime : 1f,
                     InputItemIds     = inputIds,
-                    InputQuantities  = inputQtys
+                    InputQuantities  = inputQtys,
+                    ByproductEntropy = recipe.EscapeEntropyPerCraft
                 };
             }
 
@@ -556,7 +651,9 @@ namespace MobileIdleBuilder
                 speedMult,
                 DateTime.UtcNow.ToString("O"),
                 getManagerOutputMultiplier,
-                getRecipeInfo);
+                getRecipeInfo,
+                SurplusSale.CurrentFraction(),
+                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

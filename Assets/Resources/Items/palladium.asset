@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Palladium (Pd), element number 46 with mass number 106. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 1904179
+  baseSellValue: 39200
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

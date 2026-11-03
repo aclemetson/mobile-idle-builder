@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -19,7 +20,17 @@ namespace MobileIdleBuilder
     ///
     /// Supported target IDs:
     ///   FieldInstance.Field.id — e.g. "electron_field", "quark_field"
-    ///   (ECS building IDs can be added to FindWorldPosition when needed)
+    ///   "maxwells_demon" or any BuildingSO id ("atomic_assembler", "fusion_reactor") — placed buildings
+    ///   "route:&lt;from&gt;&gt;&lt;to&gt;" — the start and end tiles of the next belt to draw: the free
+    ///       cell in front of a &lt;from&gt; output and the free cell in front of a &lt;to&gt; input (#202)
+    ///   "suggest:&lt;building&gt;:&lt;from&gt;&gt;&lt;to&gt;" — where to place &lt;building&gt; so belts from
+    ///       &lt;from&gt; feed it and its output reaches &lt;to&gt; (#203)
+    ///   "power:&lt;building&gt;" — the nearest free spot where &lt;building&gt; is inside a placed generator's
+    ///       influence circle (PowerCoverageMath), so it gets power
+    ///   "power:&lt;building&gt;@&lt;near&gt;" — the same, ranked by how close its inputs are to &lt;near&gt;'s
+    ///       outputs instead of to the generator (#311)
+    ///   Building keys are BuildingSO ids (e.g. "harvester", "strong_force_combiner");
+    ///   "maxwells_demon" matches the entropy sink. Grid math lives in TutorialRouteGuide.
     ///
     /// Inspector wiring required:
     ///   cameraFollow  → CameraController on Main Camera
@@ -31,7 +42,7 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer     gridRenderer;
         [SerializeField] private Material         _highlightMaterial;  // URP Unlit Transparent — assign in Inspector
 
-        private TutorialTileHighlight _activeHighlight;
+        private readonly List<TutorialTileHighlight> _activeHighlights = new();
         private Coroutine             _searchRoutine;
 
         /// <summary>Everything ApplyHighlight needs: the anchor grid cell, footprint size, and camera target.</summary>
@@ -42,6 +53,9 @@ namespace MobileIdleBuilder
             public int     FootprintW;
             public int     FootprintH;
             public Vector3 CameraTarget; // world-space point to pan the camera to
+            public bool    HasSecond;    // route targets: a second 1x1 tile (the belt's end)
+            public int     SecondX;
+            public int     SecondZ;
         }
 
         // ── Public API ────────────────────────────────────────────────────────
@@ -51,6 +65,17 @@ namespace MobileIdleBuilder
 
         /// <summary>Show the amber tile + pulse without moving the camera.</summary>
         public void ShowVisualOnly(string targetId) => BeginSearch(targetId, panCamera: false);
+
+        /// <summary>True when <paramref name="targetId"/> suggests where to place a building (see TutorialRouteGuide).</summary>
+        public static bool IsPlacementSuggestion(string targetId) =>
+            TutorialRouteGuide.IsPlacementSuggestion(targetId, IsFieldId);
+
+        private static bool IsFieldId(string id)
+        {
+            foreach (var f in FieldGenerator.AllInstances)
+                if (f != null && f.Field != null && f.Field.id == id) return true;
+            return false;
+        }
 
         /// <summary>Return camera to the character and remove all highlight visuals.</summary>
         public void ClearHighlight()
@@ -85,19 +110,25 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Retries every frame until FieldGenerator has spawned the target,
         /// then applies the camera pan and/or visual highlight.
-        /// Times out after 15 seconds to avoid an infinite loop on bad IDs.
+        /// Times out after 15 seconds to avoid an infinite loop on bad IDs, except route and placement
+        /// targets, which wait for the player until the step ends.
         /// </summary>
         private IEnumerator SearchAndHighlight(string targetId, bool panCamera)
         {
             float        timeout = 15f;
             WorldTarget? target  = null;
+            // Route and placement targets wait on the player (a belt to remove, a generator to place),
+            // not on spawn order, so they keep looking until the step ends (#307: the reroute glow
+            // appears once the old neutron belt is deconstructed). Step changes stop this search.
+            bool waitsOnPlayer = TutorialRouteGuide.TryParseRoute(targetId, out _, out _)
+                              || IsPlacementSuggestion(targetId);
 
             while (target == null)
             {
                 target   = FindWorldTarget(targetId);
                 timeout -= Time.deltaTime;
 
-                if (timeout <= 0f)
+                if (timeout <= 0f && !waitsOnPlayer)
                 {
                     GameLogger.Warning($"[TutorialHighlighter] Timed out searching for target '{targetId}'. " +
                                      "Check that the FieldSO id matches exactly.");
@@ -105,8 +136,9 @@ namespace MobileIdleBuilder
                     yield break;
                 }
 
+                // Past the spawn window a waiting search scans the grid four times a second, not every frame.
                 if (target == null)
-                    yield return null;
+                    yield return timeout > 0f ? null : new WaitForSecondsRealtime(0.25f);
             }
 
             _searchRoutine = null;
@@ -122,20 +154,32 @@ namespace MobileIdleBuilder
 
             float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
             ClearVisual();
-            _activeHighlight = TutorialTileHighlight.Spawn(t.CameraTarget, cs, t.FootprintW, t.FootprintH, _highlightMaterial);
+
+            var firstCenter = new Vector3((t.AnchorX + (t.FootprintW - 1) * 0.5f) * cs, 0f,
+                                          (t.AnchorZ + (t.FootprintH - 1) * 0.5f) * cs);
+            _activeHighlights.Add(TutorialTileHighlight.Spawn(firstCenter, cs, t.FootprintW, t.FootprintH, _highlightMaterial));
+
+            if (t.HasSecond)
+            {
+                gridRenderer?.AddTutorialHighlightRect(t.SecondX, t.SecondZ);
+                _activeHighlights.Add(TutorialTileHighlight.Spawn(
+                    new Vector3(t.SecondX * cs, 0f, t.SecondZ * cs), cs, 1, 1, _highlightMaterial));
+            }
         }
 
         private WorldTarget? FindWorldTarget(string targetId)
         {
-            // Scene-based field instances
-            var fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var f in fields)
+            // Field instances on the active site (FieldGenerator's registry; no scene scan). A field that
+            // already has a building on it is not where the next Harvester goes, so skip it (#308: the
+            // glow stayed on the field just built on).
+            foreach (var f in FieldGenerator.AllInstances)
             {
-                if (f.Field == null || f.Field.id != targetId) continue;
+                if (f == null || f.Field == null || f.Field.id != targetId) continue;
 
                 float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
                 int   ax = Mathf.RoundToInt(f.transform.position.x / cs);
                 int   az = Mathf.RoundToInt(f.transform.position.z / cs);
+                if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(ax, az)) continue;
                 // Camera target = tile centre on the ground plane
                 var camTarget = new Vector3(ax * cs, 0f, az * cs);
                 return new WorldTarget { AnchorX = ax, AnchorZ = az,
@@ -147,11 +191,328 @@ namespace MobileIdleBuilder
             if (targetId == "maxwells_demon")
                 return FindEntropySinkTarget();
 
-            if (targetId == "atomic_assembler")
-                return FindPlacedBuildingTarget(4);
+            if (TutorialRouteGuide.TryParseRoute(targetId, out var from, out var to))
+                return FindRouteTarget(from, to);
+
+            if (TutorialRouteGuide.TryParseSuggest(targetId, out var building, out var sFrom, out var sTo))
+                return FindSuggestTarget(building, sFrom, sTo);
+
+            if (TutorialRouteGuide.TryParsePower(targetId, out var powered, out var near))
+                return FindPoweredTarget(powered, near);
+
+            // Any other placed building by BuildingSO id ("atomic_assembler", "fusion_reactor", ...).
+            // Only "atomic_assembler" used to resolve, so other ids timed out with no highlight.
+            var placed = FindBuildingSO(targetId);
+            if (placed != null)
+                return FindPlacedBuildingTarget(placed.buildingId);
 
             return null;
         }
+
+        // ── Power placement guidance ──────────────────────────────────────────
+
+        /// <summary>
+        /// Nearest free spot where <paramref name="buildingKey"/> is inside a placed power source's influence
+        /// circle, so the grid links it. Retries until a generator is placed (returns null until then).
+        /// With <paramref name="nearKey"/>, the spot whose inputs are closest to that building's outputs
+        /// wins instead, wherever the player put it (#311: the Fusion Reactor next to the Atom Generator).
+        /// </summary>
+        private WorldTarget? FindPoweredTarget(string buildingKey, string nearKey = null)
+        {
+            var so = FindBuildingSO(buildingKey);
+            if (so == null || gridRenderer == null) return null;
+
+            var sources = GatherPowerSources();
+            if (sources.Count == 0) return null;
+
+            var fp = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+
+            // Keep every belt tile in front of its ports free and off the Demon's edge (#275): the Demon
+            // has an input on every edge tile, so a belt ending there could sell what it carries, and a
+            // boxed-in Atom Generator had no side left for the neutron line.
+            var frontOffsets = new List<Vector2Int>();
+            var inputOffsets = new List<Vector2Int>();
+            if (so.ports != null)
+                foreach (var port in so.ports)
+                {
+                    var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
+                    bool isInput = port.portType == PortType.Input;
+                    var front = isInput ? TutorialRouteGuide.InputFront(cell, facing)
+                                        : TutorialRouteGuide.OutputFront(cell, facing);
+                    frontOffsets.Add(front);
+                    if (isInput) inputOffsets.Add(front);
+                }
+            var demon = FindEntropySinkTarget();
+            bool BesideDemon(Vector2Int c) => demon is WorldTarget d
+                && c.x >= d.AnchorX - 1 && c.x <= d.AnchorX + d.FootprintW
+                && c.y >= d.AnchorZ - 1 && c.y <= d.AnchorZ + d.FootprintH;
+
+            // Output fronts of the building to sit next to, taken or not: the Atom Generator's still has
+            // its belt to the Demon at this point, which the next step has the player remove.
+            System.Func<Vector2Int, int> distanceFor = null;
+            if (!string.IsNullOrEmpty(nearKey))
+            {
+                var nearOutputs = new List<Vector2Int>();
+                if (!GatherPortFronts(nearKey, PortType.Output, nearOutputs) || nearOutputs.Count == 0) return null;
+                if (inputOffsets.Count > 0)
+                    distanceFor = anchor => TutorialRouteGuide.InputDistance(anchor, inputOffsets, nearOutputs);
+            }
+
+            var a  = TutorialRouteGuide.SuggestPoweredAnchor(gridRenderer.Width, gridRenderer.Height, fp,
+                sources, IsBuildable, frontOffsets, c => IsBeltFree(c) && !BesideDemon(c), distanceFor);
+            if (a == null) return null;
+
+            var anchor = a.Value;
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = anchor.x, AnchorZ = anchor.y, FootprintW = fp.x, FootprintH = fp.y,
+                CameraTarget = new Vector3((anchor.x + (fp.x - 1) * 0.5f) * cs, 0f, (anchor.y + (fp.y - 1) * 0.5f) * cs)
+            };
+        }
+
+        /// <summary>Footprint and influence radius of every placed generator (a power node with MaxEV above zero).</summary>
+        private static List<(Vector2Int min, Vector2Int max, float radius)> GatherPowerSources()
+        {
+            var sources = new List<(Vector2Int, Vector2Int, float)>();
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return sources;
+            var em = world.EntityManager;
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<PowerNodeData>(),
+                                                   ComponentType.ReadOnly<GridPosition>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var node = em.GetComponentData<PowerNodeData>(entity);
+                if (node.MaxEV <= 0f) continue;
+
+                var  pos = em.GetComponentData<GridPosition>(entity).Cell;
+                int  w = 1, h = 1;
+                if (em.HasComponent<BuildingFootprint>(entity))
+                {
+                    var fp = em.GetComponentData<BuildingFootprint>(entity);
+                    w = fp.Width;
+                    h = fp.Height;
+                }
+                sources.Add((new Vector2Int(pos.x, pos.y),
+                             new Vector2Int(pos.x + w - 1, pos.y + h - 1),
+                             node.InfluenceRadius));
+            }
+            return sources;
+        }
+
+        // ── Route / placement guidance (#202, #203) ───────────────────────────
+
+        /// <summary>Start tile = free cell in front of a &lt;from&gt; output; end = free cell in front of a &lt;to&gt; input.</summary>
+        private WorldTarget? FindRouteTarget(string from, string to)
+        {
+            var starts = new List<Vector2Int>();
+            var ends   = new List<Vector2Int>();
+            bool found = from == to
+                ? GatherChainFronts(from, starts, ends)
+                : GatherPortFronts(from, PortType.Output, starts) && GatherPortFronts(to, PortType.Input, ends);
+            if (!found) return null;
+
+            if (!TutorialRouteGuide.TryPickRoute(starts, ends, IsBeltFree, out var s, out var e))
+                return null;
+
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = s.x, AnchorZ = s.y, FootprintW = 1, FootprintH = 1,
+                HasSecond = true, SecondX = e.x, SecondZ = e.y,
+                CameraTarget = new Vector3((s.x + e.x) * 0.5f * cs, 0f, (s.y + e.y) * 0.5f * cs)
+            };
+        }
+
+        /// <summary>Footprint rect where &lt;building&gt; fits best between &lt;from&gt; outputs and &lt;to&gt; inputs.</summary>
+        private WorldTarget? FindSuggestTarget(string buildingKey, string from, string to)
+        {
+            var so = FindBuildingSO(buildingKey);
+            if (so == null || gridRenderer == null) return null;
+
+            var sources = new List<Vector2Int>();
+            var sinks   = new List<Vector2Int>();
+            // Only sources making something this building uses: the electron Harvester is a "harvester"
+            // too, and counting it as a third Combiner source pulled the glow a cell off (#236).
+            if (!GatherPortFronts(from, PortType.Output, sources, ConsumedItemIds(so)) ||
+                !GatherPortFronts(to, PortType.Input, sinks))
+                return null;
+            sources.RemoveAll(c => !IsBeltFree(c)); // already-routed outputs are not looking for a destination
+            sinks.RemoveAll(c => !IsBeltFree(c));
+
+            var fp           = new Vector2Int(Mathf.Max(1, so.footprint.x), Mathf.Max(1, so.footprint.y));
+            var inputFronts  = new List<Vector2Int>();
+            var outputFronts = new List<Vector2Int>();
+            if (so.ports != null)
+            {
+                foreach (var port in so.ports)
+                {
+                    var (cell, facing) = PortUtils.TransformPort(port, fp, flipped: false, rotation: 0);
+                    if (port.portType == PortType.Input)       inputFronts.Add(TutorialRouteGuide.InputFront(cell, facing));
+                    else if (port.portType == PortType.Output) outputFronts.Add(TutorialRouteGuide.OutputFront(cell, facing));
+                }
+            }
+
+            var anchor = TutorialRouteGuide.SuggestAnchor(gridRenderer.Width, gridRenderer.Height, fp,
+                inputFronts, outputFronts, sources, sinks, IsBuildable, IsBeltFree);
+            if (anchor == null) return null;
+
+            var a = anchor.Value;
+            float cs = CellSize;
+            return new WorldTarget
+            {
+                AnchorX = a.x, AnchorZ = a.y, FootprintW = fp.x, FootprintH = fp.y,
+                CameraTarget = new Vector3((a.x + (fp.x - 1) * 0.5f) * cs, 0f, (a.y + (fp.y - 1) * 0.5f) * cs)
+            };
+        }
+
+        /// <summary>
+        /// Adds the belt cell in front of every <paramref name="type"/> port on placed buildings matching
+        /// <paramref name="buildingKey"/>. Returns false when no such building is placed yet (keep searching).
+        /// </summary>
+        private bool GatherPortFronts(string buildingKey, PortType type, List<Vector2Int> result,
+                                      HashSet<int> onlyProducing = null)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return false;
+            var em = world.EntityManager;
+
+            bool isDemon = buildingKey == "maxwells_demon";
+            int  typeId  = -1;
+            if (!isDemon)
+            {
+                var so = FindBuildingSO(buildingKey);
+                if (so == null) return false;
+                typeId = so.buildingId;
+            }
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                   ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            bool any = false;
+            foreach (var entity in entities)
+            {
+                bool match = isDemon
+                    ? em.HasComponent<EntropySinkTag>(entity)
+                    : em.GetComponentData<BuildingData>(entity).BuildingType == typeId;
+                if (!match) continue;
+                any = true;
+                if (onlyProducing != null && onlyProducing.Count > 0 &&
+                    ProducedItemId(em, entity) is int produced && !onlyProducing.Contains(produced))
+                    continue;
+
+                AddPortFronts(em, entity, type, result);
+            }
+            return any;
+        }
+
+        private static void AddPortFronts(EntityManager em, Entity entity, PortType type, List<Vector2Int> result)
+        {
+            var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+            for (int i = 0; i < ports.Length; i++)
+            {
+                if (ports[i].PortType != (int)type) continue;
+                var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
+                var facing = (OutputDirection)ports[i].Facing;
+                result.Add(type == PortType.Output
+                    ? TutorialRouteGuide.OutputFront(cell, facing)
+                    : TutorialRouteGuide.InputFront(cell, facing));
+            }
+        }
+
+        /// <summary>
+        /// A belt between two buildings of the same type (e.g. Fusion Reactor → Fusion Reactor): starts at
+        /// the one whose product another one consumes, ends at that consumer, judged by their set recipes.
+        /// Without this the glow could point a reactor's output back into the wrong reactor.
+        /// </summary>
+        private bool GatherChainFronts(string buildingKey, List<Vector2Int> starts, List<Vector2Int> ends)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return false;
+            var em = world.EntityManager;
+            var so = FindBuildingSO(buildingKey);
+            if (so == null) return false;
+
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<BuildingData>(),
+                                                   ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            var placed = new List<(Entity e, int? produced, HashSet<int> consumed)>();
+            foreach (var entity in entities)
+            {
+                if (em.GetComponentData<BuildingData>(entity).BuildingType != so.buildingId) continue;
+                var consumed = new HashSet<int>();
+                if (em.HasBuffer<RecipeInputSlot>(entity))
+                {
+                    var inputs = em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+                    for (int i = 0; i < inputs.Length; i++) consumed.Add(inputs[i].ItemID);
+                }
+                placed.Add((entity, ProducedItemId(em, entity), consumed));
+            }
+            if (placed.Count < 2) return false;
+
+            foreach (var a in placed)
+                foreach (var b in placed)
+                {
+                    if (a.e == b.e || a.produced is not int item || !b.consumed.Contains(item)) continue;
+                    AddPortFronts(em, a.e, PortType.Output, starts);
+                    AddPortFronts(em, b.e, PortType.Input, ends);
+                }
+            return starts.Count > 0 && ends.Count > 0;
+        }
+
+        /// <summary>Item ids consumed by any of <paramref name="building"/>'s recipes.</summary>
+        private static HashSet<int> ConsumedItemIds(BuildingSO building)
+        {
+            var ids = new HashSet<int>();
+            if (building?.supportedRecipes == null) return ids;
+            foreach (var r in building.supportedRecipes)
+            {
+                if (r?.inputs == null) continue;
+                foreach (var input in r.inputs)
+                    if (input.item != null) ids.Add(input.item.itemId);
+            }
+            return ids;
+        }
+
+        /// <summary>The item a placed building's current recipe makes, or null when it has none or it is unknown.</summary>
+        private static int? ProducedItemId(EntityManager em, Entity entity)
+        {
+            if (!em.HasComponent<RecipeProcessData>(entity) || !em.HasComponent<BuildingData>(entity)) return null;
+            int recipeId = em.GetComponentData<RecipeProcessData>(entity).RecipeID;
+            var so = FindBuildingSO(em.GetComponentData<BuildingData>(entity).BuildingType);
+            if (so?.supportedRecipes == null) return null;
+            foreach (var r in so.supportedRecipes)
+                if (r != null && r.recipeId == recipeId && r.outputItem != null) return r.outputItem.itemId;
+            return null;
+        }
+
+        private static BuildingSO FindBuildingSO(int buildingId)
+        {
+            var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            if (db == null || db.allBuildings == null) return null;
+            foreach (var b in db.allBuildings)
+                if (b != null && b.buildingId == buildingId) return b;
+            return null;
+        }
+
+        private static BuildingSO FindBuildingSO(string id)
+        {
+            var db = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
+            if (db == null || db.allBuildings == null) return null;
+            foreach (var b in db.allBuildings)
+                if (b != null && b.id == id) return b;
+            return null;
+        }
+
+        private float CellSize => gridRenderer != null ? gridRenderer.CellSize : 1f;
+
+        private bool IsBeltFree(Vector2Int c) =>
+            gridRenderer != null && gridRenderer.IsInBounds(c.x, c.y)
+            && (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(c.x, c.y));
+
+        private bool IsBuildable(Vector2Int c) => IsBeltFree(c) && FieldGenerator.GetFieldAt(c.x, c.y) == null;
 
         /// <summary>
         /// Returns the highlight target for the first entity with EntropySinkTag, including
@@ -245,11 +606,9 @@ namespace MobileIdleBuilder
 
         private void ClearVisual()
         {
-            if (_activeHighlight != null)
-            {
-                Destroy(_activeHighlight.gameObject);
-                _activeHighlight = null;
-            }
+            foreach (var h in _activeHighlights)
+                if (h != null) Destroy(h.gameObject);
+            _activeHighlights.Clear();
         }
 
         void OnDestroy() => ClearHighlight();

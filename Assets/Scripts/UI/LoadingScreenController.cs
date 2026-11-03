@@ -25,6 +25,9 @@ namespace MobileIdleBuilder
                 var root = doc.rootVisualElement;
                 _progressBar  = root?.Q<ProgressBar>("progress-bar");
                 _percentLabel = root?.Q<Label>("percent-label");
+
+                var versionLabel = root?.Q<Label>("loading-version");
+                if (versionLabel != null) versionLabel.text = VersionLabel.Format();
             }
 
             if (string.IsNullOrEmpty(SceneLoader.TargetScene))
@@ -61,7 +64,9 @@ namespace MobileIdleBuilder
 
             // Phase 1 — scene file loading (op.progress: 0→0.9, displayed: 0%→90%).
             float displayed = 0f;
-            const float fillSpeed = 0.6f;
+            // Fast enough that the bar tracks real progress instead of adding >= 1.5 s of
+            // animation on top of an already-finished load (#190).
+            const float fillSpeed = 2f;
             float phase1LogTimer = 0f;
 
             while (op.progress < 0.9f || displayed < 0.9f)
@@ -111,7 +116,7 @@ namespace MobileIdleBuilder
             catch (System.Exception ex) { GameLogger.Error($"[LoadingScreen] UpdateProgress(100f) threw: {ex.Message}"); }
 
             GameLogger.Info("[LoadingScreen] Phase3 — pre-yield");
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return new WaitForSecondsRealtime(0.1f);
 
             GameLogger.Info("[LoadingScreen] Phase3 — post-yield, calling CompleteTransition");
             SceneLoader.CompleteTransition();

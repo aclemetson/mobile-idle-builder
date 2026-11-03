@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Gallium (Ga), element number 31 with mass number 69. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 54760430
+  baseSellValue: 41200
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

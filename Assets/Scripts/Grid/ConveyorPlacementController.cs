@@ -181,10 +181,10 @@ namespace MobileIdleBuilder
             OnChainPlaced?.Invoke();
 
             // Auto-chain: the run's end becomes the next start so the player can keep extending.
+            // The start is moved, never dropped, so OnStartChanged(false) still means the chain ended.
             Vector2Int newStart = _destCell;
-            ClearStartAndCandidate();
+            ClearPathState();
             _startCell = newStart;
-            SetHasStart(true);
             MarkStart();
         }
 
@@ -244,14 +244,8 @@ namespace MobileIdleBuilder
                 _dragAccum   = 0f;
                 _pressActive = true;
 
-                // Develop-tier trace of why a press over the conveyor bar is/ isn't treated as UI.
-                // VerboseLogging stays true across BOTH checks so the bar-check + UIBlock detail
-                // log only on the press (not every hover frame).
-                UIInputBlocker.VerboseLogging = true;
                 bool overBlocker  = UIInputBlocker.IsPointerOverUI(_pressPos);
                 bool overConveyor = IsPointerOverConveyorUI?.Invoke(_pressPos) ?? false;
-                UIInputBlocker.VerboseLogging = false;
-                GameLogger.Develop($"[Conveyor] PRESS at {_pressPos} screen={Screen.width}x{Screen.height} mode={_mode} hasStart={_hasStart} hasCandidate={HasCandidate} overBlocker={overBlocker} overConveyor={overConveyor} -> pressOverUI={(overBlocker || overConveyor)}");
 
                 _pressOverUI = overBlocker || overConveyor;
             }
@@ -281,6 +275,7 @@ namespace MobileIdleBuilder
 
             if (_mode == Mode.Destroy)
             {
+                // Belts are free to replace, so removal needs no confirmation (only buildings ask).
                 if (IsConveyorCell(cell) && conveyorPlacer.RemoveSegmentAt(cell.x, cell.y))
                 {
                     gridRenderer.ClearDeconstructHover();
@@ -474,10 +469,15 @@ namespace MobileIdleBuilder
 
         private void ClearStartAndCandidate()
         {
+            SetHasStart(false);
+            ClearPathState();
+        }
+
+        private void ClearPathState()
+        {
             conveyorVisualizer?.ClearSinglePreview();
             gridRenderer.ClearConveyorGhost();
             ClearHover();
-            SetHasStart(false);
             _currentPath = new List<Vector2Int>();
             _pathValid   = false;
             _isSingle    = false;

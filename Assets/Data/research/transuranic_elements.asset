@@ -19,10 +19,13 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
   - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   depthInTree: 6
-  costBaseCurrency: 500000
+  block: synthetic_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 315000000
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1

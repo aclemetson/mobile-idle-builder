@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: "Countless populations woven into one self-sustaining web \u2014 predators,
     prey, plants, and decomposers cycling matter and energy. A living world."
   codexUnlocked: 0
-  baseSellValue: 1.5e+11
+  baseSellValue: 6.66e+10
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

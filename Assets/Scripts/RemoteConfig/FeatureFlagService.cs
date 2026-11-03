@@ -30,7 +30,7 @@ namespace MobileIdleBuilder
     {
         protected override bool PersistAcrossScenes => true;
 
-        const string FileName = "feature_flags.json";
+        internal const string FileName = "feature_flags.json";
 
         string _filePath;
         readonly Dictionary<string, string> _values = new();
@@ -53,7 +53,7 @@ namespace MobileIdleBuilder
             base.Awake();
             if (Instance != this) return;
 
-            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+            _filePath = Path.Combine(LocalSaveService.SaveDirectory, FileName);
             LoadCache();
         }
 

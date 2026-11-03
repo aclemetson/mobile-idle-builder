@@ -35,9 +35,17 @@ namespace MobileIdleBuilder
         [SerializeField] private float        tutorialPanSpeed = 4f;
         [SerializeField] private float        minPitch         = 10f;     // near-horizon (degrees above ground)
         [SerializeField] private float        maxPitch         = 90f;     // straight down
-        [SerializeField] private float        rotateSpeedTouch = 0.2f;    // degrees per pixel of two-finger centroid move
+        [SerializeField] private float        rotateSpeedTouch = 0.2f;    // degrees per pixel of two-finger vertical (tilt) move
+        [SerializeField] private float        rotateSpeedTwist = 1f;      // yaw degrees per degree of two-finger twist
         [SerializeField] private float        rotateSpeedMouse = 0.2f;    // degrees per pixel of middle-mouse drag
+        [SerializeField] private float        panInertiaDamping = 6f;     // higher = pan glide stops sooner after release
         [SerializeField] private GridRenderer gridRenderer;
+
+        // ── Player camera preferences (read live from SettingsService) ────────
+        private static float PanSensitivity => SettingsService.Instance?.Current?.panSensitivity ?? 1f;
+        private static bool  InvertTilt     => SettingsService.Instance?.Current?.invertTilt     ?? false;
+        // Default tilt is flipped from the raw drag direction; the invert setting restores it.
+        private static float TiltSign       => InvertTilt ? 1f : -1f;
 
         // ── Shared threshold (PlayerInputRouter reads this) ──────────────────
         public const float TapThreshold = 20f;  // pixels
@@ -65,6 +73,20 @@ namespace MobileIdleBuilder
         private Vector3? _panTarget;
         private Vector2  _mouseOrbitPrev;
         private bool     _isMouseOrbiting;
+        private Vector3  _panVelocity;   // world units/sec, drives inertial glide after a pan release
+
+        // ── Background / resume (#222) ───────────────────────────────────────
+        // Longest frame the inertial glide integrates. The first frame after a resume can report
+        // the whole time spent in background, which would otherwise fling the camera.
+        internal const float MaxGlideDelta = 0.1f;
+        // Frames after a resume during which input is ignored, so stale touch positions from
+        // the gesture that backgrounded the app (e.g. swipe-home) cannot produce a drag.
+        internal const int ResumeGuardFrames = 2;
+
+        private bool    _suspended;
+        private Vector3 _suspendPivot;
+        private float   _suspendYaw, _suspendPitch, _suspendDistance, _suspendFov;
+        private int     _resumeGuard;
 
         public void SetPanLocked(bool locked) => _panLocked = locked;
 
@@ -93,11 +115,77 @@ namespace MobileIdleBuilder
             ApplyRig();
         }
 
+        void OnApplicationPause(bool paused) { if (paused) Suspend(); else Resume(); }
+        void OnApplicationFocus(bool focused) { if (focused) Resume(); else Suspend(); }
+
+        /// <summary>
+        /// Called when the app loses focus or is backgrounded (both events fire; idempotent).
+        /// Remembers where the camera was left and drops any in-flight gesture or glide: the
+        /// release of a gesture that backgrounds the app (swipe-home) never reaches us.
+        /// </summary>
+        internal void Suspend()
+        {
+            if (_suspended) return;
+            _suspended       = true;
+            _suspendPivot    = _pivot;
+            _suspendYaw      = _yaw;
+            _suspendPitch    = _pitch;
+            _suspendDistance = _distance;
+            _suspendFov      = _cam != null ? _cam.fieldOfView : 0f;
+            ResetGesture();
+        }
+
+        /// <summary>Puts the camera back where it was left and briefly ignores input.</summary>
+        internal void Resume()
+        {
+            if (!_suspended) return;
+            _suspended = false;
+            _pivot     = _suspendPivot;
+            _yaw       = _suspendYaw;
+            _pitch     = _suspendPitch;
+            _distance  = _suspendDistance;
+            if (_cam != null && _suspendFov > 0f) _cam.fieldOfView = _suspendFov;
+            ResetGesture();
+            _resumeGuard = ResumeGuardFrames;
+            if (_cam != null) ApplyRig();
+        }
+
+        private void ResetGesture()
+        {
+            _isPanActive     = false;
+            _isMouseOrbiting = false;
+            _dragAccum       = 0f;
+            _panVelocity     = Vector3.zero;
+        }
+
+        internal Vector3 Pivot       => _pivot;
+        internal Vector3 PanVelocity => _panVelocity;
+        internal bool    IsSuspended => _suspended;
+
         void LateUpdate()
         {
+            if (_resumeGuard > 0)
+            {
+                _resumeGuard--;
+                ResetGesture();
+                ApplyRig();
+                return;
+            }
+
             HandleSwipePan();
             HandleZoom();
             HandleMouseOrbit();
+
+            // Inertial glide: after a pan release, keep drifting and decelerate so the map
+            // feels natural rather than snapping to a dead stop. Suppressed while actively
+            // panning, locked, or following a tutorial pan.
+            if (!_isPanActive && !_panLocked && !_panTarget.HasValue && _panVelocity.sqrMagnitude > 1e-4f)
+            {
+                float dt     = GlideDelta(Time.unscaledDeltaTime);
+                _pivot       = ClampPivot(_pivot + _panVelocity * dt);
+                _panVelocity = DecayVelocity(_panVelocity, panInertiaDamping, dt);
+                if (_panVelocity.sqrMagnitude < 1e-4f) _panVelocity = Vector3.zero;
+            }
 
             // Smooth tutorial pan toward the requested focal point.
             if (_panTarget.HasValue)
@@ -113,9 +201,11 @@ namespace MobileIdleBuilder
             if (_panLocked) { _isPanActive = false; return; }
 
             // Two-finger gestures are owned by pinch-zoom / rotate; skip single-finger pan
+            // and cancel any inertial glide so the map doesn't drift while zooming/rotating.
             if (ActiveTouchCount() >= 2)
             {
                 _isPanActive = false;
+                _panVelocity = Vector3.zero;
                 return;
             }
 
@@ -126,6 +216,7 @@ namespace MobileIdleBuilder
                 _pressOverUI = UIInputBlocker.IsPointerOverUI(_panPrev);
                 _isPanActive = !_pressOverUI;
                 _dragAccum   = 0f;
+                _panVelocity = Vector3.zero; // touching down halts any inertial glide
             }
 
             if (InputUtils.IsPointerHeld() && _isPanActive)
@@ -141,16 +232,24 @@ namespace MobileIdleBuilder
 
                     Vector3 prevGround = ScreenToGround(_panPrev);
                     Vector3 curGround  = ScreenToGround(cur);
-                    Vector3 worldDelta = prevGround - curGround; // negative so the grid follows the finger
+                    // negative so the grid follows the finger; scaled by the sensitivity preference
+                    Vector3 worldDelta = (prevGround - curGround) * PanSensitivity;
 
                     _pivot = ClampPivot(_pivot + worldDelta);
+
+                    // Track a smoothed velocity so releasing the drag flings the map.
+                    if (Time.unscaledDeltaTime > 0f)
+                    {
+                        Vector3 instantV = worldDelta / Time.unscaledDeltaTime;
+                        _panVelocity = Vector3.Lerp(_panVelocity, instantV, 0.5f);
+                    }
                 }
 
                 _panPrev = cur;
             }
 
             if (InputUtils.WasPointerReleased())
-                _isPanActive = false;
+                _isPanActive = false; // _panVelocity persists -> inertial glide in LateUpdate
         }
 
         // ── Zoom + two-finger rotate ──────────────────────────────────────────
@@ -167,6 +266,7 @@ namespace MobileIdleBuilder
                 var prv0 = pos0 - t0.delta.ReadValue();
                 var prv1 = pos1 - t1.delta.ReadValue();
 
+                // Zoom from the change in finger SPACING (radial component of the gesture).
                 float prevDist = Vector2.Distance(prv0, prv1);
                 float currDist = Vector2.Distance(pos0, pos1);
 
@@ -175,12 +275,19 @@ namespace MobileIdleBuilder
                         _cam.fieldOfView - (currDist - prevDist) * zoomSpeed,
                         minFOV, maxFOV);
 
-                // Rotate from the movement of the fingers' centroid (orthogonal to pinch).
+                // Rotate/tilt, decoupled from zoom so the two gestures don't fight:
+                //  - yaw   from TWIST (change in the finger-to-finger angle) — orthogonal to pinch spacing
+                //  - pitch from the vertical movement of the fingers' centroid (tilt)
                 // Frozen while the camera is locked (e.g. Maxwell's Demon minigame).
                 if (!_panLocked)
                 {
-                    Vector2 cDelta = ((pos0 + pos1) - (prv0 + prv1)) * 0.5f;
-                    ApplyRotate(cDelta, rotateSpeedTouch);
+                    _yaw += SignedAngleDelta(prv0, prv1, pos0, pos1) * rotateSpeedTwist;
+
+                    float centroidDeltaY = ((pos0.y + pos1.y) - (prv0.y + prv1.y)) * 0.5f;
+                    _pitch = Mathf.Clamp(
+                        _pitch + centroidDeltaY * rotateSpeedTouch * TiltSign,
+                        minPitch, maxPitch);
+
                     _panTarget = null; // manual rotate cancels any tutorial pan
                 }
             }
@@ -226,13 +333,40 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Applies a screen-space drag delta to yaw (horizontal) and pitch (vertical).
-        /// Dragging up tilts toward the top-down view; pitch is clamped to [minPitch, maxPitch].
+        /// Used by the desktop middle-mouse orbit. Pitch honours the invert-tilt preference
+        /// and is clamped to [minPitch, maxPitch].
         /// </summary>
         private void ApplyRotate(Vector2 screenDelta, float speed)
         {
             _yaw  += screenDelta.x * speed;
-            _pitch = Mathf.Clamp(_pitch + screenDelta.y * speed, minPitch, maxPitch);
+            _pitch = Mathf.Clamp(_pitch + screenDelta.y * speed * TiltSign, minPitch, maxPitch);
         }
+
+        /// <summary>
+        /// Signed change in the angle of the vector between two fingers, in degrees
+        /// (the "twist" of a two-finger gesture). Positive = counter-clockwise. Pure
+        /// function so it stays orthogonal to pinch spacing and is unit-testable.
+        /// </summary>
+        public static float SignedAngleDelta(Vector2 prevA, Vector2 prevB, Vector2 curA, Vector2 curB)
+        {
+            Vector2 prev = prevB - prevA;
+            Vector2 cur  = curB  - curA;
+            if (prev.sqrMagnitude < 1e-6f || cur.sqrMagnitude < 1e-6f) return 0f;
+            return Vector2.SignedAngle(prev, cur);
+        }
+
+        /// <summary>
+        /// One step of exponential velocity decay toward zero. Pure function (unit-tested).
+        /// </summary>
+        public static Vector3 DecayVelocity(Vector3 velocity, float damping, float dt)
+            => Vector3.Lerp(velocity, Vector3.zero, Mathf.Clamp01(damping * dt));
+
+        /// <summary>
+        /// Frame delta used by the inertial glide, capped at <see cref="MaxGlideDelta"/> so a
+        /// long hitch (e.g. the first frame after resuming from background) cannot fling the
+        /// camera. Pure function (unit-tested).
+        /// </summary>
+        public static float GlideDelta(float dt) => Mathf.Clamp(dt, 0f, MaxGlideDelta);
 
         /// <summary>
         /// Recomputes the camera transform from the orbit rig so it always looks at the pivot.

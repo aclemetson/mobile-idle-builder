@@ -93,6 +93,19 @@ namespace MobileIdleBuilder
                 new[]{ 35, 70, 140, 280, 560, 1120 },
                 new[]{ ("memory_resonance", 1) }),
 
+            new UpgradeDef(
+                "salvage_protocols", "Salvage Protocols",
+                "Removing a building refunds +10% more of the entropy spent on it per level (base 50%, max 100%).",
+                UpgradeEffectType.DemolishRefund, 0.10f, 5,
+                new[]{ 30, 60, 120, 240, 480 },
+                new[]{ ("efficient_layouts", 1) }),
+
+            new UpgradeDef(
+                "surplus_resale", "Surplus Brokerage",
+                "Items a building can't use are sold automatically for +10% more of the Demon price per level (base 50%, max 100%).",
+                UpgradeEffectType.SurplusResale, 0.10f, 5,
+                new[]{ 20, 40, 80, 160, 320 }),
+
             // ── Tier 3: require deeper investment ────────────────────────────
             new UpgradeDef(
                 "turnkey_builder", "Turnkey Builder",

@@ -95,7 +95,8 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(rdb, "ResearchDatabase missing");
             var lab = System.Array.Find(rdb.allResearch, r => r != null && r.id == "chemistry_lab");
             Assert.IsNotNull(lab, "chemistry_lab research missing");
-            Assert.AreEqual(150000, lab.costBaseCurrency, "chemistry_lab gate = 150000e");
+            var mid = System.Array.Find(rdb.allResearch, r => r != null && r.id == "mid_elements");
+            Assert.Greater(lab.costBaseCurrency, mid.costBaseCurrency, "chemistry_lab costs more than its prerequisite (values: scripts/rebalance_curve.py)");
             Assert.AreEqual(ResearchBranch.Chemistry, lab.branch);
             Assert.IsNotNull(System.Array.Find(lab.prerequisites, p => p != null && p.id == "mid_elements"),
                 "chemistry_lab requires mid_elements");
@@ -154,16 +155,16 @@ namespace MobileIdleBuilder.Tests
             // chemistry_lab -> reaction_engineering -> organic_chemistry -> biochem_precursors
             var expected = new (string id, string prereq, int cost, ResearchBranch branch)[]
             {
-                ("reaction_engineering", "chemistry_lab",        500000,  ResearchBranch.Chemistry),
-                ("organic_chemistry",    "reaction_engineering", 2000000, ResearchBranch.Chemistry),
-                ("biochem_precursors",   "organic_chemistry",    5000000, ResearchBranch.Chemistry),
+                ("reaction_engineering", "chemistry_lab",        0, ResearchBranch.Chemistry),
+                ("organic_chemistry",    "reaction_engineering", 0, ResearchBranch.Chemistry),
+                ("biochem_precursors",   "organic_chemistry",    0, ResearchBranch.Chemistry),
             };
             foreach (var (id, prereq, cost, branch) in expected)
             {
                 var node = Find(id);
                 Assert.IsNotNull(node, $"{id} research missing");
                 Assert.AreEqual(branch, node.branch, $"{id} branch");
-                Assert.AreEqual(cost, node.costBaseCurrency, $"{id} cost");
+                Assert.Greater(node.costBaseCurrency, Find(prereq).costBaseCurrency, $"{id} costs more than {prereq}");
                 Assert.IsNotNull(System.Array.Find(node.prerequisites, p => p != null && p.id == prereq),
                     $"{id} must require {prereq}");
             }

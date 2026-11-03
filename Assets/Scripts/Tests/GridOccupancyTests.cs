@@ -162,5 +162,24 @@ namespace MobileIdleBuilder.Tests
 
             Assert.IsFalse(_occ.IsConveyorCell(1, 1), "A building-occupied cell must not be reported as a conveyor cell");
         }
+
+        // ── Conveyor cell change notification (#237) ─────────────────────────
+
+        [Test]
+        public void RegisterAndUnregisterConveyor_RaiseConveyorCellChanged()
+        {
+            var seen = new System.Collections.Generic.List<(int, int)>();
+            void Record(int x, int y) => seen.Add((x, y));
+            GridOccupancy.ConveyorCellChanged += Record;
+            try
+            {
+                _occ.RegisterConveyor(2, 3);
+                _occ.UnregisterConveyor(2, 3);
+            }
+            finally { GridOccupancy.ConveyorCellChanged -= Record; }
+
+            CollectionAssert.AreEqual(new[] { (2, 3), (2, 3) }, seen,
+                "GridRenderer recolours belt tiles from this event; every belt change must raise it");
+        }
     }
 }

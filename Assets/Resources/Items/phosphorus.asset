@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Phosphorus (P), element number 15 with mass number 31. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 81920
+  baseSellValue: 7270
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

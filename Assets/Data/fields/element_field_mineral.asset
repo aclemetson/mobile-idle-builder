@@ -29,6 +29,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 4c6c94900546a7340bd82fd524fc4c57, type: 2}
     weight: 1
   tapCooldownSeconds: 2
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.7882353, g: 0.63529414, b: 0.15294118, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A mineral bed of salts and nonmetals \u2014 silicon, sodium, chlorine,

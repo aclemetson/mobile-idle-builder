@@ -17,7 +17,5 @@
             <ui:Button name="btn-maintenance-retry" text="Retry"           class="maintenance-retry-btn" />
         </ui:VisualElement>
 
-        <ui:Label name="splash-version" text="" class="splash-version" />
-
     </ui:VisualElement>
 </ui:UXML>

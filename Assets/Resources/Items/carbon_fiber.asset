@@ -35,5 +35,6 @@ MonoBehaviour:
     than steel at one quarter the weight. The structural material of spacecraft,
     racing vehicles, and megastructures."
   codexUnlocked: 0
-  baseSellValue: 6000000
+  baseSellValue: 1460000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -1,6 +1,6 @@
 param(
     [string]$UnityPath = "C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe",
-    [int]$TimeoutMinutes = 60,
+    [int]$TimeoutMinutes = 150,
     [string]$ExecuteMethod = "MobileIdleBuilder.Editor.BuildScript.BuildAndroid"
 )
 
@@ -41,6 +41,12 @@ $proc = Start-Process -FilePath $UnityPath `
     -WorkingDirectory $ProjectRoot `
     -ArgumentList "-batchmode -nographics -projectPath `"$ProjectRoot`" -buildTarget Android -executeMethod $ExecuteMethod -logFile `"$logFile`"" `
     -PassThru -NoNewWindow
+
+# Force the Process object to cache its OS handle while Unity is still alive. Without this,
+# Start-Process -PassThru leaves ExitCode blank afterwards, and "exit $null" exits 0 -- so a
+# failed build reported success (same fix as scripts/test-local.ps1).
+try { $null = $proc.Handle } catch { }
+
 $timeoutMs = $TimeoutMinutes * 60 * 1000
 $finished  = $proc.WaitForExit($timeoutMs)
 
@@ -50,6 +56,12 @@ if (-not $finished) {
     $exitCode = -1
 } else {
     $exitCode = $proc.ExitCode
+    if ($null -eq $exitCode -or "$exitCode" -eq "") {
+        # Fail closed: BuildScript always calls EditorApplication.Exit(0|1), so an unreadable
+        # code means we cannot prove the build succeeded.
+        Write-Host "[build] Unity exit code unavailable - treating as FAILED."
+        $exitCode = -2
+    }
 }
 Write-Host "[build] Unity exited with code $exitCode"
 

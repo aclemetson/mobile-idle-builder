@@ -22,8 +22,9 @@ MonoBehaviour:
   tier: 1
   category: 1
   isObsoleteable: 1
-  obsoleteCondition: "Nucleon Harvester unlocked \u2014 the Strong Force Combiner
-    is no longer needed."
+  obsoleteCondition: 'Nucleon Harvesting researched: a Nucleon Harvester makes protons
+    and neutrons straight from quark fields.'
+  obsoletedByResearch: nucleon_harvesting
   requiresPower: 1
   isPowerSource: 0
   basePowerCostEV: 10
@@ -40,6 +41,10 @@ MonoBehaviour:
   - Up Quarks
   - Down Quarks
   isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 2, y: 1}
   structureKind: 2
   ports:

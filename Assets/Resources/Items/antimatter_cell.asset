@@ -35,5 +35,6 @@ MonoBehaviour:
     antimatter meets matter, 100% of both masses convert to energy per E=mc\xB2.
     The most energy-dense storage known."
   codexUnlocked: 0
-  baseSellValue: 8e+11
+  baseSellValue: 94300000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

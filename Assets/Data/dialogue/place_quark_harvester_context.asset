@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "The Combiner is powered but has nothing to process. Place a second Harvester
-      on the quark field \u2014 it produces Up Quarks and Down Quarks in equal measure."
+    text: 'Electrons are only part of the story. Place a Harvester on each quark
+      field. A quark field holds both Up and Down Quarks, so when you place each
+      Harvester, choose what it collects: one for Up Quarks, one for Down Quarks.'
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

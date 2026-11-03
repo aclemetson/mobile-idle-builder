@@ -122,9 +122,7 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return false;
             if (!PrereqsMet(save, world)) return false;
-            if (GetCurrentEntropy() < world.unlockCost) return false;
-
-            DeductEntropy(world.unlockCost);
+            if (!EnsureEcs() || !EntropyWallet.TrySpend(_progressQuery, world.unlockCost)) return false;
 
             save.unlockedWorlds ??= new List<string>();
             if (!save.unlockedWorlds.Contains(world.id))
@@ -213,20 +211,6 @@ namespace MobileIdleBuilder
             return true;
         }
 
-        private long GetCurrentEntropy()
-        {
-            if (!EnsureEcs() || _progressQuery.IsEmpty) return 0;
-            return _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
-        }
-
-        private void DeductEntropy(long amount)
-        {
-            if (!EnsureEcs() || _progressQuery.IsEmpty) return;
-            var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            long actual = Math.Min(amount, progress.BaseCurrency);
-            progress.BaseCurrency      -= actual;
-            progress.TotalEntropySpent += actual;
-            _progressQuery.SetSingleton(progress);
-        }
+        private long GetCurrentEntropy() => EnsureEcs() ? EntropyWallet.Balance(_progressQuery) : 0;
     }
 }

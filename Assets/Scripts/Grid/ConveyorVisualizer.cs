@@ -27,10 +27,25 @@ namespace MobileIdleBuilder
 
         private EntityQuery _segmentQuery;
         private EntityQuery _itemQuery;
+        private EntityQuery _portQuery;
         private bool        _queriesReady;
+
+        // Tail tiles drawn exiting toward the input they actually feed, when that differs from their
+        // stored ExitDir (#223). Keyed by cell; read by the item animation so items glide into the
+        // building instead of straight past it. Rebuilt with the belts.
+        private readonly Dictionary<(int, int), int> _tailVisualExit = new();
 
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres = new();
+        private readonly Dictionary<Entity, int>             _itemSpriteIds = new();   // which item each visual shows
+
+        // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
+        // but not merged with) points at a neighbour that also has a belt — they look aligned but
+        // items do not flow across. Rebuilt in RefreshAll alongside the belts.
+        private readonly List<GameObject> _gapMarkers = new();
+        private Material _gapMaterial;
+        private bool     _ownsGapMaterial;
+        private static readonly Color GapColor = new Color(0.95f, 0.25f, 0.20f);
 
         // Transient single-cell placement preview (not tracked in _spawnedBelts so it never
         // collides with the real Refresh map). Lives only while a single candidate is pending.
@@ -64,6 +79,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<ConveyorSegmentData>(),
                 ComponentType.ReadOnly<ConveyorItemData>()
             );
+            _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
             _queriesReady = true;
         }
 
@@ -74,16 +90,20 @@ namespace MobileIdleBuilder
             {
                 _segmentQuery.Dispose();
                 _itemQuery.Dispose();
+                _portQuery.Dispose();
             }
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
+            _itemSpriteIds.Clear();
+            ClearGapMarkers();
             ClearSinglePreview();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
             if (_ownsChannelMaterial && _channelMaterial != null) Destroy(_channelMaterial);
+            if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
         }
 
         // ----------------------------------------------------------------
@@ -112,6 +132,10 @@ namespace MobileIdleBuilder
         // Update — item sphere animation
         // ----------------------------------------------------------------
 
+        /// <summary>True when a segment's visual was made for a different item than the one now on it (#334).</summary>
+        internal static bool VisualIsStale(IReadOnlyDictionary<Entity, int> shownIds, Entity segment, int itemId) =>
+            !shownIds.TryGetValue(segment, out int shown) || shown != itemId;
+
         void Update()
         {
             if (!_queriesReady || _itemQuery.IsEmpty) return;
@@ -136,19 +160,29 @@ namespace MobileIdleBuilder
                 // Create the item visual if not yet spawned. Prefer the item's periodic-table
                 // tile sprite as a camera-facing billboard; fall back to a colour-coded sphere
                 // when no icon is available (e.g. in tests without an ItemDatabase).
-                if (!_itemSpheres.TryGetValue(e, out var sphere))
+                // A segment's item can be swapped in place (one leaves and the next arrives between two visual
+                // updates); the sprite must follow the item, not the segment (#334).
+                if (_itemSpheres.TryGetValue(e, out var sphere) && VisualIsStale(_itemSpriteIds, e, item.ItemID))
+                {
+                    if (sphere) Destroy(sphere);
+                    _itemSpheres.Remove(e);
+                    sphere = null;
+                }
+                if (sphere == null)
                 {
                     var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
                     sphere = (icon != null && icon.texture != null)
                         ? CreateItemTile(gridRenderer.transform, icon.texture)
                         : CreateItemSphere(gridRenderer.transform, item.ItemID);
                     _itemSpheres[e] = sphere;
+                    _itemSpriteIds[e] = item.ItemID;
                 }
 
                 // Animate position: lerp from entry edge to exit edge
                 Vector3 cellCenter  = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
                 Vector3 entryEdge   = cellCenter + DirOffset(OppositeDir(seg.EntryDir), cs * 0.45f);
-                Vector3 exitEdge    = cellCenter + DirOffset(seg.ExitDir, cs * 0.45f);
+                int     exitDir     = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                Vector3 exitEdge    = cellCenter + DirOffset(exitDir, cs * 0.45f);
                 float   t           = Mathf.Clamp01(item.Progress);
                 Vector3 pos         = Vector3.Lerp(entryEdge, exitEdge, t);
                 pos.y               = 0.3f;
@@ -174,7 +208,7 @@ namespace MobileIdleBuilder
                     toRemove.Add(kvp.Key);
                 }
             }
-            foreach (var e in toRemove) _itemSpheres.Remove(e);
+            foreach (var e in toRemove) { _itemSpheres.Remove(e); _itemSpriteIds.Remove(e); }
         }
 
         // ----------------------------------------------------------------
@@ -230,17 +264,60 @@ namespace MobileIdleBuilder
                 exitMap[(seg.Cell.x, seg.Cell.y)] = seg.ExitDir;
             }
 
+            var inputPorts = CollectInputPorts(em);
+            var feeds      = new bool[4];
+            var sinks      = new bool[4];
+
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg  = em.GetComponentData<ConveyorSegmentData>(entities[i]);
                 var cell = (seg.Cell.x, seg.Cell.y);
                 if (_spawnedBelts.ContainsKey(cell)) continue;
 
+                // A tail is drawn exiting toward the input it really feeds (same ranking as
+                // ConveyorSystem.TryPickInput, via TailDelivery), not straight past it (#223). Data is
+                // untouched, so extending the belt from this tile still links along its stored ExitDir.
+                int exitDir = seg.ExitDir;
+                if (seg.NextSegment == Entity.Null)
+                {
+                    for (int d = 0; d < 4; d++)
+                    {
+                        int2 nb = Adjacent(seg.Cell, d);
+                        feeds[d] = inputPorts.TryGetValue((nb.x, nb.y, d), out bool sink);
+                        sinks[d] = feeds[d] && sink;
+                    }
+                    exitDir = TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds, sinks);
+                }
+                if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
+                else                        _tailVisualExit.Remove(cell);
+
                 var inbound = ComputeInboundEdges(seg.Cell, exitMap);
-                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, seg.ExitDir, inbound, cs);
+                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
             }
 
             entities.Dispose();
+        }
+
+        /// <summary>
+        /// Every building input port as (cell x, cell y, facing) -> whether its building is an entropy
+        /// sink. A tail at cell C feeds direction d when (C + d, d) is a key, the same test as
+        /// ConveyorSystem.HasMatchingPort; the sink flag feeds TailInputPriority (Demon last).
+        /// </summary>
+        private Dictionary<(int, int, int), bool> CollectInputPorts(EntityManager em)
+        {
+            var map = new Dictionary<(int, int, int), bool>();
+            if (_portQuery.IsEmpty) return map;
+            var buildings = _portQuery.ToEntityArray(Allocator.Temp);
+            for (int b = 0; b < buildings.Length; b++)
+            {
+                bool isSink = em.HasComponent<EntropySinkTag>(buildings[b]);
+                var ports = em.GetBuffer<PlacedPortData>(buildings[b], isReadOnly: true);
+                for (int p = 0; p < ports.Length; p++)
+                    if (ports[p].PortType == (int)PortType.Input)
+                        map[(ports[p].CellX, ports[p].CellY, ports[p].Facing)] = isSink;
+            }
+            buildings.Dispose();
+            return map;
         }
 
         /// <summary>Destroys all belt ribbons and rebuilds them from current ECS data. Call after any
@@ -249,7 +326,94 @@ namespace MobileIdleBuilder
         {
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             _spawnedBelts.Clear();
+            _tailVisualExit.Clear();
             Refresh();
+            RefreshGapMarkers();
+        }
+
+        // ----------------------------------------------------------------
+        // "Not connected" seam markers
+        // ----------------------------------------------------------------
+
+        private void ClearGapMarkers()
+        {
+            foreach (var go in _gapMarkers) if (go) Destroy(go);
+            _gapMarkers.Clear();
+        }
+
+        /// <summary>
+        /// Rebuilds the red seam markers. A belt whose forward output is intentionally blocked
+        /// (drawn up to, but not merged onto, an existing belt) is flagged when the cell it points
+        /// at also contains a belt — so the player sees the two are aligned but NOT connected.
+        /// </summary>
+        private void RefreshGapMarkers()
+        {
+            ClearGapMarkers();
+            if (!_queriesReady || _segmentQuery.IsEmpty) return;
+
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+
+            var em       = world.EntityManager;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            float cs     = gridRenderer.CellSize;
+
+            var allCells = new HashSet<(int, int)>(entities.Length);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                allCells.Add((seg.Cell.x, seg.Cell.y));
+            }
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (!seg.OutputBlocked) continue;                 // only intentional dead-ends
+                int2 nc = Adjacent(seg.Cell, seg.ExitDir);
+                if (allCells.Contains((nc.x, nc.y)))              // …that point at another belt
+                    _gapMarkers.Add(SpawnGapMarker(seg.Cell.x, seg.Cell.y, seg.ExitDir, cs));
+            }
+
+            entities.Dispose();
+        }
+
+        private GameObject SpawnGapMarker(int x, int y, int exitDir, float cs)
+        {
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = $"ConveyorGap_{x}_{y}";
+            if (marker.TryGetComponent<Collider>(out var col)) Destroy(col);
+
+            marker.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+            // Sit on the shared edge between this cell and the neighbour it fails to connect to.
+            marker.transform.localPosition =
+                new Vector3(x * cs, 0.06f, y * cs) + DirOffset(exitDir, cs * 0.5f);
+
+            // Thin across the flow direction, long along the shared edge.
+            bool alongX = exitDir == (int)OutputDirection.East || exitDir == (int)OutputDirection.West;
+            float thin = cs * 0.08f, longSide = cs * 0.55f, h = 0.08f;
+            marker.transform.localScale = alongX
+                ? new Vector3(thin, h, longSide)
+                : new Vector3(longSide, h, thin);
+
+            var mr = marker.GetComponent<MeshRenderer>();
+            mr.sharedMaterial    = GetGapMaterial();
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+            return marker;
+        }
+
+        private Material GetGapMaterial()
+        {
+            if (_gapMaterial != null) return _gapMaterial;
+
+            // URP Unlit so the marker never renders magenta on Android (CLAUDE.md rule).
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            _gapMaterial     = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            _ownsGapMaterial = true;
+            if (_gapMaterial.HasProperty("_BaseColor")) _gapMaterial.SetColor("_BaseColor", GapColor);
+            if (_gapMaterial.HasProperty("_Color"))     _gapMaterial.SetColor("_Color", GapColor);
+            _gapMaterial.color = GapColor;
+            return _gapMaterial;
         }
 
         /// <summary>Returns the edge directions (0..3) from which conveyor flow enters this cell.</summary>

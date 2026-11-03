@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Dysprosium (Dy), element number 66 with mass number 164. A fission
     fragment on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 21612
+  baseSellValue: 170000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -14,8 +15,7 @@ namespace MobileIdleBuilder
         [SerializeField] private HUDController hud;
         [SerializeField] [Min(0.1f)] private float proximityRadius = 2.5f;
 
-        private FieldInstance[] _fields;
-        private FieldInstance   _currentField;
+        private FieldInstance _currentField;
 
         /// <summary>The field instance the player is currently standing near, or null.</summary>
         public FieldInstance CurrentField => _currentField;
@@ -30,27 +30,12 @@ namespace MobileIdleBuilder
 
         void Update()
         {
-            // FieldGenerator.Start() is a coroutine that yields before spawning fields,
-            // so we cannot rely on Start() order. Re-scan until fields appear.
-            if (_fields == null || _fields.Length == 0)
-            {
-                _fields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-                if (_fields.Length == 0) return;
-            }
-
-            FieldInstance closest    = null;
-            float         closestSqr = proximityRadius * proximityRadius;
-
-            foreach (var field in _fields)
-            {
-                if (field == null) continue;
-                float sqr = (field.transform.position - transform.position).sqrMagnitude;
-                if (sqr < closestSqr)
-                {
-                    closestSqr = sqr;
-                    closest    = field;
-                }
-            }
+            // Read FieldGenerator's live registry every frame instead of caching a scene scan. A cached
+            // array went stale on site switch / prestige: ClearAllFields destroyed every entry, the
+            // array stayed non-empty, and it was never re-scanned, so the banner died until a reload
+            // (#283). The registry is also empty until FieldGenerator's Start coroutine spawns fields,
+            // which covers the old "re-scan until fields appear" case.
+            var closest = FindClosest(FieldGenerator.AllInstances, transform.position, proximityRadius);
 
             if (closest == _currentField) return;
 
@@ -60,6 +45,29 @@ namespace MobileIdleBuilder
                 hud?.ShowFieldBanner(_currentField.Field);
             else
                 hud?.HideFieldBanner();
+        }
+
+        /// <summary>
+        /// The field nearest <paramref name="position"/> strictly within <paramref name="radius"/>, or
+        /// null. Skips null / destroyed entries.
+        /// </summary>
+        internal static FieldInstance FindClosest(Dictionary<Vector2Int, FieldInstance>.ValueCollection fields,
+                                                  Vector3 position, float radius)
+        {
+            FieldInstance closest    = null;
+            float         closestSqr = radius * radius;
+
+            foreach (var field in fields)
+            {
+                if (field == null) continue;
+                float sqr = (field.transform.position - position).sqrMagnitude;
+                if (sqr < closestSqr)
+                {
+                    closestSqr = sqr;
+                    closest    = field;
+                }
+            }
+            return closest;
         }
 
 #if UNITY_EDITOR

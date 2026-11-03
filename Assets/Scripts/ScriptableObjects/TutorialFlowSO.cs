@@ -47,6 +47,15 @@ namespace MobileIdleBuilder
         public TutorialOnEnter onEnter;
         /// <summary>Research IDs whose purchase button is disabled while this step is active. Prevents early purchase before the tutorial is ready.</summary>
         public string[] lockedResearchIds;
+        /// <summary>Marks a substep of a larger beat. Within a contiguous run of substeps,
+        /// TutorialSystem skips forward when a LATER substep's advance condition is already
+        /// satisfied (handles e.g. protons consumed into hydrogen before the check runs).
+        /// A non-substep ("major") step bounds the run and is never auto-skipped this way.</summary>
+        public bool isSubstep;
+        /// <summary>Entropy granted once, when this step advances (not on entry, which re-runs on load).
+        /// Covers a tutorial gate without changing the research's cost for everyone else. 0 = none.
+        /// Paid by TutorialSystem, so it only works on state-driven steps, not UiEvent ones.</summary>
+        public long rewardEntropy;
     }
 
     /// <summary>Defines when a tutorial step is considered complete.</summary>
@@ -64,6 +73,21 @@ namespace MobileIdleBuilder
         public string             researchId;
         /// <summary>BuildingMin / PrestigeRunMin: threshold count.</summary>
         public int                minCount;
+        /// <summary>BuildingMin only: BuildingData.BuildingType to filter on, resolved from the
+        /// JSON building_id at import time. -1 = count all buildings (no filter).</summary>
+        public int                buildingType = -1;
+        /// <summary>ConveyorLinked / BuildingUpgradeMin: the target is Maxwell's Demon, matched by its
+        /// EntropySinkTag rather than its BuildingType.</summary>
+        public bool               buildingIsEntropySink;
+        /// <summary>ConveyorLinked only: BuildingType of the source buildings, resolved from the JSON
+        /// from_building_id. -1 = any building. (buildingType is the destination.)</summary>
+        public int                fromBuildingType = -1;
+        /// <summary>BuildingUpgradeMin only: speed upgrade level (BuildingData.UpgradeLevel) to reach.</summary>
+        public int                minLevel;
+        /// <summary>FieldPurchasedMin only: FieldSO id; minCount = purchases this run (a quark pair is one).</summary>
+        public string             fieldId;
+        /// <summary>BuildingRecipeSet only: RecipeSO.recipeId the target building must be set to.</summary>
+        public int                recipeId = -1;
     }
 
     [Serializable]

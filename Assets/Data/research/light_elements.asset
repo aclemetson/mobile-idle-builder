@@ -14,31 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: light_elements
   displayName: Light Elements
-  description: "Unlock synthesis of beryllium and boron \u2014 the lightest solid
-    elements beyond lithium."
+  description: Fuse Lithium (Helium + Deuterium), then Beryllium and Boron by adding
+    one proton at a time.
   icon: {fileID: 0}
-  branch: 0
+  branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
-  depthInTree: 2
-  costBaseCurrency: 1000
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  depthInTree: 4
+  block: foundations
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 442000
   costPrestigeCurrency: 0
   durationSeconds: 120
   fieldCooldownMult: 1
   unlocksItems:
+  - {fileID: 11400000, guid: 1861494e6440194438a3d3f9af7636d5, type: 2}
   - {fileID: 11400000, guid: 7a943f92f16babd4d99dcc1c0b813968, type: 2}
   - {fileID: 11400000, guid: 7ccf03d0ad1be2d4a9a061bbe7f99d2d, type: 2}
-  - {fileID: 11400000, guid: e6ba63c2e5deb7d41b3d61d79e8aaaa5, type: 2}
-  - {fileID: 11400000, guid: a23e5b9e76e088e4493537f741bcce74, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: be0454f0bf6baca449c8e6291edc1be9, type: 2}
-  - {fileID: 11400000, guid: 07802ddc5ba0150489b8882bd8778805, type: 2}
-  - {fileID: 11400000, guid: 0199a3c08e4ec1d4ea4d67a94d8931f2, type: 2}
-  - {fileID: 11400000, guid: 62fb9a403ccade74fabb57937dc69396, type: 2}
+  - {fileID: 11400000, guid: bc81222a1362ed241b3e4a74f61efc74, type: 2}
+  - {fileID: 11400000, guid: a2a978fc6f2cab44c8794d522ce614d5, type: 2}
+  - {fileID: 11400000, guid: 04e9637445ae72b4b9c9b8a09bd7b352, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch:
-  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  unlocksResearch: []
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.2
   codexEntry: 'The lightest solid elements: beryllium, harder than steel and lighter

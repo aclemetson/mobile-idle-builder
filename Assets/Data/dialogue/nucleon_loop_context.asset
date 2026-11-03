@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Protons and neutrons selling automatically alongside electrons. Your factory
-      has two income streams now. Every quark from every field finds a buyer.
+    text: Protons selling automatically alongside your electrons. The quark Harvester
+      feeds the Combiner, the Combiner feeds the Demon - income with no tapping required.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

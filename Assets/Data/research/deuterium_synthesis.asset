@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: deuterium_synthesis
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: deuterium_synthesis
+  displayName: Deuterium Synthesis
+  description: 'Teach the Atom Generator to build Deuterium (1 proton, 1 neutron,
+    1 electron): heavy hydrogen, the fuel for your first fusion.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  depthInTree: 2
+  block: ignition
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 1200
+  costPrestigeCurrency: 0
+  durationSeconds: 45
+  fieldCooldownMult: 1
+  unlocksItems:
+  - {fileID: 11400000, guid: beb5636689c5d6044aa328785598c25c, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 2b4876074898bb244990b07a9a587753, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0.2
+  codexEntry: Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen
+    atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing
+    bare protons, which is why every fusion experiment on Earth starts with it.

@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Cobalt (Co), element number 27 with mass number 59. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 134112510
+  baseSellValue: 30000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 88b16eecc00db8244a51c8b437db4fe0, type: 2}
     weight: 1
   tapCooldownSeconds: 2.5
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 1, g: 0.7176471, b: 0.3019608, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: An oily seep of long-chain fatty acids. Harvest them to build the membranes

@@ -51,6 +51,12 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
           [System.IO.File]::WriteAllBytes("secrets\user.keystore", $bytes)
 
+      # Warm Library/ survives between builds this way (see scripts/ci-library-stash.ps1).
+      # Separate stash from release-internal: different scripting defines.
+      - name: Restore Library
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Restore -Name prod
+
       - name: Build AAB
         shell: powershell
         env:
@@ -73,6 +79,11 @@ jobs:
         if: always()
         shell: powershell
         run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
+
+      - name: Save Library
+        if: always()
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name prod
 
       - uses: actions/upload-artifact@v4
         if: always()

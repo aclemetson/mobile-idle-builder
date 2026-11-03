@@ -283,15 +283,8 @@ namespace MobileIdleBuilder.Dev
             var input = _inputField.value?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(input)) return;
 
-            AppendLog($"> {input}", "log-entry--info");
             _inputField.SetValueWithoutNotify(string.Empty);
-
-            var result = _registry.Execute(input);
-            if (!string.IsNullOrEmpty(result))
-            {
-                bool isError = result.StartsWith("Error") || result.StartsWith("Unknown");
-                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
-            }
+            RunAndLog(input);
 
             // Don't re-focus if a scene transition is already underway — keeping the input
             // field focused leaves UI Toolkit's keyboard-poll timer running into the loading
@@ -306,6 +299,46 @@ namespace MobileIdleBuilder.Dev
             {
                 _inputField.Blur();
             }
+        }
+
+        /// <summary>
+        /// Runs one command without the console UI open (the AI playtest tools drive the
+        /// console this way). Same logging and save tainting as a typed command. Returns
+        /// null when the console has not run Start() yet.
+        /// </summary>
+        public static string ExecuteCommand(string input)
+        {
+            var console = s_Instance;
+            if (console == null || console._registry == null) return null;
+            return console.RunAndLog(input?.Trim() ?? string.Empty);
+        }
+
+        private string RunAndLog(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            AppendLog($"> {input}", "log-entry--info");
+            var result = _registry.Execute(input);
+            bool isError = !string.IsNullOrEmpty(result)
+                        && (result.StartsWith("Error") || result.StartsWith("Unknown"));
+            if (!string.IsNullOrEmpty(result))
+                AppendLog(result, isError ? "log-entry--error" : "log-entry--success");
+
+            if (!isError) MarkDevConsoleUsed(input);
+            return result;
+        }
+
+        // Alpha builds ship the console, so a command that ran taints this save's balancing data:
+        // set the sticky save flag (stamped on telemetry snapshots) and emit the once-per-session event.
+        // Only the command name is reported, never its arguments.
+        private static void MarkDevConsoleUsed(string input)
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save != null) save.devConsoleUsed = true;
+
+            int space = input.IndexOf(' ');
+            string command = (space < 0 ? input : input.Substring(0, space)).ToLowerInvariant();
+            TelemetryService.Instance?.RecordDevConsoleUsed(command);
         }
 
         // ── Log ───────────────────────────────────────────────────────────────
@@ -328,7 +361,12 @@ namespace MobileIdleBuilder.Dev
                 _logLabels.RemoveAt(0);
             }
 
-            _logView.schedule.Execute(() => _logView.ScrollTo(_logLabels[^1]));
+            // Runs a frame later: a scene reload in between (snapshot load) rebinds the UI and
+            // empties _logLabels, so scroll to this label only if it is still in the log.
+            _logView.schedule.Execute(() =>
+            {
+                if (label.parent == _logView) _logView.ScrollTo(label);
+            });
         }
 
         // ── Command registration ──────────────────────────────────────────────
@@ -975,28 +1013,15 @@ namespace MobileIdleBuilder.Dev
                     return t == null ? "Error: TelemetryService not found." : t.DevStatus();
                 });
 
-            _registry.Register("analytics fire", "Fire all 6 telemetry events with sample data and flush to UGS",
+            _registry.Register("analytics fire", "Fire every telemetry event with sample data, flush, and report what the backend accepted",
                 _ =>
                 {
                     var t = TelemetryService.Instance;
                     if (t == null) return "Error: TelemetryService not found.";
 
-                    // Force-start with the live UGS sink so this works even if analytics.enabled is off.
-                    // (If the flag already started collection, this is a no-op.)
-                    t.DevForceStart();
-
-                    t.RecordBuildingPlaced("dev_test_building");
-                    t.RecordResearch("dev_test_research");
-                    t.RecordTier(3);
-                    t.RecordMegastructureStage(1);
-                    // Sends prestige_completed AND an internal player_snapshot:
-                    t.RecordPrestige(runCount: 1, netWorthBefore: 12345f, prestigeCurrencyEarned: 42,
-                                     buildingCount: 7, highestTier: 3);
-                    t.CaptureSnapshot();   // explicit snapshot in case the prestige one couldn't read ECS
-                    t.Flush();             // push immediately instead of waiting for the batch interval
-
-                    return "Fired: building_placed, research_completed, tier_reached, megastructure_stage, " +
-                           "prestige_completed, player_snapshot. Flushed. Check Event Manager (dev env) shortly.";
+                    // DevFireAll force-starts (so this works even if analytics.enabled is off), sends one
+                    // of each event, flushes, and reports real delivery counts — see TelemetryService.
+                    return t.DevFireAll();
                 });
 
             // ── save / reload ─────────────────────────────────────────────────
@@ -1055,6 +1080,48 @@ namespace MobileIdleBuilder.Dev
                     return "Deleting cloud + local save. Reloading...";
                 });
 
+            _registry.Register("clear all save", "Full fresh-install reset: cloud + local + settings + recipe knowledge + all PlayerPrefs",
+                _ =>
+                {
+                    var sm = SaveManager.Instance;
+                    if (sm == null)
+                    {
+                        // SaveManager not ready yet (running before GameScene initializes).
+                        // Wipe everything local now and defer the cloud delete to next boot.
+                        var wiped = SaveWipe.WipeEverything(scheduleCloudWipe: true);
+                        SceneLoader.GoTo("GameScene");
+                        return $"SaveManager not ready — wiped {DescribeWipe(wiped)}; cloud wipe deferred to next GameScene load.";
+                    }
+
+                    GameLogger.Info("[DevConsole] clear all save — starting coroutine");
+                    StartCoroutine(sm.DeleteCloudSave(success =>
+                    {
+                        if (!success)
+                            AppendLog("Warning: cloud delete failed (offline?). Scheduling cloud wipe for next boot.", "log-entry--error");
+
+                        GridSaveService.Instance?.ClearGrid();
+                        var wiped = SaveWipe.WipeEverything(scheduleCloudWipe: !success);
+
+                        // Everything below survives the scene reload (persistent singletons), so it has
+                        // to be reset in memory too — otherwise it writes the old run straight back out
+                        // over the files we just deleted.
+                        sm.ResetToFreshSave();
+                        PersistentUpgradeService.Instance?.LoadFromSave(new System.Collections.Generic.List<string>());
+                        AchievementService.Instance?.ResetInMemory();
+                        RecipeKnowledgeService.Instance?.ResetInMemory();
+                        SettingsService.Instance?.ResetToDefaults();
+
+                        AppendLog($"Wiped {DescribeWipe(wiped)} + all PlayerPrefs" +
+                                  (success ? " + cloud save." : " (cloud wipe pending)."));
+
+                        // Blur the input field before transitioning so UI Toolkit's keyboard-poll
+                        // timer is cancelled before LoadSceneAsync runs.
+                        _inputField?.Blur();
+                        SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    }));
+                    return "Full reset: deleting cloud + local + settings + prefs. Reloading...";
+                });
+
             _registry.Register("reload", "Reload the active scene",
                 _ =>
                 {
@@ -1088,8 +1155,60 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("snapshot list", "List all saved snapshots",
                 _ => SnapshotList());
 
+            // ── research blocks (game phases): start any phase as a first-time arrival ───────
+            _registry.Register("block list", "List research blocks (game phases) and what 'block load' gives you",
+                _ => BlockList());
+
+            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists",
+                args => BlockLoad(args[0], preferCapture: true));
+
+            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point",
+                args => BlockLoad(args[0], preferCapture: false));
+
+            _registry.Register("block capture <id>", "Save the current game as the save point for a research block",
+                args =>
+                {
+                    var block = BlockStartPresets.Find(Resources.Load<ResearchDatabaseSO>("ResearchDatabase"), args[0]);
+                    if (block == null) return $"Unknown block '{args[0]}'. Type 'block list'.";
+                    return SnapshotSave(BlockStartPresets.CapturePrefix + block.id) +
+                           $" 'block load {block.id}' now restores it; 'block fresh {block.id}' still builds from data.";
+                });
+
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
+
+            // ── simulated spending and absence (AI playtest benchmarks) ──────
+            _registry.Register("iap grant <tier>", "Simulate buying crystal pack 1-4 ($0.99 / $4.99 / $9.99 / $19.99)",
+                args => IapGrant(args[0]));
+
+            _registry.Register("away <seconds>", "Simulate closing the app for <seconds> (offline earnings, timers)",
+                args =>
+                {
+                    if (!double.TryParse(args[0], out double seconds) || seconds <= 0)
+                        return "Error: <seconds> must be a positive number.";
+                    if (SaveManager.Instance == null || ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
+                        return "Error: game not loaded yet.";
+                    SaveManager.Instance.DevSimulateAway(seconds);
+                    Playtest.PlaytestBenchmark.Active?.AddAway(seconds);
+                    return $"Away for {Playtest.PlaytestBenchmark.FormatDuration(seconds)}.";
+                });
+        }
+
+        // Grants a crystal pack through the same award path as a completed store purchase, so
+        // crystalsPurchased stays a true audit of (simulated) spending.
+        private static string IapGrant(string tierArg)
+        {
+            var tiers = PremiumShopCalculator.CrystalPackTiers;
+            if (!int.TryParse(tierArg, out int tier) || tier < 1 || tier > tiers.Length)
+                return $"Error: <tier> must be 1-{tiers.Length}.";
+            var shop = PremiumShopService.Instance;
+            if (shop == null) return "Error: PremiumShopService not ready.";
+
+            var pack = tiers[tier - 1];
+            shop.AwardCrystals(pack.CrystalAmount);
+            double dollars = double.Parse(pack.DisplayPrice.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture);
+            Playtest.PlaytestBenchmark.Active?.AddPurchase(dollars, pack.CrystalAmount, pack.Name);
+            return $"Granted {pack.Name}: +{pack.CrystalAmount} crystals ({pack.DisplayPrice}).";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────
@@ -1121,6 +1240,65 @@ namespace MobileIdleBuilder.Dev
             string step   = sm.Current.tutorial?.currentStepId;
             return $"Snapshot '{name}' saved — {buildings} building(s), " +
                    $"{sm.Current.currentRun?.baseCurrency ?? 0}e, tutorial '{step}'.";
+        }
+
+        private static string BlockList()
+        {
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            if (db?.blocks == null || db.blocks.Length == 0)
+                return "Error: no research blocks. Run MobileIdleBuilder > Import Game Data.";
+            var sb = new StringBuilder("Research blocks (load with 'block load <n|id>'):\n");
+            int n = 1;
+            foreach (var b in System.Linq.Enumerable.OrderBy(db.blocks, b => b.order))
+            {
+                int research = 0;
+                foreach (var r in db.allResearch) if (r != null && r.block == b.id) research++;
+                bool captured = File.Exists(Path.Combine(SnapshotDir, BlockStartPresets.CapturePrefix + b.id + ".json"));
+                int ups = b.startPermanentUpgrades?.Length ?? 0;
+                sb.AppendLine($"  [{n++}] {b.id,-20} {b.displayName,-20} {b.targetHours,5:0.#}h  {research,2} research  " +
+                              $"start: {b.startPrestigeCount} prestiges, {ups} upgrades, {b.startEntropy:N0}e" +
+                              (captured ? "  [captured save point]" : ""));
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        private string BlockLoad(string key, bool preferCapture)
+        {
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            var block = BlockStartPresets.Find(db, key);
+            if (block == null) return $"Unknown block '{key}'. Type 'block list'.";
+            var sm = SaveManager.Instance;
+            if (sm?.Current == null) return "Error: SaveManager not ready.";
+            // A second scene transition stacked on one in progress leaves the loading screen stuck over the game.
+            if (SceneLoader.IsTransitioning || !(ECSLoadBridge.Instance?.SaveApplied ?? false))
+                return "The game is still loading. Try again once it has finished.";
+
+            SaveData data = null;
+            string source = "data definition";
+            if (preferCapture && File.Exists(Path.Combine(SnapshotDir, BlockStartPresets.CapturePrefix + block.id + ".json")))
+            {
+                data = SnapshotRead(BlockStartPresets.CapturePrefix + block.id, out string err);
+                if (data == null) return err;
+                source = "captured save point";
+            }
+            data ??= BlockStartPresets.Build(sm.Current, db, Resources.Load<WorldDatabaseSO>("WorldDatabase"), block);
+            if (data == null) return "Error: could not build the block's save.";
+
+            // The Recipes panel lists only recipes the player has learned; research learns them.
+            var knowledge = RecipeKnowledgeService.Instance;
+            var recipes   = RecipeDatabase.Instance?.Recipes;
+            if (knowledge != null && recipes != null)
+                foreach (var rid in data.unlockedResearch)
+                    foreach (var recipeId in ResearchService.RecipesGatedBy(recipes, rid))
+                        knowledge.MarkKnown(recipeId);
+
+            sm.DevReplaceCurrent(data);
+            GridSaveService.Instance?.ClearGrid();
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            return $"Starting '{block.displayName}' from its {source}: {data.unlockedResearch.Count} research done, " +
+                   $"{data.prestigeCount} prestiges, {data.permanentUpgrades.Count} permanent upgrades, " +
+                   $"{data.currentRun.baseCurrency:N0}e. Reloading...";
         }
 
         private static SaveData SnapshotRead(string name, out string error)
@@ -1166,6 +1344,12 @@ namespace MobileIdleBuilder.Dev
         }
 
         // ── Building spawn helpers ────────────────────────────────────────────
+
+        /// <summary>Names the files a wipe actually removed, so the console says what it did.</summary>
+        private static string DescribeWipe(List<string> deleted) =>
+            deleted == null || deleted.Count == 0
+                ? "no local files (none were present)"
+                : string.Join(", ", deleted);
 
         private static string ListBuildings()
         {

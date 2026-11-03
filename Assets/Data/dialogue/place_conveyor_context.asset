@@ -18,7 +18,7 @@ MonoBehaviour:
       particles to Maxwell's Demon automatically. Open the conveyor tool, then tap
       the tile beside the Harvester's output to set the start. Tap the tile in front
       of the Demon's input and I will route the belt for you. Tap the check to place
-      it, then Finished when you are done.
+      it, then Done when you are finished.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

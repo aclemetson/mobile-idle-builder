@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: 'Nobelium (No), element number 102 with mass number 259. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 1.717987e+11
+  baseSellValue: 1140000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

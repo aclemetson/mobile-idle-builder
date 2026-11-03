@@ -33,9 +33,9 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
-            _savePath   = Path.Combine(Application.persistentDataPath, "save.json");
+            _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
 
             // Single daily craft achievement (quantity=2)
             _dailyAch = ScriptableObject.CreateInstance<AchievementSO>();
@@ -78,13 +78,63 @@ namespace MobileIdleBuilder.PlayModeTests
             if (_achievementGO != null) { UnityEngine.Object.DestroyImmediate(_achievementGO); _achievementGO = null; }
             if (_saveManagerGO != null) { UnityEngine.Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
 
             if (_dailyAch      != null) { UnityEngine.Object.DestroyImmediate(_dailyAch);      _dailyAch      = null; }
             if (_dailyBonusAch != null) { UnityEngine.Object.DestroyImmediate(_dailyBonusAch); _dailyBonusAch = null; }
             if (_progAch       != null) { UnityEngine.Object.DestroyImmediate(_progAch);       _progAch       = null; }
             if (_testDb        != null) { UnityEngine.Object.DestroyImmediate(_testDb);        _testDb        = null; }
+        }
+
+        // ── Pre-first-prestige gating ─────────────────────────────────────────
+
+        [Test]
+        public void PreFirstPrestige_NotifyCraft_AccruesNothing()
+        {
+            SpawnServices(hasCompletedFirstRun: false);
+
+            AchievementService.Instance.NotifyCraft("any", 5);
+
+            Assert.IsFalse(AchievementService.Instance.IsCompleted("prog_first_craft"),
+                "No achievement may complete before the first prestige");
+            Assert.IsFalse(AchievementService.Instance.IsClaimable("daily_craft_2"),
+                "Nothing may become claimable before the first prestige");
+            Assert.AreEqual(0, AchievementService.Instance.ClaimableCount,
+                "A tutorial craft must not queue an unlock toast");
+        }
+
+        [Test]
+        public void PreFirstPrestige_NotifyCraft_WritesNoProgressToSave()
+        {
+            SpawnServices(hasCompletedFirstRun: false);
+
+            AchievementService.Instance.NotifyCraft("any", 5);
+
+            Assert.IsEmpty(SaveManager.Instance.Current.achievements,
+                "Pre-prestige activity must not persist completed achievements");
+            Assert.IsEmpty(SaveManager.Instance.Current.achievementProgress,
+                "Pre-prestige activity must not persist achievement progress");
+        }
+
+        [Test]
+        public void FirstPrestigeMidSession_InitPostPrestige_StartsAccruing()
+        {
+            SpawnServices(hasCompletedFirstRun: false);
+
+            // Tutorial activity while dormant — discarded.
+            AchievementService.Instance.NotifyCraft("any", 5);
+
+            // First prestige lands mid-session: HUDController flips the flag then initializes.
+            SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = true;
+            AchievementService.Instance.InitPostPrestige();
+
+            AchievementService.Instance.NotifyCraft("any", 1);
+
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("prog_first_craft"),
+                "Crafting after the unlock must complete a quantity-1 achievement");
+            Assert.IsFalse(AchievementService.Instance.IsCompleted("daily_craft_2"),
+                "Pre-prestige crafts must not carry over as progress toward quantity-2");
         }
 
         // ── Claim flow ────────────────────────────────────────────────────────
@@ -218,13 +268,13 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
-        void SpawnServices()
+        void SpawnServices(bool hasCompletedFirstRun = true)
         {
             _saveManagerGO = new GameObject("SaveManager");
             var sm = _saveManagerGO.AddComponent<SaveManager>();
             RunAwake(sm);
-            // Simulate post-prestige state — AchievementService.Start() gates on this flag.
-            SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = true;
+            // Achievements are dormant until first prestige; most tests want the unlocked state.
+            SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = hasCompletedFirstRun;
 
             _achievementGO = new GameObject("AchievementService");
             var svc = _achievementGO.AddComponent<AchievementService>();

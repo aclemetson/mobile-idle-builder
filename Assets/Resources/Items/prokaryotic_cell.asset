@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: 'The first complete cell: a membrane enclosing ribosomes, energy, and
     a loop of DNA. Simple, ancient, and alive.'
   codexUnlocked: 0
-  baseSellValue: 15000000
+  baseSellValue: 30500000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -65,9 +65,9 @@ namespace MobileIdleBuilder
                 row.AddToClassList("upgrade-row");
                 row.AddToClassList("upgrade-row--maxed");
 
-                var header = new Label($"✓ {done.displayName}");
+                var header = new Label(done.displayName);
                 header.AddToClassList("upgrade-row-name");
-                row.Add(header);
+                row.Add(GlyphIcon.TitleRow(GlyphIcon.Kind.Check, header));
 
                 var reward = new Label(RewardText(done));
                 reward.AddToClassList("upgrade-row-desc");

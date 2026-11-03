@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "The Combiner can run both recipes at once. Enable Proton \u2014 2 Up,
-      1 Down \u2014 and Neutron \u2014 1 Up, 2 Down \u2014 simultaneously. With equal
-      quark input, they balance each other naturally. No surplus accumulates."
+    text: Open the Combiner and set its recipe to Proton - two Up Quarks and one
+      Down Quark each. A proton is the nucleus of hydrogen, so protons are what we
+      want flowing next.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

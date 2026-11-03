@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Open the build menu and place a building on an open grid tile. It will
-      begin production immediately.
+    text: Open the Build menu and place a Harvester on the lepton field. It will
+      collect electrons automatically - you will need a steady supply of them for
+      hydrogen later.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

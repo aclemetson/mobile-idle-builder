@@ -22,6 +22,16 @@ This guide covers manual verification of every dev-console testing feature. Work
   ```
   Expected: `Save cleared. Reloading...` — scene reloads, tutorial starts at step 0
 
+  `clear save` deletes only `save.json`, and `clear cloud save` adds the cloud key. Neither touches
+  the sidecar files, so recipe knowledge, settings and cached flags carry over into the "clean" run.
+  To reproduce a genuine first-ever launch, use:
+  ```
+  clear all save
+  ```
+  which additionally deletes `recipe_knowledge.json`, `settings.json`, `feature_flags.json` and ALL
+  PlayerPrefs. It clears cached sign-in too, so expect to be signed out / land on a new anonymous
+  player.
+
 - [ ] **Confirm fresh state.** After reload, open console and run:
   ```
   show progress
@@ -48,6 +58,7 @@ This guide covers manual verification of every dev-console testing feature. Work
   - `show progress`
   - `save`
   - `clear save`
+  - `clear all save`
 
 ### 1.3 Unknown Command
 
@@ -55,6 +66,26 @@ This guide covers manual verification of every dev-console testing feature. Work
   - Expected output (red): `Unknown command. Type 'help' for a list of commands.`
 
 ---
+
+## Part 1.4 — Research Blocks: start any game phase
+
+Each research block (game phase) can be started as a **first arrival**: every research in earlier blocks done, the
+block's expected prestiges and permanent upgrades bought, worlds and sites that earlier research opened, an empty run
+(like right after a prestige) and enough entropy for the block's first research. The definitions live in
+`game_data.json` `research_blocks` (`start_prestige_count`, `start_prestige_currency_earned`; the upgrade levels,
+`start_entropy` and `start_sites` come from `python scripts/block_starts.py --apply`).
+
+| Command | What it does |
+|---|---|
+| `block list` | Every block with its target hours, research count and first-arrival state; marks captured save points |
+| `block load <n\|id\|name>` | Start the block. Uses a captured save point if one exists, otherwise builds it from data |
+| `block fresh <n\|id\|name>` | Start the block from its data definition, ignoring any captured save point |
+| `block capture <n\|id\|name>` | Save the current game as that block's save point (e.g. after laying out a starter factory) |
+
+- `block load 1` is a fresh game (the tutorial).
+- Wait for the game to finish loading before running `block load`; it refuses while a scene transition is running.
+- Back up first with `snapshot save <name>` if you want your current save back (`snapshot load <name>`).
+- Captured save points live in `persistentDataPath/snapshots/block_<id>.json`, per device.
 
 ## Part 1.5 — Building Spawn (visual / structure testing)
 
@@ -283,14 +314,19 @@ From step 31 onward, grid presets have not yet been captured from a playthrough.
   - Entropy: **12**
   - Grid: **No buildings placed by the skip** — grid is empty (buildings must be placed manually)
 
-### 7.2 SFC Phase
+### 7.2 Quark Harvesters + SFC Phase
+
+- [ ] `tutorial skip place_quark_harvester`
+  - Expected: `Skipped to 'place_quark_harvester' [33]. Entropy: 375e.` Only the electron Harvester is placed.
+  - In-game: Hint bar shows **"Place a Harvester on each quark field. Set one to Up Quarks and the other to Down Quarks."**
+  - Placing the 2nd quark Harvester (3 Harvesters total) advances to `intro_sfc`
 
 - [ ] `tutorial skip intro_sfc`
-  - Expected: `Skipped to 'intro_sfc' [33]. Entropy: 50e. 3 research node(s) unlocked. (grid preset not yet captured...)`
+  - Expected: `Skipped to 'intro_sfc' [34]. Entropy: 50e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Hint bar shows **"Save up entropy to place the Strong Force Combiner."**
 
 - [ ] `tutorial skip place_sfc`
-  - Expected: `Skipped to 'place_sfc' [34]. Entropy: 200e. 3 research node(s) unlocked. (grid preset not yet captured...)`
+  - Expected: `Skipped to 'place_sfc' [35]. Entropy: 200e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Entropy: **200** (enough to buy the 200e SFC); build menu shows SFC available
 
 ### 7.3 Nucleon Loop Complete
@@ -305,25 +341,19 @@ From step 31 onward, grid presets have not yet been captured from a playthrough.
   - Expected: `Skipped to 'place_atom_generator' [43]. Entropy: 350e. 3 research node(s) unlocked. (grid preset not yet captured...)`
   - In-game: Entropy: **350** (exact cost of Atom Generator); build menu shows Atom Generator available
 
-### 7.5 Building Upgrades
-
-- [ ] `tutorial skip upgrade_atom_generator_speed`
-  - Expected: `Skipped to 'upgrade_atom_generator_speed' [48]. Entropy: 1000e. 3 research node(s) unlocked. (grid preset not yet captured...)`
-  - In-game: Entropy: **1000** (needed for L2 speed upgrade); Atom Generator interaction is the only building gate
-
 ---
 
 ## Part 8 — tutorial skip: Post-Tutorial Research Gates (Steps 51–70)
 
-### 8.1 Atomic Assembly
+### 8.1 Nucleosynthesis
 
 - [ ] `tutorial skip buy_atomic_assembly`
   - Expected: `Skipped to 'buy_atomic_assembly' [51]. Entropy: 500e. 3 research node(s) unlocked. (grid preset not yet captured...)`
-  - In-game: Research panel: 3 previous nodes purchased; **Atomic Assembly = available** (500e)
+  - In-game: Research panel: 3 previous nodes purchased; **Nucleosynthesis = available** (500e)
 
 - [ ] `tutorial skip atomic_assembly_unlocked`
   - Expected: `Skipped to 'atomic_assembly_unlocked' [52]. Entropy: 50e. **4** research node(s) unlocked.`
-  - In-game: **Atomic Assembly now shows as purchased** ✓
+  - In-game: **Nucleosynthesis now shows as purchased** ✓
   - Atom Generator recipe panel should now include Helium-4 and other elements
 
 ### 8.2 Heavy Elements
@@ -564,7 +594,6 @@ These checks confirm that `tutorial skip` correctly persists state to SaveData s
 | `place_sfc` | 200 | Idle income; enough for SFC |
 | `nucleon_loop_complete` | 100 | Pipeline running |
 | `place_atom_generator` | 350 | Idle; exact Atom Gen cost |
-| `upgrade_atom_generator_speed` | 1000 | Idle; exact L2 speed cost |
 | `buy_atomic_assembly` | 500 | Idle; exact research cost |
 | `buy_heavy_elements` | 3000 | Idle; exact research cost |
 | `buy_isotope_engineering` | 1500 | Idle; exact research cost |

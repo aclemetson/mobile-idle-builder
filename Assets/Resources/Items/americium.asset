@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Americium (Am), element number 95 with mass number 243. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 1.3421773e+9
+  baseSellValue: 899000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

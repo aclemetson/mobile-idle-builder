@@ -198,6 +198,7 @@ namespace MobileIdleBuilder
                 !_em.HasComponent<EntropySinkTag>(found))
             {
                 GameLogger.Develop("[Inspector] Blocked by EntropySinkOnly gate");
+                InventoryPopupController.NotifyWarning(GateBlockedMessage("Maxwell's Demon"));
                 return false;
             }
 
@@ -208,6 +209,7 @@ namespace MobileIdleBuilder
                 if (bd.BuildingType != 4)
                 {
                     GameLogger.Develop($"[Inspector] Blocked by AtomicAssemblerOnly gate (buildingType={bd.BuildingType})");
+                    InventoryPopupController.NotifyWarning(GateBlockedMessage("the Atom Generator"));
                     return false;
                 }
             }
@@ -278,6 +280,10 @@ namespace MobileIdleBuilder
             if (!ScreenToWorldGround(screenPos, out Vector3 world)) return new(-1, -1);
             return GridRenderer.WorldToCell(world, gridRenderer.CellSize);
         }
+
+        /// <summary>Shown when a tutorial interaction gate rejects a tap, so the block isn't silent (#187).</summary>
+        internal static string GateBlockedMessage(string allowedBuilding)
+            => $"Finish the current tutorial step first: tap {allowedBuilding}.";
 
     }
 }

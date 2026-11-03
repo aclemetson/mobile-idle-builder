@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Fermium (Fm), element number 100 with mass number 257. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 4.2949673e+10
+  baseSellValue: 951000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

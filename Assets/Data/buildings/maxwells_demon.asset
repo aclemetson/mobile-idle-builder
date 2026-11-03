@@ -24,6 +24,7 @@ MonoBehaviour:
   category: 0
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 0
   isPowerSource: 0
   basePowerCostEV: 0
@@ -36,6 +37,10 @@ MonoBehaviour:
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 1
+  isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 3, y: 3}
   structureKind: 0
   ports:

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: 'Atomic Assembly. Every element above hydrogen follows the same principle:
+    text: 'Nucleosynthesis. Every element above hydrogen follows the same principle:
       proton count defines the element, neutron count defines its isotope. The Atom
       Generator supports all of them once this is purchased.'
     portrait: {fileID: 0}

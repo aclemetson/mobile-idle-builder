@@ -119,7 +119,8 @@ namespace MobileIdleBuilder.Tests
             RequireInput(r, "proton",   quantity: 2);
             RequireInput(r, "neutron",  quantity: 2);
             RequireInput(r, "electron", quantity: 2);
-            Assert.AreEqual("helium", r.output.id);
+            // The item is helium_4; "helium" resolved to no item, so the craft button found no building.
+            Assert.AreEqual("helium_4", r.output.id);
         }
 
         [Test]

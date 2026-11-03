@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Osmium (Os), element number 76 with mass number 192. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 2302
+  baseSellValue: 423000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

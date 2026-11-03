@@ -131,12 +131,13 @@
         { "id": "neutron", "quantity": 2 },
         { "id": "electron", "quantity": 2 }
       ],
-      "output": { "id": "helium", "quantity": 1 },
+      "output": { "id": "helium_4", "quantity": 1 },
       "base_craft_time": 4.0,
       "manual_craft_time": 4.0,
       "power_cost_ev": 20,
       "_comment_ev": "power_cost_ev = atomic_mass(4) × atomic_assembler_ev_per_mass_unit(5)",
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "atomic_assembly",
       "alternate_recipe": {
         "id": "helium_fusion",
         "crafted_in": ["fusion_generator"],
@@ -156,106 +157,285 @@
     },
 
     {
-      "id": "lithium",
-      "name": "Lithium",
-      "symbol": "Li",
-      "atomic_number": 3,
-      "atomic_mass": 7,
+      "id": "assemble_deuterium",
+      "name": "Assemble Deuterium",
+      "symbol": "H-2",
+      "atomic_number": 1,
+      "atomic_mass": 2,
       "tier": 2,
       "inputs": [
-        { "id": "proton", "quantity": 3 },
-        { "id": "neutron", "quantity": 4 },
-        { "id": "electron", "quantity": 3 }
+        { "id": "proton", "quantity": 1 },
+        { "id": "neutron", "quantity": 1 },
+        { "id": "electron", "quantity": 1 }
       ],
-      "output": { "id": "lithium", "quantity": 1 },
-      "base_craft_time": 7.0,
-      "manual_craft_time": 7.0,
-      "power_cost_ev": 35,
+      "output": { "id": "deuterium", "quantity": 1 },
+      "base_craft_time": 1.5,
+      "manual_craft_time": 1.5,
+      "power_cost_ev": 10,
       "crafted_in": ["atomic_assembler"],
+      "requires_research": "deuterium_synthesis",
       "simplification": null,
-      "codex": "A soft alkali metal and the lightest solid element. Critical in battery technology — the backbone of rechargeable batteries used in mobile devices."
+      "codex": "A stable isotope of hydrogen with one added neutron. Found naturally in heavy water. An essential fuel for nuclear fusion reactions alongside tritium."
     },
 
     {
-      "id": "carbon",
-      "name": "Carbon",
+      "id": "fuse_deuterium",
+      "name": "Fuse Deuterium",
+      "symbol": "He",
+      "atomic_number": 2,
+      "atomic_mass": 4,
+      "tier": 2,
+      "inputs": [
+        { "id": "deuterium", "quantity": 2 }
+      ],
+      "output": { "id": "helium_4", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 1.0,
+      "manual_craft_time": 1.0,
+      "power_cost_ev": 5,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_i",
+      "simplification": null,
+      "codex": "The second lightest element, produced in stellar cores through hydrogen fusion. A noble gas — chemically inert. Its nucleus (2 protons + 2 neutrons) is identical to an alpha particle."
+    },
+
+    {
+      "id": "fuse_helium",
+      "name": "Fuse Helium-4 (p-p chain)",
+      "symbol": "He",
+      "atomic_number": 2,
+      "atomic_mass": 4,
+      "tier": 2,
+      "inputs": [
+        { "id": "hydrogen", "quantity": 4 }
+      ],
+      "output": { "id": "helium_4", "quantity": 1 },
+      "byproducts": [
+        { "id": "neutrino", "quantity": 2 },
+        { "id": "gamma_photon", "quantity": 2 }
+      ],
+      "base_craft_time": 2.0,
+      "manual_craft_time": 2.0,
+      "power_cost_ev": 10,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_i",
+      "simplification": null,
+      "codex": "The second lightest element, produced in stellar cores through hydrogen fusion. A noble gas — chemically inert. Its nucleus (2 protons + 2 neutrons) is identical to an alpha particle."
+    },
+
+    {
+      "id": "fuse_carbon",
+      "name": "Fuse Carbon",
       "symbol": "C",
       "atomic_number": 6,
       "atomic_mass": 12,
       "tier": 2,
       "inputs": [
-        { "id": "proton", "quantity": 6 },
-        { "id": "neutron", "quantity": 6 },
-        { "id": "electron", "quantity": 6 }
+        { "id": "helium_4", "quantity": 3 }
       ],
       "output": { "id": "carbon", "quantity": 1 },
-      "base_craft_time": 12.0,
-      "manual_craft_time": 12.0,
-      "power_cost_ev": 60,
-      "crafted_in": ["atomic_assembler"],
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 6.0,
+      "manual_craft_time": 6.0,
+      "power_cost_ev": 30,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_i",
       "simplification": null,
       "codex": "The basis of all organic chemistry. Carbon's ability to form four bonds makes it the backbone of life. Also exists as graphite, diamond, and graphene."
     },
 
     {
-      "id": "oxygen",
-      "name": "Oxygen",
+      "id": "capture_lithium",
+      "name": "Fuse Lithium",
+      "symbol": "Li",
+      "atomic_number": 3,
+      "atomic_mass": 7,
+      "tier": 2,
+      "inputs": [
+        { "id": "helium_4", "quantity": 1 },
+        { "id": "deuterium", "quantity": 1 }
+      ],
+      "output": { "id": "lithium", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 3.0,
+      "manual_craft_time": 3.0,
+      "power_cost_ev": 15,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "light_elements",
+      "simplification": null,
+      "codex": "A soft alkali metal and the lightest solid element. Critical in battery technology — the backbone of rechargeable batteries used in every mobile device."
+    },
+
+    {
+      "id": "capture_beryllium",
+      "name": "Fuse Beryllium",
+      "symbol": "Be",
+      "atomic_number": 4,
+      "atomic_mass": 9,
+      "tier": 2,
+      "inputs": [
+        { "id": "lithium", "quantity": 1 },
+        { "id": "hydrogen", "quantity": 1 }
+      ],
+      "output": { "id": "beryllium", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 4.0,
+      "manual_craft_time": 4.0,
+      "power_cost_ev": 20,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "light_elements",
+      "simplification": null,
+      "codex": "Harder than steel and lighter than aluminium. Beryllium is transparent to X-rays and used in nuclear reactor reflectors. Toxic in dust form — handle with care."
+    },
+
+    {
+      "id": "capture_boron",
+      "name": "Fuse Boron",
+      "symbol": "B",
+      "atomic_number": 5,
+      "atomic_mass": 11,
+      "tier": 2,
+      "inputs": [
+        { "id": "beryllium", "quantity": 1 },
+        { "id": "hydrogen", "quantity": 1 }
+      ],
+      "output": { "id": "boron", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 5.0,
+      "manual_craft_time": 5.0,
+      "power_cost_ev": 25,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "light_elements",
+      "simplification": null,
+      "codex": "A metalloid bridging metals and nonmetals. Boron carbide is one of the hardest materials known. Boron-10 absorbs neutrons, making it essential for nuclear reactor control rods."
+    },
+
+    {
+      "id": "capture_nitrogen",
+      "name": "Fuse Nitrogen",
+      "symbol": "N",
+      "atomic_number": 7,
+      "atomic_mass": 14,
+      "tier": 2,
+      "inputs": [
+        { "id": "carbon", "quantity": 1 },
+        { "id": "hydrogen", "quantity": 1 }
+      ],
+      "output": { "id": "nitrogen", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 7.0,
+      "manual_craft_time": 7.0,
+      "power_cost_ev": 35,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "mid_elements",
+      "simplification": null,
+      "codex": "78% of Earth's atmosphere. Nitrogen is the limiting nutrient in agriculture — the Haber process that synthesises ammonia from it feeds half of humanity."
+    },
+
+    {
+      "id": "fuse_oxygen",
+      "name": "Fuse Oxygen",
       "symbol": "O",
       "atomic_number": 8,
       "atomic_mass": 16,
       "tier": 2,
       "inputs": [
-        { "id": "proton", "quantity": 8 },
-        { "id": "neutron", "quantity": 8 },
-        { "id": "electron", "quantity": 8 }
+        { "id": "carbon", "quantity": 1 },
+        { "id": "helium_4", "quantity": 1 }
       ],
       "output": { "id": "oxygen", "quantity": 1 },
-      "base_craft_time": 16.0,
-      "manual_craft_time": 16.0,
-      "power_cost_ev": 80,
-      "crafted_in": ["atomic_assembler"],
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 8.0,
+      "manual_craft_time": 8.0,
+      "power_cost_ev": 40,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_ii",
       "simplification": null,
-      "codex": "The third most abundant element in the universe. Highly reactive, essential for combustion and respiration. Makes up 21% of Earth's atmosphere."
+      "codex": "The third most abundant element in the universe. Highly reactive and essential for combustion and respiration. Makes up 21% of Earth's atmosphere."
     },
 
     {
-      "id": "silicon",
-      "name": "Silicon",
+      "id": "capture_aluminum",
+      "name": "Fuse Aluminum",
+      "symbol": "Al",
+      "atomic_number": 13,
+      "atomic_mass": 27,
+      "tier": 2,
+      "inputs": [
+        { "id": "magnesium", "quantity": 1 },
+        { "id": "hydrogen", "quantity": 1 }
+      ],
+      "output": { "id": "aluminum", "quantity": 1 },
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 13.0,
+      "manual_craft_time": 13.0,
+      "power_cost_ev": 65,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "mid_elements",
+      "simplification": null,
+      "codex": "The most abundant metal in Earth's crust, yet rare in pure form before electrolysis was discovered. Lightweight and corrosion-resistant — the backbone of aerospace and packaging."
+    },
+
+    {
+      "id": "fuse_silicon",
+      "name": "Fuse Silicon",
       "symbol": "Si",
       "atomic_number": 14,
       "atomic_mass": 28,
       "tier": 2,
       "inputs": [
-        { "id": "proton", "quantity": 14 },
-        { "id": "neutron", "quantity": 14 },
-        { "id": "electron", "quantity": 14 }
+        { "id": "magnesium", "quantity": 1 },
+        { "id": "helium_4", "quantity": 1 }
       ],
       "output": { "id": "silicon", "quantity": 1 },
-      "base_craft_time": 28.0,
-      "manual_craft_time": 28.0,
-      "power_cost_ev": 140,
-      "crafted_in": ["atomic_assembler"],
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 14.0,
+      "manual_craft_time": 14.0,
+      "power_cost_ev": 70,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_ii",
       "simplification": null,
       "codex": "A semiconductor at the heart of modern electronics. Silicon wafers are the foundation of processors, solar cells, and transistors."
     },
 
     {
-      "id": "iron",
-      "name": "Iron",
+      "id": "fuse_iron",
+      "name": "Fuse Iron",
       "symbol": "Fe",
       "atomic_number": 26,
       "atomic_mass": 56,
       "tier": 2,
       "inputs": [
-        { "id": "proton", "quantity": 26 },
-        { "id": "neutron", "quantity": 30 },
-        { "id": "electron", "quantity": 26 }
+        { "id": "chromium", "quantity": 1 },
+        { "id": "helium_4", "quantity": 1 }
       ],
       "output": { "id": "iron", "quantity": 1 },
-      "base_craft_time": 56.0,
-      "manual_craft_time": 56.0,
-      "power_cost_ev": 280,
-      "crafted_in": ["atomic_assembler"],
+      "byproducts": [
+        { "id": "gamma_photon", "quantity": 1 }
+      ],
+      "base_craft_time": 28.0,
+      "manual_craft_time": 28.0,
+      "power_cost_ev": 140,
+      "crafted_in": ["fusion_reactor"],
+      "requires_research": "fusion_iii",
       "simplification": null,
       "codex": "The most common element on Earth by mass. The endpoint of stellar fusion — stars cannot fuse elements heavier than iron without consuming more energy than they produce."
     },
@@ -422,226 +602,6 @@
       "_section": "TIER 2 — NEW ELEMENTS (recipe_ids 18–29, via Atomic Assembler)"
     },
 
-    {
-      "id": "beryllium",
-      "name": "Beryllium",
-      "symbol": "Be",
-      "atomic_number": 4,
-      "atomic_mass": 9,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 4 },
-        { "id": "neutron", "quantity": 5 },
-        { "id": "electron", "quantity": 4 }
-      ],
-      "output": { "id": "beryllium", "quantity": 1 },
-      "base_craft_time": 9.0,
-      "power_cost_ev": 45,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "light_elements",
-      "simplification": null,
-      "codex": "Harder than steel and lighter than aluminium. Used in nuclear reactor reflectors and X-ray windows. The first element beyond the lithium group."
-    },
-    {
-      "id": "boron",
-      "name": "Boron",
-      "symbol": "B",
-      "atomic_number": 5,
-      "atomic_mass": 11,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 5 },
-        { "id": "neutron", "quantity": 6 },
-        { "id": "electron", "quantity": 5 }
-      ],
-      "output": { "id": "boron", "quantity": 1 },
-      "base_craft_time": 11.0,
-      "power_cost_ev": 55,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "light_elements",
-      "simplification": null,
-      "codex": "A metalloid with exceptional neutron-absorption properties. Boron-10 is the active component in nuclear reactor control rods."
-    },
-    {
-      "id": "nitrogen",
-      "name": "Nitrogen",
-      "symbol": "N",
-      "atomic_number": 7,
-      "atomic_mass": 14,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 7 },
-        { "id": "neutron", "quantity": 7 },
-        { "id": "electron", "quantity": 7 }
-      ],
-      "output": { "id": "nitrogen", "quantity": 1 },
-      "base_craft_time": 14.0,
-      "power_cost_ev": 70,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "mid_elements",
-      "simplification": null,
-      "codex": "78% of Earth's atmosphere. The limiting nutrient in agriculture — and the key ingredient in ammonia synthesis via the Haber process."
-    },
-    {
-      "id": "aluminum",
-      "name": "Aluminum",
-      "symbol": "Al",
-      "atomic_number": 13,
-      "atomic_mass": 27,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 13 },
-        { "id": "neutron", "quantity": 14 },
-        { "id": "electron", "quantity": 13 }
-      ],
-      "output": { "id": "aluminum", "quantity": 1 },
-      "base_craft_time": 27.0,
-      "power_cost_ev": 135,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "mid_elements",
-      "simplification": null,
-      "codex": "The most abundant metal in Earth's crust. Lightweight and corrosion-resistant — the backbone of aerospace and modern packaging."
-    },
-    {
-      "id": "nickel",
-      "name": "Nickel",
-      "symbol": "Ni",
-      "atomic_number": 28,
-      "atomic_mass": 58,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 28 },
-        { "id": "neutron", "quantity": 30 },
-        { "id": "electron", "quantity": 28 }
-      ],
-      "output": { "id": "nickel", "quantity": 1 },
-      "base_craft_time": 58.0,
-      "power_cost_ev": 290,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "mid_elements",
-      "simplification": null,
-      "codex": "A transition metal critical in stainless steel, battery cathodes, and jet-engine superalloys. Strong magnetic properties."
-    },
-    {
-      "id": "copper",
-      "name": "Copper",
-      "symbol": "Cu",
-      "atomic_number": 29,
-      "atomic_mass": 63,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 29 },
-        { "id": "neutron", "quantity": 34 },
-        { "id": "electron", "quantity": 29 }
-      ],
-      "output": { "id": "copper", "quantity": 1 },
-      "base_craft_time": 63.0,
-      "power_cost_ev": 315,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "transition_metals",
-      "simplification": null,
-      "codex": "The best electrical conductor among common metals. In this Foundry, copper is synthesised atom by atom — ironic, given it is the cheapest ore in simpler mining games."
-    },
-    {
-      "id": "zinc",
-      "name": "Zinc",
-      "symbol": "Zn",
-      "atomic_number": 30,
-      "atomic_mass": 65,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 30 },
-        { "id": "neutron", "quantity": 35 },
-        { "id": "electron", "quantity": 30 }
-      ],
-      "output": { "id": "zinc", "quantity": 1 },
-      "base_craft_time": 65.0,
-      "power_cost_ev": 325,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "transition_metals",
-      "simplification": null,
-      "codex": "Zinc galvanises steel against corrosion and is half of brass alloy. An essential cofactor in hundreds of human enzymes."
-    },
-    {
-      "id": "silver",
-      "name": "Silver",
-      "symbol": "Ag",
-      "atomic_number": 47,
-      "atomic_mass": 108,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 47 },
-        { "id": "neutron", "quantity": 61 },
-        { "id": "electron", "quantity": 47 }
-      ],
-      "output": { "id": "silver", "quantity": 1 },
-      "base_craft_time": 108.0,
-      "power_cost_ev": 540,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "precious_metals",
-      "simplification": null,
-      "codex": "Highest electrical and thermal conductivity of any element. Used in solar panel contacts, antibacterial coatings, and high-performance circuit connections."
-    },
-    {
-      "id": "gold",
-      "name": "Gold",
-      "symbol": "Au",
-      "atomic_number": 79,
-      "atomic_mass": 197,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 79 },
-        { "id": "neutron", "quantity": 118 },
-        { "id": "electron", "quantity": 79 }
-      ],
-      "output": { "id": "gold", "quantity": 1 },
-      "base_craft_time": 197.0,
-      "power_cost_ev": 985,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "precious_metals",
-      "simplification": null,
-      "codex": "Chemically inert and immune to corrosion. Every connector in space hardware is gold-plated. Its cosmic rarity is a product of neutron star collisions."
-    },
-    {
-      "id": "platinum",
-      "name": "Platinum",
-      "symbol": "Pt",
-      "atomic_number": 78,
-      "atomic_mass": 195,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 78 },
-        { "id": "neutron", "quantity": 117 },
-        { "id": "electron", "quantity": 78 }
-      ],
-      "output": { "id": "platinum", "quantity": 1 },
-      "base_craft_time": 195.0,
-      "power_cost_ev": 975,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "exotic_metals",
-      "simplification": null,
-      "codex": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature."
-    },
-    {
-      "id": "tungsten",
-      "name": "Tungsten",
-      "symbol": "W",
-      "atomic_number": 74,
-      "atomic_mass": 184,
-      "tier": 2,
-      "inputs": [
-        { "id": "proton", "quantity": 74 },
-        { "id": "neutron", "quantity": 110 },
-        { "id": "electron", "quantity": 74 }
-      ],
-      "output": { "id": "tungsten", "quantity": 1 },
-      "base_craft_time": 184.0,
-      "power_cost_ev": 920,
-      "crafted_in": ["atomic_assembler"],
-      "requires_research": "exotic_metals",
-      "simplification": null,
-      "codex": "Highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing fusion reactor components all depend on tungsten."
-    },
     {
       "id": "plutonium",
       "name": "Plutonium",

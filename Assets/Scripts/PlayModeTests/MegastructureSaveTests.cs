@@ -20,18 +20,18 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
-            _savePath   = Path.Combine(Application.persistentDataPath, "save.json");
+            _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _bakPath    = _savePath + ".bak";
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             _bakBackup  = File.Exists(_bakPath)  ? File.ReadAllText(_bakPath)  : null;
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (File.Exists(_bakPath))  File.Delete(_bakPath);
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (File.Exists(_savePath)) File.Delete(_savePath);
+            new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
             if (File.Exists(_bakPath))  File.Delete(_bakPath);
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
             if (_bakBackup  != null) File.WriteAllText(_bakPath,  _bakBackup);

@@ -6,6 +6,26 @@ the "why" behind each field — read it before re-tuning the economy so you chan
 All events also carry `player_id` (UGS player id) and `collection_phase` (the `analytics.phase` flag value,
 so data from different collection windows stays separable).
 
+## ⚠ This data is a sample, not a census
+
+Analytics events post to `collect.analytics.unity3d.com`. **Any player running a DNS-level tracker blocker —
+a VPN that filters trackers, Pi-hole, AdGuard, NextDNS, ISP filtering — sends us nothing, and we cannot
+detect that they exist.** We can't report "I can't report" over the channel that's blocked. Every
+client-side analytics system has this hole; it is not a bug and there is no fix.
+
+Two consequences for anyone drawing conclusions from these numbers:
+
+- **The population is self-selected.** It under-represents privacy-conscious players. For tuning economy
+  curves this bias is almost certainly negligible — the blocked cohort has no reason to play differently —
+  but do not treat counts here as *how many players did X*, only as *how many reporting players did X*.
+- **Blocking is often intermittent, and those events arrive late.** The SDK persists its buffer and uploads
+  when a network finally resolves the host, so a player who toggles a VPN can dump hours-old events from
+  several sessions at once. Timestamps are correct, but **a spike in received volume is not necessarily a
+  spike in activity** — check before reading one as a behavioural signal.
+
+If a *device under test* reports nothing, that's not this: run `analytics status` in the dev console and read
+the `collect endpoint:` line. See `docs/agents/analytics.md`.
+
 ## Metric → decision map
 
 | Metric | Source event/field | Question it answers | Scale lever it informs |
@@ -26,6 +46,12 @@ so data from different collection windows stays separable).
 | Manual-collection engagement | `player_snapshot.field_collections` over `playtime_total_sec` | Are players actively tapping fields, or ignoring manual collection once idle income kicks in? | field tap cooldown, drop value, early-game idle pacing |
 | Field cooldown reached | `player_snapshot.field_cooldown_sec` | How far have players driven the tap cooldown down via research + Quick Hands? Is the floor too easy/hard to hit? | `FieldSO.tapCooldownSeconds`, research `field_cooldown_mult`, Quick Hands per-level reduction |
 | Power grid connectivity | `player_snapshot.power_nodes_total` vs `power_nodes_linked` | What fraction of placed power buildings are stranded (not chained to a generator)? A large gap means link ranges are too tight or relays are hard to wire in. | `link_radius_tiles` per power building (generator / relay) + per-upgrade-level scaling |
+
+## Excluding dev-console sessions
+
+Alpha builds include the dev console. Before reading any balance metric, drop every `player_id` that has a
+`dev_console_used` event (param `command`) or a `player_snapshot` where `dev_console_used = true`. The snapshot
+flag is sticky per save, so one cheated session marks that player for good.
 
 ## Where to view each metric
 
@@ -52,6 +78,13 @@ parameter value** (no avg/sum of a number). So:
   are *session*-relative, not lifetime. A run that spans an app restart will under-report. Acceptable for
   dev/playtest balancing; revisit if lifetime playtime becomes a needed metric.
 - **`building_count`** excludes the permanent Entropy Sink fixture (matches how PrestigeSystem treats it).
-- **`tier_reached`** has no caller in gameplay yet, so tier funnels currently come from
-  `player_snapshot.highest_tier`. The discrete event will populate automatically once a `NotifyTierReached`
-  caller is wired.
+- **`tier_reached` / `highest_tier`** are driven by `TierProgress.NotifyItemProduced`, called from both
+  production paths (manual crafts in `ManualCraftService`, automated recipe output in
+  `ProductionAchievementBridge`). "Tier reached" means *produced*: the highest `ItemSO.tier` the player has
+  actually made this run. Collectors are not a source — they only yield tier-1 items, which is the floor.
+  Tier resets to 1 on prestige (`PrestigeSystem`), so `tier_reached` re-fires as a run climbs back up;
+  count it per `run_count` rather than per player.
+
+  Data before this hook existed is unusable for tier analysis: nothing advanced `CurrentTier`, so
+  `tier_reached` never fired and `highest_tier` was a constant `1` on every snapshot and prestige event.
+  Segment tier funnels by `collection_phase` to exclude those older windows.

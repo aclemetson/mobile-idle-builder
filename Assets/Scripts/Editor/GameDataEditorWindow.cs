@@ -49,7 +49,7 @@ namespace MobileIdleBuilder.Editor
         private static readonly string[] FieldTypeOptions =
             { "None", "Quark", "Lepton", "Uranium", "Plutonium", "Element", "ElementMetal" };
         private static readonly string[] DecayTypeOptions =
-            { "None", "Alpha", "Beta" };
+            { "None", "Alpha", "Beta", "BetaPlus" };
         private static readonly string[] EnvironmentOptions =
             { "Dev", "Staging", "Prod" };
 
@@ -346,7 +346,7 @@ namespace MobileIdleBuilder.Editor
             r.description  = TextArea("Description",   r.description);
             r.branch       = StringPopup("Branch",     r.branch, BranchOptions);
             r.depth_in_tree          = IntField("Depth in Tree",        r.depth_in_tree);
-            r.cost_base_currency     = IntField("Cost (Base Currency)", r.cost_base_currency);
+            r.cost_base_currency     = LongField("Cost (Base Currency)", r.cost_base_currency);
             r.cost_prestige_currency = IntField("Cost (Prestige)",      r.cost_prestige_currency);
             r.resets_on_prestige     = Toggle("Resets on Prestige",     r.resets_on_prestige);
             r.prestige_memory_discount = FloatField("Prestige Discount %", r.prestige_memory_discount);
@@ -399,6 +399,7 @@ namespace MobileIdleBuilder.Editor
             item.is_secondary_particle = Toggle("Is Secondary Particle", item.is_secondary_particle);
             if (item.is_secondary_particle)
                 item.particle_uses = IntField("Particle Uses (bitmask)", item.particle_uses);
+            item.escapes_as_entropy = Toggle("Escapes as Entropy (byproduct)", item.escapes_as_entropy);
 
             H("Economy");
             item.base_sell_value       = FloatField("Base Sell Value",       item.base_sell_value);
@@ -473,7 +474,10 @@ namespace MobileIdleBuilder.Editor
             H("Obsolescence");
             b.is_obsoleteable    = Toggle("Is Obsoleteable", b.is_obsoleteable);
             if (b.is_obsoleteable)
-                b.obsolete_condition = TextArea("Obsolete Condition", b.obsolete_condition);
+            {
+                b.obsolete_condition    = TextArea("Obsolete Condition", b.obsolete_condition);
+                b.obsoleted_by_research = TextField("Obsoleted By Research", b.obsoleted_by_research);
+            }
 
             H("Power");
             b.requires_power       = Toggle("Requires Power",        b.requires_power);
@@ -493,6 +497,8 @@ namespace MobileIdleBuilder.Editor
             b.input_slot_count = IntField("Input Slot Count", b.input_slot_count);
             b.input_slot_labels= StringArrayField("Input Slot Labels", b.input_slot_labels);
             b.is_entropy_sink  = Toggle("Is Entropy Sink", b.is_entropy_sink);
+            b.is_item_filter   = Toggle("Is Item Filter", b.is_item_filter);
+            b.assignable_outputs = Toggle("Assignable Outputs", b.assignable_outputs);
 
             H("Supported Recipes");
             b.supported_recipes = IdListField("Recipes", b.supported_recipes, _recipeIds);
@@ -736,6 +742,15 @@ namespace MobileIdleBuilder.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(label, GUILayout.Width(labelWidth));
             int result = EditorGUILayout.IntField(value);
+            EditorGUILayout.EndHorizontal();
+            return result;
+        }
+
+        private static long LongField(string label, long value, float labelWidth = 160)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(label, GUILayout.Width(labelWidth));
+            long result = EditorGUILayout.LongField(value);
             EditorGUILayout.EndHorizontal();
             return result;
         }

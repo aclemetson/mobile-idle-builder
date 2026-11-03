@@ -24,3 +24,5 @@ MonoBehaviour:
     densityMultiplier: 0.5
   - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
     densityMultiplier: 0.5
+  - field: {fileID: 11400000, guid: 934f8313ceaf4a444b1037948b300544, type: 2}
+    densityMultiplier: 2

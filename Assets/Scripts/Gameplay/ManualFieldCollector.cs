@@ -121,13 +121,13 @@ namespace MobileIdleBuilder
             // Tutorial gates — block or filter, posting a toast so the player gets feedback.
             if (!IsCollectionAllowed(out var filterType))
             {
-                ToastService.Instance?.Post(field.id);
+                ToastService.Instance?.Post(field.id, BlockedMessage(null));
                 return false;
             }
 
             if (!FieldTypes.IsUnrestricted(filterType) && field.fieldType != filterType)
             {
-                ToastService.Instance?.Post(field.id);
+                ToastService.Instance?.Post(field.id, BlockedMessage(filterType));
                 return false;
             }
 
@@ -136,7 +136,7 @@ namespace MobileIdleBuilder
             if (cooldown != null && cooldown.IsOnCooldown)
                 return false;
 
-            if (!CollectOne(field))
+            if (!CollectOne(field, instance.transform.position))
                 return false;
 
             // Tap juice: bounce the wire-mesh and birth a particle burst from the tile.
@@ -147,7 +147,7 @@ namespace MobileIdleBuilder
             return true;
         }
 
-        private bool CollectOne(FieldSO field)
+        private bool CollectOne(FieldSO field, Vector3 popupPosition)
         {
             var item = PickWeightedItem(field);
             if (item == null) return false;
@@ -157,7 +157,8 @@ namespace MobileIdleBuilder
             var buffer = _em.GetBuffer<InventorySlot>(entity);
             AddToBuffer(ref buffer, item.itemId, 1);
 
-            InventoryPopupController.Notify(item.displayName, 1);
+            // Pop the "+1" over the tapped field, in the field's colour (#198).
+            InventoryPopupController.NotifyAt(item.displayName, 1, popupPosition, field.fieldColor);
             TelemetryService.Instance?.NotifyFieldCollected();
             return true;
         }
@@ -230,6 +231,16 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
         // Tutorial helpers
         // ----------------------------------------------------------------
+
+        /// <summary>
+        /// Fallback feedback for a field tap the tutorial blocks when the step has no message of its
+        /// own for that field; tapping the electron field while collecting quarks used to do nothing.
+        /// <paramref name="allowedType"/> is the step's collection filter, or null when all are paused.
+        /// </summary>
+        internal static string BlockedMessage(string allowedType) =>
+            string.IsNullOrEmpty(allowedType)
+                ? "Field collection is paused for this tutorial step."
+                : $"Not yet: collect from the {allowedType} fields for now.";
 
         /// <summary>
         /// Returns true if manual field collection is permitted given the current tutorial step.

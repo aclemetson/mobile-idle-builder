@@ -18,7 +18,7 @@
 .\scripts\test-local.ps1 -TestPlatform playmode
 ```
 
-- Default Unity path: `C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe` (override with `-UnityPath`).
+- Default Unity path: `C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe` (override with `-UnityPath`, or the `UNITY_PATH` env var when `-UnityPath` is not passed).
 - The script kills orphaned batchmode Unity processes, refuses to run if the editor has the project open, runs `-batchmode -nographics -runTests -testResults TestResults\<platform>.xml`, waits up to 30 min, parses the NUnit XML, exit code 0 = all pass.
 - **Never** add `-quit` to a `-runTests` invocation (kills Unity before results are written). **No results XML = the run did not happen** — check `TestResults\unity-<platform>.log`, do not assume pass (CLAUDE.md rules).
 - CLAUDE.md mandates the FULL suite (both platforms) before commit. The `commit-unity` skill wraps test → commit → push → PR.
@@ -44,8 +44,12 @@
 | UI panel | `HUDControllerTests.cs` pattern for wiring; manual visibility check in editor (tests can't catch clipping) |
 | Timed/reset logic | Copy `AchievementResetTests.cs` — inject timestamps, never sleep |
 
+## AI playtests (exploratory, not a gate)
+
+`Playtests/README.md` covers agent-driven play sessions in the Editor via MCP for Unity: briefs, fixtures and reports. The runtime side is `Assets/Scripts/Playtest/` (editor and dev builds only): `PlaytestDriver` injects taps and drags through a virtual Input System mouse, `PlaytestState` and `PlaytestUi` read game and HUD state. MCP tools live in `Assets/Scripts/Playtest/Editor/` (its asmdef compiles only when `com.coplaydev.unity-mcp` is installed). Findings that matter should become regression tests here. Scenario briefs `stability-sweep`, `casual-idler`, `active-grinder` and `whale-speedrun` run from a full wipe; the timed ones record milestone timings in player time to `Playtests/benchmarks/` (compare with `python scripts/benchmark-report.py`). `PlaytestBenchmarkTests` covers milestone detection and `GameClock`.
+
 ## Gotchas
 
 - `SingletonMonoBehaviour` logs an error on duplicate instances, which NUnit treats as failure — tests use the established setup/teardown patterns in existing service tests; copy them rather than instantiating singletons ad-hoc.
-- PlayMode tests back up and restore the real save file — copy the backup/restore fixture from `SaveSystemTests.cs`, don't write your own.
+- Tests never touch the real save. A namespace-less `[SetUpFixture]` in each test assembly (`TestSaveDirectory.cs`) points `LocalSaveService.SaveDirectoryOverride` at a temp folder for the whole run, so `save.json` and every sidecar file (settings, recipe knowledge, cached flags) resolve there. Before this, `SaveWipeTests` overwrote and deleted the real files and a prestige test wrote through a leaked `SaveManager`, so every run reset Play Mode progress. Build save paths from `LocalSaveService.SaveDirectory`, never `Application.persistentDataPath`; `SaveWipeTests.TestRun_IsRedirectedAwayFromTheRealSaveFolder` fails if the redirect stops running. The per-fixture backup/restore in `SaveSystemTests.cs` still isolates fixtures from each other inside the temp folder.
 - Tests run against **generated SO assets** — if you changed `game_data.json` and didn't re-import, tests validate stale data.

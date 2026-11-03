@@ -14,11 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Your Fusion Reactor fuses two light nuclei into a heavier one \u2014 four
-      hydrogen into helium, three helium into carbon, and onward up the ladder. Feed
-      it light atoms and it climbs toward iron far faster than the Assembler ever
-      could."
+    text: "Every fusion turns a sliver of mass into energy. It leaves the reactor
+      as particles \u2014 gamma rays, neutrinos \u2014 that pass straight through
+      your walls. Each one that escapes is paid out as bonus entropy."
     portrait: {fileID: 0}
     pauseGame: 1
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: 'Feed the reactor Deuterium and it makes Helium. A second reactor fed that
+      Helium makes Carbon: three Helium-4 for one Carbon, worth 160 entropy.'
+    portrait: {fileID: 0}
+    pauseGame: 0
     highlightTarget: 
     action: 

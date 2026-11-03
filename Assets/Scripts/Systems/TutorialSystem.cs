@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Unity.Entities;
+using UnityEngine;
 
 namespace MobileIdleBuilder
 {
@@ -18,6 +20,13 @@ namespace MobileIdleBuilder
         private int _diagLastCount;
         private int _diagLastStep;
 
+        /// <summary>
+        /// Linked sources counted for the current step when it advances on ConveyorLinked, else -1. Lets
+        /// the overlay tell a belt that linked nothing apart from one that linked but the step wants more
+        /// (#255: a wrong belt left the step silently stuck).
+        /// </summary>
+        public static int CurrentStepConveyorLinks { get; private set; } = -1;
+
         public void OnCreate(ref SystemState state)
         {
             _diagLastCount = -1;
@@ -28,6 +37,7 @@ namespace MobileIdleBuilder
 
         public void OnUpdate(ref SystemState state)
         {
+            CurrentStepConveyorLinks = -1;
             var tutorial = SystemAPI.GetSingleton<TutorialStateData>();
             if (!tutorial.IsActive) return;
 
@@ -73,6 +83,20 @@ namespace MobileIdleBuilder
 
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>(true); // read-only
 
+            // Smart progression: if this is a substep and a LATER substep in the same
+            // contiguous run already has its advance condition satisfied, this substep is
+            // moot — e.g. the protons it asked for were already consumed into hydrogen, so
+            // its own InventoryMin will never read high enough. Skip it. The run is bounded
+            // by the first non-substep ("major") step, which is never auto-skipped this way.
+            // Advancing one index per frame cascades forward until the satisfied substep is
+            // reached and advances on its own condition.
+            if (step.isSubstep && LaterSubstepSatisfied(flow, tutorial.CurrentStepIndex, inventory, ref state))
+            {
+                tutorial.CurrentStepIndex++;
+                SystemAPI.SetSingleton(tutorial);
+                return;
+            }
+
             // Diagnostic: log inventory count changes for InventoryMin steps.
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.InventoryMin
                 && step.advanceCondition.items != null && step.advanceCondition.items.Count > 0)
@@ -86,11 +110,23 @@ namespace MobileIdleBuilder
                 }
             }
 
-            if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
+            if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.ConveyorLinked)
+            {
+                CurrentStepConveyorLinks = CountConveyorLinks(step.advanceCondition, ref state);
+                if (CurrentStepConveyorLinks < System.Math.Max(1, step.advanceCondition.minCount)) return;
+            }
+            else if (!EvaluateCondition(step.advanceCondition, inventory, ref state)) return;
 
             // Side-effect: mark first run complete when the prestige-run condition triggers
             if (step.advanceCondition != null && step.advanceCondition.type == ConditionType.PrestigeRunMin)
                 tutorial.FirstRunComplete = true;
+
+            // Paid on advance, never on entry: entry re-runs when a save loads on this step.
+            if (step.rewardEntropy > 0 && SystemAPI.TryGetSingletonRW<PlayerProgressData>(out var progress))
+            {
+                progress.ValueRW.BaseCurrency += step.rewardEntropy;
+                GameLogger.Info($"[TutorialSystem] Step '{step.id}' rewarded {step.rewardEntropy} entropy.");
+            }
 
             tutorial.CurrentStepIndex++;
 
@@ -103,6 +139,25 @@ namespace MobileIdleBuilder
                 ? flow.steps[tutorial.CurrentStepIndex].id
                 : "(complete)";
             GameLogger.Debug($"[TutorialSystem] Advanced to step {tutorial.CurrentStepIndex}: {nextId}");
+        }
+
+        /// <summary>
+        /// True if any later substep in the contiguous run beginning after <paramref name="startIndex"/>
+        /// already has its advance condition satisfied. The scan stops at the first non-substep
+        /// ("major") step so a run of substeps never lets the tutorial jump past a major beat.
+        /// UiEvent conditions never count as satisfied here (they only advance via explicit UI calls),
+        /// so forward-skip fires only on state-derived conditions like InventoryMin/InventoryZero.
+        /// </summary>
+        private bool LaterSubstepSatisfied(TutorialFlowSO flow, int startIndex,
+            DynamicBuffer<InventorySlot> inv, ref SystemState state)
+        {
+            for (int j = startIndex + 1; j < flow.steps.Length; j++)
+            {
+                var later = flow.steps[j];
+                if (later == null || !later.isSubstep) break; // major step bounds the run
+                if (EvaluateCondition(later.advanceCondition, inv, ref state)) return true;
+            }
+            return false;
         }
 
         // ── Condition evaluator ───────────────────────────────────────────────
@@ -147,8 +202,12 @@ namespace MobileIdleBuilder
 
                 case ConditionType.BuildingMin:
                     int buildingCount = 0;
-                    foreach (var _ in SystemAPI.Query<RefRO<BuildingData>>())
-                        buildingCount++;
+                    foreach (var bd in SystemAPI.Query<RefRO<BuildingData>>())
+                    {
+                        // buildingType < 0 = count all; otherwise only matching building types.
+                        if (c.buildingType < 0 || bd.ValueRO.BuildingType == c.buildingType)
+                            buildingCount++;
+                    }
                     return buildingCount >= c.minCount;
 
                 case ConditionType.PrestigeRunMin:
@@ -157,9 +216,103 @@ namespace MobileIdleBuilder
                 case ConditionType.PrestigeAvailable:
                     return SystemAPI.GetSingleton<PlayerProgressData>().PrestigeAvailable;
 
+                case ConditionType.ConveyorLinked:
+                    return CountConveyorLinks(c, ref state) >= System.Math.Max(1, c.minCount);
+
+                case ConditionType.BuildingUpgradeMin:
+                    foreach (var (bd, e) in SystemAPI.Query<RefRO<BuildingData>>().WithEntityAccess())
+                        if (MatchesTarget(c, bd.ValueRO, e, ref state) && bd.ValueRO.UpgradeLevel >= c.minLevel)
+                            return true;
+                    return false;
+
+                case ConditionType.FieldPurchasedMin:
+                    return FieldPurchaseService.PurchasedCount(SaveManager.Instance?.Current, c.fieldId)
+                           >= System.Math.Max(1, c.minCount);
+
+                case ConditionType.BuildingRecipeSet:
+                    // The recipe set UiEvent fires for any recipe on any building, so it can't tell a
+                    // second Combiner set to Neutron from one left on Proton. Read the live recipe.
+                    foreach (var (bd, rp, e) in SystemAPI.Query<RefRO<BuildingData>, RefRO<RecipeProcessData>>()
+                                                         .WithEntityAccess())
+                        if (MatchesTarget(c, bd.ValueRO, e, ref state) && rp.ValueRO.RecipeID == c.recipeId)
+                            return true;
+                    return false;
+
+                case ConditionType.ItemCraftedMin:
+                    // Automated output belted to the Demon is sold before it can reach the inventory,
+                    // so count crafts. Holding the item also counts (Empty output, or a craft from a
+                    // previous session).
+                    if (c.items == null || c.items.Count == 0) return true;
+                    foreach (var r in c.items)
+                        if (CraftLog.Count(r.itemId) < r.quantity
+                            && SlotBufferUtils.CountInInventory(inv, r.itemId) < r.quantity) return false;
+                    return true;
+
                 default:
                     return false;
             }
+        }
+
+        // ── Belt links ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// True when <paramref name="e"/> is the condition's target building: Maxwell's Demon by its
+        /// EntropySinkTag, anything else by BuildingType (-1 = any building).
+        /// </summary>
+        private bool MatchesTarget(TutorialConditionDef c, BuildingData bd, Entity e, ref SystemState state)
+        {
+            if (c.buildingIsEntropySink) return SystemAPI.HasComponent<EntropySinkTag>(e);
+            return c.buildingType < 0 || bd.BuildingType == c.buildingType;
+        }
+
+        /// <summary>
+        /// Number of distinct source buildings whose output belt currently ends in front of an input
+        /// of a target building (#233). Read from the live belts, so the order the player built them
+        /// in doesn't matter. Port fronts follow ConveyorSystem (see TutorialRouteGuide).
+        /// </summary>
+        private int CountConveyorLinks(TutorialConditionDef c, ref SystemState state)
+        {
+            var sourceFronts = new List<(int, Vector2Int)>();
+            var inputFronts  = new HashSet<Vector2Int>();
+
+            foreach (var (bd, ports, e) in SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<PlacedPortData>>()
+                                                     .WithEntityAccess())
+            {
+                bool isTarget = MatchesTarget(c, bd.ValueRO, e, ref state);
+                // A chain of one building type (Fusion Reactor → Fusion Reactor) has every building as
+                // both a possible source and a possible target.
+                bool sameTypeChain = c.fromBuildingType >= 0 && c.fromBuildingType == c.buildingType;
+                bool isSource = (!isTarget || sameTypeChain) && !SystemAPI.HasComponent<EntropySinkTag>(e)
+                             && (c.fromBuildingType < 0 || bd.ValueRO.BuildingType == c.fromBuildingType);
+                if (!isTarget && !isSource) continue;
+
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    var p      = ports[i];
+                    var cell   = new Vector2Int(p.CellX, p.CellY);
+                    var facing = (OutputDirection)p.Facing;
+                    if (isTarget && p.PortType == (int)PortType.Input)
+                        inputFronts.Add(TutorialRouteGuide.InputFront(cell, facing));
+                    else if (isSource && p.PortType == (int)PortType.Output)
+                        sourceFronts.Add((e.Index, TutorialRouteGuide.OutputFront(cell, facing)));
+                }
+            }
+            if (sourceFronts.Count == 0 || inputFronts.Count == 0) return 0;
+
+            var belts = new Dictionary<Vector2Int, Vector2Int?>();
+            foreach (var seg in SystemAPI.Query<RefRO<ConveyorSegmentData>>())
+            {
+                var s = seg.ValueRO;
+                Vector2Int? next = null;
+                if (s.NextSegment != Entity.Null && SystemAPI.HasComponent<ConveyorSegmentData>(s.NextSegment))
+                {
+                    var n = SystemAPI.GetComponent<ConveyorSegmentData>(s.NextSegment).Cell;
+                    next = new Vector2Int(n.x, n.y);
+                }
+                belts[new Vector2Int(s.Cell.x, s.Cell.y)] = next;
+            }
+
+            return TutorialRouteGuide.CountLinkedSources(sourceFronts, inputFronts, belts);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

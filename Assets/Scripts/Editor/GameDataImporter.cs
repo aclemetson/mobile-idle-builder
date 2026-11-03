@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using MobileIdleBuilder;
@@ -209,10 +210,10 @@ namespace MobileIdleBuilder.Editor
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
-            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup);
+            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
-            GenerateResearchDatabase(data.research, researchLookup);
+            GenerateResearchDatabase(data.research, data.research_blocks, researchLookup);
 
             // ── Step 12.5: SiteDatabaseSO ────────────────────────────────────
             GenerateSiteDatabase(data.sites, siteLookup);
@@ -334,6 +335,9 @@ namespace MobileIdleBuilder.Editor
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;
             so.codexEntry           = data.codex_entry;
+            so.block                = data.block ?? "";
+            so.treeX                = data.tree_x;
+            so.treeY                = data.tree_y;
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -377,6 +381,7 @@ namespace MobileIdleBuilder.Editor
             so.codexEntry          = data.codex_entry;
             so.baseSellValue       = data.base_sell_value;
             so.isotopeSellMultiplier = data.isotope_sell_multiplier;
+            so.escapesAsEntropy    = data.escapes_as_entropy;
 
             so.icon = LoadAssetOrWarn<Sprite>(data.icon_path, $"ItemSO '{data.id}'.icon")
                       ?? LoadGeneratedIcon(data.id);
@@ -443,6 +448,7 @@ namespace MobileIdleBuilder.Editor
             so.tier                = data.tier;
             so.isObsoleteable      = data.is_obsoleteable;
             so.obsoleteCondition   = data.obsolete_condition;
+            so.obsoletedByResearch = data.obsoleted_by_research;
             so.requiresPower       = data.requires_power;
             so.isPowerSource       = data.is_power_source;
             so.basePowerCostEV     = data.base_power_cost_ev;
@@ -454,6 +460,10 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isItemFilter        = data.is_item_filter;
+            so.assignableOutputs   = data.assignable_outputs;
+            so.recipeModeLabels    = data.recipe_mode_labels;
+            so.recipeModePrefixes  = data.recipe_mode_prefixes;
             so.entropyCost                = data.entropy_cost;
             so.baseMaxOutputItems         = data.base_max_output_items;
             so.baseMaxInputItemsPerSlot   = data.base_max_input_items_per_slot;
@@ -569,6 +579,11 @@ namespace MobileIdleBuilder.Editor
             so.displayName   = data.display_name;
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
+
+            so.purchaseResearchId     = data.purchase_research ?? "";
+            so.purchaseCostBase       = data.purchase_cost_base;
+            so.purchaseCostMultiplier = data.purchase_cost_multiplier;
+            so.purchaseGroupSize      = Mathf.Max(1, data.purchase_group_size);
 
             so.fieldType = FieldTypes.Normalize(data.field_type);
             if (ColorUtility.TryParseHtmlString(data.field_color, out var color))
@@ -780,7 +795,8 @@ namespace MobileIdleBuilder.Editor
         }
 
         private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
-            Dictionary<string, DialogueSO> dialogueLookup)
+            Dictionary<string, DialogueSO> dialogueLookup,
+            Dictionary<string, BuildingSO> buildingLookup)
         {
             if (steps == null || steps.Count == 0) return;
 
@@ -794,8 +810,10 @@ namespace MobileIdleBuilder.Editor
                 var s = realSteps[i];
                 var def = new TutorialStepDef
                 {
-                    id       = s.id,
-                    hintText = s.hint,
+                    id        = s.id,
+                    hintText  = s.hint,
+                    isSubstep = s.is_substep,
+                    rewardEntropy = s.reward_entropy,
                 };
 
                 // Advance condition
@@ -803,14 +821,48 @@ namespace MobileIdleBuilder.Editor
                 {
                     def.advanceCondition = new TutorialConditionDef
                     {
-                        anyOf      = s.advance_condition.any_of,
-                        uiEventId  = s.advance_condition.ui_event_id  ?? "",
-                        researchId = s.advance_condition.research_id  ?? "",
-                        minCount   = s.advance_condition.min_count,
+                        anyOf        = s.advance_condition.any_of,
+                        uiEventId    = s.advance_condition.ui_event_id  ?? "",
+                        researchId   = s.advance_condition.research_id  ?? "",
+                        minCount     = s.advance_condition.min_count,
+                        minLevel     = s.advance_condition.min_level,
+                        fieldId      = s.advance_condition.field_id     ?? "",
+                        recipeId     = s.advance_condition.recipe_id,
+                        buildingType = -1,
                     };
                     if (TryParseEnum<ConditionType>(s.advance_condition.type,
                             $"TutorialStep '{s.id}'.advance_condition.type", out var ct))
                         def.advanceCondition.type = ct;
+
+                    // UiEvent steps advance in TutorialOverlayController, which never pays the reward.
+                    if (s.reward_entropy > 0 && def.advanceCondition.type == ConditionType.UiEvent)
+                        GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': reward_entropy " +
+                            "is ignored on a UiEvent step; put it on a state-driven step.");
+
+                    // Resolve BuildingMin's building_id string to the int BuildingType so the
+                    // ECS system can filter the count. Empty/unknown id leaves buildingType at
+                    // -1 (count all buildings).
+                    if (!string.IsNullOrEmpty(s.advance_condition.building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.building_id, out var bso))
+                        {
+                            def.advanceCondition.buildingType          = bso.buildingId;
+                            def.advanceCondition.buildingIsEntropySink = bso.isEntropySink;
+                        }
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.building_id '{s.advance_condition.building_id}' not found.");
+                    }
+
+                    // ConveyorLinked's source building (empty = any building).
+                    if (!string.IsNullOrEmpty(s.advance_condition.from_building_id))
+                    {
+                        if (buildingLookup.TryGetValue(s.advance_condition.from_building_id, out var fso))
+                            def.advanceCondition.fromBuildingType = fso.buildingId;
+                        else
+                            GameLogger.Warning($"[GameDataImporter] TutorialStep '{s.id}': " +
+                                $"advance_condition.from_building_id '{s.advance_condition.from_building_id}' not found.");
+                    }
 
                     if (s.advance_condition.items != null && s.advance_condition.items.Count > 0)
                     {
@@ -977,7 +1029,7 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateResearchDatabase(List<ResearchJson> research,
+        private static void GenerateResearchDatabase(List<ResearchJson> research, List<ResearchBlockJson> blocks,
             Dictionary<string, ResearchSO> researchLookup)
         {
             EnsureDirectory(ResourcesDir);
@@ -990,6 +1042,19 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allResearch = list.ToArray();
+            db.blocks = (blocks ?? new List<ResearchBlockJson>())
+                .OrderBy(b => b.order)
+                .Select(b => new ResearchBlock
+                {
+                    id = b.id, displayName = b.name, order = b.order, targetHours = b.target_hours, anchor = b.anchor,
+                    description = b.description,
+                    startPrestigeCount          = b.start_prestige_count,
+                    startPrestigeCurrencyEarned = b.start_prestige_currency_earned,
+                    startEntropy                = b.start_entropy,
+                    startPermanentUpgrades      = b.start_permanent_upgrades ?? System.Array.Empty<string>(),
+                    startSites                  = b.start_sites ?? System.Array.Empty<string>(),
+                })
+                .ToArray();
             EditorUtility.SetDirty(db);
         }
 

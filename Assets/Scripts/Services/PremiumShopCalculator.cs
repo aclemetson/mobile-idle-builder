@@ -68,7 +68,7 @@ namespace MobileIdleBuilder
         {
             DateTime baseline = IsBoostActive(currentExpiryUtc)
                 ? DateTime.Parse(currentExpiryUtc, null, DateTimeStyles.RoundtripKind)
-                : DateTime.UtcNow;
+                : GameClock.UtcNow;
             return (baseline + duration).ToString("O");
         }
 
@@ -77,7 +77,7 @@ namespace MobileIdleBuilder
             if (string.IsNullOrEmpty(expiryUtc)) return false;
             if (!DateTime.TryParse(expiryUtc, null, DateTimeStyles.RoundtripKind, out var expiry))
                 return false;
-            return DateTime.UtcNow < expiry;
+            return GameClock.UtcNow < expiry;
         }
 
         public static float GetSpeedBoostMultiplier(string expiryUtc)

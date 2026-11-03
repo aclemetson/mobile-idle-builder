@@ -269,16 +269,6 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void TutorialOverlayController_HasNotifyAtomGeneratorSpeedUpgradedMethod()
-        {
-            var method = typeof(TutorialOverlayController)
-                .GetMethod("NotifyAtomGeneratorSpeedUpgraded",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            Assert.IsNotNull(method,
-                "TutorialOverlayController missing public method: NotifyAtomGeneratorSpeedUpgraded() — needed by the building upgrade UI to advance step 49");
-        }
-
-        [Test]
         public void GameConfigSO_HasPrestigeBaseValueField()
         {
             var type = typeof(GameConfigSO);

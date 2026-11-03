@@ -32,6 +32,16 @@ namespace MobileIdleBuilder
                  "Shortened by research and the 'Quick Hands' prestige upgrade.")]
         [Min(0.1f)] public float tapCooldownSeconds = 1.5f;
 
+        [Header("Purchase (Build menu)")]
+        [Tooltip("Research that lets the player buy this field. Empty = never for sale.")]
+        public string purchaseResearchId;
+        [Tooltip("Price of the first purchase. 0 = never for sale.")]
+        [Min(0)] public long purchaseCostBase;
+        [Tooltip("Each purchase multiplies the next price by this.")]
+        [Min(1f)] public float purchaseCostMultiplier = 10f;
+        [Tooltip("Fields placed per purchase, side by side (2 for quark pairs).")]
+        [Min(1)] public int purchaseGroupSize = 1;
+
         public Color fieldColor;
         public Sprite fieldIcon;
         [TextArea(2, 5)]

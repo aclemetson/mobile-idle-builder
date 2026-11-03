@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Chlorine (Cl), element number 17 with mass number 35. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 327680
+  baseSellValue: 11100
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

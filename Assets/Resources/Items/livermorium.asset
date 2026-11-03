@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: 'Livermorium (Lv), element number 116 with mass number 293. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 2.8147498e+15
+  baseSellValue: 1290000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

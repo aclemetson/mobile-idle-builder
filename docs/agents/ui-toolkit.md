@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205). If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -21,8 +21,25 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
   - **Trap:** a new sub-controller class does nothing until the component is added to the HUD GameObject in `GameScene.unity`. `[RequireComponent]` does not retro-add it to an existing scene object — this is a manual Unity Editor step; flag it to the user in your final report.
 - Lifecycle calls made by HUDController on each sub-controller: `Init(VisualElement root, HUDController hud)` (query elements by name, e.g., `root.Q("upgrades-panel")`) then `SetECSContext(EntityManager em)` once ECS is ready, then `Refresh()` when the panel opens. Copy `Assets/Scripts/UI/PrestigeShopSubController.cs` — it is the cleanest reference (panel + currency label + ScrollView list rebuilt in `Refresh()`).
 - `SitesSubController.cs` is a second clean reference (sites-panel): list rebuilt in `Refresh()`, a pure `ClassifyRow(isActive, isUnlocked, canAfford)` helper drives each row's action (Active/Travel/Unlock/Locked), and the Travel handler calls `HUDController.CancelActiveModes()` before `SiteService.SwitchTo` so placement overlays clear before the grid swaps.
-- Drawer nav buttons are wired in HUDController around `HUDController.cs:347-369` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
+- Drawer nav buttons are wired in HUDController around `HUDController.cs:454-491` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
 - Building rows/list items are built **in C#** (`new VisualElement()` + `AddToClassList`), not via UXML templates, in sub-controllers — follow that style.
+
+## Building inspector: no layout bounce
+
+`HUDBuildingInspectorSubController` clears and rebuilds `inspector-static` / `inspector-recipes` / `inspector-upgrades` every 0.5s. Anything whose row count changed between rebuilds shifted the scrolls below and moved buttons out from under the finger (0.4 checklist item 21). Rules for this panel:
+
+- **Reserve, don't add/remove.** Buffer sections list one row per recipe-expected item (`StableBufferRows`, ×0 when absent); the Empty buttons are always present and `SetEnabled(false)` when empty; the input section shows whenever the building *can* hold inputs (`ShowInputBufferSection`). Maxed upgrade rows keep their description + footer with a disabled "Maxed" button (`AddUpgradeRow`). Manager rows are one same-shaped row per hired manager in catalogue order; assign/unassign only flips the button text.
+- **Backstop:** `inspector-static` gets a `min-height` high-water mark per inspected entity (`OnStaticGeometryChanged`), reset on entity change / hide.
+- All inspector buttons route through `ListTapRouter` (not `.clicked`): the ScrollView eats a Button's own Clickable on touch, and the 0.5s rebuild would drop a held press. The rebuild also waits while `ListTapRouter.GestureInProgress` (finger down, capped at 1s), since replacing or disabling the button mid-press lost the tap.
+- Destructive actions ask first via `ConfirmPrompt.Show(title, message, confirmLabel, onConfirm, onCancel)` (static; `confirm-prompt` in `GameHUD.uxml`, initialised by `HUDController`). It sets `UIInputBlocker.SetModal` while open; world controllers also skip their tap handling while `ConfirmPrompt.IsOpen` so the target stays highlighted. Removing a building asks; removing a conveyor tile does not (belts are free to replace).
+- Blocked-action feedback (`InventoryPopupController.NotifyWarning`, so `ToastService` and the tutorial gates) shows in the HUD notification banner with the `warning` style, not as world text over the player anchor, which could spawn off-screen (#238).
+- A `<ui:Instance>` in `GameHUD.uxml` that holds an absolutely positioned overlay (dialogue, notification banner, tooltip) needs `picking-mode="Ignore"` and `style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;"`. Without it the TemplateContainer is laid out in the root's flex column below the grid area, so its overlay's `top`/`left` start from the bottom edge: the notification banner sat off screen and only flashed into view while sliding (#238). `HudOverlayInstanceTests` checks this.
+
+## Tutorial hint banner (minimizable)
+
+`tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. `HUDController.RefreshBannerClearance` runs every frame and calls `HUDBannerController.SetMenuOpen(drawerOpen || any slide panel visible)`, which collapses the banner to the pill (its full-width bottom bar hid the drawer's and the Builder sheet's Place buttons) and restores it when everything closes, unless the player had minimized it. Keep it per-frame, not per open path: an explicit call in one open method missed the Builder sheet, which opens after the drawer closes. Under the hint text, `tutorial-hint-banner__progress` shows live have/need counts for `InventoryMin` steps ("Up Quark 2/4, Down Quark 1/2, Electron 0/2"): `TutorialOverlayController.RefreshHintProgress` (every 0.2s) formats it with the pure `TutorialHintProgress.Format` and pushes it through `HUDBannerController.SetTutorialHintProgress`, which never re-expands a minimized hint (#260). Covered by `TutorialHintMinimizeTests` (runs against the real UXML) and `TutorialHintProgressTests`.
+
+**Drawer tap guard:** `DrawerTapGuard` (attached to `left-drawer` in `HUDController.QueryElements`, armed in `OpenDrawer`) swallows pointer/click events on the drawer for `DrawerSlideMs` after it opens. The handle sits over the map's left edge, so the second tap of a double tap landed on whichever nav row had just slid under the finger (#256). Covered by `DrawerTapGuardTests`.
 
 ## Power readout & coverage (proximity power feature)
 
@@ -48,6 +65,8 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 2. A **stationary tap sets a candidate cell** (`SetCandidate`), locks the ghost there (`_hasCandidate` skips the desktop hover-follow), and raises `OnCandidateChanged(true)`. Tapping another cell repositions; Rotate/Flip re-draw the ghost at the candidate.
 3. A **world-anchored confirm popup** (`placement-confirm-popup` in `GameHUD.uxml`, ✕ `btn-cancel-candidate` / ↻ `btn-rotate-candidate` / ✓ `btn-confirm-place`) floats above the candidate. `HUDController.UpdatePlacementConfirmPopup` repositions it every frame via `RuntimePanelUtils.CameraTransformWorldToPanel(panel, CandidateWorldPosition, Camera.main)`, disables ✓ when `CandidateValid` is false, and hides it on `OnCandidateChanged(false)` / placement end. ✓ → `ConfirmCandidate()` (runs the field output-selector if needed, else `ConfirmPlacement`); ✕ / Esc → `ClearCandidate()`; ↻ → `placementController.Rotate()` (same call as the bottom-bar `btn-rotate-output` and the R key). The ↻ button is shown by `OnCandidateChanged` only when `placementController.CanRotate` is true; the per-frame re-anchor + ✓-validity refresh already pick up the new footprint after a rotate. Flip stays on the bottom `placement-bar` (`btn-flip-building`), not the popup.
 
+**Why ✓ is disabled:** `IsCellValidForPending` is `BlockAt(x, y) == PlacementBlock.None`. `BlockAt` returns the first reason a cell fails (`OffGrid`, `Occupied`, `NeedsField`, `WrongField`, `OnField`), and `SetCandidate` shows `BlockMessage(...)` through `InventoryPopupController.NotifyWarning` on every tap of an invalid cell, so a disabled ✓ always comes with a reason (#258). Messages must fit the one-line banner (`PlacementBlockMessageTests` caps them at 56 characters). A new placement rule adds a `PlacementBlock` value and a message, not a bare `return false`.
+
 **Gotcha (cost a debug cycle):** `BuildingPlacementController.IsPointerOverPlacementUI` (assigned by `HUDController`) must hit-test the **`placement-bar`** strip and the popup — NOT the `placement-overlay` container, which is full-screen/transparent so the world shows through. Hit-testing the overlay makes *every* tap read as "over UI", so no candidate is ever set and the popup never appears. Use `ScreenPointInElement` (`RuntimePanelUtils.ScreenToPanel` + `worldBound.Contains`).
 
 ## World-input blocking (taps/pans starting on UI)
@@ -68,6 +87,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 ## Styling
 
 - `Assets/UI/tokens.uss` — design tokens (colors/spacing/typography vars). `Assets/UI/components.uss` — shared classes. `Assets/UI/GameHUD.uss` — HUD layout. Panel-specific: `AchievementsMenu.uss`, `PremiumShop.uss`.
+- **Icons: never use the `✕ ✓ ↻ ⇄` text glyphs.** The Android default font lacks them and they render blank on device (#165). Use `GlyphIcon` (`Assets/Scripts/UI/GlyphIcon.cs`), which is vector-drawn and strokes with the inherited text `color`. In UXML, use `<ui:Button text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>` (`icon` = `Close|Check|Rotate|Flip`). In code, use `GlyphIcon.SetOn(host, kind)` / `ClearFrom(host)` / `TitleRow(kind, label)`. Size it per context with `.<host-class> > .glyph-icon` rules in `components.uss`. `GlyphIconTests` fails if any GameHUD text uses those glyphs. Other symbols (`▶ ○ ⚙ ⚡ ◆ ◈`, emoji in notification banners) are still unverified on device.
 - Reuse existing classes (e.g., `upgrade-row`, `upgrade-row--locked`, `slide-panel`) before writing new USS. Grep `GameHUD.uss`/`components.uss` for a class before inventing one.
 
 ## Checklist: adding a new panel
@@ -78,8 +98,9 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 4. In `HUDController.cs`: add the `GetComponent<>()` field (`:106-111` region), wire the button (`:347-369` region), add the `OpenXPanel` method mirroring an existing one (closes others, removes `hidden`, calls `Refresh()`).
 5. Tell the user to add the component to the HUD GameObject in GameScene (manual step).
 6. Use `ToastService` for transient feedback, not ad-hoc labels.
+   - **Back button (#205):** a new slide panel must be in `_allPanels` (so Android back / Escape closes it). A new modal needs an `IsOpen` + `Close()` and a row in `BackNavigation` (`UI/BackNavigation.cs`, pure, tested) plus the switch in `HUDController.HandleBackButton`. Order: mode active → yield to its controller; dialogue → swallowed (never skipped); confirm prompt; idle return; update notice; inspector; panel; drawer; root → nothing.
 7. Verify visibility: panel must not be clipped by a zero-height wrapper; check parent sizing classes (CLAUDE.md recurring bug).
-8. Mobile: respect safe area (`SafeAreaAdapter` exists); test portrait sizing.
+8. Mobile: respect safe area (`SafeAreaAdapter` exists; it pads the document root in panel px, never percent, since UI Toolkit resolves percent padding against WIDTH, and paints `safe-area-fill` strips in the top-bar colour behind the top/left/right insets when a `top-bar` exists, framing off the landscape camera cutout). Android does not report rounded display corners as unsafe, so inset edge-to-edge bottom panels from the sides (see `.dialogue-box`); test portrait sizing.
 
 ## Pitfalls
 

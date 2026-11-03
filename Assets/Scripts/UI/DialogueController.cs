@@ -38,6 +38,12 @@ namespace MobileIdleBuilder
         private DialogueSO _current;
         private int        _lineIndex;
 
+        /// <summary>True while a dialogue is on screen.</summary>
+        public bool IsPlaying => _current != null;
+
+        /// <summary>True while the dialogue on screen holds Time.timeScale at 0.</summary>
+        public bool IsPausingGame => _current != null && PausesGame(_current);
+
         void Start()
         {
             if (_uiDocument == null)
@@ -79,8 +85,20 @@ namespace MobileIdleBuilder
 
             _current   = dialogue;
             _lineIndex = 0;
+            // Pause is decided once for the whole sequence so paging through it never starts and
+            // stops the world (#235). SetBoxVisible(false) restores time when it closes.
+            Time.timeScale = PausesGame(dialogue) ? 0f : 1f;
             ShowLine(_lineIndex);
             SetBoxVisible(true);
+        }
+
+        /// <summary>True when any line of <paramref name="dialogue"/> asks to pause: the whole sequence pauses.</summary>
+        internal static bool PausesGame(DialogueSO dialogue)
+        {
+            if (dialogue?.lines == null) return false;
+            foreach (var line in dialogue.lines)
+                if (line.pauseGame) return true;
+            return false;
         }
 
         /// <summary>Hides the dialogue box immediately.</summary>
@@ -128,10 +146,17 @@ namespace MobileIdleBuilder
 
             bool isLast = _current == null || _lineIndex >= _current.lines.Length - 1;
             if (_nextBtn != null)
-                _nextBtn.text = isLast ? "✓" : "▶";
-
-            // Pause / unpause game time based on line directive
-            Time.timeScale = line.pauseGame ? 0f : 1f;
+            {
+                if (isLast)
+                {
+                    GlyphIcon.SetOn(_nextBtn, GlyphIcon.Kind.Check);
+                }
+                else
+                {
+                    GlyphIcon.ClearFrom(_nextBtn);
+                    _nextBtn.text = "▶";
+                }
+            }
 
             // Broadcast highlight target (empty string = clear)
             OnHighlightRequested?.Invoke(line.highlightTarget ?? "");

@@ -89,7 +89,8 @@ namespace MobileIdleBuilder
     {
         None,
         Alpha,
-        Beta
+        Beta,
+        BetaPlus   // beta-plus / electron capture: a proton becomes a neutron (Z - 1)
     }
 
     [Flags]
@@ -155,6 +156,8 @@ namespace MobileIdleBuilder
         PrestigeGainMultiplier,   // % bonus to PC earned per prestige
         IdleTimeCap,              // additive seconds per level (+1800 = 30 min)
         IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
+        DemolishRefund,           // additive fraction of spent entropy refunded on removal (+0.10 = 10 %)
+        SurplusResale,            // additive fraction of the Demon price paid for auto-sold unused items (+0.10 = 10 %)
     }
 
     public enum AchievementTrigger
@@ -222,7 +225,12 @@ namespace MobileIdleBuilder
         ResearchUnlocked,   // A specific research ID appears in SaveManager.unlockedResearch
         BuildingMin,        // At least minCount BuildingData entities exist
         PrestigeRunMin,     // PrestigeData.RunCount >= minCount
-        PrestigeAvailable   // PlayerProgressData.PrestigeAvailable == true
+        PrestigeAvailable,  // PlayerProgressData.PrestigeAvailable == true
+        ConveyorLinked,     // At least minCount source buildings have a belt from an output into the target's input
+        BuildingUpgradeMin, // A building of the target type has a speed upgrade level >= minLevel
+        FieldPurchasedMin,  // At least minCount purchases of fieldId this run (FieldPurchaseService)
+        ItemCraftedMin,     // Each listed item was crafted at least quantity times this session (CraftLog), or is held
+        BuildingRecipeSet   // A building of the target type has recipeId as its active recipe (RecipeProcessData)
     }
 
     /// <summary>How TutorialOverlayController highlights a world target when a step activates.</summary>

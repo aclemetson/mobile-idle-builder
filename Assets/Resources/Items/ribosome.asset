@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: 'The cell''s factory floor: a complex of nucleic acid and protein that
     reads genetic code and builds new proteins.'
   codexUnlocked: 0
-  baseSellValue: 2000000
+  baseSellValue: 7450000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

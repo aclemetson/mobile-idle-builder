@@ -86,11 +86,22 @@ namespace MobileIdleBuilder
         public bool HasPortLayout =>
             IsPlacing && _pending.building?.ports != null && _pending.building.ports.Length > 0;
 
-        /// <summary>True when the rotate button / R key should be shown (port layout OR legacy field collector).</summary>
+        /// <summary>True when the rotate button / R key should be shown (port layout, legacy field collector, or a field pair).</summary>
         public bool CanRotate =>
-            IsPlacing && (HasPortLayout ||
+            IsPlacing && (HasPortLayout || IsPlacingFieldGroup ||
                           (_pending.building != null &&
                            _pending.building.placementRule == PlacementRule.MustBeOnField));
+
+        // ---- Field purchase state (Field Synthesis) ----
+        private FieldSO        _pendingField;
+        private FieldGenerator _fieldGenerator;
+        private ConveyorVisualizer _conveyorVisualizer;
+
+        /// <summary>The field being bought and placed, or null while placing a building.</summary>
+        public FieldSO PendingField => IsPlacing ? _pendingField : null;
+
+        /// <summary>True while placing a multi-tile field purchase (a quark pair), which can turn 90°.</summary>
+        private bool IsPlacingFieldGroup => _pendingField != null && _pendingField.purchaseGroupSize > 1;
 
         /// <summary>True when the flip button / F key should be shown.</summary>
         public bool CanFlip => HasPortLayout;
@@ -107,7 +118,13 @@ namespace MobileIdleBuilder
 
         public void Rotate()
         {
-            if (HasPortLayout)
+            if (IsPlacing && IsPlacingFieldGroup)
+            {
+                // A pair only has two distinct orientations: side by side, or one above the other.
+                _rotation = (_rotation + 1) % 2;
+                RefreshCandidateGhost();
+            }
+            else if (HasPortLayout)
             {
                 _rotation = NextRotation(_rotation);
                 RefreshCandidateGhost();
@@ -217,9 +234,22 @@ namespace MobileIdleBuilder
         // Public API
         // ================================================================
 
-        public void BeginPlacement(BuildingEntry entry)
+        public void BeginPlacement(BuildingEntry entry) => BeginPlacementCore(entry, null);
+
+        /// <summary>
+        /// Starts placing a field bought with Field Synthesis. Same ghost, confirm popup and rotate
+        /// button as a building; confirming charges the price via <see cref="FieldPurchaseService"/>.
+        /// </summary>
+        public void BeginFieldPlacement(FieldSO field)
+        {
+            if (field == null) return;
+            BeginPlacementCore(default, field);
+        }
+
+        private void BeginPlacementCore(BuildingEntry entry, FieldSO field)
         {
             _pending           = entry;
+            _pendingField      = field;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             _outputDirection   = OutputDirection.North;
@@ -258,6 +288,7 @@ namespace MobileIdleBuilder
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             IsPlacing          = false;
+            _pendingField      = null;
             if (_hasCandidate) { _hasCandidate = false; OnCandidateChanged?.Invoke(false); }
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
@@ -357,6 +388,11 @@ namespace MobileIdleBuilder
                 _hasCandidate = true;
                 OnCandidateChanged?.Invoke(true);
             }
+
+            // ✓ is disabled on an invalid cell; say why, once per tap.
+            string reason = BlockMessage(BlockAt(cell.x, cell.y), _pending.building?.displayName, _pendingField != null);
+            if (reason != null)
+                InventoryPopupController.NotifyWarning(reason);
         }
 
         /// <summary>Drops the pending candidate and returns to positioning (called by the popup's ✕).</summary>
@@ -383,6 +419,12 @@ namespace MobileIdleBuilder
             OnCandidateChanged?.Invoke(false);
             gridRenderer.HideGhost();
 
+            if (_pendingField != null)
+            {
+                ConfirmFieldPurchase(x, y);
+                return;
+            }
+
             // Field-collector output selector (multiple harvestable items on the field).
             var field = FieldGenerator.GetFieldAt(x, y);
             if (field != null && _pending.building != null && _pending.building.supportedRecipes != null)
@@ -406,7 +448,11 @@ namespace MobileIdleBuilder
                 }
             }
 
-            ConfirmPlacement(x, y, _pending.defaultRecipe);
+            // Off-field buildings with exactly one usable recipe start producing right away (#186).
+            var recipe = _pending.defaultRecipe;
+            if (recipe == null && field == null)
+                recipe = RecipeAvailability.SoleAvailable(_pending.building);
+            ConfirmPlacement(x, y, recipe);
         }
 
         /// <summary>Draws the ghost (and port arrows / power coverage) at a cell without locking it in.</summary>
@@ -489,6 +535,8 @@ namespace MobileIdleBuilder
                     for (int dy = 0; dy < fp.y; dy++)
                         gridRenderer.SetTileHighlight(x + dx, y + dy, true);
                 buildingVisualizer.Refresh();
+                // A new building can give a belt tail an input to feed: redraw so the tail points at it (#223).
+                (_conveyorVisualizer ??= FindAnyObjectByType<ConveyorVisualizer>())?.RefreshAll();
                 OnBuildingPlaced?.Invoke(_pending);
                 AchievementService.Instance?.NotifyBuildingPlaced(_pending.building?.id ?? _pending.building?.name ?? "");
                 SaveManager.Instance?.SaveLocal();
@@ -501,6 +549,30 @@ namespace MobileIdleBuilder
             _awaitingSelection = false;
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
+        }
+
+        private void ConfirmFieldPurchase(int x, int y)
+        {
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            var cells = FootprintCells(x, y);
+            if (!FieldPurchaseService.TryPurchase(_pendingField, _fieldGenerator, cells))
+                InventoryPopupController.NotifyWarning("Not enough entropy");
+
+            _pendingField = null;
+            IsPlacing     = false;
+            cameraController?.SetPanLocked(false);
+            OnPlacingChanged?.Invoke(false);
+        }
+
+        /// <summary>Every cell the pending footprint covers when anchored at (x, y).</summary>
+        internal List<Vector2Int> FootprintCells(int x, int y)
+        {
+            var fp    = GetEffectiveFootprint();
+            var cells = new List<Vector2Int>(fp.x * fp.y);
+            for (int dx = 0; dx < fp.x; dx++)
+                for (int dy = 0; dy < fp.y; dy++)
+                    cells.Add(new Vector2Int(x + dx, y + dy));
+            return cells;
         }
 
         // ---- Ghost port arrows ----
@@ -618,6 +690,7 @@ namespace MobileIdleBuilder
 
         private Vector2Int GetBaseFootprint()
         {
+            if (_pendingField != null) return new Vector2Int(Mathf.Max(1, _pendingField.purchaseGroupSize), 1);
             if (_pending.building == null) return Vector2Int.one;
             var fp = _pending.building.footprint;
             return new Vector2Int(Mathf.Max(1, fp.x), Mathf.Max(1, fp.y));
@@ -629,12 +702,28 @@ namespace MobileIdleBuilder
             return PortUtils.RotatedFootprint(GetBaseFootprint(), _rotation);
         }
 
-        private bool IsCellValidForPending(int x, int y)
+        private bool IsCellValidForPending(int x, int y) => BlockAt(x, y) == PlacementBlock.None;
+
+        /// <summary>Why the pending placement can't go at (x, y), or None when it can.</summary>
+        private PlacementBlock BlockAt(int x, int y)
         {
+            if (_pendingField != null)
+            {
+                // A bought field needs bare ground: no building, belt or existing field.
+                foreach (var c in FootprintCells(x, y))
+                {
+                    if (!gridRenderer.IsInBounds(c.x, c.y)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return PlacementBlock.Occupied;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return PlacementBlock.OnField;
+                }
+                return PlacementBlock.None;
+            }
+
             if (_pending.building == null)
             {
-                return gridRenderer.IsInBounds(x, y) &&
-                       (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(x, y));
+                if (!gridRenderer.IsInBounds(x, y)) return PlacementBlock.OffGrid;
+                return GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
+                    ? PlacementBlock.Occupied : PlacementBlock.None;
             }
 
             var fp = GetEffectiveFootprint();
@@ -644,45 +733,55 @@ namespace MobileIdleBuilder
                 for (int dy = 0; dy < fp.y; dy++)
                 {
                     int cx = x + dx, cy = y + dy;
-                    if (!gridRenderer.IsInBounds(cx, cy)) return false;
-                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return false;
+                    if (!gridRenderer.IsInBounds(cx, cy)) return PlacementBlock.OffGrid;
+                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return PlacementBlock.Occupied;
 
                     var fieldAtCell = FieldGenerator.GetFieldAt(cx, cy);
 
                     if (_pending.building.placementRule == PlacementRule.MustBeOnField)
                     {
-                        if (fieldAtCell == null) return false;
+                        if (fieldAtCell == null) return PlacementBlock.NeedsField;
                         if (_pending.building.compatibleFields != null && _pending.building.compatibleFields.Length > 0)
                         {
                             bool compatible = System.Array.Exists(_pending.building.compatibleFields,
                                                                   ft => ft == fieldAtCell.fieldType);
-                            if (!compatible) return false;
+                            if (!compatible) return PlacementBlock.WrongField;
                         }
                     }
                     else if (fieldAtCell != null)
                     {
-                        return false;
+                        return PlacementBlock.OnField;
                     }
                 }
             }
 
-            return true;
+            return PlacementBlock.None;
         }
 
-        private List<RecipeSO> GetMatchingRecipes(FieldSO field)
+        internal enum PlacementBlock { None, OffGrid, Occupied, NeedsField, WrongField, OnField }
+
+        /// <summary>
+        /// One-line reason shown in the notification banner when a tap picks a cell the ✓ can't confirm,
+        /// so a disabled ✓ never goes unexplained (#258). Null for None. The banner does not wrap: keep it short.
+        /// </summary>
+        internal static string BlockMessage(PlacementBlock block, string buildingName, bool isField)
         {
-            var result = new List<RecipeSO>();
-            if (field.outputItems == null || field.outputItems.Count == 0) return result;
-            if (_pending.building.supportedRecipes == null) return result;
-
-            foreach (var recipe in _pending.building.supportedRecipes)
+            string name = string.IsNullOrEmpty(buildingName) ? "it" : "the " + buildingName;
+            switch (block)
             {
-                if (recipe == null) continue;
-                if (field.outputItems.Contains(recipe.outputItem))
-                    result.Add(recipe);
+                case PlacementBlock.OffGrid:    return "Doesn't fit: part of it is off the grid.";
+                case PlacementBlock.Occupied:   return "That spot is taken.";
+                case PlacementBlock.NeedsField: return $"Place {name} on a field tile.";
+                case PlacementBlock.WrongField: return $"{Capitalize(name)} can't harvest this field.";
+                case PlacementBlock.OnField:    return isField ? "A new field needs empty ground."
+                                                               : "Fields are for Harvesters. Pick an empty tile.";
+                default:                        return null;
             }
-            return result;
         }
+
+        private static string Capitalize(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
+
+        private List<RecipeSO> GetMatchingRecipes(FieldSO field) => FieldRecipes.For(_pending.building, field);
 
         private static Vector3 FacingEdgeOffset(OutputDirection dir, float cellSize)
         {

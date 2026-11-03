@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
         public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
+        public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
@@ -103,6 +104,13 @@ namespace MobileIdleBuilder
         public int          activeWorldIndex        = 0;       // index into WorldDatabase of the active world; 0 = Physics. Keep consistent with activeSiteIndex via WorldLayout.
         public List<string> researchProgressKeys    = new();
         public List<float>  researchProgressValues  = new();
+        // Fields bought this run (FieldPurchaseService), parallel lists: FieldSO.id -> purchases.
+        // A quark pair counts once. Each purchase raises the next price; cleared with the run on prestige.
+        public List<string> fieldPurchaseIds        = new();
+        public List<int>    fieldPurchaseCounts     = new();
+        // Recipe-menu craft queue (ManualCraftService, #310). Inputs were taken when each item was
+        // queued; cleared with the run on prestige.
+        public CraftQueueSaveData craftQueue        = new();
 
         /// <summary>
         /// The grid for the currently active site. Falls back to the legacy single 'grid'
@@ -122,6 +130,26 @@ namespace MobileIdleBuilder
                 return grid;
             }
         }
+    }
+
+    /// <summary>One queued recipe-menu craft: <c>count</c> items of a recipe, each taking <c>unitSeconds</c>.</summary>
+    [Serializable]
+    public class CraftQueueEntry
+    {
+        public string recipeId;
+        public int    count;
+        public float  unitSeconds;
+    }
+
+    /// <summary>
+    /// The recipe-menu craft queue. Only the front entry is in progress; it finishes at
+    /// <c>activeCompleteUtc</c> (ISO 8601 "O", same timed-effect pattern as research). Logic: <see cref="CraftQueue"/>.
+    /// </summary>
+    [Serializable]
+    public class CraftQueueSaveData
+    {
+        public List<CraftQueueEntry> entries = new();
+        public string activeCompleteUtc      = "";
     }
 
     [Serializable]
@@ -175,6 +203,7 @@ namespace MobileIdleBuilder
         public int   rotation;        // 0-3 CW
         public bool  flipped;
         public int   outputDirection; // -1 = not a field-collector
+        public int[] portFilters;     // Filter rules [facing, itemId, …] (PortFilterRules); null = none / defaults
     }
 
     [Serializable]

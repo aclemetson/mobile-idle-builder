@@ -16,6 +16,7 @@
   <h1>Quantum Foundry — <span>Gameplay Loop</span></h1>
   <nav class="tabs">
     <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="timing">Tutorial Timing</button>
     <button class="tab" data-tab="dialogue">Dialogue Flow</button>
     <button class="tab" data-tab="gaps">Design Gaps <span id="gap-badge" class="gap-badge"></span></button>
     <button class="tab" data-tab="balance">Balance &amp; Progression</button>
@@ -187,6 +188,39 @@
   </div>
 
   <div id="overview-phases"></div><!-- populated by renderOverviewTab() -->
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TUTORIAL TIMING ══ -->
+<div id="timing" class="tab-content">
+
+  <div class="callout">
+    <h3>Tutorial Timing: current 69-step flow</h3>
+    <p style="font-size:12px;color:#8b949e;">What a first-time player does at each step of <code>game_data.json</code> <code>tutorial_steps</code>, and about how long it takes. The Overview tab still shows the older 50-step design.</p>
+    <ul style="font-size:12px;color:#8b949e;margin:8px 0 0 18px;line-height:1.6;">
+      <li><strong>Read</strong>: dialogue at 15 characters/s plus 1 s per line (a hint-only step costs 3 s).</li>
+      <li><strong>Do</strong>: taps (1.5 s field recharge; random quark flavour), building and belt placement, and research timers (<code>duration_seconds</code>).</li>
+      <li><strong>Wait for e</strong>: simulated. The balance starts at 250e, earns the phase's passive rate every second, and a step waits when its cost is above the balance. Rates are from production data: 0.8 e/s electrons (measured 0.6–0.8), 2.5 e/s once Protons or Hydrogen sell (one Up Quark Harvester gives 0.5 Protons/s), and 3 e/s after the neutron line. No building upgrades are assumed.</li>
+      <li><strong>AI median</strong>: measured time in that step across the active-grinder playtests (<code>Playtests/benchmarks/</code>, 2026-10-22/23). The AI skips dialogue, so compare it with "skip dialogue" on. No run got past step 44.</li>
+    </ul>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin-top:12px;">
+      <label class="bal-scalar-label">Income multiplier <input type="number" class="bal-input" id="tt-income" value="1" step="0.5" min="0.5" max="20"></label>
+      <label class="bal-scalar-label"><input type="checkbox" id="tt-skip"> Player skips dialogue</label>
+    </div>
+    <div class="item-grid" style="margin-top:12px;">
+      <span class="item-chip">To first automation (33): <span class="val" id="tt-to-auto">—</span></span>
+      <span class="item-chip">To hydrogen loop (47): <span class="val" id="tt-to-hydrogen">—</span></span>
+      <span class="item-chip">To first Helium (59): <span class="val" id="tt-to-uranium">—</span></span>
+      <span class="item-chip">Whole tutorial (79): <span class="val" id="tt-total">—</span></span>
+    </div>
+  </div>
+
+  <div class="callout" style="border-left-color:#f0883e;">
+    <h3 style="color:#f0883e;">Pacing findings</h3>
+    <ul id="timing-findings" style="font-size:12px;color:#c9d1d9;margin-left:18px;line-height:1.6;"></ul><!-- populated by renderTutorialTimingTab() -->
+  </div>
+
+  <div id="timing-phases"></div><!-- populated by renderTutorialTimingTab() -->
 
 </div>
 

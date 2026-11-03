@@ -156,6 +156,14 @@ namespace MobileIdleBuilder
             IsLoaded = true;
             GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
 
+            // Session login tick. This is the only point that is both once-per-session and late
+            // enough to count: SaveManager.Current is final (cloud reconcile awaited above), and
+            // DailyEventService.Start()/EnsureToday() has already rolled today's challenges — its
+            // Accumulate() bails while _todaysChallengeIds is empty, so an earlier hook would
+            // silently drop dc_login. Idempotent: the challenge caps at its target and completed
+            // achievements are skipped, and pre-first-prestige the achievement half is dormant.
+            AchievementService.Instance?.NotifyLogin();
+
             if (_pendingIdleResult != null)
             {
                 FindAnyObjectByType<HUDController>()?.ShowIdleReturn(_pendingIdleResult);
@@ -372,6 +380,42 @@ namespace MobileIdleBuilder
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
+        /// <summary>Removed tutorial step id -> the step a save on it resumes at.</summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, string> RetiredSteps = new()
+        {
+            // The 1,000 entropy Atom Generator speed upgrade stalled the early game.
+            { "intro_building_upgrades",      "post_tutorial_intro" },
+            { "upgrade_atom_generator_speed", "post_tutorial_intro" },
+            { "upgrade_context",              "post_tutorial_intro" },
+            // #307: neutrons go to the Demon until Nucleosynthesis, then move to the Atom Generator.
+            { "route_neutrons_to_atom_gen",   "route_neutrons_to_demon" },
+            // Deuterium now feeds the first reactor; Helium goes reactor to reactor later.
+            { "route_helium_to_reactor",      "route_deuterium_to_reactor" },
+            // #275: the tutorial now ends at the first Carbon from fusion. Heavy elements, isotopes and
+            // radioactive isotopes came between Helium and Fusion, so those saves resume at Fusion.
+            { "buy_heavy_elements",            "intro_nuclear_reactors" },
+            { "heavy_elements_unlocked",       "intro_nuclear_reactors" },
+            { "craft_first_uranium",           "intro_nuclear_reactors" },
+            { "uranium_crafted",               "intro_nuclear_reactors" },
+            { "buy_isotope_engineering",       "intro_nuclear_reactors" },
+            { "isotopes_unlocked",             "intro_nuclear_reactors" },
+            { "place_isotopic_manipulator",    "intro_nuclear_reactors" },
+            { "craft_first_isotope",           "intro_nuclear_reactors" },
+            { "isotope_crafted",               "intro_nuclear_reactors" },
+            { "buy_radioactive_isotopes",      "intro_nuclear_reactors" },
+            { "radioactive_isotopes_unlocked", "intro_nuclear_reactors" },
+            { "place_radioactive_containment", "intro_nuclear_reactors" },
+            { "craft_uranium_235",             "intro_nuclear_reactors" },
+            { "uranium_235_crafted",           "intro_nuclear_reactors" },
+            { "collect_alpha_particle",        "intro_nuclear_reactors" },
+            { "particles_loop_complete",       "intro_nuclear_reactors" },
+            // Fission came after Fusion; those players have built a reactor, so they get the last line.
+            { "buy_fissile_extraction",        "tutorial_complete" },
+            { "buy_fission_i",                 "tutorial_complete" },
+            { "place_fission_reactor",         "tutorial_complete" },
+            { "reactors_complete",             "tutorial_complete" },
+        };
+
         internal static int ResolveStepIndex(string stepId)
         {
             // Empty id is a legitimate fresh-game value — resolve to step 0 silently.
@@ -386,6 +430,12 @@ namespace MobileIdleBuilder
             }
             for (int i = 0; i < flow.steps.Length; i++)
                 if (flow.steps[i].id == stepId) return i;
+
+            // A save sitting on a step that was later removed resumes at the step that replaced it,
+            // instead of restarting the tutorial from step 0.
+            if (RetiredSteps.TryGetValue(stepId, out var successor))
+                for (int i = 0; i < flow.steps.Length; i++)
+                    if (flow.steps[i].id == successor) return i;
 
             GameLogger.Warning($"[Save] Saved tutorial step '{stepId}' not found in flow " +
                       $"({flow.steps.Length} steps) — defaulting to step 0 (id drift?).");

@@ -23,6 +23,7 @@ MonoBehaviour:
   category: 1
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 1
   isPowerSource: 0
   basePowerCostEV: 60
@@ -33,24 +34,35 @@ MonoBehaviour:
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: 3c0787a948f661f48a2ca71ec42eaeb1, type: 2}
+  - {fileID: 11400000, guid: abb0f48e8ca71864e9236f126dfd0757, type: 2}
+  - {fileID: 11400000, guid: 17d7d7b689e473148b2704c6cacd77fb, type: 2}
+  - {fileID: 11400000, guid: a54f7fcb06142054b82a8e9a98330546, type: 2}
+  - {fileID: 11400000, guid: 0cf01bbff6d29394994b1219829584d4, type: 2}
+  - {fileID: 11400000, guid: 7d89bfccfbbc9374786b95bb9d727b4e, type: 2}
+  - {fileID: 11400000, guid: b1ba269b0d4ff7e419531923e86102cd, type: 2}
   - {fileID: 11400000, guid: 81d3e11de48055f4386e1eaa2dee8aff, type: 2}
-  inputSlotCount: 2
+  - {fileID: 11400000, guid: 7f46442546b09714fa1b2ecc7999c5ad, type: 2}
+  - {fileID: 11400000, guid: f17c23f834f9cba4c9a898442d81fba9, type: 2}
+  inputSlotCount: 1
   inputSlotLabels:
   - Fissile
-  - Neutron
   isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 1
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
   structureKind: 0
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
-  - portType: 0
+    localFacing: 1
+  - portType: 1
+    localCell: {x: 0, y: 0}
+    localFacing: 0
+  - portType: 1
     localCell: {x: 0, y: 0}
     localFacing: 1
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 2
   - portType: 1
     localCell: {x: 0, y: 0}
     localFacing: 2
@@ -58,7 +70,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields: []
   entropyCost: 5000
-  baseMaxOutputItems: 20
+  baseMaxOutputItems: 30
   baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2

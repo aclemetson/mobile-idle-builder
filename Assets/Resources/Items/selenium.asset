@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Selenium (Se), element number 34 with mass number 80. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 27971456
+  baseSellValue: 49600
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -31,8 +31,11 @@ MonoBehaviour:
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: Radon (Rn), element number 86 with mass number 222. A fission fragment
-    on the long descent from the heavy actinides back toward iron.
+  codexEntry: 'Radon (Rn), element number 86 with mass number 222. A fission fragment
+    on the long descent from the heavy actinides back toward iron. Decays: alpha
+    decay turns it into Polonium. Add a neutron for Radon-223 (decays into Francium),
+    or remove eleven for Radon-211 (decays into Astatine).'
   codexUnlocked: 0
-  baseSellValue: 245
+  baseSellValue: 25100
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

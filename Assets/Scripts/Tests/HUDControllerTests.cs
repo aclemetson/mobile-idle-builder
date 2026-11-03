@@ -342,5 +342,15 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(banner.ClassListContains("notification-banner--warning"));
             Assert.IsFalse(banner.ClassListContains("notification-banner--danger"));
         }
+
+        // ── Build menu cost column (#197) ────────────────────────────────────
+
+        [Test]
+        public void FormatBuildCost_ZeroIsFree()
+            => Assert.AreEqual("Free", HUDController.FormatBuildCost(0));
+
+        [Test]
+        public void FormatBuildCost_PositiveShowsEntropy()
+            => Assert.AreEqual($"◈ {1500:N0}", HUDController.FormatBuildCost(1500));
     }
 }

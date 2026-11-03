@@ -179,7 +179,7 @@ namespace MobileIdleBuilder
             if (boostActive && !string.IsNullOrEmpty(expiryUtc))
             {
                 var expiry    = DateTime.Parse(expiryUtc, null, System.Globalization.DateTimeStyles.RoundtripKind);
-                var remaining = expiry - DateTime.UtcNow;
+                var remaining = expiry - GameClock.UtcNow;
                 _contextLabel.text = $"ACTIVE: {FormatDuration(remaining)} remaining";
             }
             else

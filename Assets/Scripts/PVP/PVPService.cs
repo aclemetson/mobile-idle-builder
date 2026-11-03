@@ -90,7 +90,7 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
-            var now = DateTime.UtcNow;
+            var now = GameClock.UtcNow;
             save.pvpRun.state          = "InRun";
             save.pvpRun.runStartUtc    = now.ToString("o");
             save.pvpRun.runEndUtc      = now.AddHours(RunDurationHours).ToString("o");
@@ -204,7 +204,7 @@ namespace MobileIdleBuilder
                 save.pvpRun.runEndUtc, null,
                 System.Globalization.DateTimeStyles.RoundtripKind);
 
-            TimeRemaining = end - DateTime.UtcNow;
+            TimeRemaining = end - GameClock.UtcNow;
             if (TimeRemaining < TimeSpan.Zero) TimeRemaining = TimeSpan.Zero;
         }
 

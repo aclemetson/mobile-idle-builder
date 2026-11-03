@@ -13,15 +13,13 @@ MonoBehaviour:
   m_Name: fission_pu239
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_pu239
-  displayName: Fission Pu-239
+  displayName: 'Split Plutonium: Xenon + Zirconium'
   recipeId: 161
   tier: 2
   category: 9
   inputs:
   - item: {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
-    quantity: 1
-  - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
-    quantity: 1
+    quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 00df9c08ff2c3a14fb5a89c4160c0cb9, type: 2}
   outputQuantity: 1
@@ -30,16 +28,18 @@ MonoBehaviour:
     quantity: 1
   - item: {fileID: 11400000, guid: 8bde997a9b14cda45a30e033c4d1626c, type: 2}
     quantity: 2
-  baseCraftTime: 10
-  manualCraftTime: 10
+  baseCraftTime: 20
+  manualCraftTime: 20
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 240
+  fixedPowerCostEV: 200
   validBuildings:
   - {fileID: 11400000, guid: e4346b137e117ed4a80e2d84116dc0f8, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: Second fragment (zirconium) + neutrons are authored as byproducts
-    but not emitted until byproduct support lands.
+  isSimplified: 1
+  simplificationNote: Harvested Plutonium skips enrichment, so a split takes two.
+    A fissile nucleus absorbs a neutron and splits into two lighter ones, releasing
+    about three neutrons; one keeps the chain going, the other two come out. The
+    two fragments' protons always add up to the parent's.

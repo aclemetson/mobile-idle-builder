@@ -30,6 +30,7 @@ namespace MobileIdleBuilder
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
+            long escapedEntropy = 0;
 
             // Global production multipliers from the megastructure (1 = no bonus when the singleton is absent,
             // e.g. in tests that never bake it).
@@ -129,15 +130,38 @@ namespace MobileIdleBuilder
                         ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                         : 1f;
                     outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
+                    // Optional buffer: only entities built with the current archetype carry it, and a
+                    // missing one must never stop production — so probe rather than widen the query.
+                    bool logCrafts = SystemAPI.HasBuffer<CraftedOutputEvent>(entity);
+                    var crafted = logCrafts
+                        ? SystemAPI.GetBuffer<CraftedOutputEvent>(entity)
+                        : default;
+
                     for (int i = 0; i < outputs.Length; i++)
                     {
                         int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
                         SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
+
+                        // Record the craft where it happens. Diffing output-buffer totals downstream
+                        // loses any craft a conveyor drains before the bridge samples it.
+                        if (logCrafts && qty > 0)
+                            crafted.Add(new CraftedOutputEvent { ItemID = outputs[i].ItemID, Quantity = qty });
                     }
+
+                    // Escaping byproducts (neutrinos, gamma photons) leave the building and are paid
+                    // out as entropy right away, scaled like the main output.
+                    if (process.ValueRO.ByproductEntropy > 0f)
+                        escapedEntropy += (long)(process.ValueRO.ByproductEntropy * outMult);
                 }
 
                 process.ValueRW.Progress   = 0f;
                 process.ValueRW.IsCrafting = false;
+            }
+
+            if (escapedEntropy > 0 && SystemAPI.HasSingleton<PlayerProgressData>())
+            {
+                var progress = SystemAPI.GetSingletonRW<PlayerProgressData>();
+                progress.ValueRW.BaseCurrency += escapedEntropy;
             }
         }
 

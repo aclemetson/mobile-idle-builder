@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "Assembling atoms one nucleon at a time is precise, but slow. The stars
-      found a faster way \u2014 fuse light nuclei together, or split heavy ones apart.
-      Both roads converge on iron, the most stable nucleus there is."
+    text: 'Two deuterium nuclei, pressed together hard enough, fuse into helium.
+      That is a Fusion Reactor''s whole job: join light nuclei into heavier ones,
+      climbing the ladder toward iron.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

@@ -24,13 +24,34 @@ namespace MobileIdleBuilder
 
         private int    _lastStepIndex = -1;
         private bool   _wasActive;
-        private Button _pulsingButton;
-        private Coroutine _pulseRoutine;
+        private VisualElement _pulsingButton;
+        private Coroutine     _pulseRoutine;
+
+        // Pulses pause while the player is placing in the world (found at Start; no scene wiring).
+        private ConveyorPlacementController _conveyorController;
+        private BuildingPlacementController _placementController;
+
+        // Hint text held back while a step's dialogue is on screen, revealed when the
+        // dialogue closes so the hint bar and dialogue panel never stack at the bottom.
+        private string _pendingHintText;
+
+        // A deferred hint waits this long after its dialogue closes. Acting on the hint often opens
+        // the next step's dialogue within a second, which hid a just-revealed hint again: the bar
+        // flashed up from the bottom edge and vanished before it could be read (#238).
+        internal const float HintRevealDelaySeconds = 2f;
+        private Coroutine _hintReveal;
 
         private EntityQuery _tutorialQuery;
         private bool        _queryReady;
         private EntityQuery _powerGridQuery;
         private bool        _powerQueryReady;
+        private EntityQuery _inventoryQuery;
+        private bool        _inventoryQueryReady;
+        private string      _lastHintProgress;
+        private float       _nextHintProgressAt;
+
+        // Collect taps are human-paced; refreshing the counts a few times a second avoids a string per frame.
+        private const float HintProgressInterval = 0.2f;
 
         void Start()
         {
@@ -44,12 +65,18 @@ namespace MobileIdleBuilder
             if (hudController == null)
                 hudController = FindAnyObjectByType<HUDController>();
 
+            _conveyorController  = FindAnyObjectByType<ConveyorPlacementController>();
+            _placementController = FindAnyObjectByType<BuildingPlacementController>();
+            if (_conveyorController != null) _conveyorController.OnStartChanged += OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced += OnBuildingPlacedHandler;
+
             if (hudController != null)
             {
                 hudController.OnDrawerOpened        += OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened += OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   += OnRecipePanelOpenedHandler;
                 hudController.OnConveyorPlaced      += OnConveyorPlacedHandler;
+                hudController.OnBuildingRecipeSet   += OnBuildingRecipeSetHandler;
             }
 
             if (maxwellsDemon == null)
@@ -72,6 +99,11 @@ namespace MobileIdleBuilder
                 _powerGridQuery = world.EntityManager.CreateEntityQuery(
                     ComponentType.ReadOnly<PowerGridState>());
                 _powerQueryReady = true;
+
+                _inventoryQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerInventoryTag>(),
+                    ComponentType.ReadOnly<InventorySlot>());
+                _inventoryQueryReady = true;
             }
         }
 
@@ -84,12 +116,16 @@ namespace MobileIdleBuilder
                 dialogueController.OnActionTriggered    -= OnActionTriggered;
             }
 
+            if (_conveyorController != null) _conveyorController.OnStartChanged -= OnConveyorStartChanged;
+            if (_placementController != null) _placementController.OnBuildingPlaced -= OnBuildingPlacedHandler;
+
             if (hudController != null)
             {
                 hudController.OnDrawerOpened        -= OnDrawerOpenedHandler;
                 hudController.OnResearchPanelOpened -= OnResearchPanelOpened;
                 hudController.OnRecipePanelOpened   -= OnRecipePanelOpenedHandler;
                 hudController.OnConveyorPlaced      -= OnConveyorPlacedHandler;
+                hudController.OnBuildingRecipeSet   -= OnBuildingRecipeSetHandler;
             }
 
             if (maxwellsDemon != null)
@@ -124,6 +160,8 @@ namespace MobileIdleBuilder
                 if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
                     hudController?.HideTutorialHint();
                 dialogueController?.HideDialogue();
+                _lastHintProgress = null;
+                hudController?.SetTutorialHintProgress(null);
                 return;
             }
 
@@ -142,11 +180,42 @@ namespace MobileIdleBuilder
                     return; // advanced — OnStepChanged already ran
             }
 
-            if (state.CurrentStepIndex == _lastStepIndex) return;
+            bool stepChanged = state.CurrentStepIndex != _lastStepIndex;
+            if (stepChanged)
+            {
+                int prevIdx = _lastStepIndex;
+                _lastStepIndex = state.CurrentStepIndex;
+                OnStepChanged(state.CurrentStepIndex, prevIdx);
+            }
 
-            int prevIdx = _lastStepIndex;
-            _lastStepIndex = state.CurrentStepIndex;
-            OnStepChanged(state.CurrentStepIndex, prevIdx);
+            if (stepChanged || Time.unscaledTime >= _nextHintProgressAt)
+            {
+                _nextHintProgressAt = Time.unscaledTime + HintProgressInterval;
+                RefreshHintProgress(state.CurrentStepIndex);
+            }
+        }
+
+        /// <summary>
+        /// Keeps the have/need line under the hint current for gather (InventoryMin) steps (#260). Pushed
+        /// to the banner only when the text changes; the banner keeps it hidden while the hint is.
+        /// </summary>
+        private void RefreshHintProgress(int stepIndex)
+        {
+            string progress = null;
+            var flow = TutorialFlowSO.Current;
+            if (flow != null && stepIndex < flow.steps.Length && _inventoryQueryReady
+                && _inventoryQuery.CalculateEntityCount() == 1)
+            {
+                var inv = _inventoryQuery.GetSingletonBuffer<InventorySlot>(true);
+                progress = TutorialHintProgress.Format(
+                    flow.steps[stepIndex].advanceCondition,
+                    id => SlotBufferUtils.CountInInventory(inv, id),
+                    id => ItemDatabase.GetStatic(id)?.displayName);
+            }
+
+            if (progress == _lastHintProgress) return;
+            _lastHintProgress = progress;
+            hudController?.SetTutorialHintProgress(progress);
         }
 
         // ── Step entry ────────────────────────────────────────────────────────
@@ -156,6 +225,8 @@ namespace MobileIdleBuilder
             StopPulseRoutine();
             tutorialHighlighter?.ClearHighlight();
             hudController?.HideTutorialHint();
+            _pendingHintText = null;
+            CancelHintReveal();
 
             // Checkpoint: persist the new step immediately rather than waiting for auto-save.
             SaveManager.Instance?.SaveLocal();
@@ -176,8 +247,16 @@ namespace MobileIdleBuilder
                     hudController?.ShowNotification("→", step.hintText);
             }
 
+            // Defer the hint bar when this step also plays a dialogue, so the dialogue
+            // panel and the bottom hint bar don't cover each other. The hint is revealed
+            // by OnDialogueComplete once the dialogue box closes.
             if (!string.IsNullOrEmpty(step.hintText))
-                hudController?.ShowTutorialHint(step.hintText);
+            {
+                if (step.onEnter?.dialogue != null)
+                    _pendingHintText = step.hintText;
+                else
+                    hudController?.ShowTutorialHint(step.hintText);
+            }
 
             ApplyOnEnterActions(step.onEnter);
         }
@@ -190,7 +269,10 @@ namespace MobileIdleBuilder
 
             // Dialogue
             if (enter.dialogue != null)
+            {
+                CancelHintReveal();
                 dialogueController?.PlayDialogue(enter.dialogue);
+            }
 
             // World highlight
             switch (enter.highlightMode)
@@ -254,7 +336,38 @@ namespace MobileIdleBuilder
 
         // ── Dialogue event handlers ───────────────────────────────────────────
 
-        private void OnDialogueComplete() => TryAdvanceOnUiEvent("dialogue_complete");
+        private void OnDialogueComplete()
+        {
+            int stepBefore = _lastStepIndex;
+            TryAdvanceOnUiEvent("dialogue_complete");
+
+            // If the dialogue was contextual (this step advances on something other than
+            // dialogue_complete), the step index is unchanged. Now that the dialogue box
+            // has closed, reveal the hint we deferred in OnStepChanged.
+            if (_lastStepIndex == stepBefore && !string.IsNullOrEmpty(_pendingHintText))
+            {
+                CancelHintReveal();
+                _hintReveal = StartCoroutine(RevealHintAfterDelay(_pendingHintText));
+                _pendingHintText = null;
+            }
+        }
+
+        private IEnumerator RevealHintAfterDelay(string hint)
+        {
+            yield return new WaitForSecondsRealtime(HintRevealDelaySeconds);
+            _hintReveal = null;
+            // Another dialogue (the next step's, or a site/world one) may be up by now; its own
+            // completion reveals that step's hint instead.
+            if (dialogueController != null && dialogueController.IsPlaying) yield break;
+            hudController?.ShowTutorialHint(hint);
+        }
+
+        private void CancelHintReveal()
+        {
+            if (_hintReveal == null) return;
+            StopCoroutine(_hintReveal);
+            _hintReveal = null;
+        }
 
         private void OnHighlightRequested(string target)
         {
@@ -303,15 +416,119 @@ namespace MobileIdleBuilder
         private void OnDrawerOpenedHandler()        => TryAdvanceOnUiEvent("drawer_opened");
         private void OnResearchPanelOpened()         => TryAdvanceOnUiEvent("research_panel_opened");
         private void OnRecipePanelOpenedHandler()    => TryAdvanceOnUiEvent("recipe_panel_opened");
-        private void OnConveyorPlacedHandler()       => TryAdvanceOnUiEvent("conveyor_placed");
+        private void OnConveyorPlacedHandler()
+        {
+            TryAdvanceOnUiEvent("conveyor_placed");
+            NoteBeltPlaced();
+        }
+
+        // ── Belt feedback (#255) ──────────────────────────────────────────────
+
+        // One line in the notification banner, which does not wrap: keep it short.
+        internal const string UnlinkedBeltMessage = "Belt not linked. Draw it between the two glowing tiles.";
+
+        // The new belt reaches ECS and TutorialSystem a few frames after the chain is placed.
+        private const float BeltCheckDelaySeconds = 0.5f;
+        private Coroutine _beltCheck;
+
+        // Link count when the open chain's first segment was placed; -1 when no chain is open.
+        private int _chainLinksBefore = -1;
+        private int _chainStepIndex   = -1;
 
         /// <summary>
-        /// Called by the building upgrade UI when the player purchases a speed upgrade on the
-        /// Atom Generator (atomic_assembler). Advances the tutorial step waiting on
-        /// "atom_generator_speed_upgraded".
+        /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
+        /// word why. Each confirm auto-chains from the segment's end, so a route is often drawn in several
+        /// segments: remember the count before the first one and judge the whole chain once it ends.
         /// </summary>
-        public void NotifyAtomGeneratorSpeedUpgraded() =>
-            TryAdvanceOnUiEvent("atom_generator_speed_upgraded");
+        private void NoteBeltPlaced()
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            if (flow.steps[_lastStepIndex].advanceCondition?.type != ConditionType.ConveyorLinked) return;
+
+            if (_chainStepIndex != _lastStepIndex)
+            {
+                _chainStepIndex   = _lastStepIndex;
+                _chainLinksBefore = TutorialSystem.CurrentStepConveyorLinks;
+            }
+            if (_conveyorController == null || !_conveyorController.HasStart) EndBeltChain();
+        }
+
+        // The start drops when the player taps New, leaves belt mode, or placed a single belt.
+        private void OnConveyorStartChanged(bool hasStart)
+        {
+            if (!hasStart) EndBeltChain();
+        }
+
+        /// <summary>Warns, and re-shows the glowing route, when the chain that just ended linked nothing new.</summary>
+        private void EndBeltChain()
+        {
+            if (_chainStepIndex < 0) return;
+            int stepIndex = _chainStepIndex, linksBefore = _chainLinksBefore;
+            _chainStepIndex   = -1;
+            _chainLinksBefore = -1;
+
+            if (_beltCheck != null) StopCoroutine(_beltCheck);
+            _beltCheck = StartCoroutine(WarnIfBeltUnlinked(stepIndex, linksBefore));
+        }
+
+        private IEnumerator WarnIfBeltUnlinked(int stepIndex, int linksBefore)
+        {
+            yield return new WaitForSecondsRealtime(BeltCheckDelaySeconds);
+            _beltCheck = null;
+
+            int linksAfter = TutorialSystem.CurrentStepConveyorLinks;
+            if (!IsBeltUnlinked(stepAdvanced: _lastStepIndex != stepIndex, linksBefore, linksAfter)) yield break;
+
+            InventoryPopupController.NotifyWarning(UnlinkedBeltMessage);
+            var enter = TutorialFlowSO.Current?.steps[stepIndex].onEnter;
+            if (enter != null && enter.highlightMode == HighlightMode.Full && !string.IsNullOrEmpty(enter.highlightTarget))
+                tutorialHighlighter?.ShowHighlight(enter.highlightTarget);
+        }
+
+        /// <summary>
+        /// True when a belt placed on a ConveyorLinked step linked nothing new: the step did not advance and
+        /// the link count did not rise. A count of -1 means the step is no longer being evaluated.
+        /// </summary>
+        internal static bool IsBeltUnlinked(bool stepAdvanced, int linksBefore, int linksAfter) =>
+            !stepAdvanced && linksAfter >= 0 && linksAfter <= Mathf.Max(0, linksBefore);
+        // ── Placement glow (#308) ─────────────────────────────────────────────
+
+        // The placed building reaches ECS, GridOccupancy and TutorialSystem a few frames later.
+        private const float PlacementGlowRecheckSeconds = 0.5f;
+        private Coroutine _placementGlowRecheck;
+
+        /// <summary>
+        /// A placement glow (where to put a building) used to stay lit when the player built somewhere
+        /// else, or stay on the spot they just built on while the step waited for more. Any placement
+        /// clears it. If the step still wants a building, the glow comes back worked out fresh from the
+        /// grid as it is now, without moving the camera.
+        /// </summary>
+        private void OnBuildingPlacedHandler(BuildingPlacementController.BuildingEntry _)
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || _lastStepIndex < 0 || _lastStepIndex >= flow.steps.Length) return;
+            var enter = flow.steps[_lastStepIndex].onEnter;
+            if (enter == null || enter.highlightMode == HighlightMode.None) return;
+            if (!TutorialHighlighter.IsPlacementSuggestion(enter.highlightTarget)) return;
+
+            tutorialHighlighter?.ClearHighlight();
+            if (_placementGlowRecheck != null) StopCoroutine(_placementGlowRecheck);
+            _placementGlowRecheck = StartCoroutine(ReshowPlacementGlow(_lastStepIndex, enter.highlightTarget));
+        }
+
+        private IEnumerator ReshowPlacementGlow(int stepIndex, string target)
+        {
+            yield return new WaitForSecondsRealtime(PlacementGlowRecheckSeconds);
+            _placementGlowRecheck = null;
+            // Advanced: OnStepChanged already showed the next step's guidance.
+            if (_lastStepIndex != stepIndex || !_wasActive) yield break;
+            tutorialHighlighter?.ShowVisualOnly(target);
+        }
+
+        private void OnBuildingRecipeSetHandler()    => TryAdvanceOnUiEvent("combiner_recipe_set");
+        // The speed-upgrade step reads the Atom Generator's level (BuildingUpgradeMin, #232), so the
+        // upgrade UI needs no tutorial hook.
 
         // ── Field lock states ─────────────────────────────────────────────────
 
@@ -323,10 +540,9 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFieldLockStates(TutorialOnEnter enter)
         {
-            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var fi in allFields)
+            foreach (var fi in FieldGenerator.AllInstances)
             {
-                if (fi.Field == null) continue;
+                if (fi == null || fi.Field == null) continue;
                 bool locked;
                 if (enter.blockCollection)
                     locked = true;
@@ -340,20 +556,17 @@ namespace MobileIdleBuilder
 
         private void UnlockAllFields()
         {
-            var allFields = FindObjectsByType<FieldInstance>(FindObjectsSortMode.None);
-            foreach (var fi in allFields)
-                fi.SetLocked(false);
+            foreach (var fi in FieldGenerator.AllInstances)
+                if (fi != null) fi.SetLocked(false);
         }
 
         // ── UI helpers ────────────────────────────────────────────────────────
 
         private void StartPulseButton(string buttonId)
         {
-            if (uiDocument == null) return;
-            var btn = uiDocument.rootVisualElement.Q<Button>(buttonId);
-            if (btn == null) return;
-            _pulsingButton = btn;
-            _pulseRoutine  = StartCoroutine(PulseButton(btn));
+            if (uiDocument == null || string.IsNullOrEmpty(buttonId)) return;
+            StopPulseRoutine();
+            _pulseRoutine = StartCoroutine(PulseButton(buttonId));
         }
 
         private void StopPulseRoutine()
@@ -366,16 +579,32 @@ namespace MobileIdleBuilder
             }
         }
 
-        private IEnumerator PulseButton(Button btn)
+        /// <summary>
+        /// Pulses the next visible step towards <paramref name="buttonId"/> (drawer handle, then the
+        /// panel's button, then the target; see <see cref="TutorialPulseResolver"/>). Re-resolved each
+        /// cycle so the pulse follows the player. Paused while the player is placing a building or a
+        /// belt: the world highlight is the guide then, and the closed menu path would mislead (#202).
+        /// </summary>
+        private IEnumerator PulseButton(string buttonId)
         {
             while (true)
             {
-                btn.AddToClassList("panel-btn--highlight");
+                var el = IsPlacingInWorld()
+                    ? null
+                    : TutorialPulseResolver.Resolve(uiDocument.rootVisualElement, buttonId);
+
+                _pulsingButton = el;
+                el?.AddToClassList("panel-btn--highlight");
                 yield return new WaitForSecondsRealtime(0.7f);
-                btn.RemoveFromClassList("panel-btn--highlight");
+                el?.RemoveFromClassList("panel-btn--highlight");
+                _pulsingButton = null;
                 yield return new WaitForSecondsRealtime(0.7f);
             }
         }
+
+        private bool IsPlacingInWorld() =>
+            (_conveyorController != null && _conveyorController.IsPlacing)
+            || (_placementController != null && _placementController.IsPlacing);
 
     }
 }

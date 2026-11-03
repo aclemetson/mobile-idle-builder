@@ -56,6 +56,11 @@ namespace MobileIdleBuilder
             if (save?.unlockedResearch != null)
                 foreach (var id in save.unlockedResearch) _unlockedIds.Add(id);
 
+            // Backfill: a recipe whose research was finished before the recipe was gated on it
+            // (helium..iron in recipes.json had no requires_research) was never marked known and
+            // stayed out of the Recipes panel. MarkKnown is idempotent, so this is cheap on load.
+            foreach (var id in _unlockedIds) MarkGatedRecipesKnown(id);
+
             // Restore an in-progress research timer; complete it immediately if it already elapsed
             // while the app was closed (offline completion, mirrors the speed-boost UtcNow pattern).
             RestoreActiveTimer(save);
@@ -65,7 +70,7 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (_activeResearch == null) return;
-            if (DateTime.UtcNow >= _activeCompleteUtc)
+            if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
         }
 
@@ -105,7 +110,7 @@ namespace MobileIdleBuilder
             get
             {
                 if (_activeResearch == null) return 0;
-                double rem = (_activeCompleteUtc - DateTime.UtcNow).TotalSeconds;
+                double rem = (_activeCompleteUtc - GameClock.UtcNow).TotalSeconds;
                 return rem > 0 ? rem : 0;
             }
         }
@@ -156,7 +161,8 @@ namespace MobileIdleBuilder
         {
             if (research == null || HasActiveResearch || !CanPurchase(research)) return;
 
-            DeductEntropy(research.costBaseCurrency);
+            // Check-and-spend in one step; CanPurchase already confirmed the balance.
+            if (!EntropyWallet.TrySpend(_progressQuery, research.costBaseCurrency)) return;
             AchievementService.Instance?.NotifyEntropySpent(research.costBaseCurrency);
 
             int effective = EffectiveDurationSeconds(research);
@@ -167,7 +173,7 @@ namespace MobileIdleBuilder
             }
 
             _activeResearch    = research;
-            _activeCompleteUtc = DateTime.UtcNow.AddSeconds(effective);
+            _activeCompleteUtc = GameClock.UtcNow.AddSeconds(effective);
 
             var save = SaveManager.Instance?.Current;
             if (save != null)
@@ -226,19 +232,34 @@ namespace MobileIdleBuilder
             _activeCompleteUtc = default;
 
             // Mark any JSON recipes gated behind this research as "known" (persists across prestige)
-            if (RecipeDatabase.Instance != null)
-            {
-                foreach (var r in RecipeDatabase.Instance.Recipes)
-                {
-                    if (r.requires_research == research.id)
-                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
-                }
-            }
+            MarkGatedRecipesKnown(research.id);
 
             GameLogger.Info($"[ResearchService] Completed: {research.displayName}");
             OnResearchUnlocked?.Invoke(research);
 
             AchievementService.Instance?.NotifyResearchCompleted(research.id);
+
+            // Research is the only thing that unlocks codex entries (it is what marks recipes
+            // known, just above), so this is the one place the total can change. NotifyCodexUnlocked
+            // takes an absolute total rather than a delta, so recount instead of incrementing —
+            // Evaluate does Max(current, total), making it safe to call with an unchanged value.
+            AchievementService.Instance?.NotifyCodexUnlocked(RecipeKnowledgeService.CountCodexEntries());
+        }
+
+        private static void MarkGatedRecipesKnown(string researchId)
+        {
+            var knowledge = RecipeKnowledgeService.Instance;
+            if (knowledge == null || RecipeDatabase.Instance?.Recipes == null) return;
+            foreach (var id in RecipesGatedBy(RecipeDatabase.Instance.Recipes, researchId))
+                knowledge.MarkKnown(id);
+        }
+
+        /// <summary>Ids of the JSON recipes that <paramref name="researchId"/> unlocks.</summary>
+        internal static IEnumerable<string> RecipesGatedBy(IEnumerable<RecipeJson> recipes, string researchId)
+        {
+            foreach (var r in recipes)
+                if (r != null && !string.IsNullOrEmpty(researchId) && r.requires_research == researchId)
+                    yield return r.id;
         }
 
         /// <summary>Loads the persisted active-timer state into the cached fields (no completion).</summary>
@@ -262,7 +283,7 @@ namespace MobileIdleBuilder
         public void ProcessActiveTimer()
         {
             if (_activeResearch == null) return;
-            if (DateTime.UtcNow >= _activeCompleteUtc)
+            if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
         }
 
@@ -298,10 +319,7 @@ namespace MobileIdleBuilder
                 _activeCompleteUtc = default;
             }
 
-            if (RecipeDatabase.Instance != null)
-                foreach (var r in RecipeDatabase.Instance.Recipes)
-                    if (r.requires_research == researchId)
-                        RecipeKnowledgeService.Instance?.MarkKnown(r.id);
+            MarkGatedRecipesKnown(researchId);
 
             var so = FindResearch(researchId);
             if (so != null)
@@ -331,20 +349,6 @@ namespace MobileIdleBuilder
         private ResearchSO FindResearch(string id) =>
             _allResearch == null ? null : System.Array.Find(_allResearch, r => r != null && r.id == id);
 
-        private long GetCurrentEntropy()
-        {
-            if (_progressQuery.IsEmpty) return 0;
-            return _progressQuery.GetSingleton<PlayerProgressData>().BaseCurrency;
-        }
-
-        private void DeductEntropy(int amount)
-        {
-            if (_progressQuery.IsEmpty) return;
-            var progress = _progressQuery.GetSingleton<PlayerProgressData>();
-            long actual = Math.Min(amount, progress.BaseCurrency);
-            progress.BaseCurrency      -= actual;
-            progress.TotalEntropySpent += actual;
-            _progressQuery.SetSingleton(progress);
-        }
+        private long GetCurrentEntropy() => EntropyWallet.Balance(_progressQuery);
     }
 }

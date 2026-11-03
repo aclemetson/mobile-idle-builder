@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Terbium (Tb), element number 65 with mass number 159. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 27036
+  baseSellValue: 148000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

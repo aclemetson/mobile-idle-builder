@@ -57,6 +57,8 @@ namespace MobileIdleBuilder
         private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
         void Awake()  => BuildGrid();
+        void OnEnable()  => GridOccupancy.ConveyorCellChanged += RestoreCell;
+        void OnDisable() => GridOccupancy.ConveyorCellChanged -= RestoreCell;
         void Start()
         {
             // Skip if CameraController is driving the camera (it initialises its own position)
@@ -402,6 +404,22 @@ namespace MobileIdleBuilder
         public void SetTutorialHighlightRect(int x, int y, int w = 1, int h = 1)
         {
             ClearTutorialHighlightCell();
+            for (int dx = 0; dx < w; dx++)
+            for (int dy = 0; dy < h; dy++)
+            {
+                int cx = x + dx, cy = y + dy;
+                if (!IsInBounds(cx, cy)) continue;
+                SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), tutorialHighlightColor);
+                _tutorialHighlightCells.Add(new Vector2Int(cx, cy));
+            }
+        }
+
+        /// <summary>
+        /// Adds a rect to the active tutorial highlight without clearing it (e.g. a belt's start and
+        /// end tiles, #202).
+        /// </summary>
+        public void AddTutorialHighlightRect(int x, int y, int w = 1, int h = 1)
+        {
             for (int dx = 0; dx < w; dx++)
             for (int dy = 0; dy < h; dy++)
             {

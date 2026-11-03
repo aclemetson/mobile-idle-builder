@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: A reactive monomer poised to link into long polymer chains. The bridge
     between small organics and macromolecular matter.
   codexUnlocked: 0
-  baseSellValue: 12000000
+  baseSellValue: 752000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

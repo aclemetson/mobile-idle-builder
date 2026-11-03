@@ -20,6 +20,16 @@ namespace MobileIdleBuilder
 
         private VisualElement _tutorialHintBanner;
         private Label         _tutorialHintMessage;
+        private Label         _tutorialHintProgress;
+        private Button        _tutorialHintRestore;
+        private string        _tutorialHintText;
+        private bool          _tutorialHintShown;
+        private bool          _tutorialHintMinimized;
+        private bool          _menuOpen;             // the left drawer is open: the hint must not cover its rows
+        private bool          _autoMinimized;        // the menu, not the player, collapsed the hint
+
+        /// <summary>True while a hint is active but collapsed to the "Show hint" pill.</summary>
+        public bool IsTutorialHintMinimized => _tutorialHintShown && _tutorialHintMinimized;
 
         private VisualElement _fieldBanner;
         private Label         _fieldBannerName;
@@ -32,7 +42,14 @@ namespace MobileIdleBuilder
             _notificationMessage = root.Q<Label>("notification-banner__message");
 
             _tutorialHintBanner  = root.Q("tutorial-hint-banner");
-            _tutorialHintMessage = root.Q<Label>("tutorial-hint-banner__message");
+            _tutorialHintMessage  = root.Q<Label>("tutorial-hint-banner__message");
+            _tutorialHintProgress = root.Q<Label>("tutorial-hint-banner__progress");
+            _tutorialHintRestore = root.Q<Button>("tutorial-hint-restore");
+
+            var minimize = root.Q<Button>("tutorial-hint-banner__minimize");
+            if (minimize != null)             minimize.clicked             += MinimizeTutorialHint;
+            if (_tutorialHintRestore != null) _tutorialHintRestore.clicked += RestoreTutorialHint;
+            ApplyTutorialHintVisibility();
 
             _fieldBanner     = root.Q("field-proximity-banner");
             _fieldBannerName = root.Q<Label>("field-proximity-banner__name");
@@ -105,19 +122,87 @@ namespace MobileIdleBuilder
             HUDController.SetElementVisible(_fieldBanner, true);
         }
 
-        public void HideFieldBanner() => HUDController.SetElementVisible(_fieldBanner, false);
+        public void HideFieldBanner()
+        {
+            HUDController.SetElementVisible(_fieldBanner, false);
+        }
 
         // ── Tutorial hint banner ─────────────────────────────────────────────
 
         /// <summary>
         /// Shows a persistent tutorial hint. Stays visible until HideTutorialHint is called.
+        /// The player can minimize it to a "Show hint" pill so it stops covering menus; a
+        /// hint with different text (a new tutorial step) re-expands so new guidance is seen.
         /// </summary>
         public void ShowTutorialHint(string message)
         {
+            if (message != _tutorialHintText)
+            {
+                _tutorialHintMinimized = _menuOpen;
+                _autoMinimized         = _menuOpen;
+            }
+            _tutorialHintText  = message;
+            _tutorialHintShown = true;
             if (_tutorialHintMessage != null) _tutorialHintMessage.text = message;
-            HUDController.SetElementVisible(_tutorialHintBanner, true);
+            ApplyTutorialHintVisibility();
         }
 
-        public void HideTutorialHint() => HUDController.SetElementVisible(_tutorialHintBanner, false);
+        public void HideTutorialHint()
+        {
+            _tutorialHintShown = false;
+            ApplyTutorialHintVisibility();
+        }
+
+        /// <summary>
+        /// Sets the small have/need line under the hint (null or empty hides it). Unlike a new hint text,
+        /// this never re-expands a minimized hint: it changes on every collect tap.
+        /// </summary>
+        public void SetTutorialHintProgress(string progress)
+        {
+            if (_tutorialHintProgress == null) return;
+            bool show = !string.IsNullOrEmpty(progress);
+            _tutorialHintProgress.text = show ? progress : "";
+            HUDController.SetElementVisible(_tutorialHintProgress, show);
+        }
+
+        public void MinimizeTutorialHint()
+        {
+            _tutorialHintMinimized = true;
+            ApplyTutorialHintVisibility();
+        }
+
+        public void RestoreTutorialHint()
+        {
+            _tutorialHintMinimized = false;
+            _autoMinimized         = false;
+            ApplyTutorialHintVisibility();
+        }
+
+        /// <summary>
+        /// Collapses the hint to its "Show hint" pill (bottom-right) while the left drawer is open, because
+        /// the full-width banner sits on the drawer's bottom rows and hides their Place buttons. Expands it
+        /// again when the drawer closes, unless the player had already minimized it.
+        /// </summary>
+        public void SetMenuOpen(bool open)
+        {
+            _menuOpen = open;
+            if (open && _tutorialHintShown && !_tutorialHintMinimized)
+            {
+                _tutorialHintMinimized = true;
+                _autoMinimized         = true;
+            }
+            else if (!open && _autoMinimized)
+            {
+                _tutorialHintMinimized = false;
+                _autoMinimized         = false;
+            }
+            ApplyTutorialHintVisibility();
+        }
+
+        private void ApplyTutorialHintVisibility()
+        {
+            HUDController.SetElementVisible(_tutorialHintBanner,  _tutorialHintShown && !_tutorialHintMinimized);
+            HUDController.SetElementVisible(_tutorialHintRestore, _tutorialHintShown &&  _tutorialHintMinimized);
+        }
     }
 }

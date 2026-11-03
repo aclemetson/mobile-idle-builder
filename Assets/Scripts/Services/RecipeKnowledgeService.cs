@@ -36,7 +36,7 @@ namespace MobileIdleBuilder
         internal static IRecipeKnowledgeService OverrideForTests;
         internal static IRecipeKnowledgeService Current => OverrideForTests ?? Instance;
 
-        const string FileName = "recipe_knowledge.json";
+        internal const string FileName = "recipe_knowledge.json";
 
         [SerializeField] private TextAsset _defaultKnowledgeAsset;
 
@@ -49,10 +49,22 @@ namespace MobileIdleBuilder
         {
             base.Awake();
             if (Instance != this) return;
-            _filePath = Path.Combine(Application.persistentDataPath, FileName);
+            _filePath = Path.Combine(LocalSaveService.SaveDirectory, FileName);
         }
 
         void Start()
+        {
+            Load();
+            SyncWithRecipeDatabase();
+        }
+
+        /// <summary>
+        /// Re-reads knowledge from disk, falling back to the default asset when the file is gone.
+        /// This service survives scene loads, so a save wipe must reset it explicitly — otherwise it
+        /// keeps the old run's unlocks in memory and writes them straight back out on the next
+        /// MarkKnown(), resurrecting the file the wipe just deleted.
+        /// </summary>
+        public void ResetInMemory()
         {
             Load();
             SyncWithRecipeDatabase();
@@ -69,6 +81,42 @@ namespace MobileIdleBuilder
             var entry = FindEntry(recipeId);
             return entry != null && entry.previous_research;
         }
+
+        /// <summary>
+        /// Number of codex entries the player has unlocked — i.e. the count of DISTINCT output
+        /// items across all known recipes, which is exactly the row count
+        /// <c>HUDController.BuildCodexList</c> renders.
+        ///
+        /// Deliberately not a known-recipe count: several recipes can produce the same item, so
+        /// counting recipes would over-report and let "Unlock 10 codex entries" complete while the
+        /// panel still shows fewer than 10 rows.
+        ///
+        /// Note this is the *implemented* codex ("items whose recipe you know"), which diverges from
+        /// the originally designed one ("items you have crafted") — <c>SaveData.codex</c> and
+        /// <c>ItemSO.codexUnlocked</c> are both dead and never written. The panel is the source of
+        /// truth, so the achievement matches the panel.
+        ///
+        /// Takes its inputs explicitly so the counting rule is unit-testable without the
+        /// RecipeDatabase / RecipeKnowledgeService singletons.
+        /// </summary>
+        internal static int CountCodexEntries(IReadOnlyList<RecipeJson> recipes,
+                                              IRecipeKnowledgeService knowledge)
+        {
+            if (recipes == null || knowledge == null) return 0;
+
+            var seen = new HashSet<int>();
+            foreach (var recipe in recipes)
+            {
+                if (recipe == null || !knowledge.IsKnown(recipe.id)) continue;
+                var item = recipe.output != null ? ItemDatabase.GetStatic(recipe.output.id) : null;
+                if (item != null) seen.Add(item.itemId);
+            }
+            return seen.Count;
+        }
+
+        /// <summary>Live-database overload of <see cref="CountCodexEntries"/>.</summary>
+        public static int CountCodexEntries() =>
+            CountCodexEntries(RecipeDatabase.Instance?.Recipes, Current);
 
         // ── Mutation ─────────────────────────────────────────────────────────
 

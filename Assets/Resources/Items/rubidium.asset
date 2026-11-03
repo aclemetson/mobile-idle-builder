@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Rubidium (Rb), element number 37 with mass number 85. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 14287730
+  baseSellValue: 17200
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

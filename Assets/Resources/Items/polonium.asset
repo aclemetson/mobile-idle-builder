@@ -31,8 +31,10 @@ MonoBehaviour:
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: Polonium (Po), element number 84 with mass number 209. A fission fragment
-    on the long descent from the heavy actinides back toward iron.
+  codexEntry: 'Polonium (Po), element number 84 with mass number 209. A fission fragment
+    on the long descent from the heavy actinides back toward iron. Decays: alpha
+    decay turns it into Lead.'
   codexUnlocked: 0
-  baseSellValue: 384
+  baseSellValue: 26800
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

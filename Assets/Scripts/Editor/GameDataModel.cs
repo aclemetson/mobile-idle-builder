@@ -15,6 +15,7 @@ namespace MobileIdleBuilder.Editor
     {
         public GameConfigJson            game_config     = new();
         public List<TierJson>            tiers           = new();
+        public List<ResearchBlockJson>   research_blocks = new();
         public List<ResearchJson>        research        = new();
         public List<ItemJson>            items           = new();
         public List<RecipeJson>          recipes         = new();
@@ -94,6 +95,23 @@ namespace MobileIdleBuilder.Editor
         public string[] starter_items   = Array.Empty<string>();
     }
 
+    /// <summary>A research block: one game phase (game_data.json research_blocks).</summary>
+    [Serializable]
+    internal class ResearchBlockJson
+    {
+        public string   id                              = "";
+        public string   name                            = "";
+        public int      order                           = 0;
+        public float    target_hours                    = 0f;
+        public bool     anchor                          = false;
+        public string   description                     = "";
+        public int      start_prestige_count            = 0;
+        public long     start_prestige_currency_earned  = 0;
+        public long     start_entropy                   = 0;
+        public string[] start_permanent_upgrades        = Array.Empty<string>();   // "id:level"
+        public string[] start_sites                     = Array.Empty<string>();
+    }
+
     [Serializable]
     internal class ResearchJson
     {
@@ -103,7 +121,7 @@ namespace MobileIdleBuilder.Editor
         public string   branch                 = "Nuclear";
         public string[] prerequisites          = Array.Empty<string>();
         public int      depth_in_tree          = 0;
-        public int      cost_base_currency     = 100;
+        public long     cost_base_currency     = 100;   // long: derived late-game research costs pass 2^31 (scripts/rebalance_curve.py)
         public int      cost_prestige_currency = 0;
         public int      duration_seconds       = 0;
         public float    field_cooldown_mult    = 1f;
@@ -116,6 +134,9 @@ namespace MobileIdleBuilder.Editor
         public float    prestige_memory_discount = 0.1f;
         public string   codex_entry            = "";
         public string   icon_path              = "TODO";
+        public string   block                  = "";    // research_blocks id (game phase)
+        public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
+        public int      tree_y                 = -1;
 
         public void Initialize()
         {
@@ -152,6 +173,7 @@ namespace MobileIdleBuilder.Editor
         public string codex_entry          = "";
         public float  base_sell_value      = 1f;
         public float  isotope_sell_multiplier = 1f;
+        public bool   escapes_as_entropy   = false;
     }
 
     [Serializable]
@@ -247,6 +269,7 @@ namespace MobileIdleBuilder.Editor
         public string                 category                   = "Core";
         public bool                   is_obsoleteable            = false;
         public string                 obsolete_condition         = "";
+        public string                 obsoleted_by_research      = "";
         public bool                   requires_power             = false;
         public bool                   is_power_source            = false;
         public float                  base_power_cost_ev         = 0f;
@@ -259,6 +282,10 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public bool                   is_item_filter             = false;
+        public bool                   assignable_outputs         = false;
+        public string[]               recipe_mode_labels         = null;
+        public string[]               recipe_mode_prefixes       = null;
         public int[]                  footprint                  = { 1, 1 };
         public string                 structure_kind             = "None";
         public List<PortJson>         ports                      = new();
@@ -312,6 +339,10 @@ namespace MobileIdleBuilder.Editor
         public string             field_color   = "#FFFFFF";
         public string             field_icon_path = "TODO";
         public string             codex_entry   = "";
+        public string             purchase_research        = "";
+        public long               purchase_cost_base       = 0;
+        public float              purchase_cost_multiplier = 10f;
+        public int                purchase_group_size      = 1;
 
         public void Initialize() { drops ??= new List<FieldDropJson>(); }
     }
@@ -465,6 +496,13 @@ namespace MobileIdleBuilder.Editor
         public TutorialSkipJson       skip_condition;
         public TutorialOnEnterJson    on_enter             = new();
         public string[]               locked_research_ids  = new string[0];
+        /// <summary>Marks a step as a substep of a larger beat. Within a contiguous run of
+        /// substeps, TutorialSystem may skip forward when a LATER substep's advance condition
+        /// is already satisfied (e.g. protons already consumed into hydrogen). Non-substep
+        /// ("major") steps bound the run and are never auto-skipped.</summary>
+        public bool                   is_substep           = false;
+        /// <summary>Entropy granted once when this step advances. 0 = none.</summary>
+        public long                   reward_entropy       = 0;
 
         public void Initialize()
         {
@@ -485,6 +523,17 @@ namespace MobileIdleBuilder.Editor
         public string   ui_event_id  = "";
         public string   research_id  = "";
         public int      min_count    = 0;
+        /// <summary>BuildingMin only: restrict the count to buildings of this building id
+        /// (e.g. "strong_force_combiner"). Empty = count all buildings.</summary>
+        public string   building_id  = "";
+        /// <summary>ConveyorLinked only: source building id. Empty = any building.</summary>
+        public string   from_building_id = "";
+        /// <summary>BuildingUpgradeMin only: speed upgrade level to reach.</summary>
+        public int      min_level    = 0;
+        /// <summary>FieldPurchasedMin only: FieldSO id whose purchases are counted.</summary>
+        public string   field_id     = "";
+        /// <summary>BuildingRecipeSet only: recipe_id the building_id building must be set to.</summary>
+        public int      recipe_id    = -1;
     }
 
     [Serializable]

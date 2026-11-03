@@ -31,8 +31,11 @@ MonoBehaviour:
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
-  codexEntry: Radium (Ra), element number 88 with mass number 226. A fission fragment
-    on the long descent from the heavy actinides back toward iron.
+  codexEntry: 'Radium (Ra), element number 88 with mass number 226. A fission fragment
+    on the long descent from the heavy actinides back toward iron. Decays: alpha
+    decay turns it into Radon. Add a neutron to make Radium-227, which decays into
+    Actinium.'
   codexUnlocked: 0
-  baseSellValue: 157
+  baseSellValue: 23400
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

@@ -22,9 +22,9 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: 'Notice the sell value: twenty entropy per atom. The complexity premium
-      scales with atomic mass. Heavier elements cost more to build, but they are
-      proportionally more valuable to sell.'
+    text: Building it one nucleon at a time is slow, and the Atom Generator will
+      go no further than this. Heavier atoms must be fused. I have sent you 6,500
+      entropy toward that road.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

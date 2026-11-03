@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: 'Nihonium (Nh), element number 113 with mass number 286. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 3.5184372e+14
+  baseSellValue: 1260000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

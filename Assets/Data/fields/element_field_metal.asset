@@ -25,6 +25,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
     weight: 1
   tapCooldownSeconds: 2
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.6901961, g: 0.74509805, b: 0.77254903, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A vein of workable metals \u2014 iron, copper, aluminum, nickel. The

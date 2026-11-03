@@ -22,6 +22,7 @@ MonoBehaviour:
   category: 1
   isObsoleteable: 0
   obsoleteCondition: 
+  obsoletedByResearch: 
   requiresPower: 1
   isPowerSource: 0
   basePowerCostEV: 100
@@ -43,6 +44,10 @@ MonoBehaviour:
   - Primary Molecule
   - Secondary Molecule
   isEntropySink: 0
+  isItemFilter: 0
+  assignableOutputs: 0
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
   structureKind: 5
   ports:

@@ -56,5 +56,37 @@ namespace MobileIdleBuilder
         public bool isSimplified;
         [TextArea(1, 3)]
         public string simplificationNote;
+
+        /// <summary>
+        /// Every item a craft puts in the building's output: the main output, then each byproduct that doesn't
+        /// escape (an alpha particle from a decay, neutrons stripped from a nucleus, #322). Escaping byproducts
+        /// are paid as entropy instead (<see cref="EscapeEntropyPerCraft"/>).
+        /// </summary>
+        public System.Collections.Generic.List<(ItemSO item, int quantity)> ProducedOutputs()
+        {
+            var list = new System.Collections.Generic.List<(ItemSO, int)>();
+            if (outputItem != null) list.Add((outputItem, outputQuantity));
+            if (byproducts != null)
+                foreach (var b in byproducts)
+                    if (b.item != null && b.quantity > 0 && !b.item.escapesAsEntropy) list.Add((b.item, b.quantity));
+            return list;
+        }
+
+        /// <summary>
+        /// Entropy paid on every craft by byproducts that escape the building (see
+        /// <see cref="ItemSO.escapesAsEntropy"/>): quantity x sell value, summed. 0 when none escape.
+        /// </summary>
+        public float EscapeEntropyPerCraft
+        {
+            get
+            {
+                if (byproducts == null) return 0f;
+                float total = 0f;
+                foreach (var b in byproducts)
+                    if (b.item != null && b.item.escapesAsEntropy && b.quantity > 0)
+                        total += b.quantity * b.item.baseSellValue;
+                return total;
+            }
+        }
     }
 }

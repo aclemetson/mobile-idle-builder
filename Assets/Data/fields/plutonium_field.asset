@@ -19,6 +19,10 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
     weight: 1
   tapCooldownSeconds: 4
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
   fieldColor: {r: 0.7529412, g: 0.19607843, b: 0.12941177, a: 1}
   fieldIcon: {fileID: 0}
   codexEntry: "A bred-actinide deposit. Harvest plutonium \u2014 denser fission fuel,

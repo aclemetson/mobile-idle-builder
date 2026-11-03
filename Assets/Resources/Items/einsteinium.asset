@@ -34,5 +34,6 @@ MonoBehaviour:
   codexEntry: Einsteinium (Es), element number 99 with mass number 252. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 2.1474836e+10
+  baseSellValue: 932000
   isotopeSellMultiplier: 1
+  escapesAsEntropy: 0
