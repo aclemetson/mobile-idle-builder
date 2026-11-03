@@ -35,6 +35,6 @@ MonoBehaviour:
     for life as we know it. In the Foundry it is a chemical intermediate and coolant
     feedstock."
   codexUnlocked: 0
-  baseSellValue: 6000
+  baseSellValue: 15600
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

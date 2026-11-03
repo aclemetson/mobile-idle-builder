@@ -22,8 +22,8 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 2
-  manualCraftTime: 2
+  baseCraftTime: 25
+  manualCraftTime: 25
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:

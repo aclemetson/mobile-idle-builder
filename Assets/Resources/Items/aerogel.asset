@@ -35,6 +35,6 @@ MonoBehaviour:
     An extraordinary thermal insulator. Used in Mars rover heat shields and as structural
     fill in megastructures."
   codexUnlocked: 0
-  baseSellValue: 400000000
+  baseSellValue: 2570000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

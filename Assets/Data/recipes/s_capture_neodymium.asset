@@ -28,7 +28,7 @@ MonoBehaviour:
   byproducts:
   - item: {fileID: 11400000, guid: 2aa3f256dbe6a324c89dcd09b44631e5, type: 2}
     quantity: 1
-  baseCraftTime: 12
+  baseCraftTime: 16
   manualCraftTime: 12
   powerCostIsDynamic: 0
   fixedPowerCostEV: 40

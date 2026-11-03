@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: The monomer of proteins. Twenty of these, chained, spell out every
     enzyme and structure of life.
   codexUnlocked: 0
-  baseSellValue: 40000
+  baseSellValue: 374000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

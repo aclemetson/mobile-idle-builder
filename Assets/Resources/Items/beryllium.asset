@@ -35,6 +35,6 @@ MonoBehaviour:
     to X-rays and used in nuclear reactor reflectors. Toxic in dust form \u2014 handle
     with care."
   codexUnlocked: 0
-  baseSellValue: 40
+  baseSellValue: 488
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -35,6 +35,6 @@ MonoBehaviour:
     to a helium-4 nucleus: 2 protons + 2 neutrons. Collected by Radioactive Containment
     buildings and used as a secondary energy currency.'
   codexUnlocked: 0
-  baseSellValue: 50
+  baseSellValue: 10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

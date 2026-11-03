@@ -35,6 +35,6 @@ MonoBehaviour:
     materials \u2014 negative refractive index, electromagnetic cloaking, and exotic
     gravitational interactions."
   codexUnlocked: 0
-  baseSellValue: 6.4e+9
+  baseSellValue: 26200000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -35,6 +35,6 @@ MonoBehaviour:
     the hardest materials known. Boron-10 absorbs neutrons, making it essential for
     nuclear reactor control rods.
   codexUnlocked: 0
-  baseSellValue: 80
+  baseSellValue: 826
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

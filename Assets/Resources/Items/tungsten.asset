@@ -35,6 +35,6 @@ MonoBehaviour:
     nozzles, light filaments, and plasma-facing components in fusion reactors all
     rely on tungsten's thermal extremity."
   codexUnlocked: 0
-  baseSellValue: 214
+  baseSellValue: 346000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: The simplest two-carbon hydrocarbon. A short link in the chain that
     organic chemistry builds outward without end.
   codexUnlocked: 0
-  baseSellValue: 1500000
+  baseSellValue: 78000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

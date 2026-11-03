@@ -36,6 +36,6 @@ MonoBehaviour:
     decay turns it into Radon. Add a neutron to make Radium-227, which decays into
     Actinium.'
   codexUnlocked: 0
-  baseSellValue: 97
+  baseSellValue: 23400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

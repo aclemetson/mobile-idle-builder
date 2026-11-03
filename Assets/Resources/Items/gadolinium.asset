@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: Gadolinium (Gd), element number 64 with mass number 158. A fission
     fragment on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 237
+  baseSellValue: 126000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

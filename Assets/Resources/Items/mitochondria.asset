@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: The powerhouse of the cell. A membrane-bound organelle that burns fuel
     into usable energy.
   codexUnlocked: 0
-  baseSellValue: 3000000
+  baseSellValue: 9390000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

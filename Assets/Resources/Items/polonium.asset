@@ -35,6 +35,6 @@ MonoBehaviour:
     on the long descent from the heavy actinides back toward iron. Decays: alpha
     decay turns it into Lead.'
   codexUnlocked: 0
-  baseSellValue: 147
+  baseSellValue: 26800
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

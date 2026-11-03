@@ -15,7 +15,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | save fields, persistence, cloud, offline earnings, timed effects | `save-system.md` |
 | HUD, panels, UXML/USS, sub-controllers | `ui-toolkit.md` |
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |
-| balance numbers, currencies, costs, formulas | `economy-balance.md` |
+| balance numbers, currencies, costs, formulas | `economy-balance.md` (values and research costs are generated: "Derived economy") |
 | remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
 | telemetry, analytics events, player data collection, balancing dashboards | `analytics.md` |
 | crash/exception reporting, Cloud Diagnostics, debug data to Unity Cloud, symbol upload | `../cloud-diagnostics-setup.md` |

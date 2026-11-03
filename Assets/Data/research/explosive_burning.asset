@@ -22,7 +22,10 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
   depthInTree: 6
-  costBaseCurrency: 150000
+  block: stellar_forge
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 8530000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1

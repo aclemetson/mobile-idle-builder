@@ -212,15 +212,17 @@
 
 /* ---- Left drawer ---- */
 
-/* Full-height anchor column on the left edge — holds the handle, doesn't intercept input */
+/* Full-height anchor column on the left edge — holds the handle, doesn't intercept input.
+   The handle sits near the top, not centred: centred, it covered the starting quark field tile (#257). */
 .drawer-handle-anchor {
     position: absolute;
     left: 0;
     top: var(--top-bar-height);
     bottom: 0;
     width: 44px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
+    padding-top: 24px;
 }
 
 .drawer-handle {
@@ -1157,4 +1159,111 @@
     min-height: 44px;
     margin: 0 var(--spacing-xs);
     -unity-text-align: middle-center;
+}
+
+/* ---- Research tree (#337) ---- */
+.research-tree {
+    flex-grow: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.rt-viewport {
+    flex-grow: 1;
+    min-height: 200px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+}
+
+.rt-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.rt-node {
+    position: absolute;
+    padding: 6px 10px 6px 12px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-left-width: 5px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--color-surface-raised);
+    justify-content: space-between;
+}
+
+.rt-node-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.rt-node-meta {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+}
+
+/* State is shown by the left stripe and the meta text, not colour alone. */
+.rt-node--done {
+    border-left-color: var(--color-success);
+    opacity: 0.7;
+}
+
+.rt-node--available {
+    border-left-color: var(--color-primary);
+}
+
+.rt-node--available .rt-node-meta {
+    color: var(--color-primary);
+}
+
+.rt-node--active {
+    border-left-color: var(--color-primary);
+    border-color: var(--color-primary);
+    background-color: rgba(0, 229, 255, 0.10);
+}
+
+.rt-node--locked {
+    opacity: 0.55;
+    border-left-color: rgba(255, 255, 255, 0.25);
+}
+
+.rt-node--selected {
+    border-color: var(--color-primary);
+    border-width: 2px;
+    border-left-width: 5px;
+}
+
+.rt-band-label {
+    position: absolute;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.rt-band-label--alt {
+    color: var(--color-text-primary);
+}
+
+.rt-detail {
+    max-height: 45%;
+    flex-shrink: 0;
+    margin-top: var(--spacing-xs);
+}
+
+.rt-detail-phase {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.research-view-btn {
+    margin-right: var(--spacing-sm);
+    padding: 2px 10px;
+    font-size: var(--font-size-sm);
+    border-radius: 6px;
 }

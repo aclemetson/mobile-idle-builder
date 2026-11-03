@@ -34,6 +34,6 @@ MonoBehaviour:
   codexEntry: 'Copernicium (Cn), element number 112 with mass number 285. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 4.3980465e+13
+  baseSellValue: 1260000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -21,7 +21,10 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
   depthInTree: 6
-  costBaseCurrency: 300000
+  block: actinide_frontier
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 16500000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1

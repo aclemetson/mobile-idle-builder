@@ -82,15 +82,15 @@ Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tuto
 | Phase | Gate (research → entropy cost) | Economy landmark |
 |---|---|---|
 | ⑦ Run 2 ramp | repeat discounts: Recombination I 75e, Hydrogen Synth 38e, Automation I 13e | H loop ~4–8 e/sec |
-| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (10e) only |
-| ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e | D 4e; 2D→He (10e) + γ 5e escape bonus; 3He→C 160e. Li..Fe only via fusion: `light_elements` 6k, `fusion_ii` 20k, `mid_elements` 30k, `fusion_iii` 120k (Fe 167.8M), `explosive_burning` 150k (Cl..Mn), `transition_metals` 250k (now gates Neutron Capture Co..Br, #322) |
-| ⑨ Heavy Elements | 3,000e | Uranium = 1,310,720e/unit |
-| ⑩ Isotopes | 1,500e | isotopes sell 1.5× base element |
-| ⑪ Radioactive Decay | 5,000e | needs ⑨+⑩ |
-| ⑫ Molecular Synthesis | 3,000e (+ element gates 1K→80K) | tier 3 |
-| ⑬ Materials Science | 150,000e | Steel 1.5M, Carbon Fiber 6M, Ti Alloy 25M |
-| ⑭ Component Engineering | 5,000,000e | Quantum Processor 50B, Plasma Ring 200B, Antimatter Cell 800B |
-| ⑮ Megastructure Theory | 50,000,000e | Dyson Node 5T, Orbital Frame 20T, Graviton Lens 100T |
+| ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (15e) only (Deuterium comes at ⑧b) |
+| ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e (tutorial end) | D 4e; 2D→He (15e) + γ 5e escape bonus; 3He→C 160e. Everything below is **generated** (see "Derived economy") |
+| ⑨ Heavy Elements / ⑩ Isotopes / ⑫ Molecular Synthesis | 3,000e / 1,500e / 3,000e (tutorial-era, kept) | Atom Generator Uranium 64e: the decay-chain on-ramp; molecules wait for their element inputs |
+| ⑪ Radioactive Isotopes | 40k | first post-tutorial node; decay chain U 64 → Th 413 … Pb 1.82k; U-235 1.5k |
+| Fusion II → Fusion III | `light_elements` 195k, `fusion_ii` 556k, `mid_elements` 2.32M, `fission_i` 8.18M, `fusion_iii` 23.8M | O 977, Si 4.65k, **Fe 37.2k** (~12h with 5 buildings) |
+| Actinide / capture branch | `slow_neutron_capture` 37.4M → `rapid_neutron_capture` 57M → `precious_metals` 82.9M → `exotic_metals` 120M → `lanthanides_and_heavy_metals` 194M → `transuranic_elements` 275M → `superheavy_synthesis` 324M | Kr 2.77k, Ag 20.1k, Pt 874k, **Au 952k**, Og 962k |
+| Chemistry / Materials | `chemistry_lab` 39.3M, `materials_science` 59.9M | Water 13.9k, Carbon Fiber 457k, Steel 1.23M, Ti Alloy 1.33M; world mines paced to the wage (Iron 1 per ~20s) |
+| ⑭ Component Engineering | 460M | Quantum Processor 18.1M, Antimatter Cell 50.7M, Plasma Ring 61.3M |
+| ⑮ Megastructure Theory / Biology | 904M; `biology_lab` 553M → `ecosystems` 2.02B (last node, ~157h) | Dyson Node 183M, Orbital Frame 402M, Graviton Lens 945M; Ecosystem 41.1B |
 
 Tiers: 1 Subatomic, 2 Atomic, 3 Molecular, 4 Materials, 5 Components (`game_data.json` `tiers`).
 
@@ -175,13 +175,21 @@ Endgame project gated by `megastructure_theory` research (phase ⑮). 5 stages, 
 | 4 Stabilizer Array | 40× orbital_frame + 10× graviton_lens | +25% craft speed |
 | 5 Stellar Engine | 100× dyson_node + 80× orbital_frame + 30× graviton_lens | ×2 prestige currency earned |
 
-## Balance derivation method (when a task file needs NEW numbers)
+## Derived economy (2026-11-02): how values and research costs are set
 
-Reference game data lives in `docs/ipm-research.md` (Idle Planet Miner economy: ore ×2.0–2.6/tier scaling, planet costs ×3.8, galaxy-sell prestige cadence). House rules used so far:
-1. Sell values scale ~×4 per recipe step within a tier, ×8–×40 across tier boundaries (see ⑧–⑮ landmarks above).
-2. Research gates ≈ 10–30 minutes of current-phase income at the time they're reached.
-3. Prestige cadence target: first prestige ≈ 1–2h session; later runs faster via discounts/upgrades.
-4. Premium pricing anchors to the 600◆/$0.99 pack; a "nice-to-have" boost ≈ 50–150◆.
+Item values after the tutorial and every post-tutorial research cost are **generated**, not hand-tuned. Do not edit them one by one: change the curve and re-run.
+
+- `python scripts/progression_curve.py` writes `docs/progression-curve.html` (payback per research, estimated playtime, best earning rate, every item value by unlock, flags). `--report` prints the same as a table. Re-run it after any balance change and check the flags.
+- `python scripts/rebalance_curve.py` previews the derived values; `--apply` writes them (then run Import Game Data and sync the `ItemBalanceTests` pins).
+- **Unlock order** = the cheapest research whose prerequisites are met, repeatedly. A recipe counts from when it is unlocked *and* its inputs can be made.
+- **Anchor:** everything the Physics tutorial makes (up to `fusion_i`) keeps its value and cost. Particles keep fixed values (α 10, β 2, n 3, ν 3, γ 5).
+- **Values:** a later recipe that makes a new item is priced `outputs = inputs + wage(n) × craft time`, wage(n) = the tutorial-end rate × **1.19** per research. So every craft gains and one building on the newest recipe earns about wage(n). Physics recipes price elements; Chemistry/Biology harvesters reuse those prices, and any raw collect recipe is slowed to `value ÷ wage` so a mine never out-earns its unlock (#332).
+- **Back-pricing:** a recipe whose products were priced by a dearer route (Plutonium fission makes the same fragments as U-235 fission) would out-earn its wage; its harvested inputs are raised until it earns the wage, and their harvesters slow to match. Items the tutorial prices are never changed.
+- **Research blocks (game phases):** `research_blocks` in `game_data.json`; every research names its `block`. Each block has `target_hours`, the time a player running 5 buildings should spend clearing it. Current plan: Ignition (tutorial, 1h, costs kept), Foundations 3h, Stellar Forge 12h, Actinide Frontier 20h, Chemistry World 20h, Synthetic Frontier 30h, Biology World 40h (126h ≈ 5.3 days). Unlock order runs block by block, cheapest first inside one.
+- **Research costs:** each block's budget is spread over its research, each node 1.2× the one before, and `cost = share (building-minutes) × 60 × best rate before the node`; a node never costs less than 1.05× its dearest prerequisite. Edit blocks and targets in the research tree editor (`docs/research-tree.html`, https://claude.ai/artifact/CF6rEtx6GunCJMeGqaRgg9), apply with `scripts/apply_research_tree.py`, then re-run the rebalance. `docs/progression-curve.html` shows target vs model per block.
+- **Limits:** research cost is a C# `long` (`ResearchSO.costBaseCurrency`, since 2026-11-02); the script refuses a cost over 2^53 (JSON doubles stay exact below it). Prestige ✦ = `log10(netWorth / 5000) × 50`, so the smaller late values give fewer ✦ than the old curve; revisit with the prestige work.
+- **Deliberate exceptions** (recipes that do not gain): the tutorial quark→nucleon steps (break even) and the Atom Generator / Manipulator on-ramps for Deuterium, Uranium and Plutonium.
+- Building placement and upgrade costs were checked against the new rates (0.1–17 minutes of payback at unlock) and left as they are.
 
 ## Economy health & risks (re-evaluated 2026-06-28 — read before adding more track)
 
