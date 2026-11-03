@@ -37,6 +37,7 @@ namespace MobileIdleBuilder
 
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<Entity, GameObject>      _itemSpheres = new();
+        private readonly Dictionary<Entity, int>             _itemSpriteIds = new();   // which item each visual shows
 
         // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
@@ -96,6 +97,7 @@ namespace MobileIdleBuilder
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
+            _itemSpriteIds.Clear();
             ClearGapMarkers();
             ClearSinglePreview();
 
@@ -130,6 +132,10 @@ namespace MobileIdleBuilder
         // Update — item sphere animation
         // ----------------------------------------------------------------
 
+        /// <summary>True when a segment's visual was made for a different item than the one now on it (#334).</summary>
+        internal static bool VisualIsStale(IReadOnlyDictionary<Entity, int> shownIds, Entity segment, int itemId) =>
+            !shownIds.TryGetValue(segment, out int shown) || shown != itemId;
+
         void Update()
         {
             if (!_queriesReady || _itemQuery.IsEmpty) return;
@@ -154,13 +160,22 @@ namespace MobileIdleBuilder
                 // Create the item visual if not yet spawned. Prefer the item's periodic-table
                 // tile sprite as a camera-facing billboard; fall back to a colour-coded sphere
                 // when no icon is available (e.g. in tests without an ItemDatabase).
-                if (!_itemSpheres.TryGetValue(e, out var sphere))
+                // A segment's item can be swapped in place (one leaves and the next arrives between two visual
+                // updates); the sprite must follow the item, not the segment (#334).
+                if (_itemSpheres.TryGetValue(e, out var sphere) && VisualIsStale(_itemSpriteIds, e, item.ItemID))
+                {
+                    if (sphere) Destroy(sphere);
+                    _itemSpheres.Remove(e);
+                    sphere = null;
+                }
+                if (sphere == null)
                 {
                     var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
                     sphere = (icon != null && icon.texture != null)
                         ? CreateItemTile(gridRenderer.transform, icon.texture)
                         : CreateItemSphere(gridRenderer.transform, item.ItemID);
                     _itemSpheres[e] = sphere;
+                    _itemSpriteIds[e] = item.ItemID;
                 }
 
                 // Animate position: lerp from entry edge to exit edge
@@ -193,7 +208,7 @@ namespace MobileIdleBuilder
                     toRemove.Add(kvp.Key);
                 }
             }
-            foreach (var e in toRemove) _itemSpheres.Remove(e);
+            foreach (var e in toRemove) { _itemSpheres.Remove(e); _itemSpriteIds.Remove(e); }
         }
 
         // ----------------------------------------------------------------
