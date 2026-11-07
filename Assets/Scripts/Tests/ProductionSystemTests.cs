@@ -307,6 +307,21 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void CompletedCraft_CountsByproductEntropyAsAutomationIncome()
+        {
+            AddProgress(100);
+            var incomeEntity = _em.CreateEntity();
+            _em.AddComponentData(incomeEntity, new AutomationIncome { Total = 0 });
+            SetByproductEntropy(5f);
+            AddToGlobalInventory(InputItemId, InputQty);
+
+            Tick(CraftTime);
+
+            Assert.AreEqual(5.0, _em.GetComponentData<AutomationIncome>(incomeEntity).Total, 0.0001,
+                "Escaping byproduct entropy counts toward automation income");
+        }
+
+        [Test]
         public void UnfinishedCraft_PaysNoByproductEntropy()
         {
             var progress = AddProgress(100);

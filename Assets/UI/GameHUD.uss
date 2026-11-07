@@ -1373,3 +1373,9 @@
     font-size: var(--font-size-sm);
     border-radius: 6px;
 }
+
+.stats-value {
+    color: #d2a8ff;
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}

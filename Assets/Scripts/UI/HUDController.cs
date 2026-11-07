@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
         private HUDBannerController                 _banner;
         private PrestigeShopSubController           _prestigeShop;
         private ManagersSubController               _managers;
+        private StatsSubController                  _stats;
         private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
         private RewardedAdsSubController            _rewards;
@@ -52,7 +53,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel;
+                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -188,6 +189,8 @@ namespace MobileIdleBuilder
             _settings     = GetComponent<HUDSettingsSubController>();
             _sites        = GetComponent<SitesSubController>();
             _worlds       = GetComponent<WorldsSubController>();
+            _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
+            if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
         }
 
         void OnEnable()
@@ -224,6 +227,7 @@ namespace MobileIdleBuilder
             _banner?.Init(root);
             _prestigeShop?.Init(root, this);
             _managers?.Init(root, this);
+            _stats?.Init(root, this);
             _megastructure?.Init(root, this);
             _daily?.Init(root, this);
             _rewards?.Init(root, this);
@@ -409,6 +413,7 @@ namespace MobileIdleBuilder
             _researchPanel     = root.Q("research-panel");
             _upgradesPanel     = root.Q("upgrades-panel");
             _managersPanel     = root.Q("managers-panel");
+            _statsPanel        = root.Q("stats-panel");
             _megastructurePanel = root.Q("megastructure-panel");
             _dailyPanel        = root.Q("daily-panel");
             _rewardsPanel      = root.Q("rewards-panel");
@@ -424,7 +429,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
@@ -516,6 +521,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-research").clicked     += OpenResearchPanel;
             root.Q<Button>("btn-upgrades").clicked     += () => TryOpenPanel(OpenUpgradesPanel);
             root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
+            root.Q<Button>("btn-stats")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenStatsPanel));
             root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
             var btnDaily = root.Q<Button>("btn-daily");
             if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
@@ -560,6 +566,7 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-research").clicked     += () => SetElementVisible(_researchPanel,     false);
             root.Q<Button>("btn-close-upgrades").clicked     += () => SetElementVisible(_upgradesPanel,     false);
             root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
+            root.Q<Button>("btn-close-stats")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_statsPanel, false));
             root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
             var btnCloseDaily = root.Q<Button>("btn-close-daily");
             if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
@@ -1147,6 +1154,14 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _managers?.Refresh();
             SetElementVisible(_managersPanel, true);
+        }
+
+        private void OpenStatsPanel()
+        {
+            CloseAllPanels();
+            _stats?.Refresh();
+            SetElementVisible(_statsPanel, true);
+            _stats?.StartTicker();
         }
 
         private void OpenMegastructurePanel()

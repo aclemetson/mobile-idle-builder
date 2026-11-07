@@ -56,6 +56,9 @@ namespace MobileIdleBuilder
                 // Research effect multipliers (Transportation I etc.); ResearchService overwrites on load / unlock.
                 AddComponent(entity, new ResearchEffects { ConveyorSpeedMult = 1f });
 
+                // Automation income counter (Statistics panel); not saved.
+                AddComponent(entity, new AutomationIncome { Total = 0 });
+
                 var buffer = AddBuffer<InventorySlot>(entity);
 
                 if (authoring.startingItems == null) return;

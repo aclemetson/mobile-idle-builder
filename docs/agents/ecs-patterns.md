@@ -90,3 +90,5 @@ If a feature needs a bonus to affect live production, either (a) bake it into `B
 ## Testing ECS
 
 EditMode tests create a private `World` + system instance and tick it manually — copy `Assets/Scripts/Tests/ProductionSystemTests.cs` (creates entities, sets `BuildingData{ProductionSpeed}`, asserts `Progress` advanced by `dt × speed` at `:158`) or `PrestigeSystemTests.cs`.
+
+**`AutomationIncome` singleton (Statistics panel):** blittable `{ double Total }` on the player entity (baked 0 in `PlayerInventoryAuthoring`, not saved). Incremented, `HasSingleton`-guarded, at the three places automation adds entropy: `EntropySinkSystem` (`SystemAPI.SetSingleton`), `ConveyorSystem` surplus sales (`TryGetSingletonEntity` + `EntityManager`), and `ProductionSystem` escaping byproducts (Burst, `GetSingletonRW`). Nothing else counts (tutorial rewards, prestige, manual sales, ads). `UI/IncomeRateTracker` samples it each second into `Services/RollingRate`; a drop in Total (reload/prestige recreates the entity) clears the buffer.

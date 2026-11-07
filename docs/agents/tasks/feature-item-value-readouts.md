@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ui-toolkit.md`, `economy-balance.md` (the "Derived
 economy" and surplus sections only), `testing.md`.
-**Status:** done (PR pending, integration/2026-11-07).
+**Status:** done (PR #354).
 **Size:** M. **Branch:** `feat/item-value-readouts` from `integration/2026-11-07`.
 
 ## Goal
