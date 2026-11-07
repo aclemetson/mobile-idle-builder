@@ -275,6 +275,16 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorStatic, "—— Collector ——");
                 _craftProgressFill = AddProgressBar(_inspectorStatic, CollectorFraction(col));
                 AddInspectorRow(_inspectorStatic, $"Output rate: {col.OutputRate:F1} /s");
+                if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
+                {
+                    var outBuf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
+                    if (outBuf.Length > 0)
+                    {
+                        ReadOutputMult(_inspectorEntity, out float cOutMult, out _);
+                        AddInspectorRow(_inspectorStatic, CollectorValueLine(
+                            ItemValue.CollectorPerSecond(SurplusSale.DemonPrice(outBuf[0].ItemID), col.OutputRate, cOutMult)));
+                    }
+                }
                 AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
             }
 
@@ -320,6 +330,15 @@ namespace MobileIdleBuilder
                     AddInspectorRow(_inspectorStatic, "—— Produces ——");
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+
+                    // Three fixed rows for a crafter with a recipe (stable across rebuilds).
+                    if (!isCollector && hasBuildingData && _em.HasComponent<RecipeProcessData>(_inspectorEntity))
+                    {
+                        var outs = new List<(int itemId, int quantity)>(buf.Length);
+                        for (int i = 0; i < buf.Length; i++) outs.Add((buf[i].ItemID, buf[i].Quantity));
+                        foreach (var line in CrafterValueLines(outs, buildingData))
+                            AddInspectorRow(_inspectorStatic, line);
+                    }
                 }
             }
 
@@ -1124,6 +1143,54 @@ namespace MobileIdleBuilder
                 if (entry.building != null && entry.building.id == id) return entry.building;
             return null;
         }
+
+        // outMult / global speed exactly as ProductionSystem and CollectorSystem read them: the manager's
+        // AppliedOutputMult (when assigned) times the megastructure's GlobalProductionBonus.
+        private void ReadOutputMult(Entity entity, out float outMult, out float globalSpeed)
+        {
+            outMult = _em.HasComponent<ManagerAssignmentData>(entity)
+                ? _em.GetComponentData<ManagerAssignmentData>(entity).AppliedOutputMult
+                : 1f;
+            globalSpeed = 1f;
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<GlobalProductionBonus>());
+            if (q.IsEmpty) return;
+            var gb = q.GetSingleton<GlobalProductionBonus>();
+            outMult *= gb.OutputMult;
+            globalSpeed = gb.SpeedMult;
+        }
+
+        private string[] CrafterValueLines(List<(int itemId, int quantity)> outs, BuildingData building)
+        {
+            var process = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+            ReadOutputMult(_inspectorEntity, out float outMult, out float globalSpeed);
+            bool hasPower = _em.HasComponent<PowerStatus>(_inspectorEntity);
+            float powerRatio = hasPower ? _em.GetComponentData<PowerStatus>(_inspectorEntity).ThrottleRatio : 1f;
+
+            float price = SurplusSale.DemonPrice(outs[0].itemId);
+            double perCraft = ItemValue.PerCraft(outs, SurplusSale.DemonPrice, outMult, process.ByproductEntropy);
+            float speed = building.ProductionSpeed * powerRatio * globalSpeed;
+            double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
+            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+        }
+
+        /// <summary>
+        /// The inspector's value rows for a crafter: price each, value per craft, value per second. Always three
+        /// rows so the 0.5s rebuild keeps its layout.
+        /// </summary>
+        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower)
+        {
+            string craft = outMult > 1.001f
+                ? $"×{outMult:0.##} output → {NumberFormat.Entropy(perCraft)} per craft"
+                : $"{NumberFormat.Entropy(perCraft)} per craft";
+            string rate = noPower
+                ? "≈ ◈ 0 /s (no power)"
+                : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
+            return new[] { HUDController.WorthEachText(price), craft, rate };
+        }
+
+        /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>
+        internal static string CollectorValueLine(double perSecond) =>
+            $"≈ {NumberFormat.Entropy(perSecond)} /s";
 
         private float CostReduction()
         {

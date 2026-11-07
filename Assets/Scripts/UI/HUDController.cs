@@ -1586,6 +1586,15 @@ namespace MobileIdleBuilder
             timeLabel.style.opacity  = 0.7f;
             info.Add(timeLabel);
 
+            // What one item sells for. Shown once per row (the group's row), not on each method row.
+            if (outputItem != null)
+            {
+                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem)));
+                worthLabel.style.fontSize = 11;
+                worthLabel.AddToClassList("recipe-bonus-hint");
+                info.Add(worthLabel);
+            }
+
             float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
             if (bonus > 0f)
             {
@@ -1668,6 +1677,10 @@ namespace MobileIdleBuilder
             row.Add(BuildCraftButtons(method, isLocked, hasBuilding, max, () => _recipeMethodChoice[group.outputId] = method.id));
             return row;
         }
+
+        /// <summary>Recipe-row / inspector line for what one item sells for, e.g. "Worth ◈ 2.5 each".</summary>
+        internal static string WorthEachText(float price) =>
+            $"Worth {NumberFormat.Entropy(price)} each";
 
         /// <summary>Recipe-row / inspector line for fusion byproducts that escape as entropy.</summary>
         internal static string EscapeBonusText(float entropyPerCraft) =>
