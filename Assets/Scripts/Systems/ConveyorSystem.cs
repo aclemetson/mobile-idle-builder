@@ -199,6 +199,12 @@ namespace MobileIdleBuilder
                     var progress = EntityManager.GetComponentData<PlayerProgressData>(progressEntity);
                     progress.BaseCurrency += earned;
                     EntityManager.SetComponentData(progressEntity, progress);
+                    if (SystemAPI.TryGetSingletonEntity<AutomationIncome>(out Entity incomeEnt))
+                    {
+                        var income = EntityManager.GetComponentData<AutomationIncome>(incomeEnt);
+                        income.Total += earned;
+                        EntityManager.SetComponentData(incomeEnt, income);
+                    }
                 }
                 if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sold, paid {earned}");
             }

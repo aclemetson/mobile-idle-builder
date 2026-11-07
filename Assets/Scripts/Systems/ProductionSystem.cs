@@ -162,6 +162,11 @@ namespace MobileIdleBuilder
             {
                 var progress = SystemAPI.GetSingletonRW<PlayerProgressData>();
                 progress.ValueRW.BaseCurrency += escapedEntropy;
+                if (SystemAPI.HasSingleton<AutomationIncome>())
+                {
+                    var income = SystemAPI.GetSingletonRW<AutomationIncome>();
+                    income.ValueRW.Total += escapedEntropy;
+                }
             }
         }
 

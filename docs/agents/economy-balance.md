@@ -136,7 +136,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
 | `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
 | `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 2h, max 12h) | per-lvl |
-| `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 50%, max 100%) | per-lvl |
+| `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 20%, max 100%) | per-lvl |
 | `salvage_protocols` | Salvage Protocols | +10% removal refund (base 50%, max 100%; prereq Efficient Layouts 1) | 5 |
 | `surplus_resale` | Surplus Brokerage | +10% of the Demon price for auto-sold unused items (base 50%, max 100%) | 5 |
 
@@ -204,3 +204,5 @@ Findings from the full earning re-evaluation. These are the things most likely t
 4. **Prestige cadence vs new tiers.** With `prestige_scale = 50`, each ×10 of netWorth yields only ≈ +50✦ (flat, log curve). Adding higher tiers raises the netWorth ceiling but NOT proportionally the ✦ payout, so deep runs can feel ✦-starved relative to the cost of late managers (Demiurge 800✦ hire + 4,000✦/star) and deep upgrades (≈5,400✦). When adding tiers, re-check that first prestige stays ≈1–2h and that ✦ income per run keeps pace with the new sink costs — consider raising `prestige_scale` or adding ✦ faucets rather than letting the gap widen.
 
 5. **Manager star costs are the biggest ✦ sink and are flat-authored.** Star costs live as explicit `star_costs[]` arrays in `game_data.json` (not a formula), so new managers must have their tables hand-tuned. Keep them on the same rough curve (hire cost → ★ costs scaling ~×1.5–2 per star) to avoid outliers.
+
+**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is unwired in idle too: `GridSaveService` only folds in `prestigeSpeedMultiplier`.

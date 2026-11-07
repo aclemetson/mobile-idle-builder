@@ -66,6 +66,7 @@
                 <ui:Button name="btn-buildings"    text="Builder"      class="drawer-nav-btn" />
                 <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
+                <ui:Button name="btn-stats"        text="Statistics"   class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
@@ -138,6 +139,40 @@
             <ui:ScrollView name="upgrades-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ STATISTICS PANEL ═══ -->
+        <ui:VisualElement name="stats-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Statistics" class="panel-title" />
+                <ui:Button name="btn-close-stats" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+            </ui:VisualElement>
+            <ui:ScrollView name="stats-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Automation income" class="upgrade-row-name" />
+                        <ui:Label name="stats-income-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-income-sub" text="" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="If you go idle" class="upgrade-row-name" />
+                        <ui:Label name="stats-idle-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-idle-sub" text="" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Idle earnings cap" class="upgrade-row-name" />
+                        <ui:Label name="stats-cap-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label text="Hours of time away that count toward idle earnings" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:Label name="stats-footnote" text="" class="upgrade-row-desc" />
+            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ MANAGERS PANEL ═══ -->

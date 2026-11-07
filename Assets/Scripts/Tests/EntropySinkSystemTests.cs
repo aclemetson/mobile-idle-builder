@@ -102,6 +102,19 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(0, remaining, "EntropySink must clear its input buffer after each tick");
         }
 
+        [Test]
+        public void WithAutomationIncomeSingleton_AddsSameAmountAsCurrency()
+        {
+            var incomeEntity = _em.CreateEntity();
+            _em.AddComponentData(incomeEntity, new AutomationIncome { Total = 0 });
+            AddInputItems(itemId: 1, qty: 5);
+
+            Tick();
+
+            Assert.AreEqual(5.0, _em.GetComponentData<AutomationIncome>(incomeEntity).Total, 0.0001);
+            Assert.AreEqual(5L, GetCurrency());
+        }
+
         // ── Multiple buildings ────────────────────────────────────────────────
 
         [Test]

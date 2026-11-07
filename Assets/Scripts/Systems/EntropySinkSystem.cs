@@ -57,6 +57,13 @@ namespace MobileIdleBuilder
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency += totalEntropy;
             SystemAPI.SetSingleton(progress);
+
+            if (SystemAPI.HasSingleton<AutomationIncome>())
+            {
+                var income = SystemAPI.GetSingleton<AutomationIncome>();
+                income.Total += totalEntropy;
+                SystemAPI.SetSingleton(income);
+            }
         }
     }
 }
