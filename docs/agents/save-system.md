@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -14,7 +14,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `prestigeSpeedMultiplier / prestigeOutputMultiplier / prestigeCostReduction` | written by `PersistentUpgradeService.cs:224-226` from purchased upgrades |
 | `permanentUpgrades` (List<string>) | purchased upgrade ids (`"id:level"` style — check `PersistentUpgradeService.LoadFromSave`) |
 | `idleSnapshot` + `idleCollectionApplied` | active site's offline-earnings chain snapshot + double-apply guard timestamp |
-| `siteSnapshots` (List<IdleCollectionSnapshot>) | per-site offline snapshots, index = site index. Mirrors `idleSnapshot` at the active index; inactive sites keep producing from their stored entries. Populated by `GridSaveService.MirrorActiveSiteSnapshot` on every flush/load. Run state — cleared on prestige by `PrestigeSaveWatcher.ResetSitesForPrestige` |
+| `siteSnapshots` (List<IdleCollectionSnapshot>) | per-site offline snapshots, index = site index. Mirrors `idleSnapshot` at the active index; inactive sites keep producing from their stored entries. Populated by `GridSaveService.MirrorActiveSiteSnapshot` on every flush/load. Run state — cleared on prestige by `PrestigeRunReset.ResetSitesForPrestige` |
 | `unlockedRecipes / unlockedResearch / codex` | knowledge; `unlockedResearch` is per-run (cleared by PrestigeSystem) |
 | `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
@@ -37,7 +37,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `SaveManager` (`Assets/Scripts/SaveSystem/SaveManager.cs`) | Owns `Current` SaveData. `SaveLocal()` = `ECSLoadBridge.FlushToSave()` then write disk. **Autosave** (`AutoSaveTick`, every `autoSaveIntervalSeconds` = 60s) always writes locally but pushes to the cloud only when the save's content hash differs from the last *successful* push AND `cloudPushIntervalSeconds` (300s) have passed since the last push started (`ShouldAutoPush`); honors the `CloudSaveEnabled` kill-switch. `SaveToCloud()` (explicit saves, e.g. `MaintenanceWatcher`) always pushes. `SaveLocal()` + best-effort cloud push (`PushToCloudBestEffort`) on both background (`OnApplicationPause(true)`) and quit (`OnApplicationQuit`), always, unthrottled — fire-and-forget Task, not a coroutine, since the player loop is suspended once backgrounded. `ICloudSaveService.PushAsync` returns `Task<bool>` (never throws; true only if the write landed). Cloud reconcile: newest `lastSaved` wins (`IsNewerStamp`, culture-invariant, never throws; an empty local stamp always loses), loser kept as 24h backup. |
 | `LocalSaveService` | JSON file read/write. `LocalSaveService.SaveDirectory` is the one folder for `save.json` and every sidecar file (`SettingsService`, `RecipeKnowledgeService`, `FeatureFlagService`, `SaveWipe` resolve paths from it); tests redirect it to a temp folder (see `testing.md`). **Crash-safe (#280):** writes go to `save.json.tmp`, are flushed to disk, then swapped in with `File.Replace` (delete + move fallback); `SaveWithBackup` copies the old `save.json` to `.bak` first. `Load()` tries `save.json` → `save.json.tmp` → `save.json.bak`, skipping empty/unparseable files, and reports `LastLoadSource`. After a fallback load the corrupt `save.json` is never rotated over the good `.bak`. `Serialize` hashes the JSON with `lastSaved` blanked (`LastWrittenContentHash`, FNV-1a 64) and splices the stamp in, so the save is serialized once. |
 | `UGSCloudSaveService` + `AuthSessionPolicy` | UGS Cloud Save; Google sign-in with 30/90-day re-auth policy; anonymous fallback. |
-| `PrestigeSaveWatcher` | Clears idle snapshot when `PrestigeData.RunCount` changes (prevents double-earning). |
+| `PrestigeRunReset` | Static. `ResetRun(save, startingEntropy)` wipes the run part of the save on prestige (new `currentRun`, grids + idle snapshots, research, manager assignments; tutorial retired). `BeginReload()` then reloads GameScene through the loading screen; while `ReloadPending`, `SaveLocal` skips the ECS/grid flush so the old scene can't write its belts and fields back. |
 | `GridSaveService` | Building/conveyor/field persistence + idle snapshot rebuild (below). |
 
 ## The bridge: `Assets/Scripts/SaveSystem/ECSLoadBridge.cs`
@@ -59,7 +59,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 ## Research timer (`ResearchService`)
 
 - One research runs at a time. `SaveData.activeResearchId` + `activeResearchCompleteUtc` (ISO-UTC, same timed-effect pattern as `speedBoostExpiryUtc`) hold the in-progress node and its finish time. `ResearchService` caches these on `Start()` (`RestoreActiveTimer`) and completes offline if already elapsed; `Update()` completes it live; `SkipActive()` finishes it early for crystals.
-- **Prestige:** research fully resets, so both fields are cleared (set to null) in `PrestigeSaveWatcher` and `PrestigeSystem` alongside `unlockedResearch`, and `ResearchService.ResetAll()` drops the cached timer. (Recipe knowledge survives prestige — that is separate, in `unlockedRecipes`.)
+- **Prestige:** research fully resets, so both fields are cleared (set to null) by `PrestigeRunReset.ResetRun` (called from `PrestigeSystem`) alongside `unlockedResearch`, and `ResearchService.ResetAll()` drops the cached timer. (Recipe knowledge survives prestige — that is separate, in `unlockedRecipes`.)
 
 ## Multi-grids / sites (`SiteService`)
 
@@ -67,7 +67,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 - `GridSaveService.EnsureSiteGrid(save, index)` pads `grids` so a newly unlocked/visited site has a slot. `LoadGrid` restores fields even when a site has no buildings/conveyors.
 - Inactive sites are NEVER live ECS (load-bearing constraint). Dev console: `site list` / `site switch <n>` / `site unlock <id>` / `domains intro` (replay the intro). UI: `sites-panel` + `SitesSubController` (Travel/Unlock).
 - **Domains introduction:** one-shot dialogue `intro_quantum_domains` plays when the player unlocks `materials_science` research (the 150K gate before the first 250K domain). Routed via `HUDController.OnResearchUnlocked` → `SitesSubController.NotifyResearchUnlocked`; guarded by `save.domainsIntroSeen`. Dialogue resolved at runtime via `Resources/DialogueDatabase` (`DialogueDatabaseSO`, generated by the importer — the general runtime id→DialogueSO lookup) so no Inspector wiring is needed.
-- **Prestige:** `PrestigeSaveWatcher.ResetSitesForPrestige(save)` (also called from `PrestigeSystem.OnUpdate`) clears all `grids`, resets `activeSiteIndex` to 0, and wipes `idleSnapshot` + `siteSnapshots`. `unlockedSites` is intentionally preserved (site unlocks survive prestige, like recipe knowledge).
+- **Prestige:** `PrestigeRunReset.ResetSitesForPrestige(save)` (part of `ResetRun`, called from `PrestigeSystem.OnUpdate`) clears all `grids`, resets `activeSiteIndex` to 0, and wipes `idleSnapshot` + `siteSnapshots`. `unlockedSites` is intentionally preserved (site unlocks survive prestige, like recipe knowledge).
 
 ## Adding a save field — the rules
 
@@ -80,4 +80,4 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 
 - `JsonUtility` cannot serialize dictionaries — use parallel lists (`inventoryKeys/Values`) or `[Serializable]` entry classes (`AchievementProgressEntry`).
 - Anything you write to ECS after load must also be flushed back in `FlushToSave()`, or it silently reverts on next launch.
-- Prestige calls `SaveManager.SaveLocal()` at the end of `PrestigeSystem.OnUpdate` — your field's post-prestige value must already be correct in ECS/SaveData by then.
+- Prestige (`PrestigeSystem.OnUpdate`) flushes ECS, calls `PrestigeRunReset.ResetRun`, writes the save without re-flushing, then reloads GameScene (`PrestigeRunReset.BeginReload`). A run-scoped field outside `currentRun` must be cleared in `ResetRun`; the new scene loads the reset save like a returning player.
