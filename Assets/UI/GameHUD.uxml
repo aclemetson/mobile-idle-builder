@@ -387,6 +387,14 @@
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
+            <ui:VisualElement name="conveyor-legend" class="conveyor-legend" picking-mode="Ignore">
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--endpoint" picking-mode="Ignore" />
+                <ui:Label text="Start / end" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--path" picking-mode="Ignore" />
+                <ui:Label text="Path preview" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--guide" picking-mode="Ignore" />
+                <ui:Label text="Guide" class="conveyor-legend__text" picking-mode="Ignore" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ DECONSTRUCT OVERLAY ═══ -->

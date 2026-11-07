@@ -994,6 +994,34 @@
     text-overflow: ellipsis;
 }
 
+/* Belt glow legend (#301a). Swatch colours duplicate the GridRenderer fields:
+   ConveyorEndpointColor (green), ConveyorGhostColor (orange), tutorialHighlightColor (amber). */
+.conveyor-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    align-self: flex-start;
+    padding: 2px var(--spacing-md);
+    background-color: rgba(10, 14, 26, 0.6);
+}
+
+.conveyor-legend__swatch {
+    width: 10px;
+    height: 10px;
+    margin-right: 4px;
+    border-radius: 2px;
+}
+
+.conveyor-legend__swatch--endpoint { background-color: rgb(64, 224, 89); }
+.conveyor-legend__swatch--path     { background-color: rgb(255, 128, 0); }
+.conveyor-legend__swatch--guide    { background-color: rgb(255, 199, 38); }
+
+.conveyor-legend__text {
+    color: var(--color-text-secondary);
+    font-size: 10px;
+    margin-right: var(--spacing-md);
+}
+
 .cancel-placement-btn {
     padding: var(--spacing-xs) var(--spacing-sm);
     background-color: rgba(255, 23, 68, 0.14);

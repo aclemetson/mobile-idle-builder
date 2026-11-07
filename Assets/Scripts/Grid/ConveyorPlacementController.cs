@@ -96,6 +96,11 @@ namespace MobileIdleBuilder
 
         private Vector2Int _hoverCell = new(-1, -1);
 
+        // Feedback (#301a): identical refusal toasts at most once per 1.5 s; the chain-continuation
+        // toast shows once per conveyor-mode session.
+        private readonly ToastRateLimiter _toastLimiter = new(1.5);
+        private bool _continueToastShown;
+
         // ----------------------------------------------------------------
         // Lifecycle
         // ----------------------------------------------------------------
@@ -116,6 +121,8 @@ namespace MobileIdleBuilder
         {
             if (IsPlacing) return;
             ResetAll();
+            _continueToastShown = false;
+            _toastLimiter.Reset();
             IsPlacing = true;
             _mode     = Mode.Create;
             cameraController?.SetPanLocked(false); // allow map panning between taps
@@ -186,6 +193,14 @@ namespace MobileIdleBuilder
             ClearPathState();
             _startCell = newStart;
             MarkStart();
+
+            // Make the continuation visible: pulse the new start and explain it once per session.
+            gridRenderer.PulseConveyorEndpoint(_startCell.x, _startCell.y);
+            if (!_continueToastShown)
+            {
+                _continueToastShown = true;
+                InventoryPopupController.NotifyWarning(BeltFeedback.ContinuingMessage);
+            }
         }
 
         /// <summary>
@@ -288,7 +303,7 @@ namespace MobileIdleBuilder
             // ---- Create mode ----
             if (!_hasStart)
             {
-                if (!IsValidEndpoint(cell)) return;
+                if (!IsValidEndpoint(cell)) { ToastRefusal(cell); return; }
                 _startCell = cell;
                 SetHasStart(true);
                 ClearHover();
@@ -301,10 +316,11 @@ namespace MobileIdleBuilder
             if (cell == _startCell)
             {
                 if (!IsConveyorCell(_startCell)) BeginSingleCandidate();
+                else ToastRefusal(cell);
                 return;
             }
 
-            if (!IsValidEndpoint(cell)) return;
+            if (!IsValidEndpoint(cell)) { ToastRefusal(cell); return; }
 
             // Leaving a pending single candidate for a real run — drop its directional preview.
             if (_isSingle) conveyorVisualizer?.ClearSinglePreview();
@@ -343,17 +359,38 @@ namespace MobileIdleBuilder
         // Path computation
         // ----------------------------------------------------------------
 
+        /// <summary>Toasts why a Create-mode tap was refused (rate-limited per message).</summary>
+        private void ToastRefusal(Vector2Int cell)
+        {
+            string reason = BeltFeedback.RefusalReason(
+                _hasStart, _hasStart && cell == _startCell, IsFreecell(cell.x, cell.y), IsConveyorCell(cell));
+            if (reason != null && _toastLimiter.TryAcquire(reason))
+                InventoryPopupController.NotifyWarning(reason);
+        }
+
         private void RecomputePath()
         {
-            gridRenderer.ClearConveyorGhost();
+            gridRenderer.ClearConveyorGhost();   // also clears any blocking-belt tint
 
             Func<int, int, bool> isFree = IsFreecell;
 
             // Prefer the chosen single-turn elbow, then the other elbow, then route around.
             List<Vector2Int> path =
                 ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, _elbowHorizontalFirst, isFree)
-                ?? ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, !_elbowHorizontalFirst, isFree)
-                ?? ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree);
+                ?? ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, !_elbowHorizontalFirst, isFree);
+            bool routed = false;
+            if (path == null)
+            {
+                path   = ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree);
+                routed = true;
+            }
+
+            // No route, or a long detour: tint the existing belts sitting on the straight L.
+            bool showBlockers = routed &&
+                (path == null || BeltFeedback.IsDetour(path.Count, _startCell, _destCell));
+            var blockers = showBlockers
+                ? BeltFeedback.BlockingBeltCells(_startCell, _destCell, _elbowHorizontalFirst, (x, y) => IsConveyorCell(new Vector2Int(x, y)))
+                : null;
 
             _currentPath = path ?? new List<Vector2Int>();
             _pathValid   = path != null && path.Count >= 1;
@@ -362,6 +399,7 @@ namespace MobileIdleBuilder
             {
                 // Unreachable end — keep showing the start marker, drop the candidate.
                 if (_hasStart) MarkStart();
+                if (blockers != null && blockers.Count > 0) gridRenderer.SetBlockingBelts(blockers);
                 return;
             }
 
@@ -375,6 +413,7 @@ namespace MobileIdleBuilder
                     gridRenderer.AddConveyorGhostCell(c.x, c.y);
             }
             gridRenderer.PaintConveyorEndpoints(_startCell.x, _startCell.y, _destCell.x, _destCell.y);
+            if (blockers != null && blockers.Count > 0) gridRenderer.SetBlockingBelts(blockers);
         }
 
         // ----------------------------------------------------------------
