@@ -67,6 +67,8 @@ namespace MobileIdleBuilder.Editor
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<BuildingDatabaseSO>($"{ResourcesDir}/BuildingDatabase.asset") == null)
                 needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<RecipeDatabaseSO>($"{ResourcesDir}/RecipeDatabase.asset") == null)
+                needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
@@ -228,6 +230,9 @@ namespace MobileIdleBuilder.Editor
             foreach (var world in data.worlds)
                 worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
             GenerateWorldDatabase(data.worlds, worldLookup);
+
+            // ── Step 12.59: RecipeDatabaseSO (runtime recipe list, #336/#287) ─
+            GenerateRecipeDatabase(data.recipes, recipeLookup);
 
             // ── Step 12.6: BuildingDatabaseSO (data-driven build menu) ───────
             GenerateBuildingDatabase(data.buildings, buildingLookup);
@@ -751,6 +756,22 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allWorlds = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateRecipeDatabase(List<RecipeJson> recipes,
+            Dictionary<string, RecipeSO> recipeLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/RecipeDatabase.asset";
+            var db = LoadOrCreate<RecipeDatabaseSO>(path);
+
+            var list = new List<RecipeSO>(recipes.Count);
+            foreach (var r in recipes)
+                if (recipeLookup.TryGetValue(r.id, out var so))
+                    list.Add(so);
+
+            db.allRecipes = list.ToArray();
             EditorUtility.SetDirty(db);
         }
 

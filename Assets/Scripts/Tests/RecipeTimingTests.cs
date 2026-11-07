@@ -11,7 +11,7 @@ namespace MobileIdleBuilder.Tests
     /// Edit Mode tests that verify baseCraftTime values for key recipes across all
     /// 5 tiers, and confirm ingredient counts for tutorial-critical recipes.
     ///
-    /// Source of truth: Assets/Data/recipes.json.
+    /// Source of truth: Assets/Data/game_data.json (via RecipeDatabaseSO).
     /// If a test fails, check the JSON entry for the recipe and re-import via
     /// 'MobileIdleBuilder > Import Game Data' if needed.
     /// </summary>
@@ -23,15 +23,7 @@ namespace MobileIdleBuilder.Tests
         [OneTimeSetUp]
         public void LoadRecipes()
         {
-            string path = Path.Combine(Application.dataPath, "Data", "recipes.json");
-            Assert.IsTrue(File.Exists(path), $"recipes.json not found at: {path}");
-
-            var raw = JsonUtility.FromJson<RecipeListJson>(File.ReadAllText(path));
-            Assert.IsNotNull(raw,         "Failed to deserialize recipes.json");
-            Assert.IsNotNull(raw.recipes, "recipes array is null in recipes.json");
-
-            _recipes = RecipeDatabase.ParseValidRecipes(raw.recipes);
-            Assert.IsNotEmpty(_recipes, "No valid recipes after filtering recipes.json");
+            _recipes = RecipeTestData.LoadRuntimeRecipes();
         }
 
         // ── Tier 1 — Subatomic craft times ───────────────────────────────────
@@ -59,7 +51,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Helium_CraftTime_Is4s()
         {
-            Assert.AreEqual(4f, RequireRecipe("helium").base_craft_time, 0.001f);
+            Assert.AreEqual(4f, RequireRecipe("helium_4").base_craft_time, 0.001f);
         }
 
         [Test]
@@ -67,7 +59,7 @@ namespace MobileIdleBuilder.Tests
         {
             // Two Deuterium (then one fusion) must take less Atom Generator time than one Helium.
             Assert.Less(2f * RequireRecipe("assemble_deuterium").base_craft_time,
-                        RequireRecipe("helium").base_craft_time);
+                        RequireRecipe("helium_4").base_craft_time);
         }
 
         [Test]
@@ -133,7 +125,7 @@ namespace MobileIdleBuilder.Tests
         private RecipeJson RequireRecipe(string id)
         {
             var r = _recipes.FirstOrDefault(x => x.id == id);
-            Assert.IsNotNull(r, $"Recipe with id '{id}' not found in recipes.json");
+            Assert.IsNotNull(r, $"Recipe with id '{id}' not found in the runtime recipe list");
             return r;
         }
 

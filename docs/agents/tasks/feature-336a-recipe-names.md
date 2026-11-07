@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `data-pipeline.md`, `ui-toolkit.md` (inspector
 section), `testing.md`.
-**Status:** done (PR pending, integration/2026-11-07).
+**Status:** done (PR #350).
 **Size:** M. **Branch:** `feat/336-recipe-names` from `integration/2026-11-07`.
 **Phase B** (the Recipes tab on game_data.json, grouped by item, #287 step 2) is a separate task:
 `feature-336b-recipes-tab-grouping.md`. **Do not touch the Recipes tab, `RecipeDatabase` or `recipes.json` here.**
