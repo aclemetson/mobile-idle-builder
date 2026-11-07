@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_rhenium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_rhenium
-  displayName: 'Slow capture: Rhenium'
+  displayName: Rhenium
+  methodLabel: 
   recipeId: 282
   tier: 2
   category: 4

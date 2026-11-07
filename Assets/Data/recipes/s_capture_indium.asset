@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_indium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_indium
-  displayName: 'Slow capture: Indium'
+  displayName: Indium
+  methodLabel: 
   recipeId: 265
   tier: 2
   category: 4

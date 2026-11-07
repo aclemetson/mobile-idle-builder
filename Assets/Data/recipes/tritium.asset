@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: tritium
   displayName: Tritium
+  methodLabel: 
   recipeId: 15
   tier: 2
   category: 4

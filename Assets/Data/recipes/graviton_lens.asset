@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: graviton_lens
   displayName: Graviton Lens
+  methodLabel: 
   recipeId: 49
   tier: 5
   category: 7

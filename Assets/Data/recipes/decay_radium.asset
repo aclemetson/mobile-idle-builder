@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_radium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_radium
-  displayName: Radium Decay
+  displayName: Radon
+  methodLabel: 
   recipeId: 233
   tier: 2
   category: 4

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_aluminum
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_aluminum
-  displayName: Mine Aluminum
+  displayName: Aluminum
+  methodLabel: 
   recipeId: 175
   tier: 3
   category: 3

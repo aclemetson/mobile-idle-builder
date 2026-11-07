@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: population
   displayName: Population
+  methodLabel: 
   recipeId: 205
   tier: 3
   category: 5

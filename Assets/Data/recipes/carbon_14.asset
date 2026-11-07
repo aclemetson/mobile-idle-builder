@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: carbon_14
   displayName: Carbon-14
+  methodLabel: 
   recipeId: 16
   tier: 2
   category: 4

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: harvest_proton
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: harvest_proton
-  displayName: Harvest Proton
+  displayName: Proton
+  methodLabel: 
   recipeId: 222
   tier: 1
   category: 2

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: steel
   displayName: Steel
+  methodLabel: 
   recipeId: 37
   tier: 4
   category: 6

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: liquid_hydrogen
   displayName: Liquid Hydrogen
+  methodLabel: 
   recipeId: 30
   tier: 3
   category: 5

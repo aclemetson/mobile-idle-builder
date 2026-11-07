@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: irradiate_radon
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: irradiate_radon
-  displayName: Irradiate Radon
+  displayName: Radon-223
+  methodLabel: 
   recipeId: 227
   tier: 2
   category: 4

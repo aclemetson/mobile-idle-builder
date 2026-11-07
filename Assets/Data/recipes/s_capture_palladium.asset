@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_palladium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_palladium
-  displayName: 'Slow capture: Palladium'
+  displayName: Palladium
+  methodLabel: 
   recipeId: 262
   tier: 2
   category: 4

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_holmium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_holmium
-  displayName: 'Slow capture: Holmium'
+  displayName: Holmium
+  methodLabel: 
   recipeId: 274
   tier: 2
   category: 4

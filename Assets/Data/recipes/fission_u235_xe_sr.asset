@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fission_u235_xe_sr
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_u235_xe_sr
-  displayName: 'Split U-235: Xenon + Strontium'
+  displayName: Xenon
+  methodLabel: 
   recipeId: 242
   tier: 2
   category: 9

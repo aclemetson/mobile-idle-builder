@@ -2171,8 +2171,8 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: craft_first_deuterium
-    hintText: 'Tap the Atom Generator and set its recipe to Assemble Deuterium: 1
-      proton, 1 neutron, 1 electron.'
+    hintText: 'Tap the Atom Generator and set its recipe to Deuterium: 1 proton,
+      1 neutron, 1 electron.'
     advanceCondition:
       type: 11
       anyOf: 0
@@ -2397,8 +2397,9 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: fuse_first_helium
-    hintText: Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium
-      become one Helium, and the gamma ray that escapes pays bonus entropy.
+    hintText: Tap the Fusion Reactor and set its recipe to Helium-4 from 2 Deuterium
+      (D-D fusion). Two Deuterium become one Helium, and the gamma ray that escapes
+      pays bonus entropy.
     advanceCondition:
       type: 12
       anyOf: 0
@@ -2493,8 +2494,8 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: set_carbon_recipe
-    hintText: Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three
-      Helium-4 become one Carbon.
+    hintText: Tap the new Fusion Reactor and set its recipe to Carbon. Three Helium-4
+      become one Carbon.
     advanceCondition:
       type: 12
       anyOf: 0

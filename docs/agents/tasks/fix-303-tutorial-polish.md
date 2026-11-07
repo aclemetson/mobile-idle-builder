@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ui-toolkit.md`, `data-pipeline.md` (tutorial
 steps/dialogues section only), `testing.md`.
-**Status:** done (PR pending, integration/2026-11-07). Item 7 (list swipe) needs an on-device check.
+**Status:** done (PR #349). Item 7 (list swipe) needs an on-device check.
 **Size:** S. Six small independent items; do them in order and keep each one minimal.
 **Branch:** `fix/303-tutorial-polish` from `integration/2026-11-07`.
 

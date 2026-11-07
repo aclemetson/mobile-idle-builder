@@ -390,10 +390,7 @@ namespace MobileIdleBuilder
                         foreach (var r in available)
                         {
                             var captured = r;
-                            var btn = new Button { text = r.displayName ?? r.name };
-                            btn.AddToClassList("craft-btn");
-                            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
-                            if (icon != null) btn.Insert(0, icon);
+                            var btn = MakeRecipeButton(r, SharesOutput(available, r));
                             // Routed from the list: a Button's own Clickable consumes the
                             // pointer-down before any manipulator added later. See ListTapRouter.
                             ListTapRouter.Register(_inspectorRecipes, btn, () =>
@@ -791,10 +788,7 @@ namespace MobileIdleBuilder
             {
                 if (r == null) continue;
                 var captured = r;
-                var btn = new Button { text = r.displayName ?? r.outputItem?.displayName ?? r.name };
-                btn.AddToClassList("craft-btn");
-                var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
-                if (icon != null) btn.Insert(0, icon);
+                var btn = MakeRecipeButton(r, SharesOutput(relevantRecipes, r));
                 ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     SetBuildingRecipe(entity, captured);
@@ -802,6 +796,48 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Recipe buttons (#336) ──────────────────────────────────────────────
+
+        /// <summary>True when another recipe in the list makes the same output item as <paramref name="r"/>.</summary>
+        private static bool SharesOutput(List<RecipeSO> list, RecipeSO r)
+        {
+            if (r == null || r.outputItem == null) return false;
+            foreach (var other in list)
+                if (other != null && other != r && other.outputItem == r.outputItem) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A picker button named after the recipe's product. When several buttons make the same product
+        /// (<paramref name="withMethodLine"/>), a smaller second line says the building, inputs and method.
+        /// </summary>
+        private static Button MakeRecipeButton(RecipeSO r, bool withMethodLine)
+        {
+            string name = r.outputItem?.displayName ?? r.displayName ?? r.name;
+            var btn = new Button();
+            btn.AddToClassList("craft-btn");
+            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+
+            if (!withMethodLine)
+            {
+                btn.text = name;
+                if (icon != null) btn.Insert(0, icon);
+                return btn;
+            }
+
+            // Two lines: the button's own text can't hold a second label, so lay out icon + a text column.
+            btn.AddToClassList("craft-btn--with-method");
+            if (icon != null) btn.Add(icon);
+            var column = new VisualElement { pickingMode = PickingMode.Ignore };
+            column.AddToClassList("recipe-text-column");
+            column.Add(new Label(name) { pickingMode = PickingMode.Ignore });
+            var method = new Label(RecipeText.MethodLine(r)) { pickingMode = PickingMode.Ignore };
+            method.AddToClassList("recipe-method-line");
+            column.Add(method);
+            btn.Add(column);
+            return btn;
         }
 
         // ── Recipe modes (#322: Neutron Capture Slow / Fast) ───────────────────

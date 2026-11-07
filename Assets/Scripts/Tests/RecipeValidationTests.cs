@@ -149,6 +149,31 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("tritium", r.output.id);
         }
 
+        // ── Naming (#336): a recipe is named after its product ──────────────────
+
+        [System.Serializable] private class GdItem   { public string id; public string display_name; }
+        [System.Serializable] private class GdRecipe { public string id; public string display_name; public string output_item; }
+        [System.Serializable] private class GdRoot   { public List<GdItem> items = new(); public List<GdRecipe> recipes = new(); }
+
+        [Test]
+        public void GameData_EveryRecipeIsNamedAfterItsOutputItem()
+        {
+            string path = Path.Combine(Application.dataPath, "Data", "game_data.json");
+            Assert.IsTrue(File.Exists(path), $"game_data.json not found at: {path}");
+            var root = JsonUtility.FromJson<GdRoot>(File.ReadAllText(path));
+            var itemNames = new Dictionary<string, string>();
+            foreach (var i in root.items) if (!string.IsNullOrEmpty(i.id)) itemNames[i.id] = i.display_name;
+
+            var bad = new List<string>();
+            foreach (var r in root.recipes)
+            {
+                if (string.IsNullOrEmpty(r.id)) continue;
+                if (!itemNames.TryGetValue(r.output_item ?? "", out var want)) { bad.Add($"{r.id}: unknown output '{r.output_item}'"); continue; }
+                if (r.display_name != want) bad.Add($"{r.id}: '{r.display_name}' should be '{want}'");
+            }
+            Assert.IsEmpty(bad, string.Join("\n", bad));
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         private RecipeJson RequireRecipe(string id)

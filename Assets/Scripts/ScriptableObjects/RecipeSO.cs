@@ -16,6 +16,8 @@ namespace MobileIdleBuilder
         [Header("Identity")]
         public string id;               // matches recipes.json id
         public string displayName;
+        [Tooltip("Optional short method name shown on the picker's method line (#336), e.g. 'p-p chain'.")]
+        public string methodLabel;
 
         [Header("ECS Reference")]
         public int recipeId;            // integer ID used in ECS components
