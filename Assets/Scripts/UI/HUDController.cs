@@ -284,6 +284,8 @@ namespace MobileIdleBuilder
             if (pvpService != null)
                 pvpService.OnStateChanged += OnPVPStateChanged;
 
+            BindLiveServices();
+
             if (researchService != null)
                 researchService.OnResearchUnlocked += OnResearchUnlocked;
 
@@ -297,6 +299,20 @@ namespace MobileIdleBuilder
                 _craftQueueView.Root.RegisterCallback<GeometryChangedEvent>(_ => UpdateRecipeListClearance());
                 craftService.QueueChanged += OnCraftQueueChanged;
             }
+        }
+
+        /// <summary>
+        /// Points the serialized service fields at the live singletons. ManualCraftService and ResearchService
+        /// sit on the persistent Bootstrap object, so after a scene reload (fresh start, new game, dev reload)
+        /// the freshly loaded scene's copies are duplicates that SingletonMonoBehaviour destroys at the end of
+        /// the frame. The HUD kept its serialized reference to the doomed copy, so every craft silently did
+        /// nothing until Play Mode restarted (playtest S1, 2026-11-07). The kept instance is still Instance
+        /// here; on a first load whose service hasn't woken yet, the serialized reference stays.
+        /// </summary>
+        private void BindLiveServices()
+        {
+            if (ManualCraftService.Instance != null) craftService    = ManualCraftService.Instance;
+            if (ResearchService.Instance    != null) researchService = ResearchService.Instance;
         }
 
         void OnDisable()
@@ -1123,9 +1139,16 @@ namespace MobileIdleBuilder
 
         private void OnResearchUnlocked(ResearchSO research)
         {
-            // Refresh research panel if it is currently open
+            // Refresh research panel if it is currently open. During the tutorial, close it instead: every
+            // step after a tutorial research needs the world or another panel, and a Research panel left
+            // open silently blocked field taps (2026-11-07 playtest: 18 turns lost at gather_for_hydrogen).
             if (_researchPanel != null && !_researchPanel.ClassListContains("hidden"))
-                BuildResearchList();
+            {
+                bool tutorialActive = _ecsReady && !_tutorialQuery.IsEmpty
+                                      && _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
+                if (tutorialActive) SetElementVisible(_researchPanel, false);
+                else                BuildResearchList();
+            }
 
             // Refresh buildings panel if it is open (newly unlocked buildings will appear)
             if (_buildingsPanel != null && !_buildingsPanel.ClassListContains("hidden"))
@@ -1738,6 +1761,7 @@ namespace MobileIdleBuilder
 
         private void OnCraftPressed(RecipeJson recipe, int count)
         {
+            if (craftService == null) BindLiveServices();   // a destroyed reload duplicate reads as null
             if (craftService == null) return;
             if (count == CraftMax) count = craftService.MaxCraftable(recipe);
             // Max with nothing affordable: report what one craft needs.
