@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_ytterbium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_ytterbium
-  displayName: 'Slow capture: Ytterbium'
+  displayName: Ytterbium
+  methodLabel: 
   recipeId: 277
   tier: 2
   category: 4

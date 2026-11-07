@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fuse_carbon
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fuse_carbon
-  displayName: Fuse Carbon
+  displayName: Carbon
+  methodLabel: 
   recipeId: 149
   tier: 2
   category: 8

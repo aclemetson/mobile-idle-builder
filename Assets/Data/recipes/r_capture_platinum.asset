@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: r_capture_platinum
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: r_capture_platinum
-  displayName: 'Fast capture: Platinum'
+  displayName: Platinum
+  methodLabel: 
   recipeId: 287
   tier: 2
   category: 4

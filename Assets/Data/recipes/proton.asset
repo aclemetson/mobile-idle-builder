@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: proton
   displayName: Proton
+  methodLabel: 
   recipeId: 4
   tier: 1
   category: 2

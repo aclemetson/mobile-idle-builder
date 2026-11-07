@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_glucose
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_glucose
-  displayName: Harvest Glucose
+  displayName: Glucose
+  methodLabel: 
   recipeId: 189
   tier: 3
   category: 5

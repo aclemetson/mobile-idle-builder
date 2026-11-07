@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_aluminum
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_aluminum
-  displayName: Fuse Aluminum
+  displayName: Aluminum
+  methodLabel: 
   recipeId: 215
   tier: 2
   category: 8

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: protein
   displayName: Protein
+  methodLabel: 
   recipeId: 193
   tier: 3
   category: 5

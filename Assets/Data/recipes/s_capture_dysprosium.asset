@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_dysprosium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_dysprosium
-  displayName: 'Slow capture: Dysprosium'
+  displayName: Dysprosium
+  methodLabel: 
   recipeId: 273
   tier: 2
   category: 4

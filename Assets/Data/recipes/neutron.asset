@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: neutron
   displayName: Neutron
+  methodLabel: 
   recipeId: 5
   tier: 1
   category: 2

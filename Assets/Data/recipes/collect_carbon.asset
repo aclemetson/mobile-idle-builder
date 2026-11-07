@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: collect_carbon
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_carbon
-  displayName: Mine Carbon
-  recipeId: 165
-  tier: 3
+  displayName: Carbon
+  methodLabel: 
+  recipeId: 0
+  tier: 1
   category: 3
   inputs: []
   neutronAdjustment: []

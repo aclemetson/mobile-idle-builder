@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: irradiate_lead
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: irradiate_lead
-  displayName: Irradiate Lead
+  displayName: Lead-209
+  methodLabel: 
   recipeId: 228
   tier: 2
   category: 4

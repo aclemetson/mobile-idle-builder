@@ -37,6 +37,15 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-power-draw.md` — proximity eV power grid (makes PowerDiscount live) | done (feature/power-draw) | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
+| `tasks/fix-341-recipe-switch-outputs.md` — recipe switch moves old-recipe outputs to inventory | done (PR #346) | S |
+| `tasks/feature-339-research-effects.md` - research effects (Transportation I = +10% belt speed) | done (PR #347) | M |
+| `tasks/feature-302-placement-power-preview.md` - power range while placing a powered building | done (PR #348) | M |
+| `tasks/fix-303-tutorial-polish.md` - tutorial polish from the 2026-10-31 playtests | done (PR #349) | S |
+| `tasks/feature-336a-recipe-names.md` - recipes named after their product, picker method line | done (PR #350) | M |
+| `tasks/feature-336b-recipes-tab-grouping.md` - Recipes tab on game_data.json, grouped by item (#287 step 2) | done (PR #351) | M-L |
+| `tasks/feature-301-belt-drawing-ux.md` - belt drawing feedback (301a) and router cost (301b) | done (PRs #352, #353) | L |
+| `tasks/feature-item-value-readouts.md` - item worth in the Recipes tab and building inspector | done (PR #354) | M |
+| `tasks/feature-stats-panel.md` - Statistics menu: automation income/s and idle projection | done (PR pending) | M |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

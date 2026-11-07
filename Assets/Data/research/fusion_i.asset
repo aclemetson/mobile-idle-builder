@@ -28,6 +28,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 180
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
   - {fileID: 11400000, guid: 2aa3f256dbe6a324c89dcd09b44631e5, type: 2}

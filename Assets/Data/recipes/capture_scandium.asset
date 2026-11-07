@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_scandium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_scandium
-  displayName: Fuse Scandium
+  displayName: Scandium
+  methodLabel: 
   recipeId: 219
   tier: 2
   category: 8

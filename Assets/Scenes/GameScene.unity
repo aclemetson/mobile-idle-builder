@@ -322,7 +322,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e992acbd9735e646bad81078035f410, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeDatabase
-  recipesJsonAsset: {fileID: 4900000, guid: fabdbb24d26dea3448a77ed089ff3f01, type: 3}
 --- !u!114 &262970763
 MonoBehaviour:
   m_ObjectHideFlags: 0

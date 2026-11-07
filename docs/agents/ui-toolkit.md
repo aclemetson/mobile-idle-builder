@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336). If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -107,3 +107,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 - `root.Q<T>("name")` returns null silently for typos — null-check and log, especially in `Init`.
 - Per-frame ECS reads belong in `HUDController.Update` flow or `HUDStatusBarController`; panel `Refresh()` is on-open only.
 - Don't edit `GameHUD.uss` design tokens for one panel — add a panel-specific USS if needed and register it on the panel root.
+
+- **Recipes tab (#336):** `HUDController.BuildRecipeList` groups known recipes with `RecipeGrouping.Group` (one row per output item). One method renders as before. Several methods render the chosen method's row plus a `recipe-methods-toggle` button ("N ways to make this"); expanded, `recipe-methods` lists every method (`BuildMethodDetailRow`: "Made in a X", inputs, time, lock text, craft buttons). `RecipeGrouping.PickMethod` picks the row's method: the remembered one (`_recipeMethodChoice`, session only, set when a method's craft button is pressed), else the first unlocked menu-craftable one. Rows are code-built; the classes live in `GameHUD.uss`.
+- **Item value readouts:** the Recipes group row shows `HUDController.WorthEachText` ("Worth ◈ X each", price from `ItemValue.PricePerItem` = `SurplusSale.DemonPrice`). The inspector adds three fixed rows under "Produces" for crafters (`HUDBuildingInspectorSubController.ValueLines`: worth each, per craft with outMult, per second at current speed) and one `CollectorValueLine` row for collectors. Maths lives in `Services/ItemValue.cs` and mirrors ProductionSystem/CollectorSystem (outMult = manager `AppliedOutputMult` x `GlobalProductionBonus.OutputMult`; speed = `ProductionSpeed` x `PowerStatus.ThrottleRatio` x `GlobalProductionBonus.SpeedMult`). `NumberFormat.Compact`/`Entropy` (UI/NumberFormat.cs) format the numbers.
+- **Statistics panel:** drawer button `btn-stats` opens `stats-panel` (copy of the upgrades slide-panel; close button `btn-close-stats` is a `GlyphIcon` in UXML; rows reuse `upgrade-row*` classes plus `.stats-value`). `StatsSubController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, no scene edit) shows automation income per second (rolling 60 s from `IncomeRateTracker`, also added in `Awake`, samples `AutomationIncome.Total` once a second even when the panel is closed), the idle projection (rate x `OfflineCollectionService.GetEffectiveCollectionRate` x `GetAdIdleMultiplier`) and the idle cap. `OpenStatsPanel` refreshes and starts a 1 s ticker that pauses itself when the panel is hidden. `HUDController` field/wiring locations drift: grep `_stats`, `OpenStatsPanel`, `btn-stats`.

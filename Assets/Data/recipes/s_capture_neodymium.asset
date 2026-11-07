@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_neodymium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_neodymium
-  displayName: 'Slow capture: Neodymium'
+  displayName: Neodymium
+  methodLabel: 
   recipeId: 268
   tier: 2
   category: 4

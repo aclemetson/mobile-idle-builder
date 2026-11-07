@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fission_pu239
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_pu239
-  displayName: 'Split Plutonium: Xenon + Zirconium'
+  displayName: Xenon
+  methodLabel: 
   recipeId: 161
   tier: 2
   category: 9

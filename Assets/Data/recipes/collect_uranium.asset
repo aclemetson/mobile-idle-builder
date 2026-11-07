@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_uranium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_uranium
-  displayName: Harvest Uranium
+  displayName: Uranium
+  methodLabel: 
   recipeId: 162
   tier: 2
   category: 3

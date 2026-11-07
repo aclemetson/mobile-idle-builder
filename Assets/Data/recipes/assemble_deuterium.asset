@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: assemble_deuterium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: assemble_deuterium
-  displayName: Assemble Deuterium
+  displayName: Deuterium
+  methodLabel: 
   recipeId: 207
   tier: 2
   category: 4

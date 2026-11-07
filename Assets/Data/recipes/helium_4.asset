@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: helium_4
   displayName: Helium-4
+  methodLabel: 
   recipeId: 7
   tier: 2
   category: 3

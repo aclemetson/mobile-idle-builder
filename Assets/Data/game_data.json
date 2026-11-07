@@ -379,7 +379,7 @@
       "_comment": "--- TIER 2 ELEMENT GATES ---",
       "id": "light_elements",
       "display_name": "Light Elements",
-      "description": "Fuse Lithium (Helium + Deuterium), then Beryllium and Boron by adding one proton at a time.",
+      "description": "Make Lithium from Helium and Deuterium, then Beryllium and Boron by adding one proton at a time.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
@@ -1083,6 +1083,7 @@
       "cost_base_currency": 62400,
       "duration_seconds": 45,
       "description": "Increases conveyor belt speed by 10%.",
+      "effects": [{ "type": "ConveyorSpeed", "value": 0.10 }],
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 0,
       "cost_prestige_currency": 0,
@@ -5625,7 +5626,7 @@
     {
       "_comment": "--- RAW RESOURCE COLLECTION (one recipe per harvested item) ---",
       "id": "collect_up_quark",
-      "display_name": "Collect Up Quark",
+      "display_name": "Up Quark",
       "recipe_id": 1,
       "tier": 1,
       "category": "Quark",
@@ -5648,7 +5649,7 @@
     },
     {
       "id": "collect_down_quark",
-      "display_name": "Collect Down Quark",
+      "display_name": "Down Quark",
       "recipe_id": 2,
       "tier": 1,
       "category": "Quark",
@@ -5671,7 +5672,7 @@
     },
     {
       "id": "collect_electron",
-      "display_name": "Collect Electron",
+      "display_name": "Electron",
       "recipe_id": 3,
       "tier": 1,
       "category": "Lepton",
@@ -5694,7 +5695,7 @@
     },
     {
       "id": "harvest_proton",
-      "display_name": "Harvest Proton",
+      "display_name": "Proton",
       "recipe_id": 222,
       "tier": 1,
       "category": "Nucleon",
@@ -5717,7 +5718,7 @@
     },
     {
       "id": "harvest_neutron",
-      "display_name": "Harvest Neutron",
+      "display_name": "Neutron",
       "recipe_id": 223,
       "tier": 1,
       "category": "Nucleon",
@@ -5849,7 +5850,7 @@
     },
     {
       "id": "assemble_deuterium",
-      "display_name": "Assemble Deuterium",
+      "display_name": "Deuterium",
       "recipe_id": 207,
       "tier": 2,
       "category": "Isotope",
@@ -7241,7 +7242,8 @@
     },
     {
       "id": "fuse_helium",
-      "display_name": "Fuse Helium-4 (p-p chain)",
+      "display_name": "Helium-4",
+      "method_label": "p-p chain",
       "recipe_id": 148,
       "tier": 2,
       "category": "Fusion",
@@ -7269,7 +7271,7 @@
     },
     {
       "id": "fuse_carbon",
-      "display_name": "Fuse Carbon",
+      "display_name": "Carbon",
       "recipe_id": 149,
       "tier": 2,
       "category": "Fusion",
@@ -7296,7 +7298,7 @@
     },
     {
       "id": "fuse_oxygen",
-      "display_name": "Fuse Oxygen",
+      "display_name": "Oxygen",
       "recipe_id": 150,
       "tier": 2,
       "category": "Fusion",
@@ -7324,7 +7326,7 @@
     },
     {
       "id": "fuse_neon",
-      "display_name": "Fuse Neon",
+      "display_name": "Neon",
       "recipe_id": 151,
       "tier": 2,
       "category": "Fusion",
@@ -7352,7 +7354,7 @@
     },
     {
       "id": "fuse_magnesium",
-      "display_name": "Fuse Magnesium",
+      "display_name": "Magnesium",
       "recipe_id": 152,
       "tier": 2,
       "category": "Fusion",
@@ -7380,7 +7382,7 @@
     },
     {
       "id": "fuse_silicon",
-      "display_name": "Fuse Silicon",
+      "display_name": "Silicon",
       "recipe_id": 153,
       "tier": 2,
       "category": "Fusion",
@@ -7408,7 +7410,7 @@
     },
     {
       "id": "fuse_sulfur",
-      "display_name": "Fuse Sulfur",
+      "display_name": "Sulfur",
       "recipe_id": 154,
       "tier": 2,
       "category": "Fusion",
@@ -7436,7 +7438,7 @@
     },
     {
       "id": "fuse_argon",
-      "display_name": "Fuse Argon",
+      "display_name": "Argon",
       "recipe_id": 155,
       "tier": 2,
       "category": "Fusion",
@@ -7464,7 +7466,7 @@
     },
     {
       "id": "fuse_calcium",
-      "display_name": "Fuse Calcium",
+      "display_name": "Calcium",
       "recipe_id": 156,
       "tier": 2,
       "category": "Fusion",
@@ -7492,7 +7494,7 @@
     },
     {
       "id": "fuse_titanium",
-      "display_name": "Fuse Titanium",
+      "display_name": "Titanium",
       "recipe_id": 157,
       "tier": 2,
       "category": "Fusion",
@@ -7520,7 +7522,7 @@
     },
     {
       "id": "fuse_chromium",
-      "display_name": "Fuse Chromium",
+      "display_name": "Chromium",
       "recipe_id": 158,
       "tier": 2,
       "category": "Fusion",
@@ -7548,7 +7550,7 @@
     },
     {
       "id": "fuse_iron",
-      "display_name": "Fuse Iron",
+      "display_name": "Iron",
       "recipe_id": 159,
       "tier": 2,
       "category": "Fusion",
@@ -7576,7 +7578,8 @@
     },
     {
       "id": "fuse_deuterium",
-      "display_name": "Fuse Deuterium",
+      "display_name": "Helium-4",
+      "method_label": "D-D fusion",
       "recipe_id": 208,
       "tier": 2,
       "category": "Fusion",
@@ -7603,7 +7606,7 @@
     },
     {
       "id": "capture_lithium",
-      "display_name": "Fuse Lithium",
+      "display_name": "Lithium",
       "recipe_id": 209,
       "tier": 2,
       "category": "Fusion",
@@ -7631,7 +7634,7 @@
     },
     {
       "id": "capture_beryllium",
-      "display_name": "Fuse Beryllium",
+      "display_name": "Beryllium",
       "recipe_id": 210,
       "tier": 2,
       "category": "Fusion",
@@ -7659,7 +7662,7 @@
     },
     {
       "id": "capture_boron",
-      "display_name": "Fuse Boron",
+      "display_name": "Boron",
       "recipe_id": 211,
       "tier": 2,
       "category": "Fusion",
@@ -7687,7 +7690,7 @@
     },
     {
       "id": "capture_nitrogen",
-      "display_name": "Fuse Nitrogen",
+      "display_name": "Nitrogen",
       "recipe_id": 212,
       "tier": 2,
       "category": "Fusion",
@@ -7715,7 +7718,7 @@
     },
     {
       "id": "capture_fluorine",
-      "display_name": "Fuse Fluorine",
+      "display_name": "Fluorine",
       "recipe_id": 213,
       "tier": 2,
       "category": "Fusion",
@@ -7743,7 +7746,7 @@
     },
     {
       "id": "capture_sodium",
-      "display_name": "Fuse Sodium",
+      "display_name": "Sodium",
       "recipe_id": 214,
       "tier": 2,
       "category": "Fusion",
@@ -7771,7 +7774,7 @@
     },
     {
       "id": "capture_aluminum",
-      "display_name": "Fuse Aluminum",
+      "display_name": "Aluminum",
       "recipe_id": 215,
       "tier": 2,
       "category": "Fusion",
@@ -7799,7 +7802,7 @@
     },
     {
       "id": "capture_phosphorus",
-      "display_name": "Fuse Phosphorus",
+      "display_name": "Phosphorus",
       "recipe_id": 216,
       "tier": 2,
       "category": "Fusion",
@@ -7827,7 +7830,7 @@
     },
     {
       "id": "capture_chlorine",
-      "display_name": "Fuse Chlorine",
+      "display_name": "Chlorine",
       "recipe_id": 217,
       "tier": 2,
       "category": "Fusion",
@@ -7855,7 +7858,7 @@
     },
     {
       "id": "capture_potassium",
-      "display_name": "Fuse Potassium",
+      "display_name": "Potassium",
       "recipe_id": 218,
       "tier": 2,
       "category": "Fusion",
@@ -7883,7 +7886,7 @@
     },
     {
       "id": "capture_scandium",
-      "display_name": "Fuse Scandium",
+      "display_name": "Scandium",
       "recipe_id": 219,
       "tier": 2,
       "category": "Fusion",
@@ -7911,7 +7914,7 @@
     },
     {
       "id": "capture_vanadium",
-      "display_name": "Fuse Vanadium",
+      "display_name": "Vanadium",
       "recipe_id": 220,
       "tier": 2,
       "category": "Fusion",
@@ -7939,7 +7942,7 @@
     },
     {
       "id": "capture_manganese",
-      "display_name": "Fuse Manganese",
+      "display_name": "Manganese",
       "recipe_id": 221,
       "tier": 2,
       "category": "Fusion",
@@ -7967,7 +7970,7 @@
     },
     {
       "id": "fission_u235",
-      "display_name": "Split U-235: Barium + Krypton",
+      "display_name": "Barium",
       "recipe_id": 160,
       "tier": 2,
       "category": "Fission",
@@ -7995,7 +7998,7 @@
     },
     {
       "id": "fission_u235_xe_sr",
-      "display_name": "Split U-235: Xenon + Strontium",
+      "display_name": "Xenon",
       "recipe_id": 242,
       "tier": 2,
       "category": "Fission",
@@ -8023,7 +8026,7 @@
     },
     {
       "id": "fission_u235_cs_rb",
-      "display_name": "Split U-235: Cesium + Rubidium",
+      "display_name": "Cesium",
       "recipe_id": 243,
       "tier": 2,
       "category": "Fission",
@@ -8051,7 +8054,7 @@
     },
     {
       "id": "fission_u235_i_y",
-      "display_name": "Split U-235: Iodine + Yttrium",
+      "display_name": "Iodine",
       "recipe_id": 244,
       "tier": 2,
       "category": "Fission",
@@ -8079,7 +8082,7 @@
     },
     {
       "id": "fission_u235_te_zr",
-      "display_name": "Split U-235: Tellurium + Zirconium",
+      "display_name": "Tellurium",
       "recipe_id": 245,
       "tier": 2,
       "category": "Fission",
@@ -8107,7 +8110,7 @@
     },
     {
       "id": "fission_u235_sb_nb",
-      "display_name": "Split U-235: Antimony + Niobium",
+      "display_name": "Antimony",
       "recipe_id": 246,
       "tier": 2,
       "category": "Fission",
@@ -8135,7 +8138,7 @@
     },
     {
       "id": "fission_u235_sn_mo",
-      "display_name": "Split U-235: Tin + Molybdenum",
+      "display_name": "Tin",
       "recipe_id": 247,
       "tier": 2,
       "category": "Fission",
@@ -8163,7 +8166,7 @@
     },
     {
       "id": "fission_pu239",
-      "display_name": "Split Plutonium: Xenon + Zirconium",
+      "display_name": "Xenon",
       "recipe_id": 161,
       "tier": 2,
       "category": "Fission",
@@ -8191,7 +8194,7 @@
     },
     {
       "id": "fission_pu239_ba_sr",
-      "display_name": "Split Plutonium: Barium + Strontium",
+      "display_name": "Barium",
       "recipe_id": 248,
       "tier": 2,
       "category": "Fission",
@@ -8219,7 +8222,7 @@
     },
     {
       "id": "fission_pu239_ce_kr",
-      "display_name": "Split Plutonium: Cerium + Krypton",
+      "display_name": "Cerium",
       "recipe_id": 249,
       "tier": 2,
       "category": "Fission",
@@ -8247,7 +8250,7 @@
     },
     {
       "id": "s_capture_cobalt",
-      "display_name": "Slow capture: Cobalt",
+      "display_name": "Cobalt",
       "recipe_id": 250,
       "tier": 2,
       "category": "Isotope",
@@ -8275,7 +8278,7 @@
     },
     {
       "id": "s_capture_nickel",
-      "display_name": "Slow capture: Nickel",
+      "display_name": "Nickel",
       "recipe_id": 251,
       "tier": 2,
       "category": "Isotope",
@@ -8303,7 +8306,7 @@
     },
     {
       "id": "s_capture_copper",
-      "display_name": "Slow capture: Copper",
+      "display_name": "Copper",
       "recipe_id": 252,
       "tier": 2,
       "category": "Isotope",
@@ -8331,7 +8334,7 @@
     },
     {
       "id": "s_capture_zinc",
-      "display_name": "Slow capture: Zinc",
+      "display_name": "Zinc",
       "recipe_id": 253,
       "tier": 2,
       "category": "Isotope",
@@ -8359,7 +8362,7 @@
     },
     {
       "id": "s_capture_gallium",
-      "display_name": "Slow capture: Gallium",
+      "display_name": "Gallium",
       "recipe_id": 254,
       "tier": 2,
       "category": "Isotope",
@@ -8387,7 +8390,7 @@
     },
     {
       "id": "s_capture_germanium",
-      "display_name": "Slow capture: Germanium",
+      "display_name": "Germanium",
       "recipe_id": 255,
       "tier": 2,
       "category": "Isotope",
@@ -8415,7 +8418,7 @@
     },
     {
       "id": "s_capture_arsenic",
-      "display_name": "Slow capture: Arsenic",
+      "display_name": "Arsenic",
       "recipe_id": 256,
       "tier": 2,
       "category": "Isotope",
@@ -8443,7 +8446,7 @@
     },
     {
       "id": "s_capture_selenium",
-      "display_name": "Slow capture: Selenium",
+      "display_name": "Selenium",
       "recipe_id": 257,
       "tier": 2,
       "category": "Isotope",
@@ -8471,7 +8474,7 @@
     },
     {
       "id": "s_capture_bromine",
-      "display_name": "Slow capture: Bromine",
+      "display_name": "Bromine",
       "recipe_id": 258,
       "tier": 2,
       "category": "Isotope",
@@ -8499,7 +8502,7 @@
     },
     {
       "id": "s_capture_technetium",
-      "display_name": "Slow capture: Technetium",
+      "display_name": "Technetium",
       "recipe_id": 259,
       "tier": 2,
       "category": "Isotope",
@@ -8527,7 +8530,7 @@
     },
     {
       "id": "s_capture_ruthenium",
-      "display_name": "Slow capture: Ruthenium",
+      "display_name": "Ruthenium",
       "recipe_id": 260,
       "tier": 2,
       "category": "Isotope",
@@ -8555,7 +8558,7 @@
     },
     {
       "id": "s_capture_rhodium",
-      "display_name": "Slow capture: Rhodium",
+      "display_name": "Rhodium",
       "recipe_id": 261,
       "tier": 2,
       "category": "Isotope",
@@ -8583,7 +8586,7 @@
     },
     {
       "id": "s_capture_palladium",
-      "display_name": "Slow capture: Palladium",
+      "display_name": "Palladium",
       "recipe_id": 262,
       "tier": 2,
       "category": "Isotope",
@@ -8611,7 +8614,7 @@
     },
     {
       "id": "s_capture_silver",
-      "display_name": "Slow capture: Silver",
+      "display_name": "Silver",
       "recipe_id": 263,
       "tier": 2,
       "category": "Isotope",
@@ -8639,7 +8642,7 @@
     },
     {
       "id": "s_capture_cadmium",
-      "display_name": "Slow capture: Cadmium",
+      "display_name": "Cadmium",
       "recipe_id": 264,
       "tier": 2,
       "category": "Isotope",
@@ -8667,7 +8670,7 @@
     },
     {
       "id": "s_capture_indium",
-      "display_name": "Slow capture: Indium",
+      "display_name": "Indium",
       "recipe_id": 265,
       "tier": 2,
       "category": "Isotope",
@@ -8695,7 +8698,7 @@
     },
     {
       "id": "s_capture_lanthanum",
-      "display_name": "Slow capture: Lanthanum",
+      "display_name": "Lanthanum",
       "recipe_id": 266,
       "tier": 2,
       "category": "Isotope",
@@ -8723,7 +8726,7 @@
     },
     {
       "id": "s_capture_praseodymium",
-      "display_name": "Slow capture: Praseodymium",
+      "display_name": "Praseodymium",
       "recipe_id": 267,
       "tier": 2,
       "category": "Isotope",
@@ -8751,7 +8754,7 @@
     },
     {
       "id": "s_capture_neodymium",
-      "display_name": "Slow capture: Neodymium",
+      "display_name": "Neodymium",
       "recipe_id": 268,
       "tier": 2,
       "category": "Isotope",
@@ -8779,7 +8782,7 @@
     },
     {
       "id": "s_capture_promethium",
-      "display_name": "Slow capture: Promethium",
+      "display_name": "Promethium",
       "recipe_id": 269,
       "tier": 2,
       "category": "Isotope",
@@ -8807,7 +8810,7 @@
     },
     {
       "id": "s_capture_samarium",
-      "display_name": "Slow capture: Samarium",
+      "display_name": "Samarium",
       "recipe_id": 270,
       "tier": 2,
       "category": "Isotope",
@@ -8835,7 +8838,7 @@
     },
     {
       "id": "s_capture_gadolinium",
-      "display_name": "Slow capture: Gadolinium",
+      "display_name": "Gadolinium",
       "recipe_id": 271,
       "tier": 2,
       "category": "Isotope",
@@ -8863,7 +8866,7 @@
     },
     {
       "id": "s_capture_terbium",
-      "display_name": "Slow capture: Terbium",
+      "display_name": "Terbium",
       "recipe_id": 272,
       "tier": 2,
       "category": "Isotope",
@@ -8891,7 +8894,7 @@
     },
     {
       "id": "s_capture_dysprosium",
-      "display_name": "Slow capture: Dysprosium",
+      "display_name": "Dysprosium",
       "recipe_id": 273,
       "tier": 2,
       "category": "Isotope",
@@ -8919,7 +8922,7 @@
     },
     {
       "id": "s_capture_holmium",
-      "display_name": "Slow capture: Holmium",
+      "display_name": "Holmium",
       "recipe_id": 274,
       "tier": 2,
       "category": "Isotope",
@@ -8947,7 +8950,7 @@
     },
     {
       "id": "s_capture_erbium",
-      "display_name": "Slow capture: Erbium",
+      "display_name": "Erbium",
       "recipe_id": 275,
       "tier": 2,
       "category": "Isotope",
@@ -8975,7 +8978,7 @@
     },
     {
       "id": "s_capture_thulium",
-      "display_name": "Slow capture: Thulium",
+      "display_name": "Thulium",
       "recipe_id": 276,
       "tier": 2,
       "category": "Isotope",
@@ -9003,7 +9006,7 @@
     },
     {
       "id": "s_capture_ytterbium",
-      "display_name": "Slow capture: Ytterbium",
+      "display_name": "Ytterbium",
       "recipe_id": 277,
       "tier": 2,
       "category": "Isotope",
@@ -9031,7 +9034,7 @@
     },
     {
       "id": "s_capture_lutetium",
-      "display_name": "Slow capture: Lutetium",
+      "display_name": "Lutetium",
       "recipe_id": 278,
       "tier": 2,
       "category": "Isotope",
@@ -9059,7 +9062,7 @@
     },
     {
       "id": "s_capture_hafnium",
-      "display_name": "Slow capture: Hafnium",
+      "display_name": "Hafnium",
       "recipe_id": 279,
       "tier": 2,
       "category": "Isotope",
@@ -9087,7 +9090,7 @@
     },
     {
       "id": "s_capture_tantalum",
-      "display_name": "Slow capture: Tantalum",
+      "display_name": "Tantalum",
       "recipe_id": 280,
       "tier": 2,
       "category": "Isotope",
@@ -9115,7 +9118,7 @@
     },
     {
       "id": "s_capture_tungsten",
-      "display_name": "Slow capture: Tungsten",
+      "display_name": "Tungsten",
       "recipe_id": 281,
       "tier": 2,
       "category": "Isotope",
@@ -9143,7 +9146,7 @@
     },
     {
       "id": "s_capture_rhenium",
-      "display_name": "Slow capture: Rhenium",
+      "display_name": "Rhenium",
       "recipe_id": 282,
       "tier": 2,
       "category": "Isotope",
@@ -9171,7 +9174,7 @@
     },
     {
       "id": "s_capture_mercury",
-      "display_name": "Slow capture: Mercury",
+      "display_name": "Mercury",
       "recipe_id": 283,
       "tier": 2,
       "category": "Isotope",
@@ -9199,7 +9202,7 @@
     },
     {
       "id": "r_capture_europium",
-      "display_name": "Fast capture: Europium",
+      "display_name": "Europium",
       "recipe_id": 284,
       "tier": 2,
       "category": "Isotope",
@@ -9227,7 +9230,7 @@
     },
     {
       "id": "r_capture_osmium",
-      "display_name": "Fast capture: Osmium",
+      "display_name": "Osmium",
       "recipe_id": 285,
       "tier": 2,
       "category": "Isotope",
@@ -9255,7 +9258,7 @@
     },
     {
       "id": "r_capture_iridium",
-      "display_name": "Fast capture: Iridium",
+      "display_name": "Iridium",
       "recipe_id": 286,
       "tier": 2,
       "category": "Isotope",
@@ -9283,7 +9286,7 @@
     },
     {
       "id": "r_capture_platinum",
-      "display_name": "Fast capture: Platinum",
+      "display_name": "Platinum",
       "recipe_id": 287,
       "tier": 2,
       "category": "Isotope",
@@ -9311,7 +9314,7 @@
     },
     {
       "id": "r_capture_gold",
-      "display_name": "Fast capture: Gold",
+      "display_name": "Gold",
       "recipe_id": 288,
       "tier": 2,
       "category": "Isotope",
@@ -9339,7 +9342,7 @@
     },
     {
       "id": "collect_uranium",
-      "display_name": "Harvest Uranium",
+      "display_name": "Uranium",
       "recipe_id": 162,
       "tier": 2,
       "category": "Element",
@@ -9362,7 +9365,7 @@
     },
     {
       "id": "collect_plutonium",
-      "display_name": "Harvest Plutonium",
+      "display_name": "Plutonium",
       "recipe_id": 163,
       "tier": 2,
       "category": "Element",
@@ -9385,7 +9388,7 @@
     },
     {
       "id": "collect_neutron",
-      "display_name": "Collect Neutron",
+      "display_name": "Neutron",
       "recipe_id": 224,
       "tier": 2,
       "category": "Nucleon",
@@ -9408,7 +9411,7 @@
     },
     {
       "id": "irradiate_thorium",
-      "display_name": "Irradiate Thorium",
+      "display_name": "Thorium-233",
       "recipe_id": 225,
       "tier": 2,
       "category": "Isotope",
@@ -9434,7 +9437,7 @@
     },
     {
       "id": "irradiate_radium",
-      "display_name": "Irradiate Radium",
+      "display_name": "Radium-227",
       "recipe_id": 226,
       "tier": 2,
       "category": "Isotope",
@@ -9460,7 +9463,7 @@
     },
     {
       "id": "irradiate_radon",
-      "display_name": "Irradiate Radon",
+      "display_name": "Radon-223",
       "recipe_id": 227,
       "tier": 2,
       "category": "Isotope",
@@ -9486,7 +9489,7 @@
     },
     {
       "id": "irradiate_lead",
-      "display_name": "Irradiate Lead",
+      "display_name": "Lead-209",
       "recipe_id": 228,
       "tier": 2,
       "category": "Isotope",
@@ -9512,7 +9515,7 @@
     },
     {
       "id": "strip_radon",
-      "display_name": "Strip Radon",
+      "display_name": "Radon-211",
       "recipe_id": 229,
       "tier": 2,
       "category": "Isotope",
@@ -9539,7 +9542,7 @@
     },
     {
       "id": "strip_lead",
-      "display_name": "Strip Lead",
+      "display_name": "Lead-201",
       "recipe_id": 230,
       "tier": 2,
       "category": "Isotope",
@@ -9566,7 +9569,7 @@
     },
     {
       "id": "decay_uranium",
-      "display_name": "Uranium Decay",
+      "display_name": "Thorium",
       "recipe_id": 231,
       "tier": 2,
       "category": "Isotope",
@@ -9593,7 +9596,7 @@
     },
     {
       "id": "decay_thorium",
-      "display_name": "Thorium Decay",
+      "display_name": "Radium",
       "recipe_id": 232,
       "tier": 2,
       "category": "Isotope",
@@ -9620,7 +9623,7 @@
     },
     {
       "id": "decay_radium",
-      "display_name": "Radium Decay",
+      "display_name": "Radon",
       "recipe_id": 233,
       "tier": 2,
       "category": "Isotope",
@@ -9647,7 +9650,7 @@
     },
     {
       "id": "decay_radon",
-      "display_name": "Radon Decay",
+      "display_name": "Polonium",
       "recipe_id": 234,
       "tier": 2,
       "category": "Isotope",
@@ -9674,7 +9677,7 @@
     },
     {
       "id": "decay_polonium",
-      "display_name": "Polonium Decay",
+      "display_name": "Lead",
       "recipe_id": 235,
       "tier": 2,
       "category": "Isotope",
@@ -9701,7 +9704,7 @@
     },
     {
       "id": "decay_thorium_233",
-      "display_name": "Thorium-233 Decay",
+      "display_name": "Protactinium",
       "recipe_id": 236,
       "tier": 2,
       "category": "Isotope",
@@ -9728,7 +9731,7 @@
     },
     {
       "id": "decay_radium_227",
-      "display_name": "Radium-227 Decay",
+      "display_name": "Actinium",
       "recipe_id": 237,
       "tier": 2,
       "category": "Isotope",
@@ -9755,7 +9758,7 @@
     },
     {
       "id": "decay_radon_223",
-      "display_name": "Radon-223 Decay",
+      "display_name": "Francium",
       "recipe_id": 238,
       "tier": 2,
       "category": "Isotope",
@@ -9782,7 +9785,7 @@
     },
     {
       "id": "decay_lead_209",
-      "display_name": "Lead-209 Decay",
+      "display_name": "Bismuth",
       "recipe_id": 239,
       "tier": 2,
       "category": "Isotope",
@@ -9809,7 +9812,7 @@
     },
     {
       "id": "decay_radon_211",
-      "display_name": "Radon-211 Decay",
+      "display_name": "Astatine",
       "recipe_id": 240,
       "tier": 2,
       "category": "Isotope",
@@ -9836,7 +9839,7 @@
     },
     {
       "id": "decay_lead_201",
-      "display_name": "Lead-201 Decay",
+      "display_name": "Thallium",
       "recipe_id": 241,
       "tier": 2,
       "category": "Isotope",
@@ -9863,19 +9866,19 @@
     },
 
     { "_comment": "--- CHEMISTRY C1: element harvest recipes (Element Harvester) + inorganic synthesis (Compound Synthesizer). Chem/Bio Phase 4a. ---",
-      "id": "collect_hydrogen", "display_name": "Mine Hydrogen", "recipe_id": 164, "tier": 3, "category": "Element",
+      "id": "collect_hydrogen", "display_name": "Hydrogen",
       "inputs": [], "neutron_adjustment": [], "output_item": "hydrogen", "output_quantity": 1, "byproducts": [],
       "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_carbon", "display_name": "Mine Carbon", "recipe_id": 165, "tier": 3, "category": "Element",
+    { "id": "collect_carbon", "display_name": "Carbon",
       "inputs": [], "neutron_adjustment": [], "output_item": "carbon", "output_quantity": 1, "byproducts": [],
       "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
     {
       "id": "collect_oxygen",
-      "display_name": "Mine Oxygen",
+      "display_name": "Oxygen",
       "recipe_id": 166,
       "tier": 3,
       "category": "Element",
@@ -9898,7 +9901,7 @@
     },
     {
       "id": "collect_sodium",
-      "display_name": "Mine Sodium",
+      "display_name": "Sodium",
       "recipe_id": 167,
       "tier": 3,
       "category": "Element",
@@ -9921,7 +9924,7 @@
     },
     {
       "id": "collect_chlorine",
-      "display_name": "Mine Chlorine",
+      "display_name": "Chlorine",
       "recipe_id": 168,
       "tier": 3,
       "category": "Element",
@@ -9944,7 +9947,7 @@
     },
     {
       "id": "collect_sulfur",
-      "display_name": "Mine Sulfur",
+      "display_name": "Sulfur",
       "recipe_id": 169,
       "tier": 3,
       "category": "Element",
@@ -9988,7 +9991,7 @@
     {
       "_comment": "--- CHEMISTRY C2: metal harvest (Metal Harvester) + reactions/catalysis (Catalytic Reactor). Chem/Bio Phase 4b. ---",
       "id": "collect_iron",
-      "display_name": "Mine Iron",
+      "display_name": "Iron",
       "recipe_id": 173,
       "tier": 3,
       "category": "Element",
@@ -10011,7 +10014,7 @@
     },
     {
       "id": "collect_copper",
-      "display_name": "Mine Copper",
+      "display_name": "Copper",
       "recipe_id": 174,
       "tier": 3,
       "category": "Element",
@@ -10034,7 +10037,7 @@
     },
     {
       "id": "collect_aluminum",
-      "display_name": "Mine Aluminum",
+      "display_name": "Aluminum",
       "recipe_id": 175,
       "tier": 3,
       "category": "Element",
@@ -10057,7 +10060,7 @@
     },
     {
       "id": "collect_nickel",
-      "display_name": "Mine Nickel",
+      "display_name": "Nickel",
       "recipe_id": 176,
       "tier": 3,
       "category": "Element",
@@ -10159,7 +10162,7 @@
     {
       "_comment": "--- BIOLOGY B1: organic-compound harvest (Organic Harvester) + biomolecule synthesis (Biosynthesizer). Chem/Bio Biology track. ---",
       "id": "collect_glucose",
-      "display_name": "Harvest Glucose",
+      "display_name": "Glucose",
       "recipe_id": 189,
       "tier": 3,
       "category": "Molecule",
@@ -10182,7 +10185,7 @@
     },
     {
       "id": "collect_amino_acid",
-      "display_name": "Harvest Amino Acid",
+      "display_name": "Amino Acid",
       "recipe_id": 190,
       "tier": 3,
       "category": "Molecule",
@@ -10205,7 +10208,7 @@
     },
     {
       "id": "collect_fatty_acid",
-      "display_name": "Harvest Fatty Acid",
+      "display_name": "Fatty Acid",
       "recipe_id": 191,
       "tier": 3,
       "category": "Molecule",
@@ -10228,7 +10231,7 @@
     },
     {
       "id": "collect_nucleotide",
-      "display_name": "Harvest Nucleotide",
+      "display_name": "Nucleotide",
       "recipe_id": 192,
       "tier": 3,
       "category": "Molecule",
@@ -14171,7 +14174,7 @@
     {
       "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
       "id": "reroute_neutrons_to_atom_gen",
-      "hint": "Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "hint": "Remove the Neutron Combiner's belt to the Demon (belt tool: switch Create to Destroy, or Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
       "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
     },
@@ -14211,7 +14214,7 @@
     {
       "_comment": "ItemCraftedMin: the Atom Generator's belt still runs to the Demon, which sells the Deuterium before it reaches the inventory.",
       "id": "craft_first_deuterium",
-      "hint": "Tap the Atom Generator and set its recipe to Assemble Deuterium: 1 proton, 1 neutron, 1 electron.",
+      "hint": "Tap the Atom Generator and set its recipe to Deuterium: 1 proton, 1 neutron, 1 electron.",
       "advance_condition": {
         "type": "ItemCraftedMin",
         "items": [{ "item_id": 14, "quantity": 2 }]
@@ -14255,14 +14258,14 @@
     {
       "_comment": "Was route_helium_to_reactor (saves map across via ECSLoadBridge.RetiredSteps). The Atom Generator's output still has its belt to the Demon, so the player removes it first; the route guide only lights a free output front.",
       "id": "route_deuterium_to_reactor",
-      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
+      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (belt tool: switch Create to Destroy, or Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "atomic_assembler", "building_id": "fusion_reactor", "min_count": 1 },
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:atomic_assembler>fusion_reactor", "highlight_mode": "Full" }
     },
     {
       "_comment": "BuildingRecipeSet, not ItemCraftedMin: Helium was already crafted this session by the Atom Generator. The reward covers the second reactor (1,500e) and its generator (150e).",
       "id": "fuse_first_helium",
-      "hint": "Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.",
+      "hint": "Tap the Fusion Reactor and set its recipe to Helium-4 from 2 Deuterium (D-D fusion). Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.",
       "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 208 },
       "reward_entropy": 1800,
       "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
@@ -14283,7 +14286,7 @@
     {
       "_comment": "Set before routing: the reactor-to-reactor route glow picks its start and end from the reactors' recipes (Helium maker to Helium user).",
       "id": "set_carbon_recipe",
-      "hint": "Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4 become one Carbon.",
+      "hint": "Tap the new Fusion Reactor and set its recipe to Carbon. Three Helium-4 become one Carbon.",
       "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 149 },
       "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
     },

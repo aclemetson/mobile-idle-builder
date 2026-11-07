@@ -275,6 +275,16 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorStatic, "—— Collector ——");
                 _craftProgressFill = AddProgressBar(_inspectorStatic, CollectorFraction(col));
                 AddInspectorRow(_inspectorStatic, $"Output rate: {col.OutputRate:F1} /s");
+                if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
+                {
+                    var outBuf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
+                    if (outBuf.Length > 0)
+                    {
+                        ReadOutputMult(_inspectorEntity, out float cOutMult, out _);
+                        AddInspectorRow(_inspectorStatic, CollectorValueLine(
+                            ItemValue.CollectorPerSecond(SurplusSale.DemonPrice(outBuf[0].ItemID), col.OutputRate, cOutMult)));
+                    }
+                }
                 AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
             }
 
@@ -320,6 +330,15 @@ namespace MobileIdleBuilder
                     AddInspectorRow(_inspectorStatic, "—— Produces ——");
                     for (int i = 0; i < buf.Length; i++)
                         AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+
+                    // Three fixed rows for a crafter with a recipe (stable across rebuilds).
+                    if (!isCollector && hasBuildingData && _em.HasComponent<RecipeProcessData>(_inspectorEntity))
+                    {
+                        var outs = new List<(int itemId, int quantity)>(buf.Length);
+                        for (int i = 0; i < buf.Length; i++) outs.Add((buf[i].ItemID, buf[i].Quantity));
+                        foreach (var line in CrafterValueLines(outs, buildingData))
+                            AddInspectorRow(_inspectorStatic, line);
+                    }
                 }
             }
 
@@ -390,10 +409,7 @@ namespace MobileIdleBuilder
                         foreach (var r in available)
                         {
                             var captured = r;
-                            var btn = new Button { text = r.displayName ?? r.name };
-                            btn.AddToClassList("craft-btn");
-                            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
-                            if (icon != null) btn.Insert(0, icon);
+                            var btn = MakeRecipeButton(r, SharesOutput(available, r));
                             // Routed from the list: a Button's own Clickable consumes the
                             // pointer-down before any manipulator added later. See ListTapRouter.
                             ListTapRouter.Register(_inspectorRecipes, btn, () =>
@@ -791,10 +807,7 @@ namespace MobileIdleBuilder
             {
                 if (r == null) continue;
                 var captured = r;
-                var btn = new Button { text = r.displayName ?? r.outputItem?.displayName ?? r.name };
-                btn.AddToClassList("craft-btn");
-                var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
-                if (icon != null) btn.Insert(0, icon);
+                var btn = MakeRecipeButton(r, SharesOutput(relevantRecipes, r));
                 ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     SetBuildingRecipe(entity, captured);
@@ -802,6 +815,48 @@ namespace MobileIdleBuilder
                 });
                 _inspectorRecipes?.Add(btn);
             }
+        }
+
+        // ── Recipe buttons (#336) ──────────────────────────────────────────────
+
+        /// <summary>True when another recipe in the list makes the same output item as <paramref name="r"/>.</summary>
+        private static bool SharesOutput(List<RecipeSO> list, RecipeSO r)
+        {
+            if (r == null || r.outputItem == null) return false;
+            foreach (var other in list)
+                if (other != null && other != r && other.outputItem == r.outputItem) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A picker button named after the recipe's product. When several buttons make the same product
+        /// (<paramref name="withMethodLine"/>), a smaller second line says the building, inputs and method.
+        /// </summary>
+        private static Button MakeRecipeButton(RecipeSO r, bool withMethodLine)
+        {
+            string name = r.outputItem?.displayName ?? r.displayName ?? r.name;
+            var btn = new Button();
+            btn.AddToClassList("craft-btn");
+            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+
+            if (!withMethodLine)
+            {
+                btn.text = name;
+                if (icon != null) btn.Insert(0, icon);
+                return btn;
+            }
+
+            // Two lines: the button's own text can't hold a second label, so lay out icon + a text column.
+            btn.AddToClassList("craft-btn--with-method");
+            if (icon != null) btn.Add(icon);
+            var column = new VisualElement { pickingMode = PickingMode.Ignore };
+            column.AddToClassList("recipe-text-column");
+            column.Add(new Label(name) { pickingMode = PickingMode.Ignore });
+            var method = new Label(RecipeText.MethodLine(r)) { pickingMode = PickingMode.Ignore };
+            method.AddToClassList("recipe-method-line");
+            column.Add(method);
+            btn.Add(column);
+            return btn;
         }
 
         // ── Recipe modes (#322: Neutron Capture Slow / Fast) ───────────────────
@@ -1089,6 +1144,54 @@ namespace MobileIdleBuilder
             return null;
         }
 
+        // outMult / global speed exactly as ProductionSystem and CollectorSystem read them: the manager's
+        // AppliedOutputMult (when assigned) times the megastructure's GlobalProductionBonus.
+        private void ReadOutputMult(Entity entity, out float outMult, out float globalSpeed)
+        {
+            outMult = _em.HasComponent<ManagerAssignmentData>(entity)
+                ? _em.GetComponentData<ManagerAssignmentData>(entity).AppliedOutputMult
+                : 1f;
+            globalSpeed = 1f;
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<GlobalProductionBonus>());
+            if (q.IsEmpty) return;
+            var gb = q.GetSingleton<GlobalProductionBonus>();
+            outMult *= gb.OutputMult;
+            globalSpeed = gb.SpeedMult;
+        }
+
+        private string[] CrafterValueLines(List<(int itemId, int quantity)> outs, BuildingData building)
+        {
+            var process = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
+            ReadOutputMult(_inspectorEntity, out float outMult, out float globalSpeed);
+            bool hasPower = _em.HasComponent<PowerStatus>(_inspectorEntity);
+            float powerRatio = hasPower ? _em.GetComponentData<PowerStatus>(_inspectorEntity).ThrottleRatio : 1f;
+
+            float price = SurplusSale.DemonPrice(outs[0].itemId);
+            double perCraft = ItemValue.PerCraft(outs, SurplusSale.DemonPrice, outMult, process.ByproductEntropy);
+            float speed = building.ProductionSpeed * powerRatio * globalSpeed;
+            double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
+            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+        }
+
+        /// <summary>
+        /// The inspector's value rows for a crafter: price each, value per craft, value per second. Always three
+        /// rows so the 0.5s rebuild keeps its layout.
+        /// </summary>
+        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower)
+        {
+            string craft = outMult > 1.001f
+                ? $"×{outMult:0.##} output → {NumberFormat.Entropy(perCraft)} per craft"
+                : $"{NumberFormat.Entropy(perCraft)} per craft";
+            string rate = noPower
+                ? "≈ ◈ 0 /s (no power)"
+                : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
+            return new[] { HUDController.WorthEachText(price), craft, rate };
+        }
+
+        /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>
+        internal static string CollectorValueLine(double perSecond) =>
+            $"≈ {NumberFormat.Entropy(perSecond)} /s";
+
         private float CostReduction()
         {
             using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
@@ -1145,6 +1248,7 @@ namespace MobileIdleBuilder
                 outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
             SellInputsTheRecipeDoesNotUse(entity);
+            MoveOutputsTheRecipeDoesNotMake(entity);
 
             // A building whose draw follows its recipe (Neutron Capture Slow/Fast) re-reads it now.
             var so = FindBuildingSOForEntity(entity);
@@ -1353,6 +1457,33 @@ namespace MobileIdleBuilder
             progress.BaseCurrency += earned;
             _playerQuery.SetSingleton(progress);
             InventoryPopupController.Notify("entropy", (int)System.Math.Min(earned, int.MaxValue));
+        }
+
+        /// <summary>
+        /// After a recipe change, outputs made under the old recipe that the new one doesn't produce would leave
+        /// on the belt (#341). Move them to the player's inventory instead and say so; outputs the new recipe
+        /// also makes stay and keep shipping.
+        /// </summary>
+        private void MoveOutputsTheRecipeDoesNotMake(Entity entity)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(entity)) return;
+            if (!_em.HasBuffer<BuildingOutputSlot>(entity) || !_em.HasBuffer<RecipeOutputSlot>(entity)) return;
+
+            var outBuf = _em.GetBuffer<BuildingOutputSlot>(entity);
+            if (outBuf.Length == 0) return;
+
+            var recipeOut = _em.GetBuffer<RecipeOutputSlot>(entity);
+            var leaving = new System.Collections.Generic.List<(int id, int qty)>();
+            for (int i = 0; i < outBuf.Length; i++)
+                if (outBuf[i].Quantity > 0 && !RecipeSwitch.RecipeMakes(recipeOut, outBuf[i].ItemID))
+                    leaving.Add((outBuf[i].ItemID, outBuf[i].Quantity));
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            int moved = RecipeSwitch.MoveUnproducedOutputsToInventory(outBuf, recipeOut, ref inv);
+            if (moved <= 0) return;
+
+            foreach (var (id, qty) in leaving)
+                InventoryPopupController.Notify(ItemName(id), qty);
         }
 
         private void EmptyInputToInventory(Entity building)

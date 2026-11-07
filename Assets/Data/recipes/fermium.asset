@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fermium
   displayName: Fermium
+  methodLabel: 
   recipeId: 129
   tier: 2
   category: 3

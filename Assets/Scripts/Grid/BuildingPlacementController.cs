@@ -206,6 +206,8 @@ namespace MobileIdleBuilder
 
         // Dashed lines to the power buildings the pending power source would link to (built in code).
         private PowerConnectionRenderer _connectionRenderer;
+        // Placed power nodes, gathered once per placement session for the powered-consumer preview (#302).
+        private List<PowerConnectionGraph.PowerNode> _placementPowerNodes;
         private static readonly Color ConnectionLineColor = new Color(1f, 0.9f, 0.3f, 0.95f); // warm amber, reads as "wired"
 
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
@@ -250,6 +252,7 @@ namespace MobileIdleBuilder
         {
             _pending           = entry;
             _pendingField      = field;
+            _placementPowerNodes = null;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
             _outputDirection   = OutputDirection.North;
@@ -283,6 +286,7 @@ namespace MobileIdleBuilder
         {
             gridRenderer.HideGhost();
             HideRadiusPreview();
+            _placementPowerNodes = null;
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             _lastGhostCell     = new(-1, -1);
@@ -460,6 +464,7 @@ namespace MobileIdleBuilder
         {
             var  fp    = GetEffectiveFootprint();
             bool valid = IsCellValidForPending(cell.x, cell.y);
+            bool powerGhostDrawn = false;
 
             // Preview the power radius for power buildings: a circular ring on the ground plus lighting up
             // the placed buildings that fall inside it (instead of the old square tile wash).
@@ -475,12 +480,23 @@ namespace MobileIdleBuilder
                 buildingVisualizer?.HighlightBuildingsInRange(cell.x, cell.y, fp.x, fp.y, radius);
                 ShowConnectionPreview(cell, fp, center, cs);
             }
+            else if (_pending.building != null && _pending.building.requiresPower)
+            {
+                // Powered consumer: show every linked node's coverage; the ghost is amber outside it (#302).
+                HideRadiusPreview();
+                var nodes = GetPlacementPowerNodes();
+                gridRenderer.ShowPowerCoverage(nodes);
+                gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid,
+                    PlacementPower.IsFootprintPowered(nodes, cell.x, cell.y, fp.x, fp.y));
+                powerGhostDrawn = true;
+            }
             else
             {
                 HideRadiusPreview();
             }
 
-            gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
+            if (!powerGhostDrawn)
+                gridRenderer.ShowGhost(cell.x, cell.y, fp.x, fp.y, valid);
             _lastGhostCell = cell;
 
             if (HasPortLayout)
@@ -525,8 +541,19 @@ namespace MobileIdleBuilder
                               _pending.building.placementRule == PlacementRule.MustBeOnField)
                              ? (int?)_outputDirection : null;
 
+            // Decide before placing so the node snapshot predates the new building (#302).
+            bool unpowered = false;
+            if (_pending.building != null && _pending.building.requiresPower && !_pending.building.isPowerSource)
+            {
+                var pfp = GetEffectiveFootprint();
+                unpowered = !PlacementPower.IsFootprintPowered(GetPlacementPowerNodes(), x, y, pfp.x, pfp.y);
+            }
+
             bool placed = buildingPlacer.PlaceBuilding(
                 x, y, _pending.building, recipe, legacyDir, _rotation, _flipped);
+
+            if (placed && unpowered)
+                InventoryPopupController.NotifyWarning("Unpowered: place it in generator range");
 
             if (placed)
             {
@@ -543,6 +570,7 @@ namespace MobileIdleBuilder
             }
 
             HideRadiusPreview();
+            _placementPowerNodes = null;
             DestroyGhostArrow();
             DestroyGhostPortArrows();
             IsPlacing          = false;
@@ -643,6 +671,18 @@ namespace MobileIdleBuilder
             _radiusIndicator?.Hide();
             _connectionRenderer?.Hide();
             buildingVisualizer?.ClearRangeHighlight();
+            gridRenderer.ClearPowerCoverage();
+        }
+
+        /// <summary>Placed power nodes, gathered once per placement session (they don't change while placing).</summary>
+        private List<PowerConnectionGraph.PowerNode> GetPlacementPowerNodes()
+        {
+            if (_placementPowerNodes != null) return _placementPowerNodes;
+            var world = World.DefaultGameObjectInjectionWorld;
+            _placementPowerNodes = (world == null || !world.IsCreated)
+                ? new List<PowerConnectionGraph.PowerNode>()
+                : PowerConnectionGraph.GatherFromEcs(world.EntityManager, gridRenderer.CellSize);
+            return _placementPowerNodes;
         }
 
         /// <summary>Lazily creates the dashed power-connection renderer (runtime GameObject, no scene wiring).</summary>

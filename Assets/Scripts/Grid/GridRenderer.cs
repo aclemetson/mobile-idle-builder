@@ -21,6 +21,7 @@ namespace MobileIdleBuilder
         [SerializeField] private Color occupiedColor         = new Color(0f,     0.565f, 0.612f, 1f); // #009090 placed building
         [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
         [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
+        [SerializeField] private Color ghostUnpoweredColor   = new Color(1f,     0.7f,   0.1f,  0.55f); // amber — valid but outside power range
         [SerializeField] private Color deconstructHoverColor = new Color(0.9f,   0.15f,  0.15f, 0.9f); // solid danger red
         [SerializeField] private Color fieldHoverColor       = new Color(0.15f,  0.85f,  0.35f, 0.55f); // soft green — interactable field
         [SerializeField] private Color tutorialHighlightColor = new Color(1f,    0.78f,  0.15f, 0.75f); // amber/gold — tutorial focus
@@ -38,6 +39,8 @@ namespace MobileIdleBuilder
 
         private static readonly Color ConveyorGhostColor    = new Color(1f,    0.5f,  0f,    0.7f); // orange
         private static readonly Color ConveyorEndpointColor = new Color(0.25f, 0.88f, 0.35f, 0.9f); // green
+        // Existing belts that block the straight run between start and end (#301a). Red-ish, solid enough to read.
+        private static readonly Color BlockingBeltColor     = new Color(1f,    0.2f,  0.2f,  0.85f);
         private static readonly Color PowerCoverageColor    = new Color(0.25f, 0.6f,  1f,    0.45f); // blue — power radius
 
         private GameObject[,]        _tiles;
@@ -53,6 +56,9 @@ namespace MobileIdleBuilder
         private readonly List<Vector2Int> _conveyorGhostCells    = new();
         private readonly List<Vector2Int> _deconstructHoverCells = new();
         private readonly List<Vector2Int> _powerCoverageCells    = new();
+        private readonly HashSet<Vector2Int> _blockingBeltCells  = new();
+        private Vector2Int               _pulseCell              = new(-1, -1);
+        private float                    _pulseUntil;
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
         private Vector2Int               _fieldHoverCell         = new(-1, -1);
 
@@ -71,6 +77,7 @@ namespace MobileIdleBuilder
         // runs on an actual change. Waits until WorldService exists so the first apply carries a real theme.
         void Update()
         {
+            TickConveyorPulse();
             var svc = WorldService.Instance;
             if (svc == null) return;
             int w = svc.ActiveIndex;
@@ -185,14 +192,24 @@ namespace MobileIdleBuilder
         public void ShowGhost(int x, int y, bool isValid) => ShowGhost(x, y, 1, 1, isValid);
 
         /// <summary>Shows a ghost footprint of (w x h) cells starting at (x, y). Pass isValid=false for red.</summary>
-        public void ShowGhost(int x, int y, int w, int h, bool isValid)
+        public void ShowGhost(int x, int y, int w, int h, bool isValid) => ShowGhost(x, y, w, h, isValid, true);
+
+        /// <summary>
+        /// Shows a ghost footprint tinted by power: red when invalid, amber when valid but outside every
+        /// linked generator's range (<paramref name="isPowered"/> false), cyan when valid and powered.
+        /// </summary>
+        public void ShowGhost(int x, int y, int w, int h, bool isValid, bool isPowered)
         {
             foreach (var c in _ghostCells)
-                RestoreCell(c.x, c.y);
+            {
+                // Keep the power-coverage tint under the old ghost footprint.
+                if (_powerCoverageCells.Contains(c)) SetColor(_tiles[c.x, c.y].GetComponent<MeshRenderer>(), PowerCoverageColor);
+                else RestoreCell(c.x, c.y);
+            }
             _ghostCells.Clear();
             _ghostCell = new(-1, -1);
 
-            var color = isValid ? ghostValidColor : ghostInvalidColor;
+            var color = !isValid ? ghostInvalidColor : (isPowered ? ghostValidColor : ghostUnpoweredColor);
             for (int dx = 0; dx < w; dx++)
             {
                 for (int dy = 0; dy < h; dy++)
@@ -231,6 +248,8 @@ namespace MobileIdleBuilder
         /// <summary>Clears all conveyor ghost highlights, restoring each cell to its normal colour.</summary>
         public void ClearConveyorGhost()
         {
+            ClearBlockingBelts();
+            _pulseCell = new(-1, -1);
             foreach (var c in _conveyorGhostCells)
                 RestoreCell(c.x, c.y);
             _conveyorGhostCells.Clear();
@@ -275,6 +294,54 @@ namespace MobileIdleBuilder
             SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), ConveyorEndpointColor);
             var cell = new Vector2Int(x, y);
             if (!_conveyorGhostCells.Contains(cell)) _conveyorGhostCells.Add(cell);
+        }
+
+        // ---- Chain-continuation pulse and blocking belts (#301a) ----
+
+        /// <summary>
+        /// Pulses a conveyor endpoint tile between the endpoint green and white for a moment, so the
+        /// player sees where a chain continues from. The cell must already be painted as an endpoint
+        /// (PaintConveyorEndpoints); the pulse stops by itself and when the ghost is cleared.
+        /// </summary>
+        public void PulseConveyorEndpoint(int x, int y, float seconds = 1.5f)
+        {
+            if (!IsInBounds(x, y)) return;
+            _pulseCell  = new Vector2Int(x, y);
+            _pulseUntil = Time.unscaledTime + seconds;
+        }
+
+        private void TickConveyorPulse()
+        {
+            if (_pulseCell.x < 0) return;
+            var cell = _pulseCell;
+            var tile = IsInBounds(cell.x, cell.y) ? _tiles[cell.x, cell.y] : null;
+            if (tile == null || !_conveyorGhostCells.Contains(cell)) { _pulseCell = new(-1, -1); return; }
+
+            bool done = Time.unscaledTime >= _pulseUntil;
+            float t   = done ? 0f : 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 10f);
+            SetColor(tile.GetComponent<MeshRenderer>(), Color.Lerp(ConveyorEndpointColor, Color.white, t));
+            if (done) _pulseCell = new(-1, -1);
+        }
+
+        /// <summary>Tints existing belt cells red to show they are in the way of the straight run. Replaces any previous set.</summary>
+        public void SetBlockingBelts(IEnumerable<Vector2Int> cells)
+        {
+            ClearBlockingBelts();
+            foreach (var c in cells)
+            {
+                if (!IsInBounds(c.x, c.y)) continue;
+                _blockingBeltCells.Add(c);
+                SetColor(_tiles[c.x, c.y].GetComponent<MeshRenderer>(), BlockingBeltColor);
+            }
+        }
+
+        /// <summary>Removes the blocking-belt tint, restoring each cell.</summary>
+        public void ClearBlockingBelts()
+        {
+            if (_blockingBeltCells.Count == 0) return;
+            var cells = new List<Vector2Int>(_blockingBeltCells);
+            _blockingBeltCells.Clear();
+            foreach (var c in cells) RestoreCell(c.x, c.y);
         }
 
         // ---- Deconstruct hover ----
@@ -345,6 +412,28 @@ namespace MobileIdleBuilder
         public void ShowPowerCoverage(int gridX, int gridY, int w, int h, float radius)
         {
             ClearPowerCoverage();
+            AddCoverageFor(gridX, gridY, w, h, radius);
+        }
+
+        /// <summary>
+        /// Tints the union of the coverage of every grid-linked node (generators and linked relays; unlinked
+        /// nodes power nothing). Clears the previous highlight once first.
+        /// </summary>
+        public void ShowPowerCoverage(IReadOnlyList<PowerConnectionGraph.PowerNode> nodes)
+        {
+            ClearPowerCoverage();
+            if (nodes == null) return;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var n = nodes[i];
+                if (!n.IsGridLinked) continue;
+                AddCoverageFor(n.AnchorX, n.AnchorY, n.Width, n.Height, n.InfluenceRadius);
+            }
+        }
+
+        /// <summary>Adds one source's covered tiles to the highlight (skipping tiles already tinted).</summary>
+        private void AddCoverageFor(int gridX, int gridY, int w, int h, float radius)
+        {
             if (radius <= 0f) return;
 
             // Circle reach extends ~radius + half-footprint past the near edge, plus a cell of slack for
@@ -358,8 +447,10 @@ namespace MobileIdleBuilder
                 if (!IsInBounds(cx, cy)) continue;
                 // Single-cell tile (cx,cy) vs the source footprint — shared with PowerGridSystem/BuildingVisualizer.
                 if (!PowerCoverageMath.FootprintWithinRadius(gridX, gridY, maxX, maxY, cx, cy, cx, cy, radius)) continue;
+                var cell = new Vector2Int(cx, cy);
+                if (_powerCoverageCells.Contains(cell)) continue;
                 SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), PowerCoverageColor);
-                _powerCoverageCells.Add(new Vector2Int(cx, cy));
+                _powerCoverageCells.Add(cell);
             }
         }
 
@@ -450,6 +541,8 @@ namespace MobileIdleBuilder
             Color color;
             if (_tutorialHighlightCells.Contains(key))
                 color = tutorialHighlightColor;
+            else if (_blockingBeltCells.Contains(key))
+                color = BlockingBeltColor;
             else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y))
                 color = occupiedColor;
             else if (_fieldTileColors.TryGetValue(key, out var fieldColorRaw))

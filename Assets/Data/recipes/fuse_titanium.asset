@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fuse_titanium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fuse_titanium
-  displayName: Fuse Titanium
+  displayName: Titanium
+  methodLabel: 
   recipeId: 157
   tier: 2
   category: 8

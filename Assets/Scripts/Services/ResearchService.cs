@@ -16,6 +16,10 @@ namespace MobileIdleBuilder
     {
         private ResearchSO[] _allResearch;
 
+        private EntityQuery _effectsQuery;
+        private bool        _effectsDirty;
+        private bool        _effectsReady;
+
         /// <summary>Fired when a research timer is started.</summary>
         public event Action<ResearchSO> OnResearchStarted;
         /// <summary>Fired whenever a research finishes (instantly, on timer, or via skip).</summary>
@@ -50,6 +54,8 @@ namespace MobileIdleBuilder
             {
                 _em = world.EntityManager;
                 _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                _effectsQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<ResearchEffects>());
+                _effectsReady  = true;
             }
 
             var save = SaveManager.Instance?.Current;
@@ -65,10 +71,14 @@ namespace MobileIdleBuilder
             // while the app was closed (offline completion, mirrors the speed-boost UtcNow pattern).
             RestoreActiveTimer(save);
             ProcessActiveTimer();
+
+            _effectsDirty = true;
         }
 
         void Update()
         {
+            TryApplyEffectsToECS();
+
             if (_activeResearch == null) return;
             if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
@@ -94,6 +104,48 @@ namespace MobileIdleBuilder
                 if (IsUnlocked(r.id)) mult *= r.fieldCooldownMult;
             }
             return mult;
+        }
+
+        /// <summary>
+        /// Sum of every effect of <paramref name="type"/> across the given (unlocked) research.
+        /// Values of the same type add up; returns 0 when none apply.
+        /// </summary>
+        public static float SumEffect(IEnumerable<ResearchSO> unlocked, ResearchEffectType type)
+        {
+            float total = 0f;
+            if (unlocked == null) return total;
+            foreach (var r in unlocked)
+            {
+                if (r == null || r.effects == null) continue;
+                foreach (var e in r.effects)
+                    if (e.type == type) total += e.value;
+            }
+            return total;
+        }
+
+        /// <summary>Total of one effect type across all currently unlocked research.</summary>
+        public float GetEffectTotal(ResearchEffectType type)
+        {
+            if (_allResearch == null) return 0f;
+            var unlocked = new List<ResearchSO>();
+            foreach (var r in _allResearch)
+                if (r != null && IsUnlocked(r.id)) unlocked.Add(r);
+            return SumEffect(unlocked, type);
+        }
+
+        /// <summary>
+        /// Pushes the research effect totals into the ResearchEffects ECS singleton. The player entity
+        /// comes from a SubScene and may not exist yet, so this retries each frame while dirty.
+        /// </summary>
+        private void TryApplyEffectsToECS()
+        {
+            if (!_effectsDirty || !_effectsReady) return;
+            if (_effectsQuery.IsEmptyIgnoreFilter) return;
+            _effectsQuery.SetSingleton(new ResearchEffects
+            {
+                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed)
+            });
+            _effectsDirty = false;
         }
 
         /// <summary>True while a research timer is running (one research at a time).</summary>
@@ -230,6 +282,7 @@ namespace MobileIdleBuilder
 
             _activeResearch    = null;
             _activeCompleteUtc = default;
+            _effectsDirty      = true;
 
             // Mark any JSON recipes gated behind this research as "known" (persists across prestige)
             MarkGatedRecipesKnown(research.id);
@@ -320,6 +373,7 @@ namespace MobileIdleBuilder
             }
 
             MarkGatedRecipesKnown(researchId);
+            _effectsDirty = true;
 
             var so = FindResearch(researchId);
             if (so != null)
@@ -341,6 +395,7 @@ namespace MobileIdleBuilder
             _unlockedIds.Clear();
             _activeResearch    = null;
             _activeCompleteUtc = default;
+            _effectsDirty      = true;
             GameLogger.Info("[ResearchService] Research reset for prestige.");
         }
 
