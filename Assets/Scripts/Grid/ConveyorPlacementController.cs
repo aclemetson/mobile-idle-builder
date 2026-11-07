@@ -374,16 +374,20 @@ namespace MobileIdleBuilder
 
             Func<int, int, bool> isFree = IsFreecell;
 
-            // Prefer the chosen single-turn elbow, then the other elbow, then route around.
+            // Router cost (#301b): keep away from free port fronts and from hugging buildings.
+            var extraCost = ConveyorPathfinder.MakeExtraCost(
+                CollectPortFronts(), (x, y) => IsBuildingCell(x, y), _startCell, _destCell);
+
+            // Prefer the chosen single-turn elbow, then the other elbow; keep that L unless the
+            // cost-aware route is strictly cheaper (or there is no L at all).
             List<Vector2Int> path =
                 ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, _elbowHorizontalFirst, isFree)
                 ?? ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, !_elbowHorizontalFirst, isFree);
-            bool routed = false;
-            if (path == null)
-            {
-                path   = ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree);
-                routed = true;
-            }
+            bool routed = path == null;
+            var route = ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree, extraCost);
+            if (path == null
+                || (route != null && ConveyorPathfinder.PathCost(route, extraCost) < ConveyorPathfinder.PathCost(path, extraCost)))
+                path = route;
 
             // No route, or a long detour: tint the existing belts sitting on the straight L.
             bool showBlockers = routed &&
@@ -476,6 +480,42 @@ namespace MobileIdleBuilder
             if (!gridRenderer.IsInBounds(x, y)) return false;
             if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)) return false;
             return true;
+        }
+
+        /// <summary>A building cell: occupied but not a conveyor.</summary>
+        private bool IsBuildingCell(int x, int y) =>
+            GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
+            && !GridOccupancy.Instance.IsConveyorCell(x, y);
+
+        /// <summary>
+        /// Belt cells in front of every placed building port (outputs and inputs), via the same
+        /// TutorialRouteGuide.OutputFront/InputFront the tutorial route guide uses. Connected ports are
+        /// not filtered out: their front already holds a belt, so it is blocked and never costed anyway.
+        /// </summary>
+        private static HashSet<Vector2Int> CollectPortFronts()
+        {
+            var fronts = new HashSet<Vector2Int>();
+            var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return fronts;
+            var em = world.EntityManager;
+
+            using var query = em.CreateEntityQuery(
+                Unity.Entities.ComponentType.ReadOnly<BuildingData>(),
+                Unity.Entities.ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
+                    var facing = (OutputDirection)ports[i].Facing;
+                    fronts.Add(ports[i].PortType == (int)PortType.Output
+                        ? TutorialRouteGuide.OutputFront(cell, facing)
+                        : TutorialRouteGuide.InputFront(cell, facing));
+                }
+            }
+            return fronts;
         }
 
         private bool IsConveyorCell(Vector2Int c) =>

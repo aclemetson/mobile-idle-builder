@@ -43,7 +43,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/fix-303-tutorial-polish.md` - tutorial polish from the 2026-10-31 playtests | done (PR #349) | S |
 | `tasks/feature-336a-recipe-names.md` - recipes named after their product, picker method line | done (PR #350) | M |
 | `tasks/feature-336b-recipes-tab-grouping.md` - Recipes tab on game_data.json, grouped by item (#287 step 2) | done (PR #351) | M-L |
-| `tasks/feature-301-belt-drawing-ux.md` - belt drawing feedback (301a) and router cost (301b) | 301a done (PR pending); 301b pending | L |
+| `tasks/feature-301-belt-drawing-ux.md` - belt drawing feedback (301a) and router cost (301b) | done (PRs #352, #353) | L |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 
