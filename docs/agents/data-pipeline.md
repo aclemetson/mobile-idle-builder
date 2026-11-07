@@ -2,7 +2,7 @@
 
 **Scope:** How game content is authored, imported, and consumed. Read before adding/changing items, recipes, buildings, research, tiers, fields, dialogue, or any new content type.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `5431d1a`, 2026-11-07. If code contradicts this doc, trust the code and update this doc.
 > Power Relay added (`building_id 13`) 2026-07-03 — next free `building_id` is 14.
 > `worlds` section + `WorldSO`/`WorldDatabaseSO` added 2026-07-06 (Chem/Bio Phase 1); `_meta.version` bumped to 0.3.9.
 > Chem/Bio Phase 2 (2026-07-06, `_meta.version` 0.3.10): **field "type" is now a data-driven string** (`FieldSO.fieldType`/`BuildingSO.compatibleFields`/`TutorialFlowSO.collectionFilter` are `string`/`string[]`; the `FieldType` enum is gone — use the `FieldTypes` helper; JSON was already string-valued). New `ItemCategory.OrganicCompound` + items 150–153; element fields; `site_chem_lab`. New items still need a generated tile — run **Generate Element Icons** then **Import Game Data** (a new item with no icon fails `ItemIconTests`).
@@ -13,7 +13,7 @@
 
 `Assets/Data/game_data.json` (~5,400 lines). Top-level keys:
 `_meta`, `game_config`, `tiers`, `research_blocks`, `research`, `items`, `recipes`, `buildings`, `fields`, `sites`, `worlds`, `managers`, `dialogues`, `daily_rewards`, `daily_challenges`, `tutorial_steps`, `megastructure`.
-- **Research blocks** (`research_blocks`, 2026-11-02): game phases with `id`, `name`, `order`, `target_hours`, `anchor`. Every `research[]` node names its `block`. Imported into `ResearchDatabaseSO.blocks` (with each block's first-arrival state for the dev console's `block load`) and `ResearchSO.block` / `treeX` / `treeY` (the in-game research tree). They also drive `scripts/rebalance_curve.py`, `scripts/progression_curve.py` and the research tree editor. `research[].cost_base_currency` is a `long`.
+- **Research blocks** (`research_blocks`, 2026-11-02): game phases with `id`, `name`, `order`, `target_hours`, `anchor`. Every `research[]` node names its `block`. Imported into `ResearchDatabaseSO.blocks` (with each block's first-arrival state for the dev console's `block load`) and `ResearchSO.block` / `treeX` / `treeY` (the in-game research tree). They also drive `scripts/rebalance_curve.py`, `scripts/progression_curve.py` and the research tree editor. `research[].cost_base_currency` is a `long`. **Research effects (#339):** `research[].effects` is a list of `{ "type", "value" }` (`ResearchEffectJson` -> `ResearchSO.effects` of `ResearchEffect`, type = `ResearchEffectType` name; an unknown type logs an error and is skipped). Values of one type add up across unlocked research; only `ConveyorSpeed` is wired (`ResearchEffects` singleton, see `ecs-patterns.md`). `field_cooldown_mult` remains the separate scalar modifier.
 
 Separate file: `Assets/Data/achievements.json` → imported by `Assets/Scripts/Editor/AchievementImporter.cs`.
 

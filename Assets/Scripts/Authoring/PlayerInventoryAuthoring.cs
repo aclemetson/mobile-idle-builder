@@ -53,6 +53,9 @@ namespace MobileIdleBuilder
                     SpeedMult  = 1f,
                 });
 
+                // Research effect multipliers (Transportation I etc.); ResearchService overwrites on load / unlock.
+                AddComponent(entity, new ResearchEffects { ConveyorSpeedMult = 1f });
+
                 var buffer = AddBuffer<InventorySlot>(entity);
 
                 if (authoring.startingItems == null) return;

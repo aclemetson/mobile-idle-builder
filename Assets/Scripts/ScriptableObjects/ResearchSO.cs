@@ -31,6 +31,9 @@ namespace MobileIdleBuilder
                  "1 = no effect; 0.85 = 15% shorter. Stacks multiplicatively across unlocked research.")]
         public float fieldCooldownMult = 1f;
 
+        [Tooltip("Typed effects (e.g. ConveyorSpeed 0.10 = +10% belt speed). Same-type values add up across unlocked research.")]
+        public ResearchEffect[] effects;
+
         [Header("Unlocks")]
         public ItemSO[] unlocksItems;
         public RecipeSO[] unlocksRecipes;

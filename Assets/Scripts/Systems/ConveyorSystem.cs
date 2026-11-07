@@ -41,6 +41,9 @@ namespace MobileIdleBuilder
         protected override void OnUpdate()
         {
             float dt = SystemAPI.Time.DeltaTime;
+            // Research effects (Transportation I etc.): belts move faster by this factor. 1 = no bonus.
+            float speedMult = SystemAPI.TryGetSingleton<ResearchEffects>(out var fx) ? fx.ConveyorSpeedMult : 1f;
+            if (speedMult <= 0f) speedMult = 1f;
             _debugTimer += dt;
             bool debugLog = _debugTimer >= 2f;
             if (debugLog) _debugTimer = 0f;
@@ -90,7 +93,7 @@ namespace MobileIdleBuilder
                 var seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
                 var item = EntityManager.GetComponentData<ConveyorItemData>(e);
 
-                float newProg = item.Progress + dt / seg.TransportTime;
+                float newProg = item.Progress + dt * speedMult / seg.TransportTime;
 
                 if (newProg >= 0.5f)
                 {

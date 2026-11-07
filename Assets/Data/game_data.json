@@ -1083,6 +1083,7 @@
       "cost_base_currency": 62400,
       "duration_seconds": 45,
       "description": "Increases conveyor belt speed by 10%.",
+      "effects": [{ "type": "ConveyorSpeed", "value": 0.10 }],
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 0,
       "cost_prestige_currency": 0,

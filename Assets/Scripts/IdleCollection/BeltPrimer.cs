@@ -72,6 +72,15 @@ namespace MobileIdleBuilder
             if (resolve == null) return 0;
             if (globalRateMultiplier <= 0f) globalRateMultiplier = 1f;
 
+            // Research belt-speed bonus (ResearchEffects singleton): items cross a cell faster, so
+            // the effective transport time shrinks. 1 when the singleton is absent in this world.
+            float beltSpeedMult = 1f;
+            var effectsQuery = em.CreateEntityQuery(ComponentType.ReadOnly<ResearchEffects>());
+            if (effectsQuery.HasSingleton<ResearchEffects>())
+                beltSpeedMult = effectsQuery.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
+            effectsQuery.Dispose();
+            if (beltSpeedMult <= 0f) beltSpeedMult = 1f;
+
             var segEntities  = segmentQuery.ToEntityArray(Allocator.Temp);
             var bldgEntities = buildingQuery.ToEntityArray(Allocator.Temp);
 
@@ -139,6 +148,7 @@ namespace MobileIdleBuilder
                 }
 
                 float transportTime = headSeg.TransportTime > 0f ? headSeg.TransportTime : 1f;
+                transportTime /= beltSpeedMult;
                 var placements = ComputeItemPlacements(chain.Count, rate, transportTime);
 
                 foreach (int idx in placements)

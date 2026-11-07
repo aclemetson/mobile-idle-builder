@@ -423,6 +423,14 @@
     margin-bottom: var(--spacing-xs);
 }
 
+.research-card-effect {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: var(--spacing-xs);
+}
+
 .research-card-footer {
     flex-direction: row;
     align-items: center;
