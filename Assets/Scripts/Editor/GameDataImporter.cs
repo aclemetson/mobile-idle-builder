@@ -318,6 +318,24 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
+        private static ResearchEffect[] ParseResearchEffects(ResearchJson data)
+        {
+            var list = new List<ResearchEffect>();
+            if (data.effects == null) return list.ToArray();
+            foreach (var e in data.effects)
+            {
+                if (e == null) continue;
+                if (!Enum.TryParse<ResearchEffectType>(e.type, out var type) ||
+                    !Enum.IsDefined(typeof(ResearchEffectType), type))
+                {
+                    Debug.LogError($"[GameDataImporter] Research '{data.id}': unknown effect type '{e.type}', skipped.");
+                    continue;
+                }
+                list.Add(new ResearchEffect { type = type, value = e.value });
+            }
+            return list.ToArray();
+        }
+
         private static ResearchSO GenerateResearchPass1(ResearchJson data)
         {
             string path = $"{ResearchDir}/{Sanitize(data.id)}.asset";
@@ -331,6 +349,7 @@ namespace MobileIdleBuilder.Editor
             so.costPrestigeCurrency = data.cost_prestige_currency;
             so.durationSeconds      = data.duration_seconds;
             so.fieldCooldownMult    = data.field_cooldown_mult;
+            so.effects              = ParseResearchEffects(data);
             so.unlocksGridExpansion = data.unlocks_grid_expansion;
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;

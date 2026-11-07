@@ -992,6 +992,14 @@ namespace MobileIdleBuilder
                     card.Add(descLabel);
                 }
 
+                if (research.effects != null)
+                    foreach (var effect in research.effects)
+                    {
+                        var effectLabel = new Label(ResearchEffectText.Describe(effect));
+                        effectLabel.AddToClassList("research-card-effect");
+                        card.Add(effectLabel);
+                    }
+
                 bool isActive    = researchService.HasActiveResearch &&
                                    researchService.ActiveResearchId == research.id;
                 bool labBusy     = researchService.HasActiveResearch && !isActive;

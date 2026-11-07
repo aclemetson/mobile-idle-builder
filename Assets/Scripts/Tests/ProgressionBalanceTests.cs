@@ -13,7 +13,8 @@ namespace MobileIdleBuilder.Tests
     [TestFixture]
     public class ProgressionBalanceTests
     {
-        [Serializable] class GdResearch { public string id; public List<string> prerequisites; public long cost_base_currency; public string block; }
+        [Serializable] class GdEffect   { public string type; public float value; }
+        [Serializable] class GdResearch { public string id; public List<string> prerequisites; public long cost_base_currency; public string block; public List<GdEffect> effects; }
         [Serializable] class GdBlock    { public string id; public float target_hours; public int order; }
         [Serializable] class GdIng      { public string item; public int quantity; }
         [Serializable] class GdRecipe   { public string id; public List<GdIng> inputs; public string output_item; public List<string> valid_buildings; public string required_research; public float base_craft_time; }
@@ -27,6 +28,16 @@ namespace MobileIdleBuilder.Tests
         {
             _gd       = JsonUtility.FromJson<GameData>(File.ReadAllText("Assets/Data/game_data.json"));
             _research = _gd.research.ToDictionary(r => r.id);
+        }
+
+        [Test]
+        public void TransportationI_HasOneConveyorSpeedEffect()
+        {
+            var r = _gd.research.First(x => x.id == "transportation_1");
+            Assert.IsNotNull(r.effects);
+            Assert.AreEqual(1, r.effects.Count);
+            Assert.AreEqual("ConveyorSpeed", r.effects[0].type);
+            Assert.AreEqual(0.10f, r.effects[0].value, 1e-6f);
         }
 
         [Test]
