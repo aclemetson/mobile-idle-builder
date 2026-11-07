@@ -21,6 +21,7 @@ namespace MobileIdleBuilder
         [SerializeField] private Color occupiedColor         = new Color(0f,     0.565f, 0.612f, 1f); // #009090 placed building
         [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
         [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
+        [SerializeField] private Color ghostUnpoweredColor   = new Color(1f,     0.7f,   0.1f,  0.55f); // amber — valid but outside power range
         [SerializeField] private Color deconstructHoverColor = new Color(0.9f,   0.15f,  0.15f, 0.9f); // solid danger red
         [SerializeField] private Color fieldHoverColor       = new Color(0.15f,  0.85f,  0.35f, 0.55f); // soft green — interactable field
         [SerializeField] private Color tutorialHighlightColor = new Color(1f,    0.78f,  0.15f, 0.75f); // amber/gold — tutorial focus
@@ -185,14 +186,24 @@ namespace MobileIdleBuilder
         public void ShowGhost(int x, int y, bool isValid) => ShowGhost(x, y, 1, 1, isValid);
 
         /// <summary>Shows a ghost footprint of (w x h) cells starting at (x, y). Pass isValid=false for red.</summary>
-        public void ShowGhost(int x, int y, int w, int h, bool isValid)
+        public void ShowGhost(int x, int y, int w, int h, bool isValid) => ShowGhost(x, y, w, h, isValid, true);
+
+        /// <summary>
+        /// Shows a ghost footprint tinted by power: red when invalid, amber when valid but outside every
+        /// linked generator's range (<paramref name="isPowered"/> false), cyan when valid and powered.
+        /// </summary>
+        public void ShowGhost(int x, int y, int w, int h, bool isValid, bool isPowered)
         {
             foreach (var c in _ghostCells)
-                RestoreCell(c.x, c.y);
+            {
+                // Keep the power-coverage tint under the old ghost footprint.
+                if (_powerCoverageCells.Contains(c)) SetColor(_tiles[c.x, c.y].GetComponent<MeshRenderer>(), PowerCoverageColor);
+                else RestoreCell(c.x, c.y);
+            }
             _ghostCells.Clear();
             _ghostCell = new(-1, -1);
 
-            var color = isValid ? ghostValidColor : ghostInvalidColor;
+            var color = !isValid ? ghostInvalidColor : (isPowered ? ghostValidColor : ghostUnpoweredColor);
             for (int dx = 0; dx < w; dx++)
             {
                 for (int dy = 0; dy < h; dy++)
@@ -345,6 +356,28 @@ namespace MobileIdleBuilder
         public void ShowPowerCoverage(int gridX, int gridY, int w, int h, float radius)
         {
             ClearPowerCoverage();
+            AddCoverageFor(gridX, gridY, w, h, radius);
+        }
+
+        /// <summary>
+        /// Tints the union of the coverage of every grid-linked node (generators and linked relays; unlinked
+        /// nodes power nothing). Clears the previous highlight once first.
+        /// </summary>
+        public void ShowPowerCoverage(IReadOnlyList<PowerConnectionGraph.PowerNode> nodes)
+        {
+            ClearPowerCoverage();
+            if (nodes == null) return;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var n = nodes[i];
+                if (!n.IsGridLinked) continue;
+                AddCoverageFor(n.AnchorX, n.AnchorY, n.Width, n.Height, n.InfluenceRadius);
+            }
+        }
+
+        /// <summary>Adds one source's covered tiles to the highlight (skipping tiles already tinted).</summary>
+        private void AddCoverageFor(int gridX, int gridY, int w, int h, float radius)
+        {
             if (radius <= 0f) return;
 
             // Circle reach extends ~radius + half-footprint past the near edge, plus a cell of slack for
@@ -358,8 +391,10 @@ namespace MobileIdleBuilder
                 if (!IsInBounds(cx, cy)) continue;
                 // Single-cell tile (cx,cy) vs the source footprint — shared with PowerGridSystem/BuildingVisualizer.
                 if (!PowerCoverageMath.FootprintWithinRadius(gridX, gridY, maxX, maxY, cx, cy, cx, cy, radius)) continue;
+                var cell = new Vector2Int(cx, cy);
+                if (_powerCoverageCells.Contains(cell)) continue;
                 SetColor(_tiles[cx, cy].GetComponent<MeshRenderer>(), PowerCoverageColor);
-                _powerCoverageCells.Add(new Vector2Int(cx, cy));
+                _powerCoverageCells.Add(cell);
             }
         }
 

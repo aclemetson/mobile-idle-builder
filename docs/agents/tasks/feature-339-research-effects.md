@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `data-pipeline.md` (research fields, importer),
 `ecs-patterns.md` (multipliers / singletons), `testing.md`.
-**Status:** done (PR pending, integration/2026-11-07).
+**Status:** done (PR #347).
 **Size:** M. **Branch:** `feat/339-research-effects` from `integration/2026-11-07`.
 
 ## Problem
