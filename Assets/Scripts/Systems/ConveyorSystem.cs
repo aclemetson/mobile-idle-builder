@@ -259,6 +259,7 @@ namespace MobileIdleBuilder
             // Pass 4 — Pull items from building output buffers onto chain heads
             // ----------------------------------------------------------------
             var pulls = new List<(Entity head, int itemID)>();
+            var splitterHeads = new Dictionary<Entity, List<(Entity head, int facing)>>();
 
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -324,6 +325,15 @@ namespace MobileIdleBuilder
                     continue;
                 }
 
+                if (EntityManager.HasComponent<SplitterTag>(bldg))
+                {
+                    // A Belt Splitter: its sides take turns, decided once every ready head is known.
+                    if (!splitterHeads.TryGetValue(bldg, out var heads))
+                        splitterHeads[bldg] = heads = new List<(Entity head, int facing)>();
+                    heads.Add((e, portFacing));
+                    continue;
+                }
+
                 int itemID = outputBuf[0].ItemID;
                 if (EntityManager.HasBuffer<OutputPortFilter>(bldg))
                 {
@@ -342,6 +352,9 @@ namespace MobileIdleBuilder
                               $"from building at {sourceCell} (portFacing={portFacing}) onto belt.");
             }
 
+            foreach (var kv in splitterHeads)
+                PullFromSplitter(kv.Key, kv.Value, pulls);
+
             foreach (var (head, itemID) in pulls)
             {
                 if (!EntityManager.HasComponent<ConveyorItemData>(head))
@@ -358,6 +371,43 @@ namespace MobileIdleBuilder
             bldgEntities.Dispose();
             segMap.Dispose();
             buildingMap.Dispose();
+        }
+
+        /// <summary>
+        /// Belt Splitter: gives its next item to the side whose turn it is, or the next ready side after it
+        /// (<see cref="SplitterRotation"/>), then passes the turn on. One item per splitter per tick, far more
+        /// than a belt carries, so the branches share the flow evenly whatever order the heads were visited in.
+        /// </summary>
+        private void PullFromSplitter(Entity bldg, List<(Entity head, int facing)> readyHeads,
+                                      List<(Entity head, int itemID)> pulls)
+        {
+            var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
+            if (outputBuf.Length == 0) return;
+
+            var order = new List<int>(3);
+            var ports = EntityManager.GetBuffer<PlacedPortData>(bldg, isReadOnly: true);
+            for (int p = 0; p < ports.Length; p++)
+                if (ports[p].PortType == (int)PortType.Output && !order.Contains(ports[p].Facing))
+                    order.Add(ports[p].Facing);
+
+            var ready = new HashSet<int>();
+            foreach (var (_, facing) in readyHeads) ready.Add(facing);
+
+            var state  = EntityManager.GetComponentData<SplitterState>(bldg);
+            int chosen = SplitterRotation.Pick(order, state.NextFacing, ready);
+            if (chosen < 0) return;
+
+            foreach (var (head, facing) in readyHeads)
+            {
+                if (facing != chosen) continue;
+                int itemID = outputBuf[0].ItemID;
+                SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
+                pulls.Add((head, itemID));
+                break;
+            }
+
+            state.NextFacing = SplitterRotation.After(order, chosen);
+            EntityManager.SetComponentData(bldg, state);
         }
 
         // ----------------------------------------------------------------

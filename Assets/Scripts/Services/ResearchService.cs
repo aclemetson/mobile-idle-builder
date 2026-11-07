@@ -387,7 +387,7 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Clears all unlocked research and any in-progress timer for the new run.
-        /// Called by PrestigeSaveWatcher / PrestigeSystem. The caller clears the matching
+        /// Called by PrestigeSystem. The caller clears the matching
         /// SaveData fields before saving.
         /// </summary>
         public void ResetAll()

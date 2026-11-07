@@ -199,6 +199,12 @@ namespace MobileIdleBuilder
             if (building != null && (building.isItemFilter || building.assignableOutputs))
                 AddFilterComponents(entity, portFilters, building.isItemFilter);
 
+            if (building != null && building.isSplitter)
+            {
+                _em.AddComponent<SplitterTag>(entity);
+                _em.AddComponentData(entity, new SplitterState { NextFacing = -1 });
+            }
+
             GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;
         }
