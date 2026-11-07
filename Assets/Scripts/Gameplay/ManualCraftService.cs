@@ -15,7 +15,7 @@ namespace MobileIdleBuilder
     [DefaultExecutionOrder(-80)]
     public class ManualCraftService : SingletonMonoBehaviour<ManualCraftService>
     {
-        /// <summary>Recipes in recipes.json that the player can craft without a building.</summary>
+        /// <summary>crafted_in entry for recipes the player can craft without a building.</summary>
         public const string InventoryMenuSource = "inventory_menu";
 
         private const float MinUnitSeconds = 0.1f;
@@ -190,7 +190,7 @@ namespace MobileIdleBuilder
         }
 
         // Numeric building types (BuildingSO.buildingId) that make this recipe: those named in
-        // recipes.json crafted_in, plus any whose supportedRecipes output the same item.
+        // the recipe's crafted_in, plus any whose supportedRecipes output the same item.
         private HashSet<int> CraftingBuildingTypes(RecipeJson recipe, out string firstName)
         {
             var types = new HashSet<int>();
@@ -229,7 +229,11 @@ namespace MobileIdleBuilder
                 if (QueueOverride != null) return QueueOverride;
                 var run = SaveManager.Instance?.Current?.currentRun;
                 if (run == null) return null;
-                return run.craftQueue ??= new CraftQueueSaveData();
+                run.craftQueue ??= new CraftQueueSaveData();
+                // A queue saved before recipes.json was retired may hold legacy recipe ids (#336); it is cheap
+                // and idempotent, and the first read after a load is what fixes them.
+                LegacyRecipeIds.Migrate(run.craftQueue);
+                return run.craftQueue;
             }
         }
 

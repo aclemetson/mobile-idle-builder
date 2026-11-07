@@ -131,6 +131,21 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         [Test]
+        public void Load_MapsLegacyRecipeId_ToTheNewId()
+        {
+            // A save from before recipes.json was retired (#336): legacy "helium" is now "helium_4".
+            string json = "{\"entries\":[{\"id\":\"helium\",\"previous_research\":true}]}";
+            File.WriteAllText(_filePath, json);
+
+            SpawnService();
+
+            Assert.IsTrue(RecipeKnowledgeService.Instance.IsKnown("helium_4"),
+                "A legacy id in the save must load as its new id");
+            Assert.IsFalse(RecipeKnowledgeService.Instance.IsKnown("helium"),
+                "The legacy entry must not linger beside the new one");
+        }
+
+        [Test]
         public void Load_FallsBackToEmptyState_WhenNoFileOrDefaultAsset()
         {
             // No file on disk and _defaultKnowledgeAsset is null (not wired in tests)

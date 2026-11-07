@@ -6,7 +6,7 @@ namespace MobileIdleBuilder
     public class ItemSO : ScriptableObject
     {
         [Header("Identity")]
-        public string id;               // matches recipes.json id
+        public string id;               // matches game_data.json id
         public string displayName;
         public string symbol;           // chemical symbol or notation
         public Sprite icon;

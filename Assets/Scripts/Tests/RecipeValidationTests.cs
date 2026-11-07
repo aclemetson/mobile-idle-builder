@@ -8,7 +8,7 @@ using MobileIdleBuilder;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// Validates recipes.json on every CI build.
+    /// Validates game_data.json (via RecipeDatabaseSO) on every CI build.
     /// Only real recipe entries are tested — _section markers and byproduct-only
     /// entries (alpha/beta particles) are filtered out during setup.
     /// Recipes that intentionally deviate from real-world science must have a
@@ -22,15 +22,7 @@ namespace MobileIdleBuilder.Tests
         [OneTimeSetUp]
         public void LoadRecipes()
         {
-            string path = Path.Combine(Application.dataPath, "Data", "recipes.json");
-            Assert.IsTrue(File.Exists(path), $"recipes.json not found at: {path}");
-
-            var raw = JsonUtility.FromJson<RecipeListJson>(File.ReadAllText(path));
-            Assert.IsNotNull(raw,          "Failed to deserialize recipes.json");
-            Assert.IsNotNull(raw.recipes,  "recipes array is null");
-
-            _recipes = RecipeDatabase.ParseValidRecipes(raw.recipes);
-            Assert.IsNotEmpty(_recipes, "No valid recipes found after filtering");
+            _recipes = RecipeTestData.LoadRuntimeRecipes();
         }
 
         // ── Structural integrity ──────────────────────────────────────────────
@@ -115,7 +107,7 @@ namespace MobileIdleBuilder.Tests
         public void Recipe_Helium_Is2Protons2Neutrons2Electrons()
         {
             // Real: He-4 = 2 protons + 2 neutrons + 2 electrons
-            var r = RequireRecipe("helium");
+            var r = RequireRecipe("helium_4");
             RequireInput(r, "proton",   quantity: 2);
             RequireInput(r, "neutron",  quantity: 2);
             RequireInput(r, "electron", quantity: 2);
@@ -126,7 +118,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Recipe_Helium_RequiresBuilding()
         {
-            var r = RequireRecipe("helium");
+            var r = RequireRecipe("helium_4");
             Assert.IsTrue(r.requiresBuilding,
                 "Helium should require a building — it is not craftable in the inventory menu");
         }
@@ -179,7 +171,7 @@ namespace MobileIdleBuilder.Tests
         private RecipeJson RequireRecipe(string id)
         {
             var r = _recipes.FirstOrDefault(x => x.id == id);
-            Assert.IsNotNull(r, $"Recipe with id '{id}' not found in recipes.json");
+            Assert.IsNotNull(r, $"Recipe with id '{id}' not found in the runtime recipe list");
             return r;
         }
 
