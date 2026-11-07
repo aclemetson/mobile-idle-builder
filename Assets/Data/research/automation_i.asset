@@ -15,7 +15,8 @@ MonoBehaviour:
   id: automation_i
   displayName: Automation I
   description: "Unlocks the Harvester \u2014 a field collector that gathers particles
-    continuously without manual input."
+    continuously without manual input. Also unlocks the Filter and the Belt Splitters
+    for routing belts."
   icon: {fileID: 0}
   branch: 3
   prerequisites:
@@ -34,6 +35,8 @@ MonoBehaviour:
   unlocksBuildings:
   - {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
   - {fileID: 11400000, guid: 67eafaf92dc630d4c864cb8f7448f623, type: 2}
+  - {fileID: 11400000, guid: 0b5ff5bdeb0714943b6fad1c74f6bfd5, type: 2}
+  - {fileID: 11400000, guid: 9b8f087bef7056d47ab502293614253a, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}

@@ -48,6 +48,7 @@ MonoBehaviour:
   - Reagent
   isEntropySink: 0
   isItemFilter: 0
+  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []

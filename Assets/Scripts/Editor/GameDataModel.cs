@@ -292,6 +292,7 @@ namespace MobileIdleBuilder.Editor
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
         public bool                   is_item_filter             = false;
+        public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
         public bool                   assignable_outputs         = false;
         public string[]               recipe_mode_labels         = null;
         public string[]               recipe_mode_prefixes       = null;
