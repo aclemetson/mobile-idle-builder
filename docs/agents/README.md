@@ -37,6 +37,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-power-draw.md` — proximity eV power grid (makes PowerDiscount live) | done (feature/power-draw) | M–L |
 | `tasks/feature-multi-grids.md` — multiple build sites | done (PRs #58-61) | XL (4 phased PRs) |
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
+| `tasks/fix-341-recipe-switch-outputs.md` — recipe switch moves old-recipe outputs to inventory | pending | S |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

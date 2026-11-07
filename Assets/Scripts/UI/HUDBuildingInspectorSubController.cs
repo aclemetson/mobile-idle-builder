@@ -1145,6 +1145,7 @@ namespace MobileIdleBuilder
                 outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
             SellInputsTheRecipeDoesNotUse(entity);
+            MoveOutputsTheRecipeDoesNotMake(entity);
 
             // A building whose draw follows its recipe (Neutron Capture Slow/Fast) re-reads it now.
             var so = FindBuildingSOForEntity(entity);
@@ -1353,6 +1354,33 @@ namespace MobileIdleBuilder
             progress.BaseCurrency += earned;
             _playerQuery.SetSingleton(progress);
             InventoryPopupController.Notify("entropy", (int)System.Math.Min(earned, int.MaxValue));
+        }
+
+        /// <summary>
+        /// After a recipe change, outputs made under the old recipe that the new one doesn't produce would leave
+        /// on the belt (#341). Move them to the player's inventory instead and say so; outputs the new recipe
+        /// also makes stay and keep shipping.
+        /// </summary>
+        private void MoveOutputsTheRecipeDoesNotMake(Entity entity)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(entity)) return;
+            if (!_em.HasBuffer<BuildingOutputSlot>(entity) || !_em.HasBuffer<RecipeOutputSlot>(entity)) return;
+
+            var outBuf = _em.GetBuffer<BuildingOutputSlot>(entity);
+            if (outBuf.Length == 0) return;
+
+            var recipeOut = _em.GetBuffer<RecipeOutputSlot>(entity);
+            var leaving = new System.Collections.Generic.List<(int id, int qty)>();
+            for (int i = 0; i < outBuf.Length; i++)
+                if (outBuf[i].Quantity > 0 && !RecipeSwitch.RecipeMakes(recipeOut, outBuf[i].ItemID))
+                    leaving.Add((outBuf[i].ItemID, outBuf[i].Quantity));
+
+            var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
+            int moved = RecipeSwitch.MoveUnproducedOutputsToInventory(outBuf, recipeOut, ref inv);
+            if (moved <= 0) return;
+
+            foreach (var (id, qty) in leaving)
+                InventoryPopupController.Notify(ItemName(id), qty);
         }
 
         private void EmptyInputToInventory(Entity building)
