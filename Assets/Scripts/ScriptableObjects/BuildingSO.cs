@@ -73,6 +73,7 @@ namespace MobileIdleBuilder
         public string[] inputSlotLabels;    // e.g. ["Protons", "Neutrons", "Electrons"]
         public bool isEntropySink;          // true = Maxwell's Demon; items in input buffer are consumed for entropy
         public bool isItemFilter;           // true = Filter (#321): routes each item to the output side its rules pick
+        public bool isSplitter;             // true = Belt Splitter: every item leaves by the next output side in turn (no filter)
         public bool assignableOutputs;      // true = the player picks which output side each product leaves by (#322)
         public string[] recipeModeLabels;   // e.g. Slow / Fast: the inspector shows one recipe group at a time (#322)
         public string[] recipeModePrefixes; // recipe id prefix for each mode, same order as recipeModeLabels

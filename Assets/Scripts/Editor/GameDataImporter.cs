@@ -486,6 +486,7 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
             so.isItemFilter        = data.is_item_filter;
+            so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;
             so.recipeModeLabels    = data.recipe_mode_labels;
             so.recipeModePrefixes  = data.recipe_mode_prefixes;

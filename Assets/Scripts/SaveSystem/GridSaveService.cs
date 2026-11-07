@@ -653,7 +653,8 @@ namespace MobileIdleBuilder
                 getManagerOutputMultiplier,
                 getRecipeInfo,
                 SurplusSale.CurrentFraction(),
-                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter);
+                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
+                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

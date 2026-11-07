@@ -370,6 +370,13 @@ namespace MobileIdleBuilder
                 {
                     AddFilterSection(_inspectorEntity);
                 }
+                else if (buildingSO.isSplitter)
+                {
+                    AddInspectorRow(_inspectorRecipes, "—— Splitting ——");
+                    AddInspectorRow(_inspectorRecipes,
+                        "Every item goes out the next side in turn, so the belts share it evenly. " +
+                        "A side with no belt, or a full one, is skipped.");
+                }
                 else if (buildingSO.supportedRecipes != null)
                 {
                     // Only offer recipes whose gating research has been purchased. Research-gating
