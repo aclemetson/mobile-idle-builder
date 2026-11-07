@@ -293,6 +293,14 @@ namespace MobileIdleBuilder
                 skipGridFlush = true;
             }
 
+            // Prestige already wrote the reset run into _current; the old scene's grid and ECS state
+            // (still live until the reload lands) must not be flushed back over it.
+            if (PrestigeRunReset.ReloadPending)
+            {
+                skipECSFlush  = true;
+                skipGridFlush = true;
+            }
+
             if (!skipECSFlush)
                 ECSLoadBridge.Instance?.FlushToSave();
             if (!skipGridFlush)
