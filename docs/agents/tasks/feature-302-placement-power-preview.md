@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ecs-patterns.md`, `testing.md`. The power model is
 summarised in `tasks/feature-power-draw.md`; read only its first section.
-**Status:** done (PR pending, integration/2026-11-07). Port-front marking (step 6) deferred.
+**Status:** done (PR #348). Port-front marking (step 6) deferred.
 **Size:** M. **Branch:** `feat/302-placement-power-preview` from `integration/2026-11-07`.
 
 ## Problem

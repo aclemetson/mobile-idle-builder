@@ -498,7 +498,14 @@ namespace MobileIdleBuilder
         private void BindButtons(VisualElement root)
         {
             // Drawer toggle
-            root.Q<Button>("btn-drawer-handle").clicked += ToggleDrawer;
+            // A pan that starts on the handle also ends as a click; ignore clicks where the pointer moved.
+            var drawerHandle = root.Q<Button>("btn-drawer-handle");
+            Vector2 handleDownPos = Vector2.zero;
+            drawerHandle.RegisterCallback<PointerDownEvent>(e => handleDownPos = e.position, TrickleDown.TrickleDown);
+            drawerHandle.RegisterCallback<ClickEvent>(e =>
+            {
+                if (IsTap(handleDownPos, e.position, 12f)) ToggleDrawer();
+            });
             if (_drawerBackdrop != null)
                 _drawerBackdrop.RegisterCallback<ClickEvent>(_ => CloseDrawer());
 
@@ -2033,12 +2040,31 @@ namespace MobileIdleBuilder
             if (float.IsNaN(w)) w = 0f;
             if (float.IsNaN(h)) h = 0f;
 
-            // Centre horizontally over the cell and float above it.
-            _placementConfirmPopup.style.left = panelPoint.x - w * 0.5f;
-            _placementConfirmPopup.style.top  = panelPoint.y - h - 24f;
+            // Centre horizontally over the cell and float above it (below it if that would clip the top).
+            const float margin = 8f;
+            float topAbove = panelPoint.y - h - 24f;
+            float desiredTop = topAbove < margin ? panelPoint.y + 24f : topAbove;
+            Vector2 panelSize = panel.visualTree.layout.size;
+            Vector2 pos = (panelSize.x > 0f && panelSize.y > 0f)
+                ? ClampPopup(new Vector2(panelPoint.x - w * 0.5f, desiredTop), new Vector2(w, h), panelSize, margin)
+                : new Vector2(panelPoint.x - w * 0.5f, desiredTop);
+            _placementConfirmPopup.style.left = pos.x;
+            _placementConfirmPopup.style.top  = pos.y;
 
             _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
         }
+
+        /// <summary>Clamps a popup's top-left so the whole popup stays inside the panel with a margin.</summary>
+        public static Vector2 ClampPopup(Vector2 desired, Vector2 size, Vector2 panelSize, float margin)
+        {
+            float maxX = Mathf.Max(margin, panelSize.x - size.x - margin);
+            float maxY = Mathf.Max(margin, panelSize.y - size.y - margin);
+            return new Vector2(Mathf.Clamp(desired.x, margin, maxX), Mathf.Clamp(desired.y, margin, maxY));
+        }
+
+        /// <summary>True if the pointer moved no more than threshold between down and up (a tap, not a pan).</summary>
+        public static bool IsTap(Vector2 down, Vector2 up, float threshold)
+            => (up - down).sqrMagnitude <= threshold * threshold;
 
         /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
         /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
