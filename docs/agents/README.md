@@ -44,6 +44,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-336a-recipe-names.md` - recipes named after their product, picker method line | done (PR #350) | M |
 | `tasks/feature-336b-recipes-tab-grouping.md` - Recipes tab on game_data.json, grouped by item (#287 step 2) | done (PR #351) | M-L |
 | `tasks/feature-301-belt-drawing-ux.md` - belt drawing feedback (301a) and router cost (301b) | done (PRs #352, #353) | L |
+| `tasks/feature-item-value-readouts.md` - item worth in the Recipes tab and building inspector | done (PR pending) | M |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

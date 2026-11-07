@@ -154,53 +154,6 @@ namespace MobileIdleBuilder
         ///   1 T – 999 T         → "1.23T"
         ///   ≥ 1 000 T           → "1.23×10¹⁵" (scientific notation)
         /// </summary>
-        public static string FormatLargeNumber(long value)
-        {
-            if (value < 10_000L)
-                return value.ToString("N0");
-
-            if (value < 1_000_000L)
-                return $"{value / 1_000.0:F1}K";
-
-            if (value < 1_000_000_000L)
-                return $"{value / 1_000_000.0:F2}M";
-
-            if (value < 1_000_000_000_000L)
-                return $"{value / 1_000_000_000.0:F2}B";
-
-            if (value < 1_000_000_000_000_000L)
-                return $"{value / 1_000_000_000_000.0:F2}T";
-
-            // Scientific notation for truly astronomical values
-            double v    = value;
-            int    exp  = (int)Math.Floor(Math.Log10(v));
-            double coef = v / Math.Pow(10, exp);
-            return $"{coef:F2}×10{ToSuperscript(exp)}";
-        }
-
-        private static string ToSuperscript(int n)
-        {
-            string digits = n.ToString();
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in digits)
-            {
-                sb.Append(c switch
-                {
-                    '-' => '⁻',
-                    '0' => '⁰',
-                    '1' => '¹',
-                    '2' => '²',
-                    '3' => '³',
-                    '4' => '⁴',
-                    '5' => '⁵',
-                    '6' => '⁶',
-                    '7' => '⁷',
-                    '8' => '⁸',
-                    '9' => '⁹',
-                    _   => c
-                });
-            }
-            return sb.ToString();
-        }
+        public static string FormatLargeNumber(long value) => NumberFormat.Compact(value);
     }
 }
