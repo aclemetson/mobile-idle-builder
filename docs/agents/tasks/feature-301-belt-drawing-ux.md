@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ui-toolkit.md`, `testing.md`. Repro notes are in
 `Playtests/reports/2026-10-31-first-session.md` (:41-57) and `2026-10-31-active-grinder.md` (:83-104).
-**Status:** 301a done (PR pending); 301b pending (integration/2026-11-07).
+**Status:** done (301a PR #352, 301b PR #353). Router weights shipped: StepCost 10, TurnCost 30, PortFrontCost 150, BuildingAdjacentCost 5.
 **Size:** L, as **two PRs**:
 - **301a:** `fix/301-belt-feedback`;
 - **301b:** `feat/301-router-cost`, done after 301a merges.
