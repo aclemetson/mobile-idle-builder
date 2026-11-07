@@ -116,27 +116,28 @@ namespace MobileIdleBuilder
                 SystemAPI.SetSingleton(ts);
             }
 
+            ManagerService.Instance?.ResetAssignments();
+
             var save = SaveManager.Instance?.Current;
             if (save != null)
             {
-                save.unlockedResearch              = new System.Collections.Generic.List<string>();
-                save.activeResearchId              = null;
-                save.activeResearchCompleteUtc     = null;
-                // Multi-grids: clear all sites' grids + snapshots and return to site 0 (unlocks
-                // survive) so the intermediate SaveLocal below never persists stale inactive sites.
-                PrestigeSaveWatcher.ResetSitesForPrestige(save);
-                save.tutorial.hasCompletedFirstRun = true;
-                save.tutorial.isActive             = false;
-                GameLogger.Info("[PrestigeSystem] hasCompletedFirstRun set → true in SaveData");
+                // Flush ECS first so the prestige totals (RunCount, PrestigeCurrency, multipliers)
+                // reach the save, then wipe the whole run: grids, bought fields, research, craft queue.
+                ECSLoadBridge.Instance?.FlushToSave();
+                PrestigeRunReset.ResetRun(save, cfgEntropy + bonusEntropy);
+                // The old scene's belts, fields and buildings are still live until the reload, so
+                // write the reset save as it is instead of flushing them back into it.
+                SaveManager.Instance.SaveLocal(skipGridFlush: true, skipECSFlush: true);
             }
-
-            // Flush ECS state → SaveData and write to disk.
-            // ECS singletons are already updated above so FlushToSave captures correct post-prestige values.
-            SaveManager.Instance?.SaveLocal();
 
             GameLogger.Info(
                 $"[PrestigeSystem] Run {prestige.RunCount} complete. " +
                 $"Earned {earned} prestige currency. Total: {prestige.PrestigeCurrency}.");
+
+            // Start the new run from a clean scene (loading screen, fresh field layout, no tutorial).
+            // Only with a real save in Play Mode: EditMode tests drive this system without one.
+            if (save != null && UnityEngine.Application.isPlaying)
+                PrestigeRunReset.BeginReload();
         }
     }
 }

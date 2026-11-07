@@ -81,7 +81,7 @@ namespace MobileIdleBuilder.Dev
 
             // The run, reset the way a prestige resets it.
             save.currentRun = new CurrentRunData();
-            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+            PrestigeRunReset.ResetSitesForPrestige(save);
             save.activeResearchId          = null;
             save.activeResearchCompleteUtc = null;
             save.speedBoostExpiryUtc       = null;
