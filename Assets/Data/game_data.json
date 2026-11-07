@@ -14172,7 +14172,7 @@
     {
       "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
       "id": "reroute_neutrons_to_atom_gen",
-      "hint": "Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "hint": "Remove the Neutron Combiner's belt to the Demon (belt tool: switch Create to Destroy, or Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
       "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
     },
@@ -14256,7 +14256,7 @@
     {
       "_comment": "Was route_helium_to_reactor (saves map across via ECSLoadBridge.RetiredSteps). The Atom Generator's output still has its belt to the Demon, so the player removes it first; the route guide only lights a free output front.",
       "id": "route_deuterium_to_reactor",
-      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
+      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (belt tool: switch Create to Destroy, or Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "atomic_assembler", "building_id": "fusion_reactor", "min_count": 1 },
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:atomic_assembler>fusion_reactor", "highlight_mode": "Full" }
     },

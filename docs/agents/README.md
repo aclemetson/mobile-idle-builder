@@ -39,7 +39,8 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
 | `tasks/fix-341-recipe-switch-outputs.md` — recipe switch moves old-recipe outputs to inventory | done (PR #346) | S |
 | `tasks/feature-339-research-effects.md` - research effects (Transportation I = +10% belt speed) | done (PR #347) | M |
-| `tasks/feature-302-placement-power-preview.md` - power range while placing a powered building | done (PR pending) | M |
+| `tasks/feature-302-placement-power-preview.md` - power range while placing a powered building | done (PR #348) | M |
+| `tasks/fix-303-tutorial-polish.md` - tutorial polish from the 2026-10-31 playtests | done (PR pending) | S |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

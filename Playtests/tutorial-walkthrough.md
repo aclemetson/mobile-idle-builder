@@ -165,6 +165,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
   - The Architect: Two Up Quarks, one Down Quark, bound by the strong force. The result: a proton. Charge +1. The nucleus of the simplest atom in existence. Craft two.
 - **Blocks:** field collection is **blocked**; research locked: Hydrogen Synthesis (`hydrogen_synthesis`)
 - **How to get Proton:**
+  - Harvest Proton: ; needs a building: `nucleon_harvester`
   - Proton: 2 x Up Quark, 1 x Down Quark; craft manually from the recipe panel (btn-recipes)
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
@@ -176,7 +177,9 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
   - The Architect: Now the neutron — one Up Quark, two Down Quarks. Net charge zero, but nearly identical mass to the proton. Inside a nucleus, neutrons neutralize the repulsion between protons. Craft two.
 - **Blocks:** field collection is **blocked**; research locked: Hydrogen Synthesis (`hydrogen_synthesis`)
 - **How to get Neutron:**
+  - Harvest Neutron: ; needs a building: `nucleon_harvester`
   - Neutron: 1 x Up Quark, 2 x Down Quark; craft manually from the recipe panel (btn-recipes)
+  - Collect Neutron: ; needs a building: `harvester`
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
 ### 18. `direct_to_demon_for_nucleons`
@@ -236,6 +239,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Blocks:** field collection is **blocked**
 - **Tap:** pulses button `btn-recipes`
 - **How to get Proton:**
+  - Harvest Proton: ; needs a building: `nucleon_harvester`
   - Proton: 2 x Up Quark, 1 x Down Quark; craft manually from the recipe panel (btn-recipes)
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
@@ -524,7 +528,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 59. `reroute_neutrons_to_atom_gen`
 
-- **Hint:** Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.
+- **Hint:** Remove the Neutron Combiner's belt to the Demon (belt tool: switch Create to Destroy, or Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.
 - **Advances when:** link at least 2 conveyor(s) into Atom Generator (`atomic_assembler`)
 - **Tap:** pulses button `btn-deconstruct`; highlights `route:strong_force_combiner>atomic_assembler` (Full)
 - **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
@@ -600,7 +604,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 70. `route_deuterium_to_reactor`
 
-- **Hint:** Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.
+- **Hint:** Remove the belt from the Atom Generator to Maxwell's Demon (belt tool: switch Create to Destroy, or Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.
 - **Advances when:** link at least 1 conveyor(s) into Fusion Reactor (`fusion_reactor`)
 - **Tap:** pulses button `btn-place-conveyor`; highlights `route:atomic_assembler>fusion_reactor` (Full)
 - **Conveyor placement:** a belt links only when it starts on the glowing tile that the source's output faces, and ends on the glowing tile in front of the target's input. Tap the start tile, then the end tile, then check and Done. Use the glowing tiles; do not pick tiles by guessing coordinates. Maxwell's Demon is 3x3 with input ports along its edges, and a belt that ends at its corner did not link in playtest. A belt that links nothing shows the warning "Belt not linked" about half a second after check, and the camera returns to the glowing tiles: the belt is wrong. Extend it from its end onto the glowing tile, or remove it and redraw it.
