@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `data-pipeline.md`, `save-system.md` (recipe
 knowledge), `ui-toolkit.md` (HUD Recipes tab), `testing.md`.
-**Status:** done (PR pending, integration/2026-11-07).
+**Status:** done (PR #351).
 **Size:** M-L. This is the riskiest task in the batch because it touches saves. **Branch:**
 `feat/336-recipes-tab-grouping` from `integration/2026-11-07`.
 
