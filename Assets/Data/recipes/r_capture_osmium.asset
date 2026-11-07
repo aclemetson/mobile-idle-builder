@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: r_capture_osmium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: r_capture_osmium
-  displayName: 'Fast capture: Osmium'
+  displayName: Osmium
+  methodLabel: 
   recipeId: 285
   tier: 2
   category: 4

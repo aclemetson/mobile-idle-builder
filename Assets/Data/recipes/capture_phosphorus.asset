@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_phosphorus
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_phosphorus
-  displayName: Fuse Phosphorus
+  displayName: Phosphorus
+  methodLabel: 
   recipeId: 216
   tier: 2
   category: 8

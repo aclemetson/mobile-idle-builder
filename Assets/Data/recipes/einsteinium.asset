@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: einsteinium
   displayName: Einsteinium
+  methodLabel: 
   recipeId: 128
   tier: 2
   category: 3

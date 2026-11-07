@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: lawrencium
   displayName: Lawrencium
+  methodLabel: 
   recipeId: 132
   tier: 2
   category: 3

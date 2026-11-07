@@ -165,7 +165,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
   - The Architect: Two Up Quarks, one Down Quark, bound by the strong force. The result: a proton. Charge +1. The nucleus of the simplest atom in existence. Craft two.
 - **Blocks:** field collection is **blocked**; research locked: Hydrogen Synthesis (`hydrogen_synthesis`)
 - **How to get Proton:**
-  - Harvest Proton: ; needs a building: `nucleon_harvester`
+  - Proton: ; needs a building: `nucleon_harvester`
   - Proton: 2 x Up Quark, 1 x Down Quark; craft manually from the recipe panel (btn-recipes)
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
@@ -177,9 +177,9 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
   - The Architect: Now the neutron — one Up Quark, two Down Quarks. Net charge zero, but nearly identical mass to the proton. Inside a nucleus, neutrons neutralize the repulsion between protons. Craft two.
 - **Blocks:** field collection is **blocked**; research locked: Hydrogen Synthesis (`hydrogen_synthesis`)
 - **How to get Neutron:**
-  - Harvest Neutron: ; needs a building: `nucleon_harvester`
+  - Neutron: ; needs a building: `nucleon_harvester`
   - Neutron: 1 x Up Quark, 2 x Down Quark; craft manually from the recipe panel (btn-recipes)
-  - Collect Neutron: ; needs a building: `harvester`
+  - Neutron: ; needs a building: `harvester`
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
 ### 18. `direct_to_demon_for_nucleons`
@@ -239,7 +239,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Blocks:** field collection is **blocked**
 - **Tap:** pulses button `btn-recipes`
 - **How to get Proton:**
-  - Harvest Proton: ; needs a building: `nucleon_harvester`
+  - Proton: ; needs a building: `nucleon_harvester`
   - Proton: 2 x Up Quark, 1 x Down Quark; craft manually from the recipe panel (btn-recipes)
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
@@ -253,7 +253,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Tap:** pulses button `btn-recipes`
 - **How to get Hydrogen:**
   - Hydrogen: 1 x Proton, 1 x Electron; craft manually from the recipe panel (btn-recipes)
-  - Mine Hydrogen: ; craft manually from the recipe panel (btn-recipes)
+  - Hydrogen: ; craft manually from the recipe panel (btn-recipes)
 - **[check stock]** this step blocks collection while asking for items; carry the items in from earlier steps.
 
 ### 25. `hydrogen_crafted`
@@ -564,7 +564,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 64. `craft_first_deuterium`
 
-- **Hint:** Tap the Atom Generator and set its recipe to Assemble Deuterium: 1 proton, 1 neutron, 1 electron.
+- **Hint:** Tap the Atom Generator and set its recipe to Deuterium: 1 proton, 1 neutron, 1 electron.
 - **Advances when:** ?11
 - **Tap:** highlights `atomic_assembler` (VisualOnly)
 
@@ -611,7 +611,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 71. `fuse_first_helium`
 
-- **Hint:** Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.
+- **Hint:** Tap the Fusion Reactor and set its recipe to Helium-4 from 2 Deuterium (D-D fusion). Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.
 - **Advances when:** ?12
 - **Tap:** highlights `fusion_reactor` (VisualOnly)
 
@@ -629,7 +629,7 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 
 ### 74. `set_carbon_recipe`
 
-- **Hint:** Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4 become one Carbon.
+- **Hint:** Tap the new Fusion Reactor and set its recipe to Carbon. Three Helium-4 become one Carbon.
 - **Advances when:** ?12
 - **Tap:** highlights `fusion_reactor` (VisualOnly)
 

@@ -695,6 +695,30 @@
     -unity-text-align: middle-center;
 }
 
+/* Picker button with a second "method line" (#336): icon, then a column of name + method. */
+.craft-btn--with-method {
+    flex-direction: row;
+    align-items: center;
+    -unity-text-align: middle-left;
+}
+
+.recipe-text-column {
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+.recipe-text-column > Label {
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    -unity-text-align: middle-left;
+    white-space: normal;
+}
+
+.recipe-text-column > .recipe-method-line {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
 .craft-btn:hover {
     background-color: rgba(0, 229, 255, 0.24);
 }

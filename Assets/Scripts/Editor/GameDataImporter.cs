@@ -428,6 +428,7 @@ namespace MobileIdleBuilder.Editor
 
             so.id               = data.id;
             so.displayName      = data.display_name;
+            so.methodLabel      = data.method_label ?? "";
             so.recipeId         = data.recipe_id;
             so.tier             = data.tier;
             so.outputQuantity   = data.output_quantity;

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fatty_acid
   displayName: Fatty Acid
+  methodLabel: 
   recipeId: 187
   tier: 3
   category: 5

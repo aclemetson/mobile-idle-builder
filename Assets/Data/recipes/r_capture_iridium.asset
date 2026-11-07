@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: r_capture_iridium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: r_capture_iridium
-  displayName: 'Fast capture: Iridium'
+  displayName: Iridium
+  methodLabel: 
   recipeId: 286
   tier: 2
   category: 4

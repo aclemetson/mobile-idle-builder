@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: prokaryotic_cell
   displayName: Prokaryotic Cell
+  methodLabel: 
   recipeId: 200
   tier: 3
   category: 5

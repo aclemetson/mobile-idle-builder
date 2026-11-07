@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fuse_magnesium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fuse_magnesium
-  displayName: Fuse Magnesium
+  displayName: Magnesium
+  methodLabel: 
   recipeId: 152
   tier: 2
   category: 8

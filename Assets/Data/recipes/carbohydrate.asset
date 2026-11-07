@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: carbohydrate
   displayName: Carbohydrate
+  methodLabel: 
   recipeId: 194
   tier: 3
   category: 5

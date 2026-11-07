@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: light_elements
   displayName: Light Elements
-  description: Fuse Lithium (Helium + Deuterium), then Beryllium and Boron by adding
-    one proton at a time.
+  description: Make Lithium from Helium and Deuterium, then Beryllium and Boron by
+    adding one proton at a time.
   icon: {fileID: 0}
   branch: 1
   prerequisites:

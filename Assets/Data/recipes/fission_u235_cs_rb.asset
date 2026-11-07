@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fission_u235_cs_rb
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_u235_cs_rb
-  displayName: 'Split U-235: Cesium + Rubidium'
+  displayName: Cesium
+  methodLabel: 
   recipeId: 243
   tier: 2
   category: 9

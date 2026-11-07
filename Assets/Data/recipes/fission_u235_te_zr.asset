@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fission_u235_te_zr
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_u235_te_zr
-  displayName: 'Split U-235: Tellurium + Zirconium'
+  displayName: Tellurium
+  methodLabel: 
   recipeId: 245
   tier: 2
   category: 9

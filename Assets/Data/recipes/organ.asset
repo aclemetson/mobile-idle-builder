@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: organ
   displayName: Organ
+  methodLabel: 
   recipeId: 203
   tier: 3
   category: 5

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: strip_lead
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: strip_lead
-  displayName: Strip Lead
+  displayName: Lead-201
+  methodLabel: 
   recipeId: 230
   tier: 2
   category: 4

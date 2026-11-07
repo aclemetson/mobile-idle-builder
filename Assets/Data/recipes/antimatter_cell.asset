@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: antimatter_cell
   displayName: Antimatter Cell
+  methodLabel: 
   recipeId: 46
   tier: 5
   category: 7

@@ -196,6 +196,7 @@ namespace MobileIdleBuilder.Editor
     {
         public string                     id                  = "";
         public string                     display_name        = "";
+        public string                     method_label        = "";
         public int                        recipe_id           = 0;
         public int                        tier                = 1;
         public string                     category            = "Element";
