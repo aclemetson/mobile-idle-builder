@@ -42,16 +42,16 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",        50 },
             { "route_hydrogen_to_demon",        50 },
             { "hydrogen_loop_complete",         50 },
+            { "post_tutorial_intro",          200 },
+            { "buy_atomic_assembly",          500 },   // enough for 500e Nucleosynthesis
+            { "atomic_assembly_unlocked",      50 },
             { "buy_field_synthesis",          250 },   // enough for 250e Field Synthesis
             { "place_quark_field_pair",       300 },   // after -250e; enough for the first 300e quark pair
             { "field_pair_placed",             50 },
             { "place_neutron_harvesters",     850 },   // two more Harvesters: 337e + 506e
             { "place_neutron_combiner",       300 },   // after -843e; enough for the second 300e Combiner
             { "route_quarks_to_neutron_combiner", 0 },
-            { "post_tutorial_intro",          200 },
-            { "buy_atomic_assembly",          500 },   // enough for 500e Nucleosynthesis
-            { "atomic_assembly_unlocked",      50 },
-            { "reroute_neutrons_to_atom_gen",  50 },
+            { "route_neutrons_to_atom_gen",    50 },
             { "first_element_context",       6550 },   // craft_first_helium rewards 6,500e
             { "craft_first_deuterium",       5350 },   // after -1200e Deuterium Synthesis
             { "buy_fusion_i",                5350 },   // enough for 4000e Stellar Fusion
@@ -126,13 +126,13 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      7_000f },
             { "route_hydrogen_to_demon",      8_000f },
             { "hydrogen_loop_complete",      10_000f },
-            { "buy_field_synthesis",         12_000f },
-            { "place_quark_field_pair",      14_000f },
-            { "field_pair_placed",           16_000f },
-            { "post_tutorial_intro",         20_000f },
-            { "buy_atomic_assembly",         22_000f },
-            { "atomic_assembly_unlocked",    24_000f },
-            { "reroute_neutrons_to_atom_gen", 25_000f },
+            { "post_tutorial_intro",         12_000f },
+            { "buy_atomic_assembly",         14_000f },
+            { "atomic_assembly_unlocked",    16_000f },
+            { "buy_field_synthesis",         18_000f },
+            { "place_quark_field_pair",      20_000f },
+            { "field_pair_placed",           22_000f },
+            { "route_neutrons_to_atom_gen",  25_000f },
             { "craft_first_helium",          26_000f },
             { "first_element_context",       28_000f },
             { "craft_first_deuterium",       29_000f },
@@ -272,6 +272,9 @@ namespace MobileIdleBuilder.Dev
             { "connect_atom_gen_inputs",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "route_hydrogen_to_demon",      (k_PlaceAtomGen_Buildings,   k_PlaceAtomGen_Conveyors) },
             { "hydrogen_loop_complete",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
+            { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "buy_field_synthesis",          (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "place_quark_field_pair",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "field_pair_placed",            (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
@@ -279,11 +282,7 @@ namespace MobileIdleBuilder.Dev
             { "place_neutron_combiner",       (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "set_neutron_recipe",           (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
             { "route_quarks_to_neutron_combiner", (k_HydrogenLoop_Buildings, k_HydrogenLoop_Conveyors) },
-            { "route_neutrons_to_demon",      (k_HydrogenLoop_Buildings,   k_HydrogenLoop_Conveyors) },
-            { "post_tutorial_intro",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "buy_atomic_assembly",          (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "atomic_assembly_unlocked",     (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
-            { "reroute_neutrons_to_atom_gen", (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
+            { "route_neutrons_to_atom_gen",   (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "craft_first_helium",           (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
             { "first_element_context",        (k_UpgradeSpeed_Buildings,   k_UpgradeSpeed_Conveyors) },
         };

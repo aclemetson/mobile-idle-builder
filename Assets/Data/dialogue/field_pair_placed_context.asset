@@ -22,9 +22,8 @@ MonoBehaviour:
     action: 
   - speakerName: The Architect
     text: Protons from one Combiner, neutrons from the other, electrons from your
-      lepton field. That is everything helium needs. Your Atom Generator can only
-      make hydrogen for now, so sell the neutrons at the Demon until Nucleosynthesis
-      teaches it helium.
+      lepton field. That is everything helium needs, and your Atom Generator already
+      knows what to do with it.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

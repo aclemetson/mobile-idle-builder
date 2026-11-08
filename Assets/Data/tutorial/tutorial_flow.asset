@@ -1662,6 +1662,99 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: post_tutorial_intro
+    hintText: Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 7b5367a1b577c974da0097b3dd852b32, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: buy_atomic_assembly
+    hintText: Purchase Nucleosynthesis in the Research panel to unlock Helium-4.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: atomic_assembly
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 5f1aae805e109b748a253b7cff0d5ea5, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: atomic_assembly_unlocked
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: fb2e3d0eddd76c64ea3a7d4394f066c3, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: buy_field_synthesis
     hintText: Save up 250 entropy and research Field Synthesis.
     advanceCondition:
@@ -1884,135 +1977,10 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
-  - id: route_neutrons_to_demon
-    hintText: Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom
-      Generator can't use neutrons until Nucleosynthesis, so sell them for now.
-    advanceCondition:
-      type: 8
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: 
-      minCount: 1
-      buildingType: 7
-      buildingIsEntropySink: 1
-      fromBuildingType: 2
-      minLevel: 0
-      fieldId: 
-      recipeId: -1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: route:strong_force_combiner>maxwells_demon
-      highlightMode: 1
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-place-conveyor
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-    rewardEntropy: 0
-  - id: post_tutorial_intro
-    hintText: Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-      recipeId: -1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 7b5367a1b577c974da0097b3dd852b32, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-    rewardEntropy: 0
-  - id: buy_atomic_assembly
-    hintText: Purchase Nucleosynthesis in the Research panel to unlock Helium-4.
-    advanceCondition:
-      type: 4
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: atomic_assembly
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-      recipeId: -1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: 5f1aae805e109b748a253b7cff0d5ea5, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-research
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-    rewardEntropy: 0
-  - id: atomic_assembly_unlocked
-    hintText: 
-    advanceCondition:
-      type: 3
-      anyOf: 0
-      items: []
-      uiEventId: dialogue_complete
-      researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-      recipeId: -1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: fb2e3d0eddd76c64ea3a7d4394f066c3, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: 
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-    rewardEntropy: 0
-  - id: reroute_neutrons_to_atom_gen
-    hintText: 'Remove the Neutron Combiner''s belt to the Demon (belt tool: switch
-      Create to Destroy, or Build menu, Deconstruct), then belt the Neutron Combiner
-      into the Atom Generator''s free input.'
+  - id: route_neutrons_to_atom_gen
+    hintText: 'Belt the Neutron Combiner''s output into the Atom Generator''s free
+      input. If that output already has a belt, remove it first (belt tool: switch
+      Create to Destroy).'
     advanceCondition:
       type: 8
       anyOf: 0
@@ -2035,7 +2003,7 @@ MonoBehaviour:
       highlightMode: 1
       blockCollection: 0
       collectionFilter: None
-      pulseButtonId: btn-deconstruct
+      pulseButtonId: btn-place-conveyor
       demonHighlightItemIds: 
       buildingInteractionGate: 0
       lockedMessages: []

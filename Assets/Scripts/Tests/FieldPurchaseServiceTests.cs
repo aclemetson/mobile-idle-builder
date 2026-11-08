@@ -108,21 +108,27 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Tutorial_PlacesAQuarkPair_RightAfterTheHydrogenLoop()
+        public void Tutorial_BuysNucleosynthesis_ThenBuildsTheNeutronLineStraightIntoHelium()
         {
             var flow = UnityEditor.AssetDatabase.LoadAssetAtPath<TutorialFlowSO>("Assets/Data/tutorial/tutorial_flow.asset");
             Assert.IsNotNull(flow);
             int Index(string id) => System.Array.FindIndex(flow.steps, s => s.id == id);
 
             int loop = Index("hydrogen_loop_complete");
-            Assert.AreEqual(loop + 1, Index("buy_field_synthesis"));
-            Assert.AreEqual(loop + 2, Index("place_quark_field_pair"));
-            Assert.AreEqual(loop + 3, Index("field_pair_placed"));
-            // The new pair becomes the neutron line before Nucleosynthesis (#269, #275).
-            Assert.AreEqual(loop + 4, Index("place_neutron_harvesters"));
-            Assert.AreEqual(loop + 9, Index("post_tutorial_intro"));
+            Assert.AreEqual(loop + 1, Index("post_tutorial_intro"));
+            Assert.AreEqual(loop + 2, Index("buy_atomic_assembly"));
+            Assert.AreEqual(loop + 3, Index("atomic_assembly_unlocked"));
+            Assert.AreEqual(loop + 4, Index("buy_field_synthesis"));
+            Assert.AreEqual(loop + 5, Index("place_quark_field_pair"));
+            Assert.AreEqual(loop + 6, Index("field_pair_placed"));
+            // The new pair becomes the neutron line (#269, #275). Helium is unlocked by now, so the
+            // neutrons have a use the moment they exist and never detour through the Demon.
+            Assert.AreEqual(loop + 7, Index("place_neutron_harvesters"));
+            Assert.AreEqual(loop + 11, Index("route_neutrons_to_atom_gen"));
+            Assert.AreEqual(loop + 12, Index("craft_first_helium"));
+            Assert.AreEqual(-1, Index("route_neutrons_to_demon"));
 
-            var place = flow.steps[loop + 2].advanceCondition;
+            var place = flow.steps[loop + 5].advanceCondition;
             Assert.AreEqual(ConditionType.FieldPurchasedMin, place.type);
             Assert.AreEqual("quark_field", place.fieldId);
             Assert.AreEqual(1, place.minCount);

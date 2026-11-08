@@ -223,6 +223,11 @@
     translate: 0px 0px;
 }
 
+/* Follows the finger directly during a swipe; the slide transition would make it lag. */
+.notification-banner--dragging {
+    transition-duration: 0s;
+}
+
 .notification-banner__icon {
     font-size: var(--font-size-lg);
     margin-right: var(--spacing-sm);

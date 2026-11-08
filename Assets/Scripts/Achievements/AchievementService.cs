@@ -319,7 +319,7 @@ namespace MobileIdleBuilder
         static string BuildRewardHint(AchievementSO a)
         {
             var parts = new List<string>();
-            if (a.paidCurrencyReward    > 0) parts.Add($"◆ {a.paidCurrencyReward}");
+            if (a.paidCurrencyReward    > 0) parts.Add($"♦ {a.paidCurrencyReward}");
             if (a.prestigeCurrencyReward > 0) parts.Add($"⟳ {a.prestigeCurrencyReward} PC");
             return string.Join(", ", parts);
         }

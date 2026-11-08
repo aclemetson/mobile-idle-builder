@@ -22,9 +22,8 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: Every element above hydrogen needs neutrons as well as protons, and both
-      of your quark fields already feed the Combiner. Research Field Synthesis to
-      condense new fields of your own.
+    text: Every element above hydrogen needs neutrons as well as protons. Before
+      you build for them, teach the Atom Generator what to do with them.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 
