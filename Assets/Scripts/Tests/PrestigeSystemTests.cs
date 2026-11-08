@@ -244,6 +244,41 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void WhenRequested_BeltsAndTheirItemsAreDestroyed()
+        {
+            // The default world outlives the prestige scene reload: belts left here would show their
+            // items in the new run and be written back into the save.
+            var empty  = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
+            var loaded = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
+            _em.AddComponentData(loaded, new ConveyorItemData { ItemID = 3, Progress = 0.5f });
+
+            _em.SetComponentData(_playerEntity, new PlayerProgressData { PrestigeRequested = true });
+            _world.Update();
+
+            Assert.IsFalse(_em.Exists(empty),  "empty belt segment must be destroyed on prestige");
+            Assert.IsFalse(_em.Exists(loaded), "belt segment carrying an item must be destroyed on prestige");
+            using var items = _em.CreateEntityQuery(typeof(ConveyorItemData));
+            Assert.AreEqual(0, items.CalculateEntityCount(), "no item may survive on a belt");
+        }
+
+        [Test]
+        public void WhenRequested_DemonIsKept_ButEmptied()
+        {
+            var demon = _em.CreateEntity();
+            _em.AddComponent<BuildingData>(demon);
+            _em.AddComponent<EntropySinkTag>(demon);
+            _em.AddBuffer<BuildingInputSlot>(demon).Add(new BuildingInputSlot { ItemID = 3, Quantity = 7 });
+            _em.AddBuffer<BuildingOutputSlot>(demon).Add(new BuildingOutputSlot { ItemID = 3, Quantity = 2 });
+
+            _em.SetComponentData(_playerEntity, new PlayerProgressData { PrestigeRequested = true });
+            _world.Update();
+
+            Assert.IsTrue(_em.Exists(demon), "Maxwell's Demon is a permanent fixture");
+            Assert.AreEqual(0, _em.GetBuffer<BuildingInputSlot>(demon).Length,  "Demon input emptied");
+            Assert.AreEqual(0, _em.GetBuffer<BuildingOutputSlot>(demon).Length, "Demon output emptied");
+        }
+
+        [Test]
         public void WhenRequested_NoBuildingsPresent_StillCompletes()
         {
             // No building entities — should still prestige cleanly

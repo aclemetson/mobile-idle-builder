@@ -30,7 +30,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's `link_radius_tiles` (range-limited connections, relayed through **Power Relay** buildings), computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
 | `EntropySinkSystem.cs` | Sink building consumes items → grants entropy (base currency). |
 | `NetWorthSystem.cs` | Aggregates net worth (inventory + currency + spent); drives prestige wall. |
-| `PrestigeSystem.cs` | Wall detection + prestige execution: currency formula, run reset, building destruction, service resets, forced save. |
+| `PrestigeSystem.cs` | Wall detection + prestige execution: currency formula, run reset, destroys buildings + every belt segment (and its item) and empties the kept Demon, since the default world outlives the scene reload; service resets, forced save. |
 | `TutorialSystem.cs` | Advances `TutorialStateData` through `TutorialFlowSO.Current.steps` conditions. |
 | `PVPSystem.cs` | 48h competition run state. |
 | `ProductionAchievementBridge.cs` | Forwards ECS production events to `AchievementService.Notify*()`. |

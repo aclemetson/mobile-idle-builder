@@ -6,7 +6,7 @@ namespace MobileIdleBuilder
     /// Handles the prestige loop:
     ///   1. Detects when the player requests a prestige.
     ///   2. Calculates prestige currency from net worth (via GameConfig rate).
-    ///   3. Resets current-run state: inventory, buildings.
+    ///   3. Resets current-run state: inventory, buildings, belts and the items on them.
     ///   4. Resets: research unlocks (per-run). Preserves: PrestigeData, recipe knowledge.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -87,6 +87,19 @@ namespace MobileIdleBuilder
                 buildingCount++;
                 ecb.DestroyEntity(entity);
             }
+
+            // --- Destroy every belt segment, and the item riding on it ---
+            // The default world outlives the scene reload below, so anything left here would carry
+            // into the new run: items drawn on belts that are no longer there, and belts that the
+            // next save writes back into the grid.
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<ConveyorSegmentData>>().WithEntityAccess())
+                ecb.DestroyEntity(entity);
+
+            // --- Empty what the kept fixtures (Maxwell's Demon) were holding ---
+            foreach (var input in SystemAPI.Query<DynamicBuffer<BuildingInputSlot>>().WithAll<EntropySinkTag>())
+                input.Clear();
+            foreach (var output in SystemAPI.Query<DynamicBuffer<BuildingOutputSlot>>().WithAll<EntropySinkTag>())
+                output.Clear();
 
             // --- Clear player inventory ---
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>();
