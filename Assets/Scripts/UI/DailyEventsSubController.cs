@@ -68,7 +68,7 @@ namespace MobileIdleBuilder
                     _loginInfo.text = "No login rewards available.";
                 else
                 {
-                    var sb = new StringBuilder($"Day {reward.day}:  ◆ {reward.crystals}");
+                    var sb = new StringBuilder($"Day {reward.day}:  ♦ {reward.crystals}");
                     if (reward.entropy > 0)          sb.Append($"   e {reward.entropy:N0}");
                     if (reward.prestigeCurrency > 0) sb.Append($"   ✦ {reward.prestigeCurrency}");
                     if (!canClaim) sb.Append("\nClaimed — come back tomorrow!");
@@ -113,7 +113,7 @@ namespace MobileIdleBuilder
                 nameLabel.AddToClassList("recipe-name");
                 row.Add(nameLabel);
 
-                var progressLabel = new Label($"{Mathf.Min(progress, entry.target)} / {entry.target}   (◆ {entry.crystals})");
+                var progressLabel = new Label($"{Mathf.Min(progress, entry.target)} / {entry.target}   (♦ {entry.crystals})");
                 progressLabel.AddToClassList("recipe-inputs");
                 row.Add(progressLabel);
 
@@ -138,7 +138,7 @@ namespace MobileIdleBuilder
             if (svc.ClaimLoginReward())
             {
                 _hud?.ShowNotification("🎁", reward != null
-                    ? $"Login reward claimed — +◆{reward.crystals}!"
+                    ? $"Login reward claimed — +♦{reward.crystals}!"
                     : "Login reward claimed!");
             }
             Refresh();
@@ -151,7 +151,7 @@ namespace MobileIdleBuilder
 
             var entry = svc.GetChallengeEntry(id);
             if (svc.ClaimChallenge(id))
-                _hud?.ShowNotification("✅", $"Challenge complete — +◆{entry?.crystals ?? 0}!");
+                _hud?.ShowNotification("✅", $"Challenge complete — +♦{entry?.crystals ?? 0}!");
             Refresh();
         }
     }

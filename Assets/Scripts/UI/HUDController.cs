@@ -820,7 +820,7 @@ namespace MobileIdleBuilder
             {
                 long cost     = researchService.ActiveSkipCost;
                 long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
-                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.text = $"Skip  ♦{cost:N0}";
                 _researchSkipBtn.SetEnabled(crystals >= cost);
             }
         }
@@ -1124,7 +1124,7 @@ namespace MobileIdleBuilder
             long cost     = researchService.ActiveSkipCost;
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
 
-            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn = new Button { text = $"Skip  ♦{cost:N0}" };
             _researchSkipBtn.AddToClassList("craft-btn");
             _researchSkipBtn.SetEnabled(crystals >= cost);
             _researchSkipBtn.clicked += () =>
@@ -1132,7 +1132,7 @@ namespace MobileIdleBuilder
                 _researchSkipConfirming = true;
                 footer.Remove(_researchSkipBtn);
 
-                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                var confirm = new Button { text = $"Confirm  ♦{researchService.ActiveSkipCost:N0}" };
                 confirm.AddToClassList("craft-btn");
                 confirm.clicked += () =>
                 {
@@ -2112,7 +2112,7 @@ namespace MobileIdleBuilder
                 if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
                 {
                     var parts = new System.Collections.Generic.List<string>();
-                    if (achievement.paidCurrencyReward    > 0) parts.Add($"◆ {achievement.paidCurrencyReward}");
+                    if (achievement.paidCurrencyReward    > 0) parts.Add($"♦ {achievement.paidCurrencyReward}");
                     if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
                     var rewardLabel = new Label(string.Join("  ", parts));
                     rewardLabel.AddToClassList("ach-card-reward");

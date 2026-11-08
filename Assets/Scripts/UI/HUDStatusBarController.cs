@@ -17,6 +17,7 @@ namespace MobileIdleBuilder
         private Label         _entropyLabel;
         private Label         _prestigeTopbarLabel;
         private Label         _crystalLabel;
+        private VisualElement _powerStatus;
         private Label         _powerLabel;
         private Button        _btnPrestige;
         private VisualElement _researchStatus;
@@ -48,6 +49,7 @@ namespace MobileIdleBuilder
             _entropyLabel        = root.Q<Label>("entropy-label");
             _prestigeTopbarLabel = root.Q<Label>("prestige-topbar-label");
             _crystalLabel        = root.Q<Label>("crystal-label");
+            _powerStatus         = root.Q("power-status");
             _powerLabel          = root.Q<Label>("power-label");
             _btnPrestige         = root.Q<Button>("btn-prestige");
             _researchStatus      = root.Q("research-status");
@@ -132,8 +134,12 @@ namespace MobileIdleBuilder
             var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
             if (progress.BaseCurrency == _lastBaseCurrency) return;
             _lastBaseCurrency      = progress.BaseCurrency;
-            _entropyLabel.text = $"◈ {progress.BaseCurrency:N0}";
+            // Compact: the full number pushed the Settings button off a phone screen.
+            _entropyLabel.text = NumberFormat.Entropy(progress.BaseCurrency);
         }
+
+        /// <summary>The power strip stays hidden until there is a generator or a building waiting for one.</summary>
+        internal static bool ShowsPowerStrip(float supply, int disconnected) => supply > 0f || disconnected > 0;
 
         private void RefreshPowerLabel()
         {
@@ -159,6 +165,7 @@ namespace MobileIdleBuilder
 
             _powerLabel.text = text;
             _powerLabel.EnableInClassList("power-brownout", warn);
+            HUDController.SetElementVisible(_powerStatus, ShowsPowerStrip(state.Supply, state.DisconnectedCount));
         }
 
         private void RefreshPrestigeButton()
@@ -180,7 +187,7 @@ namespace MobileIdleBuilder
             long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
             if (held == _lastHeldPC) return;
             _lastHeldPC                  = held;
-            _prestigeTopbarLabel.text    = $"✦ {held:N0}";
+            _prestigeTopbarLabel.text    = $"✦ {NumberFormat.Compact(held)}";
         }
 
         private void RefreshCrystalLabel()
@@ -189,7 +196,7 @@ namespace MobileIdleBuilder
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0L;
             if (crystals == _lastCrystals) return;
             _lastCrystals     = crystals;
-            _crystalLabel.text = $"◆ {crystals:N0}";
+            _crystalLabel.text = $"♦ {NumberFormat.Compact(crystals)}";
         }
 
         // Shows the active research name + remaining time in a strip under the top bar; hides it
