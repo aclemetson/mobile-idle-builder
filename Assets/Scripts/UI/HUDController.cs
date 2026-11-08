@@ -2619,6 +2619,7 @@ namespace MobileIdleBuilder
                 foreach (var panel in _allPanels)
                     if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
             _banner.SetMenuOpen(menuOpen);
+            _banner.RefreshNotificationClearance();
         }
 
         private void CloseAllPanels()

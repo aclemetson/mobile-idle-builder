@@ -972,6 +972,10 @@
     background-color: rgba(0, 0, 0, 0);
     flex-direction: column;
     justify-content: flex-start;
+    /* HUDBannerController moves the bar down while a notification is up; matches its 300ms slide. */
+    transition-property: padding-top;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
 }
 
 .placement-bar {
