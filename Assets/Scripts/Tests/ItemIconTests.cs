@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using NUnit.Framework;
 using UnityEngine;
@@ -39,6 +40,28 @@ namespace MobileIdleBuilder.Tests
                 sb.Append(string.Join(", ", missing));
                 sb.Append(". Run 'MobileIdleBuilder/Generate Element Icons' then 'MobileIdleBuilder/Import Game Data'.");
                 Assert.Fail(sb.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Guards the list ElementIconGenerator uses to skip Blender-rendered icons: a stale id
+        /// would silently stop protecting an icon, so each must be a real item with a real PNG.
+        /// </summary>
+        [Test]
+        public void RenderedIconList_NamesRealItemsWithIcons()
+        {
+            const string listPath = "Assets/Art/Icons/rendered_icons.txt";
+            Assert.IsTrue(File.Exists(listPath), $"Missing {listPath}");
+
+            var itemIds = new HashSet<string>();
+            foreach (var item in _items) itemIds.Add(item.id);
+
+            foreach (var line in File.ReadAllLines(listPath))
+            {
+                var id = line.Trim();
+                if (id.Length == 0) continue;
+                Assert.IsTrue(itemIds.Contains(id), $"{listPath} names unknown item '{id}'");
+                Assert.IsTrue(File.Exists($"Assets/Art/Icons/Elements/{id}.png"), $"No icon PNG for '{id}'");
             }
         }
     }

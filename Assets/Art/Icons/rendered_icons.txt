@@ -1,0 +1,13 @@
+amino_acid
+ammonia
+carbon_dioxide
+ethane
+ethanol
+fatty_acid
+glucose
+liquid_hydrogen
+methane
+nitric_acid
+octane
+polymer_precursor
+water
