@@ -176,7 +176,8 @@ namespace MobileIdleBuilder
 
             _statusBar    = GetComponent<HUDStatusBarController>();
             _inspector    = GetComponent<HUDBuildingInspectorSubController>();
-            _banner       = GetComponent<HUDBannerController>();
+            if (_inspector != null) _inspector.Hidden += () => BuildingInspectorHidden?.Invoke();
+            _banner      = GetComponent<HUDBannerController>();
             _prestigeShop = GetComponent<PrestigeShopSubController>();
             _managers     = GetComponent<ManagersSubController>();
             _megastructure = GetComponent<MegastructureSubController>();
@@ -2536,6 +2537,9 @@ namespace MobileIdleBuilder
         }
 
         public void HideBuildingInspector() => _inspector?.HideBuildingInspector();
+
+        /// <summary>Fires when an open inspector closes, however that happened.</summary>
+        public event System.Action BuildingInspectorHidden;
 
         // Idle-return modal pass-through (delegated to IdleReturnSubController)
         public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);

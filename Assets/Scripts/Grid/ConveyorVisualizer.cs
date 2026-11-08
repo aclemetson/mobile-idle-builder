@@ -329,7 +329,11 @@ namespace MobileIdleBuilder
             _tailVisualExit.Clear();
             Refresh();
             RefreshGapMarkers();
+            BeltsChanged?.Invoke();
         }
+
+        /// <summary>Raised after any belt is placed, deleted or relinked; every such change ends in <see cref="RefreshAll"/>.</summary>
+        public static event System.Action BeltsChanged;
 
         // ----------------------------------------------------------------
         // "Not connected" seam markers
@@ -467,7 +471,8 @@ namespace MobileIdleBuilder
             return root;
         }
 
-        private Material GetFlowMaterial()
+        /// <summary>The shared belt water material; a Belt Splitter's river draws with it to match its belts.</summary>
+        public Material GetFlowMaterial()
         {
             if (_flowMaterial != null) return _flowMaterial;
 
@@ -488,7 +493,8 @@ namespace MobileIdleBuilder
             return _flowMaterial;
         }
 
-        private Material GetChannelMaterial()
+        /// <summary>The shared belt bed material; see <see cref="GetFlowMaterial"/>.</summary>
+        public Material GetChannelMaterial()
         {
             if (_channelMaterial != null) return _channelMaterial;
 

@@ -5,9 +5,10 @@ using UnityEngine.Rendering;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Procedural "orbital nucleus" structure for the Atom Generator building: a round glowing nucleus
-    /// (<see cref="AtomNucleusMeshBuilder"/>) circled by tilted electron orbit rings, each carrying a
-    /// bright electron that travels around it. Replaces the placeholder cube for any building whose
+    /// "An atom being built" for the Atom Generator: a nucleus you can see is made of separate protons and
+    /// neutrons, clustered around a small glowing core (<see cref="AtomNucleusMeshBuilder"/>), circled by
+    /// tilted electron orbit rings that each carry a bright electron. The cluster bursts outward a little
+    /// each time an atom is assembled. Replaces the placeholder cube for any building whose
     /// <see cref="BuildingVisualStyle"/> declares <see cref="BuildingStructureKind.AtomGenerator"/>.
     ///
     /// Mirrors <see cref="CollectorStructure"/>'s house pattern: the body is shaded by the
@@ -29,7 +30,7 @@ namespace MobileIdleBuilder
         private const float BobSpeed    = 1.0f;
         private const float BobAmp      = 0.04f;
         private const float BreatheAmp  = 0.03f;
-        private const float PulsePuff   = 0.5f;
+        private const float PulsePuff   = 0.12f;
         private const float PulseLift   = 0.12f;
 
         private static readonly Color NucleusColor  = new Color(1.0f, 0.66f, 0.22f); // warm gold nucleus
@@ -48,7 +49,21 @@ namespace MobileIdleBuilder
 
         private const float OrbitMajorRadius = 0.52f;
         private const float OrbitMinorRadius = 0.012f;
-        private const float ElectronScale    = 0.07f;
+        private const float ElectronScale    = 0.09f;
+
+        private const int   NucleonCount   = 14;
+        private const float ClusterRadius  = 0.19f;
+        private const float NucleonSize    = 0.2f;
+        private const float ClusterY       = 0.42f;
+        private const float ClusterJiggle  = 0.012f;
+        private const float ClusterBurst   = 0.09f;  // extra radius at a flare's peak
+
+        // A slim core inside the cluster: it fills the gaps between nucleons without hiding them.
+        private static readonly AtomNucleusMeshBuilder.NucleusProfile CoreProfile =
+            new AtomNucleusMeshBuilder.NucleusProfile { Height = 0.58f, EquatorRadius = 0.11f, BaseRadius = 0.05f };
+
+        private static readonly Color ProtonColor  = new Color(1.0f, 0.38f, 0.26f);
+        private static readonly Color NeutronColor = new Color(0.72f, 0.74f, 0.80f);
 
         private static readonly int PulseAmpId  = Shader.PropertyToID("_PulseAmp");
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -60,6 +75,9 @@ namespace MobileIdleBuilder
         private Mesh       _bodyMesh;
         private Mesh       _orbitMesh;
         private readonly Transform[] _orbitPivots = new Transform[Orbits.Length];
+        private readonly StructureParts _parts = new();
+        private readonly Transform[] _nucleons   = new Transform[NucleonCount];
+        private readonly Vector3[]   _directions = new Vector3[NucleonCount];
 
         private World   _world;
         private Entity  _entity;
@@ -83,12 +101,13 @@ namespace MobileIdleBuilder
             _baseScale    = transform.localScale;
 
             BuildBody();
+            BuildNucleons();
             BuildOrbits();
         }
 
         private void BuildBody()
         {
-            _bodyMesh = AtomNucleusMeshBuilder.Build(RadialSegments, HeightSegments);
+            _bodyMesh = AtomNucleusMeshBuilder.Build(RadialSegments, HeightSegments, CoreProfile);
             GetComponent<MeshFilter>().sharedMesh = _bodyMesh;
 
             var renderer = GetComponent<MeshRenderer>();
@@ -110,6 +129,34 @@ namespace MobileIdleBuilder
             renderer.material = _bodyMat; // instance; PresenceReceiver's _BaseColor MPB still applies
         }
 
+        // Evenly spread over a sphere, alternating protons and neutrons.
+        private void BuildNucleons()
+        {
+            var proton  = _parts.Shaded(ProtonColor, Color.white, 0.3f);
+            var neutron = _parts.Shaded(NeutronColor, Color.white, 0.3f);
+            float golden = Mathf.PI * (3f - Mathf.Sqrt(5f));
+
+            for (int i = 0; i < NucleonCount; i++)
+            {
+                float y = 1f - 2f * (i + 0.5f) / NucleonCount;
+                float r = Mathf.Sqrt(1f - y * y);
+                _directions[i] = new Vector3(Mathf.Cos(golden * i) * r, y, Mathf.Sin(golden * i) * r);
+                _nucleons[i] = StructureParts.AddPrimitive(PrimitiveType.Sphere, i % 2 == 0 ? "Proton" : "Neutron",
+                    transform, i % 2 == 0 ? proton : neutron, NucleonPosition(i, 0f), Vector3.one * NucleonSize);
+            }
+        }
+
+        private Vector3 NucleonPosition(int i, float extraRadius) =>
+            new Vector3(0f, ClusterY, 0f) + _directions[i] * (ClusterRadius + extraRadius);
+
+        private void AnimateNucleons(float pulse)
+        {
+            for (int i = 0; i < NucleonCount; i++)
+                if (_nucleons[i] != null)
+                    _nucleons[i].localPosition = NucleonPosition(i,
+                        Mathf.Sin(Time.time * 2.3f + i * 1.7f) * ClusterJiggle + pulse * ClusterBurst);
+        }
+
         private void BuildOrbits()
         {
             var opaque = RenderingMaterials.Instance != null ? RenderingMaterials.Instance.Opaque : null;
@@ -122,7 +169,7 @@ namespace MobileIdleBuilder
             _electronMat = new Material(opaque);
             _electronMat.SetColor(BaseColorId, ElectronColor);
 
-            float nucleusY = AtomNucleusMeshBuilder.NucleusProfile.Default.Height * 0.5f;
+            float nucleusY = ClusterY;
 
             for (int i = 0; i < Orbits.Length; i++)
             {
@@ -204,6 +251,8 @@ namespace MobileIdleBuilder
                 if (pulse <= SettleThreshold) { pulse = 0f; _pulseElapsed = Mathf.Infinity; }
             }
 
+            AnimateNucleons(pulse);
+
             float bobY   = (Mathf.Sin(t * BobSpeed) * BobAmp + pulse * PulseLift) * _baseScale.y;
             float scaleF = 1f + Mathf.Sin(t * BobSpeed) * BreatheAmp + pulse * PulsePuff;
 
@@ -220,6 +269,7 @@ namespace MobileIdleBuilder
             if (_electronMat != null) Destroy(_electronMat);
             if (_bodyMesh != null)    Destroy(_bodyMesh);
             if (_orbitMesh != null)   Destroy(_orbitMesh);
+            _parts.Dispose();
         }
     }
 }

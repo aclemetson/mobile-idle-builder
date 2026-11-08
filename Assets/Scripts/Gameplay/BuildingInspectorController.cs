@@ -43,6 +43,9 @@ namespace MobileIdleBuilder
             // so mirror its closed state to drop the grid selection highlight.
             if (maxwellsDemon != null) maxwellsDemon.OnClosed += OnDemonClosed;
 
+            // The same goes for the inspector's X button, back navigation, and a demolished building.
+            if (hudController != null) hudController.BuildingInspectorHidden += OnSelectionDismissed;
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
 
@@ -60,6 +63,7 @@ namespace MobileIdleBuilder
         void OnDestroy()
         {
             if (maxwellsDemon != null) maxwellsDemon.OnClosed -= OnDemonClosed;
+            if (hudController != null) hudController.BuildingInspectorHidden -= OnSelectionDismissed;
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated && _ecsReady)
@@ -69,8 +73,10 @@ namespace MobileIdleBuilder
             }
         }
 
-        // Keep the grid selection highlight in sync when the demon panel closes itself.
-        private void OnDemonClosed()
+        // Keep the grid selection highlight in sync when a panel closes itself.
+        private void OnDemonClosed() => OnSelectionDismissed();
+
+        private void OnSelectionDismissed()
         {
             HasSelection = false;
             buildingVisualizer?.DeselectBuilding();
@@ -214,8 +220,7 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Light up the grid under the selected building (only buildings with a deferred footprint
-            // highlight — the entropy sink — actually change; for others this is a no-op).
+            // Light up the grid under the selected building.
             var foundPos = _em.GetComponentData<GridPosition>(found);
             buildingVisualizer?.SelectBuilding(foundPos.Cell.x, foundPos.Cell.y);
 
