@@ -73,6 +73,26 @@ above do not apply.
   `HUDController.MakeItemIcon(sprite, ussClass)`; USS classes `.item-icon` / `.recipe-input-icon`
   / `.codex-icon` live in `Assets/UI/components.uss`. A null icon is skipped, never fatal.
 
+### Blender-rendered molecule icons
+Molecules built only from H, C, N and O use a 3D ball-and-stick render on the same grey tile instead of
+a text tile. `scripts/molecule_icons/` holds the pipeline; re-run it to add or change one (add the item
+to `molecules.json` first):
+1. `fetch_structures.py` downloads PubChem 3D structures into `structures.json` and checks each formula.
+2. `render_blender.py` runs inside Blender (5.2 tested) and writes `renders/<id>.png` (gitignored). It
+   replaces all meshes in the open scene. It picks the camera angle with the least atom overlap.
+3. `compose_icons.py` installs `Assets/Art/Icons/Elements/<id>.png`, lists the id in
+   `Assets/Art/Icons/rendered_icons.txt`, and writes `renders/contact_sheet.png`. **Check the sheet at
+   the UI sizes** (48/28/18): things that look fine at 256 can fail there.
+
+- **`ElementIconGenerator` skips ids in `rendered_icons.txt`**, so regenerating can't overwrite them.
+  `ItemIconTests` checks each listed id is a real item with a PNG.
+- **Atom colours** match the element tiles: H `#d2a8ff` (genesis), C `#3fb950` (fusion). N `#2dd4bf` and
+  O `#d9e45c` are deliberate departures, because fusion green covers all three of C, N and O.
+- **Large molecules** set `hide_h` with thicker `chunk`/`bond_chunk`; long chains also set `diagonal`.
+- **Representative structures** for generic items: `amino_acid` = glycine (the recipe's exact atoms),
+  `polymer_precursor` = ethylene, `fatty_acid` = octanoic acid (C8; the recipe implies C16, which is a
+  hairline at icon size).
+
 ## Reference implementations
 
 ### Conveyor "river" channel (belts)
