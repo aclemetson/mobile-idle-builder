@@ -45,7 +45,7 @@ MonoBehaviour:
   recipeModeLabels: []
   recipeModePrefixes: []
   footprint: {x: 2, y: 1}
-  structureKind: 0
+  structureKind: 12
   ports:
   - portType: 1
     localCell: {x: 0, y: 0}

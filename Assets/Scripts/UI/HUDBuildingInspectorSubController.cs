@@ -200,13 +200,18 @@ namespace MobileIdleBuilder
         /// <summary>True while a building is selected in the inspector.</summary>
         public bool IsOpen => _inspectorEntity != Entity.Null;
 
+        /// <summary>Fires when an open inspector closes, however that happened (X button, back, building gone).</summary>
+        public event System.Action Hidden;
+
         public void HideBuildingInspector()
         {
+            bool wasOpen = IsOpen;
             HUDController.SetElementVisible(_buildingInspectorPanel, false);
             _inspectorEntity = Entity.Null;
             ResetStaticReservedHeight();
             ClearSelectedPowerVisual();
             SetPowerCardCompact(false);
+            if (wasOpen) Hidden?.Invoke();
         }
 
         private void RefreshInspectorContent()

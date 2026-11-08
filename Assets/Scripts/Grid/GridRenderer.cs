@@ -18,7 +18,7 @@ namespace MobileIdleBuilder
 
         [Header("Colours")]
         [SerializeField] private Color tileColor             = new Color(0.067f, 0.094f, 0.102f, 1f); // #111827 default tile
-        [SerializeField] private Color occupiedColor         = new Color(0f,     0.565f, 0.612f, 1f); // #009090 placed building
+        [SerializeField] private Color occupiedColor         = new Color(0f,     0.565f, 0.612f, 1f); // #009090 selected building's tiles
         [SerializeField] private Color ghostValidColor       = new Color(0f,     0.898f, 1f,    0.6f); // #00e5ff semi-transparent valid
         [SerializeField] private Color ghostInvalidColor     = new Color(1f,     0.09f,  0.267f, 0.6f); // #ff1744 semi-transparent invalid
         [SerializeField] private Color ghostUnpoweredColor   = new Color(1f,     0.7f,   0.1f,  0.55f); // amber — valid but outside power range
@@ -57,6 +57,7 @@ namespace MobileIdleBuilder
         private readonly List<Vector2Int> _deconstructHoverCells = new();
         private readonly List<Vector2Int> _powerCoverageCells    = new();
         private readonly HashSet<Vector2Int> _blockingBeltCells  = new();
+        private readonly HashSet<Vector2Int> _selectedCells      = new();
         private Vector2Int               _pulseCell              = new(-1, -1);
         private float                    _pulseUntil;
         private Vector2Int               _conveyorHoverCell      = new(-1, -1);
@@ -178,14 +179,14 @@ namespace MobileIdleBuilder
             new(Mathf.FloorToInt(world.x / cellSize + 0.5f),
                 Mathf.FloorToInt(world.z / cellSize + 0.5f));
 
-        /// <summary>Marks a cell as permanently occupied (building placed).</summary>
+        /// <summary>Lights or clears a tile under the selected building (the only time a building tints its tiles).</summary>
         public void SetTileHighlight(int x, int y, bool highlighted)
         {
             if (!IsInBounds(x, y)) return;
-            if (highlighted)
-                SetColor(_tiles[x, y].GetComponent<MeshRenderer>(), occupiedColor);
-            else
-                RestoreCell(x, y);
+            var key = new Vector2Int(x, y);
+            if (highlighted) _selectedCells.Add(key);
+            else             _selectedCells.Remove(key);
+            RestoreCell(x, y);
         }
 
         /// <summary>Shows a single-cell ghost. Convenience overload for 1x1 buildings.</summary>
@@ -543,7 +544,7 @@ namespace MobileIdleBuilder
                 color = tutorialHighlightColor;
             else if (_blockingBeltCells.Contains(key))
                 color = BlockingBeltColor;
-            else if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y))
+            else if (_selectedCells.Contains(key))
                 color = occupiedColor;
             else if (_fieldTileColors.TryGetValue(key, out var fieldColorRaw))
                 color = Color.Lerp(tileColor, fieldColorRaw * _worldFieldTint, FieldTileTintStrength);
