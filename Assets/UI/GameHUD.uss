@@ -62,10 +62,17 @@
     -unity-font-style: bold;
 }
 
+/* Under the top bar, because the bar has no room left once the Prestige button shows. */
+.power-status {
+    flex-direction: row;
+    justify-content: center;
+    padding: 2px var(--spacing-md);
+    background-color: rgba(10, 14, 26, 0.7);
+}
+
 .power-label {
     color: var(--color-warning);
-    font-size: var(--font-size-lg);
-    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
 }
 
 .power-label.power-brownout {
@@ -113,21 +120,21 @@
 
 .prestige-topbar-label {
     color: #d2a8ff;
-    font-size: var(--font-size-lg);
-    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-xs);
 }
 
 .entropy-label {
     color: var(--color-currency-entropy);
-    font-size: var(--font-size-lg);
-    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-xs);
     -unity-font-style: bold;
 }
 
 .crystal-label {
     color: var(--color-currency-crystal);
-    font-size: var(--font-size-lg);
-    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-xs);
 }
 
 /* ---- Top bar buttons ---- */
@@ -158,7 +165,7 @@
     font-size: var(--font-size-lg);
     -unity-text-align: middle-center;
     padding: 0;
-    margin-left: var(--spacing-sm);
+    margin-left: var(--spacing-xs);
 }
 
 .settings-btn:hover {
@@ -549,6 +556,21 @@
     font-size: var(--font-size-lg);
     -unity-text-align: middle-center;
     padding: 0;
+}
+
+/* A text button at the right of a section header. Pulled over the padding .panel-header reserves
+   for the close button, since a section header has none. */
+.panel-header-action {
+    flex-shrink: 0;
+    margin-right: -40px;
+}
+
+/* Name of a setting, above its slider, toggle or buttons. */
+.settings-label {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    margin-left: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
 }
 
 .close-btn:hover {
@@ -972,6 +994,10 @@
     background-color: rgba(0, 0, 0, 0);
     flex-direction: column;
     justify-content: flex-start;
+    /* HUDBannerController moves the bar down while a notification is up; matches its 300ms slide. */
+    transition-property: padding-top;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
 }
 
 .placement-bar {

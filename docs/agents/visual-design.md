@@ -95,6 +95,12 @@ to `molecules.json` first):
   `polymer_precursor` = ethylene, `fatty_acid` = octanoic acid (C8; the recipe implies C16, which is a
   hairline at icon size).
 
+## Currency icons
+
+Entropy, prestige, crystals and power are single-colour glyphs in a small custom font, so they work inside any text string and take the label's colour. Entropy is Maxwell's Demon's chamber, prestige a star held by four arcs, crystals a cut gem, power a bolt in a ring.
+
+To change a shape, edit `ICONS` in `scripts/currency_icons/build_font.py` (24x24 grid, y down; `solid()` / `hole()` set the winding), run it (needs `pip install fonttools`), then run **MobileIdleBuilder > Build Currency Icon Font**. That bakes a static SDF asset, `Assets/Fonts/CurrencyIcons SDF.asset`, and wires it into `gamePanelSettings`. A new symbol must be one the default font lacks (check `FontAsset.HasCharacter`), or it never reaches the fallback. Check the result at 13px in the running game.
+
 ## Reference implementations
 
 ### Conveyor "river" channel (belts)

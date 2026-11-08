@@ -820,7 +820,7 @@ namespace MobileIdleBuilder
             {
                 long cost     = researchService.ActiveSkipCost;
                 long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
-                _researchSkipBtn.text = $"Skip  ◆{cost:N0}";
+                _researchSkipBtn.text = $"Skip  ♦{cost:N0}";
                 _researchSkipBtn.SetEnabled(crystals >= cost);
             }
         }
@@ -905,19 +905,18 @@ namespace MobileIdleBuilder
             if (_ecsReady && !_tutorialQuery.IsEmpty)
                 tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
 
-            // The tutorial's steps and highlights are built on the list, so the tree waits until it is done.
-            bool treeMode = _researchTree != null && _researchTreeMode && !tutorialActive;
+            bool treeMode = _researchTree != null && _researchTreeMode;
             SetElementVisible(_researchList, !treeMode);
             if (_researchTree != null) SetElementVisible(_researchTree, treeMode);
             if (_researchModeBtn != null)
             {
-                SetElementVisible(_researchModeBtn, !tutorialActive && _researchTree != null);
+                SetElementVisible(_researchModeBtn, _researchTree != null);
                 _researchModeBtn.text = treeMode ? "List" : "Tree";
             }
 
             if (treeMode)
             {
-                BuildResearchTree(currentEntropy);
+                BuildResearchTree(currentEntropy, tutorialActive ? TutorialResearchTargetId() : null);
                 return;
             }
 
@@ -939,7 +938,17 @@ namespace MobileIdleBuilder
             research.prerequisites == null || research.prerequisites.Length == 0 ||
             System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id));
 
-        private void BuildResearchTree(long currentEntropy)
+        /// <summary>The research the current tutorial step is waiting for, or null when it waits for something else.</summary>
+        private string TutorialResearchTargetId()
+        {
+            var steps = TutorialFlowSO.Current?.steps;
+            int index = _tutorialQuery.GetSingleton<TutorialStateData>().CurrentStepIndex;
+            if (steps == null || index < 0 || index >= steps.Length) return null;
+            var condition = steps[index].advanceCondition;
+            return condition.type == ConditionType.ResearchUnlocked ? condition.researchId : null;
+        }
+
+        private void BuildResearchTree(long currentEntropy, string tutorialTargetId)
         {
             var all = researchService.AllResearch;
             ResearchTreeView.NodeState State(ResearchSO r) =>
@@ -955,11 +964,15 @@ namespace MobileIdleBuilder
                 _ => $"Locked · ◈ {ShortNumber(r.costBaseCurrency)}",
             };
 
-            // Open on the research the player is working toward: the one in progress, else the first available.
+            // Open on the research the player is working toward: the one the tutorial is asking for (selected,
+            // so its Start button is on screen), else the one in progress, else the first available.
             if (_researchFocusPending)
             {
                 _researchFocusPending = false;
-                var target = all.FirstOrDefault(r => r != null && State(r) == ResearchTreeView.NodeState.Active)
+                var tutorialTarget = all.FirstOrDefault(r => r != null && r.id == tutorialTargetId);
+                if (tutorialTarget != null) _researchSelectedId = tutorialTarget.id;
+                var target = tutorialTarget
+                          ?? all.FirstOrDefault(r => r != null && State(r) == ResearchTreeView.NodeState.Active)
                           ?? all.Where(r => r != null && State(r) == ResearchTreeView.NodeState.Available)
                                 .OrderBy(r => System.Array.FindIndex(_researchBlocks, b => b.id == r.block)).ThenBy(r => r.costBaseCurrency)
                                 .FirstOrDefault();
@@ -1111,7 +1124,7 @@ namespace MobileIdleBuilder
             long cost     = researchService.ActiveSkipCost;
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
 
-            _researchSkipBtn = new Button { text = $"Skip  ◆{cost:N0}" };
+            _researchSkipBtn = new Button { text = $"Skip  ♦{cost:N0}" };
             _researchSkipBtn.AddToClassList("craft-btn");
             _researchSkipBtn.SetEnabled(crystals >= cost);
             _researchSkipBtn.clicked += () =>
@@ -1119,7 +1132,7 @@ namespace MobileIdleBuilder
                 _researchSkipConfirming = true;
                 footer.Remove(_researchSkipBtn);
 
-                var confirm = new Button { text = $"Confirm  ◆{researchService.ActiveSkipCost:N0}" };
+                var confirm = new Button { text = $"Confirm  ♦{researchService.ActiveSkipCost:N0}" };
                 confirm.AddToClassList("craft-btn");
                 confirm.clicked += () =>
                 {
@@ -2099,7 +2112,7 @@ namespace MobileIdleBuilder
                 if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
                 {
                     var parts = new System.Collections.Generic.List<string>();
-                    if (achievement.paidCurrencyReward    > 0) parts.Add($"◆ {achievement.paidCurrencyReward}");
+                    if (achievement.paidCurrencyReward    > 0) parts.Add($"♦ {achievement.paidCurrencyReward}");
                     if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
                     var rewardLabel = new Label(string.Join("  ", parts));
                     rewardLabel.AddToClassList("ach-card-reward");
@@ -2606,6 +2619,7 @@ namespace MobileIdleBuilder
                 foreach (var panel in _allPanels)
                     if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
             _banner.SetMenuOpen(menuOpen);
+            _banner.RefreshNotificationClearance();
         }
 
         private void CloseAllPanels()

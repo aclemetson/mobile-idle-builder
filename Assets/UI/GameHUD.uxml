@@ -22,10 +22,14 @@
             <ui:Button name="btn-prestige"          text="⬆ Prestige" class="prestige-btn" />
             <ui:Label  name="entropy-label"         text="◈ 0"       class="entropy-label" />
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
-            <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
-            <ui:Label  name="power-label"  text="⚡ 0 eV"   class="power-label" />
+            <ui:Label  name="crystal-label"         text="♦ 0"       class="crystal-label" />
             <ui:Button name="btn-power-toggle" text="⚡" class="settings-btn power-toggle-btn" />
             <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
+        </ui:VisualElement>
+
+        <!-- ═══ POWER STRIP (hidden until there is power to report; no room for it in the top bar) ═══ -->
+        <ui:VisualElement name="power-status" class="power-status hidden" picking-mode="Ignore">
+            <ui:Label name="power-label" text="" class="power-label" picking-mode="Ignore" />
         </ui:VisualElement>
 
         <!-- ═══ ACTIVE RESEARCH STRIP (shown only while a research timer runs) ═══ -->
@@ -78,7 +82,7 @@
                 <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
-                <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
+                <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -312,7 +316,7 @@
             <!-- Leaderboard section -->
             <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
                 <ui:Label text="Leaderboard" class="panel-title" />
-                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="close-btn" />
+                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="craft-btn panel-header-action" />
             </ui:VisualElement>
             <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -323,7 +327,7 @@
         <ui:VisualElement name="shop-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Premium Shop" class="panel-title" />
-                <ui:Label name="shop-crystal-balance" text="◆ 0" class="shop-crystal-balance" />
+                <ui:Label name="shop-crystal-balance" text="♦ 0" class="shop-crystal-balance" />
                 <ui:Button name="btn-close-shop" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="shop-tabs" class="shop-tabs">
@@ -331,7 +335,7 @@
                 <ui:Button name="shop-tab-timewarp"  text="⏩ Warp"     class="shop-tab" />
                 <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
                 <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
-                <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />
+                <ui:Button name="shop-tab-crystals"  text="♦ Buy"      class="shop-tab" />
             </ui:VisualElement>
             <ui:Label name="shop-context-label" text="" class="shop-context-label" />
             <ui:ScrollView name="shop-tier-list" class="shop-tier-list"
