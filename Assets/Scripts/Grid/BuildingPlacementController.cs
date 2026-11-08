@@ -147,7 +147,7 @@ namespace MobileIdleBuilder
         {
             if (!RequiresOutputDirection) return;
             _outputDirection = (OutputDirection)(((int)_outputDirection + 1) % 4);
-            _ghostArrow?.SetDirection(_outputDirection);
+            _ghostArrow?.SetEdge(_outputDirection);
         }
 
         public void Flip()
@@ -195,7 +195,7 @@ namespace MobileIdleBuilder
         // Legacy single-output arrow (field collectors)
         private OutputDirection _outputDirection;
         private GameObject      _ghostArrowGO;
-        private OutputArrow     _ghostArrow;
+        private PortGroundArrow _ghostArrow;
 
         // Port-layout ghost arrows
         private readonly List<GameObject> _ghostPortArrows = new();
@@ -275,8 +275,8 @@ namespace MobileIdleBuilder
                 _ghostArrowGO = new GameObject("GhostArrow");
                 _ghostArrowGO.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
                 _ghostArrowGO.SetActive(false);
-                _ghostArrow = _ghostArrowGO.AddComponent<OutputArrow>();
-                _ghostArrow.Initialize(_outputDirection, OutputArrow.GhostColor);
+                _ghostArrow = _ghostArrowGO.AddComponent<PortGroundArrow>();
+                _ghostArrow.Initialize(_outputDirection, true, gridRenderer.CellSize);
             }
 
             OnPlacingChanged?.Invoke(true);
@@ -509,7 +509,7 @@ namespace MobileIdleBuilder
                 {
                     _ghostArrowGO.SetActive(true);
                     _ghostArrowGO.transform.localPosition = new Vector3(
-                        cell.x * gridRenderer.CellSize, 0.1f, cell.y * gridRenderer.CellSize);
+                        cell.x * gridRenderer.CellSize, 0f, cell.y * gridRenderer.CellSize);
                 }
                 else
                 {
@@ -618,17 +618,15 @@ namespace MobileIdleBuilder
 
                 if (!gridRenderer.IsInBounds(wx, wy)) continue;
 
-                bool isOutput      = port.portType == PortType.Output;
-                var  oppDir        = (OutputDirection)(((int)dir + 2) % 4);
-                Vector3 edgeOffset = isOutput ? FacingEdgeOffset(dir, cs) : FacingEdgeOffset(oppDir, cs);
-                var displayDir     = dir;
+                // An input's facing is the way items travel, so it sits on the opposite edge.
+                bool isOutput = port.portType == PortType.Output;
+                var  edge     = isOutput ? dir : (OutputDirection)(((int)dir + 2) % 4);
 
                 var go = new GameObject($"GhostPort_{port.portType}");
                 go.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
-                go.transform.localPosition = new Vector3(wx * cs, 0.1f, wy * cs) + edgeOffset;
+                go.transform.localPosition = new Vector3(wx * cs, 0f, wy * cs);
 
-                var arrow = go.AddComponent<OutputArrow>();
-                arrow.Initialize(displayDir, isOutput ? OutputArrow.GhostOutput : OutputArrow.GhostInput);
+                go.AddComponent<PortGroundArrow>().Initialize(edge, isOutput, cs);
 
                 _ghostPortArrows.Add(go);
             }
@@ -818,19 +816,6 @@ namespace MobileIdleBuilder
         private static string Capitalize(string s) => char.ToUpperInvariant(s[0]) + s.Substring(1);
 
         private List<RecipeSO> GetMatchingRecipes(FieldSO field) => FieldRecipes.For(_pending.building, field);
-
-        private static Vector3 FacingEdgeOffset(OutputDirection dir, float cellSize)
-        {
-            float h = cellSize * 0.5f;
-            return dir switch
-            {
-                OutputDirection.North => new Vector3(0,  0,  h),
-                OutputDirection.East  => new Vector3( h, 0,  0),
-                OutputDirection.South => new Vector3(0,  0, -h),
-                OutputDirection.West  => new Vector3(-h, 0,  0),
-                _                     => Vector3.zero
-            };
-        }
 
         // ---- Grid helpers ----
         private Vector2Int WorldToCell(Vector2 screenPos)

@@ -62,7 +62,8 @@ namespace MobileIdleBuilder
         BasicGenerator,     // energy spire
         PowerRelay,         // broadcast pylon
         BeltSplitter,       // river forking around a rock
-        FusionReactor       // star in a magnetic bottle
+        FusionReactor,      // star in a magnetic bottle
+        NucleonHarvester    // two field wells feeding one nucleon
     }
 
     /// <summary>

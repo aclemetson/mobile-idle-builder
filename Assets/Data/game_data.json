@@ -10422,6 +10422,7 @@
       "input_slot_labels": [],
       "is_entropy_sink": false,
       "footprint": [2, 1],
+      "structure_kind": "NucleonHarvester",
       "ports": [
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],

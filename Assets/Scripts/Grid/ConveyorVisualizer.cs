@@ -329,7 +329,11 @@ namespace MobileIdleBuilder
             _tailVisualExit.Clear();
             Refresh();
             RefreshGapMarkers();
+            BeltsChanged?.Invoke();
         }
+
+        /// <summary>Raised after any belt is placed, deleted or relinked; every such change ends in <see cref="RefreshAll"/>.</summary>
+        public static event System.Action BeltsChanged;
 
         // ----------------------------------------------------------------
         // "Not connected" seam markers

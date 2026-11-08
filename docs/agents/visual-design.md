@@ -30,7 +30,7 @@ building prefabs. Two patterns:
 
 1. **Primitive composition** — `GameObject.CreatePrimitive` cubes/quads/spheres, scaled and
    colored. Used by grid tiles (`GridRenderer`), placeholder building cubes
-   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`), port arrows (`OutputArrow`).
+   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`).
 2. **Procedural mesh builders** — pure static classes that emit a `Mesh` from generated
    vertices/indices, paired with a thin MonoBehaviour and a custom URP shader. This is the
    house pattern for distinctive structures.
@@ -130,6 +130,13 @@ the field colour (`FieldGenerator.GetFieldAt(x,y).fieldColor`), tracked per cell
 **load** a collector can be created before its field has spawned, so such cells wait in `_pendingFieldColor` until
 `ResolvePendingFieldColors()` (from `Update`) applies the colour, giving up after 10s.
 
+### Nucleon Harvester "two wells, one nucleon" structure (the 2x1 collector)
+The 2x1 harvester declares `structure_kind: NucleonHarvester`, which Pass 2 checks before the generic collector branch, so its
+`CollectorData` still drives it. A cone on each cell draws on its field, and arcs from both tips feed a cluster of quarks between them; each
+harvest flies a nucleon to the output door. It has no door of its own: Pass 3 draws one from the placed port (a low hole fixture), and
+`NucleonHarvesterStructure.PortEdgeLocal` aims the flight at the same spot, so both follow rotation. The 1x1 door is centred because
+its only cell is its centre; **any multi-cell collector must use its port, not its centre.** `NucleonHarvesterStructureTests` pins this.
+
 ### Entropy-sink "the thought experiment" structure (Maxwell's Demon)
 Maxwell's thought experiment made literal: a gold ring holds two chambers split by a wall, with fast hot particles on one side
 and slow cold ones on the other. A small demon rides a gate in the wall, which lifts on a timer to let one particle through,
@@ -150,7 +157,7 @@ for conveyor deposits); bespoke input visuals are planned later.
 ### Belt Splitter "river meeting a rock" structure
 The belt's water forks around a teardrop rock with its point upstream; a 3-way uses two smaller rocks with a
 channel between them. Selected by `BuildingStructureKind.BeltSplitter`. The water shows the flow, so Pass 3
-draws no arrows or holes for it.
+draws no holes for it, though unconnected ports still get ground arrows.
 
 - `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` `BuildFork`: each exit takes its own slice of the inbound
   edge and widens to a full belt by its exit, so branches never overlap. Overlapping full ribbons, like a merge,
@@ -177,6 +184,19 @@ orbit rings that each carry a bright electron. Holes are separate fixtures at th
 - `Assets/Shaders/AtomGenerator.shader`: URP Unlit, shading only; `_BaseColor` is left for `PresenceReceiver`.
 - `Assets/Scripts/Tests/AtomNucleusMeshBuilderTests.cs`: EditMode invariants.
 
+## Port arrows (on the ground)
+
+`Assets/Scripts/Grid/PortGroundArrow.cs`: two flat chevrons on the tile in front of a port, gold pointing away for an output, blue
+pointing in for an input, with the far chevron larger and dimmer so an input reads as a funnel and an output as a spray. Built in code
+(`ChevronMeshBuilder`) with meshes shared across arrows, drawn just above belt water, with a dark outline for contrast on any
+tile. The placement ghost uses the same arrows.
+
+An arrow means **"this port still needs a belt"**. `PortArrowRules.ShouldShow` mirrors `ConveyorSystem`: an output feeds a belt that
+**starts** on the front tile, an input is fed by a belt that **ends** there, and a belt only passing by connects nothing, so its
+arrow stays on top of it. An arrow also hides when the tile is off the grid or holds a building. `BuildingVisualizer.RefreshPortArrows`
+re-evaluates after every `ConveyorVisualizer.BeltsChanged` and `Refresh`, so deleting a belt brings its arrow back.
+Maxwell's Demon has no arrows (Pass 3 skips it).
+
 ## Port holes (building input/output apertures)
 
 Buildings show their I/O as physical holes placed at their **port edges**, so item flow reads at a
@@ -195,7 +215,7 @@ glance. Two distinct shapes (the grammar):
   `local_facing: "West"`, etc. See the `_note_ports` on `atomic_assembler`.) The Atom Generator is 2x1 since #275 (four intakes, one output); `BuildingVisualizer` centres the nucleus on the footprint and grows it 25% per extra tile, since a round body can't stretch.
 
 **Mechanism:** `BuildingVisualizer.Refresh()` Pass 3 already iterates `PlacedPortData` per building to
-draw the port arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per
+draw the ground arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per
 port (`CreateHoleFixture`) at the resolved edge, rotated so the fixture's local +Z faces outward. The
 arch-door / intake meshes and their materials are **shared singletons** built once at the cell size
 (`EnsureHoleAssets`) so holes are allocation-free; they're tracked in `_spawnedPortArrows` for cleanup.
