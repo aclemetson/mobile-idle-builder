@@ -219,7 +219,8 @@ namespace MobileIdleBuilder
                 {
                     ts.IsActive            = save.tutorial.isActive;
                     ts.FirstRunComplete    = false;
-                    ts.CurrentStepIndex    = ResolveStepIndex(save.tutorial.currentStepId);
+                    ts.CurrentStepIndex    = ResumeAtUnboughtNucleosynthesis(
+                        ResolveStepIndex(save.tutorial.currentStepId), save.unlockedResearch);
                     GameLogger.Debug($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
@@ -387,8 +388,9 @@ namespace MobileIdleBuilder
             { "intro_building_upgrades",      "post_tutorial_intro" },
             { "upgrade_atom_generator_speed", "post_tutorial_intro" },
             { "upgrade_context",              "post_tutorial_intro" },
-            // #307: neutrons go to the Demon until Nucleosynthesis, then move to the Atom Generator.
-            { "route_neutrons_to_atom_gen",   "route_neutrons_to_demon" },
+            // Nucleosynthesis now comes before the neutron line, so neutrons never detour to the Demon.
+            { "route_neutrons_to_demon",      "route_neutrons_to_atom_gen" },
+            { "reroute_neutrons_to_atom_gen", "route_neutrons_to_atom_gen" },
             // Deuterium now feeds the first reactor; Helium goes reactor to reactor later.
             { "route_helium_to_reactor",      "route_deuterium_to_reactor" },
             // #275: the tutorial now ends at the first Carbon from fusion. Heavy elements, isotopes and
@@ -415,6 +417,21 @@ namespace MobileIdleBuilder
             { "place_fission_reactor",         "tutorial_complete" },
             { "reactors_complete",             "tutorial_complete" },
         };
+
+        /// <summary>
+        /// Nucleosynthesis moved ahead of the neutron line. A save made on one of those steps under the old
+        /// order sits past the purchase without having made it, and could never craft Helium, so it goes back
+        /// to the purchase. The steps it already did advance on their own, since they read live game state.
+        /// </summary>
+        internal static int ResumeAtUnboughtNucleosynthesis(int stepIndex, ICollection<string> unlockedResearch)
+        {
+            if (unlockedResearch != null && unlockedResearch.Contains("atomic_assembly")) return stepIndex;
+
+            var steps = TutorialFlowSO.Current?.steps;
+            if (steps == null) return stepIndex;
+            int purchase = System.Array.FindIndex(steps, s => s.id == "buy_atomic_assembly");
+            return purchase >= 0 && stepIndex > purchase ? purchase : stepIndex;
+        }
 
         internal static int ResolveStepIndex(string stepId)
         {

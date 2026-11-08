@@ -12980,7 +12980,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Every element above hydrogen needs neutrons as well as protons, and both of your quark fields already feed the Combiner. Research Field Synthesis to condense new fields of your own.",
+          "text": "Every element above hydrogen needs neutrons as well as protons. Before you build for them, teach the Atom Generator what to do with them.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -13035,7 +13035,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs. Your Atom Generator can only make hydrogen for now, so sell the neutrons at the Demon until Nucleosynthesis teaches it helium.",
+          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs, and your Atom Generator already knows what to do with it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -13222,7 +13222,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. First, move your neutron belt off the Demon and into the Atom Generator. Then set the Atom Generator to Helium-4.",
+          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -13231,6 +13231,14 @@
         {
           "speaker_name": "The Architect",
           "text": "Helium-4 is as far as the Atom Generator goes. Every heavier element must be fused from lighter ones, and that road starts with Helium.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Helium-4 is as far as the Atom Generator goes. You have protons and electrons. Neutrons are what is missing, and both of your quark fields already feed the Combiner. Research Field Synthesis to condense new fields of your own.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -14193,6 +14201,33 @@
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
     },
 
+    { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
+
+    { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
+    {
+      "id": "post_tutorial_intro",
+      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "post_tutorial_intro" }
+    },
+
+    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
+    {
+      "id": "buy_atomic_assembly",
+      "hint": "Purchase Nucleosynthesis in the Research panel to unlock Helium-4.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
+      "on_enter": {
+        "dialogue_id": "intro_atomic_assembly_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "atomic_assembly_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
+    },
+
     { "_comment": "--- PHASE 6b: FIELD SYNTHESIS (more quark fields, so a second Combiner can make neutrons for helium) ---" },
     {
       "id": "buy_field_synthesis",
@@ -14238,45 +14273,11 @@
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:harvester>strong_force_combiner", "highlight_mode": "Full" }
     },
     {
-      "_comment": "The Atom Generator makes only Hydrogen until Nucleosynthesis, so neutrons fed into it sat unused (#307). Sell them at the Demon until then; reroute_neutrons_to_atom_gen moves the belt after the research. Saves on the old route_neutrons_to_atom_gen step resume here (ECSLoadBridge.RetiredSteps).",
-      "id": "route_neutrons_to_demon",
-      "hint": "Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom Generator can't use neutrons until Nucleosynthesis, so sell them for now.",
-      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "maxwells_demon", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>maxwells_demon", "highlight_mode": "Full" }
-    },
-
-    { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
-
-    { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
-    {
-      "id": "post_tutorial_intro",
-      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": { "dialogue_id": "post_tutorial_intro" }
-    },
-
-    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
-    {
-      "id": "buy_atomic_assembly",
-      "hint": "Purchase Nucleosynthesis in the Research panel to unlock Helium-4.",
-      "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
-      "on_enter": {
-        "dialogue_id": "intro_atomic_assembly_context",
-        "pulse_button_id": "btn-research"
-      }
-    },
-    {
-      "id": "atomic_assembly_unlocked",
-      "hint": "",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
-    },
-    {
-      "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
-      "id": "reroute_neutrons_to_atom_gen",
-      "hint": "Remove the Neutron Combiner's belt to the Demon (belt tool: switch Create to Destroy, or Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "_comment": "Nucleosynthesis now comes before the neutron line, so this belt goes straight in and Helium works as soon as neutrons arrive; selling neutrons at the Demon first made the player lay it twice. Both Combiners must feed the Atom Generator: protons and neutrons. Saves on the retired Demon and reroute steps resume here (ECSLoadBridge.RetiredSteps) and may still have a Demon belt on this output, so the hint covers removing it; the route glow waits for the tile to free up.",
+      "id": "route_neutrons_to_atom_gen",
+      "hint": "Belt the Neutron Combiner's output into the Atom Generator's free input. If that output already has a belt, remove it first (belt tool: switch Create to Destroy).",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
-      "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
+      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
     },
 
     { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
