@@ -10549,7 +10549,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A fork in the flow. Whatever arrives is dealt out to the outgoing belts one at a time, taking turns, so a single line of particles can feed two buildings at once. A blocked branch is skipped until it clears.",
-      "is_splitter": true
+      "is_splitter": true,
+      "structure_kind": "BeltSplitter"
     },
     {
       "id": "splitter_3",
@@ -10598,7 +10599,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A three-way fork. Each item that arrives goes out the next side in turn, left, ahead, right, so one belt can feed three buildings evenly. A blocked branch is skipped until it clears.",
-      "is_splitter": true
+      "is_splitter": true,
+      "structure_kind": "BeltSplitter"
     },
     {
       "id": "neutron_capture",
@@ -11274,7 +11276,7 @@
       "input_slot_labels": ["Nucleus A", "Nucleus B"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "structure_kind": "None",
+      "structure_kind": "FusionReactor",
       "_note_ports": "Inputs on E/W/N edges, output on the S edge (mirrors the Atom Generator).",
       "ports": [
         { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },

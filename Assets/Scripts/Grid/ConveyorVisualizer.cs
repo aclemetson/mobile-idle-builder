@@ -467,7 +467,8 @@ namespace MobileIdleBuilder
             return root;
         }
 
-        private Material GetFlowMaterial()
+        /// <summary>The shared belt water material; a Belt Splitter's river draws with it to match its belts.</summary>
+        public Material GetFlowMaterial()
         {
             if (_flowMaterial != null) return _flowMaterial;
 
@@ -488,7 +489,8 @@ namespace MobileIdleBuilder
             return _flowMaterial;
         }
 
-        private Material GetChannelMaterial()
+        /// <summary>The shared belt bed material; see <see cref="GetFlowMaterial"/>.</summary>
+        public Material GetChannelMaterial()
         {
             if (_channelMaterial != null) return _channelMaterial;
 

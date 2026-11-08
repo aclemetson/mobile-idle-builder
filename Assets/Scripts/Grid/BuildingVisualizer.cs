@@ -36,10 +36,9 @@ namespace MobileIdleBuilder
         private readonly HashSet<(int, int)>                      _portedCells       = new();
         private readonly Dictionary<(int, int), List<GameObject>> _spawnedPortArrows = new();
 
-        // Buildings whose grid-tile highlight is shown only while selected (the entropy sink), rather
-        // than permanently like every other building. Keyed by anchor cell.
-        private readonly HashSet<(int, int)>                      _deferHighlight    = new();
-        private (int, int)                                        _selectedDeferCell = (-1, -1);
+        // The selected building's anchor cell: a building tints its grid tiles only while selected.
+        private (int, int)                                        _selectedCell      = (-1, -1);
+        private ConveyorVisualizer                                _conveyorVisualizer;
 
         // Maps every occupied cell (including non-anchor cells of multi-tile buildings)
         // back to the anchor cell so SetHover can find the right cube.
@@ -62,11 +61,14 @@ namespace MobileIdleBuilder
         private static readonly Color IsotopicGreen      = new Color(0.5f, 0.85f, 0.55f); // Isotopic Manipulator nucleus base
         private static readonly Color GeneratorCyan       = new Color(0.30f, 0.85f, 1.0f); // Basic Generator spire base
         private static readonly Color RelayAmber          = new Color(1.0f, 0.70f, 0.25f); // Power Relay broadcast-pylon base
-        private static readonly Color CombinerSteel       = new Color(0.7f, 0.78f, 0.85f); // Strong Force Combiner knot base
+        private static readonly Color CombinerSteel       = new Color(0.40f, 0.45f, 0.54f); // Strong Force Combiner housing base
         private static readonly Color MoleculeTeal        = new Color(0.2f, 0.8f, 0.8f);   // Molecular Synthesizer base
         private static readonly Color ForgeSteel          = new Color(0.45f, 0.45f, 0.48f);// Materials Forge furnace base
         private static readonly Color FabricatorViolet     = new Color(0.6f, 0.4f, 0.95f);  // Component Fabricator base
         private static readonly Color ContainmentLead      = new Color(0.35f, 0.35f, 0.38f);// Radioactive Containment shell base
+        private static readonly Color FusionPlinth         = new Color(0.20f, 0.22f, 0.30f);// Fusion Reactor plinth base
+        private static readonly Color SplitterRock         = new Color(0.50f, 0.56f, 0.66f);// Belt Splitter rock base
+        private const float LowHoleScale = 0.55f; // holes on a low plinth, which has little face to fill
         private static readonly Color OutputHoleColor    = new Color(1.0f, 0.85f, 0.45f); // lit emission aperture
         private static readonly Color InputHoleColor     = new Color(0.05f, 0.07f, 0.12f); // dark recessed intake mouth
 
@@ -157,15 +159,11 @@ namespace MobileIdleBuilder
                 int fw = 1, fh = 1;
                 if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
 
-                // Maxwell's Demon (entropy sink): the grid beneath it is highlighted only while the
-                // building is selected, so defer its footprint highlight to SelectBuilding().
                 bool isSink = em.HasComponent<EntropySinkTag>(ent);
-                if (isSink) _deferHighlight.Add(cell);
 
                 for (int dx = 0; dx < fw; dx++)
                     for (int dy = 0; dy < fh; dy++)
                     {
-                        if (!isSink) gridRenderer?.SetTileHighlight(x + dx, y + dy, true);
                         GridOccupancy.Instance?.Register(x + dx, y + dy);
                         _cellToAnchor[(x + dx, y + dy)] = cell;
                     }
@@ -243,6 +241,14 @@ namespace MobileIdleBuilder
                     {
                         baseColor = ContainmentLead; // lead-grey shell base
                     }
+                    else if (styleKind == BuildingStructureKind.BeltSplitter)
+                    {
+                        baseColor = SplitterRock; // pale slate rock base
+                    }
+                    else if (styleKind == BuildingStructureKind.FusionReactor)
+                    {
+                        baseColor = FusionPlinth; // dark plinth base
+                    }
 
                     // PresenceReceiver owns all colour state for this cube; _baseColors remembers the
                     // logical base so power/hover tints restore to it (not white) afterwards.
@@ -300,7 +306,7 @@ namespace MobileIdleBuilder
                         cube.transform.localPosition = new Vector3(
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
                         cube.transform.localScale = Vector3.one * cs;
-                        cube.AddComponent<BasicGeneratorStructure>().Initialize();
+                        cube.AddComponent<BasicGeneratorStructure>().Initialize(baseColor);
                     }
                     else if (styleKind == BuildingStructureKind.PowerRelay)
                     {
@@ -319,7 +325,7 @@ namespace MobileIdleBuilder
                         cube.transform.localPosition = new Vector3(
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
                         cube.transform.localScale = Vector3.one * cs;
-                        cube.AddComponent<StrongForceCombinerStructure>().Initialize(ent, fw, fh);
+                        cube.AddComponent<StrongForceCombinerStructure>().Initialize(ent, fw, fh, baseColor);
                     }
                     else if (styleKind == BuildingStructureKind.MolecularSynthesizer)
                     {
@@ -354,6 +360,20 @@ namespace MobileIdleBuilder
                         cube.transform.localScale = Vector3.one * cs;
                         cube.AddComponent<RadioactiveContainmentStructure>().Initialize(fw, fh);
                     }
+                    else if (styleKind == BuildingStructureKind.FusionReactor)
+                    {
+                        cube.name = $"FusionReactor_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        cube.AddComponent<FusionReactorStructure>().Initialize(ent, baseColor);
+                    }
+                    else if (styleKind == BuildingStructureKind.BeltSplitter)
+                    {
+                        cube.name = $"BeltSplitter_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        InitializeSplitter(cube, em, ent, baseColor);
+                    }
 
                     _spawnedCubes[cell] = cube;
                 }
@@ -378,6 +398,11 @@ namespace MobileIdleBuilder
                 // arrows — its own input visuals will be added later.
                 if (em.HasComponent<EntropySinkTag>(entities[i])) { _portedCells.Add(cell); continue; }
 
+                // Belt Splitter: its river shows the flow, so it needs neither arrows nor holes.
+                if (em.HasComponent<BuildingVisualStyle>(entities[i])
+                    && em.GetComponentData<BuildingVisualStyle>(entities[i]).Kind == (int)BuildingStructureKind.BeltSplitter)
+                { _portedCells.Add(cell); continue; }
+
                 var ports     = em.GetBuffer<PlacedPortData>(entities[i]);
                 var arrowList = new List<GameObject>();
 
@@ -385,6 +410,7 @@ namespace MobileIdleBuilder
                 // their port edges (a lit emission aperture for outputs, a recessed intake mouth for
                 // inputs), kept alongside the arrows as flow hints.
                 bool hasStyle = em.HasComponent<BuildingVisualStyle>(entities[i]);
+                bool lowHoles = hasStyle && em.GetComponentData<BuildingVisualStyle>(entities[i]).Kind == (int)BuildingStructureKind.FusionReactor;
 
                 for (int p = 0; p < ports.Length; p++)
                 {
@@ -412,7 +438,7 @@ namespace MobileIdleBuilder
 
                     if (hasStyle)
                     {
-                        var holeGO = CreateHoleFixture(wx, wy, edgeDir, isOut, cs2);
+                        var holeGO = CreateHoleFixture(wx, wy, edgeDir, isOut, cs2, lowHoles);
                         if (holeGO != null) arrowList.Add(holeGO);
                     }
                 }
@@ -422,6 +448,32 @@ namespace MobileIdleBuilder
             }
 
             entities.Dispose();
+        }
+
+        // The river needs the placed ports (rotated with the building) and the belts' shared materials.
+        private void InitializeSplitter(GameObject host, EntityManager em, Entity entity, Color rockColor)
+        {
+            int travelDir = (int)OutputDirection.North;
+            var outputs   = new List<int>(3);
+            if (em.HasBuffer<PlacedPortData>(entity))
+            {
+                var ports = em.GetBuffer<PlacedPortData>(entity);
+                for (int p = 0; p < ports.Length; p++)
+                {
+                    if (ports[p].PortType == (int)PortType.Output) outputs.Add(ports[p].Facing);
+                    else travelDir = ports[p].Facing;
+                }
+            }
+
+            if (_conveyorVisualizer == null) _conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
+            if (_conveyorVisualizer == null)
+            {
+                GameLogger.Warning("[BuildingVisualizer] No ConveyorVisualizer in the scene; the Belt Splitter keeps its placeholder cube.");
+                return;
+            }
+
+            host.AddComponent<SplitterStructure>().Initialize(entity, travelDir, outputs, rockColor,
+                _conveyorVisualizer.GetFlowMaterial(), _conveyorVisualizer.GetChannelMaterial());
         }
 
         // ----------------------------------------------------------------
@@ -511,7 +563,7 @@ namespace MobileIdleBuilder
         /// (built once at the cell size) so every hole is allocation-free. Parented to the GridRenderer
         /// like the port arrows; returned so the caller can track it for cleanup.
         /// </summary>
-        private GameObject CreateHoleFixture(int wx, int wy, OutputDirection edgeDir, bool isOutput, float cs)
+        private GameObject CreateHoleFixture(int wx, int wy, OutputDirection edgeDir, bool isOutput, float cs, bool low)
         {
             var opaque = RenderingMaterials.Instance != null ? RenderingMaterials.Instance.Opaque : null;
             if (opaque == null) return null;
@@ -523,9 +575,11 @@ namespace MobileIdleBuilder
 
             // Sit on the chosen edge, mid-height; rotate so the fixture's local +Z faces outward
             // (local +Z = North, so the Y rotation is edgeDir * 90 degrees).
-            float midH = cs * (isOutput ? 0.30f : 0.42f);
+            float midH = low ? cs * 0.08f : cs * (isOutput ? 0.30f : 0.42f);
             go.transform.localPosition = new Vector3(wx * cs, midH, wy * cs) + FacingEdgeOffset(edgeDir, cs);
             go.transform.localRotation = Quaternion.Euler(0f, (int)edgeDir * 90f, 0f);
+
+            if (low) go.transform.localScale = Vector3.one * LowHoleScale;
 
             go.AddComponent<MeshFilter>().sharedMesh = isOutput ? _outHoleMesh : _inHoleMesh;
             var mr = go.AddComponent<MeshRenderer>();
@@ -574,8 +628,7 @@ namespace MobileIdleBuilder
 
             _highlighted.Remove(cell);
             _footprints.Remove(cell);
-            _deferHighlight.Remove(cell);
-            if (_selectedDeferCell == cell) _selectedDeferCell = (-1, -1);
+            if (_selectedCell == cell) _selectedCell = (-1, -1);
 
             if (_spawnedCubes.TryGetValue(cell, out var cube))
             {
@@ -595,30 +648,28 @@ namespace MobileIdleBuilder
         }
 
         // ----------------------------------------------------------------
-        // Selection highlight (deferred-highlight buildings only — the entropy sink)
+        // Selection highlight
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Marks the building containing (x, y) as selected. For buildings whose footprint highlight is
-        /// deferred (the entropy sink), this lights up the grid beneath it; for every other building it
-        /// is a no-op (their footprint is always highlighted). Clears any previous deferred highlight.
+        /// Marks the building containing (x, y) as selected, lighting up the grid beneath it. A building
+        /// tints its tiles only while selected. Clears any previous selection highlight.
         /// </summary>
         public void SelectBuilding(int x, int y)
         {
             DeselectBuilding();
             if (!_cellToAnchor.TryGetValue((x, y), out var anchor)) return;
-            if (!_deferHighlight.Contains(anchor)) return;
 
             SetFootprintHighlight(anchor, true);
-            _selectedDeferCell = anchor;
+            _selectedCell = anchor;
         }
 
-        /// <summary>Removes the deferred selection highlight from the grid, if one is active.</summary>
+        /// <summary>Removes the selection highlight from the grid, if one is active.</summary>
         public void DeselectBuilding()
         {
-            if (_selectedDeferCell == (-1, -1)) return;
-            SetFootprintHighlight(_selectedDeferCell, false);
-            _selectedDeferCell = (-1, -1);
+            if (_selectedCell == (-1, -1)) return;
+            SetFootprintHighlight(_selectedCell, false);
+            _selectedCell = (-1, -1);
         }
 
         private void SetFootprintHighlight((int, int) anchor, bool on)
