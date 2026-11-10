@@ -281,14 +281,19 @@ namespace MobileIdleBuilder
 
         public void SaveLocal(bool skipGridFlush = false, bool skipECSFlush = false)
         {
-            // If the load never applied to ECS (e.g. baked SubScene entities timed out after a recompile),
-            // ECS holds baked defaults. Flushing those would overwrite the good on-disk save with zeros.
-            // Skip both ECS and grid snapshots; _current still holds the save loaded at startup, so writing
-            // it back below is harmless (and the disk file is preserved).
-            if (ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded && !ECSLoadBridge.Instance.SaveApplied)
+            // Until the save has been applied to ECS, ECS holds baked defaults and an EMPTY grid. Flushing
+            // that would overwrite the good save: currency with zeros, and every building, belt and field
+            // with nothing. Skip both ECS and grid snapshots; _current still holds the save loaded at
+            // startup, so writing it back below is harmless (and the disk file is preserved).
+            //
+            // This covers both the timed-out load (IsLoaded && !SaveApplied) AND the window before the load
+            // finishes (!IsLoaded). The second one wiped grids on device: a research timer that finished
+            // while the app was closed completes in ResearchService.Start, which calls SaveLocal seconds
+            // before LoadGrid has re-placed anything. Backgrounding during the load does the same.
+            if (ECSLoadBridge.Instance != null && !ECSLoadBridge.Instance.SaveApplied)
             {
-                GameLogger.Warning("[Save] Load did not apply to ECS (entities not ready) — skipping ECS/grid " +
-                    "flush so the on-disk save is not overwritten with defaults.");
+                GameLogger.Warning("[Save] Save not applied to ECS yet (still loading, or load timed out) — " +
+                    "skipping ECS/grid flush so the on-disk save is not overwritten with defaults.");
                 skipECSFlush  = true;
                 skipGridFlush = true;
             }

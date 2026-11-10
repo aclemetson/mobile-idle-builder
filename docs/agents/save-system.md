@@ -78,6 +78,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 
 ## Pitfalls
 
+- `SaveLocal` skips the ECS **and grid** flush whenever `ECSLoadBridge.SaveApplied` is false, which includes the whole load window before `IsLoaded`. Until `LoadGrid` runs, ECS holds no buildings, so a grid flush would erase every saved building, belt and field. This happened on device: a research timer that finished while the app was closed completes in `ResearchService.Start` and calls `SaveLocal` seconds before the load lands. Regression: `ECSLoadBridgeSaveGuardTests.SaveLocal_WhileStillLoading_KeepsSavedBuildingsAndBelts`.
 - `JsonUtility` cannot serialize dictionaries — use parallel lists (`inventoryKeys/Values`) or `[Serializable]` entry classes (`AchievementProgressEntry`).
 - Anything you write to ECS after load must also be flushed back in `FlushToSave()`, or it silently reverts on next launch.
 - Prestige (`PrestigeSystem.OnUpdate`) flushes ECS, calls `PrestigeRunReset.ResetRun`, writes the save without re-flushing, then reloads GameScene (`PrestigeRunReset.BeginReload`). A run-scoped field outside `currentRun` must be cleared in `ResetRun`; the new scene loads the reset save like a returning player. The default ECS world is NOT rebuilt by the reload, so run-scoped *entities* must be destroyed by `PrestigeSystem` itself (buildings, every `ConveyorSegmentData` belt with its `ConveyorItemData`, the kept Demon's input/output buffers); anything left there is drawn in the new run and written back by the next save.
