@@ -92,6 +92,11 @@ functional gain. Do these steps when you are ready to ship ads.
   Build → `Debug.isDebugBuild`), launch on device, open **Free Rewards → "Launch Ad Test Suite"**. The SDK
   opts in via `SetMetaData("is_test_suite","enable")` and `LevelPlay.LaunchTestSuite()`, both gated to dev
   builds (never in release). Pick the Rewarded ad unit / ironSource network → Load → Show a test ad.
+- **No ad loaded = no icon.** The Entropy Surge icon and every Watch button wait for a loaded rewarded ad.
+  A failed init or load (offline, no fill) is retried with backoff (`AdLoadRetry`: 5 s doubling to a 2 min
+  cap, reset on success), so one failure no longer leaves the whole session without ads. To diagnose on a
+  device: `adb logcat -s Unity | grep "\[Ads\]"` shows `LevelPlay initialised`, `Rewarded ad loaded`, or
+  the load error and the next retry delay.
 
 ## Reward / cap reference
 
