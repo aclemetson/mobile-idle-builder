@@ -34,6 +34,8 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(L.UpdateNotice, Top(s));
             s.IdleReturnOpen = true;
             Assert.AreEqual(L.IdleReturn, Top(s));
+            s.SurgeOfferOpen = true;
+            Assert.AreEqual(L.SurgeOffer, Top(s));
             s.ConfirmOpen = true;
             Assert.AreEqual(L.ConfirmPrompt, Top(s));
         }

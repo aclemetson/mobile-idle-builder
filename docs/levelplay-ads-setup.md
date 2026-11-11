@@ -86,7 +86,8 @@ functional gain. Do these steps when you are ready to ship ads.
 - Create the `ads.enabled` key in the Unity **Remote Config** dashboard for each environment (default
   `true`; flip to `false` as an instant kill-switch). See `docs/agents/feature-flags.md`.
 - Build to a device with LevelPlay **test mode / test devices** enabled and verify each placement grants:
-  Entropy Boost, +50% Idle, Production Surge, Time Warp, Crystal Drop, and the idle-return "Double".
+  Entropy Boost, +50% Idle, Production Surge, Time Warp, Crystal Drop, the idle-return "Double", and the
+  Entropy Surge side icon (after the first prestige: watch, No thanks restarts its 15 min timer, X keeps it).
 - **Test Suite (no advertising IDs needed):** make a **Development Build** (Build Settings → Development
   Build → `Debug.isDebugBuild`), launch on device, open **Free Rewards → "Launch Ad Test Suite"**. The SDK
   opts in via `SetMetaData("is_test_suite","enable")` and `LevelPlay.LaunchTestSuite()`, both gated to dev
@@ -102,5 +103,6 @@ functional gain. Do these steps when you are ready to ship ads.
 | Production Surge | 2× production for 30 min               | 2         |
 | Time Warp      | instantly bank 1h of production          | 2         |
 | Crystal Drop   | +25 crystals                             | 1         |
+| Entropy Surge  | 10 min of automation income (floor 500); 15 min cooldown; offered by a side icon (`EntropySurgeOfferController`) | 8 |
 
 Tune values in `AdRewardCalculator.Placements` and keep `docs/agents/economy-balance.md` in sync.

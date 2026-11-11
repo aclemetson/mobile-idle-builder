@@ -2,7 +2,7 @@
 
 **Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item / recipe / building / cost values not listed, look up `Assets/Data/game_data.json` — the single source of truth that the editor importer turns into ScriptableObjects. Never duplicate that dataset here. (`docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` are a human-only visual reference and may lag behind `game_data.json` — do not treat them as authoritative.)
 
-> Verified against: `b3defb5`, 2026-06-28. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
 
 ## Currencies
 
@@ -32,8 +32,9 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 | Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
+| Entropy Surge | 10 min of current automation income (`IncomeRateTracker`, 60 s avg; floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
 
-Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
+Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
 > **Remote balance overrides:** any `game_config` scalar (and many per-entity values) can be overridden at runtime via the `GameDataOverrides` remote-config layer without a rebuild (see `feature-flags.md`). When debugging "the number in game ≠ the number in `game_data.json`", check for an active override before assuming the doc/code is wrong.
 
@@ -126,7 +127,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | id | Name | Effect | Levels |
 |---|---|---|---|
 | `entropy_headstart` | Entropy Headstart | +250e starting entropy / run | per-lvl |
-| `memory_resonance` | Memory Resonance | −5% research cost | per-lvl |
+| `memory_resonance` | Memory Resonance | −5% research cost (live: `ResearchService.EffectiveCost`) | per-lvl |
 | `assembly_line` | Assembly Line | +10% craft speed | per-lvl |
 | `expanded_vault` | Expanded Vault | +20 inventory slots | per-lvl |
 | `field_cooldown` | Quick Hands | −5% field tap cooldown (max −50%) | per-lvl |
@@ -144,7 +145,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 
 **Surplus sales** (`SurplusSale`, #312): items a building can't use never pile up unseen. A belt's front item jamming a needed item (`ConveyorSystem` overflow) and inputs a newly set recipe no longer uses (`HUDBuildingInspectorSubController.SetBuildingRecipe`) are sold at `Fraction × Demon price` (base 50%, + `surplus_resale`). Fractions of entropy carry over between belt sales. Offline, items stuck at a starved building sell at the same rate (`IdleGraphAnalyzer`'s `surplusSaleFraction`).
 
-**Wiring caveat:** `assembly_line` (craft speed) and `quantum_yield` (output) currently affect **idle earnings + UI display only, NOT live ECS production** — they flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` does not read. See the gap map in `ecs-patterns.md` before building anything on top of them. (Megastructure Output/Speed bonuses, by contrast, ARE live — they go through `GlobalProductionBonus`, not `PrestigeData`.)
+**Live wiring:** `assembly_line` (craft speed) and `quantum_yield` (output) flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` and `CollectorSystem` read live (with the megastructure `GlobalProductionBonus`) and the idle snapshot folds in. Fractional output bonuses carry between crafts (`OutputCarry`). Research is priced by `ResearchCost.Effective`: Memory Resonance on every node, times the node's own `prestige_memory_discount` when it was finished on an earlier run (`SaveData.researchCompletedEver`).
 
 ## Managers (prestige-currency sink — `game_data.json` `managers`, `ManagerService.cs`)
 
@@ -187,6 +188,7 @@ Item values after the tutorial and every post-tutorial research cost are **gener
 - **Back-pricing:** a recipe whose products were priced by a dearer route (Plutonium fission makes the same fragments as U-235 fission) would out-earn its wage; its harvested inputs are raised until it earns the wage, and their harvesters slow to match. Items the tutorial prices are never changed.
 - **Research blocks (game phases):** `research_blocks` in `game_data.json`; every research names its `block`. Each block has `target_hours`, the time a player running 5 buildings should spend clearing it. Current plan: Ignition (tutorial, 1h, costs kept), Foundations 3h, Stellar Forge 12h, Actinide Frontier 20h, Chemistry World 20h, Synthetic Frontier 30h, Biology World 40h (126h ≈ 5.3 days). Unlock order runs block by block, cheapest first inside one.
 - **Research costs:** each block's budget is spread over its research, each node 1.2× the one before, and `cost = share (building-minutes) × 60 × best rate before the node`; a node never costs less than 1.05× its dearest prerequisite. Edit blocks and targets in the research tree editor (`docs/research-tree.html`, https://claude.ai/artifact/CF6rEtx6GunCJMeGqaRgg9), apply with `scripts/apply_research_tree.py`, then re-run the rebalance. `docs/progression-curve.html` shows target vs model per block.
+- **Prestige pacing (Physics):** `docs/balance/prestige-pacing.xlsx`, generated by `python scripts/prestige_plan.py` from the same curve. 8 runs clear Physics (~36 active hours, the blocks' target) only if research discounts (Memory Resonance, `prestige_memory_discount`) and Assembly Line / Quantum Yield are applied live; as shipped neither is, so every run replays at full price (~84 active hours). It also models the proposed timed Entropy Surge ad (minutes of income, 15 min cooldown) against today's 10%-of-net-worth Entropy Boost.
 - **Limits:** research cost is a C# `long` (`ResearchSO.costBaseCurrency`, since 2026-11-02); the script refuses a cost over 2^53 (JSON doubles stay exact below it). Prestige ✦ = `log10(netWorth / 5000) × 50`, so the smaller late values give fewer ✦ than the old curve; revisit with the prestige work.
 - **Deliberate exceptions** (recipes that do not gain): the tutorial quark→nucleon steps (break even) and the Atom Generator / Manipulator on-ramps for Deuterium, Uranium and Plutonium.
 - Building placement and upgrade costs were checked against the new rates (0.1–17 minutes of payback at unlock) and left as they are.
@@ -195,7 +197,7 @@ Item values after the tutorial and every post-tutorial research cost are **gener
 
 Findings from the full earning re-evaluation. These are the things most likely to bite as content/progression ("track") is extended.
 
-1. **Dead prestige multipliers (high priority).** `PrestigeData.SpeedMultiplier` and `OutputMultiplier` are shown in the UI and applied to the **idle snapshot only** — `ProductionSystem` does not read them (see `ecs-patterns.md` gap map). So the prestige-shop `assembly_line` (craft speed) and `quantum_yield` (output) upgrades barely affect *live* play. Live output scaling currently comes almost entirely from **OutputQuantity managers** + megastructure `GlobalProductionBonus`, which ARE read live. As more tiers are added, players who lean on the prestige shop will feel prestige is weak in active play. **Decision needed:** wire `PrestigeData` Speed/Output into `ProductionSystem`, or stop advertising them as live power. (Code change — out of scope for this doc pass; flagged here.)
+1. **Prestige multipliers (resolved 2026-11-11).** Assembly Line / Quantum Yield are now live in `ProductionSystem`/`CollectorSystem` and folded into the idle snapshot, and research discounts (Memory Resonance + per-node prestige memory) are charged. Before this, every run replayed at full price and roughly full time, which made play slow down after the first prestige.
 
 2. **Two parallel output-scaling paths.** Output now scales via (a) prestige-shop `quantum_yield` (idle/display only) and (b) OutputQuantity managers + megastructure (live). When authoring new high-tier balance, anchor expected output to the **manager + megastructure** path, not the prestige-shop path, or live-vs-idle income will diverge.
 
@@ -205,4 +207,4 @@ Findings from the full earning re-evaluation. These are the things most likely t
 
 5. **Manager star costs are the biggest ✦ sink and are flat-authored.** Star costs live as explicit `star_costs[]` arrays in `game_data.json` (not a formula), so new managers must have their tables hand-tuned. Keep them on the same rough curve (hire cost → ★ costs scaling ~×1.5–2 per star) to avoid outliers.
 
-**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is unwired in idle too: `GridSaveService` only folds in `prestigeSpeedMultiplier`.
+**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is folded into the idle snapshot alongside `prestigeSpeedMultiplier`.

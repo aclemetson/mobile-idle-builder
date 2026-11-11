@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11. If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -38,6 +38,10 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 ## Tutorial hint banner (minimizable)
 
 `tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. `HUDController.RefreshBannerClearance` runs every frame and calls `HUDBannerController.SetMenuOpen(drawerOpen || any slide panel visible)`, which collapses the banner to the pill (its full-width bottom bar hid the drawer's and the Builder sheet's Place buttons) and restores it when everything closes, unless the player had minimized it. Keep it per-frame, not per open path: an explicit call in one open method missed the Builder sheet, which opens after the drawer closes. Under the hint text, `tutorial-hint-banner__progress` shows live have/need counts for `InventoryMin` steps ("Up Quark 2/4, Down Quark 1/2, Electron 0/2"): `TutorialOverlayController.RefreshHintProgress` (every 0.2s) formats it with the pure `TutorialHintProgress.Format` and pushes it through `HUDBannerController.SetTutorialHintProgress`, which never re-expands a minimized hint (#260). Covered by `TutorialHintMinimizeTests` (runs against the real UXML) and `TutorialHintProgressTests`.
+
+## Entropy Surge offer (side icon + card)
+
+`surge-offer-btn` (round tab on the right edge, `top: 38%`) and `surge-offer-modal` (copy of the confirm-prompt card, with a `GlyphIcon` close button) in `GameHUD.uxml`, owned by `EntropySurgeOfferController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, initialised next to `ConfirmPrompt.Init`). Every 0.5 s the icon shows when the pure `ShouldShowIcon` holds: ads enabled, first prestige done, ECS loaded, an ad ready, watches left today, Entropy Surge off cooldown, card closed. Tapping it opens the card with the reward recalculated (`AdService.PreviewIncomeReward`). **Watch ad** runs `AdService.Show` (the cooldown restarts from the watch); **No thanks** calls `AdService.DeclineOffer` (restarts the 15 min cooldown, does not use a daily watch, saves); the **X** and Android back only close the card, so the icon comes straight back. The card sets `UIInputBlocker.SetModal` while open. Covered by `EntropySurgeOfferTests` and `BackNavigationTests`.
 
 ## Notification banner (top of screen)
 
@@ -104,7 +108,7 @@ How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in 
 4. In `HUDController.cs`: add the `GetComponent<>()` field (`:106-111` region), wire the button (`:347-369` region), add the `OpenXPanel` method mirroring an existing one (closes others, removes `hidden`, calls `Refresh()`).
 5. Tell the user to add the component to the HUD GameObject in GameScene (manual step).
 6. Use `ToastService` for transient feedback, not ad-hoc labels.
-   - **Back button (#205):** a new slide panel must be in `_allPanels` (so Android back / Escape closes it). A new modal needs an `IsOpen` + `Close()` and a row in `BackNavigation` (`UI/BackNavigation.cs`, pure, tested) plus the switch in `HUDController.HandleBackButton`. Order: mode active → yield to its controller; dialogue → swallowed (never skipped); confirm prompt; idle return; update notice; inspector; panel; drawer; root → nothing.
+   - **Back button (#205):** a new slide panel must be in `_allPanels` (so Android back / Escape closes it). A new modal needs an `IsOpen` + `Close()` and a row in `BackNavigation` (`UI/BackNavigation.cs`, pure, tested) plus the switch in `HUDController.HandleBackButton`. Order: mode active → yield to its controller; dialogue → swallowed (never skipped); confirm prompt; Entropy Surge offer card (minimizes, like its X); idle return; update notice; inspector; panel; drawer; root → nothing.
 7. Verify visibility: panel must not be clipped by a zero-height wrapper; check parent sizing classes (CLAUDE.md recurring bug).
 8. Mobile: respect safe area (`SafeAreaAdapter` exists; it pads the document root in panel px, never percent, since UI Toolkit resolves percent padding against WIDTH, and paints `safe-area-fill` strips in the top-bar colour behind the top/left/right insets when a `top-bar` exists, framing off the landscape camera cutout). Android does not report rounded display corners as unsafe, so inset edge-to-edge bottom panels from the sides (see `.dialogue-box`); test portrait sizing.
 

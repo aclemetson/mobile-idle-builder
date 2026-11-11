@@ -285,9 +285,10 @@ namespace MobileIdleBuilder
                     var outBuf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
                     if (outBuf.Length > 0)
                     {
-                        ReadOutputMult(_inspectorEntity, out float cOutMult, out _);
+                        ReadOutputMult(_inspectorEntity, out float cOutMult, out float cSpeed);
                         AddInspectorRow(_inspectorStatic, CollectorValueLine(
-                            ItemValue.CollectorPerSecond(SurplusSale.DemonPrice(outBuf[0].ItemID), col.OutputRate, cOutMult)));
+                            ItemValue.CollectorPerSecond(SurplusSale.DemonPrice(outBuf[0].ItemID), col.OutputRate,
+                                                         cOutMult, cSpeed)));
                     }
                 }
                 AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
@@ -1157,18 +1158,30 @@ namespace MobileIdleBuilder
         }
 
         // outMult / global speed exactly as ProductionSystem and CollectorSystem read them: the manager's
-        // AppliedOutputMult (when assigned) times the megastructure's GlobalProductionBonus.
+        // AppliedOutputMult (when assigned) times the megastructure's GlobalProductionBonus times the
+        // prestige shop's PrestigeData multipliers.
         private void ReadOutputMult(Entity entity, out float outMult, out float globalSpeed)
         {
             outMult = _em.HasComponent<ManagerAssignmentData>(entity)
                 ? _em.GetComponentData<ManagerAssignmentData>(entity).AppliedOutputMult
                 : 1f;
             globalSpeed = 1f;
-            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<GlobalProductionBonus>());
-            if (q.IsEmpty) return;
-            var gb = q.GetSingleton<GlobalProductionBonus>();
-            outMult *= gb.OutputMult;
-            globalSpeed = gb.SpeedMult;
+            using (var q = _em.CreateEntityQuery(ComponentType.ReadOnly<GlobalProductionBonus>()))
+            {
+                if (!q.IsEmpty)
+                {
+                    var gb = q.GetSingleton<GlobalProductionBonus>();
+                    outMult *= gb.OutputMult;
+                    globalSpeed = gb.SpeedMult;
+                }
+            }
+            using (var pq = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>()))
+            {
+                if (pq.IsEmpty) return;
+                var pd = pq.GetSingleton<PrestigeData>();
+                if (pd.OutputMultiplier > 0f) outMult     *= pd.OutputMultiplier;
+                if (pd.SpeedMultiplier  > 0f) globalSpeed *= pd.SpeedMultiplier;
+            }
         }
 
         private string[] CrafterValueLines(List<(int itemId, int quantity)> outs, BuildingData building)

@@ -30,6 +30,7 @@ namespace MobileIdleBuilder
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
+        public List<string> researchCompletedEver = new();  // every research finished on any run. Survives prestige: a node listed here gets its prestige_memory_discount on later runs (ResearchService.EffectiveCost).
         public string activeResearchId;                     // id of the research currently in progress; null/empty = none (one at a time). Cleared on prestige.
         public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
         public List<string> codex                           = new();
@@ -54,6 +55,7 @@ namespace MobileIdleBuilder
         // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
         public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
         public string adWatchResetUtc;                                       // ISO 8601 — when adWatchCounts were last zeroed (00:00 UTC)
+        public List<AdLastWatchEntry> adLastWatch = new();                  // id = AdPlacement name -> last watch (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge). Survives prestige.
         public string adsIdleBoostExpiryUtc;                                 // ISO 8601 — null/empty = no active +50% idle-rate boost
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
@@ -232,6 +234,14 @@ namespace MobileIdleBuilder
     {
         public string id;
         public int count;
+    }
+
+    /// <summary>When a rewarded-ad placement was last watched (starts its cooldown).</summary>
+    [Serializable]
+    public class AdLastWatchEntry
+    {
+        public string id;   // AdPlacement name
+        public string utc;  // ISO 8601 UTC
     }
 
     /// <summary>

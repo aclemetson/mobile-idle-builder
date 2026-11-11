@@ -29,6 +29,10 @@ namespace MobileIdleBuilder
 
         private readonly HashSet<string> _unlockedIds = new();
 
+        // Every research finished on any run (persisted as SaveData.researchCompletedEver, survives
+        // prestige). A node in here costs less on later runs by its prestige_memory_discount.
+        private readonly HashSet<string> _rememberedIds = new();
+
         // Active timer (one at a time). Cached so Update() avoids per-frame save lookups/parsing.
         private ResearchSO _activeResearch;
         private DateTime    _activeCompleteUtc;
@@ -66,6 +70,8 @@ namespace MobileIdleBuilder
             // (helium..iron in recipes.json had no requires_research) was never marked known and
             // stayed out of the Recipes panel. MarkKnown is idempotent, so this is cheap on load.
             foreach (var id in _unlockedIds) MarkGatedRecipesKnown(id);
+
+            RestoreRemembered(save);
 
             // Restore an in-progress research timer; complete it immediately if it already elapsed
             // while the app was closed (offline completion, mirrors the speed-boost UtcNow pattern).
@@ -190,8 +196,24 @@ namespace MobileIdleBuilder
             }
 
             long currentEntropy = GetCurrentEntropy();
-            return currentEntropy >= research.costBaseCurrency;
+            return currentEntropy >= EffectiveCost(research);
         }
+
+        /// <summary>
+        /// What this research costs now: the authored cost less Memory Resonance and, when the player
+        /// finished it on an earlier run, its own prestige-memory discount. Use for every price shown and
+        /// charged (<see cref="ResearchCost"/>).
+        /// </summary>
+        public long EffectiveCost(ResearchSO research)
+        {
+            if (research == null) return 0;
+            float global = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.GlobalResearchDiscount) ?? 0f;
+            return ResearchCost.Effective(research.costBaseCurrency, global, research.prestigeMemoryDiscount,
+                                          _rememberedIds.Contains(research.id));
+        }
+
+        /// <summary>True if the player finished this research on some run (it gets its memory discount).</summary>
+        public bool IsRemembered(string id) => !string.IsNullOrEmpty(id) && _rememberedIds.Contains(id);
 
         /// <summary>Effective research time after the Research Overdrive prestige bonus (capped at -50%).</summary>
         public int EffectiveDurationSeconds(ResearchSO research)
@@ -214,8 +236,9 @@ namespace MobileIdleBuilder
             if (research == null || HasActiveResearch || !CanPurchase(research)) return;
 
             // Check-and-spend in one step; CanPurchase already confirmed the balance.
-            if (!EntropyWallet.TrySpend(_progressQuery, research.costBaseCurrency)) return;
-            AchievementService.Instance?.NotifyEntropySpent(research.costBaseCurrency);
+            long cost = EffectiveCost(research);
+            if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
+            AchievementService.Instance?.NotifyEntropySpent(cost);
 
             int effective = EffectiveDurationSeconds(research);
             if (effective <= 0)
@@ -271,6 +294,7 @@ namespace MobileIdleBuilder
                 save.unlockedResearch ??= new();
                 if (!save.unlockedResearch.Contains(research.id))
                     save.unlockedResearch.Add(research.id);
+                Remember(save, research.id);
 
                 if (save.activeResearchId == research.id)
                 {
@@ -313,6 +337,52 @@ namespace MobileIdleBuilder
             foreach (var r in recipes)
                 if (r != null && !string.IsNullOrEmpty(researchId) && r.requires_research == researchId)
                     yield return r.id;
+        }
+
+        /// <summary>
+        /// Loads the remembered set: the saved list, plus this run's unlocks, plus (for saves made before
+        /// the list existed) every research whose gated recipes are all already known. Recipe knowledge
+        /// survives prestige and only research marks a gated recipe known, so a fully known set means the
+        /// research was finished on an earlier run.
+        /// </summary>
+        private void RestoreRemembered(SaveData save)
+        {
+            _rememberedIds.Clear();
+            if (save == null) return;
+            save.researchCompletedEver ??= new List<string>();
+            foreach (var id in save.researchCompletedEver) _rememberedIds.Add(id);
+            foreach (var id in _unlockedIds) _rememberedIds.Add(id);
+
+            var knowledge = RecipeKnowledgeService.Instance;
+            var recipes   = RecipeDatabase.Instance?.Recipes;
+            if (knowledge != null && recipes != null && _allResearch != null)
+                foreach (var r in _allResearch)
+                    if (r != null && !_rememberedIds.Contains(r.id)
+                        && AllGatedRecipesKnown(recipes, r.id, knowledge.IsKnown))
+                        _rememberedIds.Add(r.id);
+
+            foreach (var id in _rememberedIds)
+                if (!save.researchCompletedEver.Contains(id)) save.researchCompletedEver.Add(id);
+        }
+
+        private void Remember(SaveData save, string id)
+        {
+            if (!_rememberedIds.Add(id)) return;
+            save.researchCompletedEver ??= new List<string>();
+            if (!save.researchCompletedEver.Contains(id)) save.researchCompletedEver.Add(id);
+        }
+
+        /// <summary>True when the research gates at least one recipe and every one of them is known.</summary>
+        internal static bool AllGatedRecipesKnown(IEnumerable<RecipeJson> recipes, string researchId,
+                                                  Func<string, bool> isKnown)
+        {
+            bool any = false;
+            foreach (var id in RecipesGatedBy(recipes, researchId))
+            {
+                any = true;
+                if (!isKnown(id)) return false;
+            }
+            return any;
         }
 
         /// <summary>Loads the persisted active-timer state into the cached fields (no completion).</summary>
@@ -358,6 +428,7 @@ namespace MobileIdleBuilder
                 save.unlockedResearch ??= new();
                 if (!save.unlockedResearch.Contains(researchId))
                     save.unlockedResearch.Add(researchId);
+                Remember(save, researchId);
 
                 if (save.activeResearchId == researchId)
                 {

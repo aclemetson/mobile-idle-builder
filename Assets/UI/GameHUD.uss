@@ -1293,6 +1293,53 @@
     -unity-text-align: middle-center;
 }
 
+/* Entropy Surge side icon (EntropySurgeOfferController): a round tab on the right edge, about a
+   third of the way down so it clears the top bar and the bottom-right "Show hint" pill. */
+.surge-offer-btn {
+    position: absolute;
+    right: var(--spacing-md);
+    top: 38%;
+    width: 60px;
+    height: 60px;
+    margin: 0;
+    padding: 0;
+    border-radius: 30px;
+    border-width: 2px;
+    border-color: var(--color-currency-entropy);
+    background-color: rgba(10, 14, 26, 0.92);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition-property: scale;
+    transition-duration: 0.25s;
+}
+
+.surge-offer-btn__icon {
+    font-size: 24px;
+    color: var(--color-currency-entropy);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+.surge-offer-btn__label {
+    font-size: 11px;
+    color: var(--color-text-primary);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Brief "pop" when the icon reappears (toggled for one frame by the controller). */
+.surge-offer-btn--pop {
+    scale: 1.15 1.15;
+}
+
+.surge-offer__decline {
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-secondary);
+}
+
 /* ---- Research tree (#337) ---- */
 .research-tree {
     flex-grow: 1;

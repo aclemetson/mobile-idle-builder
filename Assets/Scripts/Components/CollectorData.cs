@@ -10,5 +10,6 @@ namespace MobileIdleBuilder
     {
         public float OutputRate; // items per second (from BuildingSO.baseOutputRate)
         public float Timer;      // accumulator, seconds since last output
+        public float OutputCarry; // fraction of an item owed by a fractional output multiplier (see OutputCarry)
     }
 }

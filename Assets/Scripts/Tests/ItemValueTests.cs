@@ -7,8 +7,8 @@ namespace MobileIdleBuilder.Tests
     public class ItemValueTests
     {
         [Test]
-        public void PerCraft_QtyOneWithMult1_5_FloorsToOne()
-            => Assert.AreEqual(4d, ItemValue.PerCraft(4f, 1, 1.5f, 0f), 1e-9);
+        public void PerCraft_QtyOneWithMult1_5_AveragesOneAndAHalf()
+            => Assert.AreEqual(6d, ItemValue.PerCraft(4f, 1, 1.5f, 0f), 1e-9); // the carry pays 1, 2, 1, 2 ...
 
         [Test]
         public void PerCraft_QtyTwoWithMult1_5_GivesThree()
@@ -38,9 +38,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void CollectorPerSecond_UsesFlooredOutMultAndRate()
+        public void CollectorPerSecond_UsesAverageOutMultRateAndSpeed()
         {
-            Assert.AreEqual(3d * 2 * 1.5d, ItemValue.CollectorPerSecond(3f, 1.5f, 2.9f), 1e-9);
+            Assert.AreEqual(3d * 2.9d * 1.5d, ItemValue.CollectorPerSecond(3f, 1.5f, 2.9f), 1e-6);
+            Assert.AreEqual(3d * 2d * 1.5d * 1.1d, ItemValue.CollectorPerSecond(3f, 1.5f, 2f, 1.1f), 1e-6);
             Assert.AreEqual(3d, ItemValue.CollectorPerSecond(3f, 0f, 1f), 1e-9); // rate falls back to 1
         }
 
