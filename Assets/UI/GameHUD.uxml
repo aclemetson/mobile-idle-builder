@@ -598,6 +598,30 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ ENTROPY SURGE OFFER (EntropySurgeOfferController.cs) ═══
+             The side icon appears when the Entropy Surge ad is off cooldown (every 15 min). Tapping it
+             opens the card: Watch plays the ad, No thanks restarts the cooldown, the X just closes the
+             card and leaves the icon (the amount is recalculated on the next tap). -->
+        <ui:Button name="surge-offer-btn" text="" class="surge-offer-btn blocks-world-input hidden">
+            <ui:Label text="◈" class="surge-offer-btn__icon" picking-mode="Ignore" />
+            <ui:Label text="Surge" class="surge-offer-btn__label" picking-mode="Ignore" />
+        </ui:Button>
+        <ui:VisualElement name="surge-offer-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 102;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Entropy Surge" class="panel-title" />
+                    <ui:Button name="surge-offer__close" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                </ui:VisualElement>
+                <ui:Label name="surge-offer__message" text="" class="game-update-message" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="surge-offer__decline" text="No thanks" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="surge-offer__watch" text="▶ Watch ad" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ═══ CONFIRM PROMPT (destructive actions: remove a building or belt; ConfirmPrompt.cs) ═══ -->
         <ui:VisualElement name="confirm-prompt" class="idle-return-modal blocks-world-input hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 102;">

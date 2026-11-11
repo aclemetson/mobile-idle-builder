@@ -144,5 +144,30 @@ namespace MobileIdleBuilder.Tests
                 SlotBufferUtils.TotalInOutputBuffer(outBuf),
                 "Full output buffer must not overflow");
         }
+    
+        // ── Prestige shop multipliers ─────────────────────────────────────────
+
+        private void AddPrestige(float speed, float output)
+        {
+            var player = _em.CreateEntity();
+            _em.AddComponentData(player, new PrestigeData { SpeedMultiplier = speed, OutputMultiplier = output });
+        }
+
+        [Test]
+        public void PrestigeSpeed_HarvestsFaster()
+        {
+            // OutputRate 1 -> 1 s interval; at 2x speed 0.5 s of real time is a full interval.
+            AddPrestige(speed: 2f, output: 1f);
+            Tick(deltaTime: 0.5f);
+            Assert.AreEqual(1, OutputCount(), "Speed bonuses lift harvesters too, as in the idle model");
+        }
+
+        [Test]
+        public void PrestigeOutput_FractionCarriesBetweenIntervals()
+        {
+            AddPrestige(speed: 1f, output: 1.25f);
+            for (int i = 0; i < 4; i++) Tick(deltaTime: 1f);
+            Assert.AreEqual(5, OutputCount(), "4 intervals x 1.25 = 5 items");
+        }
     }
 }

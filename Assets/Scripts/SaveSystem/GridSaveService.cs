@@ -630,6 +630,8 @@ namespace MobileIdleBuilder
             // output onto each source's output multiplier (alongside the per-building manager bonus).
             float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
             float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
+            // Quantum Yield (prestige output) composes the same way it does live in ProductionSystem.
+            if (save.prestigeOutputMultiplier > 0f) megaOutputMult *= save.prestigeOutputMultiplier;
             float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;

@@ -12,10 +12,11 @@ namespace MobileIdleBuilder
         SpeedBoost,     // 2x production for a short window (reuses the speed-boost expiry)
         TimeWarp,       // instantly bank ~1h of offline production
         Crystals,       // small premium-currency drop
+        EntropySurge,   // N minutes of current automation income, on a short cooldown (post-prestige lull)
     }
 
     /// <summary>How a placement's reward is delivered. Drives AdService.GrantReward's switch.</summary>
-    public enum AdRewardKind { Entropy, DoubleOffline, IdleRateBoost, SpeedBoost, TimeWarp, Crystals }
+    public enum AdRewardKind { Entropy, DoubleOffline, IdleRateBoost, SpeedBoost, TimeWarp, Crystals, IncomeMinutes }
 
     /// <summary>
     /// One rewarded-ad placement: its display copy, daily cap, and the reward it pays. Reward magnitudes
@@ -35,6 +36,8 @@ namespace MobileIdleBuilder
         public long  MinimumFloor;      // Entropy: floor so early-game grants are not zero
         public long  CrystalAmount;     // Crystals
         public float DurationHours;     // IdleRateBoost / TimeWarp window length
+        public float IncomeMinutes;     // IncomeMinutes: minutes of current automation income granted
+        public float CooldownMinutes;   // > 0: minimum time between two watches of this placement
 
         /// <summary>Id used as the SaveData daily-counter key (stable across builds).</summary>
         public string Id => Placement.ToString();
@@ -86,6 +89,13 @@ namespace MobileIdleBuilder
                 Name = "Crystal Drop", Description = "Watch an ad for a few crystals.",
                 DailyCap = 1, CrystalAmount = 25,
             },
+            // Paced for the post-prestige lull (docs/balance/prestige-pacing.xlsx, Ads sheet): pays a fixed
+            // slice of time at every stage instead of a % of net worth, which grows with run length.
+            new AdPlacementDef {
+                Placement = AdPlacement.EntropySurge, Kind = AdRewardKind.IncomeMinutes,
+                Name = "Entropy Surge", Description = "Watch an ad for 10 minutes of your automation income.",
+                DailyCap = 8, IncomeMinutes = 10f, CooldownMinutes = 15f, MinimumFloor = 500,
+            },
         };
 
         public static AdPlacementDef Def(AdPlacement p)
@@ -106,6 +116,63 @@ namespace MobileIdleBuilder
             long fromNetWorth = (long)(lastKnownNetWorth * def.NetWorthFraction);
             return Math.Max(fromNetWorth, def.MinimumFloor);
         }
+
+        /// <summary>
+        /// Entropy granted by an income-minutes placement (Entropy Surge): <paramref name="incomePerSecond"/>
+        /// (automation income, the Statistics panel's 60 s average) x the placement's minutes, never below
+        /// its floor so a player with nothing automated yet still gets something.
+        /// </summary>
+        public static long CalcIncomeReward(AdPlacement p, double incomePerSecond)
+        {
+            var def = Def(p);
+            double rate = incomePerSecond > 0d && !double.IsNaN(incomePerSecond) ? incomePerSecond : 0d;
+            double fromIncome = rate * 60d * def.IncomeMinutes;
+            long amount = fromIncome >= long.MaxValue ? long.MaxValue : (long)fromIncome;
+            return Math.Max(amount, def.MinimumFloor);
+        }
+
+        // ── Cooldown bookkeeping (placements with CooldownMinutes > 0) ──────────
+
+        /// <summary>Time left before <paramref name="p"/> may be watched again; zero when ready or uncooled.</summary>
+        public static TimeSpan CooldownRemaining(SaveData save, AdPlacement p, DateTime now)
+        {
+            var def = Def(p);
+            if (def.CooldownMinutes <= 0f || save?.adLastWatch == null) return TimeSpan.Zero;
+
+            string id = p.ToString();
+            foreach (var e in save.adLastWatch)
+            {
+                if (e == null || e.id != id) continue;
+                DateTime last = ParseOrEpoch(e.utc);
+                if (last == DateTime.MinValue) return TimeSpan.Zero;
+                TimeSpan left = last.AddMinutes(def.CooldownMinutes) - now;
+                // A clock that moved backwards (last watch "in the future") never locks the ad for longer
+                // than one cooldown.
+                TimeSpan max = TimeSpan.FromMinutes(def.CooldownMinutes);
+                return left <= TimeSpan.Zero ? TimeSpan.Zero : (left > max ? max : left);
+            }
+            return TimeSpan.Zero;
+        }
+
+        public static bool IsOnCooldown(SaveData save, AdPlacement p, DateTime now)
+            => CooldownRemaining(save, p, now) > TimeSpan.Zero;
+
+        /// <summary>Stamps the watch time that starts the placement's cooldown (persisted, ISO 8601 UTC).</summary>
+        public static void RecordWatch(SaveData save, AdPlacement p, DateTime now)
+        {
+            if (save == null) return;
+            save.adLastWatch ??= new System.Collections.Generic.List<AdLastWatchEntry>();
+            string id = p.ToString(), stamp = now.ToString("o");
+            foreach (var e in save.adLastWatch)
+                if (e != null && e.id == id) { e.utc = stamp; return; }
+            save.adLastWatch.Add(new AdLastWatchEntry { id = id, utc = stamp });
+        }
+
+        /// <summary>
+        /// Restarts a placement's cooldown without counting a watch (the player declined the offer).
+        /// Same stamp as a watch, so the offer returns one cooldown later; the daily count is untouched.
+        /// </summary>
+        public static void RestartCooldown(SaveData save, AdPlacement p, DateTime now) => RecordWatch(save, p, now);
 
         // ── Daily cap bookkeeping (operate on SaveData; injected `now` for tests) ──
 

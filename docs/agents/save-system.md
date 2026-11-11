@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -16,6 +16,8 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `idleSnapshot` + `idleCollectionApplied` | active site's offline-earnings chain snapshot + double-apply guard timestamp |
 | `siteSnapshots` (List<IdleCollectionSnapshot>) | per-site offline snapshots, index = site index. Mirrors `idleSnapshot` at the active index; inactive sites keep producing from their stored entries. Populated by `GridSaveService.MirrorActiveSiteSnapshot` on every flush/load. Run state — cleared on prestige by `PrestigeRunReset.ResetSitesForPrestige` |
 | `unlockedRecipes / unlockedResearch / codex` | knowledge; `unlockedResearch` is per-run (cleared by PrestigeSystem) |
+| `researchCompletedEver` | every research finished on any run; survives prestige. A listed node costs less on later runs by its `prestige_memory_discount` (`ResearchService.EffectiveCost` → `ResearchCost.Effective`, with Memory Resonance). Backfilled on load from this run's unlocks and, for older saves, from research whose gated recipes are all known (recipe knowledge survives prestige) |
+| `adLastWatch` (`AdLastWatchEntry` id/utc) | last watch per ad placement (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge, 15 min). Survives prestige |
 | `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |
@@ -43,15 +45,15 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 ## The bridge: `Assets/Scripts/SaveSystem/ECSLoadBridge.cs`
 
 - `InitializeAsync()` polls for the ECS world (5s) then for the `PlayerProgressData` / `PrestigeData` / `PlayerInventoryTag` / `TutorialStateData` entities (10s) — all four are gated so a late tutorial singleton can't leave the baked step-0 default standing — then waits for `SaveManager.CloudReconcileDone` (≤5s) so a cloud-replaced `Current` is applied to ECS rather than a stale local one, then:
-  - `ApplyLoadedSave()`: permanent upgrades → `PrestigeData` (speed boost composed in at `ECSLoadBridge.cs:148`) → tutorial state → offline earnings (`OfflineCollectionService.CalculateAndApply`) → currency + inventory (skipped on fresh install so baked defaults stand, `IsNewGame` guard at `ECSLoadBridge.cs:183`).
+  - `ApplyLoadedSave()`: permanent upgrades (multipliers recomputed from the levels via `PersistentUpgradeService.FlushEffectsToSave`) → `PrestigeData` (pure prestige values; the timed speed boost is not composed in) → tutorial state → offline earnings (`OfflineCollectionService.CalculateAndApply`) → currency + inventory (skipped on fresh install so baked defaults stand, `IsNewGame` guard at `ECSLoadBridge.cs:183`).
   - Then `GridSaveService.Instance.LoadGrid()` re-places saved buildings via `BuildingPlacer.PlaceBuilding()` (`GridSaveService.cs:256`).
   - Sets `IsLoaded = true`.
-- `FlushToSave()` (called by every `SaveManager.SaveLocal()`): snapshots ECS → SaveData. Note it **divides the speed boost back out** before persisting (`ECSLoadBridge.cs:236`) so the boost isn't compounded across saves. Copy this strip-on-save pattern for any runtime-composed multiplier.
+- `FlushToSave()` (called by every `SaveManager.SaveLocal()`): snapshots ECS → SaveData. `PrestigeData.SpeedMultiplier` is persisted as-is: it never contains the timed speed boost (older builds composed it in at load and divided it back out on save, which persisted it doubled if the boost expired mid-session).
 - Write-through helpers for live purchases: `AddEntropy()` / `AddPrestigeCurrency()` (`ECSLoadBridge.cs:279-294`).
 
 ## Idle/offline earnings
 
-- `GridSaveService.RebuildIdleSnapshot()` (end of `FlushToSave()`/`LoadGrid()`) walks the saved grid, computes producer→sink chains via `IdleGraphAnalyzer.BuildSnapshot`, baking in `prestigeSpeedMultiplier × boost` at `GridSaveService.cs:335`.
+- `GridSaveService.RebuildIdleSnapshot()` (end of `FlushToSave()`/`LoadGrid()`) walks the saved grid, computes producer→sink chains via `IdleGraphAnalyzer.BuildSnapshot`, baking in `prestigeSpeedMultiplier × boost × megastructure` (`speedMult`) and `prestigeOutputMultiplier × megastructure` into each source's output multiplier.
 - `RebuildIdleSnapshot()` also mirrors the active snapshot into `save.siteSnapshots[activeSiteIndex]` (`MirrorActiveSiteSnapshot`).
 - On next launch `OfflineCollectionService.CalculateAndApply()` pays out: elapsed seconds capped by `GetEffectiveIdleCap()` (config base + `IdleTimeCap` upgrade), rate scaled by `IdleCollectionRate` upgrade; `idleCollectionApplied` timestamp prevents double-apply. It iterates **all** `siteSnapshots` (every unlocked site earns for the offline window), falling back to the lone `idleSnapshot` on legacy/single-site saves.
 - `CalculateAndApply` only credits `SaveData.currentRun`. On cold boot that is enough (the save is copied into ECS afterwards). On **resume from background** (`SaveManager.OnReturnFromBackground`) ECS is already live, so the payout is also written through via `ECSLoadBridge.AddEntropy` / `AddInventoryItems`; without that the next `FlushToSave` overwrites it with the stale ECS total (#185). Any new mid-session payout path must do the same (see `AdService.ApplyCollectionResult`).
@@ -74,7 +76,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 1. **Additive only.** Never rename/remove/retype existing fields. New fields get field initializers as defaults — old JSON missing the field deserializes to the default, which must mean "feature never used".
 2. Checklist: field in `SaveData.cs` (+ default) → write site (service or `FlushToSave()`) → read site (`ApplyLoadedSave()` if ECS-visible, or service `LoadFromSave`) → reset-on-prestige decision (does `PrestigeSystem.OnUpdate` need to clear it? see `PrestigeSystem.cs:103-110`) → test.
 3. Test: round-trip (save → load → assert) AND legacy-load (deserialize a JSON string *without* your field, assert defaults). Copy patterns in `Assets/Scripts/PlayModeTests/SaveSystemTests.cs`.
-4. Timed effects: store ISO 8601 UTC string, compare with `DateTime.UtcNow`, copy the `speedBoostExpiryUtc` trio of sites (`SaveData.cs:30`, apply `ECSLoadBridge.cs:148`, strip `ECSLoadBridge.cs:236`).
+4. Timed effects: store ISO 8601 UTC string, compare with `DateTime.UtcNow`, copy `speedBoostExpiryUtc` (store the expiry, read it where it takes effect, e.g. `PremiumShopService.GetSpeedBoostMultiplier`). Never compose a timed multiplier into a persisted ECS value: it outlives its expiry.
 
 ## Pitfalls
 
