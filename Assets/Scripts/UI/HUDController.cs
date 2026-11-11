@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
         private PrestigeShopSubController           _prestigeShop;
         private ManagersSubController               _managers;
         private StatsSubController                  _stats;
+        private EntropySurgeOfferController         _surgeOffer;
         private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
         private RewardedAdsSubController            _rewards;
@@ -192,6 +193,7 @@ namespace MobileIdleBuilder
             _worlds       = GetComponent<WorldsSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
+            _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
         }
 
         void OnEnable()
@@ -509,6 +511,7 @@ namespace MobileIdleBuilder
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
+            _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -860,8 +863,16 @@ namespace MobileIdleBuilder
 
                 // Research cost has only an --unaffordable class; there is no --affordable pair.
                 costLabel?.EnableInClassList("research-card-cost--unaffordable",
-                                             entropy < research.costBaseCurrency);
+                                             entropy < researchService.EffectiveCost(research));
             }
+        }
+
+        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance / prestige memory discount it.</summary>
+        internal static string ResearchCostText(long cost, long baseCost)
+        {
+            if (baseCost <= 0 || cost >= baseCost) return $"◈ {cost:N0}";
+            int pct = (int)System.Math.Round(100d * (baseCost - cost) / baseCost);
+            return pct > 0 ? $"◈ {cost:N0} (-{pct}%)" : $"◈ {cost:N0}";
         }
 
         public static string FormatResearchTimer(double seconds)
@@ -960,8 +971,8 @@ namespace MobileIdleBuilder
             {
                 ResearchTreeView.NodeState.Done   => "Researched",
                 ResearchTreeView.NodeState.Active => $"In progress · {FormatResearchTimer(researchService.ActiveRemainingSeconds)}",
-                ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(r.costBaseCurrency)}" + (currentEntropy >= r.costBaseCurrency ? "  Ready" : ""),
-                _ => $"Locked · ◈ {ShortNumber(r.costBaseCurrency)}",
+                ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(researchService.EffectiveCost(r))}" + (currentEntropy >= researchService.EffectiveCost(r) ? "  Ready" : ""),
+                _ => $"Locked · ◈ {ShortNumber(researchService.EffectiveCost(r))}",
             };
 
             // Open on the research the player is working toward: the one the tutorial is asking for (selected,
@@ -1080,8 +1091,9 @@ namespace MobileIdleBuilder
                         var info = new VisualElement();
                         info.AddToClassList("research-card-info");
 
-                        bool affordable = currentEntropy >= research.costBaseCurrency;
-                        var costLabel   = new Label($"◈ {research.costBaseCurrency:N0}");
+                        long cost       = researchService.EffectiveCost(research);
+                        bool affordable = currentEntropy >= cost;
+                        var costLabel   = new Label(ResearchCostText(cost, research.costBaseCurrency));
                         costLabel.AddToClassList("research-card-cost");
                         if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
                         info.Add(costLabel);
@@ -2403,6 +2415,7 @@ namespace MobileIdleBuilder
                                         || _modeEndedFrame == Time.frameCount,
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
                 ConfirmOpen      = ConfirmPrompt.IsOpen,
+                SurgeOfferOpen   = _surgeOffer != null && _surgeOffer.IsOpen,
                 IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
                 UpdateNoticeOpen = _gameUpdate != null && _gameUpdate.IsOpen,
                 InspectorOpen    = _inspector != null && _inspector.IsOpen,
@@ -2413,6 +2426,7 @@ namespace MobileIdleBuilder
             switch (BackNavigation.TopLayer(state))
             {
                 case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
+                case BackNavigation.Layer.SurgeOffer:    _surgeOffer.Minimize();         break;
                 case BackNavigation.Layer.IdleReturn:    _idleReturn.Close();            break;
                 case BackNavigation.Layer.UpdateNotice:  _gameUpdate.Close();            break;
                 case BackNavigation.Layer.Inspector:     _inspector.HideBuildingInspector(); break;

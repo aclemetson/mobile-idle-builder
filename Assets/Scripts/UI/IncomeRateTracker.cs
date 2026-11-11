@@ -20,6 +20,13 @@ namespace MobileIdleBuilder
         /// <summary>Entropy per second earned by automation, averaged over the last 60 s.</summary>
         public double PerSecond => _rate.Rate(WindowSeconds);
 
+        /// <summary>The live tracker (on the HUD GameObject), or null outside the game scene. Used by the
+        /// Entropy Surge ad, whose reward is minutes of this income.</summary>
+        public static IncomeRateTracker Current { get; private set; }
+
+        void OnEnable()  => Current = this;
+        void OnDisable() { if (Current == this) Current = null; }
+
         void Update()
         {
             if (Time.unscaledTime < _nextSample) return;

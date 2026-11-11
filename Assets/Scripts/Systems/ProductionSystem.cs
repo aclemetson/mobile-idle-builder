@@ -32,8 +32,9 @@ namespace MobileIdleBuilder
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
             long escapedEntropy = 0;
 
-            // Global production multipliers from the megastructure (1 = no bonus when the singleton is absent,
-            // e.g. in tests that never bake it).
+            // Global production multipliers (1 = no bonus when a singleton is absent, e.g. in tests that
+            // never bake it): megastructure stage rewards and the prestige shop (Assembly Line speed,
+            // Quantum Yield output). The same factors feed the idle snapshot, so live == idle.
             float globalSpeedMult  = 1f;
             float globalOutputMult = 1f;
             if (SystemAPI.HasSingleton<GlobalProductionBonus>())
@@ -41,6 +42,12 @@ namespace MobileIdleBuilder
                 var gb = SystemAPI.GetSingleton<GlobalProductionBonus>();
                 globalSpeedMult  = gb.SpeedMult;
                 globalOutputMult = gb.OutputMult;
+            }
+            if (SystemAPI.HasSingleton<PrestigeData>())
+            {
+                var pd = SystemAPI.GetSingleton<PrestigeData>();
+                if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
+                if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
             }
 
             foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
@@ -129,7 +136,12 @@ namespace MobileIdleBuilder
                     float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
                         ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                         : 1f;
-                    outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
+                    outMult *= globalOutputMult; // global output bonuses compose on top of managers
+                    // Whole crafts' worth to deposit; the leftover fraction carries to the next craft so a
+                    // 1.1x bonus on a 1-item recipe pays out instead of flooring to nothing.
+                    float carry = process.ValueRO.OutputCarry;
+                    int crafts  = OutputCarry.Take(outMult, ref carry);
+                    process.ValueRW.OutputCarry = carry;
                     // Optional buffer: only entities built with the current archetype carry it, and a
                     // missing one must never stop production — so probe rather than widen the query.
                     bool logCrafts = SystemAPI.HasBuffer<CraftedOutputEvent>(entity);
@@ -139,7 +151,7 @@ namespace MobileIdleBuilder
 
                     for (int i = 0; i < outputs.Length; i++)
                     {
-                        int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
+                        int qty = outputs[i].Quantity * crafts;
                         SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
 
                         // Record the craft where it happens. Diffing output-buffer totals downstream

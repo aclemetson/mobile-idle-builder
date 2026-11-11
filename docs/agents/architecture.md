@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); ConveyorSystem tail drawing 2026-11-01 (#223); Belt Splitter 2026-11-07. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); ConveyorSystem tail drawing 2026-11-01 (#223); Belt Splitter 2026-11-07; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -88,7 +88,7 @@ Anything a player waits on (research timers, field cooldowns, speed boosts, offl
 | `TutorialStateData` | `IsActive`, `CurrentStepIndex`, `FirstRunComplete` | TutorialSystem, ECSLoadBridge |
 | `InventorySlot` buffer on the `PlayerInventoryTag` entity | global player inventory (`ItemID`, `Quantity`) | ProductionSystem, ECSLoadBridge, ManualCraftService |
 
-**Known gap (intentional, do not "fix" in passing):** `PrestigeData.SpeedMultiplier`/`OutputMultiplier` are persisted and shown in UI but `ProductionSystem` does NOT read them — live craft speed is only `BuildingData.ProductionSpeed` (per-building upgrade level). The multipliers DO affect the offline/idle snapshot (`GridSaveService.cs:335`) and `CostReduction` DOES affect building prices (`EntropyWallet.ReducedCost`, used by `HUDController` and `DemolishRefund`).
+`PrestigeData.SpeedMultiplier`/`OutputMultiplier` (Assembly Line / Quantum Yield) are read live by `ProductionSystem` and `CollectorSystem` (alongside `GlobalProductionBonus`) and by the idle snapshot. They hold the pure prestige values: `ECSLoadBridge` recomputes them from the purchased upgrade levels on load and never composes the timed premium speed boost into them (that boost stays idle-only, in `GridSaveService`). `CostReduction` affects building prices (`EntropyWallet.ReducedCost`, used by `HUDController` and `DemolishRefund`).
 
 ## Do NOT edit
 

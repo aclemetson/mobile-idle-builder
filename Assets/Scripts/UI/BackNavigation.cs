@@ -19,6 +19,8 @@ namespace MobileIdleBuilder
             /// <summary>Dialogue is playing: swallow the press, never skip it.</summary>
             SwallowDialogue,
             ConfirmPrompt,
+            /// <summary>The Entropy Surge offer card: back closes it like its X (the offer stays).</summary>
+            SurgeOffer,
             IdleReturn,
             UpdateNotice,
             Inspector,
@@ -31,6 +33,7 @@ namespace MobileIdleBuilder
             public bool ModeActiveOrJustEnded;
             public bool DialoguePlaying;
             public bool ConfirmOpen;
+            public bool SurgeOfferOpen;
             public bool IdleReturnOpen;
             public bool UpdateNoticeOpen;
             public bool InspectorOpen;
@@ -43,6 +46,7 @@ namespace MobileIdleBuilder
             if (s.ModeActiveOrJustEnded) return Layer.YieldToMode;
             if (s.DialoguePlaying)       return Layer.SwallowDialogue;
             if (s.ConfirmOpen)           return Layer.ConfirmPrompt;
+            if (s.SurgeOfferOpen)        return Layer.SurgeOffer;
             if (s.IdleReturnOpen)        return Layer.IdleReturn;
             if (s.UpdateNoticeOpen)      return Layer.UpdateNotice;
             if (s.InspectorOpen)         return Layer.Inspector;

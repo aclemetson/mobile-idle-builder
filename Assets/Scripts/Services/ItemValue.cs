@@ -6,8 +6,9 @@ namespace MobileIdleBuilder
     /// <summary>
     /// What products are worth, for the Recipes tab and the building inspector. Pure maths that mirrors
     /// ProductionSystem and CollectorSystem: price never changes (baseSellValue, or 1 when it has none);
-    /// bonuses raise quantity (outMult, rounded down per output) and speed.
-    /// PrestigeData.OutputMultiplier is deliberately not applied: no system applies it yet.
+    /// bonuses raise quantity (outMult) and speed. Deposits carry the fraction of a fractional outMult to
+    /// the next craft (<see cref="OutputCarry"/>), so quantities here are the long-run average, not floored.
+    /// Escaping byproduct entropy is still floored per craft, as ProductionSystem pays it.
     /// </summary>
     public static class ItemValue
     {
@@ -18,7 +19,7 @@ namespace MobileIdleBuilder
         /// <summary>Entropy for one craft of one output slot, plus escaping byproduct entropy.</summary>
         public static double PerCraft(float price, int outputQty, float outMult, float escapeEntropy)
         {
-            double sold = (double)price * Math.Max(0, (int)(outputQty * outMult));
+            double sold = (double)price * Math.Max(0d, (double)outputQty * outMult);
             double escaped = escapeEntropy > 0f ? (long)(escapeEntropy * outMult) : 0d;
             return sold + escaped;
         }
@@ -41,11 +42,12 @@ namespace MobileIdleBuilder
             return perCraft * speed / craftTime;
         }
 
-        /// <summary>Entropy per second from a collector: floor(outMult) items per interval, outputRate intervals a second.</summary>
-        public static double CollectorPerSecond(float price, float outputRate, float outMult)
+        /// <summary>Entropy per second from a collector: outMult items per interval (on average), outputRate x speed intervals a second.</summary>
+        public static double CollectorPerSecond(float price, float outputRate, float outMult, float speed = 1f)
         {
             float rate = outputRate > 0f ? outputRate : 1f;
-            return (double)price * Math.Max(0, (int)outMult) * rate;
+            if (speed <= 0f) speed = 1f;
+            return (double)price * Math.Max(0d, outMult) * rate * speed;
         }
     }
 }

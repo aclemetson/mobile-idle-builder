@@ -346,5 +346,52 @@ namespace MobileIdleBuilder.Tests
 
             Assert.AreEqual(10, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
         }
+    
+        // ── Prestige shop multipliers (Assembly Line / Quantum Yield are live) ──
+
+        private void AddPrestige(float speed, float output)
+        {
+            _em.AddComponentData(_playerEntity, new PrestigeData { SpeedMultiplier = speed, OutputMultiplier = output });
+        }
+
+        private int OutputCount() =>
+            SlotBufferUtils.CountInOutputBuffer(_em.GetBuffer<BuildingOutputSlot>(_buildingEntity), OutputItemId);
+
+        [Test]
+        public void PrestigeSpeedMultiplier_AdvancesCraftFaster()
+        {
+            AddPrestige(speed: 1.5f, output: 1f);
+            AddToGlobalInventory(InputItemId, InputQty);
+            _em.SetComponentData(_buildingEntity, new RecipeProcessData
+            {
+                RecipeID = 1, CraftTime = CraftTime, IsCrafting = true, Progress = 0f
+            });
+
+            Tick(deltaTime: 0.5f);
+
+            Assert.AreEqual(0.75f, _em.GetComponentData<RecipeProcessData>(_buildingEntity).Progress, 1e-4f,
+                "Assembly Line speed must scale live craft progress");
+        }
+
+        [Test]
+        public void PrestigeOutputMultiplier_PaysTheFractionOverManyCrafts()
+        {
+            // 1.5x on a 1-item recipe used to floor to 1 every craft; the carry pays 1, 2, 1, 2.
+            AddPrestige(speed: 1f, output: 1.5f);
+            for (int craft = 0; craft < 4; craft++)
+            {
+                AddToGlobalInventory(InputItemId, InputQty);
+                Tick(deltaTime: CraftTime); // auto-starts and completes in one tick
+            }
+            Assert.AreEqual(6, OutputCount(), "4 crafts x 1.5 = 6 items");
+        }
+
+        [Test]
+        public void NoPrestigeSingleton_BehavesAsBefore()
+        {
+            AddToGlobalInventory(InputItemId, InputQty);
+            Tick(deltaTime: CraftTime);
+            Assert.AreEqual(1, OutputCount());
+        }
     }
 }
