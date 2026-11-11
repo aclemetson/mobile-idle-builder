@@ -13,8 +13,11 @@ functional gain. Do these steps when you are ready to ship ads.
 
 - `Assets/Scripts/Services/Ads/IAdProvider.cs` — the seam AdService talks to.
 - `MockAdProvider.cs` — default everywhere except a device build with `LEVELPLAY_ADS` defined.
+- `TestAdProvider.cs` — ad test mode (`ads.test_mode`, dev builds only): no ad network, a "Test Ad"
+  card instead, reward still granted. See "Ad test mode" below.
 - `LevelPlayAdProvider.cs` — real SDK adapter, compiled only under `#if LEVELPLAY_ADS`.
-- `AdService.cs` — selects the provider: `LevelPlayAdProvider` when `LEVELPLAY_ADS && !UNITY_EDITOR`, else Mock.
+- `AdService.cs` — selects the provider once at startup (`CreateProvider`): `TestAdProvider` when
+  `FeatureFlags.AdsTestMode`, else `LevelPlayAdProvider` when `LEVELPLAY_ADS && !UNITY_EDITOR`, else Mock.
 - `AdRewardCalculator.cs` — placement table, reward math, daily-cap bookkeeping (pure, unit-tested).
 - Kill-switch: the `ads.enabled` Remote Config flag (`FeatureFlags.AdsEnabled`). Off ⇒ provider never
   initialises and the Free Rewards nav button is hidden.
@@ -97,6 +100,28 @@ functional gain. Do these steps when you are ready to ship ads.
   cap, reset on success), so one failure no longer leaves the whole session without ads. To diagnose on a
   device: `adb logcat -s Unity | grep "\[Ads\]"` shows `LevelPlay initialised`, `Rewarded ad loaded`, or
   the load error and the next retry delay.
+
+## Ad test mode (dev builds never show real ads by default)
+
+Real ads on a developer's own phone risk invalid-traffic flags on the LevelPlay account (especially
+taps). So dev builds use fake ads unless you deliberately turn them off.
+
+- **Which builds:** `FeatureFlags.IsDevBuild` is true in the Editor and in builds compiled with
+  `DEV_ENVIRONMENT` (currently every Android/iOS build, which also points them at the UGS
+  "development" environment). Production builds compile it to false and ignore `ads.test_mode`.
+- **Flag:** `ads.test_mode` (bool). The code default is `true`, so a fresh install, or a launch where
+  Remote Config hasn't loaded, uses test ads. Create the key as `true` in the **development**
+  environment only.
+- **What the player sees:** the Free Rewards panel says "TEST ADS". Watching opens a "Test Ad" card:
+  **Finish** = ad watched (reward granted, daily cap and cooldown counted), **Skip** / Android back =
+  dismissed early (no reward). Everything after the ad runs the real `AdService` path.
+- **Testing real LevelPlay ads:** first register the phone in the LevelPlay dashboard (**Settings →
+  Test devices → Add test device**, using the advertising ID from Android **Settings → Security and
+  privacy → Ads**, then enable test ads for it). Then set `ads.test_mode` to `false` in the
+  development environment and relaunch the app twice (the first launch may still use the cached value).
+  The Free Rewards panel then shows **Launch Ad Test Suite**, which is gated on `IsDevBuild`, not
+  `Debug.isDebugBuild` (our internal builds are non-debuggable, so `isDebugBuild` is always false there).
+- **Never tap real ads on your own device.**
 
 ## Reward / cap reference
 

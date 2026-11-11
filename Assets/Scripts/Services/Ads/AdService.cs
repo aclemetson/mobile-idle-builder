@@ -61,13 +61,27 @@ namespace MobileIdleBuilder
             if (_initStarted) return;
             _initStarted = true;
 
-#if LEVELPLAY_ADS && !UNITY_EDITOR
-            _provider = new LevelPlayAdProvider();
-#else
-            _provider = new MockAdProvider();
-#endif
+            _provider = CreateProvider(FeatureFlags.AdsTestMode);
             _ = InitProviderAsync();
         }
+
+        /// <summary>
+        /// Picks the ad provider once, at startup. Test mode (<c>ads.test_mode</c>, dev builds only) never
+        /// touches an ad network. Otherwise a device build with the LevelPlay SDK shows real ads, and the
+        /// Editor/CI use the instant mock. Changing the flag takes effect on the next launch.
+        /// </summary>
+        internal static IAdProvider CreateProvider(bool testMode)
+        {
+            if (testMode) return new TestAdProvider();
+#if LEVELPLAY_ADS && !UNITY_EDITOR
+            return new LevelPlayAdProvider();
+#else
+            return new MockAdProvider();
+#endif
+        }
+
+        /// <summary>True when ads are fake test ads (no ad network). The UI labels them as test ads.</summary>
+        public bool IsTestMode => _provider is TestAdProvider;
 
         async System.Threading.Tasks.Task InitProviderAsync()
         {
@@ -90,8 +104,8 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Opens the ad network's integration Test Suite (development builds only — the provider only
-        /// enables it under Debug.isDebugBuild). Use it on a device to load/show test rewarded ads and
+        /// Opens the ad network's integration Test Suite (dev builds only: the provider enables it under
+        /// FeatureFlags.IsDevBuild). Use it on a device to load/show test rewarded ads and
         /// verify mediation without registering advertising IDs.
         /// </summary>
         public void LaunchTestSuite()

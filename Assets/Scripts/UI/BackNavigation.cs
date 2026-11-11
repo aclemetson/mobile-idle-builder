@@ -18,6 +18,8 @@ namespace MobileIdleBuilder
             YieldToMode,
             /// <summary>Dialogue is playing: swallow the press, never skip it.</summary>
             SwallowDialogue,
+            /// <summary>The ad test mode card: back skips it (no reward), like dismissing an ad early.</summary>
+            TestAd,
             ConfirmPrompt,
             /// <summary>The Entropy Surge offer card: back closes it like its X (the offer stays).</summary>
             SurgeOffer,
@@ -32,6 +34,7 @@ namespace MobileIdleBuilder
         {
             public bool ModeActiveOrJustEnded;
             public bool DialoguePlaying;
+            public bool TestAdOpen;
             public bool ConfirmOpen;
             public bool SurgeOfferOpen;
             public bool IdleReturnOpen;
@@ -45,6 +48,7 @@ namespace MobileIdleBuilder
         {
             if (s.ModeActiveOrJustEnded) return Layer.YieldToMode;
             if (s.DialoguePlaying)       return Layer.SwallowDialogue;
+            if (s.TestAdOpen)            return Layer.TestAd;
             if (s.ConfirmOpen)           return Layer.ConfirmPrompt;
             if (s.SurgeOfferOpen)        return Layer.SurgeOffer;
             if (s.IdleReturnOpen)        return Layer.IdleReturn;
