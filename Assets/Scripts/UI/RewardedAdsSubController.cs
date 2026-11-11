@@ -51,9 +51,13 @@ namespace MobileIdleBuilder
             _rows.Clear();
             _liveRows.Clear();
 
-            // Development-only: open the LevelPlay Test Suite to verify mediation on a device without
-            // registering advertising IDs. Never present in a release build.
-            if (UnityEngine.Debug.isDebugBuild)
+            var ads = AdService.Instance;
+            bool testMode = ads != null && ads.IsTestMode;
+
+            // Dev builds only: open the LevelPlay Test Suite to verify mediation on a device without
+            // registering advertising IDs. Not compiled into production builds, and hidden in ad test
+            // mode (no ad network is running then).
+            if (FeatureFlags.IsDevBuild && !testMode)
             {
                 var testBtn = new Button { text = "🧪 Launch Ad Test Suite" };
                 testBtn.AddToClassList("craft-btn");
@@ -61,11 +65,12 @@ namespace MobileIdleBuilder
                 _rows.Add(testBtn);
             }
 
-            var ads = AdService.Instance;
             if (_info != null)
             {
                 _info.text = (ads != null && FeatureFlags.AdsEnabled)
-                    ? "Watch a short ad for a bonus. Limited per day."
+                    ? (testMode
+                        ? "TEST ADS: no real ads are shown (ads.test_mode). Limited per day."
+                        : "Watch a short ad for a bonus. Limited per day.")
                     : "Free rewards are currently unavailable.";
             }
 
