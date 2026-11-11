@@ -622,6 +622,25 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ═══ TEST AD (TestAdOverlayController.cs) ═══
+             Dev builds with ads.test_mode on show this card instead of a real ad. Finish = ad watched
+             (reward granted), Skip / back = closed early (no reward). Sits above every other modal, like
+             a full-screen ad would. -->
+        <ui:VisualElement name="test-ad-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 110;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Test Ad" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label text="Ad test mode is on, so no real ad was shown.&#10;Finish to receive the reward, or Skip to close it like an ad dismissed early." class="game-update-message" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="test-ad__skip" text="Skip" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="test-ad__finish" text="Finish" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ═══ CONFIRM PROMPT (destructive actions: remove a building or belt; ConfirmPrompt.cs) ═══ -->
         <ui:VisualElement name="confirm-prompt" class="idle-return-modal blocks-world-input hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 102;">

@@ -49,9 +49,11 @@ namespace MobileIdleBuilder
             // iOS App Tracking Transparency must be requested before SDK init on iOS 14+.
             await AdConsent.RequestIfNeededAsync();
 
-            // Development builds opt into the LevelPlay Test Suite (must be set before Init). Never enabled
-            // in a release build, so production players can't reach it.
-            if (UnityEngine.Debug.isDebugBuild)
+            // Dev builds opt into the LevelPlay Test Suite (must be set before Init). Keyed off the
+            // DEV_ENVIRONMENT compile symbol, not Debug.isDebugBuild: our internal-track builds are
+            // non-debuggable release builds (Play rejects debuggable ones), so isDebugBuild is false there.
+            // Production builds compile without DEV_ENVIRONMENT, so players can't reach the Test Suite.
+            if (FeatureFlags.IsDevBuild)
                 LevelPlay.SetMetaData("is_test_suite", "enable");
 
             // Init can fail when the phone is offline at launch. Retry with backoff rather than giving up

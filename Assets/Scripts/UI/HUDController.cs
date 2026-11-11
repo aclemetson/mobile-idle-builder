@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         private ManagersSubController               _managers;
         private StatsSubController                  _stats;
         private EntropySurgeOfferController         _surgeOffer;
+        private TestAdOverlayController             _testAd;
         private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
         private RewardedAdsSubController            _rewards;
@@ -194,6 +195,7 @@ namespace MobileIdleBuilder
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
+            _testAd       = GetComponent<TestAdOverlayController>() ?? gameObject.AddComponent<TestAdOverlayController>();
         }
 
         void OnEnable()
@@ -512,6 +514,7 @@ namespace MobileIdleBuilder
             _deconstructOverlay = root.Q("deconstruct-overlay");
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
+            _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -2414,6 +2417,7 @@ namespace MobileIdleBuilder
                 ModeActiveOrJustEnded = _placingMode || _conveyorMode || _deconstructMode
                                         || _modeEndedFrame == Time.frameCount,
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
+                TestAdOpen       = _testAd != null && _testAd.IsOpen,
                 ConfirmOpen      = ConfirmPrompt.IsOpen,
                 SurgeOfferOpen   = _surgeOffer != null && _surgeOffer.IsOpen,
                 IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
@@ -2425,6 +2429,7 @@ namespace MobileIdleBuilder
 
             switch (BackNavigation.TopLayer(state))
             {
+                case BackNavigation.Layer.TestAd:        _testAd.Skip();                 break;
                 case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
                 case BackNavigation.Layer.SurgeOffer:    _surgeOffer.Minimize();         break;
                 case BackNavigation.Layer.IdleReturn:    _idleReturn.Close();            break;
