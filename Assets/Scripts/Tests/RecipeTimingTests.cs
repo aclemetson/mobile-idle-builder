@@ -29,15 +29,16 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 1 — Subatomic craft times ───────────────────────────────────
 
         [Test]
-        public void Proton_CraftTime_Is1s()
+        public void Proton_CraftTime_Is2s()
         {
-            Assert.AreEqual(1f, RequireRecipe("proton").base_craft_time, 0.001f);
+            // 2 s: a Lv1 Combiner uses one up quark/s, exactly one Lv1 Harvester (Ignition rebalance).
+            Assert.AreEqual(2f, RequireRecipe("proton").base_craft_time, 0.001f);
         }
 
         [Test]
-        public void Neutron_CraftTime_Is1s()
+        public void Neutron_CraftTime_Is2s()
         {
-            Assert.AreEqual(1f, RequireRecipe("neutron").base_craft_time, 0.001f);
+            Assert.AreEqual(2f, RequireRecipe("neutron").base_craft_time, 0.001f);
         }
 
         // ── Tier 2 — Element craft times (= atomic_mass × 1s for Assembler) ──
@@ -55,11 +56,13 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Deuterium_CraftTime_BeatsHalfAHelium()
+        public void Deuterium_CraftTime_NoSlowerThanHalfAHelium()
         {
-            // Two Deuterium (then one fusion) must take less Atom Generator time than one Helium.
-            Assert.Less(2f * RequireRecipe("assemble_deuterium").base_craft_time,
-                        RequireRecipe("helium_4").base_craft_time);
+            // Two Deuterium (then one fusion) must take no more Atom Generator time than one Helium, so the
+            // tutorial's D + D route is never the worse choice (it also pays a gamma byproduct). Equal since the
+            // Ignition rebalance: Deuterium 2 s, matched to one proton + one neutron Combiner.
+            Assert.LessOrEqual(2f * RequireRecipe("assemble_deuterium").base_craft_time,
+                               RequireRecipe("helium_4").base_craft_time);
         }
 
         [Test]

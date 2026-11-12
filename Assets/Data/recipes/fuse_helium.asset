@@ -29,7 +29,7 @@ MonoBehaviour:
     quantity: 2
   - item: {fileID: 11400000, guid: 448089786c690e04aa8883e0ba514702, type: 2}
     quantity: 2
-  baseCraftTime: 2
+  baseCraftTime: 4
   manualCraftTime: 2
   powerCostIsDynamic: 0
   fixedPowerCostEV: 10

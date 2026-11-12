@@ -150,7 +150,8 @@ namespace MobileIdleBuilder
             // calls above, and regardless of whether the building defines a port layout.
             if (building?.placementRule == PlacementRule.MustBeOnField)
             {
-                float rate = building.baseOutputRate > 0f ? building.baseOutputRate : 1f;
+                // At the building's speed level: a load restores upgraded harvesters at their real rate.
+                float rate = BuildingSO.CollectorRateForLevel(building, speedLevel);
                 _em.AddComponentData(entity, new CollectorData { OutputRate = rate, Timer = 0f });
             }
 
