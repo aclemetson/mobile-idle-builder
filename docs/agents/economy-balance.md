@@ -26,7 +26,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 
 | Placement | Reward | Daily cap |
 |---|---|---|
-| Entropy Boost | 10% of net worth (floor 500e) | 5 |
+| Entropy Boost | 10% of live net worth (`ECSLoadBridge.LiveNetWorth`, floor 500e); the panel previews the amount (`AdService.PreviewEntropyReward`) | 5 |
 | Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
 | +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`, applied in `OfflineCollectionService.GetAdIdleMultiplier`) | 3 |
 | Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
@@ -34,7 +34,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 | Crystal Drop | +25◆ | 1 |
 | Entropy Surge | 10 min of current automation income (`IncomeRateTracker`, 60 s avg; floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
 
-Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
+Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
 > **Remote balance overrides:** any `game_config` scalar (and many per-entity values) can be overridden at runtime via the `GameDataOverrides` remote-config layer without a rebuild (see `feature-flags.md`). When debugging "the number in game ≠ the number in `game_data.json`", check for an active override before assuming the doc/code is wrong.
 
