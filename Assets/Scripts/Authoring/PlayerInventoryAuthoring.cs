@@ -56,6 +56,13 @@ namespace MobileIdleBuilder
                 // Research effect multipliers (Transportation I etc.); ResearchService overwrites on load / unlock.
                 AddComponent(entity, new ResearchEffects { ConveyorSpeedMult = 1f });
 
+                // Items per belt tile (game_config belt_items_per_tile); ConveyorSystem and BeltPrimer read it.
+                AddComponent(entity, new BeltSettings
+                {
+                    ItemsPerTile = BeltSettings.Clamp(authoring.config != null
+                        ? authoring.config.beltItemsPerTile : BeltSettings.DefaultItemsPerTile)
+                });
+
                 // Automation income counter (Statistics panel); not saved.
                 AddComponent(entity, new AutomationIncome { Total = 0 });
 

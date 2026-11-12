@@ -77,6 +77,7 @@ namespace MobileIdleBuilder.Editor
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
         public long   starting_entropy                   = 0;
+        public int    belt_items_per_tile                = 2;
         public float  building_purchase_multiplier_t1       = 1.5f;
         public float  building_purchase_multiplier_t2       = 1.4f;
         public float  building_purchase_multiplier_t3_plus  = 1.3f;

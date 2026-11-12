@@ -16,7 +16,7 @@ namespace MobileIdleBuilder
     /// 2-3 input merge-junction shapes are all built from the same ribbon primitive.
     ///
     /// Item visuals: colored spheres that float on the river, interpolating between a segment's entry
-    /// and exit edge by ConveyorItemData.Progress.
+    /// and exit edge by each ConveyorItem.Progress (several items per tile).
     ///
     /// Call RefreshAll() after placing/removing segments (links may have changed across the whole
     /// graph). Item visuals update every frame in Update().
@@ -36,8 +36,8 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), int> _tailVisualExit = new();
 
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
-        private readonly Dictionary<Entity, GameObject>      _itemSpheres = new();
-        private readonly Dictionary<Entity, int>             _itemSpriteIds = new();   // which item each visual shows
+        private readonly Dictionary<(Entity, int), GameObject> _itemSpheres = new();
+        private readonly Dictionary<(Entity, int), int>       _itemSpriteIds = new();   // which item each visual shows
 
         // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
@@ -77,7 +77,7 @@ namespace MobileIdleBuilder
             );
             _itemQuery = world.EntityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<ConveyorSegmentData>(),
-                ComponentType.ReadOnly<ConveyorItemData>()
+                ComponentType.ReadOnly<ConveyorItem>()
             );
             _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
             _queriesReady = true;
@@ -133,12 +133,23 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
 
         /// <summary>True when a segment's visual was made for a different item than the one now on it (#334).</summary>
-        internal static bool VisualIsStale(IReadOnlyDictionary<Entity, int> shownIds, Entity segment, int itemId) =>
-            !shownIds.TryGetValue(segment, out int shown) || shown != itemId;
+        internal static bool VisualIsStale<TSlot>(IReadOnlyDictionary<TSlot, int> shownIds, TSlot slot, int itemId) =>
+            !shownIds.TryGetValue(slot, out int shown) || shown != itemId;
 
         void Update()
         {
-            if (!_queriesReady || _itemQuery.IsEmpty) return;
+            if (!_queriesReady) return;
+            if (_itemQuery.IsEmpty)
+            {
+                // No belts left: drop any item visuals still showing.
+                if (_itemSpheres.Count > 0)
+                {
+                    foreach (var go in _itemSpheres.Values) if (go) Destroy(go);
+                    _itemSpheres.Clear();
+                    _itemSpriteIds.Clear();
+                }
+                return;
+            }
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated) return;
@@ -147,59 +158,64 @@ namespace MobileIdleBuilder
             var entities = _itemQuery.ToEntityArray(Allocator.Temp);
             float cs     = gridRenderer.CellSize;
 
-            // Track which entities we saw this frame to detect removals
-            var seen = new HashSet<Entity>();
+            // Track which item slots (segment, index in its buffer) we saw this frame to detect removals.
+            // A slot's visual follows whichever item sits in it; position is recomputed every frame.
+            var seen = new HashSet<(Entity, int)>();
 
             for (int i = 0; i < entities.Length; i++)
             {
-                var e    = entities[i];
-                var seg  = em.GetComponentData<ConveyorSegmentData>(e);
-                var item = em.GetComponentData<ConveyorItemData>(e);
-                seen.Add(e);
+                var e     = entities[i];
+                var seg   = em.GetComponentData<ConveyorSegmentData>(e);
+                var items = em.GetBuffer<ConveyorItem>(e, isReadOnly: true);
 
-                // Create the item visual if not yet spawned. Prefer the item's periodic-table
-                // tile sprite as a camera-facing billboard; fall back to a colour-coded sphere
-                // when no icon is available (e.g. in tests without an ItemDatabase).
-                // A segment's item can be swapped in place (one leaves and the next arrives between two visual
-                // updates); the sprite must follow the item, not the segment (#334).
-                if (_itemSpheres.TryGetValue(e, out var sphere) && VisualIsStale(_itemSpriteIds, e, item.ItemID))
+                Vector3 cellCenter = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
+                Vector3 entryEdge  = cellCenter + DirOffset(OppositeDir(seg.EntryDir), cs * 0.45f);
+                int     exitDir    = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                Vector3 exitEdge   = cellCenter + DirOffset(exitDir, cs * 0.45f);
+
+                for (int k = 0; k < items.Length; k++)
                 {
-                    if (sphere) Destroy(sphere);
-                    _itemSpheres.Remove(e);
-                    sphere = null;
-                }
-                if (sphere == null)
-                {
-                    var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
-                    sphere = (icon != null && icon.texture != null)
-                        ? CreateItemTile(gridRenderer.transform, icon.texture)
-                        : CreateItemSphere(gridRenderer.transform, item.ItemID);
-                    _itemSpheres[e] = sphere;
-                    _itemSpriteIds[e] = item.ItemID;
-                }
+                    var item = items[k];
+                    var slot = (e, k);
+                    seen.Add(slot);
 
-                // Animate position: lerp from entry edge to exit edge
-                Vector3 cellCenter  = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
-                Vector3 entryEdge   = cellCenter + DirOffset(OppositeDir(seg.EntryDir), cs * 0.45f);
-                int     exitDir     = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
-                Vector3 exitEdge    = cellCenter + DirOffset(exitDir, cs * 0.45f);
-                float   t           = Mathf.Clamp01(item.Progress);
-                Vector3 pos         = Vector3.Lerp(entryEdge, exitEdge, t);
-                pos.y               = 0.3f;
-                sphere.transform.localPosition = pos;
+                    // Prefer the item's periodic-table tile sprite as a camera-facing billboard; fall back to
+                    // a colour-coded sphere when no icon is available (e.g. in tests without an ItemDatabase).
+                    // The sprite must follow the item, not the slot: items move between slots (#334).
+                    if (_itemSpheres.TryGetValue(slot, out var sphere) && VisualIsStale(_itemSpriteIds, slot, item.ItemID))
+                    {
+                        if (sphere) Destroy(sphere);
+                        _itemSpheres.Remove(slot);
+                        sphere = null;
+                    }
+                    if (sphere == null)
+                    {
+                        var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
+                        sphere = (icon != null && icon.texture != null)
+                            ? CreateItemTile(gridRenderer.transform, icon.texture)
+                            : CreateItemSphere(gridRenderer.transform, item.ItemID);
+                        _itemSpheres[slot]   = sphere;
+                        _itemSpriteIds[slot] = item.ItemID;
+                    }
 
-                // Billboard tile quads to face the camera so the sprite stays readable as the
-                // camera orbits (harmless no-op for the symmetric sphere fallback).
-                if (_cam == null) _cam = Camera.main;
-                if (_cam != null)
-                    sphere.transform.rotation =
-                        Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
+                    // Animate position: lerp from entry edge to exit edge
+                    Vector3 pos = Vector3.Lerp(entryEdge, exitEdge, Mathf.Clamp01(item.Progress));
+                    pos.y       = 0.3f;
+                    sphere.transform.localPosition = pos;
+
+                    // Billboard tile quads to face the camera so the sprite stays readable as the
+                    // camera orbits (harmless no-op for the symmetric sphere fallback).
+                    if (_cam == null) _cam = Camera.main;
+                    if (_cam != null)
+                        sphere.transform.rotation =
+                            Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
+                }
             }
 
             entities.Dispose();
 
-            // Remove spheres for entities that no longer have ConveyorItemData
-            var toRemove = new List<Entity>();
+            // Remove visuals for slots that no longer hold an item
+            var toRemove = new List<(Entity, int)>();
             foreach (var kvp in _itemSpheres)
             {
                 if (!seen.Contains(kvp.Key))
@@ -208,7 +224,7 @@ namespace MobileIdleBuilder
                     toRemove.Add(kvp.Key);
                 }
             }
-            foreach (var e in toRemove) { _itemSpheres.Remove(e); _itemSpriteIds.Remove(e); }
+            foreach (var slot in toRemove) { _itemSpheres.Remove(slot); _itemSpriteIds.Remove(slot); }
         }
 
         // ----------------------------------------------------------------

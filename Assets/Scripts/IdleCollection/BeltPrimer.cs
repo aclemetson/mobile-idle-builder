@@ -13,8 +13,9 @@ namespace MobileIdleBuilder
     /// separately by <see cref="OfflineCollectionService"/> + <see cref="IdleGraphAnalyzer"/>.
     ///
     /// Presentation only: primed items are ordinary cargo — they flow to their sink/inventory through
-    /// the normal <c>ConveyorSystem</c> path. Their count is bounded by belt length (one item per
-    /// cell), so any entropy they add at the sink is negligible next to the offline-earnings payout.
+    /// the normal <c>ConveyorSystem</c> path. Their count is bounded by belt length (at most
+    /// <see cref="BeltSettings.ItemsPerTile"/> per cell), so any entropy they add at the sink is negligible
+    /// next to the offline-earnings payout.
     ///
     /// Called once per cold-boot load from <c>GridSaveService.LoadGrid()</c> after conveyors are
     /// restored. Background→foreground does not reload the grid (belts stay live), so there is no
@@ -23,28 +24,36 @@ namespace MobileIdleBuilder
     public static class BeltPrimer
     {
         /// <summary>
-        /// Pure spacing core (no ECS): returns the ordered segment indices (head = 0 .. tail =
-        /// chainLength-1) that should carry a primed item so the belt reads at the feeding collector's
-        /// steady-state density. At most one item per cell. Empty when the chain is degenerate or
-        /// nothing is being produced.
+        /// Pure spacing core (no ECS): where primed items go so the belt reads at the feeding producer's
+        /// steady-state density. Returns (segment index head = 0 .. tail = chainLength-1, Progress) pairs,
+        /// head first. Items sit one producer interval apart along the belt, but never closer than one
+        /// slot (1 / itemsPerTile tiles), which is how tightly the live belt packs. A gap of a tile or more is
+        /// rounded to whole tiles with each item mid-tile, as a one-item-per-tile belt rests. Empty when the
+        /// chain is degenerate or nothing is being produced.
         /// </summary>
-        public static List<int> ComputeItemPlacements(int chainLength, float effectiveRatePerSec, float transportTime)
+        public static List<(int cell, float progress)> ComputeItemPositions(int chainLength, float effectiveRatePerSec,
+                                                                            float transportTime, int itemsPerTile)
         {
-            var placements = new List<int>();
+            var positions = new List<(int, float)>();
             if (chainLength <= 0 || effectiveRatePerSec <= 0f || transportTime <= 0f)
-                return placements;
+                return positions;
 
-            // The collector deposits one item every `interval` seconds; in that time an item travels
-            // `interval / transportTime` cells. That gap (never less than one cell — a cell holds at
-            // most one item) is the spacing between consecutive items in steady state.
-            float interval     = 1f / effectiveRatePerSec;
-            float spacingCells = interval / transportTime;
-            int   step         = spacingCells <= 1f ? 1 : Mathf.Max(1, Mathf.RoundToInt(spacingCells));
+            // The producer deposits one item every `interval` seconds; in that time an item travels
+            // `interval / transportTime` tiles. That gap, never under one slot, is the steady-state spacing.
+            float slot  = BeltSettings.Spacing(itemsPerTile);
+            float gap   = (1f / effectiveRatePerSec) / transportTime;
+            gap = gap >= 1f ? Mathf.Max(1, Mathf.RoundToInt(gap)) : Mathf.Max(slot, gap);
 
-            for (int i = 0; i < chainLength; i += step)
-                placements.Add(i);
-
-            return placements;
+            // Each item sits mid-way through its own gap (mid-tile when the gap is a whole tile).
+            float first = Mathf.Min(gap, 1f) * 0.5f;
+            for (int k = 0; ; k++)
+            {
+                float x = first + k * gap;
+                int cell = Mathf.FloorToInt(x + 1e-4f);
+                if (cell >= chainLength) break;
+                positions.Add((cell, Mathf.Clamp01(x - cell)));
+            }
+            return positions;
         }
 
         /// <summary>
@@ -57,7 +66,7 @@ namespace MobileIdleBuilder
         public delegate (int itemId, float ratePerSec)? CollectorOutputResolver(int buildingId, int recipeId);
 
         /// <summary>
-        /// Walks every restored conveyor chain and attaches <see cref="ConveyorItemData"/> to its cells
+        /// Walks every restored conveyor chain and puts <see cref="ConveyorItem"/>s on its cells
         /// at steady-state spacing. Returns the number of items placed. Never throws: a null resolver,
         /// empty queries, or a chain with no collector simply yields no priming.
         /// </summary>
@@ -80,6 +89,12 @@ namespace MobileIdleBuilder
                 beltSpeedMult = effectsQuery.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
             effectsQuery.Dispose();
             if (beltSpeedMult <= 0f) beltSpeedMult = 1f;
+
+            int itemsPerTile = BeltSettings.DefaultItemsPerTile;
+            var beltQuery = em.CreateEntityQuery(ComponentType.ReadOnly<BeltSettings>());
+            if (beltQuery.HasSingleton<BeltSettings>())
+                itemsPerTile = BeltSettings.Clamp(beltQuery.GetSingleton<BeltSettings>().ItemsPerTile);
+            beltQuery.Dispose();
 
             var segEntities  = segmentQuery.ToEntityArray(Allocator.Temp);
             var bldgEntities = buildingQuery.ToEntityArray(Allocator.Temp);
@@ -149,17 +164,13 @@ namespace MobileIdleBuilder
 
                 float transportTime = headSeg.TransportTime > 0f ? headSeg.TransportTime : 1f;
                 transportTime /= beltSpeedMult;
-                var placements = ComputeItemPlacements(chain.Count, rate, transportTime);
+                var positions = ComputeItemPositions(chain.Count, rate, transportTime, itemsPerTile);
 
-                foreach (int idx in placements)
+                foreach (var (idx, progress) in positions)
                 {
                     var cell = chain[idx];
-                    if (em.HasComponent<ConveyorItemData>(cell)) continue;   // don't stack two on a cell
-                    em.AddComponentData(cell, new ConveyorItemData
-                    {
-                        ItemID   = output.Value.itemId,
-                        Progress = 0.5f   // the sim's back-pressure rest position — stable on frame 1
-                    });
+                    if (ConveyorItems.Count(em, cell) >= itemsPerTile) continue;   // tile already full
+                    ConveyorItems.Add(em, cell, output.Value.itemId, progress);
                     placed++;
                 }
             }

@@ -25,6 +25,8 @@
     "environment": "Dev",
     "api_base_url": "TODO",
     "starting_entropy": 250,
+    "_comment_belt_items_per_tile": "Items one belt tile holds (1-4). Belt throughput = belt speed (tiles/s, 1 base, raised by ConveyorSpeed research) x this.",
+    "belt_items_per_tile": 2,
     "_comment_purchase_scaling": "Each successive placement of the same building type costs more. Formula: base_cost × multiplier^(n-1) where n = number of buildings of that type already placed.",
     "building_purchase_multiplier_t1": 1.5,
     "building_purchase_multiplier_t2": 1.4,

@@ -105,7 +105,7 @@ namespace MobileIdleBuilder
                     else if (i < count - 1)     exit = TravelDir(path[i], path[i + 1]);
                     else                        exit = TravelDir(path[i - 1], path[i]);
 
-                    e = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
+                    e = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition), typeof(ConveyorItem));
                     _em.SetComponentData(e, new GridPosition { Cell = new int2(cell.x, cell.y) });
                     _em.SetComponentData(e, new ConveyorSegmentData
                     {

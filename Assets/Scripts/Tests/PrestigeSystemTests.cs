@@ -250,14 +250,14 @@ namespace MobileIdleBuilder.Tests
             // items in the new run and be written back into the save.
             var empty  = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
             var loaded = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
-            _em.AddComponentData(loaded, new ConveyorItemData { ItemID = 3, Progress = 0.5f });
+            ConveyorItems.Add(_em, loaded, 3, 0.5f);
 
             _em.SetComponentData(_playerEntity, new PlayerProgressData { PrestigeRequested = true });
             _world.Update();
 
             Assert.IsFalse(_em.Exists(empty),  "empty belt segment must be destroyed on prestige");
             Assert.IsFalse(_em.Exists(loaded), "belt segment carrying an item must be destroyed on prestige");
-            using var items = _em.CreateEntityQuery(typeof(ConveyorItemData));
+            using var items = _em.CreateEntityQuery(typeof(ConveyorItem));
             Assert.AreEqual(0, items.CalculateEntityCount(), "no item may survive on a belt");
         }
 

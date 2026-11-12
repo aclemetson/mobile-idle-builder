@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ecs-patterns.md` (Conveyor rows, `ResearchEffects`),
 `data-pipeline.md` (game_config, importer), `testing.md`.
-**Status:** pending.
+**Status:** done (PR pending).
 **Size:** L. **Branch:** `feat/belt-density` from `integration/2026-11-11`. **Order:** 1 of 4 (the other belt and
 balance tasks assume it).
 
