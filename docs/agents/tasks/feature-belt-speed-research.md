@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `data-pipeline.md` (research `effects`),
 `ecs-patterns.md` (`ResearchEffects`), `economy-balance.md` (research blocks, derived costs), `testing.md`.
-**Status:** pending.
+**Status:** done (PR pending). User chose: warn only (no gating); Transportation II last in Foundations, off-curve (`advances_curve: false`).
 **Size:** M. **Branch:** `feat/belt-speed-research` from `integration/2026-11-11`. **Order:** 4 of 4 (after
 `feature-belt-density.md` and `feature-ignition-rebalance.md`).
 

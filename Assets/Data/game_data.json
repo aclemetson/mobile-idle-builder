@@ -1084,10 +1084,36 @@
       "branch": "Engineering",
       "cost_base_currency": 62400,
       "duration_seconds": 45,
-      "description": "Increases conveyor belt speed by 10%.",
-      "effects": [{ "type": "ConveyorSpeed", "value": 0.10 }],
+      "description": "Doubles conveyor belt speed (2 items/s per belt becomes 4), so Lv3 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 1.0 }
+      ],
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 0,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": 0,
+      "unlocks_research": ["transportation_2"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.0,
+      "codex_entry": "",
+      "icon_path": "TODO",
+      "block": "foundations"
+    },
+    {
+      "id": "transportation_2",
+      "display_name": "Transportation II",
+      "branch": "Engineering",
+      "cost_base_currency": 1090000,
+      "duration_seconds": 90,
+      "description": "Doubles conveyor belt speed again (8 items/s per belt), so Lv4 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 2.0 }
+      ],
+      "prerequisites": ["transportation_1"],
+      "depth_in_tree": 1,
       "cost_prestige_currency": 0,
       "unlocks_items": [],
       "unlocks_recipes": [],
@@ -1098,6 +1124,7 @@
       "prestige_memory_discount": 0.0,
       "codex_entry": "",
       "icon_path": "TODO",
+      "advances_curve": false,
       "block": "foundations"
     }
   ],
