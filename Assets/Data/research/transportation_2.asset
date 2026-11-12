@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: transportation_2
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: transportation_2
+  displayName: Transportation II
+  description: Doubles conveyor belt speed again (8 items/s per belt), so Lv4 buildings
+    can run full.
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
+  depthInTree: 1
+  block: foundations
+  treeX: -1
+  treeY: -1
+  costBaseCurrency: 1090000
+  costPrestigeCurrency: 0
+  durationSeconds: 90
+  fieldCooldownMult: 1
+  effects:
+  - type: 0
+    value: 2
+  unlocksItems: []
+  unlocksRecipes: []
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  prestigeMemoryDiscount: 0
+  codexEntry: 
