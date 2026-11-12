@@ -344,6 +344,9 @@ namespace MobileIdleBuilder
                         for (int i = 0; i < buf.Length; i++) outs.Add((buf[i].ItemID, buf[i].Quantity));
                         foreach (var line in CrafterValueLines(outs, buildingData))
                             AddInspectorRow(_inspectorStatic, line);
+                        // Always present so the 0.5 s rebuild keeps its layout.
+                        var (sold, paid) = SurplusSaleLog.Rate(_inspectorEntity, Time.time);
+                        AddInspectorRow(_inspectorStatic, SurplusLine(sold, paid, SurplusSale.CurrentFraction()));
                     }
                 }
             }
@@ -1205,6 +1208,15 @@ namespace MobileIdleBuilder
             float speed = building.ProductionSpeed * powerRatio * globalSpeed;
             double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
             return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+        }
+
+        /// <summary>
+        /// The inspector's surplus row: what reaches a full input and is sold, and what it pays. Pure (unit-tested).
+        /// </summary>
+        internal static string SurplusLine(float itemsPerSecond, double entropyPerSecond, float fraction)
+        {
+            if (itemsPerSecond <= 0f) return "Surplus: none (inputs keep up)";
+            return $"Selling surplus: {itemsPerSecond:0.##}/s for {entropyPerSecond:0.##} ◈/s ({fraction * 100f:0}% of value)";
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `ecs-patterns.md`, `economy-balance.md`
 (Surplus Brokerage, value readouts, Statistics), `save-system.md` (idle/offline), `testing.md`.
-**Status:** pending.
+**Status:** done (PR pending).
 **Size:** M. **Branch:** `feat/full-input-autosell` from `integration/2026-11-11`. **Order:** independent; can land
 before or after the belt tasks.
 
