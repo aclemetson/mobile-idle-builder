@@ -693,6 +693,15 @@ namespace MobileIdleBuilder
             bd.ProductionSpeed = BuildingSO.ProductionSpeedForLevel(so, nextLevel);
             _em.SetComponentData(entity, bd);
 
+            // Field collectors run on CollectorData.OutputRate, not ProductionSpeed: without this a
+            // Harvester's speed upgrade cost entropy and changed nothing.
+            if (_em.HasComponent<CollectorData>(entity))
+            {
+                var col = _em.GetComponentData<CollectorData>(entity);
+                col.OutputRate = BuildingSO.CollectorRateForLevel(so, nextLevel);
+                _em.SetComponentData(entity, col);
+            }
+
             // Re-bake power values for the new level (generator output/radius, consumer draw).
             if (so.isPowerSource && _em.HasComponent<PowerNodeData>(entity))
             {

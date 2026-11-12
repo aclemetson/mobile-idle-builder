@@ -656,7 +656,9 @@ namespace MobileIdleBuilder
                 getRecipeInfo,
                 SurplusSale.CurrentFraction(),
                 id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
-                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter);
+                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter,
+                bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
+                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

@@ -67,7 +67,8 @@ namespace MobileIdleBuilder
             Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
             float surplusSaleFraction = 0f,
             Func<int, bool> isFilter = null,
-            Func<int, bool> isSplitter = null)
+            Func<int, bool> isSplitter = null,
+            Func<BuildingSaveData, float> getCollectorRate = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -184,7 +185,10 @@ namespace MobileIdleBuilder
                 if (node.IsCollector)
                 {
                     int itemId = getOutputItemId(node.Bsd.buildingId, node.Bsd.recipeId);
-                    float rate = getOutputRate(node.Bsd.buildingId) * eff * Mgr(node);
+                    // Per building when the caller can (speed level), else the type's base rate.
+                    float baseRate = getCollectorRate != null ? getCollectorRate(node.Bsd)
+                                                              : getOutputRate(node.Bsd.buildingId);
+                    float rate = baseRate * eff * Mgr(node);
                     node.OutputItemId = itemId;
                     node.OutputRate   = (itemId >= 0 && rate > 0f) ? rate : 0f;
                     node.Computed     = true;

@@ -2,7 +2,7 @@
 
 **Required reading:** `docs/agents/README.md`, `architecture.md`, `data-pipeline.md`, `economy-balance.md`
 (tutorial anchor, derived economy), `ecs-patterns.md` (collectors), `testing.md`.
-**Status:** pending.
+**Status:** done (PR pending); first-session pacing playtest still to run.
 **Size:** M. **Branch:** `feat/ignition-rebalance` from `integration/2026-11-11`. **Order:** 2 of 4 (after
 `feature-belt-density.md`; the craft times assume belts carry 2 items/s).
 
