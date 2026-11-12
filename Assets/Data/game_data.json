@@ -11970,7 +11970,7 @@
       "_note_purchase": "Bought from the Build menu after field_synthesis. Always placed as a pair (one Harvester per quark flavour). Price = base x multiplier^(pairs bought this run).",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 300,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 2,
       "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a particle, then wait out the field's recharge."
     },
@@ -11986,7 +11986,7 @@
       "field_icon_path": "TODO",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 200,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 1,
       "codex_entry": "A region saturated with free leptons. Tap to collect an Electron, then wait out the field's recharge. Electrons are essential for completing any atom."
     },
