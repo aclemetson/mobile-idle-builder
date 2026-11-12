@@ -31,13 +31,21 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void TransportationI_HasOneConveyorSpeedEffect()
+        public void BeltSpeedTiers_DoubleThenQuadrupleBeltSpeed()
         {
-            var r = _gd.research.First(x => x.id == "transportation_1");
-            Assert.IsNotNull(r.effects);
-            Assert.AreEqual(1, r.effects.Count);
-            Assert.AreEqual("ConveyorSpeed", r.effects[0].type);
-            Assert.AreEqual(0.10f, r.effects[0].value, 1e-6f);
+            // Transportation I lets Lv3 buildings run full (x2), Transportation II Lv4 (x4); effects add up.
+            float Effect(string id)
+            {
+                var r = _gd.research.First(x => x.id == id);
+                Assert.IsNotNull(r.effects, id);
+                Assert.AreEqual(1, r.effects.Count, id);
+                Assert.AreEqual("ConveyorSpeed", r.effects[0].type, id);
+                return r.effects[0].value;
+            }
+            Assert.AreEqual(2f, 1f + Effect("transportation_1"), 1e-6f);
+            Assert.AreEqual(4f, 1f + Effect("transportation_1") + Effect("transportation_2"), 1e-6f);
+            CollectionAssert.Contains(_research["transportation_2"].prerequisites, "transportation_1");
+            Assert.AreEqual("foundations", _research["transportation_2"].block);
         }
 
         [Test]

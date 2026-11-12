@@ -19,8 +19,13 @@ namespace MobileIdleBuilder.Tests
             => Assert.AreEqual(InputDecision.Accept, InputAcceptance.Decide(29, 30, true, true, false));
 
         [Test]
-        public void Recipe_UsedItem_AtCap_NothingNeededBehind_Waits()
-            => Assert.AreEqual(InputDecision.Wait, InputAcceptance.Decide(30, 30, true, true, false));
+        public void Recipe_UsedItem_AtCap_IsSoldAsSurplus()
+            // Full-input autosell: an over-supplied input sells the surplus instead of backing the belt up.
+            => Assert.AreEqual(InputDecision.Overflow, InputAcceptance.Decide(30, 30, true, true, false));
+
+        [Test]
+        public void NoRecipe_AtCap_StillWaits_NothingSoldBeforeTheRecipeIsChosen()
+            => Assert.AreEqual(InputDecision.Wait, InputAcceptance.Decide(30, 30, false, false, false));
 
         [Test]
         public void Recipe_UsedItem_AtCap_NeededItemBehind_Overflows()

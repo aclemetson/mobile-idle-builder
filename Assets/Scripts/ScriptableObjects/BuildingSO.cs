@@ -171,6 +171,21 @@ namespace MobileIdleBuilder
             return 1f;
         }
 
+        /// <summary>
+        /// Items per second a field collector (Harvester, Nucleon Harvester) makes at <paramref name="level"/>:
+        /// <c>base_output_rate</c> at level 1, the level's <c>upgrade_levels.output_rate</c> above it. Used at
+        /// placement, on load, on a speed upgrade and for offline earnings, so all four agree. Never below
+        /// a positive floor (1/s when the data has none), like CollectorSystem.
+        /// </summary>
+        public static float CollectorRateForLevel(BuildingSO so, int level)
+        {
+            float baseRate = so != null && so.baseOutputRate > 0f ? so.baseOutputRate : 1f;
+            if (so == null || level <= 1 || so.upgradeLevels == null) return baseRate;
+            foreach (var u in so.upgradeLevels)
+                if (u.level == level && u.outputRate > 0f) return u.outputRate;
+            return baseRate;
+        }
+
         // ── Power helpers ─────────────────────────────────────────────────
 
         /// <summary>

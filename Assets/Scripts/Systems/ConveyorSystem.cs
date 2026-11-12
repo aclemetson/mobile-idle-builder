@@ -15,9 +15,13 @@ namespace MobileIdleBuilder
     ///
     /// Four passes per frame:
     ///   1. Build cell→entity lookup maps for segments and buildings.
-    ///   2. Advance ConveyorItemData.Progress on every occupied segment.
+    ///   2. Advance every item (<see cref="ConveyorItem"/> buffer, front first) up to the item ahead.
     ///   3. Transfer items: segment→next-segment or segment→building input buffer.
     ///   4. Pull items from building output buffers onto chain-head segments.
+    ///
+    /// A tile holds up to <see cref="BeltSettings.ItemsPerTile"/> items. Items keep
+    /// <see cref="BeltSettings.Spacing"/> tiles apart along the whole chain (across tile edges too), so a
+    /// belt carries speed / spacing items per second and a blocked belt packs at that spacing.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(ProductionSystem))]
@@ -44,6 +48,9 @@ namespace MobileIdleBuilder
             // Research effects (Transportation I etc.): belts move faster by this factor. 1 = no bonus.
             float speedMult = SystemAPI.TryGetSingleton<ResearchEffects>(out var fx) ? fx.ConveyorSpeedMult : 1f;
             if (speedMult <= 0f) speedMult = 1f;
+            int   itemsPerTile = SystemAPI.TryGetSingleton<BeltSettings>(out var bs)
+                ? BeltSettings.Clamp(bs.ItemsPerTile) : BeltSettings.DefaultItemsPerTile;
+            float spacing = BeltSettings.Spacing(itemsPerTile);
             _debugTimer += dt;
             bool debugLog = _debugTimer >= 2f;
             if (debugLog) _debugTimer = 0f;
@@ -53,6 +60,12 @@ namespace MobileIdleBuilder
             // ----------------------------------------------------------------
             var segEntities  = _segmentQuery.ToEntityArray(Allocator.Temp);
             var bldgEntities = _buildingQuery.ToEntityArray(Allocator.Temp);
+
+            // Every segment carries an item buffer (ConveyorPlacer adds it; this covers any made elsewhere).
+            // Structural changes happen here, before any buffer handle is taken.
+            for (int i = 0; i < segEntities.Length; i++)
+                if (!EntityManager.HasBuffer<ConveyorItem>(segEntities[i]))
+                    EntityManager.AddBuffer<ConveyorItem>(segEntities[i]);
 
             var segMap      = new NativeHashMap<int2, Entity>(segEntities.Length  * 2, Allocator.Temp);
             var buildingMap = new NativeHashMap<int2, Entity>(bldgEntities.Length * 4, Allocator.Temp);
@@ -78,45 +91,37 @@ namespace MobileIdleBuilder
             }
 
             // ----------------------------------------------------------------
-            // Pass 2 — Advance item progress (back-pressure aware)
+            // Pass 2 — Advance items (back-pressure aware)
             //
-            // Items advance freely up to 0.5 (visual centre of their segment).
-            // Past 0.5 they only continue if the next step is clear; otherwise
-            // they stop at 0.5 so queued items rest in the middle of each cell
-            // rather than all piling at the exit edge of the last segment.
+            // The front item runs to the hand-off point (1) while the next segment has room, else it
+            // stops one spacing behind that segment's rearmost item. A tail's front item runs to 1 when an
+            // adjacent input takes it now, else it rests mid-slot. Every item behind keeps one spacing
+            // to the item ahead, so queued items pack side by side.
             // ----------------------------------------------------------------
-            for (int i = 0; i < segEntities.Length; i++)
+            // Tails first, so each segment sees where the segment ahead has moved to this frame. Reading a
+            // stale rear costs a frame at every tile edge and the belt runs slow.
+            var tailFirst = TailFirstOrder(segEntities);
+            for (int i = 0; i < tailFirst.Count; i++)
             {
-                var e = segEntities[i];
-                if (!EntityManager.HasComponent<ConveyorItemData>(e)) continue;
+                var e   = tailFirst[i];
+                var buf = EntityManager.GetBuffer<ConveyorItem>(e);
+                if (buf.Length == 0) continue;
 
-                var seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
-                var item = EntityManager.GetComponentData<ConveyorItemData>(e);
+                var   seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                float step = dt * speedMult / seg.TransportTime;
 
-                float newProg = item.Progress + dt * speedMult / seg.TransportTime;
+                float frontLimit = seg.NextSegment != Entity.Null
+                    ? BeltMotion.FrontLimitBehind(Rear(seg.NextSegment), spacing)
+                    : TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
+                        ? BeltMotion.Open : BeltMotion.TailRest(spacing);
 
-                if (newProg >= 0.5f)
+                for (int k = 0; k < buf.Length; k++)
                 {
-                    bool canAdvance;
-
-                    if (seg.NextSegment != Entity.Null)
-                    {
-                        // Mid-chain: clear if the next segment is empty
-                        canAdvance = !EntityManager.HasComponent<ConveyorItemData>(seg.NextSegment);
-                    }
-                    else
-                    {
-                        // Tail: clear if an accepting building input is in any adjacent cell that
-                        // sits in front of the input port — regardless of the belt's exit direction.
-                        canAdvance = TryPickInput(e, seg, item.ItemID, buildingMap, out _, out _, out _);
-                    }
-
-                    if (!canAdvance)
-                        newProg = Mathf.Min(newProg, 0.5f);
+                    var item  = buf[k];
+                    float lim = k == 0 ? frontLimit : buf[k - 1].Progress - spacing;
+                    item.Progress = BeltMotion.Advance(item.Progress, step, lim);
+                    buf[k] = item;
                 }
-
-                item.Progress = Mathf.Min(newProg, 1f);
-                EntityManager.SetComponentData(e, item);
             }
 
             // ----------------------------------------------------------------
@@ -129,22 +134,22 @@ namespace MobileIdleBuilder
             // no branch starves.
             // ----------------------------------------------------------------
             var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
-            var overflows         = new List<(Entity from, int itemID)>();
+            var overflows         = new List<(Entity from, int itemID, Entity bldg)>();
             var mergeTargets      = new HashSet<Entity>();
 
             for (int i = 0; i < segEntities.Length; i++)
             {
                 var e = segEntities[i];
-                if (!EntityManager.HasComponent<ConveyorItemData>(e)) continue;
+                if (!ConveyorItems.Has(EntityManager, e)) continue;
 
                 var seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
-                var item = EntityManager.GetComponentData<ConveyorItemData>(e);
+                var item = ConveyorItems.Front(EntityManager, e);
                 if (item.Progress < 1f) continue;
 
                 if (seg.NextSegment != Entity.Null)
                 {
                     // Defer to the per-target round-robin below (handles single and merge cells alike).
-                    if (!EntityManager.HasComponent<ConveyorItemData>(seg.NextSegment))
+                    if (BeltMotion.HasRoom(Rear(seg.NextSegment), item.Progress - 1f, spacing))
                         mergeTargets.Add(seg.NextSegment);
                     // else: back-pressure — item waits
                 }
@@ -157,7 +162,7 @@ namespace MobileIdleBuilder
                         switch (decision)
                         {
                             case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
-                            case InputDecision.Overflow: overflows.Add((e, item.ItemID));                          break;
+                            case InputDecision.Overflow: overflows.Add((e, item.ItemID, bldg));                    break;
                             // Wait: input full (for this item) or item unused -- it waits on the belt
                         }
                     }
@@ -167,9 +172,9 @@ namespace MobileIdleBuilder
 
             foreach (var (from, bldg, itemID, deliverDir) in buildingDeposits)
             {
-                if (!EntityManager.HasComponent<ConveyorItemData>(from)) continue;
+                if (!FrontIsReady(from, itemID)) continue;
                 SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(bldg), itemID, 1);
-                EntityManager.RemoveComponent<ConveyorItemData>(from);
+                ConveyorItems.RemoveFront(EntityManager, from);
 
                 // Input particle burst toward the building's entry face (the delivery direction,
                 // which may differ from the belt's own exit direction).
@@ -180,17 +185,20 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Jam overflow (#200): the front item was blocking an item the building needs, so it is
-            // sold at the surplus price (#312) and the belt keeps flowing. It used to go to the
-            // inventory, where nothing ever sold it.
+            // Surplus sales: the item reached a full input the recipe uses (full-input autosell), or it was
+            // jamming an item the building needs (#200). Either way it is sold at the surplus price (#312) and
+            // the belt keeps flowing. Each sale is logged per building for the inspector's surplus row.
             if (overflows.Count > 0)
             {
                 float fraction = SurplusSale.CurrentFraction();
-                foreach (var (from, itemID) in overflows)
+                float now      = UnityEngine.Time.time;
+                foreach (var (from, itemID, bldg) in overflows)
                 {
-                    if (!EntityManager.HasComponent<ConveyorItemData>(from)) continue;
-                    _surplusCarry += SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
-                    EntityManager.RemoveComponent<ConveyorItemData>(from);
+                    if (!FrontIsReady(from, itemID)) continue;
+                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
+                    _surplusCarry += value;
+                    SurplusSaleLog.Record(bldg, value, now);
+                    ConveyorItems.RemoveFront(EntityManager, from);
                 }
                 long earned = (long)System.Math.Floor(_surplusCarry);
                 if (earned > 0 && SystemAPI.TryGetSingletonEntity<PlayerProgressData>(out Entity progressEntity))
@@ -206,12 +214,12 @@ namespace MobileIdleBuilder
                         EntityManager.SetComponentData(incomeEnt, income);
                     }
                 }
-                if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sold, paid {earned}");
+                if (debugLog) GameLogger.Develop($"[Conveyor] Surplus: {overflows.Count} item(s) sold, paid {earned}");
             }
 
             foreach (var target in mergeTargets)
             {
-                if (EntityManager.HasComponent<ConveyorItemData>(target)) continue; // already filled
+                float? targetRear = Rear(target);
                 var tSeg = EntityManager.GetComponentData<ConveyorSegmentData>(target);
 
                 // Round-robin over the 4 directions starting at MergeCursor; accept the first inbound
@@ -229,8 +237,10 @@ namespace MobileIdleBuilder
                     if (inData.OutputBlocked) continue;                                         // dead-end: not connected
                     int2 inExitCell = AdjacentCell(inData.Cell, inData.ExitDir);
                     if (inExitCell.x != tSeg.Cell.x || inExitCell.y != tSeg.Cell.y) continue; // not an inbound
-                    if (!EntityManager.HasComponent<ConveyorItemData>(inSeg)) continue;
-                    if (EntityManager.GetComponentData<ConveyorItemData>(inSeg).Progress < 1f) continue;
+                    if (!ConveyorItems.Has(EntityManager, inSeg)) continue;
+                    float frontProgress = ConveyorItems.Front(EntityManager, inSeg).Progress;
+                    if (frontProgress < 1f) continue;
+                    if (!BeltMotion.HasRoom(targetRear, frontProgress - 1f, spacing)) continue;
 
                     chosen    = inSeg;
                     chosenDir = dir;
@@ -240,14 +250,15 @@ namespace MobileIdleBuilder
                 if (chosen == Entity.Null) continue;
 
                 var chosenSeg  = EntityManager.GetComponentData<ConveyorSegmentData>(chosen);
-                var chosenItem = EntityManager.GetComponentData<ConveyorItemData>(chosen);
+                var chosenItem = ConveyorItems.Front(EntityManager, chosen);
 
-                EntityManager.AddComponentData(target, new ConveyorItemData
+                // Joins at the rear, keeping the overshoot so frame timing doesn't cost throughput.
+                EntityManager.GetBuffer<ConveyorItem>(target).Add(new ConveyorItem
                 {
                     ItemID   = chosenItem.ItemID,
                     Progress = Mathf.Max(0f, chosenItem.Progress - 1f)
                 });
-                EntityManager.RemoveComponent<ConveyorItemData>(chosen);
+                ConveyorItems.RemoveFront(EntityManager, chosen);
 
                 // Animate the item from the edge it actually arrived through, and advance the cursor.
                 tSeg.EntryDir    = chosenSeg.ExitDir;
@@ -266,7 +277,7 @@ namespace MobileIdleBuilder
                 var e   = segEntities[i];
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
                 if (!seg.IsChainHead) continue;
-                if (EntityManager.HasComponent<ConveyorItemData>(e)) continue; // occupied
+                if (!BeltMotion.HasRoom(Rear(e), 0f, spacing)) continue; // no room at the entry edge yet
 
                 // Scan all 4 neighbours for a building whose output port faces this segment.
                 // We cannot rely solely on EntryDir because the belt's travel direction may be
@@ -357,14 +368,15 @@ namespace MobileIdleBuilder
 
             foreach (var (head, itemID) in pulls)
             {
-                if (!EntityManager.HasComponent<ConveyorItemData>(head))
+                // Enter exactly one spacing behind the rearmost item (or at the edge of an empty head), so
+                // a full-speed source fills the belt at its rated spacing whatever the frame timing.
+                float? rear = Rear(head);
+                if (!BeltMotion.HasRoom(rear, 0f, spacing)) continue;
+                EntityManager.GetBuffer<ConveyorItem>(head).Add(new ConveyorItem
                 {
-                    EntityManager.AddComponentData(head, new ConveyorItemData
-                    {
-                        ItemID   = itemID,
-                        Progress = 0f
-                    });
-                }
+                    ItemID   = itemID,
+                    Progress = rear == null ? 0f : rear.Value - spacing
+                });
             }
 
             segEntities.Dispose();
@@ -447,7 +459,7 @@ namespace MobileIdleBuilder
 
             var  recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
             bool uses         = InputAcceptance.RecipeUses(recipeInputs, itemID);
-            if (uses && count < cap) return InputDecision.Accept; // common case: skip the belt walk
+            if (uses) return count < cap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
 
             return InputAcceptance.Decide(count, cap, recipeSet: true, uses,
                 NeededItemBehind(tail, recipeInputs, inputBuf));
@@ -460,16 +472,73 @@ namespace MobileIdleBuilder
         private bool NeededItemBehind(Entity tail, DynamicBuffer<RecipeInputSlot> recipeInputs,
                                       DynamicBuffer<BuildingInputSlot> inputBuf)
         {
+            // Items queued behind the front on the tail itself come first.
+            if (EntityManager.HasBuffer<ConveyorItem>(tail))
+            {
+                var own = EntityManager.GetBuffer<ConveyorItem>(tail, isReadOnly: true);
+                for (int k = 1; k < own.Length; k++)
+                    if (InputAcceptance.IsShortOf(recipeInputs, inputBuf, own[k].ItemID)) return true;
+            }
             Entity cur = EntityManager.GetComponentData<ConveyorSegmentData>(tail).PrevSegment;
             for (int n = 0; n < JamLookback && cur != Entity.Null && EntityManager.Exists(cur); n++)
             {
-                if (EntityManager.HasComponent<ConveyorItemData>(cur)
-                    && InputAcceptance.IsShortOf(recipeInputs, inputBuf,
-                           EntityManager.GetComponentData<ConveyorItemData>(cur).ItemID))
-                    return true;
+                if (EntityManager.HasBuffer<ConveyorItem>(cur))
+                {
+                    var items = EntityManager.GetBuffer<ConveyorItem>(cur, isReadOnly: true);
+                    for (int k = 0; k < items.Length; k++)
+                        if (InputAcceptance.IsShortOf(recipeInputs, inputBuf, items[k].ItemID)) return true;
+                }
                 cur = EntityManager.GetComponentData<ConveyorSegmentData>(cur).PrevSegment;
             }
             return false;
+        }
+
+        /// <summary>Segments ordered by how many hops they are from their chain's tail, tails first.</summary>
+        private List<Entity> TailFirstOrder(NativeArray<Entity> segs)
+        {
+            var depth = new Dictionary<Entity, int>(segs.Length);
+            var path  = new List<Entity>();
+            for (int i = 0; i < segs.Length; i++)
+            {
+                path.Clear();
+                Entity cur = segs[i];
+                int known = -1;
+                // Walk forward until a segment with a known depth, the tail, or a loop (guarded).
+                while (cur != Entity.Null && path.Count <= segs.Length)
+                {
+                    if (depth.TryGetValue(cur, out known)) break;
+                    path.Add(cur);
+                    if (!EntityManager.Exists(cur)) { cur = Entity.Null; break; }
+                    cur = EntityManager.GetComponentData<ConveyorSegmentData>(cur).NextSegment;
+                    known = -1;
+                }
+                int d = known; // depth of the first known segment past the path, -1 when the path ended at a tail
+                for (int k = path.Count - 1; k >= 0; k--)
+                {
+                    d++;
+                    if (!depth.ContainsKey(path[k])) depth[path[k]] = d;
+                }
+            }
+            var order = new List<Entity>(segs.Length);
+            for (int i = 0; i < segs.Length; i++) order.Add(segs[i]);
+            order.Sort((a, b) => depth[a].CompareTo(depth[b]));
+            return order;
+        }
+
+        /// <summary>Progress of the rearmost item on <paramref name="seg"/>, or null when it carries none.</summary>
+        private float? Rear(Entity seg)
+        {
+            if (!EntityManager.HasBuffer<ConveyorItem>(seg)) return null;
+            var buf = EntityManager.GetBuffer<ConveyorItem>(seg, isReadOnly: true);
+            return buf.Length == 0 ? null : buf[buf.Length - 1].Progress;
+        }
+
+        /// <summary>True when <paramref name="seg"/>'s front item is still <paramref name="itemID"/> and ready to leave.</summary>
+        private bool FrontIsReady(Entity seg, int itemID)
+        {
+            if (!ConveyorItems.Has(EntityManager, seg)) return false;
+            var front = ConveyorItems.Front(EntityManager, seg);
+            return front.ItemID == itemID && front.Progress >= 1f;
         }
 
         /// <summary>
@@ -488,7 +557,11 @@ namespace MobileIdleBuilder
             building   = Entity.Null;
             deliverDir = -1;
             decision   = InputDecision.Wait;
-            int bestRank = int.MaxValue;
+            // An input that takes the item always beats one that would sell it as surplus: never sell into a
+            // full building while another input beside the tail (including the Demon, at full price) has room.
+            Entity overflowBldg = Entity.Null;
+            int    overflowDir  = -1;
+            int bestAcceptRank = int.MaxValue, bestOverflowRank = int.MaxValue;
             for (int dir = 0; dir < 4; dir++)
             {
                 int2 candidate = AdjacentCell(seg.Cell, dir);
@@ -496,14 +569,27 @@ namespace MobileIdleBuilder
                 if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;
 
                 int rank = TailInputPriority.Rank(dir == seg.ExitDir, EntityManager.HasComponent<EntropySinkTag>(cand));
-                if (rank >= bestRank) continue;
+                if (rank >= bestAcceptRank) continue;
                 var d = DecideDeposit(tail, cand, itemID);
-                if (d == InputDecision.Wait) continue;
-
-                bestRank   = rank;
-                building   = cand;
-                deliverDir = dir;
-                decision   = d;
+                if (d == InputDecision.Accept)
+                {
+                    bestAcceptRank = rank;
+                    building       = cand;
+                    deliverDir     = dir;
+                    decision       = d;
+                }
+                else if (d == InputDecision.Overflow && rank < bestOverflowRank)
+                {
+                    bestOverflowRank = rank;
+                    overflowBldg     = cand;
+                    overflowDir      = dir;
+                }
+            }
+            if (building == Entity.Null && overflowBldg != Entity.Null)
+            {
+                building   = overflowBldg;
+                deliverDir = overflowDir;
+                decision   = InputDecision.Overflow;
             }
             return building != Entity.Null;
         }

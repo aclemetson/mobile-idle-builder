@@ -363,6 +363,10 @@ namespace MobileIdleBuilder
             _progressQuery.SetSingleton(pp);
         }
 
+        /// <summary>Live net worth from the ECS singleton; null before the world is loaded.</summary>
+        public float? LiveNetWorth =>
+            IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().NetWorth : null;
+
         /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
         public void AddPrestigeCurrency(long amount)
         {

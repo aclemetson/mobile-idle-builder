@@ -21,7 +21,7 @@ MonoBehaviour:
   tapCooldownSeconds: 1.5
   purchaseResearchId: field_synthesis
   purchaseCostBase: 200
-  purchaseCostMultiplier: 10
+  purchaseCostMultiplier: 3
   purchaseGroupSize: 1
   fieldColor: {r: 0.30588236, g: 0.8039216, b: 0.76862746, a: 1}
   fieldIcon: {fileID: 0}

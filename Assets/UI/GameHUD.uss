@@ -49,6 +49,15 @@
     -unity-text-align: middle-center;
 }
 
+/* Active-craft strip: same shape as the research strip, purple so the two read apart when both run */
+.craft-status {
+    background-color: rgba(124, 77, 255, 0.14);
+}
+
+.craft-status-label {
+    color: #b39dff;
+}
+
 .inventory-bar {
     flex-direction: row;
     flex-wrap: wrap;

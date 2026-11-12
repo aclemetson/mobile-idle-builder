@@ -49,6 +49,7 @@ namespace MobileIdleBuilder
             public readonly List<int> Incoming = new(); // producer node indices feeding this node
             public int   OutputItemId = -1;
             public float OutputRate;         // items/sec (speed + manager scaled; pre idle-collection-rate)
+            public float CraftsPerSec;       // synthesizers: steady-state crafts/sec (input-limited)
             public bool  Computed;
             public int   OutgoingCount => Outgoing.Count;
         }
@@ -67,7 +68,8 @@ namespace MobileIdleBuilder
             Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
             float surplusSaleFraction = 0f,
             Func<int, bool> isFilter = null,
-            Func<int, bool> isSplitter = null)
+            Func<int, bool> isSplitter = null,
+            Func<BuildingSaveData, float> getCollectorRate = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -184,7 +186,10 @@ namespace MobileIdleBuilder
                 if (node.IsCollector)
                 {
                     int itemId = getOutputItemId(node.Bsd.buildingId, node.Bsd.recipeId);
-                    float rate = getOutputRate(node.Bsd.buildingId) * eff * Mgr(node);
+                    // Per building when the caller can (speed level), else the type's base rate.
+                    float baseRate = getCollectorRate != null ? getCollectorRate(node.Bsd)
+                                                              : getOutputRate(node.Bsd.buildingId);
+                    float rate = baseRate * eff * Mgr(node);
                     node.OutputItemId = itemId;
                     node.OutputRate   = (itemId >= 0 && rate > 0f) ? rate : 0f;
                     node.Computed     = true;
@@ -240,7 +245,22 @@ namespace MobileIdleBuilder
                     bool sink         = to >= 0 && nodes[to].IsSink;
                     bool producingSyn = to >= 0 && nodes[to].Recipe.Valid && !nodes[to].IsSink
                                                 && nodes[to].OutputRate > 0f;
-                    if (producingSyn) continue; // consumed by a synth that will be credited via its own output
+                    if (producingSyn)
+                    {
+                        // Consumed by a synth credited via its own output, except what its recipe can't use at
+                        // steady state: live play sells that at a full input (full-input autosell), so offline does too.
+                        float excess = surplusSaleFraction > 0f
+                            ? ExcessInto(nodes[to], node.OutputItemId, perEdge, nodes) : 0f;
+                        if (excess > 1e-6f)
+                            snapshot.chains.Add(new IdleChainEntry
+                            {
+                                itemId            = node.OutputItemId,
+                                itemsPerSecond    = excess,
+                                endsAtEntropySink = true,
+                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction
+                            });
+                        continue;
+                    }
 
                     bool stuck = to >= 0 && !sink && surplusSaleFraction > 0f;
                     float price = getItemSellValue(node.OutputItemId);
@@ -333,6 +353,32 @@ namespace MobileIdleBuilder
             return -1;
         }
 
+        /// <summary>
+        /// The part of <paramref name="perEdge"/> (one belt's flow of <paramref name="itemId"/> into synth
+        /// <paramref name="synth"/>) that the synth can't use at steady state. 0 for an item its recipe doesn't use.
+        /// When several belts bring the same item, the excess is shared in proportion to their flow.
+        /// </summary>
+        private static float ExcessInto(Node synth, int itemId, float perEdge, Node[] nodes)
+        {
+            var r = synth.Recipe;
+            int qty = 0;
+            for (int k = 0; k < (r.InputItemIds?.Length ?? 0); k++)
+                if (r.InputItemIds[k] == itemId)
+                    qty = r.InputQuantities != null && k < r.InputQuantities.Length ? r.InputQuantities[k] : 1;
+            if (qty <= 0) return 0f;
+
+            float arriving = 0f;
+            foreach (int u in synth.Incoming)
+            {
+                var un = nodes[u];
+                if (un.OutputItemId == itemId && un.OutputRate > 0f && un.OutgoingCount > 0)
+                    arriving += un.OutputRate / un.OutgoingCount;
+            }
+            if (arriving <= 0f) return 0f;
+            float excess = arriving - synth.CraftsPerSec * qty;
+            return excess > 0f ? excess * (perEdge / arriving) : 0f;
+        }
+
         /// <summary>Input-limited output for a synthesizer node: min(craft rate, what its inputs sustain).</summary>
         private static void ComputeSynth(Node node, Node[] nodes, float eff, Func<Node, float> mgr)
         {
@@ -363,6 +409,7 @@ namespace MobileIdleBuilder
 
             int outQty = r.OutputQuantity > 0 ? r.OutputQuantity : 1;
             node.OutputItemId = r.OutputItemId;
+            node.CraftsPerSec = craftsPerSec > 0f ? craftsPerSec : 0f;
             node.OutputRate   = craftsPerSec > 0f ? craftsPerSec * outQty * mgr(node) : 0f;
         }
 

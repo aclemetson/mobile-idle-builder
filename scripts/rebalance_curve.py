@@ -45,10 +45,27 @@ def nice(v):
     return float(math.ceil(v / p - 1e-9) * p)
 
 
+def off_curve(gd):
+    """Research flagged "advances_curve": false (e.g. Transportation II, a belt-speed upgrade) is a side upgrade: it
+    does not move the wage curve, so adding one never reprices every later item and research."""
+    return {r["id"] for r in gd["research"] if r.get("advances_curve") is False}
+
+
+def curve_steps(ids, a, skip):
+    """Wage-curve position of each node in unlock order: n - anchor, not counting off-curve nodes after the anchor."""
+    steps, k = [], 0
+    for n, rid in enumerate(ids):
+        if n > a and rid not in skip:
+            k += 1
+        steps.append(n - a if n <= a else k)
+    return steps
+
+
 def derive(gd):
     order, free, value, items = pc.analyse(gd)
     ids = [o["id"] for o in order]
     a, iron = ids.index(ANCHOR), ids.index(IRON)
+    step = curve_steps(ids, a, off_curve(gd))
     recipes_by_node = {}
     for r in gd["recipes"]:
         recipes_by_node.setdefault(r.get("required_research"), []).append(r)
@@ -72,7 +89,7 @@ def derive(gd):
     for n, node in enumerate(ids):
         pending += recipes_by_node.get(node, [])
         # In the tutorial zone the wage is what the player really earns there, not the curve extrapolated back.
-        w = order[n]["best_rate_before"] if n <= a else wage_at_anchor * WAGE_GROWTH ** (n - a)
+        w = order[n]["best_rate_before"] if n <= a else wage_at_anchor * WAGE_GROWTH ** step[n]
         progress = True
         while progress:
             progress, left = False, []
@@ -104,7 +121,7 @@ def derive(gd):
         gate = r.get("required_research")
         if not r["inputs"] or gate not in ids or ids.index(gate) <= a:
             continue
-        w = wage_at_anchor * WAGE_GROWTH ** (ids.index(gate) - a)
+        w = wage_at_anchor * WAGE_GROWTH ** step[ids.index(gate)]
         t = float(r.get("base_craft_time") or 1.0)
         out = sum(new.get(i, 0) * q for i, q in outs_of(r))
         inp = sum(new.get(i["item"], 0) * i["quantity"] for i in r["inputs"])
@@ -122,7 +139,7 @@ def derive(gd):
         gate = r.get("required_research")
         if r["inputs"] or not gate or gate not in ids or ids.index(gate) <= a:
             continue
-        w = wage_at_anchor * WAGE_GROWTH ** (ids.index(gate) - a)
+        w = wage_at_anchor * WAGE_GROWTH ** step[ids.index(gate)]
         t0 = float(_ORIG_TIME.get(r["id"]) or r.get("base_craft_time") or 1.0)   # against the file, not a prior pass
         need = new.get(r["output_item"], 0) * (r.get("output_quantity") or 1) / w
         if need > t0 * 1.05:
@@ -135,6 +152,7 @@ def costs(gd):
     order, *_ = pc.analyse(gd)
     blocks = {b["id"]: b for b in gd.get("research_blocks") or []}
     research = {r["id"]: r for r in gd["research"]}
+    skip = off_curve(gd)
     by_block = {}
     for n, o in enumerate(order):
         by_block.setdefault(o["block"], []).append(n)
@@ -145,8 +163,11 @@ def costs(gd):
             continue
         budget = float(b["target_hours"]) * 60 * BUILDINGS          # building-minutes
         weights = [BLOCK_RAMP ** k for k in range(len(members))]
+        # Off-curve nodes take the share of their position but are not part of the block's budget, so adding one
+        # leaves every other node's cost where it was (the block runs a little over its target instead).
+        on = sum(w for n, w in zip(members, weights) if order[n]["id"] not in skip)
         for n, w in zip(members, weights):
-            out[order[n]["id"]] = budget * w / sum(weights) * 60 * order[n]["best_rate_before"]
+            out[order[n]["id"]] = budget * w / on * 60 * order[n]["best_rate_before"]
     # A node never costs less than its prerequisites (walk in unlock order so prerequisites are final first).
     final = {}
     for o in order:

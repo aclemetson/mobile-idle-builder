@@ -114,7 +114,7 @@ namespace MobileIdleBuilder.Tests
             return e;
         }
 
-        int ItemOn(Entity seg) => _em.HasComponent<ConveyorItemData>(seg) ? _em.GetComponentData<ConveyorItemData>(seg).ItemID : -1;
+        int ItemOn(Entity seg) => ConveyorItems.Has(_em, seg) ? ConveyorItems.Front(_em, seg).ItemID : -1;
 
         [Test]
         public void MixedInput_EachSideGetsOnlyItsItems()

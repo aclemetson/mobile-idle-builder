@@ -344,6 +344,9 @@ namespace MobileIdleBuilder
                         for (int i = 0; i < buf.Length; i++) outs.Add((buf[i].ItemID, buf[i].Quantity));
                         foreach (var line in CrafterValueLines(outs, buildingData))
                             AddInspectorRow(_inspectorStatic, line);
+                        // Always present so the 0.5 s rebuild keeps its layout.
+                        var (sold, paid) = SurplusSaleLog.Rate(_inspectorEntity, Time.time);
+                        AddInspectorRow(_inspectorStatic, SurplusLine(sold, paid, SurplusSale.CurrentFraction()));
                     }
                 }
             }
@@ -579,6 +582,10 @@ namespace MobileIdleBuilder
                         : $"→ {next.Value.influenceRadiusTiles:0.#} tiles coverage";
                 else
                     descText = $"{next.Value.outputRate:F1}× production speed";
+
+                // Warn when the next level would outrun its belts (it pays off once belt research is done).
+                string beltWarning = NextLevelBeltWarning(entity, so, currentLevel + 1);
+                if (beltWarning != null) descText += "\n" + beltWarning;
             }
 
             int capturedNextLevel = currentLevel + 1;
@@ -586,6 +593,44 @@ namespace MobileIdleBuilder
             AddUpgradeRow(so.isPowerSource ? "Coverage Upgrade" : "Speed Upgrade",
                           currentLevel, maxLevel, isMaxed, descText, next?.costBaseCurrency ?? 0,
                           () => OnSpeedUpgradeBought(entity, so, capturedNextLevel));
+        }
+
+        /// <summary>
+        /// The belt warning for buying <paramref name="nextLevel"/>, or null when belts keep up (or the building
+        /// moves nothing on belts). Collectors need their level's output rate; crafters their busiest input or output.
+        /// </summary>
+        private string NextLevelBeltWarning(Entity entity, BuildingSO so, int nextLevel)
+        {
+            if (!_ecsReady || !_em.Exists(entity) || so.isPowerSource) return null;
+
+            float needed = 0f;
+            if (_em.HasComponent<CollectorData>(entity))
+                needed = BuildingSO.CollectorRateForLevel(so, nextLevel);
+            else if (_em.HasComponent<RecipeProcessData>(entity) && _em.HasBuffer<RecipeInputSlot>(entity))
+            {
+                var process = _em.GetComponentData<RecipeProcessData>(entity);
+                if (process.RecipeID < 0) return null;
+                var ins = _em.GetBuffer<RecipeInputSlot>(entity, isReadOnly: true);
+                var qtys = new List<int>(ins.Length);
+                for (int i = 0; i < ins.Length; i++) qtys.Add(ins[i].Quantity);
+                int outQty = 1;
+                if (_em.HasBuffer<RecipeOutputSlot>(entity))
+                {
+                    var outs = _em.GetBuffer<RecipeOutputSlot>(entity, isReadOnly: true);
+                    if (outs.Length > 0) outQty = outs[0].Quantity;
+                }
+                needed = BeltCapacity.PeakItemsPerSecond(qtys, outQty, process.CraftTime,
+                                                         BuildingSO.ProductionSpeedForLevel(so, nextLevel));
+            }
+            if (needed <= 0f) return null;
+
+            int   itemsPerTile = BeltSettings.DefaultItemsPerTile;
+            float speedMult    = 1f;
+            using (var q = _em.CreateEntityQuery(ComponentType.ReadOnly<BeltSettings>()))
+                if (!q.IsEmpty) itemsPerTile = q.GetSingleton<BeltSettings>().ItemsPerTile;
+            using (var q = _em.CreateEntityQuery(ComponentType.ReadOnly<ResearchEffects>()))
+                if (!q.IsEmpty) speedMult = q.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
+            return BeltCapacity.Warning(needed, nextLevel, itemsPerTile, speedMult);
         }
 
         /// <summary>
@@ -692,6 +737,15 @@ namespace MobileIdleBuilder
             bd.UpgradeLevel    = nextLevel;
             bd.ProductionSpeed = BuildingSO.ProductionSpeedForLevel(so, nextLevel);
             _em.SetComponentData(entity, bd);
+
+            // Field collectors run on CollectorData.OutputRate, not ProductionSpeed: without this a
+            // Harvester's speed upgrade cost entropy and changed nothing.
+            if (_em.HasComponent<CollectorData>(entity))
+            {
+                var col = _em.GetComponentData<CollectorData>(entity);
+                col.OutputRate = BuildingSO.CollectorRateForLevel(so, nextLevel);
+                _em.SetComponentData(entity, col);
+            }
 
             // Re-bake power values for the new level (generator output/radius, consumer draw).
             if (so.isPowerSource && _em.HasComponent<PowerNodeData>(entity))
@@ -1196,6 +1250,15 @@ namespace MobileIdleBuilder
             float speed = building.ProductionSpeed * powerRatio * globalSpeed;
             double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
             return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+        }
+
+        /// <summary>
+        /// The inspector's surplus row: what reaches a full input and is sold, and what it pays. Pure (unit-tested).
+        /// </summary>
+        internal static string SurplusLine(float itemsPerSecond, double entropyPerSecond, float fraction)
+        {
+            if (itemsPerSecond <= 0f) return "Surplus: none (inputs keep up)";
+            return $"Selling surplus: {itemsPerSecond:0.##}/s for {entropyPerSecond:0.##} ◈/s ({fraction * 100f:0}% of value)";
         }
 
         /// <summary>

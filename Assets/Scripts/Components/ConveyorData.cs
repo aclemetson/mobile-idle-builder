@@ -38,13 +38,34 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>
-    /// Added to a segment entity when it is currently carrying an item.
-    /// Removed when the item is handed off to the next segment or deposited into a building.
-    /// Progress 0 = just entered the segment, 1 = ready to hand off.
+    /// One item on a belt segment. Every segment carries a buffer of these, ordered front first
+    /// (index 0 has the highest Progress and leaves first). Progress 0 = entry edge, 1 = ready to hand off.
+    /// Items keep at least <see cref="BeltSettings.Spacing"/> tiles between them along the whole chain, so
+    /// a tile holds up to <see cref="BeltSettings.ItemsPerTile"/> items and a blocked belt packs at that spacing.
     /// </summary>
-    public struct ConveyorItemData : IComponentData
+    [InternalBufferCapacity(4)]
+    public struct ConveyorItem : IBufferElementData
     {
         public int   ItemID;
         public float Progress; // 0..1
+    }
+
+    /// <summary>
+    /// How many items fit on one belt tile (game_config <c>belt_items_per_tile</c>, default 2). Belt
+    /// throughput is belt speed (tiles/s) x ItemsPerTile. Singleton baked in <c>PlayerInventoryAuthoring</c>;
+    /// systems fall back to <see cref="DefaultItemsPerTile"/> when it is absent (tests).
+    /// </summary>
+    public struct BeltSettings : IComponentData
+    {
+        public const int DefaultItemsPerTile = 2;
+        public const int MaxItemsPerTile     = 4;
+
+        public int ItemsPerTile;
+
+        public static int Clamp(int itemsPerTile) =>
+            itemsPerTile < 1 ? 1 : itemsPerTile > MaxItemsPerTile ? MaxItemsPerTile : itemsPerTile;
+
+        /// <summary>Minimum distance between two items, in tiles.</summary>
+        public static float Spacing(int itemsPerTile) => 1f / Clamp(itemsPerTile);
     }
 }

@@ -25,11 +25,13 @@
     "environment": "Dev",
     "api_base_url": "TODO",
     "starting_entropy": 250,
+    "_comment_belt_items_per_tile": "Items one belt tile holds (1-4). Belt throughput = belt speed (tiles/s, 1 base, raised by ConveyorSpeed research) x this.",
+    "belt_items_per_tile": 2,
     "_comment_purchase_scaling": "Each successive placement of the same building type costs more. Formula: base_cost × multiplier^(n-1) where n = number of buildings of that type already placed.",
     "building_purchase_multiplier_t1": 1.5,
     "building_purchase_multiplier_t2": 1.4,
     "building_purchase_multiplier_t3_plus": 1.3,
-    "_reserved_research_ids": ["place_extras_in_inventory", "sell_excess_inputs"]
+    "_reserved_research_ids": ["place_extras_in_inventory"]
   },
 
   "tiers": [
@@ -1082,10 +1084,36 @@
       "branch": "Engineering",
       "cost_base_currency": 62400,
       "duration_seconds": 45,
-      "description": "Increases conveyor belt speed by 10%.",
-      "effects": [{ "type": "ConveyorSpeed", "value": 0.10 }],
+      "description": "Doubles conveyor belt speed (2 items/s per belt becomes 4), so Lv3 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 1.0 }
+      ],
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 0,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": 0,
+      "unlocks_research": ["transportation_2"],
+      "resets_on_prestige": true,
+      "prestige_memory_discount": 0.0,
+      "codex_entry": "",
+      "icon_path": "TODO",
+      "block": "foundations"
+    },
+    {
+      "id": "transportation_2",
+      "display_name": "Transportation II",
+      "branch": "Engineering",
+      "cost_base_currency": 1090000,
+      "duration_seconds": 90,
+      "description": "Doubles conveyor belt speed again (8 items/s per belt), so Lv4 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 2.0 }
+      ],
+      "prerequisites": ["transportation_1"],
+      "depth_in_tree": 1,
       "cost_prestige_currency": 0,
       "unlocks_items": [],
       "unlocks_recipes": [],
@@ -1096,6 +1124,7 @@
       "prestige_memory_discount": 0.0,
       "codex_entry": "",
       "icon_path": "TODO",
+      "advances_curve": false,
       "block": "foundations"
     }
   ],
@@ -5754,7 +5783,7 @@
       "output_item": "proton",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.0,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 0.0,
@@ -5780,7 +5809,7 @@
       "output_item": "neutron",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.0,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 0.0,
@@ -5863,7 +5892,7 @@
       "output_item": "deuterium",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.5,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.5,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 10.0,
@@ -7257,7 +7286,7 @@
         { "item": "neutrino", "quantity": 2 },
         { "item": "gamma_photon", "quantity": 2 }
       ],
-      "base_craft_time": 2.0,
+      "base_craft_time": 4.0,
       "manual_craft_time": 2.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 10.0,
@@ -7592,7 +7621,7 @@
       "byproducts": [
         { "item": "gamma_photon", "quantity": 1 }
       ],
-      "base_craft_time": 1.0,
+      "base_craft_time": 4.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 5.0,
@@ -11970,7 +11999,7 @@
       "_note_purchase": "Bought from the Build menu after field_synthesis. Always placed as a pair (one Harvester per quark flavour). Price = base x multiplier^(pairs bought this run).",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 300,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 2,
       "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a particle, then wait out the field's recharge."
     },
@@ -11986,7 +12015,7 @@
       "field_icon_path": "TODO",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 200,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 1,
       "codex_entry": "A region saturated with free leptons. Tap to collect an Electron, then wait out the field's recharge. Electrons are essential for completing any atom."
     },

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: transportation_1
   displayName: Transportation I
-  description: Increases conveyor belt speed by 10%.
+  description: Doubles conveyor belt speed (2 items/s per belt becomes 4), so Lv3
+    buildings can run full.
   icon: {fileID: 0}
   branch: 3
   prerequisites:
@@ -29,12 +30,13 @@ MonoBehaviour:
   fieldCooldownMult: 1
   effects:
   - type: 0
-    value: 0.1
+    value: 1
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0
   codexEntry: 

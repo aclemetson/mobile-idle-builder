@@ -167,6 +167,14 @@ namespace MobileIdleBuilder
             SaveManager.Instance.SaveLocal();
         }
 
+        /// <summary>
+        /// What Entropy Boost would pay right now: 10% of the live net worth (the save's snapshot only
+        /// refreshes on save, so it lags and the panel preview would not match the grant).
+        /// </summary>
+        public long PreviewEntropyReward() =>
+            AdRewardCalculator.CalcEntropyReward(
+                ECSLoadBridge.Instance?.LiveNetWorth ?? SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f);
+
         /// <summary>What an income-minutes placement (Entropy Surge) would pay right now.</summary>
         public long PreviewIncomeReward(AdPlacement p) =>
             AdRewardCalculator.CalcIncomeReward(p, IncomeRateTracker.Current?.PerSecond ?? 0d);
@@ -266,7 +274,7 @@ namespace MobileIdleBuilder
             {
                 case AdRewardKind.Entropy:
                 {
-                    long amount = AdRewardCalculator.CalcEntropyReward(save.lastKnownNetWorth);
+                    long amount = PreviewEntropyReward();
                     save.currentRun.baseCurrency += amount;
                     ApplyEntropyToECS(amount);
                     message = $"+{amount:N0} entropy";

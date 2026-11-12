@@ -40,7 +40,7 @@ namespace MobileIdleBuilder
             if (_panel == null)
                 GameLogger.Warning("[Ads] rewards-panel not found in GameHUD.uxml — Free Rewards panel will not display.");
 
-            // Once a second: tick the Entropy Surge countdown and its reward preview (income moves).
+            // Once a second: tick the cooldown countdowns and the entropy reward previews (income and net worth move).
             _rows?.schedule.Execute(UpdateLiveRows).Every(1000);
         }
 
@@ -96,7 +96,7 @@ namespace MobileIdleBuilder
                 watchBtn.AddToClassList("craft-btn");
                 watchBtn.SetEnabled(canWatch);
 
-                if (def.Kind == AdRewardKind.IncomeMinutes || def.CooldownMinutes > 0f)
+                if (def.Kind == AdRewardKind.IncomeMinutes || def.Kind == AdRewardKind.Entropy || def.CooldownMinutes > 0f)
                 {
                     _liveRows.Add((placement, descLabel, watchBtn));
                     ApplyLiveText(placement, descLabel, watchBtn);
@@ -124,9 +124,14 @@ namespace MobileIdleBuilder
             int remaining = ads?.Remaining(placement) ?? 0;
             var cooldown  = ads?.CooldownRemaining(placement) ?? System.TimeSpan.Zero;
 
-            string reward = def.Kind == AdRewardKind.IncomeMinutes && ads != null
-                ? $"+{NumberFormat.Compact(ads.PreviewIncomeReward(placement))} entropy ({def.IncomeMinutes:0} min of income)"
-                : def.Description;
+            string reward = def.Kind switch
+            {
+                AdRewardKind.IncomeMinutes when ads != null =>
+                    $"+{NumberFormat.Compact(ads.PreviewIncomeReward(placement))} entropy ({def.IncomeMinutes:0} min of income)",
+                AdRewardKind.Entropy when ads != null =>
+                    $"+{NumberFormat.Compact(ads.PreviewEntropyReward())} entropy ({def.NetWorthFraction * 100f:0}% of net worth, min {NumberFormat.Compact(def.MinimumFloor)})",
+                _ => def.Description,
+            };
             desc.text = $"{reward}   ({remaining}/{def.DailyCap} left today)";
 
             if (remaining <= 0)                  btn.text = "Maxed";
