@@ -90,11 +90,31 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void PlacementsWithoutCooldown_AreNeverOnCooldown()
+        public void EveryOtherPlacement_HasTheStandardFiveMinuteCooldown()
+        {
+            foreach (var def in AdRewardCalculator.Placements)
+            {
+                if (def.Placement == AdPlacement.EntropySurge) continue;
+                Assert.AreEqual(AdRewardCalculator.StandardCooldownMinutes, def.CooldownMinutes, def.Name);
+            }
+            Assert.AreEqual(5f, AdRewardCalculator.StandardCooldownMinutes);
+        }
+
+        [Test]
+        public void EntropyBoost_IsReadyAgainFiveMinutesAfterAWatch()
         {
             var save = new SaveData();
             AdRewardCalculator.RecordWatch(save, AdPlacement.EntropyBoost, Noon);
-            Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropyBoost, Noon));
+            Assert.IsTrue(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropyBoost, Noon.AddMinutes(4)));
+            Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropyBoost, Noon.AddMinutes(5)));
+        }
+
+        [Test]
+        public void Cooldowns_ArePerPlacement()
+        {
+            var save = new SaveData();
+            AdRewardCalculator.RecordWatch(save, AdPlacement.EntropyBoost, Noon);
+            Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.TimeWarp, Noon));
         }
 
         [Test]

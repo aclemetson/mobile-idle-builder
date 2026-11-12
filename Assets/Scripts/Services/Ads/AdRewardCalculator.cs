@@ -53,6 +53,9 @@ namespace MobileIdleBuilder
         /// <summary>Multiplier applied to the offline collection rate while the idle-rate boost is active.</summary>
         public const float IdleRateBoostMultiplier = 1.5f;
 
+        /// <summary>Time between two watches of any placement without its own cooldown (Entropy Surge has 15 min).</summary>
+        public const float StandardCooldownMinutes = 5f;
+
         /// <summary>2x production window granted by the SpeedBoost placement (reuses speed-boost expiry).</summary>
         public static readonly TimeSpan SpeedBoostDuration = TimeSpan.FromMinutes(30);
 
@@ -61,33 +64,33 @@ namespace MobileIdleBuilder
         {
             new AdPlacementDef {
                 Placement = AdPlacement.EntropyBoost, Kind = AdRewardKind.Entropy,
-                Name = "Entropy Boost", Description = "Watch an ad for a burst of entropy.",
-                DailyCap = 5, NetWorthFraction = 0.10f, MinimumFloor = 500,
+                Name = "Entropy Boost", Description = "Watch an ad for 10% of your net worth in entropy.",
+                DailyCap = 5, NetWorthFraction = 0.10f, MinimumFloor = 500, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.DoubleOffline, Kind = AdRewardKind.DoubleOffline,
                 Name = "Double Offline", Description = "Watch an ad to double your offline earnings.",
-                DailyCap = 3,
+                DailyCap = 3, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.IdleRateBoost, Kind = AdRewardKind.IdleRateBoost,
                 Name = "+50% Idle", Description = "+50% offline collection rate for 4 hours.",
-                DailyCap = 3, DurationHours = 4f,
+                DailyCap = 3, DurationHours = 4f, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.SpeedBoost, Kind = AdRewardKind.SpeedBoost,
                 Name = "Production Surge", Description = "2x production for 30 minutes.",
-                DailyCap = 2,
+                DailyCap = 2, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.TimeWarp, Kind = AdRewardKind.TimeWarp,
                 Name = "Time Warp", Description = "Instantly bank 1 hour of production.",
-                DailyCap = 2, DurationHours = 1f,
+                DailyCap = 2, DurationHours = 1f, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.Crystals, Kind = AdRewardKind.Crystals,
                 Name = "Crystal Drop", Description = "Watch an ad for a few crystals.",
-                DailyCap = 1, CrystalAmount = 25,
+                DailyCap = 1, CrystalAmount = 25, CooldownMinutes = StandardCooldownMinutes,
             },
             // Paced for the post-prestige lull (docs/balance/prestige-pacing.xlsx, Ads sheet): pays a fixed
             // slice of time at every stage instead of a % of net worth, which grows with run length.
