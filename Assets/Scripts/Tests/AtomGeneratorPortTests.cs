@@ -80,7 +80,7 @@ namespace MobileIdleBuilder.Tests
                 NextSegment = Entity.Null, PrevSegment = Entity.Null,
                 TransportTime = 1f, IsChainHead = true
             });
-            _em.AddComponentData(e, new ConveyorItemData { ItemID = ItemId, Progress = 1f });
+            ConveyorItems.Add(_em, e, ItemId, 1f);
         }
 
         private int Delivered(Entity building)

@@ -100,8 +100,8 @@ namespace MobileIdleBuilder.Tests
             return e;
         }
 
-        bool HasItem(Entity seg) => _em.HasComponent<ConveyorItemData>(seg);
-        void Clear(Entity seg) { if (HasItem(seg)) _em.RemoveComponent<ConveyorItemData>(seg); }
+        bool HasItem(Entity seg) => ConveyorItems.Has(_em, seg);
+        void Clear(Entity seg) { if (HasItem(seg)) ConveyorItems.Clear(_em, seg); }
 
         [Test]
         public void TwoWay_AlternatesBetweenLeftAndRight()
@@ -146,7 +146,7 @@ namespace MobileIdleBuilder.Tests
 
             // East's belt stays full: the others keep flowing instead of the splitter stalling.
             SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(splitter), Proton, 4);
-            _em.AddComponentData(east, new ConveyorItemData { ItemID = Proton, Progress = 0f });
+            ConveyorItems.Add(_em, east, Proton, 0f);
             int others = 0;
             for (int t = 0; t < 4; t++)
             {

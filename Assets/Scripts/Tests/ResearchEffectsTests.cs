@@ -67,11 +67,11 @@ namespace MobileIdleBuilder.Tests
                     NextSegment = Entity.Null, PrevSegment = Entity.Null,
                     TransportTime = 1f, IsChainHead = true
                 });
-                em.AddComponentData(seg, new ConveyorItemData { ItemID = 7, Progress = 0f });
+                ConveyorItems.Add(em, seg, 7, 0f);
 
                 world.SetTime(new TimeData(elapsedTime: 0, deltaTime: 0.25f));
                 world.Update();
-                return em.GetComponentData<ConveyorItemData>(seg).Progress;
+                return ConveyorItems.Front(em, seg).Progress;
             }
             finally
             {

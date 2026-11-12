@@ -63,9 +63,9 @@ namespace MobileIdleBuilder.Tests
         }
 
         private void PutItem(Entity e, float progress = 1f) =>
-            _em.AddComponentData(e, new ConveyorItemData { ItemID = ItemId, Progress = progress });
+            ConveyorItems.Add(_em, e, ItemId, progress);
 
-        private bool HasItem(Entity e) => _em.HasComponent<ConveyorItemData>(e);
+        private bool HasItem(Entity e) => ConveyorItems.Has(_em, e);
 
         // ── Two inbounds alternate (round-robin) ─────────────────────────────
 
@@ -87,7 +87,7 @@ namespace MobileIdleBuilder.Tests
                 "the merge cursor advanced past the branch it served");
 
             // Drain the merge cell and re-arm the served branch; the OTHER branch must go next.
-            _em.RemoveComponent<ConveyorItemData>(merge);
+            ConveyorItems.Clear(_em, merge);
             PutItem(north);
 
             Tick();

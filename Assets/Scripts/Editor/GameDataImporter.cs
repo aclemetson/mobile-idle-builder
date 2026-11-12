@@ -286,6 +286,7 @@ namespace MobileIdleBuilder.Editor
             so.alphaParticleEVValue               = data.alpha_particle_ev_value;
             so.betaParticleEVValue                = data.beta_particle_ev_value;
             so.startingEntropy                    = data.starting_entropy;
+            so.beltItemsPerTile                   = BeltSettings.Clamp(data.belt_items_per_tile);
             so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
             so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
             so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
