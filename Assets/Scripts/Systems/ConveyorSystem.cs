@@ -134,7 +134,7 @@ namespace MobileIdleBuilder
             // no branch starves.
             // ----------------------------------------------------------------
             var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
-            var overflows         = new List<(Entity from, int itemID)>();
+            var overflows         = new List<(Entity from, int itemID, Entity bldg)>();
             var mergeTargets      = new HashSet<Entity>();
 
             for (int i = 0; i < segEntities.Length; i++)
@@ -162,7 +162,7 @@ namespace MobileIdleBuilder
                         switch (decision)
                         {
                             case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
-                            case InputDecision.Overflow: overflows.Add((e, item.ItemID));                          break;
+                            case InputDecision.Overflow: overflows.Add((e, item.ItemID, bldg));                    break;
                             // Wait: input full (for this item) or item unused -- it waits on the belt
                         }
                     }
@@ -185,16 +185,19 @@ namespace MobileIdleBuilder
                 }
             }
 
-            // Jam overflow (#200): the front item was blocking an item the building needs, so it is
-            // sold at the surplus price (#312) and the belt keeps flowing. It used to go to the
-            // inventory, where nothing ever sold it.
+            // Surplus sales: the item reached a full input the recipe uses (full-input autosell), or it was
+            // jamming an item the building needs (#200). Either way it is sold at the surplus price (#312) and
+            // the belt keeps flowing. Each sale is logged per building for the inspector's surplus row.
             if (overflows.Count > 0)
             {
                 float fraction = SurplusSale.CurrentFraction();
-                foreach (var (from, itemID) in overflows)
+                float now      = UnityEngine.Time.time;
+                foreach (var (from, itemID, bldg) in overflows)
                 {
                     if (!FrontIsReady(from, itemID)) continue;
-                    _surplusCarry += SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
+                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
+                    _surplusCarry += value;
+                    SurplusSaleLog.Record(bldg, value, now);
                     ConveyorItems.RemoveFront(EntityManager, from);
                 }
                 long earned = (long)System.Math.Floor(_surplusCarry);
@@ -211,7 +214,7 @@ namespace MobileIdleBuilder
                         EntityManager.SetComponentData(incomeEnt, income);
                     }
                 }
-                if (debugLog) GameLogger.Develop($"[Conveyor] Jam overflow: {overflows.Count} item(s) sold, paid {earned}");
+                if (debugLog) GameLogger.Develop($"[Conveyor] Surplus: {overflows.Count} item(s) sold, paid {earned}");
             }
 
             foreach (var target in mergeTargets)
@@ -456,7 +459,7 @@ namespace MobileIdleBuilder
 
             var  recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
             bool uses         = InputAcceptance.RecipeUses(recipeInputs, itemID);
-            if (uses && count < cap) return InputDecision.Accept; // common case: skip the belt walk
+            if (uses) return count < cap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
 
             return InputAcceptance.Decide(count, cap, recipeSet: true, uses,
                 NeededItemBehind(tail, recipeInputs, inputBuf));
@@ -554,7 +557,11 @@ namespace MobileIdleBuilder
             building   = Entity.Null;
             deliverDir = -1;
             decision   = InputDecision.Wait;
-            int bestRank = int.MaxValue;
+            // An input that takes the item always beats one that would sell it as surplus: never sell into a
+            // full building while another input beside the tail (including the Demon, at full price) has room.
+            Entity overflowBldg = Entity.Null;
+            int    overflowDir  = -1;
+            int bestAcceptRank = int.MaxValue, bestOverflowRank = int.MaxValue;
             for (int dir = 0; dir < 4; dir++)
             {
                 int2 candidate = AdjacentCell(seg.Cell, dir);
@@ -562,14 +569,27 @@ namespace MobileIdleBuilder
                 if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;
 
                 int rank = TailInputPriority.Rank(dir == seg.ExitDir, EntityManager.HasComponent<EntropySinkTag>(cand));
-                if (rank >= bestRank) continue;
+                if (rank >= bestAcceptRank) continue;
                 var d = DecideDeposit(tail, cand, itemID);
-                if (d == InputDecision.Wait) continue;
-
-                bestRank   = rank;
-                building   = cand;
-                deliverDir = dir;
-                decision   = d;
+                if (d == InputDecision.Accept)
+                {
+                    bestAcceptRank = rank;
+                    building       = cand;
+                    deliverDir     = dir;
+                    decision       = d;
+                }
+                else if (d == InputDecision.Overflow && rank < bestOverflowRank)
+                {
+                    bestOverflowRank = rank;
+                    overflowBldg     = cand;
+                    overflowDir      = dir;
+                }
+            }
+            if (building == Entity.Null && overflowBldg != Entity.Null)
+            {
+                building   = overflowBldg;
+                deliverDir = overflowDir;
+                decision   = InputDecision.Overflow;
             }
             return building != Entity.Null;
         }

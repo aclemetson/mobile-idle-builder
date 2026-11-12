@@ -31,7 +31,7 @@
     "building_purchase_multiplier_t1": 1.5,
     "building_purchase_multiplier_t2": 1.4,
     "building_purchase_multiplier_t3_plus": 1.3,
-    "_reserved_research_ids": ["place_extras_in_inventory", "sell_excess_inputs"]
+    "_reserved_research_ids": ["place_extras_in_inventory"]
   },
 
   "tiers": [

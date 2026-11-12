@@ -9,7 +9,7 @@ namespace MobileIdleBuilder
         Wait,
         /// <summary>Take it into the building's input buffer.</summary>
         Accept,
-        /// <summary>Take it off the belt and sell it at the surplus price (it was jamming the belt, #312).</summary>
+        /// <summary>Take it off the belt and sell it at the surplus price (a full input, or a jam: #312).</summary>
         Overflow,
     }
 
@@ -35,14 +35,17 @@ namespace MobileIdleBuilder
     /// one fast input fill the whole buffer and lock the other out, stalling e.g. a proton Combiner
     /// fed by separate up/down quark belts.</item>
     /// <item><b>Recipe filter.</b> Once a recipe is set, items it does not use are not taken in.</item>
-    /// <item><b>Jam overflow.</b> A belt carrying several item types can jam when its front item cannot
-    /// be taken (full or unused) while an item the recipe is short of sits behind it. Only then is the
-    /// front item sold at the surplus price (<see cref="SurplusSale"/>) so the belt keeps flowing. A belt
-    /// carrying one item type never overflows, it just backs up.</item>
+    /// <item><b>Full-input autosell.</b> An item the recipe uses that arrives when that item's buffer is at
+    /// its cap is taken and sold at the surplus price (<see cref="SurplusSale"/>: 50%, raised by the Surplus
+    /// Brokerage prestige upgrade), so the belt keeps moving and an over-supplied line still earns instead
+    /// of stalling its producers.</item>
+    /// <item><b>Jam overflow.</b> An item the recipe does NOT use waits on the belt (a wrong belt stays
+    /// visible), unless an item the recipe is short of sits behind it; only then is the front item sold
+    /// so the belt keeps flowing (#200, #312).</item>
     /// </list>
     ///
     /// Buildings without a recipe (RecipeID &lt; 0, e.g. before the player picks one) only apply the
-    /// per-item cap and never overflow.
+    /// per-item cap and never overflow, so nothing is sold before the player chooses.
     /// </summary>
     public static class InputAcceptance
     {
@@ -57,7 +60,8 @@ namespace MobileIdleBuilder
         {
             bool usable = !recipeSet || recipeUsesItem;
             if (usable && countOfItem < perItemCap) return InputDecision.Accept;
-            if (recipeSet && neededItemBehind)      return InputDecision.Overflow;
+            if (recipeSet && recipeUsesItem)        return InputDecision.Overflow; // full input: sell the surplus
+            if (recipeSet && neededItemBehind)      return InputDecision.Overflow; // unused item jamming a needed one
             return InputDecision.Wait;
         }
 

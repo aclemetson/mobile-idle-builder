@@ -278,21 +278,45 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void SingleItemBelt_AtCap_BacksUp_NoOverflow()
+        public void SingleItemBelt_AtCap_SellsTheSurplus_BeltKeepsMoving()
         {
-            // Separate belts per input must keep normal back-pressure: nothing needed is behind.
+            // Full-input autosell: a down-quark belt into a Combiner whose down quarks are at their cap sells the
+            // extra at the surplus price instead of backing up and stalling the harvester.
             var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
             SetProtonRecipe(building);
             SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
             var inventory = CreatePlayerInventory();
+            var progress  = _em.CreateEntity();
+            _em.AddComponentData(progress, new PlayerProgressData { BaseCurrency = 100 });
 
             var upstream = CreateUpstream(new int2(-1, 0), DownQuark);
             var tail     = CreateTail(new int2(0, 0), East, DownQuark, upstream);
 
             Tick();
 
-            Assert.IsTrue(ConveyorItems.Has(_em, tail), "Same-item belt just backs up");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail), "the surplus item leaves the belt");
+            Assert.AreEqual(30, CountIn(building, DownQuark), "the buffer stays at its cap");
             Assert.AreEqual(0, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark));
+            // 1e at 50% is 0.5e: carried until a whole entropy is earned.
+            Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
+
+        [Test]
+        public void FullInput_NextToAnInputWithRoom_FeedsThatInputInstead()
+        {
+            // The tail points at a full Combiner, and another Combiner with room sits beside it.
+            // The item must go where it can be used, not be sold.
+            var full = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(full);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(full), DownQuark, 30);
+            var room = CreateBuildingWithInput(new int2(0, 1), North, inputCapacity: 30);
+            SetProtonRecipe(room);
+            CreateTail(new int2(0, 0), East, DownQuark, Entity.Null);
+
+            Tick();
+
+            Assert.AreEqual(1, CountIn(room, DownQuark), "the input with room gets the item");
+            Assert.AreEqual(30, CountIn(full, DownQuark));
         }
     }
 }

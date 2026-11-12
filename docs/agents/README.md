@@ -48,7 +48,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-stats-panel.md` - Statistics menu: automation income/s and idle projection | done (PR pending) | M |
 | `tasks/feature-belt-density.md` - 2 items per belt tile (game_config, adjustable); belts carry 2/s instead of 0.66/s | done (PR pending) | L |
 | `tasks/feature-ignition-rebalance.md` - quarks-to-Carbon craft times + harvester upgrades that actually apply | done (PR pending) | M |
-| `tasks/feature-full-input-autosell.md` - items reaching a full input are sold at the Surplus Brokerage rate | pending (independent) | M |
+| `tasks/feature-full-input-autosell.md` - items reaching a full input are sold at the Surplus Brokerage rate | done (PR pending) | M |
 | `tasks/feature-belt-speed-research.md` - Transportation I/II as x2/x4 belt speed tiers | pending (4 of 4) | M |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
