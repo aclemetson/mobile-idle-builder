@@ -100,7 +100,9 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(2, quark.purchaseGroupSize, "Quark fields must always come in pairs");
             Assert.AreEqual("field_synthesis", quark.purchaseResearchId);
             Assert.Greater(quark.purchaseCostBase, 0);
-            Assert.GreaterOrEqual(quark.purchaseCostMultiplier, 5f, "Each field must cost far more than the last");
+            // x3, not x10: a second hydrogen line must be reachable early in a run, but each pair still costs
+            // clearly more than the last so fields never turn into a repeatable income lever.
+            Assert.GreaterOrEqual(quark.purchaseCostMultiplier, 2f, "Each pair must cost clearly more than the last");
 
             var lepton = LoadField("electron_field");
             Assert.AreEqual(1, lepton.purchaseGroupSize);
