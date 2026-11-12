@@ -37,6 +37,11 @@
             <ui:Label name="research-status-label" text="" class="research-status-label" />
         </ui:VisualElement>
 
+        <!-- ═══ ACTIVE CRAFT STRIP (shown only while the recipe craft queue is cooking) ═══ -->
+        <ui:VisualElement name="craft-status" class="research-status craft-status hidden">
+            <ui:Label name="craft-status-label" text="" class="research-status-label craft-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
