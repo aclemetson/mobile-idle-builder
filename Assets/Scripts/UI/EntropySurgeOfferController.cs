@@ -28,6 +28,8 @@ namespace MobileIdleBuilder
         Label         _message;
         float         _nextRefresh;
         bool          _iconShown;
+        bool          _menuOpen;      // HUDController.MenuOpen as of the last frame
+        bool          _skipNextPop;   // icon returning after a menu closed: no "new offer" pop
         readonly object _modalOwner = new();
 
         public bool IsOpen { get; private set; }
@@ -58,13 +60,26 @@ namespace MobileIdleBuilder
         /// Whether the side icon should be showing. Pure so the rule is unit-tested.
         /// </summary>
         public static bool ShouldShowIcon(bool adsEnabled, bool firstPrestigeDone, bool gameLoaded, bool adReady,
-                                          int remainingToday, TimeSpan cooldownLeft, bool cardOpen)
+                                          int remainingToday, TimeSpan cooldownLeft, bool cardOpen,
+                                          bool menuOpen = false)
             => adsEnabled && firstPrestigeDone && gameLoaded && adReady
-               && remainingToday > 0 && cooldownLeft <= TimeSpan.Zero && !cardOpen;
+               && remainingToday > 0 && cooldownLeft <= TimeSpan.Zero && !cardOpen && !menuOpen;
 
         void Update()
         {
-            if (_icon == null || Time.unscaledTime < _nextRefresh) return;
+            if (_icon == null) return;
+
+            // A menu opening or closing re-evaluates at once: the icon steps out of the way of any open
+            // menu (it sat on the building menu's right edge) and returns, without its pop, when it closes.
+            bool menuOpen = _hud != null && _hud.MenuOpen;
+            if (menuOpen != _menuOpen)
+            {
+                _menuOpen = menuOpen;
+                _nextRefresh = 0f;
+                if (!menuOpen) _skipNextPop = true;
+            }
+
+            if (Time.unscaledTime < _nextRefresh) return;
             _nextRefresh = Time.unscaledTime + RefreshSeconds;
 
             // Between a prestige and the reload the old run is gone: no offer, and an open card closes,
@@ -85,8 +100,10 @@ namespace MobileIdleBuilder
                 ads != null && ads.IsReady,
                 ads?.Remaining(Placement) ?? 0,
                 ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero,
-                IsOpen);
+                IsOpen,
+                _menuOpen);
             SetIconVisible(show);
+            _skipNextPop = false;
         }
 
         void SetIconVisible(bool visible)
@@ -94,7 +111,7 @@ namespace MobileIdleBuilder
             if (_icon == null || visible == _iconShown) return;
             _iconShown = visible;
             HUDController.SetElementVisible(_icon, visible);
-            if (!visible) return;
+            if (!visible || _skipNextPop) return;
             // A short pop so the player notices it arriving.
             _icon.AddToClassList("surge-offer-btn--pop");
             _icon.schedule.Execute(() => _icon.RemoveFromClassList("surge-offer-btn--pop")).StartingIn(250);

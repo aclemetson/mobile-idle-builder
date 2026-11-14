@@ -2626,17 +2626,26 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// True while the left drawer, any slide panel or the building menu is open. Refreshed every frame by
+        /// <see cref="RefreshBannerClearance"/>. The Entropy Surge icon hides while it is set so it never sits
+        /// on a menu (it comes straight back when the menu closes).
+        /// </summary>
+        public bool MenuOpen { get; private set; }
+
+        /// <summary>
         /// Keeps the tutorial hint clear of any open menu. The left drawer and every slide panel sit over the
         /// banner's bottom bar, which hides their bottom rows (the Place buttons). Derived from what is on
         /// screen each frame, so every open path is covered and no caller can leave the banner expanded.
         /// </summary>
         private void RefreshBannerClearance()
         {
-            if (_banner == null || _allPanels == null) return;
+            if (_allPanels == null) return;
             bool menuOpen = _drawerOpen;
             if (!menuOpen)
                 foreach (var panel in _allPanels)
                     if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen);
+            if (_banner == null) return;
             _banner.SetMenuOpen(menuOpen);
             _banner.RefreshNotificationClearance();
         }
