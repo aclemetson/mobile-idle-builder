@@ -1302,12 +1302,13 @@
     -unity-text-align: middle-center;
 }
 
-/* Entropy Surge side icon (EntropySurgeOfferController): a round tab on the right edge, about a
-   third of the way down so it clears the top bar and the bottom-right "Show hint" pill. */
+/* Entropy Surge side icon (EntropySurgeOfferController): a round tab on the right edge, just below
+   the top bar and its status strips. It used to sit at 38%, which landed on the close button of
+   the slide panels (they cover the bottom 65%, so their header starts at 35%). */
 .surge-offer-btn {
     position: absolute;
     right: var(--spacing-md);
-    top: 38%;
+    top: 15%;
     width: 60px;
     height: 60px;
     margin: 0;
