@@ -67,6 +67,15 @@ namespace MobileIdleBuilder
             if (_icon == null || Time.unscaledTime < _nextRefresh) return;
             _nextRefresh = Time.unscaledTime + RefreshSeconds;
 
+            // Between a prestige and the reload the old run is gone: no offer, and an open card closes,
+            // so nothing can be watched against the old run's income.
+            if (PrestigeRunReset.ReloadPending)
+            {
+                if (IsOpen) CloseCard();
+                SetIconVisible(false);
+                return;
+            }
+
             var ads  = AdService.Instance;
             var save = SaveManager.Instance?.Current;
             bool show = ShouldShowIcon(
