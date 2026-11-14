@@ -176,13 +176,12 @@ namespace MobileIdleBuilder
                 SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(bldg), itemID, 1);
                 ConveyorItems.RemoveFront(EntityManager, from);
 
-                // Input particle burst toward the building's entry face (the delivery direction,
-                // which may differ from the belt's own exit direction).
+                // The delivery direction may differ from the belt's own exit direction: log it so the
+                // tail is drawn bending into the input it really feeds, and aim the input particle burst.
+                var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
+                TailDeliveryLog.Record(seg.Cell, deliverDir);
                 if (BuildingInputFX.Instance != null)
-                {
-                    var seg = EntityManager.GetComponentData<ConveyorSegmentData>(from);
                     BuildingInputFX.Instance.Trigger(seg.Cell, deliverDir, itemID);
-                }
             }
 
             // Surplus sales: the item reached a full input the recipe uses (full-input autosell), or it was

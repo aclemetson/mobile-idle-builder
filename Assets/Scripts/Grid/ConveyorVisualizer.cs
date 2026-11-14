@@ -34,6 +34,7 @@ namespace MobileIdleBuilder
         // stored ExitDir (#223). Keyed by cell; read by the item animation so items glide into the
         // building instead of straight past it. Rebuilt with the belts.
         private readonly Dictionary<(int, int), int> _tailVisualExit = new();
+        private int _deliveryLogVersion = -1;
 
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<(Entity, int), GameObject> _itemSpheres = new();
@@ -95,6 +96,7 @@ namespace MobileIdleBuilder
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
+            TailDeliveryLog.Clear();   // scene reload (e.g. prestige): the next layout starts fresh
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
             _itemSpriteIds.Clear();
@@ -139,6 +141,7 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (!_queriesReady) return;
+            RedrawTailsIfDeliveryChanged();
             if (_itemQuery.IsEmpty)
             {
                 // No belts left: drop any item visuals still showing.
@@ -255,6 +258,7 @@ namespace MobileIdleBuilder
                 DestroyBelt(go);
                 _spawnedBelts.Remove(cell);
             }
+            TailDeliveryLog.Forget(new int2(x, y));
         }
 
         /// <summary>Spawns ribbon visuals for any segments that don't yet have one.</summary>
@@ -290,20 +294,10 @@ namespace MobileIdleBuilder
                 var cell = (seg.Cell.x, seg.Cell.y);
                 if (_spawnedBelts.ContainsKey(cell)) continue;
 
-                // A tail is drawn exiting toward the input it really feeds (same ranking as
-                // ConveyorSystem.TryPickInput, via TailDelivery), not straight past it (#223). Data is
-                // untouched, so extending the belt from this tile still links along its stored ExitDir.
-                int exitDir = seg.ExitDir;
-                if (seg.NextSegment == Entity.Null)
-                {
-                    for (int d = 0; d < 4; d++)
-                    {
-                        int2 nb = Adjacent(seg.Cell, d);
-                        feeds[d] = inputPorts.TryGetValue((nb.x, nb.y, d), out bool sink);
-                        sinks[d] = feeds[d] && sink;
-                    }
-                    exitDir = TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds, sinks);
-                }
+                // A tail is drawn exiting toward the input it really feeds (TailDelivery), not straight
+                // past it (#223). Data is untouched, so extending the belt from this tile still links
+                // along its stored ExitDir.
+                int exitDir = DrawnExit(seg, inputPorts, feeds, sinks);
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
 
@@ -312,6 +306,59 @@ namespace MobileIdleBuilder
             }
 
             entities.Dispose();
+        }
+
+        /// <summary>
+        /// The direction a segment is drawn exiting: its ExitDir, or for a tail the input it delivers to
+        /// (<see cref="TailDeliveryLog"/>), falling back to the TryPickInput ranking before its first
+        /// delivery. <paramref name="feeds"/> / <paramref name="sinks"/> are scratch arrays.
+        /// </summary>
+        private static int DrawnExit(ConveyorSegmentData seg, Dictionary<(int, int, int), bool> inputPorts,
+                                     bool[] feeds, bool[] sinks)
+        {
+            if (seg.NextSegment != Entity.Null) return seg.ExitDir;
+            for (int d = 0; d < 4; d++)
+            {
+                int2 nb = Adjacent(seg.Cell, d);
+                feeds[d] = inputPorts.TryGetValue((nb.x, nb.y, d), out bool sink);
+                sinks[d] = feeds[d] && sink;
+            }
+            return TailDelivery.VisualExit(seg.EntryDir, seg.ExitDir, feeds, sinks,
+                                           TailDeliveryLog.Settled(seg.Cell));
+        }
+
+        /// <summary>
+        /// Re-draws any tail whose delivery direction (<see cref="TailDeliveryLog"/>) no longer matches
+        /// the way it is drawn. Runs only when the log's version changes, i.e. rarely.
+        /// </summary>
+        private void RedrawTailsIfDeliveryChanged()
+        {
+            if (TailDeliveryLog.Version == _deliveryLogVersion) return;
+            _deliveryLogVersion = TailDeliveryLog.Version;
+            if (_segmentQuery.IsEmpty) return;
+
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+            var em       = world.EntityManager;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            var inputPorts = CollectInputPorts(em);
+            var feeds = new bool[4];
+            var sinks = new bool[4];
+            bool any = false;
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (seg.NextSegment != Entity.Null) continue;
+                var cell  = (seg.Cell.x, seg.Cell.y);
+                int drawn = _tailVisualExit.TryGetValue(cell, out int v) ? v : seg.ExitDir;
+                if (DrawnExit(seg, inputPorts, feeds, sinks) == drawn) continue;
+                if (_spawnedBelts.TryGetValue(cell, out var go)) DestroyBelt(go);
+                _spawnedBelts.Remove(cell);   // Refresh() below re-spawns it with the new exit
+                any = true;
+            }
+            entities.Dispose();
+            if (any) Refresh();
         }
 
         /// <summary>
