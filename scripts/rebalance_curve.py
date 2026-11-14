@@ -162,7 +162,10 @@ def costs(gd):
         if b is None or b.get("anchor"):
             continue
         budget = float(b["target_hours"]) * 60 * BUILDINGS          # building-minutes
-        weights = [BLOCK_RAMP ** k for k in range(len(members))]
+        # A block may set its own "ramp": a steeper one front-loads cheap nodes, so the first research after the
+        # previous block is in reach (Foundations, 2026-11-14: the old 1.2 put the first node at 13x fusion_i).
+        ramp = float(b.get("ramp") or BLOCK_RAMP)
+        weights = [ramp ** k for k in range(len(members))]
         # Off-curve nodes take the share of their position but are not part of the block's budget, so adding one
         # leaves every other node's cost where it was (the block runs a little over its target instead).
         on = sum(w for n, w in zip(members, weights) if order[n]["id"] not in skip)

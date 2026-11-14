@@ -27,6 +27,7 @@ namespace MobileIdleBuilder
         private StatsSubController                  _stats;
         private EntropySurgeOfferController         _surgeOffer;
         private TestAdOverlayController             _testAd;
+        private CyclotronController                 _cyclotron;
         private MegastructureSubController          _megastructure;
         private DailyEventsSubController            _daily;
         private RewardedAdsSubController            _rewards;
@@ -196,6 +197,7 @@ namespace MobileIdleBuilder
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
             _testAd       = GetComponent<TestAdOverlayController>() ?? gameObject.AddComponent<TestAdOverlayController>();
+            _cyclotron    = GetComponent<CyclotronController>() ?? gameObject.AddComponent<CyclotronController>();
         }
 
         void OnEnable()
@@ -515,6 +517,7 @@ namespace MobileIdleBuilder
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
+            _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -2419,7 +2422,8 @@ namespace MobileIdleBuilder
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
                 TestAdOpen       = _testAd != null && _testAd.IsOpen,
                 ConfirmOpen      = ConfirmPrompt.IsOpen,
-                SurgeOfferOpen   = _surgeOffer != null && _surgeOffer.IsOpen,
+                // The Cyclotron card is a centred modal like the Surge offer, so it shares that layer.
+                SurgeOfferOpen   = (_surgeOffer != null && _surgeOffer.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen),
                 IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
                 UpdateNoticeOpen = _gameUpdate != null && _gameUpdate.IsOpen,
                 InspectorOpen    = _inspector != null && _inspector.IsOpen,
@@ -2431,7 +2435,10 @@ namespace MobileIdleBuilder
             {
                 case BackNavigation.Layer.TestAd:        _testAd.Skip();                 break;
                 case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
-                case BackNavigation.Layer.SurgeOffer:    _surgeOffer.Minimize();         break;
+                case BackNavigation.Layer.SurgeOffer:
+                    if (_cyclotron != null && _cyclotron.IsOpen) _cyclotron.Close();
+                    else _surgeOffer.Minimize();
+                    break;
                 case BackNavigation.Layer.IdleReturn:    _idleReturn.Close();            break;
                 case BackNavigation.Layer.UpdateNotice:  _gameUpdate.Close();            break;
                 case BackNavigation.Layer.Inspector:     _inspector.HideBuildingInspector(); break;
@@ -2644,7 +2651,7 @@ namespace MobileIdleBuilder
             if (!menuOpen)
                 foreach (var panel in _allPanels)
                     if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
-            MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen);
+            MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen);
             if (_banner == null) return;
             _banner.SetMenuOpen(menuOpen);
             _banner.RefreshNotificationClearance();
@@ -2680,6 +2687,9 @@ namespace MobileIdleBuilder
             if (_achievementsHintPulse != null)
                 SwapAchievementsHintPulse("btn-achievements");
         }
+
+        /// <summary>Closes the left drawer (for sub-controllers that open a modal from a drawer button).</summary>
+        public void CloseMenuDrawer() => CloseDrawer();
 
         private void CloseDrawer()
         {
