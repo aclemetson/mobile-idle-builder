@@ -115,7 +115,7 @@ namespace MobileIdleBuilder.Tests
             Assert.GreaterOrEqual(run.Energy, 0.99f, "a flawless run should max out");
         }
 
-        // ── Charges ────────────────────────────────────────────────────────
+        // ── Cooldown ────────────────────────────────────────────────────────
 
         [Test]
         public void Unlocks_AtTheSecondPrestige()
@@ -125,30 +125,30 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FirstLook_StartsFull()
+        public void NeverPlayed_IsReady()
         {
             var save = new SaveData();
-            CyclotronProgress.RefreshCharges(save, Noon);
-            Assert.AreEqual(CyclotronProgress.MaxCharges, save.cyclotronCharges);
+            Assert.IsTrue(CyclotronProgress.IsReady(save, Noon));
+            Assert.AreEqual(TimeSpan.Zero, CyclotronProgress.CooldownLeft(save, Noon));
         }
 
         [Test]
-        public void Charges_RefillOverTime_UpToTheCap()
+        public void OneRunAnHour_CountedFromTheRunStart()
         {
             var save = new SaveData();
-            CyclotronProgress.RefreshCharges(save, Noon);
-            for (int i = 0; i < 3; i++) Assert.IsTrue(CyclotronProgress.TryStartRun(save, Noon));
-            Assert.IsFalse(CyclotronProgress.TryStartRun(save, Noon), "out of runs");
+            Assert.IsTrue(CyclotronProgress.TryStartRun(save, Noon));
+            Assert.IsFalse(CyclotronProgress.TryStartRun(save, Noon.AddMinutes(30)), "still cooling down");
+            Assert.AreEqual(TimeSpan.FromMinutes(30), CyclotronProgress.CooldownLeft(save, Noon.AddMinutes(30)));
+            Assert.IsFalse(CyclotronProgress.IsReady(save, Noon.AddMinutes(59)));
+            Assert.IsTrue(CyclotronProgress.TryStartRun(save, Noon.AddMinutes(60)), "ready an hour after the last start");
+        }
 
-            CyclotronProgress.RefreshCharges(save, Noon.AddMinutes(24));
-            Assert.AreEqual(0, save.cyclotronCharges);
-            CyclotronProgress.RefreshCharges(save, Noon.AddMinutes(26));
-            Assert.AreEqual(1, save.cyclotronCharges);
-            Assert.AreEqual(TimeSpan.FromMinutes(24), CyclotronProgress.NextChargeIn(save, Noon.AddMinutes(26)),
-                "partial progress toward the next charge is kept");
-
-            CyclotronProgress.RefreshCharges(save, Noon.AddHours(10));
-            Assert.AreEqual(CyclotronProgress.MaxCharges, save.cyclotronCharges, "offline time refills, capped");
+        [Test]
+        public void Cooldown_RunsWhileAway()
+        {
+            var save = new SaveData();
+            CyclotronProgress.TryStartRun(save, Noon);
+            Assert.IsTrue(CyclotronProgress.IsReady(save, Noon.AddHours(5)));
         }
 
         // ── Rewards ────────────────────────────────────────────────────────
@@ -206,33 +206,45 @@ namespace MobileIdleBuilder.Tests
         public void OldSave_WithoutCyclotronFields_LoadsAsNeverPlayed()
         {
             var save = UnityEngine.JsonUtility.FromJson<SaveData>("{\"prestigeCount\": 3}");
-            Assert.AreEqual(0, save.cyclotronCharges);
-            Assert.IsTrue(string.IsNullOrEmpty(save.cyclotronChargeUtc));
+            Assert.IsTrue(string.IsNullOrEmpty(save.cyclotronLastRunUtc));
             Assert.AreEqual(0f, save.researchInsight);
-            CyclotronProgress.RefreshCharges(save, Noon);
-            Assert.AreEqual(CyclotronProgress.MaxCharges, save.cyclotronCharges, "first look starts full");
+            Assert.IsTrue(CyclotronProgress.IsReady(save, Noon), "a first run is available straight away");
         }
 
         [Test]
         public void CyclotronFields_RoundTrip()
         {
-            var save = new SaveData { cyclotronCharges = 2, cyclotronChargeUtc = "2026-11-14T12:00:00.0000000Z", researchInsight = 0.27f };
+            var save = new SaveData { cyclotronLastRunUtc = "2026-11-14T12:00:00.0000000Z", researchInsight = 0.27f };
             var back = UnityEngine.JsonUtility.FromJson<SaveData>(UnityEngine.JsonUtility.ToJson(save));
-            Assert.AreEqual(2, back.cyclotronCharges);
-            Assert.AreEqual(save.cyclotronChargeUtc, back.cyclotronChargeUtc);
+            Assert.AreEqual(save.cyclotronLastRunUtc, back.cyclotronLastRunUtc);
             Assert.AreEqual(0.27f, back.researchInsight, 1e-6f);
+            Assert.AreEqual(TimeSpan.FromMinutes(45), CyclotronProgress.CooldownLeft(back, Noon.AddMinutes(15)));
         }
 
         // ── UI text ────────────────────────────────────────────────────────
 
         [Test]
-        public void StatusText_ShowsRunsNextChargeAndInsight()
+        public void StatusText_ShowsCountdownAndInsight()
         {
-            string s = CyclotronController.StatusText(1, TimeSpan.FromSeconds(754), 0.12f);
-            StringAssert.Contains("Runs: 1/3", s);
-            StringAssert.Contains("next in 12m 34s", s);
+            string s = CyclotronController.StatusText(TimeSpan.FromSeconds(754), 0.12f);
+            StringAssert.Contains("Next run in 12m 34s", s);
             StringAssert.Contains("12% off your next research", s);
-            StringAssert.DoesNotContain("next in", CyclotronController.StatusText(3, TimeSpan.Zero, 0f));
+            StringAssert.Contains("Ready to run", CyclotronController.StatusText(TimeSpan.Zero, 0f));
+        }
+
+        [Test]
+        public void IntroText_PointsAtTheVerticalGap()
+        {
+            StringAssert.Contains("crosses the vertical gap", CyclotronController.IntroText);
+            StringAssert.DoesNotContain("dees", CyclotronController.IntroText);
+        }
+
+        [Test]
+        public void DrawerLabel_ShowsReadyOrMinutesLeft()
+        {
+            Assert.AreEqual("Cyclotron (ready)", CyclotronController.DrawerLabel(TimeSpan.Zero));
+            Assert.AreEqual("Cyclotron (42m)", CyclotronController.DrawerLabel(TimeSpan.FromSeconds(41 * 60 + 5)), "rounds up");
+            Assert.AreEqual("Cyclotron (1m)", CyclotronController.DrawerLabel(TimeSpan.FromSeconds(20)));
         }
 
         [Test]

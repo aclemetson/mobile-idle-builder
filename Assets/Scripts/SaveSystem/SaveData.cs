@@ -58,8 +58,7 @@ namespace MobileIdleBuilder
         public List<AdLastWatchEntry> adLastWatch = new();                  // id = AdPlacement name -> last watch (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge). Survives prestige.
         public string adsIdleBoostExpiryUtc;                                 // ISO 8601 — null/empty = no active +50% idle-rate boost
         // Cyclotron Kick minigame (CyclotronProgress) — survives prestige. Unlocks at the 2nd prestige.
-        public int    cyclotronCharges;      // plays stored (0..3); meaningful once cyclotronChargeUtc is set
-        public string cyclotronChargeUtc;    // ISO 8601 — when the charge count was last brought up to date; null = feature never seen (starts full)
+        public string cyclotronLastRunUtc;   // ISO 8601 — when the last run started; one run per hour from then. null = never played (ready)
         public float  researchInsight;       // 0..0.4 — Insight banked: discount on the NEXT research started (ResearchCost), then reset to 0
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager

@@ -7,7 +7,7 @@ namespace MobileIdleBuilder
     /// <summary>
     /// The Cyclotron Kick minigame (docs/agents/tasks/feature-cyclotron-kick.md): a drawer button, unlocked at
     /// the second prestige, opens a card with three steps:
-    ///  - <b>intro</b>: charges, time to the next one, Insight banked, Start (spends a charge);
+    ///  - <b>intro</b>: the description, time until the next run (one an hour), Insight banked, Start;
     ///  - <b>play</b>: a 30 s <see cref="CyclotronRun"/> drawn by <see cref="CyclotronView"/>; tap the view
     ///    as the particle crosses the gap;
     ///  - <b>result</b>: the energy reached and the Insight it pays; Collect banks it
@@ -76,7 +76,7 @@ namespace MobileIdleBuilder
         }
 
         internal const string IntroText =
-            "Kick the particle each time it crosses the gap between the dees. Every good kick adds energy and " +
+            "Kick the particle each time it crosses the vertical gap. Every good kick adds energy and " +
             "widens its orbit. The energy you reach in 30 s becomes Insight: a discount on your next research.";
 
         void Update()
@@ -90,8 +90,7 @@ namespace MobileIdleBuilder
             if (unlocked && Time.unscaledTime >= _nextStatus)
             {
                 _nextStatus = Time.unscaledTime + 1f;
-                CyclotronProgress.RefreshCharges(save, GameClock.UtcNow);
-                _drawerButton.text = DrawerLabel(save.cyclotronCharges);
+                _drawerButton.text = DrawerLabel(CyclotronProgress.CooldownLeft(save, GameClock.UtcNow));
                 if (_step == Step.Intro) RefreshIntro(save);
             }
 
@@ -116,15 +115,18 @@ namespace MobileIdleBuilder
             if (_run.Done) ShowResult();
         }
 
-        internal static string DrawerLabel(int charges) =>
-            $"Cyclotron ({charges}/{CyclotronProgress.MaxCharges})";
+        /// <summary>"Cyclotron (ready)", or the time left rounded up to the minute: "Cyclotron (42m)".</summary>
+        internal static string DrawerLabel(TimeSpan left) =>
+            left <= TimeSpan.Zero ? "Cyclotron (ready)" : $"Cyclotron ({(int)Math.Ceiling(left.TotalMinutes)}m)";
+
+        /// <summary>Countdown for the card: "42m 05s".</summary>
+        internal static string FormatLeft(TimeSpan left) => $"{(int)left.TotalMinutes}m {left.Seconds:00}s";
 
         void Open()
         {
             var save = SaveManager.Instance?.Current;
             if (!CyclotronProgress.IsUnlocked(save)) return;
             _hud?.CloseMenuDrawer();
-            CyclotronProgress.RefreshCharges(save, GameClock.UtcNow);
             ShowStep(Step.Intro);
             RefreshIntro(save);
             HUDController.SetElementVisible(_modal, true);
@@ -134,16 +136,18 @@ namespace MobileIdleBuilder
         void RefreshIntro(SaveData save)
         {
             if (save == null) return;
-            if (_status != null) _status.text = StatusText(save.cyclotronCharges,
-                CyclotronProgress.NextChargeIn(save, GameClock.UtcNow), save.researchInsight);
-            _start?.SetEnabled(save.cyclotronCharges > 0);
+            var left = CyclotronProgress.CooldownLeft(save, GameClock.UtcNow);
+            if (_status != null) _status.text = StatusText(left, save.researchInsight);
+            if (_start != null)
+            {
+                _start.SetEnabled(left <= TimeSpan.Zero);
+                _start.text = left <= TimeSpan.Zero ? "Start run" : $"Ready in {FormatLeft(left)}";
+            }
         }
 
-        internal static string StatusText(int charges, TimeSpan nextIn, float insight)
+        internal static string StatusText(TimeSpan left, float insight)
         {
-            string s = $"Runs: {charges}/{CyclotronProgress.MaxCharges}";
-            if (charges < CyclotronProgress.MaxCharges)
-                s += $"  ·  next in {(int)nextIn.TotalMinutes}m {nextIn.Seconds:00}s";
+            string s = left <= TimeSpan.Zero ? "Ready to run" : $"Next run in {FormatLeft(left)} (one run an hour)";
             s += $"\nInsight banked: {Mathf.RoundToInt(insight * 100f)}% off your next research " +
                  $"(max {Mathf.RoundToInt(CyclotronProgress.MaxInsight * 100f)}%)";
             return s;

@@ -4,7 +4,7 @@ using System.Globalization;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Cyclotron Kick meta rules on <see cref="SaveData"/>: unlock, play charges and the Insight it pays.
+    /// Cyclotron Kick meta rules on <see cref="SaveData"/>: unlock, the hourly cooldown and the Insight it pays.
     /// Static and pure apart from the save it is given, so every rule is unit-tested. All of it survives
     /// prestige (it is the reward for the stretch prestige leaves you in).
     ///
@@ -15,8 +15,7 @@ namespace MobileIdleBuilder
     public static class CyclotronProgress
     {
         public const int    UnlockPrestiges  = 2;        // available from the second prestige on
-        public const int    MaxCharges       = 3;
-        public const double ChargeMinutes    = 25.0;
+        public const double CooldownMinutes  = 60.0;     // one run an hour, counted from the run's start
         public const float  MinInsight       = 0.04f;    // a run with no energy still teaches something
         public const float  MaxInsightPerRun = 0.15f;
         public const float  MaxInsight       = 0.40f;    // banked cap; keeps research from going cheap
@@ -26,50 +25,21 @@ namespace MobileIdleBuilder
 
         public static bool IsUnlocked(SaveData save) => save != null && save.prestigeCount >= UnlockPrestiges;
 
-        /// <summary>
-        /// Brings the charges up to date: one more every <see cref="ChargeMinutes"/> since the last count, up to
-        /// <see cref="MaxCharges"/>. The first time the feature is seen it starts full. Offline time counts.
-        /// </summary>
-        public static void RefreshCharges(SaveData save, DateTime now)
+        /// <summary>Time until the next run is allowed; zero when one is ready (or none was ever played).</summary>
+        public static TimeSpan CooldownLeft(SaveData save, DateTime now)
         {
-            if (save == null) return;
-            if (!TryParse(save.cyclotronChargeUtc, out DateTime last))
-            {
-                save.cyclotronCharges   = MaxCharges;
-                save.cyclotronChargeUtc = Iso(now);
-                return;
-            }
-            if (save.cyclotronCharges >= MaxCharges)
-            {
-                save.cyclotronCharges   = MaxCharges;
-                save.cyclotronChargeUtc = Iso(now);   // a full store doesn't bank time toward the next charge
-                return;
-            }
-            if (now <= last) return;
-
-            int gained = (int)((now - last).TotalMinutes / ChargeMinutes);
-            if (gained <= 0) return;
-            int charges = Math.Min(MaxCharges, save.cyclotronCharges + gained);
-            save.cyclotronCharges   = charges;
-            save.cyclotronChargeUtc = charges >= MaxCharges ? Iso(now) : Iso(last.AddMinutes(gained * ChargeMinutes));
-        }
-
-        /// <summary>Time until the next charge, or zero when the store is full.</summary>
-        public static TimeSpan NextChargeIn(SaveData save, DateTime now)
-        {
-            if (save == null || save.cyclotronCharges >= MaxCharges) return TimeSpan.Zero;
-            if (!TryParse(save.cyclotronChargeUtc, out DateTime last)) return TimeSpan.Zero;
-            var left = last.AddMinutes(ChargeMinutes) - now;
+            if (save == null || !TryParse(save.cyclotronLastRunUtc, out DateTime last)) return TimeSpan.Zero;
+            var left = last.AddMinutes(CooldownMinutes) - now;
             return left > TimeSpan.Zero ? left : TimeSpan.Zero;
         }
 
-        /// <summary>Spends one charge to start a run. False when none is left.</summary>
+        public static bool IsReady(SaveData save, DateTime now) => save != null && CooldownLeft(save, now) <= TimeSpan.Zero;
+
+        /// <summary>Starts a run if the cooldown is over; the next hour is counted from now. Offline time counts.</summary>
         public static bool TryStartRun(SaveData save, DateTime now)
         {
-            RefreshCharges(save, now);
-            if (save == null || save.cyclotronCharges <= 0) return false;
-            if (save.cyclotronCharges >= MaxCharges) save.cyclotronChargeUtc = Iso(now);   // recharge starts now
-            save.cyclotronCharges--;
+            if (!IsReady(save, now)) return false;
+            save.cyclotronLastRunUtc = Iso(now);
             return true;
         }
 
