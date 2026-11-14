@@ -175,9 +175,13 @@ namespace MobileIdleBuilder
             AdRewardCalculator.CalcEntropyReward(
                 ECSLoadBridge.Instance?.LiveNetWorth ?? SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f);
 
-        /// <summary>What an income-minutes placement (Entropy Surge) would pay right now.</summary>
+        /// <summary>
+        /// What an income-minutes placement (Entropy Surge) would pay right now. Uses only this run's
+        /// income (<see cref="IncomeRateTracker.RewardPerSecond"/>), so right after a prestige it pays the floor.
+        /// </summary>
         public long PreviewIncomeReward(AdPlacement p) =>
-            AdRewardCalculator.CalcIncomeReward(p, IncomeRateTracker.Current?.PerSecond ?? 0d);
+            AdRewardCalculator.CalcIncomeReward(
+                p, PrestigeRunReset.ReloadPending ? 0d : IncomeRateTracker.Current?.RewardPerSecond ?? 0d);
 
         // ── Show / grant ──────────────────────────────────────────────────────
 

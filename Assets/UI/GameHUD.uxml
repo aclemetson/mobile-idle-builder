@@ -161,6 +161,13 @@
                            horizontal-scroller-visibility="Hidden">
                 <ui:VisualElement class="upgrade-row">
                     <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Net worth" class="upgrade-row-name" />
+                        <ui:Label name="stats-networth-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label text="Entropy you hold and have spent this run, plus your items. Prestige pays out from this." class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
                         <ui:Label text="Automation income" class="upgrade-row-name" />
                         <ui:Label name="stats-income-value" text="" class="stats-value" />
                     </ui:VisualElement>
@@ -471,9 +478,15 @@
         <ui:VisualElement name="building-inspector-panel" class="output-selector hidden">
             <ui:VisualElement class="panel-header">
                 <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
+                <ui:Button name="btn-inspector-info" text="" class="inspector-info-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Info" /></ui:Button>
                 <ui:Button name="btn-close-inspector" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="inspector-static" class="inspector-static" />
+            <!-- Details behind the (i) button (HUDBuildingInspectorSubController): floats over the
+                 recipe/upgrade lists so opening it never moves them. Tap (i) or the card to close. -->
+            <ui:VisualElement name="inspector-info-card" class="inspector-info-card hidden">
+                <ui:VisualElement name="inspector-info" class="inspector-info" />
+            </ui:VisualElement>
             <ui:ScrollView name="inspector-recipes" class="inspector-scroll inspector-scroll--recipes"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />

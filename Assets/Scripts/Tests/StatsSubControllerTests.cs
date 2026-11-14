@@ -28,7 +28,15 @@ namespace MobileIdleBuilder.Tests
             StringAssert.Contains("ad boost active", StatsSubController.IdleSubtitle(0.2f, 1.5f));
         }
 
+        [Test]
+        public void NetWorthText_FormatsAsEntropy_DashBeforeLoad()
+        {
+            Assert.AreEqual(NumberFormat.Entropy(12345f), StatsSubController.NetWorthText(12345f));
+            Assert.AreEqual("—", StatsSubController.NetWorthText(null));
+        }
+
         [TestCase("btn-stats")]
+        [TestCase("stats-networth-value")]
         [TestCase("stats-panel")]
         [TestCase("btn-close-stats")]
         public void GameHudUxml_HasStatsElement(string name)
