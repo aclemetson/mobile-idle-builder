@@ -23,7 +23,7 @@ MonoBehaviour:
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 52000
+  costBaseCurrency: 6430
   costPrestigeCurrency: 0
   durationSeconds: 120
   fieldCooldownMult: 0.8
