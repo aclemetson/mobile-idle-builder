@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Populates the Statistics panel (stats-panel): automation income per second, the idle projection
+    /// Populates the Statistics panel (stats-panel): net worth, automation income per second, the idle projection
     /// and the idle earnings cap. Sits as a component alongside HUDController on the same GameObject.
     /// </summary>
     [RequireComponent(typeof(HUDController))]
@@ -14,7 +14,7 @@ namespace MobileIdleBuilder
             "Idle payout is estimated from your factory layout when you leave, so it can differ slightly.";
 
         private VisualElement _panel;
-        private Label _incomeValue, _incomeSub, _idleValue, _idleSub, _capValue, _footnote;
+        private Label _netWorthValue, _incomeValue, _incomeSub, _idleValue, _idleSub, _capValue, _footnote;
         private HUDController _hud;
         private IncomeRateTracker _tracker;
         private IVisualElementScheduledItem _ticker;
@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
         {
             _hud         = hud;
             _panel       = root.Q("stats-panel");
+            _netWorthValue = root.Q<Label>("stats-networth-value");
             _incomeValue = root.Q<Label>("stats-income-value");
             _incomeSub   = root.Q<Label>("stats-income-sub");
             _idleValue   = root.Q<Label>("stats-idle-value");
@@ -49,6 +50,7 @@ namespace MobileIdleBuilder
             float adMult = OfflineCollectionService.GetAdIdleMultiplier(save);
             float cap    = config != null ? OfflineCollectionService.GetEffectiveIdleCap(config, upgrades) : 0f;
 
+            if (_netWorthValue != null) _netWorthValue.text = NetWorthText(ECSLoadBridge.Instance?.LiveNetWorth);
             if (_incomeValue != null) _incomeValue.text = IncomeText(perSecond);
             if (_incomeSub   != null) _incomeSub.text   = "Average over the last 60 s";
             if (_idleValue   != null) _idleValue.text   = IncomeText(IdleProjection(perSecond, rate, adMult));
@@ -74,6 +76,10 @@ namespace MobileIdleBuilder
         // ---- Pure helpers (tested) ----
 
         internal static string IncomeText(double perSecond) => NumberFormat.Entropy(perSecond) + " /s";
+
+        /// <summary>Live net worth, or a dash before the game has loaded.</summary>
+        internal static string NetWorthText(float? netWorth) =>
+            netWorth.HasValue ? NumberFormat.Entropy(netWorth.Value) : "—";
 
         internal static double IdleProjection(double perSecond, float rate, float adMult)
             => perSecond * rate * adMult;
