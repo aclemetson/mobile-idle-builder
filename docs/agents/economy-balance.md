@@ -32,7 +32,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 | Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
-| Entropy Surge | 10 min of current automation income (`IncomeRateTracker`, 60 s avg; floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
+| Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 60 s avg of this run only, history cleared on prestige, floor until 30 s of samples; floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
 
 Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 

@@ -60,5 +60,16 @@ namespace MobileIdleBuilder.Tests
             r.Clear();
             Assert.AreEqual(0, r.Count);
         }
+
+        [Test]
+        public void SpanSeconds_IsCappedAtTheWindow()
+        {
+            var r = new RollingRate(90);
+            Assert.AreEqual(0.0, r.SpanSeconds(60));
+            for (int i = 0; i < 10; i++) r.Add(i, i);
+            Assert.AreEqual(9.0, r.SpanSeconds(60), 1e-9);
+            for (int i = 10; i < 80; i++) r.Add(i, i);
+            Assert.AreEqual(60.0, r.SpanSeconds(60), 1e-9);
+        }
     }
 }
