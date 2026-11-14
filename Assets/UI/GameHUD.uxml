@@ -161,6 +161,13 @@
                            horizontal-scroller-visibility="Hidden">
                 <ui:VisualElement class="upgrade-row">
                     <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Net worth" class="upgrade-row-name" />
+                        <ui:Label name="stats-networth-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label text="Entropy you hold and have spent this run, plus your items. Prestige pays out from this." class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
                         <ui:Label text="Automation income" class="upgrade-row-name" />
                         <ui:Label name="stats-income-value" text="" class="stats-value" />
                     </ui:VisualElement>
