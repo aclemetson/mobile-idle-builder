@@ -18,7 +18,11 @@ namespace MobileIdleBuilder
         private const string InputCapacityResearchId  = "feedstock_buffers";
 
         private VisualElement _buildingInspectorPanel;
-        private VisualElement _inspectorStatic;    // read-only status (Active..Produces), pinned above the scrolls
+        private VisualElement _inspectorStatic;    // pinned above the scrolls: progress bar + one line of buffer chips
+        private VisualElement _inspectorInfo;      // details behind the (i) button (Active, Cell, Produces, power...)
+        private VisualElement _inspectorInfoCard;  // the floating card holding _inspectorInfo
+        private Button        _infoButton;
+        private bool          _infoOpen;           // survives the 0.5 s rebuilds; closed on hide / new building
         private ScrollView    _inspectorRecipes;   // Set Recipe picker (scrolls)
         private ScrollView    _inspectorUpgrades;  // power + speed/storage/input + manager (scrolls)
         private Label         _inspectorBuildingName;
@@ -157,6 +161,12 @@ namespace MobileIdleBuilder
             _inspectorRecipes       = root.Q<ScrollView>("inspector-recipes");
             _inspectorUpgrades      = root.Q<ScrollView>("inspector-upgrades");
             _inspectorBuildingName  = root.Q<Label>("inspector-building-name");
+            _inspectorInfo          = root.Q("inspector-info");
+            _inspectorInfoCard      = root.Q("inspector-info-card");
+            _infoButton             = root.Q<Button>("btn-inspector-info");
+            if (_infoButton != null) _infoButton.clicked += ToggleInfo;
+            // Tapping the card itself closes it too.
+            _inspectorInfoCard?.RegisterCallback<PointerDownEvent>(_ => SetInfoOpen(false));
             _placement              = placement;
             _hud                   = hud;
             _inspectorStatic?.RegisterCallback<GeometryChangedEvent>(OnStaticGeometryChanged);
@@ -189,11 +199,12 @@ namespace MobileIdleBuilder
         {
             GameLogger.Develop($"[InspectorUI] ShowBuildingInspector: '{buildingName}' ecsReady={_ecsReady} panel={((_buildingInspectorPanel == null) ? "NULL" : "ok")}");
             if (!_ecsReady) return;
-            if (entity != _inspectorEntity) ResetStaticReservedHeight();
+            if (entity != _inspectorEntity) { ResetStaticReservedHeight(); _infoOpen = false; }
             _inspectorEntity = entity;
             if (_inspectorBuildingName != null) _inspectorBuildingName.text = buildingName;
             RefreshInspectorContent();
             HUDController.SetElementVisible(_buildingInspectorPanel, true);
+            ApplyInfoVisibility();
             GameLogger.Develop($"[InspectorUI] Panel shown — entity={entity}");
         }
 
@@ -211,6 +222,8 @@ namespace MobileIdleBuilder
             ResetStaticReservedHeight();
             ClearSelectedPowerVisual();
             SetPowerCardCompact(false);
+            _infoOpen = false;
+            ApplyInfoVisibility();
             if (wasOpen) Hidden?.Invoke();
         }
 
@@ -221,6 +234,7 @@ namespace MobileIdleBuilder
             if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
 
             _inspectorStatic.Clear();
+            _inspectorInfo?.Clear();
             _inspectorRecipes.Clear();
             _inspectorUpgrades.Clear();
             _craftProgressFill = null; // dropped by the Clear() above; re-created if this building crafts
@@ -247,16 +261,18 @@ namespace MobileIdleBuilder
             if (buildingSO != null && buildingSO.isPowerSource)
             {
                 SetPowerCardCompact(true);
+                ApplyInfoVisibility();   // power cards have no (i)
                 AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 return;
             }
             SetPowerCardCompact(false);
+            ApplyInfoVisibility();
 
             if (hasBuildingData)
-                AddInspectorRow(_inspectorStatic, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
+                AddInspectorRow(_inspectorInfo, $"Active: {(buildingData.IsActive ? "Yes" : "No")}");
             if (buildingCellX >= 0)
-                AddInspectorRow(_inspectorStatic, $"Cell: ({buildingCellX}, {buildingCellY})");
+                AddInspectorRow(_inspectorInfo, $"Cell: ({buildingCellX}, {buildingCellY})");
 
             // Crafter creation timer: live progress toward the next output cycle. Harvesters run on
             // their collector timer instead (RecipeProcessData never advances for them), so their bar
@@ -267,7 +283,6 @@ namespace MobileIdleBuilder
                 var rp = _em.GetComponentData<RecipeProcessData>(_inspectorEntity);
                 if (rp.CraftTime > 0f)
                 {
-                    AddInspectorRow(_inspectorStatic, "—— Crafting ——");
                     _craftProgressFill = AddCraftProgressBar(_inspectorStatic, rp);
                 }
             }
@@ -277,39 +292,30 @@ namespace MobileIdleBuilder
                 var col    = _em.GetComponentData<CollectorData>(_inspectorEntity);
                 float rate = col.OutputRate > 0f ? col.OutputRate : 1f;
                 float next = Mathf.Max(0f, (1f / rate) - col.Timer);
-                AddInspectorRow(_inspectorStatic, "—— Collector ——");
                 _craftProgressFill = AddProgressBar(_inspectorStatic, CollectorFraction(col));
-                AddInspectorRow(_inspectorStatic, $"Output rate: {col.OutputRate:F1} /s");
+                AddInspectorRow(_inspectorInfo, "—— Collector ——");
+                AddInspectorRow(_inspectorInfo, $"Output rate: {col.OutputRate:F1} /s");
                 if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
                 {
                     var outBuf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
                     if (outBuf.Length > 0)
                     {
                         ReadOutputMult(_inspectorEntity, out float cOutMult, out float cSpeed);
-                        AddInspectorRow(_inspectorStatic, CollectorValueLine(
+                        AddInspectorRow(_inspectorInfo, CollectorValueLine(
                             ItemValue.CollectorPerSecond(SurplusSale.DemonPrice(outBuf[0].ItemID), col.OutputRate,
                                                          cOutMult, cSpeed)));
                     }
                 }
-                AddInspectorRow(_inspectorStatic, $"Next item in: {next:F2}s");
+                AddInspectorRow(_inspectorInfo, $"Next item in: {next:F2}s");
             }
 
-            // Buffer sections keep a stable shape across the 0.5s rebuilds: one row per item the recipe
-            // expects (shown at ×0 when absent) and an always-present Empty button that is merely
-            // disabled when there is nothing to empty. Adding/removing rows as items flow in and out
-            // shifted the scrolls below and moved buttons out from under the finger.
-            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
-            {
-                var buf      = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
-                var contents = new List<(int itemId, int quantity)>(buf.Length);
-                for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
-
-                AddInspectorRow(_inspectorStatic, "—— Output Buffer ——");
-                AddBufferRows(StableBufferRows(RecipeOutputIds(_inspectorEntity), contents));
-                var captured = _inspectorEntity;
-                AddEmptyBufferButton("Empty output → inventory", contents.Count > 0,
-                                     () => EmptyOutputToInventory(captured));
-            }
+            // Buffers: one line of item chips, IN then OUT, each with a small "empty to inventory" button.
+            // They keep a stable shape across the 0.5s rebuilds: one chip per item the recipe expects (shown
+            // at x0 when absent) and an always-present Empty button that is merely disabled when there is
+            // nothing to empty. Adding/removing chips as items flow in and out moved buttons out from
+            // under the finger.
+            var bufferLine = new VisualElement();
+            bufferLine.AddToClassList("inspector-buffers");
 
             if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
             {
@@ -319,23 +325,33 @@ namespace MobileIdleBuilder
                 {
                     var contents = new List<(int itemId, int quantity)>(buf.Length);
                     for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
-
-                    AddInspectorRow(_inspectorStatic, "—— Input Buffer ——");
-                    AddBufferRows(StableBufferRows(expected, contents));
                     var captured = _inspectorEntity;
-                    AddEmptyBufferButton("Empty input → inventory", contents.Count > 0,
-                                         () => EmptyInputToInventory(captured));
+                    bufferLine.Add(MakeBufferGroup("IN", StableBufferRows(expected, contents), contents.Count > 0,
+                        () => { if (EmptyInputToInventory(captured)) _hud?.ShowNotification("📥", EmptiedMessage(input: true)); }));
                 }
             }
+
+            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
+            {
+                var buf      = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                var contents = new List<(int itemId, int quantity)>(buf.Length);
+                for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
+                var captured = _inspectorEntity;
+                bufferLine.Add(MakeBufferGroup("OUT", StableBufferRows(RecipeOutputIds(_inspectorEntity), contents),
+                    contents.Count > 0,
+                    () => { if (EmptyOutputToInventory(captured)) _hud?.ShowNotification("📦", EmptiedMessage(input: false)); }));
+            }
+
+            if (bufferLine.childCount > 0) _inspectorStatic.Add(bufferLine);
 
             if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
             {
                 var buf = _em.GetBuffer<RecipeOutputSlot>(_inspectorEntity, isReadOnly: true);
                 if (buf.Length > 0)
                 {
-                    AddInspectorRow(_inspectorStatic, "—— Produces ——");
+                    AddInspectorRow(_inspectorInfo, "—— Produces ——");
                     for (int i = 0; i < buf.Length; i++)
-                        AddInspectorRow(_inspectorStatic, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
+                        AddInspectorRow(_inspectorInfo, $"  {ItemName(buf[i].ItemID)}  ×  {buf[i].Quantity}");
 
                     // Three fixed rows for a crafter with a recipe (stable across rebuilds).
                     if (!isCollector && hasBuildingData && _em.HasComponent<RecipeProcessData>(_inspectorEntity))
@@ -343,10 +359,10 @@ namespace MobileIdleBuilder
                         var outs = new List<(int itemId, int quantity)>(buf.Length);
                         for (int i = 0; i < buf.Length; i++) outs.Add((buf[i].ItemID, buf[i].Quantity));
                         foreach (var line in CrafterValueLines(outs, buildingData))
-                            AddInspectorRow(_inspectorStatic, line);
+                            AddInspectorRow(_inspectorInfo, line);
                         // Always present so the 0.5 s rebuild keeps its layout.
                         var (sold, paid) = SurplusSaleLog.Rate(_inspectorEntity, Time.time);
-                        AddInspectorRow(_inspectorStatic, SurplusLine(sold, paid, SurplusSale.CurrentFraction()));
+                        AddInspectorRow(_inspectorInfo, SurplusLine(sold, paid, SurplusSale.CurrentFraction()));
                     }
                 }
             }
@@ -354,7 +370,7 @@ namespace MobileIdleBuilder
             if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
             {
                 float bonus = _em.GetComponentData<RecipeProcessData>(_inspectorEntity).ByproductEntropy;
-                if (bonus > 0f) AddInspectorRow(_inspectorStatic, "  " + HUDController.EscapeBonusText(bonus));
+                if (bonus > 0f) AddInspectorRow(_inspectorInfo, "  " + HUDController.EscapeBonusText(bonus));
             }
 
             // buildingSO fetched above (before the power-source early-out).
@@ -551,14 +567,16 @@ namespace MobileIdleBuilder
                 float draw = _em.HasComponent<PowerConsumer>(_inspectorEntity)
                     ? _em.GetComponentData<PowerConsumer>(_inspectorEntity).DrawEV
                     : 0f;
-                AddInspectorRow(_inspectorStatic, "—— Power ——");
-                AddInspectorRow(_inspectorStatic, $"Draw: {draw:0.#} eV");
+                AddInspectorRow(_inspectorInfo, "—— Power ——");
+                AddInspectorRow(_inspectorInfo, $"Draw: {draw:0.#} eV");
                 string statusText = status.IsConnected == 0
                     ? "UNPOWERED (no generator in range)"
                     : (status.ThrottleRatio < 0.999f
                         ? $"Brownout — {status.ThrottleRatio * 100f:0}% power"
                         : "Powered");
-                AddInspectorRow(_inspectorStatic, $"Status: {statusText}");
+                AddInspectorRow(_inspectorInfo, $"Status: {statusText}");
+                // A power problem stops the building, so it stays in view instead of hiding behind (i).
+                if (statusText != "Powered") AddInspectorRow(_inspectorStatic, $"⚡ {statusText}");
             }
         }
 
@@ -1360,17 +1378,6 @@ namespace MobileIdleBuilder
 
         // ── Stable buffer rows ────────────────────────────────────────────────
 
-        private void AddBufferRows(List<(int itemId, int quantity)> rows)
-        {
-            if (rows.Count == 0)
-            {
-                AddInspectorRow(_inspectorStatic, "  (empty)");
-                return;
-            }
-            foreach (var (itemId, quantity) in rows)
-                AddInspectorRow(_inspectorStatic, $"  {ItemName(itemId)}  ×  {quantity}");
-        }
-
         /// <summary>
         /// Rows for a building buffer whose count doesn't change as items flow: every expected item id
         /// first (in recipe order, quantity 0 when absent), then any unexpected items the buffer holds
@@ -1499,26 +1506,98 @@ namespace MobileIdleBuilder
 
         // ── Empty buffer into player inventory ────────────────────────────────
 
-        private void AddEmptyBufferButton(string text, bool hasContents, System.Action onEmpty)
+        /// <summary>The banner shown after an Empty button moves a buffer into the inventory. Pure (tested).</summary>
+        internal static string EmptiedMessage(bool input) =>
+            input ? "Input emptied to inventory" : "Output emptied to inventory";
+
+        /// <summary>
+        /// "IN [chip][chip] [empty]": a label, one chip per buffer row, and a small icon button that empties
+        /// the buffer into the player inventory. The button is disabled (not removed) when there is
+        /// nothing to empty, so the line keeps its shape between rebuilds.
+        /// </summary>
+        private VisualElement MakeBufferGroup(string label, List<(int itemId, int quantity)> rows,
+                                              bool hasContents, System.Action onEmpty)
         {
-            var btn = new Button { text = text };
-            btn.AddToClassList("craft-btn");
+            var group = new VisualElement();
+            group.AddToClassList("inspector-buffer-group");
+
+            var title = new Label(label);
+            title.AddToClassList("inspector-buffer-label");
+            group.Add(title);
+
+            foreach (var (itemId, quantity) in rows)
+                group.Add(MakeItemChip(itemId, quantity));
+
+            var btn = new Button();
+            btn.AddToClassList("inspector-empty-btn");
+            GlyphIcon.SetOn(btn, GlyphIcon.Kind.Empty);
             // Disabled rather than omitted so the layout doesn't change as the buffer fills/drains;
             // ListTapRouter swallows taps on a disabled button.
             btn.SetEnabled(hasContents);
             // _inspectorStatic is not a ScrollView, but the router is still required: the
             // button's own Clickable consumes the pointer-down regardless of any ScrollView.
             ListTapRouter.Register(_inspectorStatic, btn, onEmpty);
-            _inspectorStatic.Add(btn);
+            group.Add(btn);
+            return group;
         }
 
-        private void EmptyOutputToInventory(Entity building)
+        /// <summary>An item's periodic-table tile (or its name when it has no icon) and its count.</summary>
+        private static VisualElement MakeItemChip(int itemId, int quantity)
         {
-            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
-            if (!_em.HasBuffer<BuildingOutputSlot>(building)) return;
+            var chip = new VisualElement { pickingMode = PickingMode.Ignore };
+            chip.AddToClassList("inspector-chip");
+            if (quantity <= 0) chip.AddToClassList("inspector-chip--empty");
+
+            var icon = ItemDatabase.Instance?.Get(itemId)?.icon;
+            if (icon != null)
+            {
+                var img = new VisualElement { pickingMode = PickingMode.Ignore };
+                img.AddToClassList("inspector-chip__icon");
+                img.style.backgroundImage = new StyleBackground(icon);
+                chip.Add(img);
+            }
+            else
+            {
+                var name = new Label(ItemName(itemId)) { pickingMode = PickingMode.Ignore };
+                name.AddToClassList("inspector-chip__name");
+                chip.Add(name);
+            }
+
+            var count = new Label($"×{quantity}") { pickingMode = PickingMode.Ignore };
+            count.AddToClassList("inspector-chip__count");
+            chip.Add(count);
+            return chip;
+        }
+
+        // ── (i) details card ──────────────────────────────────────────────────
+
+        private void ToggleInfo() => SetInfoOpen(!_infoOpen);
+
+        private void SetInfoOpen(bool open)
+        {
+            _infoOpen = open;
+            ApplyInfoVisibility();
+        }
+
+        /// <summary>Shows the details card when it is open, a building is selected and it isn't a power card.</summary>
+        private void ApplyInfoVisibility()
+        {
+            bool powerCard = _buildingInspectorPanel != null && _buildingInspectorPanel.ClassListContains(PowerCardClass);
+            bool show = _infoOpen && IsOpen && !powerCard;
+            HUDController.SetElementVisible(_inspectorInfoCard, show);
+            if (_infoButton == null) return;
+            if (show) _infoButton.AddToClassList("inspector-info-btn--active");
+            else      _infoButton.RemoveFromClassList("inspector-info-btn--active");
+        }
+
+        /// <summary>Moves the building's output buffer into the player inventory. True when anything moved.</summary>
+        private bool EmptyOutputToInventory(Entity building)
+        {
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return false;
+            if (!_em.HasBuffer<BuildingOutputSlot>(building)) return false;
 
             var outBuf = _em.GetBuffer<BuildingOutputSlot>(building);
-            if (outBuf.Length == 0) return;
+            if (outBuf.Length == 0) return false;
 
             var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
             for (int i = 0; i < outBuf.Length; i++)
@@ -1527,6 +1606,7 @@ namespace MobileIdleBuilder
             outBuf.Clear();
 
             RefreshInspectorContent();
+            return true;
         }
 
         /// <summary>
@@ -1574,13 +1654,14 @@ namespace MobileIdleBuilder
                 InventoryPopupController.Notify(ItemName(id), qty);
         }
 
-        private void EmptyInputToInventory(Entity building)
+        /// <summary>Moves the building's input buffer into the player inventory. True when anything moved.</summary>
+        private bool EmptyInputToInventory(Entity building)
         {
-            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return;
-            if (!_em.HasBuffer<BuildingInputSlot>(building)) return;
+            if (!_ecsReady || _inventoryQuery.IsEmpty || !_em.Exists(building)) return false;
+            if (!_em.HasBuffer<BuildingInputSlot>(building)) return false;
 
             var inBuf = _em.GetBuffer<BuildingInputSlot>(building);
-            if (inBuf.Length == 0) return;
+            if (inBuf.Length == 0) return false;
 
             var inv = _em.GetBuffer<InventorySlot>(_inventoryQuery.GetSingletonEntity());
             for (int i = 0; i < inBuf.Length; i++)
@@ -1589,6 +1670,7 @@ namespace MobileIdleBuilder
             inBuf.Clear();
 
             RefreshInspectorContent();
+            return true;
         }
 
         private static string ItemName(int itemID)

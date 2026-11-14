@@ -1462,3 +1462,132 @@
     font-size: var(--font-size-md);
     -unity-font-style: bold;
 }
+
+/* ---- Building inspector: (i) details card and compact buffer line ---- */
+
+/* (i) sits just left of the close button; the header reserves room for both. */
+#building-inspector-panel > .panel-header {
+    padding-right: 108px;
+}
+
+.inspector-info-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: 60px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-border);
+    border-width: 1px;
+    color: var(--color-text-secondary);
+    padding: 0;
+    margin: 0;
+}
+
+.inspector-info-btn > .glyph-icon { width: 18px; height: 18px; }
+
+.inspector-info-btn--active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Power sources keep their small top-right card with its few rows in view: no (i) there. */
+.output-selector--power .inspector-info-btn {
+    display: none;
+}
+
+.output-selector--power > .panel-header {
+    padding-right: 60px;
+}
+
+/* Floats over the recipe/upgrade lists, right under the header, so opening it moves nothing. */
+.inspector-info-card {
+    position: absolute;
+    top: 60px;
+    right: var(--spacing-sm);
+    left: 20%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    border-radius: var(--border-radius);
+}
+
+/* One line: IN [chips] [empty]   OUT [chips] [empty]; wraps only for many-input recipes. */
+.inspector-buffers {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: var(--spacing-xs);
+}
+
+.inspector-buffer-group {
+    flex-direction: row;
+    align-items: center;
+    margin-right: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.inspector-buffer-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+    margin: 0 4px 0 0;
+    padding: 0;
+}
+
+.inspector-chip {
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    padding: 0 6px 0 2px;
+    margin-right: 4px;
+    border-radius: 6px;
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.inspector-chip--empty {
+    opacity: 0.45;
+}
+
+.inspector-chip__icon {
+    width: 24px;
+    height: 24px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.inspector-chip__name {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    margin: 0 0 0 2px;
+    padding: 0;
+}
+
+.inspector-chip__count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    margin: 0 0 0 3px;
+    padding: 0;
+}
+
+.inspector-empty-btn {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-primary);
+}
+
+.inspector-empty-btn > .glyph-icon { width: 18px; height: 18px; }
+
+.inspector-empty-btn:disabled {
+    color: var(--color-text-secondary);
+    opacity: 0.4;
+}

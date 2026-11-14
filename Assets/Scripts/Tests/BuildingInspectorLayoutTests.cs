@@ -78,5 +78,32 @@ namespace MobileIdleBuilder.Tests
         {
             Assert.IsTrue(HUDBuildingInspectorSubController.ShowInputBufferSection(1, 0, isSink: false));
         }
+
+        [Test]
+        public void EmptiedMessage_NamesTheSideThatWasEmptied()
+        {
+            Assert.AreEqual("Input emptied to inventory",  HUDBuildingInspectorSubController.EmptiedMessage(input: true));
+            Assert.AreEqual("Output emptied to inventory", HUDBuildingInspectorSubController.EmptiedMessage(input: false));
+        }
+
+        [TestCase("btn-inspector-info")]
+        [TestCase("inspector-info-card")]
+        [TestCase("inspector-info")]
+        public void GameHudUxml_HasInspectorInfoElement(string name)
+        {
+            var doc = System.Xml.Linq.XDocument.Load("Assets/UI/GameHUD.uxml");
+            bool found = false;
+            foreach (var e in doc.Descendants())
+                if ((string)e.Attribute("name") == name) { found = true; break; }
+            Assert.IsTrue(found, $"{name} missing from GameHUD.uxml");
+        }
+
+        [TestCase(GlyphIcon.Kind.Info)]
+        [TestCase(GlyphIcon.Kind.Empty)]
+        public void GlyphIcon_NewKinds_CanBeSetOnAButton(GlyphIcon.Kind kind)
+        {
+            var btn = new UnityEngine.UIElements.Button();
+            Assert.AreEqual(kind, GlyphIcon.SetOn(btn, kind).Icon);
+        }
     }
 }
