@@ -77,6 +77,7 @@
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
                 <ui:Button name="btn-stats"        text="Statistics"   class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
+                <ui:Button name="btn-cyclotron"    text="Cyclotron"    class="drawer-nav-btn hidden" />
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
@@ -638,6 +639,40 @@
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="surge-offer__decline" text="No thanks" class="craft-btn confirm-prompt__btn surge-offer__decline" />
                     <ui:Button name="surge-offer__watch" text="▶ Watch ad" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ CYCLOTRON KICK (CyclotronController.cs) ═══
+             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy becomes
+             Insight (a discount on the next research). Three steps shown one at a time. -->
+        <ui:VisualElement name="cyclotron-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card cyclotron-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Cyclotron" class="panel-title" />
+                    <ui:Button name="cyclotron__close" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__intro" class="cyclotron-step">
+                    <ui:Label name="cyclotron__intro-text" text="" class="game-update-message" />
+                    <ui:Label name="cyclotron__status" text="" class="cyclotron-status" />
+                    <ui:Button name="cyclotron__start" text="Start run" class="craft-btn cyclotron-btn" />
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__play" class="cyclotron-step hidden">
+                    <ui:VisualElement class="cyclotron-hud-row">
+                        <ui:Label name="cyclotron__energy" text="Energy 0%" class="cyclotron-hud-label" />
+                        <ui:Label name="cyclotron__timer" text="30s" class="cyclotron-hud-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cyclotron-energy-bar">
+                        <ui:VisualElement name="cyclotron__energy-fill" class="cyclotron-energy-fill" />
+                    </ui:VisualElement>
+                    <MobileIdleBuilder.CyclotronView name="cyclotron__view" class="cyclotron-view" />
+                    <ui:Label name="cyclotron__feedback" text="" class="cyclotron-feedback" />
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__result" class="cyclotron-step hidden">
+                    <ui:Label name="cyclotron__result-text" text="" class="game-update-message" />
+                    <ui:Button name="cyclotron__collect" text="Collect" class="craft-btn cyclotron-btn" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
