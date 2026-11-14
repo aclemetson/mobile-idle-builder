@@ -1467,13 +1467,13 @@
 
 /* (i) sits just left of the close button; the header reserves room for both. */
 #building-inspector-panel > .panel-header {
-    padding-right: 108px;
+    padding-right: 112px;
 }
 
 .inspector-info-btn {
     position: absolute;
     top: var(--spacing-sm);
-    right: 60px;
+    right: 64px;
     width: 44px;
     height: 44px;
     border-radius: 22px;
@@ -1501,10 +1501,11 @@
     padding-right: 60px;
 }
 
-/* Floats over the recipe/upgrade lists, right under the header, so opening it moves nothing. */
+/* Floats over the recipe/upgrade lists, right under the header, so opening it moves nothing.
+   `top` is overwritten in code with the header's measured bottom (PositionInfoCard). */
 .inspector-info-card {
     position: absolute;
-    top: 60px;
+    top: 110px;
     right: var(--spacing-sm);
     left: 20%;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -1590,4 +1591,9 @@
 .inspector-empty-btn:disabled {
     color: var(--color-text-secondary);
     opacity: 0.4;
+}
+
+/* Detail rows reuse .recipe-inputs (secondary text); on the raised card that read too dim. */
+.inspector-info .recipe-inputs {
+    color: var(--color-text-primary);
 }
