@@ -207,9 +207,10 @@ namespace MobileIdleBuilder
         public long EffectiveCost(ResearchSO research)
         {
             if (research == null) return 0;
-            float global = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.GlobalResearchDiscount) ?? 0f;
+            float global  = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.GlobalResearchDiscount) ?? 0f;
+            float insight = SaveManager.Instance?.Current?.researchInsight ?? 0f;   // Cyclotron Kick reward
             return ResearchCost.Effective(research.costBaseCurrency, global, research.prestigeMemoryDiscount,
-                                          _rememberedIds.Contains(research.id));
+                                          _rememberedIds.Contains(research.id), insight);
         }
 
         /// <summary>True if the player finished this research on some run (it gets its memory discount).</summary>
@@ -239,6 +240,9 @@ namespace MobileIdleBuilder
             long cost = EffectiveCost(research);
             if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
             AchievementService.Instance?.NotifyEntropySpent(cost);
+            // Banked Cyclotron Insight was in that price; this research uses it up (saved just below or on
+            // the instant-complete path's save).
+            CyclotronProgress.ConsumeInsight(SaveManager.Instance?.Current);
 
             int effective = EffectiveDurationSeconds(research);
             if (effective <= 0)
