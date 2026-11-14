@@ -482,17 +482,19 @@
                 <ui:Button name="btn-close-inspector" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="inspector-static" class="inspector-static" />
-            <!-- Details behind the (i) button (HUDBuildingInspectorSubController): floats over the
-                 recipe/upgrade lists so opening it never moves them. Tap (i) or the card to close. -->
-            <ui:VisualElement name="inspector-info-card" class="inspector-info-card hidden">
-                <ui:VisualElement name="inspector-info" class="inspector-info" />
-            </ui:VisualElement>
             <ui:ScrollView name="inspector-recipes" class="inspector-scroll inspector-scroll--recipes"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
             <ui:ScrollView name="inspector-upgrades" class="inspector-scroll inspector-scroll--upgrades"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+            <!-- Details behind the (i) button (HUDBuildingInspectorSubController): floats over the
+                 recipe/upgrade lists so opening it never moves them. Tap (i) or the card to close.
+                 Must stay the LAST child: UI Toolkit draws later siblings on top, so anywhere earlier
+                 the recipe buttons paint over it. Its top is set from the header's height in code. -->
+            <ui:VisualElement name="inspector-info-card" class="inspector-info-card hidden">
+                <ui:VisualElement name="inspector-info" class="inspector-info" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ MAXWELL'S DEMON PANEL (particle deposit → entropy conversion) ═══ -->

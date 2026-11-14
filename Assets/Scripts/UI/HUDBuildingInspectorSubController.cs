@@ -167,6 +167,9 @@ namespace MobileIdleBuilder
             if (_infoButton != null) _infoButton.clicked += ToggleInfo;
             // Tapping the card itself closes it too.
             _inspectorInfoCard?.RegisterCallback<PointerDownEvent>(_ => SetInfoOpen(false));
+            // The card sits just under the header, whose height depends on the device's scale and font.
+            var header = _buildingInspectorPanel?.Q(className: "panel-header");
+            header?.RegisterCallback<GeometryChangedEvent>(evt => PositionInfoCard(evt.newRect));
             _placement              = placement;
             _hud                   = hud;
             _inspectorStatic?.RegisterCallback<GeometryChangedEvent>(OnStaticGeometryChanged);
@@ -1572,6 +1575,13 @@ namespace MobileIdleBuilder
         // ── (i) details card ──────────────────────────────────────────────────
 
         private void ToggleInfo() => SetInfoOpen(!_infoOpen);
+
+        /// <summary>Puts the details card's top edge just below the header (its bottom, in panel space).</summary>
+        private void PositionInfoCard(Rect header)
+        {
+            if (_inspectorInfoCard == null || header.height <= 0f) return;
+            _inspectorInfoCard.style.top = header.yMax + 4f;
+        }
 
         private void SetInfoOpen(bool open)
         {
