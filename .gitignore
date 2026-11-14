@@ -131,3 +131,6 @@ __pycache__/
 /Playtests/reports/
 # Benchmark timings stay on the machine that ran them
 /Playtests/benchmarks/
+
+# Molecule icon pipeline: intermediate Blender renders
+scripts/molecule_icons/renders/

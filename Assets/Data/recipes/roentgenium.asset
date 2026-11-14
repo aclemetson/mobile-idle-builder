@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: roentgenium
   displayName: Roentgenium
+  methodLabel: 
   recipeId: 140
   tier: 2
   category: 3

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_sodium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_sodium
-  displayName: Fuse Sodium
+  displayName: Sodium
+  methodLabel: 
   recipeId: 214
   tier: 2
   category: 8

@@ -26,6 +26,7 @@ namespace MobileIdleBuilder.PlayModeTests
 
         GameObject _saveManagerGO;
         GameObject _bridgeGO;
+        GameObject _gridGO;
 
         World         _testWorld;
         EntityManager _em;
@@ -53,12 +54,14 @@ namespace MobileIdleBuilder.PlayModeTests
         [TearDown]
         public void TearDown()
         {
+            if (_gridGO        != null) { Object.DestroyImmediate(_gridGO);        _gridGO        = null; }
             if (_bridgeGO      != null) { Object.DestroyImmediate(_bridgeGO);      _bridgeGO      = null; }
             if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
             // Guarantee the singleton statics are cleared so a bridge with IsLoaded forced true cannot
             // leak into other fixtures (e.g. DailyEventServiceTests calls ECSLoadBridge.Instance?.AddX,
             // which would NRE on the uninitialized query of a leaked instance).
+            ClearSingleton(typeof(GridSaveService));
             ClearSingleton(typeof(ECSLoadBridge));
             ClearSingleton(typeof(SaveManager));
 
@@ -69,7 +72,7 @@ namespace MobileIdleBuilder.PlayModeTests
             if (_saveBackup != null) File.WriteAllText(_savePath, _saveBackup);
         }
 
-        ECSLoadBridge SpawnBridgeWiredToEcs(bool saveApplied)
+        ECSLoadBridge SpawnBridgeWiredToEcs(bool saveApplied, bool isLoaded = true)
         {
             _saveManagerGO = new GameObject("SaveManager");
             { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
@@ -88,9 +91,56 @@ namespace MobileIdleBuilder.PlayModeTests
                 ComponentType.ReadOnly<PlayerInventoryTag>(), ComponentType.ReadWrite<InventorySlot>()));
             SetField(bridge, "_tutorialQuery",  _em.CreateEntityQuery(ComponentType.ReadWrite<TutorialStateData>()));
 
-            SetProp(bridge, "IsLoaded", true);
+            SetProp(bridge, "IsLoaded", isLoaded);
             SetProp(bridge, "SaveApplied", saveApplied);
             return bridge;
+        }
+
+        // A GridSaveService over the test world, whose ECS holds no buildings or belts: the state of a
+        // freshly loaded SubScene before LoadGrid has re-placed the saved grid.
+        void SpawnGridServiceAndSeedSavedGrid()
+        {
+            _gridGO = new GameObject("GridSaveService");
+            var grid = _gridGO.AddComponent<GridSaveService>();
+            RunAwake(grid);
+            typeof(GridSaveService).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(grid, null);
+
+            var saved = GridSaveService.EnsureActiveGrid(SaveManager.Instance.Current);
+            saved.buildings.Add(new BuildingSaveData { buildingId = 1, recipeId = -1, position = new[] { 3, 4 } });
+            saved.conveyors.Add(new ConveyorSaveData { cells = new[] { 4, 4, 5, 4 } });
+        }
+
+        [Test]
+        public void SaveLocal_WhileStillLoading_KeepsSavedBuildingsAndBelts()
+        {
+            // Device bug: a research timer that finished while the app was closed completes in
+            // ResearchService.Start and calls SaveLocal before ECSLoadBridge has applied the save.
+            // The grid flush then wrote the empty ECS grid over every saved building and belt.
+            SpawnBridgeWiredToEcs(saveApplied: false, isLoaded: false);
+            SpawnGridServiceAndSeedSavedGrid();
+
+            SaveManager.Instance.SaveLocal();
+
+            var grid = GridSaveService.EnsureActiveGrid(SaveManager.Instance.Current);
+            Assert.AreEqual(1, grid.buildings.Count, "A save during load must not wipe the saved buildings");
+            Assert.AreEqual(1, grid.conveyors.Count, "A save during load must not wipe the saved belts");
+            Assert.AreEqual(9999L, SaveManager.Instance.Current.currentRun.baseCurrency);
+        }
+
+        [Test]
+        public void SaveLocal_AfterSaveApplied_FlushesLiveGrid()
+        {
+            // Guards the test above from passing vacuously: once loaded, the grid flush really does run
+            // and mirrors the live (here: empty) ECS grid.
+            SpawnBridgeWiredToEcs(saveApplied: true);
+            SpawnGridServiceAndSeedSavedGrid();
+
+            SaveManager.Instance.SaveLocal();
+
+            var grid = GridSaveService.EnsureActiveGrid(SaveManager.Instance.Current);
+            Assert.AreEqual(0, grid.buildings.Count);
+            Assert.AreEqual(0, grid.conveyors.Count);
         }
 
         [Test]

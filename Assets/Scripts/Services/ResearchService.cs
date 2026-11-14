@@ -16,6 +16,10 @@ namespace MobileIdleBuilder
     {
         private ResearchSO[] _allResearch;
 
+        private EntityQuery _effectsQuery;
+        private bool        _effectsDirty;
+        private bool        _effectsReady;
+
         /// <summary>Fired when a research timer is started.</summary>
         public event Action<ResearchSO> OnResearchStarted;
         /// <summary>Fired whenever a research finishes (instantly, on timer, or via skip).</summary>
@@ -24,6 +28,10 @@ namespace MobileIdleBuilder
         public IReadOnlyList<ResearchSO> AllResearch => _allResearch;
 
         private readonly HashSet<string> _unlockedIds = new();
+
+        // Every research finished on any run (persisted as SaveData.researchCompletedEver, survives
+        // prestige). A node in here costs less on later runs by its prestige_memory_discount.
+        private readonly HashSet<string> _rememberedIds = new();
 
         // Active timer (one at a time). Cached so Update() avoids per-frame save lookups/parsing.
         private ResearchSO _activeResearch;
@@ -50,6 +58,8 @@ namespace MobileIdleBuilder
             {
                 _em = world.EntityManager;
                 _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
+                _effectsQuery  = _em.CreateEntityQuery(ComponentType.ReadWrite<ResearchEffects>());
+                _effectsReady  = true;
             }
 
             var save = SaveManager.Instance?.Current;
@@ -61,14 +71,20 @@ namespace MobileIdleBuilder
             // stayed out of the Recipes panel. MarkKnown is idempotent, so this is cheap on load.
             foreach (var id in _unlockedIds) MarkGatedRecipesKnown(id);
 
+            RestoreRemembered(save);
+
             // Restore an in-progress research timer; complete it immediately if it already elapsed
             // while the app was closed (offline completion, mirrors the speed-boost UtcNow pattern).
             RestoreActiveTimer(save);
             ProcessActiveTimer();
+
+            _effectsDirty = true;
         }
 
         void Update()
         {
+            TryApplyEffectsToECS();
+
             if (_activeResearch == null) return;
             if (GameClock.UtcNow >= _activeCompleteUtc)
                 CompleteResearch(_activeResearch);
@@ -94,6 +110,48 @@ namespace MobileIdleBuilder
                 if (IsUnlocked(r.id)) mult *= r.fieldCooldownMult;
             }
             return mult;
+        }
+
+        /// <summary>
+        /// Sum of every effect of <paramref name="type"/> across the given (unlocked) research.
+        /// Values of the same type add up; returns 0 when none apply.
+        /// </summary>
+        public static float SumEffect(IEnumerable<ResearchSO> unlocked, ResearchEffectType type)
+        {
+            float total = 0f;
+            if (unlocked == null) return total;
+            foreach (var r in unlocked)
+            {
+                if (r == null || r.effects == null) continue;
+                foreach (var e in r.effects)
+                    if (e.type == type) total += e.value;
+            }
+            return total;
+        }
+
+        /// <summary>Total of one effect type across all currently unlocked research.</summary>
+        public float GetEffectTotal(ResearchEffectType type)
+        {
+            if (_allResearch == null) return 0f;
+            var unlocked = new List<ResearchSO>();
+            foreach (var r in _allResearch)
+                if (r != null && IsUnlocked(r.id)) unlocked.Add(r);
+            return SumEffect(unlocked, type);
+        }
+
+        /// <summary>
+        /// Pushes the research effect totals into the ResearchEffects ECS singleton. The player entity
+        /// comes from a SubScene and may not exist yet, so this retries each frame while dirty.
+        /// </summary>
+        private void TryApplyEffectsToECS()
+        {
+            if (!_effectsDirty || !_effectsReady) return;
+            if (_effectsQuery.IsEmptyIgnoreFilter) return;
+            _effectsQuery.SetSingleton(new ResearchEffects
+            {
+                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed)
+            });
+            _effectsDirty = false;
         }
 
         /// <summary>True while a research timer is running (one research at a time).</summary>
@@ -138,8 +196,25 @@ namespace MobileIdleBuilder
             }
 
             long currentEntropy = GetCurrentEntropy();
-            return currentEntropy >= research.costBaseCurrency;
+            return currentEntropy >= EffectiveCost(research);
         }
+
+        /// <summary>
+        /// What this research costs now: the authored cost less Memory Resonance and, when the player
+        /// finished it on an earlier run, its own prestige-memory discount. Use for every price shown and
+        /// charged (<see cref="ResearchCost"/>).
+        /// </summary>
+        public long EffectiveCost(ResearchSO research)
+        {
+            if (research == null) return 0;
+            float global  = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.GlobalResearchDiscount) ?? 0f;
+            float insight = SaveManager.Instance?.Current?.researchInsight ?? 0f;   // Cyclotron Kick reward
+            return ResearchCost.Effective(research.costBaseCurrency, global, research.prestigeMemoryDiscount,
+                                          _rememberedIds.Contains(research.id), insight);
+        }
+
+        /// <summary>True if the player finished this research on some run (it gets its memory discount).</summary>
+        public bool IsRemembered(string id) => !string.IsNullOrEmpty(id) && _rememberedIds.Contains(id);
 
         /// <summary>Effective research time after the Research Overdrive prestige bonus (capped at -50%).</summary>
         public int EffectiveDurationSeconds(ResearchSO research)
@@ -162,8 +237,12 @@ namespace MobileIdleBuilder
             if (research == null || HasActiveResearch || !CanPurchase(research)) return;
 
             // Check-and-spend in one step; CanPurchase already confirmed the balance.
-            if (!EntropyWallet.TrySpend(_progressQuery, research.costBaseCurrency)) return;
-            AchievementService.Instance?.NotifyEntropySpent(research.costBaseCurrency);
+            long cost = EffectiveCost(research);
+            if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
+            AchievementService.Instance?.NotifyEntropySpent(cost);
+            // Banked Cyclotron Insight was in that price; this research uses it up (saved just below or on
+            // the instant-complete path's save).
+            CyclotronProgress.ConsumeInsight(SaveManager.Instance?.Current);
 
             int effective = EffectiveDurationSeconds(research);
             if (effective <= 0)
@@ -219,6 +298,7 @@ namespace MobileIdleBuilder
                 save.unlockedResearch ??= new();
                 if (!save.unlockedResearch.Contains(research.id))
                     save.unlockedResearch.Add(research.id);
+                Remember(save, research.id);
 
                 if (save.activeResearchId == research.id)
                 {
@@ -230,6 +310,7 @@ namespace MobileIdleBuilder
 
             _activeResearch    = null;
             _activeCompleteUtc = default;
+            _effectsDirty      = true;
 
             // Mark any JSON recipes gated behind this research as "known" (persists across prestige)
             MarkGatedRecipesKnown(research.id);
@@ -260,6 +341,52 @@ namespace MobileIdleBuilder
             foreach (var r in recipes)
                 if (r != null && !string.IsNullOrEmpty(researchId) && r.requires_research == researchId)
                     yield return r.id;
+        }
+
+        /// <summary>
+        /// Loads the remembered set: the saved list, plus this run's unlocks, plus (for saves made before
+        /// the list existed) every research whose gated recipes are all already known. Recipe knowledge
+        /// survives prestige and only research marks a gated recipe known, so a fully known set means the
+        /// research was finished on an earlier run.
+        /// </summary>
+        private void RestoreRemembered(SaveData save)
+        {
+            _rememberedIds.Clear();
+            if (save == null) return;
+            save.researchCompletedEver ??= new List<string>();
+            foreach (var id in save.researchCompletedEver) _rememberedIds.Add(id);
+            foreach (var id in _unlockedIds) _rememberedIds.Add(id);
+
+            var knowledge = RecipeKnowledgeService.Instance;
+            var recipes   = RecipeDatabase.Instance?.Recipes;
+            if (knowledge != null && recipes != null && _allResearch != null)
+                foreach (var r in _allResearch)
+                    if (r != null && !_rememberedIds.Contains(r.id)
+                        && AllGatedRecipesKnown(recipes, r.id, knowledge.IsKnown))
+                        _rememberedIds.Add(r.id);
+
+            foreach (var id in _rememberedIds)
+                if (!save.researchCompletedEver.Contains(id)) save.researchCompletedEver.Add(id);
+        }
+
+        private void Remember(SaveData save, string id)
+        {
+            if (!_rememberedIds.Add(id)) return;
+            save.researchCompletedEver ??= new List<string>();
+            if (!save.researchCompletedEver.Contains(id)) save.researchCompletedEver.Add(id);
+        }
+
+        /// <summary>True when the research gates at least one recipe and every one of them is known.</summary>
+        internal static bool AllGatedRecipesKnown(IEnumerable<RecipeJson> recipes, string researchId,
+                                                  Func<string, bool> isKnown)
+        {
+            bool any = false;
+            foreach (var id in RecipesGatedBy(recipes, researchId))
+            {
+                any = true;
+                if (!isKnown(id)) return false;
+            }
+            return any;
         }
 
         /// <summary>Loads the persisted active-timer state into the cached fields (no completion).</summary>
@@ -305,6 +432,7 @@ namespace MobileIdleBuilder
                 save.unlockedResearch ??= new();
                 if (!save.unlockedResearch.Contains(researchId))
                     save.unlockedResearch.Add(researchId);
+                Remember(save, researchId);
 
                 if (save.activeResearchId == researchId)
                 {
@@ -320,6 +448,7 @@ namespace MobileIdleBuilder
             }
 
             MarkGatedRecipesKnown(researchId);
+            _effectsDirty = true;
 
             var so = FindResearch(researchId);
             if (so != null)
@@ -333,7 +462,7 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Clears all unlocked research and any in-progress timer for the new run.
-        /// Called by PrestigeSaveWatcher / PrestigeSystem. The caller clears the matching
+        /// Called by PrestigeSystem. The caller clears the matching
         /// SaveData fields before saving.
         /// </summary>
         public void ResetAll()
@@ -341,6 +470,7 @@ namespace MobileIdleBuilder
             _unlockedIds.Clear();
             _activeResearch    = null;
             _activeCompleteUtc = default;
+            _effectsDirty      = true;
             GameLogger.Info("[ResearchService] Research reset for prestige.");
         }
 

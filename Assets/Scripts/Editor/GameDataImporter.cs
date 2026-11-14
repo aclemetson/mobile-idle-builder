@@ -67,6 +67,8 @@ namespace MobileIdleBuilder.Editor
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<BuildingDatabaseSO>($"{ResourcesDir}/BuildingDatabase.asset") == null)
                 needsImport = true;
+            if (AssetDatabase.LoadAssetAtPath<RecipeDatabaseSO>($"{ResourcesDir}/RecipeDatabase.asset") == null)
+                needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<ManagerDatabaseSO>($"{ResourcesDir}/ManagerDatabase.asset") == null)
                 needsImport = true;
             if (AssetDatabase.LoadAssetAtPath<DialogueDatabaseSO>($"{ResourcesDir}/DialogueDatabase.asset") == null)
@@ -229,6 +231,9 @@ namespace MobileIdleBuilder.Editor
                 worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
             GenerateWorldDatabase(data.worlds, worldLookup);
 
+            // ── Step 12.59: RecipeDatabaseSO (runtime recipe list, #336/#287) ─
+            GenerateRecipeDatabase(data.recipes, recipeLookup);
+
             // ── Step 12.6: BuildingDatabaseSO (data-driven build menu) ───────
             GenerateBuildingDatabase(data.buildings, buildingLookup);
 
@@ -281,6 +286,7 @@ namespace MobileIdleBuilder.Editor
             so.alphaParticleEVValue               = data.alpha_particle_ev_value;
             so.betaParticleEVValue                = data.beta_particle_ev_value;
             so.startingEntropy                    = data.starting_entropy;
+            so.beltItemsPerTile                   = BeltSettings.Clamp(data.belt_items_per_tile);
             so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
             so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
             so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
@@ -318,6 +324,24 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
+        private static ResearchEffect[] ParseResearchEffects(ResearchJson data)
+        {
+            var list = new List<ResearchEffect>();
+            if (data.effects == null) return list.ToArray();
+            foreach (var e in data.effects)
+            {
+                if (e == null) continue;
+                if (!Enum.TryParse<ResearchEffectType>(e.type, out var type) ||
+                    !Enum.IsDefined(typeof(ResearchEffectType), type))
+                {
+                    Debug.LogError($"[GameDataImporter] Research '{data.id}': unknown effect type '{e.type}', skipped.");
+                    continue;
+                }
+                list.Add(new ResearchEffect { type = type, value = e.value });
+            }
+            return list.ToArray();
+        }
+
         private static ResearchSO GenerateResearchPass1(ResearchJson data)
         {
             string path = $"{ResearchDir}/{Sanitize(data.id)}.asset";
@@ -331,6 +355,7 @@ namespace MobileIdleBuilder.Editor
             so.costPrestigeCurrency = data.cost_prestige_currency;
             so.durationSeconds      = data.duration_seconds;
             so.fieldCooldownMult    = data.field_cooldown_mult;
+            so.effects              = ParseResearchEffects(data);
             so.unlocksGridExpansion = data.unlocks_grid_expansion;
             so.resetsOnPrestige     = data.resets_on_prestige;
             so.prestigeMemoryDiscount = data.prestige_memory_discount;
@@ -409,6 +434,7 @@ namespace MobileIdleBuilder.Editor
 
             so.id               = data.id;
             so.displayName      = data.display_name;
+            so.methodLabel      = data.method_label ?? "";
             so.recipeId         = data.recipe_id;
             so.tier             = data.tier;
             so.outputQuantity   = data.output_quantity;
@@ -461,6 +487,7 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
             so.isItemFilter        = data.is_item_filter;
+            so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;
             so.recipeModeLabels    = data.recipe_mode_labels;
             so.recipeModePrefixes  = data.recipe_mode_prefixes;
@@ -731,6 +758,22 @@ namespace MobileIdleBuilder.Editor
                     list.Add(so);
 
             db.allWorlds = list.ToArray();
+            EditorUtility.SetDirty(db);
+        }
+
+        private static void GenerateRecipeDatabase(List<RecipeJson> recipes,
+            Dictionary<string, RecipeSO> recipeLookup)
+        {
+            EnsureDirectory(ResourcesDir);
+            string path = $"{ResourcesDir}/RecipeDatabase.asset";
+            var db = LoadOrCreate<RecipeDatabaseSO>(path);
+
+            var list = new List<RecipeSO>(recipes.Count);
+            foreach (var r in recipes)
+                if (recipeLookup.TryGetValue(r.id, out var so))
+                    list.Add(so);
+
+            db.allRecipes = list.ToArray();
             EditorUtility.SetDirty(db);
         }
 

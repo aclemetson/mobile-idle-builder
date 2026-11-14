@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_lead_201
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_lead_201
-  displayName: Lead-201 Decay
+  displayName: Thallium
+  methodLabel: 
   recipeId: 241
   tier: 2
   category: 4

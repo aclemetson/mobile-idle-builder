@@ -90,7 +90,7 @@ namespace MobileIdleBuilder.Tests
                 TransportTime = 1f,
                 IsChainHead   = true
             });
-            _em.AddComponentData(e, new ConveyorItemData { ItemID = ItemId, Progress = 1f });
+            ConveyorItems.Add(_em, e, ItemId, 1f);
             return e;
         }
 
@@ -111,7 +111,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(1, InputTotal(building), "Item must enter the input even when the belt runs perpendicular to it");
-            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail), "Item must be removed from the belt after handoff");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail), "Item must be removed from the belt after handoff");
         }
 
         // ── Backward compatibility: belt exit points straight into the input ──
@@ -125,7 +125,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(1, InputTotal(building), "Belt exiting straight into the input must still deposit");
-            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail));
+            Assert.IsFalse(ConveyorItems.Has(_em, tail));
         }
 
         // ── #223: two inputs touch the tail; the one it points at wins ───────
@@ -159,7 +159,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(0, InputTotal(building), "An input that does not face the belt must not receive the item");
-            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Item must remain on the belt when no input faces it");
+            Assert.IsTrue(ConveyorItems.Has(_em, tail), "Item must remain on the belt when no input faces it");
         }
 
         // ── Back-pressure: full input keeps the item on the belt ─────────────
@@ -174,7 +174,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(1, InputTotal(building), "A full input must not accept more");
-            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Item must wait on the belt while the input is full");
+            Assert.IsTrue(ConveyorItems.Has(_em, tail), "Item must wait on the belt while the input is full");
         }
 
         // ── #200: per-item cap, recipe filter, jam overflow ──────────────────
@@ -194,7 +194,7 @@ namespace MobileIdleBuilder.Tests
         private Entity CreateTail(int2 cell, int exitDir, int itemId, Entity prev)
         {
             var e = CreateLoadedTail(cell, exitDir);
-            _em.SetComponentData(e, new ConveyorItemData { ItemID = itemId, Progress = 1f });
+            ConveyorItems.Clear(_em, e); ConveyorItems.Add(_em, e, itemId, 1f);
             var seg = _em.GetComponentData<ConveyorSegmentData>(e);
             seg.PrevSegment = prev;
             seg.IsChainHead = prev == Entity.Null;
@@ -210,7 +210,7 @@ namespace MobileIdleBuilder.Tests
             {
                 Cell = cell, EntryDir = East, ExitDir = East, TransportTime = 1f, IsChainHead = true
             });
-            _em.AddComponentData(e, new ConveyorItemData { ItemID = itemId, Progress = 0.5f });
+            ConveyorItems.Add(_em, e, itemId, 0.5f);
             return e;
         }
 
@@ -238,7 +238,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(1, CountIn(building, UpQuark), "An up quark must enter even though downs are at their cap");
-            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail));
+            Assert.IsFalse(ConveyorItems.Has(_em, tail));
         }
 
         [Test]
@@ -251,7 +251,7 @@ namespace MobileIdleBuilder.Tests
             Tick();
 
             Assert.AreEqual(0, InputTotal(building), "The recipe does not use this item");
-            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Unused item stays on the belt");
+            Assert.IsTrue(ConveyorItems.Has(_em, tail), "Unused item stays on the belt");
         }
 
         [Test]
@@ -269,7 +269,7 @@ namespace MobileIdleBuilder.Tests
 
             Tick();
 
-            Assert.IsFalse(_em.HasComponent<ConveyorItemData>(tail), "Jamming item must leave the belt");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail), "Jamming item must leave the belt");
             Assert.AreEqual(30, CountIn(building, DownQuark), "Building buffer stays at its cap");
             Assert.AreEqual(0, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark),
                 "#312: the jamming item is sold, not hidden in the inventory");
@@ -278,21 +278,45 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void SingleItemBelt_AtCap_BacksUp_NoOverflow()
+        public void SingleItemBelt_AtCap_SellsTheSurplus_BeltKeepsMoving()
         {
-            // Separate belts per input must keep normal back-pressure: nothing needed is behind.
+            // Full-input autosell: a down-quark belt into a Combiner whose down quarks are at their cap sells the
+            // extra at the surplus price instead of backing up and stalling the harvester.
             var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
             SetProtonRecipe(building);
             SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), DownQuark, 30);
             var inventory = CreatePlayerInventory();
+            var progress  = _em.CreateEntity();
+            _em.AddComponentData(progress, new PlayerProgressData { BaseCurrency = 100 });
 
             var upstream = CreateUpstream(new int2(-1, 0), DownQuark);
             var tail     = CreateTail(new int2(0, 0), East, DownQuark, upstream);
 
             Tick();
 
-            Assert.IsTrue(_em.HasComponent<ConveyorItemData>(tail), "Same-item belt just backs up");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail), "the surplus item leaves the belt");
+            Assert.AreEqual(30, CountIn(building, DownQuark), "the buffer stays at its cap");
             Assert.AreEqual(0, SlotBufferUtils.CountInInventory(_em.GetBuffer<InventorySlot>(inventory), DownQuark));
+            // 1e at 50% is 0.5e: carried until a whole entropy is earned.
+            Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
+        }
+
+        [Test]
+        public void FullInput_NextToAnInputWithRoom_FeedsThatInputInstead()
+        {
+            // The tail points at a full Combiner, and another Combiner with room sits beside it.
+            // The item must go where it can be used, not be sold.
+            var full = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetProtonRecipe(full);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(full), DownQuark, 30);
+            var room = CreateBuildingWithInput(new int2(0, 1), North, inputCapacity: 30);
+            SetProtonRecipe(room);
+            CreateTail(new int2(0, 0), East, DownQuark, Entity.Null);
+
+            Tick();
+
+            Assert.AreEqual(1, CountIn(room, DownQuark), "the input with room gets the item");
+            Assert.AreEqual(30, CountIn(full, DownQuark));
         }
     }
 }

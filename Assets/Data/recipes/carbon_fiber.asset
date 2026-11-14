@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: carbon_fiber
   displayName: Carbon Fiber
+  methodLabel: 
   recipeId: 38
   tier: 4
   category: 6

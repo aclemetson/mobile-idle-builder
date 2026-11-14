@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Syncs ECS building entities to placeholder highlights and port arrows on the GridRenderer.
+    /// Syncs ECS building entities to their structures and ground port arrows on the GridRenderer.
     /// BuildingPlacer should call Refresh() after placing a building at runtime.
     /// </summary>
     public class BuildingVisualizer : MonoBehaviour
@@ -20,6 +20,8 @@ namespace MobileIdleBuilder
         private EntityQuery                                       _footprintQuery;
         private EntityQuery                                       _portQuery;
         private EntityQuery                                       _powerStatusQuery;
+        private EntityQuery                                       _segmentQuery;
+        private bool                                              _segmentQueryReady;
         private bool                                              _buildingQueryReady;
         private bool                                              _footprintQueryReady;
         private bool                                              _portQueryReady;
@@ -36,10 +38,24 @@ namespace MobileIdleBuilder
         private readonly HashSet<(int, int)>                      _portedCells       = new();
         private readonly Dictionary<(int, int), List<GameObject>> _spawnedPortArrows = new();
 
-        // Buildings whose grid-tile highlight is shown only while selected (the entropy sink), rather
-        // than permanently like every other building. Keyed by anchor cell.
-        private readonly HashSet<(int, int)>                      _deferHighlight    = new();
-        private (int, int)                                        _selectedDeferCell = (-1, -1);
+        // Each building's ground arrows, shown only while their port still needs a belt.
+        private readonly struct PortArrowEntry
+        {
+            public readonly GameObject Arrow;
+            public readonly int  FrontX, FrontY;
+            public readonly bool IsOutput;
+
+            public PortArrowEntry(GameObject arrow, int frontX, int frontY, bool isOutput)
+            {
+                Arrow = arrow; FrontX = frontX; FrontY = frontY; IsOutput = isOutput;
+            }
+        }
+        private readonly Dictionary<(int, int), List<PortArrowEntry>> _portArrows = new();
+        private readonly Dictionary<(int, int), (bool head, bool tail)> _beltCells = new();
+
+        // The selected building's anchor cell: a building tints its grid tiles only while selected.
+        private (int, int)                                        _selectedCell      = (-1, -1);
+        private ConveyorVisualizer                                _conveyorVisualizer;
 
         // Maps every occupied cell (including non-anchor cells of multi-tile buildings)
         // back to the anchor cell so SetHover can find the right cube.
@@ -62,11 +78,14 @@ namespace MobileIdleBuilder
         private static readonly Color IsotopicGreen      = new Color(0.5f, 0.85f, 0.55f); // Isotopic Manipulator nucleus base
         private static readonly Color GeneratorCyan       = new Color(0.30f, 0.85f, 1.0f); // Basic Generator spire base
         private static readonly Color RelayAmber          = new Color(1.0f, 0.70f, 0.25f); // Power Relay broadcast-pylon base
-        private static readonly Color CombinerSteel       = new Color(0.7f, 0.78f, 0.85f); // Strong Force Combiner knot base
+        private static readonly Color CombinerSteel       = new Color(0.40f, 0.45f, 0.54f); // Strong Force Combiner housing base
         private static readonly Color MoleculeTeal        = new Color(0.2f, 0.8f, 0.8f);   // Molecular Synthesizer base
         private static readonly Color ForgeSteel          = new Color(0.45f, 0.45f, 0.48f);// Materials Forge furnace base
         private static readonly Color FabricatorViolet     = new Color(0.6f, 0.4f, 0.95f);  // Component Fabricator base
         private static readonly Color ContainmentLead      = new Color(0.35f, 0.35f, 0.38f);// Radioactive Containment shell base
+        private static readonly Color FusionPlinth         = new Color(0.20f, 0.22f, 0.30f);// Fusion Reactor plinth base
+        private static readonly Color SplitterRock         = new Color(0.50f, 0.56f, 0.66f);// Belt Splitter rock base
+        private const float LowHoleScale = 0.55f; // holes on a low plinth, which has little face to fill
         private static readonly Color OutputHoleColor    = new Color(1.0f, 0.85f, 0.45f); // lit emission aperture
         private static readonly Color InputHoleColor     = new Color(0.05f, 0.07f, 0.12f); // dark recessed intake mouth
 
@@ -106,6 +125,10 @@ namespace MobileIdleBuilder
             );
             _powerStatusQueryReady = true;
 
+            _segmentQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ConveyorSegmentData>());
+            _segmentQueryReady = true;
+            ConveyorVisualizer.BeltsChanged += RefreshPortArrows;
+
             StartCoroutine(ScanOnceLoaded());
         }
 
@@ -127,6 +150,12 @@ namespace MobileIdleBuilder
         /// already-highlighted cells are skipped.
         /// </summary>
         public void Refresh()
+        {
+            SyncBuildings();
+            RefreshPortArrows();
+        }
+
+        private void SyncBuildings()
         {
             if (_buildingQuery == null || _buildingQuery.IsEmpty) return;
 
@@ -157,15 +186,11 @@ namespace MobileIdleBuilder
                 int fw = 1, fh = 1;
                 if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
 
-                // Maxwell's Demon (entropy sink): the grid beneath it is highlighted only while the
-                // building is selected, so defer its footprint highlight to SelectBuilding().
                 bool isSink = em.HasComponent<EntropySinkTag>(ent);
-                if (isSink) _deferHighlight.Add(cell);
 
                 for (int dx = 0; dx < fw; dx++)
                     for (int dy = 0; dy < fh; dy++)
                     {
-                        if (!isSink) gridRenderer?.SetTileHighlight(x + dx, y + dy, true);
                         GridOccupancy.Instance?.Register(x + dx, y + dy);
                         _cellToAnchor[(x + dx, y + dy)] = cell;
                     }
@@ -243,6 +268,14 @@ namespace MobileIdleBuilder
                     {
                         baseColor = ContainmentLead; // lead-grey shell base
                     }
+                    else if (styleKind == BuildingStructureKind.BeltSplitter)
+                    {
+                        baseColor = SplitterRock; // pale slate rock base
+                    }
+                    else if (styleKind == BuildingStructureKind.FusionReactor)
+                    {
+                        baseColor = FusionPlinth; // dark plinth base
+                    }
 
                     // PresenceReceiver owns all colour state for this cube; _baseColors remembers the
                     // logical base so power/hover tints restore to it (not white) afterwards.
@@ -252,7 +285,16 @@ namespace MobileIdleBuilder
 
                     // Swap the cube for the procedural spindle structure — a round body tapering to a
                     // singularity point, with a flat front facade + emission aperture facing the output.
-                    if (isCollector)
+                    if (styleKind == BuildingStructureKind.NucleonHarvester)
+                    {
+                        cube.name = $"NucleonHarvester_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(
+                            (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        InitializeNucleonHarvester(cube, em, ent, x, y, fw, fh, baseColor);
+                        if (fieldPending) _pendingFieldColor[cell] = Time.time;
+                    }
+                    else if (isCollector)
                     {
                         cube.name = $"Collector_{x}_{y}";
                         cube.transform.localPosition = new Vector3(
@@ -300,7 +342,7 @@ namespace MobileIdleBuilder
                         cube.transform.localPosition = new Vector3(
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
                         cube.transform.localScale = Vector3.one * cs;
-                        cube.AddComponent<BasicGeneratorStructure>().Initialize();
+                        cube.AddComponent<BasicGeneratorStructure>().Initialize(baseColor);
                     }
                     else if (styleKind == BuildingStructureKind.PowerRelay)
                     {
@@ -319,7 +361,7 @@ namespace MobileIdleBuilder
                         cube.transform.localPosition = new Vector3(
                             (x + (fw - 1) * 0.5f) * cs, 0f, (y + (fh - 1) * 0.5f) * cs);
                         cube.transform.localScale = Vector3.one * cs;
-                        cube.AddComponent<StrongForceCombinerStructure>().Initialize(ent, fw, fh);
+                        cube.AddComponent<StrongForceCombinerStructure>().Initialize(ent, fw, fh, baseColor);
                     }
                     else if (styleKind == BuildingStructureKind.MolecularSynthesizer)
                     {
@@ -354,17 +396,30 @@ namespace MobileIdleBuilder
                         cube.transform.localScale = Vector3.one * cs;
                         cube.AddComponent<RadioactiveContainmentStructure>().Initialize(fw, fh);
                     }
+                    else if (styleKind == BuildingStructureKind.FusionReactor)
+                    {
+                        cube.name = $"FusionReactor_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        cube.AddComponent<FusionReactorStructure>().Initialize(ent, baseColor);
+                    }
+                    else if (styleKind == BuildingStructureKind.BeltSplitter)
+                    {
+                        cube.name = $"BeltSplitter_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        InitializeSplitter(cube, em, ent, baseColor);
+                    }
 
                     _spawnedCubes[cell] = cube;
                 }
             }
             bEntities.Dispose();
 
-            // Pass 3: draw port arrows from SO port layout
+            // Pass 3: ground arrows and holes from the placed ports
             if (!_portQueryReady || _portQuery.IsEmpty) return;
 
             var entities = _portQuery.ToEntityArray(Allocator.Temp);
-            float portHeight = 1.1f;
             float cs2        = gridRenderer.CellSize;
 
             for (int i = 0; i < entities.Length; i++)
@@ -380,11 +435,16 @@ namespace MobileIdleBuilder
 
                 var ports     = em.GetBuffer<PlacedPortData>(entities[i]);
                 var arrowList = new List<GameObject>();
+                var entries   = new List<PortArrowEntry>(ports.Length);
 
                 // Buildings with a bespoke procedural structure also get physical input/output holes at
                 // their port edges (a lit emission aperture for outputs, a recessed intake mouth for
-                // inputs), kept alongside the arrows as flow hints.
+                // inputs). A Belt Splitter's river is its own opening, so it gets arrows only.
                 bool hasStyle = em.HasComponent<BuildingVisualStyle>(entities[i]);
+                int  styleId  = hasStyle ? em.GetComponentData<BuildingVisualStyle>(entities[i]).Kind : 0;
+                bool drawHoles = hasStyle && styleId != (int)BuildingStructureKind.BeltSplitter;
+                bool lowHoles = styleId == (int)BuildingStructureKind.FusionReactor
+                             || styleId == (int)BuildingStructureKind.NucleonHarvester;
 
                 for (int p = 0; p < ports.Length; p++)
                 {
@@ -394,34 +454,117 @@ namespace MobileIdleBuilder
                     var  dir    = (OutputDirection)port.Facing;
                     bool isOut  = port.PortType == (int)PortType.Output;
 
-                    // localFacing = direction items arrive from (= conveyor exit direction).
-                    // Output: arrow on facing edge, pointing outward.
-                    // Input:  arrow on opposite edge (exterior face), pointing inward (= facing direction).
-                    var     oppDir     = (OutputDirection)(((int)dir + 2) % 4);
-                    var     edgeDir    = isOut ? dir : oppDir; // edge the port physically sits on
-                    Vector3 edgeOffset = FacingEdgeOffset(edgeDir, cs2);
-                    var     displayDir = dir;
+                    // localFacing = direction items travel. An output sits on its facing edge; an input
+                    // sits on the opposite edge, where items arrive from.
+                    var edgeDir = isOut ? dir : (OutputDirection)(((int)dir + 2) % 4);
 
                     var arrowGO = new GameObject($"Port_{(isOut ? "Out" : "In")}_{wx}_{wy}");
                     arrowGO.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
-                    arrowGO.transform.localPosition = new Vector3(wx * cs2, portHeight, wy * cs2) + edgeOffset;
-
-                    var arrow = arrowGO.AddComponent<OutputArrow>();
-                    arrow.Initialize(displayDir, isOut ? OutputArrow.PlacedColor : OutputArrow.InputColor);
+                    arrowGO.transform.localPosition = new Vector3(wx * cs2, 0f, wy * cs2);
+                    arrowGO.AddComponent<PortGroundArrow>().Initialize(edgeDir, isOut, cs2);
                     arrowList.Add(arrowGO);
 
-                    if (hasStyle)
+                    var front = PortFrontCell(wx, wy, edgeDir);
+                    entries.Add(new PortArrowEntry(arrowGO, front.Item1, front.Item2, isOut));
+
+                    if (drawHoles)
                     {
-                        var holeGO = CreateHoleFixture(wx, wy, edgeDir, isOut, cs2);
+                        var holeGO = CreateHoleFixture(wx, wy, edgeDir, isOut, cs2, lowHoles);
                         if (holeGO != null) arrowList.Add(holeGO);
                     }
                 }
 
                 _portedCells.Add(cell);
                 _spawnedPortArrows[cell] = arrowList;
+                _portArrows[cell] = entries;
             }
 
             entities.Dispose();
+        }
+
+        private static (int, int) PortFrontCell(int x, int y, OutputDirection edge) => edge switch
+        {
+            OutputDirection.North => (x, y + 1),
+            OutputDirection.East  => (x + 1, y),
+            OutputDirection.South => (x, y - 1),
+            _                     => (x - 1, y),
+        };
+
+        // Shows each ground arrow only while its port still needs a belt. Runs after any belt or building
+        // change, so deleting a belt brings its arrow straight back.
+        private void RefreshPortArrows()
+        {
+            if (_portArrows.Count == 0 || gridRenderer == null) return;
+
+            _beltCells.Clear();
+            if (_segmentQueryReady && !_segmentQuery.IsEmpty)
+            {
+                var segments = _segmentQuery.ToComponentDataArray<ConveyorSegmentData>(Allocator.Temp);
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    var s = segments[i];
+                    _beltCells[(s.Cell.x, s.Cell.y)] = (s.IsChainHead, s.NextSegment == Entity.Null);
+                }
+                segments.Dispose();
+            }
+
+            var occupancy = GridOccupancy.Instance;
+            foreach (var list in _portArrows.Values)
+            {
+                foreach (var entry in list)
+                {
+                    if (entry.Arrow == null) continue;
+                    var  cell    = (entry.FrontX, entry.FrontY);
+                    bool hasBelt = _beltCells.TryGetValue(cell, out var belt);
+                    bool blocked = occupancy != null && occupancy.IsOccupied(entry.FrontX, entry.FrontY) && !hasBelt;
+                    bool free    = gridRenderer.IsInBounds(entry.FrontX, entry.FrontY) && !blocked;
+                    entry.Arrow.SetActive(PortArrowRules.ShouldShow(entry.IsOutput, free, hasBelt, belt.head, belt.tail));
+                }
+            }
+        }
+
+        // The door and the nucleon's flight both follow the placed output port, wherever rotation put it.
+        private static void InitializeNucleonHarvester(GameObject host, EntityManager em, Entity entity,
+                                                       int x, int y, int fw, int fh, Color fieldColor)
+        {
+            var portEdge = new Vector2(0f, -fh * 0.5f);
+            if (em.HasBuffer<PlacedPortData>(entity))
+            {
+                var ports = em.GetBuffer<PlacedPortData>(entity);
+                for (int p = 0; p < ports.Length; p++)
+                {
+                    if (ports[p].PortType != (int)PortType.Output) continue;
+                    portEdge = NucleonHarvesterStructure.PortEdgeLocal(ports[p].CellX, ports[p].CellY, ports[p].Facing, x, y, fw, fh);
+                    break;
+                }
+            }
+            host.AddComponent<NucleonHarvesterStructure>().Initialize(entity, fw, fh, portEdge, fieldColor);
+        }
+
+        // The river needs the placed ports (rotated with the building) and the belts' shared materials.
+        private void InitializeSplitter(GameObject host, EntityManager em, Entity entity, Color rockColor)
+        {
+            int travelDir = (int)OutputDirection.North;
+            var outputs   = new List<int>(3);
+            if (em.HasBuffer<PlacedPortData>(entity))
+            {
+                var ports = em.GetBuffer<PlacedPortData>(entity);
+                for (int p = 0; p < ports.Length; p++)
+                {
+                    if (ports[p].PortType == (int)PortType.Output) outputs.Add(ports[p].Facing);
+                    else travelDir = ports[p].Facing;
+                }
+            }
+
+            if (_conveyorVisualizer == null) _conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
+            if (_conveyorVisualizer == null)
+            {
+                GameLogger.Warning("[BuildingVisualizer] No ConveyorVisualizer in the scene; the Belt Splitter keeps its placeholder cube.");
+                return;
+            }
+
+            host.AddComponent<SplitterStructure>().Initialize(entity, travelDir, outputs, rockColor,
+                _conveyorVisualizer.GetFlowMaterial(), _conveyorVisualizer.GetChannelMaterial());
         }
 
         // ----------------------------------------------------------------
@@ -455,6 +598,7 @@ namespace MobileIdleBuilder
                     {
                         ApplyCubeColor(cube, field.fieldColor);
                         cube.GetComponent<CollectorStructure>()?.SetFieldColor(field.fieldColor);
+                        cube.GetComponent<NucleonHarvesterStructure>()?.SetFieldColor(field.fieldColor);
                     }
                     _resolvedFieldBuffer.Add(cell);
                 }
@@ -511,7 +655,7 @@ namespace MobileIdleBuilder
         /// (built once at the cell size) so every hole is allocation-free. Parented to the GridRenderer
         /// like the port arrows; returned so the caller can track it for cleanup.
         /// </summary>
-        private GameObject CreateHoleFixture(int wx, int wy, OutputDirection edgeDir, bool isOutput, float cs)
+        private GameObject CreateHoleFixture(int wx, int wy, OutputDirection edgeDir, bool isOutput, float cs, bool low)
         {
             var opaque = RenderingMaterials.Instance != null ? RenderingMaterials.Instance.Opaque : null;
             if (opaque == null) return null;
@@ -523,9 +667,11 @@ namespace MobileIdleBuilder
 
             // Sit on the chosen edge, mid-height; rotate so the fixture's local +Z faces outward
             // (local +Z = North, so the Y rotation is edgeDir * 90 degrees).
-            float midH = cs * (isOutput ? 0.30f : 0.42f);
+            float midH = low ? cs * 0.08f : cs * (isOutput ? 0.30f : 0.42f);
             go.transform.localPosition = new Vector3(wx * cs, midH, wy * cs) + FacingEdgeOffset(edgeDir, cs);
             go.transform.localRotation = Quaternion.Euler(0f, (int)edgeDir * 90f, 0f);
+
+            if (low) go.transform.localScale = Vector3.one * LowHoleScale;
 
             go.AddComponent<MeshFilter>().sharedMesh = isOutput ? _outHoleMesh : _inHoleMesh;
             var mr = go.AddComponent<MeshRenderer>();
@@ -553,7 +699,8 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Removes all visual artifacts for the building anchored at (x, y).
+        /// Removes all visual artifacts for the building anchored at (x, y). Callers follow up with a belt
+        /// refresh, which also re-evaluates neighbouring buildings' arrows.
         /// Call after destroying the corresponding ECS entity.
         /// </summary>
         public void RemoveBuilding(int x, int y)
@@ -574,8 +721,7 @@ namespace MobileIdleBuilder
 
             _highlighted.Remove(cell);
             _footprints.Remove(cell);
-            _deferHighlight.Remove(cell);
-            if (_selectedDeferCell == cell) _selectedDeferCell = (-1, -1);
+            if (_selectedCell == cell) _selectedCell = (-1, -1);
 
             if (_spawnedCubes.TryGetValue(cell, out var cube))
             {
@@ -591,34 +737,33 @@ namespace MobileIdleBuilder
                     if (go != null) Destroy(go);
                 _spawnedPortArrows.Remove(cell);
             }
+            _portArrows.Remove(cell);
             _portedCells.Remove(cell);
         }
 
         // ----------------------------------------------------------------
-        // Selection highlight (deferred-highlight buildings only — the entropy sink)
+        // Selection highlight
         // ----------------------------------------------------------------
 
         /// <summary>
-        /// Marks the building containing (x, y) as selected. For buildings whose footprint highlight is
-        /// deferred (the entropy sink), this lights up the grid beneath it; for every other building it
-        /// is a no-op (their footprint is always highlighted). Clears any previous deferred highlight.
+        /// Marks the building containing (x, y) as selected, lighting up the grid beneath it. A building
+        /// tints its tiles only while selected. Clears any previous selection highlight.
         /// </summary>
         public void SelectBuilding(int x, int y)
         {
             DeselectBuilding();
             if (!_cellToAnchor.TryGetValue((x, y), out var anchor)) return;
-            if (!_deferHighlight.Contains(anchor)) return;
 
             SetFootprintHighlight(anchor, true);
-            _selectedDeferCell = anchor;
+            _selectedCell = anchor;
         }
 
-        /// <summary>Removes the deferred selection highlight from the grid, if one is active.</summary>
+        /// <summary>Removes the selection highlight from the grid, if one is active.</summary>
         public void DeselectBuilding()
         {
-            if (_selectedDeferCell == (-1, -1)) return;
-            SetFootprintHighlight(_selectedDeferCell, false);
-            _selectedDeferCell = (-1, -1);
+            if (_selectedCell == (-1, -1)) return;
+            SetFootprintHighlight(_selectedCell, false);
+            _selectedCell = (-1, -1);
         }
 
         private void SetFootprintHighlight((int, int) anchor, bool on)
@@ -736,9 +881,12 @@ namespace MobileIdleBuilder
 
         void OnDestroy()
         {
+            ConveyorVisualizer.BeltsChanged -= RefreshPortArrows;
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null && world.IsCreated)
             {
+                if (_segmentQueryReady)     _segmentQuery.Dispose();
                 if (_buildingQueryReady)    _buildingQuery.Dispose();
                 if (_footprintQueryReady)   _footprintQuery.Dispose();
                 if (_portQueryReady)        _portQuery.Dispose();

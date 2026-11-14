@@ -1,126 +1,124 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Procedural "energy spire" structure for the Basic Generator (a power source, not a producer): a
-    /// tall thin spindle tapering up to a crackling singularity tip, with a heartbeat pulse that flares
-    /// the tip and emits expanding flat light-rings on the ground — reading as power broadcasting to
-    /// neighbours. Omnidirectional, so it has no input/output holes.
-    ///
-    /// Reuses <see cref="CollectorMeshBuilder"/> (with FrontFlattenFrac = 1 so the spire stays round on
-    /// every side) and the <c>MobileIdleBuilder/CollectorStructure</c> shader (body emission + tip glow +
-    /// _PulseAmp flare). Selected data-drivenly by <see cref="BuildingStructureKind.BasicGenerator"/>.
+    /// "Tesla coil": the Basic Generator (a power source, not a producer). A column wound with copper rises to
+    /// a toroidal crown and a sharp tip; on each heartbeat, lightning arcs from the crown to the ground and the
+    /// tip flares, while flat rings spread across the ground, reading as power broadcasting to neighbours.
+    /// Omnidirectional, so it has no input/output holes. The column is the host's mesh (it keeps the power and
+    /// hover tints), shaded by the CollectorStructure shader. Selected by
+    /// <see cref="BuildingStructureKind.BasicGenerator"/>. The pulse is time-driven: nothing is crafted here.
     /// </summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class BasicGeneratorStructure : MonoBehaviour
     {
-        private const int   RadialSegments = 22;
-        private const int   HeightSegments = 22;
+        private const float CrownY       = 1.0f;
+        private const float CrownRadius  = 0.21f;
 
         private const float HeartbeatPeriod = 1.5f;  // seconds between power pulses
         private const float InitialPulse    = 0.7f;
         private const float DecayRate       = 3f;
         private const float SettleThreshold = 0.001f;
 
-        private const float BobSpeed = 1.4f;
-        private const float BobAmp   = 0.03f;
+        private const int   ArcCount       = 2;
+        private const int   ArcPoints      = 7;
+        private const float ArcVisibleOver = 0.2f;   // arcs show while the pulse is above this
+        private const float ArcRefresh     = 0.05f;  // seconds between new lightning shapes
+        private const float ArcJitter      = 0.07f;
+        private const float ArcReach       = 0.56f;  // where arcs land, from the centre
+        private const float ArcWidth       = 0.035f; // world units
 
-        private const int   RippleCount    = 3;
-        private const float RipplePeriod   = 2.4f;   // one ring's expand-and-fade cycle
-        private const float RippleStart    = 0.15f;  // starting ring scale
-        private const float RippleEnd      = 2.4f;   // ending ring scale (≈ link/influence reach)
-        private const float RippleBaseRadius = 0.5f; // torus MajorRadius the scale multiplies
+        private const int   RippleCount  = 3;
+        private const float RipplePeriod = 2.4f;   // one ring's expand-and-fade cycle
+        private const float RippleStart  = 0.15f;
+        private const float RippleEnd    = 2.4f;   // ≈ link/influence reach
 
-        private static readonly Color SpireColor  = new Color(0.30f, 0.85f, 1.0f); // electric cyan
+        private static readonly Color CopperColor = new Color(0.95f, 0.58f, 0.28f);
+        private static readonly Color CrownColor  = new Color(0.72f, 0.80f, 0.90f);
+        private static readonly Color TipColor    = new Color(0.78f, 0.96f, 1.0f);
+        private static readonly Color ArcColor    = new Color(0.80f, 0.96f, 1.0f);
         private static readonly Color RippleColor = new Color(0.40f, 0.9f, 1.0f);
 
-        private static readonly int PulseAmpId  = Shader.PropertyToID("_PulseAmp");
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-        private static readonly int TipColorId  = Shader.PropertyToID("_TipColor");
+        private static readonly int PulseAmpId = Shader.PropertyToID("_PulseAmp");
 
-        private static readonly CollectorMeshBuilder.SpindleProfile SpireProfile =
-            new CollectorMeshBuilder.SpindleProfile
-            {
-                Height           = 1.5f,
-                BulbRadius       = 0.20f,
-                BaseRadius       = 0.06f,
-                ApexSharpness    = 1.9f,
-                FrontFlattenFrac = 1.0f // no front slice — round spire
-            };
+        private readonly StructureParts _parts = new();
+        private readonly LineRenderer[] _arcs = new LineRenderer[ArcCount];
+        private GroundRipples _ripples;
+        private Material _columnMat;
 
-        private Material   _bodyMat;
-        private Material   _rippleMat;
-        private Mesh       _bodyMesh;
-        private Mesh       _rippleMesh;
-        private readonly Transform[]            _ripples    = new Transform[RippleCount];
-        private readonly MeshRenderer[]         _rippleMr   = new MeshRenderer[RippleCount];
-        private MaterialPropertyBlock           _rippleMpb;
+        private float _heartbeatTimer;
+        private float _arcTimer;
+        private float _pulseElapsed = Mathf.Infinity;
 
-        private float   _heartbeatTimer;
-        private float   _pulseElapsed = Mathf.Infinity;
-        private Vector3 _baseLocalPos;
-        private Vector3 _baseScale = Vector3.one;
-
-        public void Initialize()
+        public void Initialize(Color columnColor)
         {
-            _baseLocalPos = transform.localPosition;
-            _baseScale    = transform.localScale;
-            BuildBody();
-            BuildRipples();
+            BuildColumn(columnColor);
+            BuildWindings();
+            BuildCrown();
+            BuildArcs();
+            _ripples = new GroundRipples(_parts, transform, RippleCount, 0.012f);
         }
 
-        private void BuildBody()
+        private void BuildColumn(Color color)
         {
-            _bodyMesh = CollectorMeshBuilder.Build(RadialSegments, HeightSegments, SpireProfile);
-            GetComponent<MeshFilter>().sharedMesh = _bodyMesh;
-
+            var mesh = _parts.Own(RevolveMeshBuilder.Build(new[]
+            {
+                new Vector2(0.30f, 0f),    new Vector2(0.30f, 0.05f), new Vector2(0.14f, 0.12f),
+                new Vector2(0.085f, 0.24f), new Vector2(0.075f, 0.85f), new Vector2(0.05f, 1.02f),
+                new Vector2(0.016f, 1.2f), new Vector2(0f, 1.3f),
+            }, 22));
+            GetComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = GetComponent<MeshRenderer>();
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
-            renderer.receiveShadows    = false;
-            renderer.lightProbeUsage   = LightProbeUsage.Off;
-
-            var shader = Shader.Find("MobileIdleBuilder/CollectorStructure");
-            if (shader == null)
-            {
-                GameLogger.Warning("[BasicGeneratorStructure] Shader 'MobileIdleBuilder/CollectorStructure' not found — keeps placeholder mesh.");
-                return;
-            }
-
-            _bodyMat = new Material(shader);
-            _bodyMat.SetFloat(PulseAmpId, 0f);
-            _bodyMat.SetColor(BaseColorId, SpireColor);
-            _bodyMat.SetColor(TipColorId, Color.Lerp(SpireColor, Color.white, 0.6f));
-            renderer.material = _bodyMat;
+            StructureParts.Plain(renderer);
+            _columnMat = _parts.Shaded(color, TipColor, 3f);
+            renderer.sharedMaterial = _columnMat;
         }
 
-        private void BuildRipples()
+        private void BuildWindings()
         {
-            var transparent = RenderingMaterials.Instance != null ? RenderingMaterials.Instance.Transparent : null;
-            if (transparent == null) return;
+            var material = _parts.Flat(CopperColor);
+            if (material == null) return;
 
-            // Instance the shared transparent material so we can draw the flat ground ripples AFTER the floor
-            // tiles (same queue 3000, no depth write) — otherwise the floor sometimes sorts on top of them.
-            _rippleMat = new Material(transparent) { renderQueue = 3200 };
-
-            _rippleMesh = TorusMeshBuilder.Build(40, 5,
-                new TorusMeshBuilder.TorusProfile { MajorRadius = RippleBaseRadius, MinorRadius = 0.012f });
-            _rippleMpb = new MaterialPropertyBlock();
-
-            for (int i = 0; i < RippleCount; i++)
+            // Each turn is the same ring, scaled in so the winding tapers up the column.
+            var mesh = _parts.Own(TorusMeshBuilder.Build(24, 6,
+                new TorusMeshBuilder.TorusProfile { MajorRadius = 0.13f, MinorRadius = 0.026f }));
+            const int turns = 6;
+            for (int i = 0; i < turns; i++)
             {
-                var go = new GameObject($"PowerRipple_{i}");
+                float t = (float)i / (turns - 1);
+                var turn = StructureParts.AddMesh($"Winding_{i}", transform, mesh, material,
+                                                  new Vector3(0f, Mathf.Lerp(0.26f, 0.76f, t), 0f));
+                float scale = Mathf.Lerp(1.05f, 0.82f, t);
+                turn.localScale = new Vector3(scale, 1f, scale);
+            }
+        }
+
+        private void BuildCrown()
+        {
+            var mesh = _parts.Own(TorusMeshBuilder.Build(32, 10,
+                new TorusMeshBuilder.TorusProfile { MajorRadius = CrownRadius, MinorRadius = 0.06f }));
+            StructureParts.AddMesh("Crown", transform, mesh, _parts.Shaded(CrownColor, Color.white, 0.5f), new Vector3(0f, CrownY, 0f));
+        }
+
+        private void BuildArcs()
+        {
+            var material = _parts.Flat(ArcColor);
+            if (material == null) return;
+
+            for (int i = 0; i < ArcCount; i++)
+            {
+                var go = new GameObject($"Arc_{i}");
                 go.transform.SetParent(transform, worldPositionStays: false);
-                go.transform.localPosition = new Vector3(0f, 0.02f, 0f); // flat on the ground plane
-                go.AddComponent<MeshFilter>().sharedMesh = _rippleMesh;
-                var mr = go.AddComponent<MeshRenderer>();
-                mr.sharedMaterial    = _rippleMat;
-                mr.shadowCastingMode = ShadowCastingMode.Off;
-                mr.receiveShadows    = false;
-                mr.lightProbeUsage   = LightProbeUsage.Off;
-                _ripples[i]  = go.transform;
-                _rippleMr[i] = mr;
+                var line = go.AddComponent<LineRenderer>();
+                line.useWorldSpace = false;
+                line.positionCount = ArcPoints;
+                line.startWidth    = ArcWidth;
+                line.endWidth      = ArcWidth * 0.5f;
+                line.sharedMaterial = material;
+                StructureParts.Plain(line);
+                line.enabled = false;
+                _arcs[i] = line;
             }
         }
 
@@ -129,7 +127,6 @@ namespace MobileIdleBuilder
             float t  = Time.time;
             float dt = Time.deltaTime;
 
-            // Heartbeat — fire a pulse on each beat.
             _heartbeatTimer += dt;
             if (_heartbeatTimer >= HeartbeatPeriod)
             {
@@ -145,36 +142,43 @@ namespace MobileIdleBuilder
                 if (pulse <= SettleThreshold) { pulse = 0f; _pulseElapsed = Mathf.Infinity; }
             }
 
-            // Subtle bob + tip flare.
-            float bobY = Mathf.Sin(t * BobSpeed) * BobAmp * _baseScale.y;
-            transform.localPosition = _baseLocalPos + new Vector3(0f, bobY, 0f);
-            if (_bodyMat != null) _bodyMat.SetFloat(PulseAmpId, pulse);
-
-            AnimateRipples(t);
+            if (_columnMat != null) _columnMat.SetFloat(PulseAmpId, pulse);
+            AnimateArcs(pulse, dt);
+            _ripples?.Animate(t, RipplePeriod, RippleStart, RippleEnd, 0.5f, 0f, RippleColor);
         }
 
-        private void AnimateRipples(float t)
+        private void AnimateArcs(float pulse, float dt)
         {
-            if (_rippleMpb == null) return;
-            for (int i = 0; i < _ripples.Length; i++)
-            {
-                if (_ripples[i] == null) continue;
-                float phase = (t / RipplePeriod + (float)i / RippleCount) % 1f; // 0..1 expanding cycle
-                float scale = Mathf.Lerp(RippleStart, RippleEnd, phase);
-                _ripples[i].localScale = new Vector3(scale, scale, scale);
+            bool visible = pulse > ArcVisibleOver;
+            _arcTimer -= dt;
+            bool reshape = visible && _arcTimer <= 0f;
+            if (reshape) _arcTimer = ArcRefresh;
 
-                float alpha = Mathf.Lerp(0.5f, 0f, phase); // fade as it expands
-                _rippleMpb.SetColor(BaseColorId, new Color(RippleColor.r, RippleColor.g, RippleColor.b, alpha));
-                _rippleMr[i].SetPropertyBlock(_rippleMpb);
+            foreach (var arc in _arcs)
+            {
+                if (arc == null) continue;
+                arc.enabled = visible;
+                if (reshape) ReshapeArc(arc);
             }
         }
 
-        void OnDestroy()
+        // A jagged line from a random point on the crown down to the ground, a little further round.
+        private static void ReshapeArc(LineRenderer arc)
         {
-            if (_bodyMat != null)    Destroy(_bodyMat);
-            if (_rippleMat != null)  Destroy(_rippleMat);
-            if (_bodyMesh != null)   Destroy(_bodyMesh);
-            if (_rippleMesh != null) Destroy(_rippleMesh);
+            float a = Random.value * 2f * Mathf.PI;
+            float b = a + Random.Range(-0.5f, 0.5f);
+            var from = new Vector3(CrownRadius * Mathf.Cos(a), CrownY, CrownRadius * Mathf.Sin(a));
+            var to   = new Vector3(ArcReach * Mathf.Cos(b), 0.02f, ArcReach * Mathf.Sin(b));
+
+            for (int i = 0; i < ArcPoints; i++)
+            {
+                float t = (float)i / (ArcPoints - 1);
+                Vector3 point = Vector3.Lerp(from, to, t);
+                if (i > 0 && i < ArcPoints - 1) point += Random.insideUnitSphere * ArcJitter;
+                arc.SetPosition(i, point);
+            }
         }
+
+        void OnDestroy() => _parts.Dispose();
     }
 }

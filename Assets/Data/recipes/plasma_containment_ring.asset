@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: plasma_containment_ring
   displayName: Plasma Containment Ring
+  methodLabel: 
   recipeId: 45
   tier: 5
   category: 7

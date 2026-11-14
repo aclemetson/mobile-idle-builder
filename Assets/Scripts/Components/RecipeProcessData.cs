@@ -12,5 +12,7 @@ namespace MobileIdleBuilder
         public bool IsCrafting;
         /// <summary>Entropy paid per completed craft by escaping byproducts (RecipeSO.EscapeEntropyPerCraft).</summary>
         public float ByproductEntropy;
+        /// <summary>Fraction of a craft owed by a fractional output multiplier (see <see cref="OutputCarry"/>).</summary>
+        public float OutputCarry;
     }
 }

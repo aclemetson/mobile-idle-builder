@@ -139,7 +139,7 @@ namespace MobileIdleBuilder
 
             new UpgradeDef(
                 "idle_collection_rate", "Idle Efficiency",
-                "Idle harvesters collect +5% more output per level (base 50%, max 100%).",
+                "Idle harvesters collect +5% more output per level (base 20%, max 100%).",
                 UpgradeEffectType.IdleCollectionRate, 0.05f, 10,
                 new[]{ 80, 120, 180, 270, 405, 608, 912, 1368, 2052, 3078 },
                 new[]{ ("idle_time_cap", 1) }),

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_oxygen
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_oxygen
-  displayName: Mine Oxygen
+  displayName: Oxygen
+  methodLabel: 
   recipeId: 166
   tier: 3
   category: 3

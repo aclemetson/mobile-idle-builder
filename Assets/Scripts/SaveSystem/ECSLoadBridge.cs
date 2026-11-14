@@ -182,8 +182,16 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
-            // Restore purchased permanent upgrades first — effects depend on this
-            PersistentUpgradeService.Instance?.LoadFromSave(save.permanentUpgrades);
+            // Restore purchased permanent upgrades first — effects depend on this. The multipliers are then
+            // recomputed from the levels (the source of truth) rather than trusted from the save: older
+            // builds composed the premium speed boost into the saved speed multiplier and could persist it
+            // doubled when the boost expired mid-session.
+            var upgrades = PersistentUpgradeService.Instance;
+            if (upgrades != null)
+            {
+                upgrades.LoadFromSave(save.permanentUpgrades);
+                upgrades.FlushEffectsToSave(save);
+            }
 
             // Restore megastructure progress and push its global bonuses into the ECS singleton now that
             // the player entity exists (the service's own Start may have run before SubScene load).
@@ -198,9 +206,10 @@ namespace MobileIdleBuilder
             prestige.RunCount              = save.prestigeCount;
             prestige.PrestigeCurrency      = save.prestigeCurrency;
             prestige.PrestigeCurrencySpent = save.prestigeCurrencySpent;
-            // Apply speed boost on top of the prestige base (2× when active, 1× otherwise)
-            float speedBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
-            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier * speedBoost;
+            // Pure prestige-shop multipliers, read live by ProductionSystem/CollectorSystem. The premium
+            // speed boost is NOT composed in here: it is timed, so it would outlive its expiry in ECS. It
+            // stays where it always took effect, the idle snapshot (GridSaveService reads it directly).
+            prestige.SpeedMultiplier       = save.prestigeSpeedMultiplier;
             prestige.OutputMultiplier      = save.prestigeOutputMultiplier;
             prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
@@ -219,7 +228,8 @@ namespace MobileIdleBuilder
                 {
                     ts.IsActive            = save.tutorial.isActive;
                     ts.FirstRunComplete    = false;
-                    ts.CurrentStepIndex    = ResolveStepIndex(save.tutorial.currentStepId);
+                    ts.CurrentStepIndex    = ResumeAtUnboughtNucleosynthesis(
+                        ResolveStepIndex(save.tutorial.currentStepId), save.unlockedResearch);
                     GameLogger.Debug($"[Save] Tutorial → step {ts.CurrentStepIndex} ('{save.tutorial.currentStepId}')  " +
                               $"active={ts.IsActive}  isNewGame={SaveManager.Instance.IsNewGame}");
                 }
@@ -302,9 +312,7 @@ namespace MobileIdleBuilder
                 save.prestigeCount              = p.RunCount;
                 save.prestigeCurrency           = p.PrestigeCurrency;
                 save.prestigeCurrencySpent      = p.PrestigeCurrencySpent;
-                // Strip the shop boost before saving so base × boost isn't accumulated on each save
-                float activeBoost = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
-                save.prestigeSpeedMultiplier    = activeBoost > 1f ? p.SpeedMultiplier / activeBoost : p.SpeedMultiplier;
+                save.prestigeSpeedMultiplier    = p.SpeedMultiplier;   // pure prestige value (no timed boost)
                 save.prestigeOutputMultiplier   = p.OutputMultiplier;
                 save.prestigeCostReduction      = p.CostReduction;
             }
@@ -355,6 +363,10 @@ namespace MobileIdleBuilder
             _progressQuery.SetSingleton(pp);
         }
 
+        /// <summary>Live net worth from the ECS singleton; null before the world is loaded.</summary>
+        public float? LiveNetWorth =>
+            IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().NetWorth : null;
+
         /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
         public void AddPrestigeCurrency(long amount)
         {
@@ -387,8 +399,9 @@ namespace MobileIdleBuilder
             { "intro_building_upgrades",      "post_tutorial_intro" },
             { "upgrade_atom_generator_speed", "post_tutorial_intro" },
             { "upgrade_context",              "post_tutorial_intro" },
-            // #307: neutrons go to the Demon until Nucleosynthesis, then move to the Atom Generator.
-            { "route_neutrons_to_atom_gen",   "route_neutrons_to_demon" },
+            // Nucleosynthesis now comes before the neutron line, so neutrons never detour to the Demon.
+            { "route_neutrons_to_demon",      "route_neutrons_to_atom_gen" },
+            { "reroute_neutrons_to_atom_gen", "route_neutrons_to_atom_gen" },
             // Deuterium now feeds the first reactor; Helium goes reactor to reactor later.
             { "route_helium_to_reactor",      "route_deuterium_to_reactor" },
             // #275: the tutorial now ends at the first Carbon from fusion. Heavy elements, isotopes and
@@ -415,6 +428,21 @@ namespace MobileIdleBuilder
             { "place_fission_reactor",         "tutorial_complete" },
             { "reactors_complete",             "tutorial_complete" },
         };
+
+        /// <summary>
+        /// Nucleosynthesis moved ahead of the neutron line. A save made on one of those steps under the old
+        /// order sits past the purchase without having made it, and could never craft Helium, so it goes back
+        /// to the purchase. The steps it already did advance on their own, since they read live game state.
+        /// </summary>
+        internal static int ResumeAtUnboughtNucleosynthesis(int stepIndex, ICollection<string> unlockedResearch)
+        {
+            if (unlockedResearch != null && unlockedResearch.Contains("atomic_assembly")) return stepIndex;
+
+            var steps = TutorialFlowSO.Current?.steps;
+            if (steps == null) return stepIndex;
+            int purchase = System.Array.FindIndex(steps, s => s.id == "buy_atomic_assembly");
+            return purchase >= 0 && stepIndex > purchase ? purchase : stepIndex;
+        }
 
         internal static int ResolveStepIndex(string stepId)
         {

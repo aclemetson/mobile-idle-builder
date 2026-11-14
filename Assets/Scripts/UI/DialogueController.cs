@@ -171,7 +171,18 @@ namespace MobileIdleBuilder
             if (visible)
             {
                 _box.RemoveFromClassList("hidden");
-                _blocker?.RemoveFromClassList("hidden");
+                if (_blocker != null)
+                {
+                    bool wasHidden = _blocker.ClassListContains("hidden");
+                    _blocker.RemoveFromClassList("hidden");
+                    if (wasHidden)
+                    {
+                        // Let a tap already on its way (e.g. closing Research) reach the button underneath.
+                        _blocker.pickingMode = PickingMode.Ignore;
+                        var blocker = _blocker;
+                        blocker.schedule.Execute(() => blocker.pickingMode = PickingMode.Position).StartingIn(300);
+                    }
+                }
             }
             else
             {

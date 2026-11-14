@@ -31,6 +31,7 @@ namespace MobileIdleBuilder
         public const float FloorWidthFrac = WaterWidthFrac;
 
         private const int   BendSegments = 6;          // Bézier samples for a 90° turn
+        private const int   ForkSegments = 16;         // finer: a fork's streaks bend across a widening ribbon
 
         /// <summary>Water ribbon height above the grid plane.</summary>
         public const float FlowY  = 0.06f;
@@ -87,6 +88,75 @@ namespace MobileIdleBuilder
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        /// <summary>
+        /// The reverse of a merge, for a Belt Splitter. Each exit takes its own slice of the inbound edge
+        /// and widens to a full belt by its exit edge, so branches never overlap (translucent water would
+        /// double up and its streaks would cross). Both ends line up exactly with the neighbouring belts:
+        /// across the inbound edge uv.x runs 0 to 1 over all the slices together, and across each exit
+        /// edge it runs 0 to 1 as on any belt. uv.y runs 0 (inbound) to 1 (exit).
+        /// </summary>
+        public static Mesh BuildFork(float cellSize, int inEdgeDir, IReadOnlyList<int> exitDirs,
+                                     float y = FlowY, float widthFrac = WaterWidthFrac)
+        {
+            float half = cellSize * 0.5f;
+            float hw   = cellSize * widthFrac * 0.5f;
+            Vector3 lift    = new Vector3(0f, y, 0f);
+            Vector3 forward = -DirVec(inEdgeDir);                      // travel direction
+            Vector3 right   = Vector3.Cross(Vector3.up, forward);      // right of travel
+
+            // Slices run left to right across the inbound edge, so exits must too or branches would cross.
+            var exits = new List<int>(exitDirs);
+            exits.Sort((p, q) => Vector3.Dot(DirVec(p), right).CompareTo(Vector3.Dot(DirVec(q), right)));
+
+            var verts = new List<Vector3>();
+            var uvs   = new List<Vector2>();
+            var tris  = new List<int>();
+
+            for (int i = 0; i < exits.Count; i++)
+            {
+                float uv0 = (float)i / exits.Count;
+                float uv1 = (float)(i + 1) / exits.Count;
+
+                Vector3 exitDir   = DirVec(exits[i]);
+                Vector3 exitRight = Vector3.Cross(Vector3.up, exitDir) * hw;
+                Vector3 exitMid   = exitDir * half;
+
+                int baseIndex = verts.Count;
+                for (int s = 0; s <= ForkSegments; s++)
+                {
+                    float t = (float)s / ForkSegments;
+                    verts.Add(lift + ForkEdge(Mathf.Lerp(-hw, hw, uv0), exitMid - exitRight, forward, right, half, t));
+                    verts.Add(lift + ForkEdge(Mathf.Lerp(-hw, hw, uv1), exitMid + exitRight, forward, right, half, t));
+                    uvs.Add(new Vector2(Mathf.Lerp(uv0, 0f, t), t));
+                    uvs.Add(new Vector2(Mathf.Lerp(uv1, 1f, t), t));
+                }
+                for (int s = 0; s < ForkSegments; s++)
+                {
+                    int a = baseIndex + s * 2;
+                    int b = a + 1, c = a + 2, d = a + 3;
+                    tris.Add(a); tris.Add(c); tris.Add(b);
+                    tris.Add(b); tris.Add(c); tris.Add(d);
+                }
+            }
+
+            var mesh = new Mesh { name = "ConveyorFork" };
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        // One side of a branch: leaves the inbound edge straight ahead, then curves onto the exit corner.
+        private static Vector3 ForkEdge(float entryLateral, Vector3 exitCorner, Vector3 forward, Vector3 right, float half, float t)
+        {
+            Vector3 start   = right * entryLateral - forward * half;
+            Vector3 control = right * entryLateral + forward * Vector3.Dot(exitCorner, forward);
+            float   u       = 1f - t;
+            return u * u * start + 2f * u * t * control + t * t * exitCorner;
         }
 
         /// <summary>Centreline points from the inbound edge to the exit edge: straight if collinear, else a corner Bézier.</summary>

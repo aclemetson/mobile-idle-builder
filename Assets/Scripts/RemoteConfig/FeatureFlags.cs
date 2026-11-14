@@ -27,6 +27,7 @@ namespace MobileIdleBuilder
         public const string PvpEnabledKey         = "pvp.enabled";
         public const string IapEnabledKey         = "iap.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
+        public const string AdsTestModeKey        = "ads.test_mode";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
         public const string DailyEventsEnabledKey = "dailyevents.enabled";
         public const string MaintenanceEnabledKey = "maintenance.enabled";
@@ -47,6 +48,10 @@ namespace MobileIdleBuilder
         public const bool PvpEnabledDefault         = false; // server backend not live yet
         public const bool IapEnabledDefault         = true;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
+        // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
+        // build can never show a real ad unless the dashboard explicitly turns it off. Only read in dev
+        // builds (see AdsTestMode), so production ignores the key entirely.
+        public const bool AdsTestModeDefault        = true;
         public const bool CloudSaveEnabledDefault   = true;
         public const bool DailyEventsEnabledDefault = true;
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
@@ -74,6 +79,7 @@ namespace MobileIdleBuilder
             new FlagDef(PvpEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
+            new FlagDef(AdsTestModeKey,        FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
             new FlagDef(DailyEventsEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
@@ -94,6 +100,25 @@ namespace MobileIdleBuilder
         public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
+
+        /// <summary>
+        /// True in the Editor and in builds compiled with DEV_ENVIRONMENT (the ones that talk to the UGS
+        /// "development" environment, see UgsEnvironment). Production builds compile this to false.
+        /// </summary>
+#if UNITY_EDITOR || DEV_ENVIRONMENT
+        public const bool IsDevBuild = true;
+#else
+        public const bool IsDevBuild = false;
+#endif
+
+        /// <summary>
+        /// Test ads (<c>ads.test_mode</c>): AdService uses <see cref="TestAdProvider"/> instead of the real
+        /// ad network. Dev builds only; always false in a production build, whatever the dashboard says.
+        /// </summary>
+        public static bool AdsTestMode => ResolveAdsTestMode(IsDevBuild, GetBool(AdsTestModeKey, AdsTestModeDefault));
+
+        /// <summary>Pure rule behind <see cref="AdsTestMode"/>, unit-tested.</summary>
+        public static bool ResolveAdsTestMode(bool devBuild, bool flagValue) => devBuild && flagValue;
         public static bool CloudSaveEnabled   => GetBool(CloudSaveEnabledKey,   CloudSaveEnabledDefault);
         public static bool DailyEventsEnabled => GetBool(DailyEventsEnabledKey, DailyEventsEnabledDefault);
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);

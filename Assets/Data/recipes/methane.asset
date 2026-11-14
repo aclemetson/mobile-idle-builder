@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: methane
   displayName: Methane
+  methodLabel: 
   recipeId: 32
   tier: 3
   category: 5

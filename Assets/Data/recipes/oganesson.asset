@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: oganesson
   displayName: Oganesson
+  methodLabel: 
   recipeId: 147
   tier: 2
   category: 3

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: dyson_node
   displayName: Dyson Node
+  methodLabel: 
   recipeId: 47
   tier: 5
   category: 7

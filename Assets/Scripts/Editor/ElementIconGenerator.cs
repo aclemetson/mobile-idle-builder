@@ -21,6 +21,7 @@ namespace MobileIdleBuilder.Editor
     {
         const int Size = 256;
         const string FontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
+        internal const string RenderedIconsListPath = "Assets/Art/Icons/rendered_icons.txt";
 
         // Nuclear creation-regime palette, mirrored from docs/gameplay_loop_data.js
         // (nuclear.regimes) so the in-game tiles match the docs periodic table.
@@ -69,6 +70,10 @@ namespace MobileIdleBuilder.Editor
                 Debug.LogWarning("[ElementIconGenerator] No ItemSO assets found under Assets/Resources/Items.");
                 return;
             }
+
+            // Items with a Blender-rendered icon (scripts/molecule_icons) keep it.
+            var rendered = LoadRenderedIconIds();
+            items.RemoveAll(it => rendered.Contains(GameDataImporter.Sanitize(it.id)));
 
             Directory.CreateDirectory(GameDataImporter.GeneratedIconsDir);
 
@@ -126,6 +131,19 @@ namespace MobileIdleBuilder.Editor
                 return za != zb ? za.CompareTo(zb) : a.itemId.CompareTo(b.itemId);
             });
             return items;
+        }
+
+        // One item id per line, written by scripts/molecule_icons/compose_icons.py.
+        internal static HashSet<string> LoadRenderedIconIds()
+        {
+            var ids = new HashSet<string>();
+            if (!File.Exists(RenderedIconsListPath)) return ids;
+            foreach (var line in File.ReadAllLines(RenderedIconsListPath))
+            {
+                var id = line.Trim();
+                if (id.Length > 0) ids.Add(id);
+            }
+            return ids;
         }
 
         static Color RegimeColor(ItemSO it)

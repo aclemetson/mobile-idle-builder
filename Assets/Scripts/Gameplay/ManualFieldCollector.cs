@@ -193,10 +193,30 @@ namespace MobileIdleBuilder
         // Helpers
         // ----------------------------------------------------------------
 
+        // One shuffled bag per field id so short tap runs keep the drop ratio (#303).
+        private static readonly System.Collections.Generic.Dictionary<string, DropBag> s_dropBags = new();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => s_dropBags.Clear();
+
         internal static ItemSO PickWeightedItem(FieldSO field)
         {
             if (field.drops.Count == 1)
                 return field.drops[0].item;
+
+            string bagKey = field.id ?? field.name;
+            if (!s_dropBags.TryGetValue(bagKey, out var bag))
+            {
+                var weights = new float[field.drops.Count];
+                for (int i = 0; i < weights.Length; i++) weights[i] = field.drops[i].weight;
+                bag = new DropBag(weights, max => Random.Range(0, max));
+                s_dropBags[bagKey] = bag;
+            }
+            if (bag.IsUsable)
+            {
+                int idx = bag.Next();
+                if (idx >= 0 && idx < field.drops.Count) return field.drops[idx].item;
+            }
 
             float total = 0f;
             foreach (var d in field.drops)

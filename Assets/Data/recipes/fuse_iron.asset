@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fuse_iron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fuse_iron
-  displayName: Fuse Iron
+  displayName: Iron
+  methodLabel: 
   recipeId: 159
   tier: 2
   category: 8

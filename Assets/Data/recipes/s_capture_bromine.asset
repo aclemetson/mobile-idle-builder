@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_bromine
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_bromine
-  displayName: 'Slow capture: Bromine'
+  displayName: Bromine
+  methodLabel: 
   recipeId: 258
   tier: 2
   category: 4

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_erbium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_erbium
-  displayName: 'Slow capture: Erbium'
+  displayName: Erbium
+  methodLabel: 
   recipeId: 275
   tier: 2
   category: 4

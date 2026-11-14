@@ -42,11 +42,14 @@ namespace MobileIdleBuilder
             public bool  IsCollector;
             public bool  IsSink;
             public bool  IsFilter;           // #321: passes items through by its rules; never a final consumer
+            public bool  IsSplitter;         // Belt Splitter: shares items evenly between its output belts
+            public bool  IsRouter => IsFilter || IsSplitter;
             public IdleRecipeInfo Recipe;   // valid only for synthesizers
             public readonly List<int> Outgoing = new(); // indices (or -1 for inventory)
             public readonly List<int> Incoming = new(); // producer node indices feeding this node
             public int   OutputItemId = -1;
             public float OutputRate;         // items/sec (speed + manager scaled; pre idle-collection-rate)
+            public float CraftsPerSec;       // synthesizers: steady-state crafts/sec (input-limited)
             public bool  Computed;
             public int   OutgoingCount => Outgoing.Count;
         }
@@ -64,7 +67,9 @@ namespace MobileIdleBuilder
             Func<BuildingSaveData, float> getManagerOutputMultiplier = null,
             Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
             float surplusSaleFraction = 0f,
-            Func<int, bool> isFilter = null)
+            Func<int, bool> isFilter = null,
+            Func<int, bool> isSplitter = null,
+            Func<BuildingSaveData, float> getCollectorRate = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -86,6 +91,7 @@ namespace MobileIdleBuilder
                     IsCollector = isCollector(bsd.buildingId),
                     IsSink      = isEntropySink(bsd.buildingId),
                     IsFilter    = isFilter?.Invoke(bsd.buildingId) ?? false,
+                    IsSplitter  = isSplitter?.Invoke(bsd.buildingId) ?? false,
                     Recipe      = info
                 };
                 indexOf[bsd] = i;
@@ -99,7 +105,7 @@ namespace MobileIdleBuilder
             bool CanConsume(BuildingSaveData b)
             {
                 int idx = indexOf[b];
-                return nodes[idx].IsSink || nodes[idx].IsFilter ||
+                return nodes[idx].IsSink || nodes[idx].IsRouter ||
                        (nodes[idx].Recipe.Valid && nodes[idx].Recipe.InputItemIds != null &&
                         nodes[idx].Recipe.InputItemIds.Length > 0);
             }
@@ -122,8 +128,8 @@ namespace MobileIdleBuilder
                 var producer = FindAdjacent(hx, hy, cellToBuilding, CanProduce);
                 if (producer == null)
                 {
-                    // A belt leaving a Filter: remember which side it starts from and where it ends.
-                    var filter = FindAdjacent(hx, hy, cellToBuilding, b => nodes[indexOf[b]].IsFilter);
+                    // A belt leaving a Filter or Splitter: remember which side it starts from and where it ends.
+                    var filter = FindAdjacent(hx, hy, cellToBuilding, b => nodes[indexOf[b]].IsRouter);
                     if (filter != null && filter.position?.Length >= 2)
                     {
                         int f = indexOf[filter];
@@ -140,23 +146,30 @@ namespace MobileIdleBuilder
                 if (to >= 0) nodes[to].Incoming.Add(from);
             }
 
-            // ---- Filters are see-through (#321) --------------------------------
+            // ---- Filters and Splitters are see-through (#321) -------------------
             // A belt into a Filter is re-pointed at wherever the Filter sends that producer's item (following
-            // chained Filters). An item no side takes waits on its belt, so that edge earns nothing.
+            // chained Filters). An item no side takes waits on its belt, so that edge earns nothing. A belt into
+            // a Splitter becomes one edge per output belt, so the producer's flow on it is shared evenly.
             for (int i = 0; i < n; i++)
             {
                 var node = nodes[i];
-                if (node.IsFilter) continue;
+                if (node.IsRouter) continue;
                 int item = StaticOutputItem(node, getOutputItemId);
                 for (int k = node.Outgoing.Count - 1; k >= 0; k--)
                 {
                     int to = node.Outgoing[k];
-                    if (to < 0 || !nodes[to].IsFilter) continue;
+                    if (to < 0 || !nodes[to].IsRouter) continue;
                     nodes[to].Incoming.Remove(i);
-                    int target = ThroughFilters(to, item, nodes, filterExits);
-                    if (target == Waits || target == i) { node.Outgoing.RemoveAt(k); continue; }
-                    node.Outgoing[k] = target;
-                    if (target >= 0) nodes[target].Incoming.Add(i);
+                    node.Outgoing.RemoveAt(k);
+
+                    var targets = new List<int>();
+                    ThroughRouters(to, item, nodes, filterExits, targets, 0);
+                    foreach (int target in targets)
+                    {
+                        if (target == i) continue;
+                        node.Outgoing.Add(target);
+                        if (target >= 0) nodes[target].Incoming.Add(i);
+                    }
                 }
             }
 
@@ -173,7 +186,10 @@ namespace MobileIdleBuilder
                 if (node.IsCollector)
                 {
                     int itemId = getOutputItemId(node.Bsd.buildingId, node.Bsd.recipeId);
-                    float rate = getOutputRate(node.Bsd.buildingId) * eff * Mgr(node);
+                    // Per building when the caller can (speed level), else the type's base rate.
+                    float baseRate = getCollectorRate != null ? getCollectorRate(node.Bsd)
+                                                              : getOutputRate(node.Bsd.buildingId);
+                    float rate = baseRate * eff * Mgr(node);
                     node.OutputItemId = itemId;
                     node.OutputRate   = (itemId >= 0 && rate > 0f) ? rate : 0f;
                     node.Computed     = true;
@@ -229,7 +245,22 @@ namespace MobileIdleBuilder
                     bool sink         = to >= 0 && nodes[to].IsSink;
                     bool producingSyn = to >= 0 && nodes[to].Recipe.Valid && !nodes[to].IsSink
                                                 && nodes[to].OutputRate > 0f;
-                    if (producingSyn) continue; // consumed by a synth that will be credited via its own output
+                    if (producingSyn)
+                    {
+                        // Consumed by a synth credited via its own output, except what its recipe can't use at
+                        // steady state: live play sells that at a full input (full-input autosell), so offline does too.
+                        float excess = surplusSaleFraction > 0f
+                            ? ExcessInto(nodes[to], node.OutputItemId, perEdge, nodes) : 0f;
+                        if (excess > 1e-6f)
+                            snapshot.chains.Add(new IdleChainEntry
+                            {
+                                itemId            = node.OutputItemId,
+                                itemsPerSecond    = excess,
+                                endsAtEntropySink = true,
+                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction
+                            });
+                        continue;
+                    }
 
                     bool stuck = to >= 0 && !sink && surplusSaleFraction > 0f;
                     float price = getItemSellValue(node.OutputItemId);
@@ -265,8 +296,6 @@ namespace MobileIdleBuilder
             return snapshot;
         }
 
-        private const int Waits = -2;
-
         /// <summary>The item a producer always makes, known before rates are computed (collector or recipe).</summary>
         private static int StaticOutputItem(Node node, Func<int, int, int> getOutputItemId)
         {
@@ -275,25 +304,36 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Where <paramref name="item"/> ends up after entering Filter <paramref name="filter"/>: a consumer node,
-        /// -1 (a belt to nowhere: inventory), or <see cref="Waits"/> when no side takes it or that side has no belt.
-        /// A Filter with no rules (an old save) sends everything out of its first belt.
+        /// Every place <paramref name="item"/> ends up after entering Filter or Splitter <paramref name="router"/>,
+        /// one entry per belt it is shared over (consumer node, or -1 for inventory). Nothing is added where it
+        /// waits. A Filter picks one side by its rules (with no rules, an old save, its first belt); a Splitter uses all of its belts.
         /// </summary>
-        private static int ThroughFilters(int filter, int item, Node[] nodes, List<(int filter, int side, int to)> exits)
+        private static void ThroughRouters(int router, int item, Node[] nodes,
+                                           List<(int filter, int side, int to)> exits, List<int> targets, int depth)
         {
-            for (int hop = 0; hop < 8; hop++)
-            {
-                var rules = PortFilterRules.Parse(nodes[filter].Bsd.portFilters);
-                int side  = rules.Count == 0 ? FirstExitSide(filter, exits) : PortFilterRules.Route(rules, item);
-                if (side == PortFilterRules.NoRoute) return Waits;
+            if (depth >= 8) return; // a loop of Filters/Splitters
 
-                int next = Waits;
+            if (nodes[router].IsSplitter)
+            {
                 foreach (var e in exits)
-                    if (e.filter == filter && e.side == side) { next = e.to; break; }
-                if (next == Waits || next < 0 || !nodes[next].IsFilter) return next;
-                filter = next;
+                {
+                    if (e.filter != router) continue;
+                    if (e.to >= 0 && nodes[e.to].IsRouter) ThroughRouters(e.to, item, nodes, exits, targets, depth + 1);
+                    else targets.Add(e.to);
+                }
+                return;
             }
-            return Waits; // a loop of Filters
+
+            var rules = PortFilterRules.Parse(nodes[router].Bsd.portFilters);
+            int side  = rules.Count == 0 ? FirstExitSide(router, exits) : PortFilterRules.Route(rules, item);
+            if (side == PortFilterRules.NoRoute) return;
+            foreach (var e in exits)
+            {
+                if (e.filter != router || e.side != side) continue;
+                if (e.to >= 0 && nodes[e.to].IsRouter) ThroughRouters(e.to, item, nodes, exits, targets, depth + 1);
+                else targets.Add(e.to);
+                return;
+            }
         }
 
         private static int FirstExitSide(int filter, List<(int filter, int side, int to)> exits)
@@ -311,6 +351,32 @@ namespace MobileIdleBuilder
             if (dx == 0 && dy == -1) return (int)OutputDirection.South;
             if (dx == -1 && dy == 0) return (int)OutputDirection.West;
             return -1;
+        }
+
+        /// <summary>
+        /// The part of <paramref name="perEdge"/> (one belt's flow of <paramref name="itemId"/> into synth
+        /// <paramref name="synth"/>) that the synth can't use at steady state. 0 for an item its recipe doesn't use.
+        /// When several belts bring the same item, the excess is shared in proportion to their flow.
+        /// </summary>
+        private static float ExcessInto(Node synth, int itemId, float perEdge, Node[] nodes)
+        {
+            var r = synth.Recipe;
+            int qty = 0;
+            for (int k = 0; k < (r.InputItemIds?.Length ?? 0); k++)
+                if (r.InputItemIds[k] == itemId)
+                    qty = r.InputQuantities != null && k < r.InputQuantities.Length ? r.InputQuantities[k] : 1;
+            if (qty <= 0) return 0f;
+
+            float arriving = 0f;
+            foreach (int u in synth.Incoming)
+            {
+                var un = nodes[u];
+                if (un.OutputItemId == itemId && un.OutputRate > 0f && un.OutgoingCount > 0)
+                    arriving += un.OutputRate / un.OutgoingCount;
+            }
+            if (arriving <= 0f) return 0f;
+            float excess = arriving - synth.CraftsPerSec * qty;
+            return excess > 0f ? excess * (perEdge / arriving) : 0f;
         }
 
         /// <summary>Input-limited output for a synthesizer node: min(craft rate, what its inputs sustain).</summary>
@@ -343,6 +409,7 @@ namespace MobileIdleBuilder
 
             int outQty = r.OutputQuantity > 0 ? r.OutputQuantity : 1;
             node.OutputItemId = r.OutputItemId;
+            node.CraftsPerSec = craftsPerSec > 0f ? craftsPerSec : 0f;
             node.OutputRate   = craftsPerSec > 0f ? craftsPerSec * outQty * mgr(node) : 0f;
         }
 

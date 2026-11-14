@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_uranium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_uranium
-  displayName: Uranium Decay
+  displayName: Thorium
+  methodLabel: 
   recipeId: 231
   tier: 2
   category: 4

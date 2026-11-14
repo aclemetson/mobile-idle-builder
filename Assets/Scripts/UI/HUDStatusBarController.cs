@@ -17,10 +17,13 @@ namespace MobileIdleBuilder
         private Label         _entropyLabel;
         private Label         _prestigeTopbarLabel;
         private Label         _crystalLabel;
+        private VisualElement _powerStatus;
         private Label         _powerLabel;
         private Button        _btnPrestige;
         private VisualElement _researchStatus;
         private Label         _researchStatusLabel;
+        private VisualElement _craftStatus;
+        private Label         _craftStatusLabel;
 
         private readonly Dictionary<int, Label> _inventoryLabels = new();
 
@@ -41,6 +44,9 @@ namespace MobileIdleBuilder
         private long  _lastCrystals           = long.MinValue;
         private string _lastResearchId        = null;
         private int    _lastResearchRemaining = int.MinValue;
+        private string _lastCraftRecipeId     = null;
+        private int    _lastCraftItems        = int.MinValue;
+        private int    _lastCraftRemaining    = int.MinValue;
 
         public void Init(VisualElement root)
         {
@@ -48,10 +54,13 @@ namespace MobileIdleBuilder
             _entropyLabel        = root.Q<Label>("entropy-label");
             _prestigeTopbarLabel = root.Q<Label>("prestige-topbar-label");
             _crystalLabel        = root.Q<Label>("crystal-label");
+            _powerStatus         = root.Q("power-status");
             _powerLabel          = root.Q<Label>("power-label");
             _btnPrestige         = root.Q<Button>("btn-prestige");
             _researchStatus      = root.Q("research-status");
             _researchStatusLabel = root.Q<Label>("research-status-label");
+            _craftStatus         = root.Q("craft-status");
+            _craftStatusLabel    = root.Q<Label>("craft-status-label");
         }
 
         public void SetECSContext(EntityManager em, EntityQuery inventoryQuery,
@@ -77,6 +86,7 @@ namespace MobileIdleBuilder
             if (!_powerQuery.IsEmpty) RefreshPowerLabel();
             RefreshCrystalLabel();
             RefreshResearchStatus();
+            RefreshCraftStatus();
         }
 
         private void RefreshInventoryBar()
@@ -132,8 +142,12 @@ namespace MobileIdleBuilder
             var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
             if (progress.BaseCurrency == _lastBaseCurrency) return;
             _lastBaseCurrency      = progress.BaseCurrency;
-            _entropyLabel.text = $"◈ {progress.BaseCurrency:N0}";
+            // Compact: the full number pushed the Settings button off a phone screen.
+            _entropyLabel.text = NumberFormat.Entropy(progress.BaseCurrency);
         }
+
+        /// <summary>The power strip stays hidden until there is a generator or a building waiting for one.</summary>
+        internal static bool ShowsPowerStrip(float supply, int disconnected) => supply > 0f || disconnected > 0;
 
         private void RefreshPowerLabel()
         {
@@ -159,6 +173,7 @@ namespace MobileIdleBuilder
 
             _powerLabel.text = text;
             _powerLabel.EnableInClassList("power-brownout", warn);
+            HUDController.SetElementVisible(_powerStatus, ShowsPowerStrip(state.Supply, state.DisconnectedCount));
         }
 
         private void RefreshPrestigeButton()
@@ -180,7 +195,7 @@ namespace MobileIdleBuilder
             long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
             if (held == _lastHeldPC) return;
             _lastHeldPC                  = held;
-            _prestigeTopbarLabel.text    = $"✦ {held:N0}";
+            _prestigeTopbarLabel.text    = $"✦ {NumberFormat.Compact(held)}";
         }
 
         private void RefreshCrystalLabel()
@@ -189,7 +204,7 @@ namespace MobileIdleBuilder
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0L;
             if (crystals == _lastCrystals) return;
             _lastCrystals     = crystals;
-            _crystalLabel.text = $"◆ {crystals:N0}";
+            _crystalLabel.text = $"♦ {NumberFormat.Compact(crystals)}";
         }
 
         // Shows the active research name + remaining time in a strip under the top bar; hides it
@@ -220,6 +235,46 @@ namespace MobileIdleBuilder
             string name = rs.ActiveResearch != null ? rs.ActiveResearch.displayName : "Research";
             _researchStatusLabel.text = $"🔬 {name}   ⏳ {HUDController.FormatResearchTimer(remaining)}";
             _researchStatus.style.display = DisplayStyle.Flex;
+        }
+
+        // Shows the recipe craft queue (Recipes panel) in a strip under the research strip, so a
+        // cook is visible from anywhere; hides it when the queue is empty. Dirty-flagged like the
+        // research strip: front recipe, items left, whole seconds left.
+        private void RefreshCraftStatus()
+        {
+            if (_craftStatus == null) return;
+
+            var queue = ManualCraftService.Instance != null ? ManualCraftService.Instance.Queue : null;
+            if (CraftQueue.IsEmpty(queue))
+            {
+                if (_lastCraftRecipeId != null)
+                {
+                    _lastCraftRecipeId  = null;
+                    _lastCraftItems     = int.MinValue;
+                    _lastCraftRemaining = int.MinValue;
+                    _craftStatus.style.display = DisplayStyle.None;
+                }
+                return;
+            }
+
+            var    front     = queue.entries[0];
+            int    items     = CraftQueue.TotalItems(queue);
+            int    remaining = Mathf.CeilToInt((float)CraftQueue.SecondsRemaining(queue, GameClock.UtcNow));
+            if (front.recipeId == _lastCraftRecipeId && items == _lastCraftItems && remaining == _lastCraftRemaining) return;
+            _lastCraftRecipeId  = front.recipeId;
+            _lastCraftItems     = items;
+            _lastCraftRemaining = remaining;
+
+            string name = ManualCraftService.FindRecipe(front.recipeId)?.name ?? front.recipeId;
+            _craftStatusLabel.text = FormatCraftStatus(name, front.count, items - front.count, remaining);
+            _craftStatus.style.display = DisplayStyle.Flex;
+        }
+
+        /// <summary>"⚗ Helium ×3   ⏳ 12s", with "+N more" when other recipes wait behind the front one.</summary>
+        internal static string FormatCraftStatus(string recipeName, int frontCount, int itemsBehind, double secondsLeft)
+        {
+            string more = itemsBehind > 0 ? $"  +{itemsBehind} more" : "";
+            return $"⚗ {recipeName} ×{frontCount}{more}   ⏳ {HUDController.FormatResearchTimer(secondsLeft)}";
         }
     }
 }

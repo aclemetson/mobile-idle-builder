@@ -120,7 +120,7 @@ namespace MobileIdleBuilder
         {
             if (_crystalBalance == null) return;
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
-            _crystalBalance.text = $"◆ {crystals:N0}";
+            _crystalBalance.text = $"♦ {crystals:N0}";
         }
 
         private void Refresh()
@@ -155,7 +155,7 @@ namespace MobileIdleBuilder
                 var card = MakeTierCard(
                     tier.Name,
                     tier.Description,
-                    $"◆ {tier.CrystalCost:N0}",
+                    $"♦ {tier.CrystalCost:N0}",
                     canAfford,
                     false,
                     null,
@@ -197,7 +197,7 @@ namespace MobileIdleBuilder
                 var card = MakeTierCard(
                     tier.Name,
                     tier.Description,
-                    $"◆ {tier.CrystalCost:N0}",
+                    $"♦ {tier.CrystalCost:N0}",
                     canAfford,
                     boostActive,
                     boostActive ? "⚡ Active" : null,
@@ -231,7 +231,7 @@ namespace MobileIdleBuilder
                 var card = MakeTierCard(
                     tier.Name,
                     $"{amount:N0}◈ ({tier.Description})",
-                    $"◆ {tier.CrystalCost:N0}",
+                    $"♦ {tier.CrystalCost:N0}",
                     canAfford,
                     false,
                     null,
@@ -261,7 +261,7 @@ namespace MobileIdleBuilder
                 var card = MakeTierCard(
                     tier.Name,
                     $"+{tier.PrestigeCurrencyAmount:N0}✦ prestige currency",
-                    $"◆ {tier.CrystalCost:N0}",
+                    $"♦ {tier.CrystalCost:N0}",
                     canAfford,
                     false,
                     null,
@@ -302,7 +302,7 @@ namespace MobileIdleBuilder
 
                 var card = MakeIAPTierCard(
                     tier.Name,
-                    $"+{tier.CrystalAmount:N0}◆ crystals",
+                    $"+{tier.CrystalAmount:N0}♦ crystals",
                     price,
                     () => OnIAPBuyPressed(tier.ProductId));
 

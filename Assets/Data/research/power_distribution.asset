@@ -29,6 +29,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 60
   fieldCooldownMult: 1
+  effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings:

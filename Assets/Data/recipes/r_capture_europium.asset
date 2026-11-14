@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: r_capture_europium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: r_capture_europium
-  displayName: 'Fast capture: Europium'
+  displayName: Europium
+  methodLabel: 
   recipeId: 284
   tier: 2
   category: 4

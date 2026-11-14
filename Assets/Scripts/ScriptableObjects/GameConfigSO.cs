@@ -39,6 +39,10 @@ namespace MobileIdleBuilder
         [Tooltip("Fraction of active-play output collected while idle before upgrades (0..1).")]
         public float idleBaseCollectionRate = 0.20f;
 
+        [Header("Conveyors")]
+        [Tooltip("Items one belt tile holds (1-4). Belt throughput = belt speed (tiles/s) x this.")]
+        [Range(1, 4)] public int beltItemsPerTile = 2;
+
         [Header("Building Purchase Scaling")]
         [Tooltip("Each additional placement of the same Tier 1 building costs base × multiplier^(n-1)")]
         public float buildingPurchaseMultiplierT1 = 1.5f;

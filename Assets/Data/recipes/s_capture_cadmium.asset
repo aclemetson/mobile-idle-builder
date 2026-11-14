@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_cadmium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_cadmium
-  displayName: 'Slow capture: Cadmium'
+  displayName: Cadmium
+  methodLabel: 
   recipeId: 264
   tier: 2
   category: 4

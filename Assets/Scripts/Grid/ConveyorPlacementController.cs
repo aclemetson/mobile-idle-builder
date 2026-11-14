@@ -96,6 +96,11 @@ namespace MobileIdleBuilder
 
         private Vector2Int _hoverCell = new(-1, -1);
 
+        // Feedback (#301a): identical refusal toasts at most once per 1.5 s; the chain-continuation
+        // toast shows once per conveyor-mode session.
+        private readonly ToastRateLimiter _toastLimiter = new(1.5);
+        private bool _continueToastShown;
+
         // ----------------------------------------------------------------
         // Lifecycle
         // ----------------------------------------------------------------
@@ -116,6 +121,8 @@ namespace MobileIdleBuilder
         {
             if (IsPlacing) return;
             ResetAll();
+            _continueToastShown = false;
+            _toastLimiter.Reset();
             IsPlacing = true;
             _mode     = Mode.Create;
             cameraController?.SetPanLocked(false); // allow map panning between taps
@@ -186,6 +193,14 @@ namespace MobileIdleBuilder
             ClearPathState();
             _startCell = newStart;
             MarkStart();
+
+            // Make the continuation visible: pulse the new start and explain it once per session.
+            gridRenderer.PulseConveyorEndpoint(_startCell.x, _startCell.y);
+            if (!_continueToastShown)
+            {
+                _continueToastShown = true;
+                InventoryPopupController.NotifyWarning(BeltFeedback.ContinuingMessage);
+            }
         }
 
         /// <summary>
@@ -288,7 +303,7 @@ namespace MobileIdleBuilder
             // ---- Create mode ----
             if (!_hasStart)
             {
-                if (!IsValidEndpoint(cell)) return;
+                if (!IsValidEndpoint(cell)) { ToastRefusal(cell); return; }
                 _startCell = cell;
                 SetHasStart(true);
                 ClearHover();
@@ -301,10 +316,11 @@ namespace MobileIdleBuilder
             if (cell == _startCell)
             {
                 if (!IsConveyorCell(_startCell)) BeginSingleCandidate();
+                else ToastRefusal(cell);
                 return;
             }
 
-            if (!IsValidEndpoint(cell)) return;
+            if (!IsValidEndpoint(cell)) { ToastRefusal(cell); return; }
 
             // Leaving a pending single candidate for a real run — drop its directional preview.
             if (_isSingle) conveyorVisualizer?.ClearSinglePreview();
@@ -343,17 +359,42 @@ namespace MobileIdleBuilder
         // Path computation
         // ----------------------------------------------------------------
 
+        /// <summary>Toasts why a Create-mode tap was refused (rate-limited per message).</summary>
+        private void ToastRefusal(Vector2Int cell)
+        {
+            string reason = BeltFeedback.RefusalReason(
+                _hasStart, _hasStart && cell == _startCell, IsFreecell(cell.x, cell.y), IsConveyorCell(cell));
+            if (reason != null && _toastLimiter.TryAcquire(reason))
+                InventoryPopupController.NotifyWarning(reason);
+        }
+
         private void RecomputePath()
         {
-            gridRenderer.ClearConveyorGhost();
+            gridRenderer.ClearConveyorGhost();   // also clears any blocking-belt tint
 
             Func<int, int, bool> isFree = IsFreecell;
 
-            // Prefer the chosen single-turn elbow, then the other elbow, then route around.
+            // Router cost (#301b): keep away from free port fronts and from hugging buildings.
+            var extraCost = ConveyorPathfinder.MakeExtraCost(
+                CollectPortFronts(), (x, y) => IsBuildingCell(x, y), _startCell, _destCell);
+
+            // Prefer the chosen single-turn elbow, then the other elbow; keep that L unless the
+            // cost-aware route is strictly cheaper (or there is no L at all).
             List<Vector2Int> path =
                 ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, _elbowHorizontalFirst, isFree)
-                ?? ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, !_elbowHorizontalFirst, isFree)
-                ?? ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree);
+                ?? ConveyorPathfinder.BuildOneTurnPath(_startCell, _destCell, !_elbowHorizontalFirst, isFree);
+            bool routed = path == null;
+            var route = ConveyorPathfinder.FindRoute(_startCell, _destCell, isFree, extraCost);
+            if (path == null
+                || (route != null && ConveyorPathfinder.PathCost(route, extraCost) < ConveyorPathfinder.PathCost(path, extraCost)))
+                path = route;
+
+            // No route, or a long detour: tint the existing belts sitting on the straight L.
+            bool showBlockers = routed &&
+                (path == null || BeltFeedback.IsDetour(path.Count, _startCell, _destCell));
+            var blockers = showBlockers
+                ? BeltFeedback.BlockingBeltCells(_startCell, _destCell, _elbowHorizontalFirst, (x, y) => IsConveyorCell(new Vector2Int(x, y)))
+                : null;
 
             _currentPath = path ?? new List<Vector2Int>();
             _pathValid   = path != null && path.Count >= 1;
@@ -362,6 +403,7 @@ namespace MobileIdleBuilder
             {
                 // Unreachable end — keep showing the start marker, drop the candidate.
                 if (_hasStart) MarkStart();
+                if (blockers != null && blockers.Count > 0) gridRenderer.SetBlockingBelts(blockers);
                 return;
             }
 
@@ -375,6 +417,7 @@ namespace MobileIdleBuilder
                     gridRenderer.AddConveyorGhostCell(c.x, c.y);
             }
             gridRenderer.PaintConveyorEndpoints(_startCell.x, _startCell.y, _destCell.x, _destCell.y);
+            if (blockers != null && blockers.Count > 0) gridRenderer.SetBlockingBelts(blockers);
         }
 
         // ----------------------------------------------------------------
@@ -437,6 +480,42 @@ namespace MobileIdleBuilder
             if (!gridRenderer.IsInBounds(x, y)) return false;
             if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)) return false;
             return true;
+        }
+
+        /// <summary>A building cell: occupied but not a conveyor.</summary>
+        private bool IsBuildingCell(int x, int y) =>
+            GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
+            && !GridOccupancy.Instance.IsConveyorCell(x, y);
+
+        /// <summary>
+        /// Belt cells in front of every placed building port (outputs and inputs), via the same
+        /// TutorialRouteGuide.OutputFront/InputFront the tutorial route guide uses. Connected ports are
+        /// not filtered out: their front already holds a belt, so it is blocked and never costed anyway.
+        /// </summary>
+        private static HashSet<Vector2Int> CollectPortFronts()
+        {
+            var fronts = new HashSet<Vector2Int>();
+            var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return fronts;
+            var em = world.EntityManager;
+
+            using var query = em.CreateEntityQuery(
+                Unity.Entities.ComponentType.ReadOnly<BuildingData>(),
+                Unity.Entities.ComponentType.ReadOnly<PlacedPortData>());
+            using var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var ports = em.GetBuffer<PlacedPortData>(entity, isReadOnly: true);
+                for (int i = 0; i < ports.Length; i++)
+                {
+                    var cell   = new Vector2Int(ports[i].CellX, ports[i].CellY);
+                    var facing = (OutputDirection)ports[i].Facing;
+                    fronts.Add(ports[i].PortType == (int)PortType.Output
+                        ? TutorialRouteGuide.OutputFront(cell, facing)
+                        : TutorialRouteGuide.InputFront(cell, facing));
+                }
+            }
+            return fronts;
         }
 
         private bool IsConveyorCell(Vector2Int c) =>

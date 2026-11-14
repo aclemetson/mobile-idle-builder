@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_radon_211
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_radon_211
-  displayName: Radon-211 Decay
+  displayName: Astatine
+  methodLabel: 
   recipeId: 240
   tier: 2
   category: 4

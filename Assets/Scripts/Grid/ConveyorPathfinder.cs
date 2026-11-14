@@ -25,10 +25,60 @@ namespace MobileIdleBuilder
         private static readonly int[] DX = { 1, -1, 0, 0 };
         private static readonly int[] DY = { 0, 0, 1, -1 };
 
-        // Dijkstra cost weighting: a turn costs far more than a step, so the route minimizes
-        // turns first and only then total length. Larger than any realistic path length.
-        private const long TurnCost = 1_000_000L;
-        private const long StepCost = 1L;
+        // Dijkstra cost weighting: a turn costs about 3 extra tiles (#301b), so a short detour
+        // beats a long loop that saves a turn, but turns are still discouraged.
+        public const long StepCost = 10L;
+        public const long TurnCost = 30L;
+
+        /// <summary>Extra cost of crossing the front tile of a building input/output port (keeps ports usable).</summary>
+        public const int PortFrontCost = 150;  // > a one-row detour on a straight run (4 turns + 2 steps = 140): a free port front is worth going around
+        /// <summary>Extra cost of a cell beside a building (mild push away from hugging buildings).</summary>
+        public const int BuildingAdjacentCost = 5;
+
+        /// <summary>
+        /// Builds the router's extra-cost function: <see cref="PortFrontCost"/> for port-front cells,
+        /// <see cref="BuildingAdjacentCost"/> for cells next to a building, and nothing for
+        /// <paramref name="start"/> / <paramref name="end"/> (the end is often a port front itself).
+        /// </summary>
+        public static Func<int, int, int> MakeExtraCost(
+            HashSet<Vector2Int> portFronts, Func<int, int, bool> isBuildingCell,
+            Vector2Int start, Vector2Int end)
+        {
+            return (x, y) =>
+            {
+                if ((x == start.x && y == start.y) || (x == end.x && y == end.y)) return 0;
+                if (portFronts != null && portFronts.Contains(new Vector2Int(x, y))) return PortFrontCost;
+                if (isBuildingCell != null)
+                {
+                    for (int d = 0; d < 4; d++)
+                        if (isBuildingCell(x + DX[d], y + DY[d])) return BuildingAdjacentCost;
+                }
+                return 0;
+            };
+        }
+
+        /// <summary>
+        /// Total router cost of an ordered path: <see cref="StepCost"/> per step, <see cref="TurnCost"/> per
+        /// turn, plus <paramref name="extraCost"/> for each intermediate cell (never the first or last).
+        /// Same weighting <see cref="FindRoute"/> minimises, so an L and a route can be compared.
+        /// </summary>
+        public static long PathCost(List<Vector2Int> path, Func<int, int, int> extraCost = null)
+        {
+            if (path == null) return long.MaxValue;
+            long total = 0;
+            for (int i = 1; i < path.Count; i++)
+            {
+                total += StepCost;
+                if (i >= 2)
+                {
+                    Vector2Int d1 = path[i - 1] - path[i - 2];
+                    Vector2Int d2 = path[i] - path[i - 1];
+                    if (d1 != d2) total += TurnCost;
+                }
+                if (extraCost != null && i < path.Count - 1) total += extraCost(path[i].x, path[i].y);
+            }
+            return total;
+        }
 
         /// <summary>
         /// Builds a single-turn L-path between two cells (or a straight line when they share a
@@ -68,15 +118,15 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Finds the best route between two cells when a simple one-turn L is blocked. Uses
-        /// Dijkstra over (cell, incoming-direction) states so the result minimizes the number of
-        /// turns first and total length second — a route that needs multiple turns to go around
-        /// obstacles, but as few as possible.
+        /// Dijkstra over (cell, incoming-direction) states with StepCost per tile, TurnCost per turn
+        /// and an optional <paramref name="extraCost"/> per intermediate cell (never the goal).
         ///
         /// Returns the ordered cell list (start..end inclusive), or <c>null</c> if the end is
         /// unreachable.
         /// </summary>
         public static List<Vector2Int> FindRoute(
-            Vector2Int start, Vector2Int end, Func<int, int, bool> isCellFree)
+            Vector2Int start, Vector2Int end, Func<int, int, bool> isCellFree,
+            Func<int, int, int> extraCost = null)
         {
             if (isCellFree == null) throw new ArgumentNullException(nameof(isCellFree));
             if (start == end) return new List<Vector2Int> { start };
@@ -115,7 +165,8 @@ namespace MobileIdleBuilder
                     if (!isGoal && !isCellFree(nx, ny)) continue;
 
                     long turn = (cdir != 4 && cdir != d) ? TurnCost : 0L;
-                    long ncost = cost + StepCost + turn;
+                    long extra = (!isGoal && extraCost != null) ? extraCost(nx, ny) : 0L;
+                    long ncost = cost + StepCost + turn + extra;
 
                     var nstate = (nx, ny, d);
                     if (!dist.TryGetValue(nstate, out long existing) || ncost < existing)

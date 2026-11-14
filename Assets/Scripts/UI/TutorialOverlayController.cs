@@ -158,7 +158,11 @@ namespace MobileIdleBuilder
                 // Don't clear the hint when ended by prestige — HUDController shows the
                 // achievements unlock hint on the same frame and we must not stomp it.
                 if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                {
                     hudController?.HideTutorialHint();
+                    // Real active -> complete transition only (_wasActive is never set by a save that loads complete).
+                    hudController?.ShowNotification("★", "Tutorial complete! The Foundry is yours.", "success");
+                }
                 dialogueController?.HideDialogue();
                 _lastHintProgress = null;
                 hudController?.SetTutorialHintProgress(null);

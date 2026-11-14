@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_thorium_233
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_thorium_233
-  displayName: Thorium-233 Decay
+  displayName: Protactinium
+  methodLabel: 
   recipeId: 236
   tier: 2
   category: 4

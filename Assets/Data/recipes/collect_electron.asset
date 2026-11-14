@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_electron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_electron
-  displayName: Collect Electron
+  displayName: Electron
+  methodLabel: 
   recipeId: 3
   tier: 1
   category: 1

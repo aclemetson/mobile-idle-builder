@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_up_quark
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_up_quark
-  displayName: Collect Up Quark
+  displayName: Up Quark
+  methodLabel: 
   recipeId: 1
   tier: 1
   category: 0

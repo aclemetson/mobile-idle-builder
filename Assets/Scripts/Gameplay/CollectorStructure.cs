@@ -5,11 +5,11 @@ using UnityEngine.Rendering;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Procedural "spindle" structure for field-collector buildings: a round body that tapers to a
-    /// single sharp apex (a singularity point), rounded on every side except a flat <b>front</b>
-    /// facade (local +Z) that carries a solid black "doorway" (rectangle with an arched top) reading
-    /// as a hole, with particles streaming out of it on each harvest. The whole structure is tinted to
-    /// resemble the field it sits on, and is rotated so the front faces the building's output direction.
+    /// "A field drawn to a point": the structure for field-collector buildings. Rings on the ground contract
+    /// towards a low cone, as if pulling the field in, and a particle condenses at its sharp tip as the
+    /// harvest timer fills. On each harvest the particle pops and a burst streams from a solid black
+    /// "doorway" (rectangle with an arched top) on the cone's one flat <b>front</b> (local +Z). The whole
+    /// structure is tinted to the field it sits on, and rotated so the front faces the output direction.
     ///
     /// BuildingVisualizer attaches this to any building carrying <see cref="CollectorData"/>, replacing
     /// the placeholder cube. The silhouette is built by <see cref="CollectorMeshBuilder"/>; the slow
@@ -27,13 +27,26 @@ namespace MobileIdleBuilder
         private const float SettleThreshold = 0.001f; // below this the flare is idle
         private const int   BurstCount      = 12;     // particles emitted from the aperture per harvest
 
-        // Bob/breathe/pulse motion is applied to the host TRANSFORM (not the shader) so the child door
-        // and particles inherit it and stay locked to the animated surface.
-        private const float BobSpeed   = 1.0f;
-        private const float BobAmp     = 0.05f; // vertical bob (in base-scale units)
-        private const float BreatheAmp = 0.03f; // XZ breathing
-        private const float PulsePuff  = 0.6f;  // extra XZ scale at a flare peak
-        private const float PulseLift  = 0.15f; // extra vertical lift at a flare peak
+        // Pulse motion is applied to the host TRANSFORM (not the shader) so the child door and particles
+        // inherit it and stay locked to the animated surface.
+        private const float PulsePuff  = 0.22f; // extra XZ scale at a flare peak
+
+        // Low and wide, with a long concave taper: reads as the ground being drawn up to a point.
+        private static readonly CollectorMeshBuilder.SpindleProfile ConeProfile =
+            new CollectorMeshBuilder.SpindleProfile
+            {
+                Height           = 0.95f,
+                BulbRadius       = 0.44f,
+                BaseRadius       = 0.30f,
+                ApexSharpness    = 2.1f,
+                FrontFlattenFrac = 0.62f
+            };
+
+        private const int   RingCount   = 3;
+        private const float RingPeriod  = 2.2f;  // one ring's contraction
+        private const float RingOuter   = 1.5f;  // starting ring scale, just past the cell
+        private const float RingInner   = 0.45f; // ends at the cone's foot
+        private const float BeadMaxSize = 0.17f; // the condensing particle's diameter when ready
 
         private static readonly int PulseAmpId = Shader.PropertyToID("_PulseAmp");
         private static readonly int TipColorId = Shader.PropertyToID("_TipColor");
@@ -46,14 +59,19 @@ namespace MobileIdleBuilder
         private Mesh           _doorMesh;
         private ParticleSystem _particles;
 
+        private readonly StructureParts _parts = new();
+        private GroundRipples _rings;
+        private Transform     _bead;
+        private Material      _beadMat;
+        private Color         _fieldColor;
+
         private World   _world;
         private Entity  _entity;
         private bool    _hasEntity;
         private int     _currentDir   = -2;             // last applied output direction (-2 == unset)
         private float   _lastTimer     = -1f;           // < 0 == not yet sampled
         private float   _pulseElapsed  = Mathf.Infinity; // Infinity == not pulsing
-        private Vector3 _baseLocalPos;                   // host transform captured pre-animation
-        private Vector3 _baseScale = Vector3.one;
+        private Vector3 _baseScale = Vector3.one;        // host transform captured pre-animation
 
         /// <summary>
         /// Builds the spindle + aperture onto the host, tints everything with <paramref name="fieldColor"/>,
@@ -67,17 +85,18 @@ namespace MobileIdleBuilder
             _hasEntity = _world != null && _world.IsCreated;
 
             // Capture the host transform as set by BuildingVisualizer, before we animate around it.
-            _baseLocalPos = transform.localPosition;
-            _baseScale    = transform.localScale;
+            _baseScale = transform.localScale;
+            _fieldColor = fieldColor;
 
             BuildBody(fieldColor);
             BuildAperture(fieldColor);
+            BuildFieldPull(fieldColor);
             ApplyOutputDirection(forceWrite: true);
         }
 
         private void BuildBody(Color fieldColor)
         {
-            _mesh = CollectorMeshBuilder.Build(RadialSegments, HeightSegments);
+            _mesh = CollectorMeshBuilder.Build(RadialSegments, HeightSegments, ConeProfile);
             GetComponent<MeshFilter>().sharedMesh = _mesh;
 
             var renderer = GetComponent<MeshRenderer>();
@@ -103,9 +122,8 @@ namespace MobileIdleBuilder
         // hole, with a forward-firing particle jet streaming out of it.
         private void BuildAperture(Color fieldColor)
         {
-            var   prof  = CollectorMeshBuilder.SpindleProfile.Default;
-            float flatZ = CollectorMeshBuilder.FrontFlatZ(prof);
-            float baseY = prof.Height * 0.13f; // door sits low on the broad part of the flat face
+            float flatZ = CollectorMeshBuilder.FrontFlatZ(ConeProfile);
+            float baseY = ConeProfile.Height * 0.06f; // door sits low on the broad part of the flat face
 
             const float doorWidth  = 0.16f;
             const float doorHeight = 0.26f;
@@ -124,6 +142,17 @@ namespace MobileIdleBuilder
             }
 
             BuildParticles(pivot.transform, fieldColor, doorHeight * 0.45f);
+        }
+
+        // The contracting rings and the particle that condenses at the tip.
+        private void BuildFieldPull(Color fieldColor)
+        {
+            _rings = new GroundRipples(_parts, transform, RingCount, 0.014f);
+
+            _beadMat = _parts.Flat(Color.Lerp(fieldColor, Color.white, 0.55f));
+            if (_beadMat == null) return;
+            _bead = StructureParts.AddPrimitive(PrimitiveType.Sphere, "Bead", transform, _beadMat,
+                new Vector3(0f, ConeProfile.Height - 0.02f, 0f), Vector3.zero);
         }
 
         private static void AddDecal(string name, Transform parent, Mesh mesh, Material mat, float zOffset)
@@ -202,6 +231,8 @@ namespace MobileIdleBuilder
                 _material.SetColor(TipColorId, Color.Lerp(fieldColor, Color.white, 0.45f));
             }
             TintParticles(fieldColor);
+            _fieldColor = fieldColor;
+            if (_beadMat != null) _beadMat.SetColor(BaseColorId, Color.Lerp(fieldColor, Color.white, 0.55f));
         }
 
         private void TintParticles(Color fieldColor)
@@ -271,13 +302,11 @@ namespace MobileIdleBuilder
             transform.localRotation = Quaternion.Euler(0f, dir * 90f, 0f);
         }
 
-        // Bob + pulse-lift on Y, breathe + pulse-puff on XZ — applied to the host transform so the door
-        // and particle emitter (children) move with the surface and never detach from it. The flare's
-        // emission boost is fed to the shader via _PulseAmp.
+        // Pulse-puff on XZ, applied to the host transform so the door and particle emitter (children) move
+        // with the surface and never detach from it. The flare's emission boost goes to the shader via
+        // _PulseAmp. The rings contract at a steady rate; the bead grows as the harvest timer fills.
         private void AnimateTransform()
         {
-            float t = Time.time;
-
             float pulse = 0f;
             if (!float.IsInfinity(_pulseElapsed))
             {
@@ -286,13 +315,21 @@ namespace MobileIdleBuilder
                 if (pulse <= SettleThreshold) { pulse = 0f; _pulseElapsed = Mathf.Infinity; }
             }
 
-            float bobY   = (Mathf.Sin(t * BobSpeed) * BobAmp + pulse * PulseLift) * _baseScale.y;
-            float scaleF = 1f + Mathf.Sin(t * BobSpeed) * BreatheAmp + pulse * PulsePuff;
-
-            transform.localPosition = _baseLocalPos + new Vector3(0f, bobY, 0f);
-            transform.localScale    = new Vector3(_baseScale.x * scaleF, _baseScale.y, _baseScale.z * scaleF);
+            float scaleF = 1f + pulse * PulsePuff;
+            transform.localScale = new Vector3(_baseScale.x * scaleF, _baseScale.y, _baseScale.z * scaleF);
 
             if (_material != null) _material.SetFloat(PulseAmpId, pulse);
+            _rings?.Animate(Time.time, RingPeriod, RingOuter, RingInner, 0f, 0.55f, _fieldColor);
+            if (_bead != null) _bead.localScale = Vector3.one * (BeadMaxSize * ReadHarvestFraction());
+        }
+
+        private float ReadHarvestFraction()
+        {
+            if (!_hasEntity || !_world.IsCreated) return 0f;
+            var em = _world.EntityManager;
+            if (!em.Exists(_entity) || !em.HasComponent<CollectorData>(_entity)) return 0f;
+            var data = em.GetComponentData<CollectorData>(_entity);
+            return Mathf.Clamp01(data.Timer * data.OutputRate);
         }
 
         void OnDestroy()
@@ -302,6 +339,7 @@ namespace MobileIdleBuilder
             if (_particleMat != null) Destroy(_particleMat);
             if (_mesh != null)        Destroy(_mesh);
             if (_doorMesh != null)    Destroy(_doorMesh);
+            _parts.Dispose();
         }
     }
 }

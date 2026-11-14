@@ -41,6 +41,7 @@ namespace MobileIdleBuilder.Tests
         [Serializable] private class Step
         {
             public string id;
+            public string hint;
             public Condition advance_condition;
             public OnEnter   on_enter;
         }
@@ -93,6 +94,18 @@ namespace MobileIdleBuilder.Tests
                 foreach (var b in r.valid_buildings) if (BuildingAvailable(b)) return null;
             }
             return $"no recipe for '{key}' is unlocked with an available building";
+        }
+
+        [Test]
+        public void TutorialHints_DoNotUseOldVerbRecipeNames()
+        {
+            // Recipes are named after their product (#336); "Assemble X" / "Fuse X" no longer exist as recipe names.
+            foreach (var s in _data.tutorial_steps)
+            {
+                if (string.IsNullOrEmpty(s.hint)) continue;
+                Assert.IsFalse(s.hint.Contains("Assemble ") || s.hint.Contains("Fuse "),
+                    $"Step '{s.id}' hint names an old verb recipe: {s.hint}");
+            }
         }
 
         [Test]

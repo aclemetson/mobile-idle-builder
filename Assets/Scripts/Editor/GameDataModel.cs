@@ -77,6 +77,7 @@ namespace MobileIdleBuilder.Editor
         public string environment                        = "Dev";
         public string api_base_url                       = "TODO";
         public long   starting_entropy                   = 0;
+        public int    belt_items_per_tile                = 2;
         public float  building_purchase_multiplier_t1       = 1.5f;
         public float  building_purchase_multiplier_t2       = 1.4f;
         public float  building_purchase_multiplier_t3_plus  = 1.3f;
@@ -113,6 +114,13 @@ namespace MobileIdleBuilder.Editor
     }
 
     [Serializable]
+    internal class ResearchEffectJson
+    {
+        public string type  = "";   // ResearchEffectType name, e.g. "ConveyorSpeed"
+        public float  value = 0f;
+    }
+
+    [Serializable]
     internal class ResearchJson
     {
         public string   id                     = "";
@@ -125,6 +133,7 @@ namespace MobileIdleBuilder.Editor
         public int      cost_prestige_currency = 0;
         public int      duration_seconds       = 0;
         public float    field_cooldown_mult    = 1f;
+        public ResearchEffectJson[] effects = Array.Empty<ResearchEffectJson>();
         public string[] unlocks_items          = Array.Empty<string>();
         public string[] unlocks_recipes        = Array.Empty<string>();
         public string[] unlocks_buildings      = Array.Empty<string>();
@@ -188,6 +197,7 @@ namespace MobileIdleBuilder.Editor
     {
         public string                     id                  = "";
         public string                     display_name        = "";
+        public string                     method_label        = "";
         public int                        recipe_id           = 0;
         public int                        tier                = 1;
         public string                     category            = "Element";
@@ -283,6 +293,7 @@ namespace MobileIdleBuilder.Editor
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
         public bool                   is_item_filter             = false;
+        public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
         public bool                   assignable_outputs         = false;
         public string[]               recipe_mode_labels         = null;
         public string[]               recipe_mode_prefixes       = null;

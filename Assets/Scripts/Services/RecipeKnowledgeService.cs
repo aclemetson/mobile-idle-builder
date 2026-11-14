@@ -150,7 +150,10 @@ namespace MobileIdleBuilder
                     var loaded = JsonUtility.FromJson<RecipeKnowledgeSave>(json);
                     if (loaded?.entries != null)
                     {
+                        // Saves from before recipes.json was retired may hold legacy ids (#336).
+                        bool migrated = LegacyRecipeIds.Migrate(loaded);
                         _data = loaded;
+                        if (migrated) Save();
                         return;
                     }
                 }
@@ -168,6 +171,7 @@ namespace MobileIdleBuilder
                     var loaded = JsonUtility.FromJson<RecipeKnowledgeSave>(_defaultKnowledgeAsset.text);
                     if (loaded?.entries != null)
                     {
+                        LegacyRecipeIds.Migrate(loaded);
                         _data = loaded;
                         return;
                     }

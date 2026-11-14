@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_promethium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_promethium
-  displayName: 'Slow capture: Promethium'
+  displayName: Promethium
+  methodLabel: 
   recipeId: 269
   tier: 2
   category: 4

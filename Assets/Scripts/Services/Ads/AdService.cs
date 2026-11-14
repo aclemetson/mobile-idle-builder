@@ -13,6 +13,7 @@ namespace MobileIdleBuilder
         Declined,          // user dismissed the ad without earning the reward
         NoSave,            // SaveManager not ready
         NothingToCollect,  // reward would have been empty (e.g. TimeWarp with no production)
+        OnCooldown,        // this placement's cooldown has not run out yet (Entropy Surge)
     }
 
     /// <summary>Result handed back to the UI after a show attempt.</summary>
@@ -60,13 +61,27 @@ namespace MobileIdleBuilder
             if (_initStarted) return;
             _initStarted = true;
 
-#if LEVELPLAY_ADS && !UNITY_EDITOR
-            _provider = new LevelPlayAdProvider();
-#else
-            _provider = new MockAdProvider();
-#endif
+            _provider = CreateProvider(FeatureFlags.AdsTestMode);
             _ = InitProviderAsync();
         }
+
+        /// <summary>
+        /// Picks the ad provider once, at startup. Test mode (<c>ads.test_mode</c>, dev builds only) never
+        /// touches an ad network. Otherwise a device build with the LevelPlay SDK shows real ads, and the
+        /// Editor/CI use the instant mock. Changing the flag takes effect on the next launch.
+        /// </summary>
+        internal static IAdProvider CreateProvider(bool testMode)
+        {
+            if (testMode) return new TestAdProvider();
+#if LEVELPLAY_ADS && !UNITY_EDITOR
+            return new LevelPlayAdProvider();
+#else
+            return new MockAdProvider();
+#endif
+        }
+
+        /// <summary>True when ads are fake test ads (no ad network). The UI labels them as test ads.</summary>
+        public bool IsTestMode => _provider is TestAdProvider;
 
         async System.Threading.Tasks.Task InitProviderAsync()
         {
@@ -89,8 +104,8 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Opens the ad network's integration Test Suite (development builds only — the provider only
-        /// enables it under Debug.isDebugBuild). Use it on a device to load/show test rewarded ads and
+        /// Opens the ad network's integration Test Suite (dev builds only: the provider enables it under
+        /// FeatureFlags.IsDevBuild). Use it on a device to load/show test rewarded ads and
         /// verify mediation without registering advertising IDs.
         /// </summary>
         public void LaunchTestSuite()
@@ -102,7 +117,19 @@ namespace MobileIdleBuilder
         // ── Public query API (for the UI) ─────────────────────────────────────
 
         /// <summary>True when ads are enabled and a rewarded ad can currently be shown.</summary>
-        public bool IsReady => FeatureFlags.AdsEnabled && _provider != null && _provider.IsRewardedReady;
+        public bool IsReady => EnsureProviderIfEnabled() && _provider != null && _provider.IsRewardedReady;
+
+        /// <summary>
+        /// Start() only sees the flag value cached from the previous launch; the fresh Remote Config fetch
+        /// lands seconds later. Without this, switching ads on in the dashboard took two launches to work.
+        /// Every query path calls it, so the provider starts the first time the flag reads true.
+        /// </summary>
+        bool EnsureProviderIfEnabled()
+        {
+            if (!FeatureFlags.AdsEnabled) return false;
+            EnsureProvider();
+            return true;
+        }
 
         public int Remaining(AdPlacement p)
         {
@@ -112,13 +139,49 @@ namespace MobileIdleBuilder
             return AdRewardCalculator.Remaining(save, p);
         }
 
-        /// <summary>True if the player may watch this placement right now (enabled, ready, under cap).</summary>
+        /// <summary>True if the player may watch this placement right now (enabled, ready, under cap, cooled down).</summary>
         public bool CanWatch(AdPlacement p)
         {
-            if (!FeatureFlags.AdsEnabled) return false;
+            if (!EnsureProviderIfEnabled()) return false;
             if (_provider == null || !_provider.IsRewardedReady) return false;
+            if (CooldownRemaining(p) > TimeSpan.Zero) return false;
             return Remaining(p) > 0;
         }
+
+        /// <summary>Time left on the placement's cooldown (zero when ready or the placement has none).</summary>
+        public TimeSpan CooldownRemaining(AdPlacement p)
+        {
+            var save = SaveManager.Instance?.Current;
+            return save == null ? TimeSpan.Zero : AdRewardCalculator.CooldownRemaining(save, p, GameClock.UtcNow);
+        }
+
+        /// <summary>
+        /// The player turned down the offer ("No thanks"): restart the placement's cooldown so it is offered
+        /// again one cooldown later. Does not use up a daily watch. Saved so a relaunch does not re-offer.
+        /// </summary>
+        public void DeclineOffer(AdPlacement p)
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+            AdRewardCalculator.RestartCooldown(save, p, GameClock.UtcNow);
+            SaveManager.Instance.SaveLocal();
+        }
+
+        /// <summary>
+        /// What Entropy Boost would pay right now: 10% of the live net worth (the save's snapshot only
+        /// refreshes on save, so it lags and the panel preview would not match the grant).
+        /// </summary>
+        public long PreviewEntropyReward() =>
+            AdRewardCalculator.CalcEntropyReward(
+                ECSLoadBridge.Instance?.LiveNetWorth ?? SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f);
+
+        /// <summary>
+        /// What an income-minutes placement (Entropy Surge) would pay right now. Uses only this run's
+        /// income (<see cref="IncomeRateTracker.RewardPerSecond"/>), so right after a prestige it pays the floor.
+        /// </summary>
+        public long PreviewIncomeReward(AdPlacement p) =>
+            AdRewardCalculator.CalcIncomeReward(
+                p, PrestigeRunReset.ReloadPending ? 0d : IncomeRateTracker.Current?.RewardPerSecond ?? 0d);
 
         // ── Show / grant ──────────────────────────────────────────────────────
 
@@ -158,12 +221,18 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) { Finish(onDone, Fail(p, AdShowOutcome.NoSave, "Save not ready.")); return; }
 
-            if (!FeatureFlags.AdsEnabled) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
+            if (!EnsureProviderIfEnabled()) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
 
             AdRewardCalculator.ApplyDailyReset(save, GameClock.UtcNow);
             if (AdRewardCalculator.IsAtCap(save, p))
             {
                 Finish(onDone, Fail(p, AdShowOutcome.AtDailyCap, "Daily limit reached — come back tomorrow."));
+                return;
+            }
+            var cooldown = AdRewardCalculator.CooldownRemaining(save, p, GameClock.UtcNow);
+            if (cooldown > TimeSpan.Zero)
+            {
+                Finish(onDone, Fail(p, AdShowOutcome.OnCooldown, $"Ready again in {FormatCooldown(cooldown)}."));
                 return;
             }
             if (_provider == null || !_provider.IsRewardedReady)
@@ -191,6 +260,7 @@ namespace MobileIdleBuilder
                 }
 
                 AdRewardCalculator.IncrementWatch(save, p);
+                AdRewardCalculator.RecordWatch(save, p, GameClock.UtcNow);
                 SaveManager.Instance.SaveLocal();
                 Finish(onDone, new AdShowResult { Outcome = AdShowOutcome.Granted, Placement = p, Message = message });
             });
@@ -208,7 +278,15 @@ namespace MobileIdleBuilder
             {
                 case AdRewardKind.Entropy:
                 {
-                    long amount = AdRewardCalculator.CalcEntropyReward(save.lastKnownNetWorth);
+                    long amount = PreviewEntropyReward();
+                    save.currentRun.baseCurrency += amount;
+                    ApplyEntropyToECS(amount);
+                    message = $"+{amount:N0} entropy";
+                    return true;
+                }
+                case AdRewardKind.IncomeMinutes:
+                {
+                    long amount = PreviewIncomeReward(p);
                     save.currentRun.baseCurrency += amount;
                     ApplyEntropyToECS(amount);
                     message = $"+{amount:N0} entropy";
@@ -300,5 +378,13 @@ namespace MobileIdleBuilder
             => new AdShowResult { Outcome = outcome, Placement = p, Message = message };
 
         static void Finish(Action<AdShowResult> onDone, AdShowResult result) => onDone?.Invoke(result);
+
+        /// <summary>"12:05" for minutes:seconds left on a cooldown.</summary>
+        public static string FormatCooldown(TimeSpan left)
+        {
+            if (left < TimeSpan.Zero) left = TimeSpan.Zero;
+            int secs = (int)Math.Ceiling(left.TotalSeconds);
+            return $"{secs / 60}:{secs % 60:00}";
+        }
     }
 }
