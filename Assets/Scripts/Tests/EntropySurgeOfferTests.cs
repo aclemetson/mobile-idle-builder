@@ -13,15 +13,19 @@ namespace MobileIdleBuilder.Tests
         static readonly DateTime Noon = new DateTime(2026, 11, 11, 12, 0, 0, DateTimeKind.Utc);
 
         static bool Show(bool ads = true, bool prestiged = true, bool loaded = true, bool ready = true,
-                         int remaining = 8, double cooldownMin = 0, bool cardOpen = false, bool menuOpen = false)
+                         int remaining = 8, double cooldownMin = 0, bool cardOpen = false, bool menuOpen = false,
+                         bool measured = true)
             => EntropySurgeOfferController.ShouldShowIcon(ads, prestiged, loaded, ready, remaining,
-                                                          TimeSpan.FromMinutes(cooldownMin), cardOpen, menuOpen);
+                                                          TimeSpan.FromMinutes(cooldownMin), cardOpen, menuOpen, measured);
 
         [Test]
         public void Icon_ShowsWhenEverythingIsReady() => Assert.IsTrue(Show());
 
         [Test]
         public void Icon_HiddenWhileAMenuIsOpen() => Assert.IsFalse(Show(menuOpen: true));
+
+        [Test]
+        public void Icon_HiddenWhileIncomeIsStillBeingMeasured() => Assert.IsFalse(Show(measured: false));
 
         [Test]
         public void Icon_HiddenWhileCoolingDown() => Assert.IsFalse(Show(cooldownMin: 3));

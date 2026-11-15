@@ -9,7 +9,11 @@ namespace MobileIdleBuilder
     public static class BannerSwipe
     {
         public const float DismissDistance = 40f;
+        /// <summary>A press that moves less than this is a tap (opens the banner's target), not a swipe.</summary>
+        public const float TapSlop = 12f;
         const float ExitUp = 200f;
+
+        public static bool IsTap(Vector2 drag) => drag.magnitude <= TapSlop;
 
         /// <summary>Where the banner sits for a drag: locked to the drag's main axis, and never below its home.</summary>
         public static Vector2 Follow(Vector2 drag) =>
