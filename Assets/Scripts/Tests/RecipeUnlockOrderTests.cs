@@ -21,15 +21,12 @@ namespace MobileIdleBuilder.Tests
     public class RecipeUnlockOrderTests
     {
         /// <summary>
-        /// Known out-of-order recipes in the late neutron-capture chain: r-Process / Precious Metals / Exotic
-        /// Metals need Samarium, Rhenium and Osmium/Iridium from nodes that come later in the tree. Fixing them
-        /// means reordering that part of the tree (pending). Remove an entry when it is fixed;
-        /// <see cref="KnownOutOfOrderList_IsNotStale"/> fails once a listed recipe unlocks in order.
+        /// Recipes allowed to unlock before their inputs (a deliberate exception, with a reason next to each).
+        /// Empty since 2026-11-15, when the neutron-capture chain was reordered to Heavy Transition Metals ->
+        /// r-Process -> Lanthanides -> Exotic Metals -> Precious Metals. <see cref="KnownOutOfOrderList_IsNotStale"/>
+        /// fails once a listed recipe unlocks in order.
         /// </summary>
-        static readonly HashSet<string> KnownOutOfOrder = new()
-        {
-            "r_capture_europium", "r_capture_platinum", "r_capture_gold", "r_capture_osmium", "r_capture_iridium",
-        };
+        static readonly HashSet<string> KnownOutOfOrder = new();
 
         List<RecipeSO>   _recipes;
         ResearchDatabaseSO _db;
@@ -123,6 +120,21 @@ namespace MobileIdleBuilder.Tests
             var stillBad = OutOfOrder();
             var fixedNow = KnownOutOfOrder.Where(id => !stillBad.ContainsKey(id)).ToList();
             Assert.IsEmpty(fixedNow, "These now unlock in order; remove them from KnownOutOfOrder: " + string.Join(", ", fixedNow));
+        }
+
+        [Test]
+        public void NeutronCaptureChain_RunsInInputOrder()
+        {
+            var db = _db.allResearch.Where(r => r != null).ToDictionary(r => r.id);
+            void Requires(string node, string prereq) =>
+                Assert.IsTrue(db[node].prerequisites.Any(p => p != null && p.id == prereq), $"{node} should require {prereq}");
+            Requires("heavy_transition_metals",      "slow_neutron_capture");   // Samarium from Cerium (fission)
+            Requires("rapid_neutron_capture",        "heavy_transition_metals"); // Europium needs Samarium
+            Requires("lanthanides_and_heavy_metals", "rapid_neutron_capture");  // Gadolinium..Rhenium from Europium
+            Requires("exotic_metals",                "lanthanides_and_heavy_metals"); // Osmium needs Rhenium
+            Requires("precious_metals",              "exotic_metals");          // Platinum needs Iridium
+            Assert.AreEqual("precious_metals", _recipes.First(r => r.id == "s_capture_mercury").requiredResearch?.id,
+                            "Mercury (Gold + neutron) unlocks with Gold");
         }
 
         [Test]

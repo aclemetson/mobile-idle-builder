@@ -92,7 +92,7 @@ Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tuto
 | ⑨ Heavy Elements / ⑩ Isotopes / ⑫ Molecular Synthesis | 3,000e / 1,500e / 3,000e (tutorial-era, kept) | Atom Generator Uranium 64e: the decay-chain on-ramp; molecules wait for their element inputs |
 | ⑪ Radioactive Isotopes | 40k | first post-tutorial node; decay chain U 64 → Th 413 … Pb 1.82k; U-235 1.5k |
 | Fusion II → Fusion III | `light_elements` 195k, `fusion_ii` 556k, `mid_elements` 2.32M, `fission_i` 8.18M, `fusion_iii` 23.8M | O 977, Si 4.65k, **Fe 37.2k** (~12h with 5 buildings) |
-| Actinide / capture branch | `slow_neutron_capture` 37.4M → `rapid_neutron_capture` 57M → `precious_metals` 82.9M → `exotic_metals` 120M → `lanthanides_and_heavy_metals` 194M → `transuranic_elements` 275M → `superheavy_synthesis` 324M | Kr 2.77k, Ag 20.1k, Pt 874k, **Au 952k**, Og 962k |
+| Actinide / capture branch (reordered 2026-11-15 so every recipe's inputs exist when it unlocks) | `slow_neutron_capture` 11.7M → `heavy_transition_metals` 16.5M → `rapid_neutron_capture` 23.7M → `lanthanides_and_heavy_metals` 33.6M → `exotic_metals` 49.7M → `precious_metals` 68.9M → `transuranic_elements` 315M → `superheavy_synthesis` 447M | Sm 52.3k, Eu 71.8k, Re 263k, Ir 337k, Pt 392k, **Au 447k**, Hg 469k |
 | Chemistry / Materials | `chemistry_lab` 39.3M, `materials_science` 59.9M | Water 13.9k, Carbon Fiber 457k, Steel 1.23M, Ti Alloy 1.33M; world mines paced to the wage (Iron 1 per ~20s) |
 | ⑭ Component Engineering | 460M | Quantum Processor 18.1M, Antimatter Cell 50.7M, Plasma Ring 61.3M |
 | ⑮ Megastructure Theory / Biology | 904M; `biology_lab` 553M → `ecosystems` 2.02B (last node, ~157h) | Dyson Node 183M, Orbital Frame 402M, Graviton Lens 945M; Ecosystem 41.1B |
