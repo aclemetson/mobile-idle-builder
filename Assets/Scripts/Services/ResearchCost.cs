@@ -19,18 +19,9 @@ namespace MobileIdleBuilder
         public const float MaxDiscount = 0.9f;
 
         public static long Effective(long baseCost, float globalDiscount, float memoryDiscount, bool completedBefore)
-            => Effective(baseCost, globalDiscount, memoryDiscount, completedBefore, 0f);
-
-        /// <summary>
-        /// As above, plus <paramref name="insight"/>: the Cyclotron Kick's banked discount on the next research
-        /// started (<see cref="CyclotronProgress"/>), stacked multiplicatively like the other two.
-        /// </summary>
-        public static long Effective(long baseCost, float globalDiscount, float memoryDiscount, bool completedBefore,
-                                     float insight)
         {
             if (baseCost <= 0) return 0;
-            double factor = (1d - Clamp(globalDiscount)) * (1d - (completedBefore ? Clamp(memoryDiscount) : 0d))
-                          * (1d - Clamp(insight));
+            double factor = (1d - Clamp(globalDiscount)) * (1d - (completedBefore ? Clamp(memoryDiscount) : 0d));
             long cost = (long)Math.Round(baseCost * factor, MidpointRounding.AwayFromZero);
             return Math.Max(1, cost);
         }

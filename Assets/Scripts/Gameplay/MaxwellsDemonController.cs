@@ -728,7 +728,9 @@ namespace MobileIdleBuilder
             return (long)(item.baseSellValue * quantity * multiplier);
         }
 
-        protected virtual float GetMultiplier(ItemSO item) => 1f;
+        // The Cyclotron Kick entropy boost (1 when none is running); shared by the sale and the earn preview.
+        protected virtual float GetMultiplier(ItemSO item) =>
+            CyclotronProgress.BoostMultiplier(SaveManager.Instance?.Current, GameClock.UtcNow);
 
         // ================================================================
         // Earn preview

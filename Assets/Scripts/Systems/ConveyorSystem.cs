@@ -190,11 +190,13 @@ namespace MobileIdleBuilder
             if (overflows.Count > 0)
             {
                 float fraction = SurplusSale.CurrentFraction();
+                // Cyclotron Kick boost (1 when none is running) multiplies what the sales pay.
+                double boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1d;
                 float now      = UnityEngine.Time.time;
                 foreach (var (from, itemID, bldg) in overflows)
                 {
                     if (!FrontIsReady(from, itemID)) continue;
-                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
+                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction) * boost;
                     _surplusCarry += value;
                     SurplusSaleLog.Record(bldg, value, now);
                     ConveyorItems.RemoveFront(EntityManager, from);

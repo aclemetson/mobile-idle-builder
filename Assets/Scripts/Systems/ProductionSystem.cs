@@ -31,6 +31,8 @@ namespace MobileIdleBuilder
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
             long escapedEntropy = 0;
+            // Cyclotron Kick boost (1 when none is running) multiplies the byproduct entropy paid below.
+            float entropyBoost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1f;
 
             // Global production multipliers (1 = no bonus when a singleton is absent, e.g. in tests that
             // never bake it): megastructure stage rewards and the prestige shop (Assembly Line speed,
@@ -163,7 +165,7 @@ namespace MobileIdleBuilder
                     // Escaping byproducts (neutrinos, gamma photons) leave the building and are paid
                     // out as entropy right away, scaled like the main output.
                     if (process.ValueRO.ByproductEntropy > 0f)
-                        escapedEntropy += (long)(process.ValueRO.ByproductEntropy * outMult);
+                        escapedEntropy += (long)(process.ValueRO.ByproductEntropy * outMult * entropyBoost);
                 }
 
                 process.ValueRW.Progress   = 0f;
