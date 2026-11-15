@@ -4,11 +4,12 @@ using UnityEngine;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Builds the flat "river" ribbon mesh for a single conveyor cell, in cell-local space (centred
-    /// on the origin, lying in the XZ plane). The companion <c>MobileIdleBuilder/ConveyorFlow</c>
-    /// shader scrolls a current pattern along <c>uv.y</c>, so the flow direction reads straight from
-    /// the moving water — no arrows. <c>uv.x</c> runs 0→1 across the channel width (used to darken the
-    /// banks); <c>uv.y</c> runs 0 (inbound edge) → 1 (outbound edge) along the flow.
+    /// Builds the flat ribbon mesh for a single conveyor cell, in cell-local space (centred on the
+    /// origin, lying in the XZ plane). The companion <c>MobileIdleBuilder/ConveyorField</c> shader rolls
+    /// wave packets through a field lattice along <c>uv.y</c>, so the flow direction reads straight from
+    /// the moving packets — no arrows. <c>uv.x</c> runs 0→1 across the belt width (used to soften the
+    /// edges); <c>uv.y</c> runs 0 (inbound edge) → 1 (outbound edge) along the flow. A merge also writes
+    /// <c>uv1.x</c> = 1 on its secondary (turning) arms so the shader shows one lattice where arms overlap.
     ///
     /// Three shapes, all from one ribbon primitive:
     ///   - straight: a quad strip from the inbound edge through the centre to the exit edge;
@@ -26,8 +27,8 @@ namespace MobileIdleBuilder
     {
         /// <summary>Water ribbon width as a fraction of the cell.</summary>
         public const float WaterWidthFrac = 0.7f;
-        /// <summary>Channel floor width as a fraction of the cell. Matches the water (no raised banks/rails);
-        /// it is just an opaque dark bed under the translucent ribbon for depth/sorting.</summary>
+        /// <summary>Floor-layer width as a fraction of the cell. Belts no longer draw a bed (the field lattice
+        /// sits straight on the tile); kept for callers that want a second, lower ribbon.</summary>
         public const float FloorWidthFrac = WaterWidthFrac;
 
         private const int   BendSegments = 6;          // Bézier samples for a 90° turn
@@ -65,6 +66,11 @@ namespace MobileIdleBuilder
 
             Vector3 EdgeMid(int dir) => center + DirVec(dir) * half;
 
+            // uv1.x marks a merge's SECONDARY arms (1) vs the main arm (0). The arms overlap in the exit
+            // half, so the belt shader fades a secondary arm's lattice lines there instead of drawing two
+            // grids on top of each other.
+            var arms = new List<Vector2>();
+
             if (edges.Count <= 1)
             {
                 var path = BuildPath(edges[0], exitDir, center, EdgeMid(edges[0]), EdgeMid(exitDir));
@@ -76,14 +82,21 @@ namespace MobileIdleBuilder
                 // input is a full straight piece, every turning input a full bend piece. They all share
                 // the exit half and overlay there; flowing the same direction under the same shader,
                 // they blend into one seamless outflow instead of meeting at a hard centre seam.
+                int main = edges.Contains(Opposite(exitDir)) ? Opposite(exitDir) : edges[0];
                 foreach (var e in edges)
+                {
                     AppendRibbon(verts, uvs, tris,
                         BuildPath(e, exitDir, center, EdgeMid(e), EdgeMid(exitDir)), hw, 0f, 1f, y);
+                    var flag = new Vector2(e == main ? 0f : 1f, 0f);
+                    while (arms.Count < verts.Count) arms.Add(flag);
+                }
             }
+            while (arms.Count < verts.Count) arms.Add(Vector2.zero);
 
             var mesh = new Mesh { name = "ConveyorFlow" };
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
+            mesh.SetUVs(1, arms);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();

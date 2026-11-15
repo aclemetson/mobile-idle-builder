@@ -357,6 +357,14 @@
     padding: var(--spacing-xs) var(--spacing-md) var(--spacing-md) var(--spacing-md);
 }
 
+/* Settings account row: Google / guest and a short player id, so two devices can be compared. */
+.settings-account {
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    white-space: normal;
+    padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+}
+
 .drawer-nav-btn {
     width: 100%;
     margin-bottom: var(--spacing-xs);
@@ -1660,4 +1668,32 @@
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     min-height: 32px;
+}
+
+/* ── Save choice (SaveConflictPrompt.cs) ─────────────────────────────────── */
+.save-choice__options {
+    padding: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.save-choice__option {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    min-height: 72px;
+}
+
+.save-choice__option-title {
+    font-size: var(--font-size-lg);
+    -unity-font-style: bold;
+    color: var(--color-primary);
+    -unity-text-align: middle-left;
+}
+
+.save-choice__option-summary {
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    white-space: normal;
+    -unity-text-align: middle-left;
+    margin-top: var(--spacing-xs);
 }

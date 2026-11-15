@@ -17,35 +17,37 @@ public static class GoogleSignInBridge
         {
             WebClientId    = k_WebClientId,
             RequestIdToken = true,
+            RequestEmail   = true,   // shown in Settings so both devices can be checked against each other
             UseGameSignIn  = false
         };
 
-        UGSCloudSaveService.GoogleAuthProvider = GetIdTokenAsync;
+        UGSCloudSaveService.GoogleAuthProvider = GetCredentialAsync;
         Debug.Log("[GoogleSignInBridge] Registered.");
     }
 
-    static async Task<string> GetIdTokenAsync()
+    static async Task<GoogleCredential> GetCredentialAsync(GoogleAuthMode mode)
     {
-        GoogleSignInUser user;
+        bool interactive = mode == GoogleAuthMode.Interactive ||
+                           (mode == GoogleAuthMode.Policy && AuthSessionPolicy.RequiresInteractiveSignIn());
 
-        if (AuthSessionPolicy.RequiresInteractiveSignIn())
+        GoogleSignInUser user;
+        if (interactive)
         {
-            // Policy requires full account picker (inactivity ≥30d or full-auth ≥90d)
+            // Account picker: first install, the 30/90-day policy, or Settings "Sign in with Google".
             user = await Wrap(GoogleSignIn.DefaultInstance.SignIn());
             AuthSessionPolicy.RecordFullAuth();
         }
         else
         {
-            // Silent only — if the credential is gone, throw so the caller can fall
-            // back to an anonymous UGS session without showing any UI.  The 30/90-day
-            // policy will trigger a full interactive sign-in at the appropriate time.
+            // Silent only. If the credential is gone, throw so the caller stays a guest without
+            // showing any UI; Settings offers the interactive sign-in.
             user = await Wrap(GoogleSignIn.DefaultInstance.SignInSilently());
         }
 
         if (string.IsNullOrEmpty(user?.IdToken))
             throw new Exception("[GoogleSignIn] IdToken is null — verify RequestIdToken = true in configuration.");
 
-        return user.IdToken;
+        return new GoogleCredential { IdToken = user.IdToken, Email = user.Email };
     }
 
     // GoogleSignIn Tasks use ContinueWith internally; wrap to standard awaitable Task

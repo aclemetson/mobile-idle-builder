@@ -134,3 +134,4 @@ __pycache__/
 
 # Molecule icon pipeline: intermediate Blender renders
 scripts/molecule_icons/renders/
+scripts/belt_particles/renders/
