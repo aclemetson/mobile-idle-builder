@@ -110,14 +110,27 @@ particles, so direction reads from them, not an arrow. Chosen 2026-11-14 over wa
 vacuum foam; warm white contrasts with every world's dark, cool tiles (`#1e2233` / `#123039` / `#17301c`).
 - `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` — pure static ribbon builder in cell-local XZ.
   `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the belt.
-  Shapes from one primitive: **straight** (quad strip), **bend** (quadratic Bézier, centre as control),
-  and **merge** (each inbound is drawn as a *full* edge→exit ribbon with `uv.y` 0→1, all sharing the exit
-  half). A merge writes `uv1.x` = 1 on its secondary (turning) arms; the shader fades their lines out in the
-  overlap so a junction shows ONE lattice (two overlaid grids looked like a mess).
+  Shapes from one primitive: **straight** (quad strip), **bend** (a quarter circle about the cell corner the
+  two edges share, radius ½ cell, 12 segments — `CenterlinePoint`), and **merge** (each inbound is drawn as a
+  *full* edge→exit ribbon with `uv.y` 0→1, all sharing the exit half). Bends were a quadratic Bézier through
+  the cell centre until 2026-11-15: its radius at the apex (~0.35 cell) equalled the half-width, so the inner
+  edge pinched to a point and the lattice lines crowded into a blur on device.
+  - `uv1.x` = 1 on a merge's secondary (turning) arms; `uv1.y` = the arm's centreline length in cells
+    (`PathLengthCells`: 1 straight, π/4 for a turn).
+  - `uv2` (secondary arms, only when a straight main arm exists) = the main belt's sideways axis / half-width.
+    The shader fades a secondary arm out wherever the main belt covers it (`|dot(pos.xz, uv2)| < 1`), matching
+    the main belt's soft edge, so a junction shows ONE lattice. Without a straight main arm it falls back to
+    fading along the arm (`uv.y`).
+  - Items follow the same centreline: `ConveyorVisualizer` places them with `CenterlinePoint` (inset 5% at
+    each edge), so they ride round the arc instead of cutting the corner.
 - `Assets/Shaders/ConveyorField.shader` — URP Unlit translucent (`Transparent+50`, above the transparent grid
-  tiles). Cross lines (`_CrossLines`/cell) and lengthwise lines (`_Lanes`); a main packet per cell plus a
-  smaller one at 2×. Every `uv.y` pattern is a whole number of cycles per cell, so cells, bends and merges meet
-  seamlessly. Soft (alpha-faded) edges.
+  tiles). Cross lines and lengthwise lines (`_Lanes`); a main packet per cell plus a smaller one at 2×. Every
+  `uv.y` pattern is a whole number of cycles per cell, so cells, bends and merges meet seamlessly. Soft
+  (alpha-faded) edges.
+  - Cross lines per piece = `round(_CrossLines * uv1.y)`: 8 on a straight, 6 on a corner, so spacing along the
+    centreline is the same everywhere and line ends still meet at cell edges.
+  - Lines are anti-aliased with `fwidth` (`GridLine`): never thinner than ~1.5 px, and they fade instead of
+    shimmering where they'd be packed tighter than ~3 px (the inside of a corner, far zoom).
 - **Speed sync:** the packets read a GLOBAL `_BeltPhase` (cells travelled). `ConveyorVisualizer.UpdateBeltPhase`
   advances it each frame by `dt * ResearchEffects.ConveyorSpeedMult` — the same rate `ConveyorSystem` advances
   `ConveyorItem.Progress` (every `TransportTime` is 1) — so a crest travels with the particles riding it and
@@ -130,7 +143,7 @@ vacuum foam; warm white contrasts with every world's dark, cool tiles (`#1e2233`
   across the whole graph). Inbound edges per cell come from neighbours whose `ExitDir` points back at the cell —
   the same geometry `ConveyorPlacer.RelinkAll` uses.
 - Tests: `ConveyorFlowMeshBuilderTests.cs` (vertex counts, merge arms reaching each edge, monotonic flow UVs,
-  flat low profile) and `ConveyorBeltPhaseTests.cs` (phase advances at item speed, wraps, speed fallback).
+  flat low profile, bend inner radius, centreline arc, arm length / main-axis UVs) and `ConveyorBeltPhaseTests.cs` (phase advances at item speed, wraps, speed fallback).
 
 ### Belt item visuals (what rides the belts)
 Every item is its menu icon tile on the belt (a camera-facing quad, `CreateItemTile`) **except** the basic

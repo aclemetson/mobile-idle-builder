@@ -257,7 +257,8 @@ namespace MobileIdleBuilder
                 EntityManager.GetBuffer<ConveyorItem>(target).Add(new ConveyorItem
                 {
                     ItemID   = chosenItem.ItemID,
-                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f)
+                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f),
+                    InEdge   = ConveyorItem.EncodeEdge(chosenDir)   // the edge it came through (merge arm)
                 });
                 ConveyorItems.RemoveFront(EntityManager, chosen);
 
