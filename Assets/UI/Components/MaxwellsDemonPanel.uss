@@ -109,6 +109,11 @@
     transition-property: border-color, background-color;
 }
 
+/* Tutorial: an item this step won't let you sell (TutorialSellPolicy) */
+.demon-item--locked {
+    opacity: 0.4;
+}
+
 .demon-item__name {
     color: var(--color-text-primary);
     font-size: var(--font-size-sm);
