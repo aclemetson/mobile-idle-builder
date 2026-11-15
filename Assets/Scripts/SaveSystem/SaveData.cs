@@ -30,7 +30,6 @@ namespace MobileIdleBuilder
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
         public List<string> unlockedRecipes   = new();
         public List<string> unlockedResearch  = new();
-        public List<string> researchCompletedEver = new();  // every research finished on any run. Survives prestige: a node listed here gets its prestige_memory_discount on later runs (ResearchService.EffectiveCost).
         public string activeResearchId;                     // id of the research currently in progress; null/empty = none (one at a time). Cleared on prestige.
         public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
         public List<string> codex                           = new();

@@ -49,7 +49,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
   - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum
     is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable
     batteries.

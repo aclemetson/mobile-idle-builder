@@ -35,6 +35,5 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.25
   codexEntry: Refining the extraction pulse lets a field recharge faster after each
     manual tap, shortening the wait between collections.

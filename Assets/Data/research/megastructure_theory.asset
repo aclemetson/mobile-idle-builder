@@ -41,7 +41,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: A Dyson sphere captures all energy output of a star. Dyson nodes are
     the structural anchors. Orbital frames are the load-bearing superstructure. Graviton
     lenses stabilise the whole assembly against tidal forces.

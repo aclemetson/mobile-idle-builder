@@ -44,7 +44,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: 'The second row of transition metals: catalytic, refractory, and the
     rare-earth precursors. Bridging the periodic table from the everyday metals toward
     the lanthanides.'

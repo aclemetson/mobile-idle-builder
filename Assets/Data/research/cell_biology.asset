@@ -45,7 +45,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: 'The macromolecules find their common cause: enclosed by a membrane,
     running on ribosomes and mitochondria, the first cell is a chemistry that keeps
     itself alive.'

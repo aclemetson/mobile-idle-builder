@@ -42,6 +42,5 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: "Cells stop living alone. Nucleated and specialised, they bind into
     tissues and organs \u2014 a division of labour that lets life grow large."
