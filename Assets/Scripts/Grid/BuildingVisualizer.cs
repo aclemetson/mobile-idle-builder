@@ -564,7 +564,7 @@ namespace MobileIdleBuilder
             }
 
             host.AddComponent<SplitterStructure>().Initialize(entity, travelDir, outputs, rockColor,
-                _conveyorVisualizer.GetFlowMaterial(), _conveyorVisualizer.GetChannelMaterial());
+                _conveyorVisualizer.GetFlowMaterial());
         }
 
         // ----------------------------------------------------------------
