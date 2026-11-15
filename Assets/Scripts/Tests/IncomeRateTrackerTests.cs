@@ -76,6 +76,24 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void SecondsUntilRewardRate_CountsDownToZero()
+        {
+            Assert.AreEqual(IncomeRateTracker.MinRewardSpanSeconds, IncomeRateTracker.SecondsUntil(0), 1e-9);
+            Assert.AreEqual(12.0, IncomeRateTracker.SecondsUntil(IncomeRateTracker.MinRewardSpanSeconds - 12), 1e-9);
+            Assert.AreEqual(0.0, IncomeRateTracker.SecondsUntil(IncomeRateTracker.MinRewardSpanSeconds + 5), 1e-9);
+        }
+
+        [Test]
+        public void HasRewardRate_FalseUntilTheMinimumSpan_ThenTrue()
+        {
+            Feed(0, 10, 100.0, 0.0, run: 1);
+            Assert.IsFalse(_tracker.HasRewardRate);
+            Feed(11, 40, 100.0, 1100.0, run: 1);
+            Assert.IsTrue(_tracker.HasRewardRate);
+            Assert.AreEqual(0.0, _tracker.SecondsUntilRewardRate, 1e-9);
+        }
+
+        [Test]
         public void SurgeReward_AfterPrestige_IsTheFloor()
         {
             Feed(0, 60, 1000.0, 0.0, run: 1);
