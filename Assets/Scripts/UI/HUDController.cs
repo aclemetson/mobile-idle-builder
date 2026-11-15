@@ -2796,7 +2796,7 @@ namespace MobileIdleBuilder
         /// Calculates how much prestige currency a prestige would award.
         /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth)
+        internal static long CalculatePrestigePreview(double netWorth)
         {
             var cfg    = GameBootstrap.Instance?.gameConfig;
             float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;

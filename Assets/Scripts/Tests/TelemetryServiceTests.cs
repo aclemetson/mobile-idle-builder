@@ -181,7 +181,7 @@ namespace MobileIdleBuilder.Tests
             var p = sink.First("prestige_completed");
             Assert.IsNotNull(p, "prestige_completed event must be recorded");
             Assert.AreEqual(5L,    p["run_count"]);
-            Assert.AreEqual(1000f, (float)p["networth_before"], 1e-3f);
+            Assert.AreEqual(1000d, (double)p["networth_before"], 1e-3); // double since #284
             Assert.AreEqual(50L,   p["prestige_currency_earned"]);
             Assert.AreEqual(12,    p["building_count"]);
             Assert.AreEqual(4,     p["highest_tier"]);

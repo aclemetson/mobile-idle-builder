@@ -83,7 +83,7 @@ Anything a player waits on (research timers, field cooldowns, speed boosts, offl
 
 | Singleton | Fields that matter | Written by |
 |---|---|---|
-| `PlayerProgressData` | `BaseCurrency` (entropy), `TotalEntropySpent`, `NetWorth`, `CurrentTier`, `PrestigeWallValue/Available/Requested` | NetWorthSystem, PrestigeSystem, ECSLoadBridge, UI |
+| `PlayerProgressData` | `BaseCurrency` (entropy), `TotalEntropySpent`, `NetWorth` (double, #284), `CurrentTier`, `PrestigeWallValue/Available/Requested` | NetWorthSystem, PrestigeSystem, ECSLoadBridge, UI |
 | `PrestigeData` | `RunCount`, `PrestigeCurrency(+Spent)`, `SpeedMultiplier`, `OutputMultiplier`, `CostReduction` | ECSLoadBridge, PrestigeSystem, PrestigeShopSubController |
 | `TutorialStateData` | `IsActive`, `CurrentStepIndex`, `FirstRunComplete` | TutorialSystem, ECSLoadBridge |
 | `InventorySlot` buffer on the `PlayerInventoryTag` entity | global player inventory (`ItemID`, `Quantity`) | ProductionSystem, ECSLoadBridge, ManualCraftService |
