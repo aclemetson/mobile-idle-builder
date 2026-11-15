@@ -1,0 +1,365 @@
+<title>Prestige Pacing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. Summary tiles, then the run plan (the working sheet), levers, chart, reference tables. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #14161a; --ink-2: #4c5361; --ink-3: #7a8190;
+  --rule: #dfe3ea; --grid: #eceff3; --accent: #2a78d6; --input: #fff8d6; --input-rule: #e6d27a;
+  --good: #1f8a4c; --warn: #b7791f; --crit: #c53030; --s2: #eb6834;
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111317; --panel: #1a1d22; --ink: #eceef2; --ink-2: #b4bac6; --ink-3: #868d9a;
+  --rule: #2c313a; --grid: #23272e; --accent: #3987e5; --input: #2b2716; --input-rule: #5c5226;
+  --good: #3fb36f; --warn: #d69e2e; --crit: #f0605d; --s2: #d95926; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111317; --panel: #1a1d22; --ink: #eceef2; --ink-2: #b4bac6; --ink-3: #868d9a;
+  --rule: #2c313a; --grid: #23272e; --accent: #3987e5; --input: #2b2716; --input-rule: #5c5226;
+  --good: #3fb36f; --warn: #d69e2e; --crit: #f0605d; --s2: #d95926; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px; }
+h1 { font: 600 clamp(26px, 5vw, 36px)/1.1 var(--f-display); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h2 { font: 600 19px/1.25 var(--f-display); margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; color: var(--ink-2); }
+.eyebrow { font: 500 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+header { display: grid; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.stat { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat b { font: 600 22px var(--f-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--ink-2); }
+.stat small { font: 12px var(--f-mono); color: var(--ink-3); }
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font: 500 11px var(--f-mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; vertical-align: bottom; white-space: normal; min-width: 52px; }
+th.grp { text-align: center; border-bottom: 1px solid var(--rule); }
+td.num, th.num { text-align: right; }
+td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+td.sep, th.sep { border-left: 1px solid var(--rule); }
+tfoot td { font-weight: 600; border-top: 1px solid var(--rule); }
+input[type=number], select { font: 13px var(--f-mono); color: var(--ink); background: var(--input); border: 1px solid var(--input-rule);
+  border-radius: 4px; padding: 3px 5px; font-variant-numeric: tabular-nums; }
+input[type=number] { width: 4.2em; text-align: right; }
+input.wide { width: 6.5em; }
+select { max-width: 15em; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { font: 500 13px var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.pill { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 7px; border-radius: 99px; border: 1px solid currentColor; }
+.pill.ok { color: var(--good); } .pill.bad { color: var(--crit); } .pill.warn { color: var(--warn); }
+.levers { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.lever-group { display: grid; gap: 6px; align-content: start; }
+.lever-group h3 { font: 600 14px var(--f-display); margin: 0 0 2px; }
+.lever { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; font-size: 13px; }
+.lever small { grid-column: 1 / -1; color: var(--ink-3); font-size: 12px; line-height: 1.4; }
+.lever .unit { font: 12px var(--f-mono); color: var(--ink-3); margin-left: 4px; }
+.derived { font: 13px var(--f-mono); color: var(--ink-2); }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { fill: var(--ink-3); font: 11px var(--f-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+details > summary { cursor: pointer; font: 600 15px var(--f-display); }
+details[open] > summary { margin-bottom: 10px; }
+ul.findings { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--ink-2); max-width: 80ch; }
+.foot { font-size: 13px; color: var(--ink-3); }
+code { font-family: var(--f-mono); font-size: .92em; }
+.toast { font: 13px var(--f-body); color: var(--good); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Quantum Foundry · economy · Physics world</div>
+    <h1>Prestige Pacing</h1>
+    <p>Eight runs to clear Physics. Each run says where it prestiges and which ✦ upgrades the player owns at its start; everything else is calculated. Hours are active play with every building running; days add offline earnings between sessions. Yellow fields are editable and recalculate instantly.</p>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="panel">
+    <div class="eyebrow">Plan</div>
+    <h2>One row per run</h2>
+    <div class="row">
+      <button id="reset" type="button">Reset to generated values</button>
+      <button id="copy" type="button">Copy plan for prestige_plan.py</button>
+      <span class="toast" id="toast" role="status"></span>
+    </div>
+    <div class="scroll"><table id="plan"></table></div>
+    <p class="foot">Levels are the total owned at the start of the run. "Longest gap" is the single longest research grind in the run: the lull the player feels. "Timer wait" is time an always-on player spends waiting on a research timer with nothing left to earn for.</p>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Gaps</div>
+    <h2>Longest active gap between unlocks, per run</h2>
+    <div class="legend"><span><i style="background:var(--good)"></i>Within target</span><span><i style="background:var(--crit)"></i>Over target</span><span><i style="background:var(--ink-3)"></i>Target line</span></div>
+    <svg id="gapchart" viewBox="0 0 900 240" role="img" aria-label="Longest gap per run in active minutes"></svg>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Levers</div>
+    <h2>Inputs and assumptions</h2>
+    <div class="levers" id="levers"></div>
+    <div class="derived" id="derived"></div>
+  </section>
+
+  <section class="panel">
+    <div class="eyebrow">Read</div>
+    <h2>What this says</h2>
+    <ul class="findings" id="findings"></ul>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Physics research in unlock order</summary>
+      <div class="scroll"><table id="research"></table></div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Prestige shop costs (✦ per level)</summary>
+      <div class="scroll"><table id="shop"></table></div>
+    </details>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+const D = /*DATA*/null;
+const LS = "prestige-pacing:v1:" + D.generated;
+const UP = D.upgrades;                       // [{id, label, short, costs}]
+const CUM = UP.map(u => { const c = [0]; for (let i = 0; i < 20; i++) c.push(c[i] + (u.costs[i] || 0)); return c; });
+const RIDX = Object.fromEntries(D.research.map((r, i) => [r.id, i + 1]));
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(LS)); if (s && s.plan && s.inputs) return s; } catch (e) {}
+  return { plan: structuredClone(D.plan), inputs: Object.fromEntries(D.inputs.filter(i => i.key).map(i => [i.key, i.value])) };
+}
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+let S = load();
+
+const fmtN = (v, d = 0) => (v == null || !isFinite(v)) ? "–" : v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+function fmtE(v) {
+  const a = Math.abs(v);
+  for (const [k, s] of [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "k"]]) if (a >= k) return (v / k).toFixed(a / k >= 100 ? 0 : 1).replace(/\.0$/, "") + s;
+  return Math.round(v).toLocaleString();
+}
+
+// ── Model: mirrors the formulas in docs/balance/prestige-pacing.xlsx (Plan sheet). ──
+function compute() {
+  const I = S.inputs, R = D.research;
+  const gapH = (24 - I.ActiveMin / 60) / I.Sessions;
+  const adsPerDay = Math.min(I.AdCap, (I.Sessions + Math.floor(I.ActiveMin / I.AdCooldown)) * I.AdWatch);
+  const adH = adsPerDay * I.AdReward / 60;
+  const out = []; let prevMax = 0, bank = 0, cumDays = 0;
+  S.plan.forEach((p, i) => {
+    const lv = p.levels, [mr, ro, al, qy, echo, head, cap, rate] = lv;
+    const k = RIDX[p.target] || 1;
+    let spend = 0;
+    UP.forEach((u, j) => { const prev = i ? S.plan[i - 1].levels[j] : 0; spend += CUM[j][clampLv(lv[j])] - CUM[j][clampLv(prev)]; });
+    const N = p.mgr * (I.LiveBonuses ? (1 + 0.1 * al) * (1 + 0.1 * qy) : 1);
+    const O = 1 - (I.Wired ? 0.05 * mr : 0);
+    const roF = 1 - 0.05 * ro;
+    let P = 0, Q = 0, gap = 0, gapNode = "", wait = 0, timer = 0, nw = 0;
+    for (let j = 0; j < k; j++) {
+      const r = R[j], mem = I.Wired && (j + 1) <= prevMax ? r.mem : 0;
+      const bsec = r.cost / r.rate;
+      const earn = bsec * (1 - mem) * O * (1 + I.Overhead) / (I.Buildings * N);
+      P += earn; Q += bsec * (1 + I.Overhead) / (I.Buildings * p.mgr);
+      if (earn > gap) { gap = earn; gapNode = r.name; }
+      const w = r.prevTimer * roF - earn; if (w > 0) wait += w;
+      timer += r.timer * roF;
+      nw += r.cost * (1 - mem) * O * (1 + I.Overhead);
+    }
+    P /= 3600; Q /= 3600; gap /= 60; wait /= 3600; timer /= 3600;
+    nw += I.StartE + 250 * head;
+    const stars = nw >= I.PBase * I.PWall ? Math.floor(Math.floor(Math.log10(nw / I.PBase) * I.PScale) * (1 + 0.05 * echo)) : 0;
+    const affordable = bank - spend >= 0;
+    bank = bank - spend + stars;
+    const idleRate = Math.min(1, 0.2 + 0.05 * rate), idleCap = Math.min(12, 2 + 0.5 * cap);
+    const daily = I.ActiveMin / 60 + I.Sessions * Math.min(gapH, idleCap) * idleRate;
+    const days = Math.max(P / daily, timer / 24);
+    const daysAds = Math.max(P / (daily + adH), timer / 24);
+    const daysPre = Math.max(Q / (I.ActiveMin / 60 + I.Sessions * Math.min(gapH, 2) * 0.2), timer / 24);
+    cumDays += daysAds;
+    out.push({ k, spend, N, O, P, Q, gap, gapNode, avg: P * 60 / k, wait, timer, nw, stars, bank, affordable,
+               idleRate, idleCap, daily, days, daysAds, saved: 1 - daysAds / days, daysPre, cumDays,
+               boost: I.CurBoostFrac * P / 2, wall: I.PBase * I.PWall });
+    prevMax = Math.max(prevMax, k);
+  });
+  return { rows: out, gapH, adsPerDay, adH };
+}
+const clampLv = v => Math.max(0, Math.min(20, Math.round(+v || 0)));
+
+// ── Plan table ──
+function buildPlan() {
+  const t = document.getElementById("plan");
+  const opts = D.research.map(r => `<option value="${r.id}">${r.n}. ${r.name}</option>`).join("");
+  let h = `<thead><tr><th colspan="2"></th><th class="grp sep" colspan="${UP.length + 1}">Owned at run start (editable)</th>
+    <th class="grp sep" colspan="6">Time</th><th class="grp sep" colspan="4">Prestige</th><th class="grp sep" colspan="3">Days</th></tr><tr>
+    <th>Run</th><th>Prestige after research</th>`;
+  UP.forEach((u, j) => h += `<th class="num${j ? "" : " sep"}" title="${u.label}">${u.short}</th>`);
+  h += `<th class="num" title="Live income multiplier from managers on the 5 buildings. One 2x manager on one of 5 = 1.2x.">Mgr ×</th>
+    <th class="num sep" title="Active-play hours to earn every research up to the target">Active h</th>
+    <th class="num" title="Same run in the pre-fix build: no research discounts, Assembly/Quantum idle-only">Pre-fix h</th>
+    <th class="num">Longest gap (min)</th><th>Gap</th><th class="num">Avg min / unlock</th><th class="num" title="Waiting on a research timer with nothing left to earn">Timer wait h</th>
+    <th class="num sep">Net worth</th><th class="num">✦ earned</th><th class="num">✦ spent</th><th class="num">✦ bank</th>
+    <th class="num sep">No ads</th><th class="num">With Surge</th><th class="num">Pre-fix</th></tr></thead><tbody>`;
+  S.plan.forEach((p, i) => {
+    h += `<tr><td class="num">${i + 1}</td><td><select id="t${i}" data-i="${i}" aria-label="Run ${i + 1} prestige target">${opts}</select></td>`;
+    UP.forEach((u, j) => h += `<td class="num${j ? "" : " sep"}"><input type="number" id="l${i}_${j}" data-i="${i}" data-j="${j}" min="0" max="${u.costs.length}" step="1" aria-label="Run ${i + 1} ${u.label}"></td>`);
+    h += `<td class="num"><input type="number" id="m${i}" data-i="${i}" min="1" step="0.1" aria-label="Run ${i + 1} manager multiplier"></td>`;
+    h += `<td class="num sep" id="c${i}P"></td><td class="num" id="c${i}Q"></td><td class="num" id="c${i}G"></td><td id="c${i}T"></td><td class="num" id="c${i}A"></td><td class="num" id="c${i}W"></td>
+      <td class="num sep" id="c${i}N"></td><td class="num" id="c${i}X"></td><td class="num" id="c${i}M"></td><td class="num" id="c${i}B"></td>
+      <td class="num sep" id="c${i}D"></td><td class="num" id="c${i}E"></td><td class="num" id="c${i}F"></td></tr>`;
+  });
+  h += `</tbody><tfoot><tr><td></td><td>Total</td><td colspan="${UP.length + 1}" class="sep"></td>
+    <td class="num sep" id="totP"></td><td class="num" id="totQ"></td><td colspan="4"></td><td class="sep"></td><td class="num" id="totX"></td><td class="num" id="totM"></td><td></td>
+    <td class="num sep" id="totD"></td><td class="num" id="totE"></td><td class="num" id="totF"></td></tr></tfoot>`;
+  t.innerHTML = h;
+  S.plan.forEach((p, i) => {
+    document.getElementById("t" + i).value = p.target;
+    p.levels.forEach((v, j) => document.getElementById(`l${i}_${j}`).value = v);
+    document.getElementById("m" + i).value = p.mgr;
+  });
+  t.addEventListener("input", ev => {
+    const e = ev.target, i = +e.dataset.i;
+    if (e.tagName === "SELECT") S.plan[i].target = e.value;
+    else if (e.id.startsWith("m")) S.plan[i].mgr = Math.max(0.1, +e.value || 1);
+    else S.plan[i].levels[+e.dataset.j] = clampLv(e.value);
+    save(); render();
+  });
+}
+
+function buildLevers() {
+  const box = document.getElementById("levers");
+  let h = "", open = false;
+  D.inputs.forEach(it => {
+    if (!it.key) { if (open) h += "</div>"; h += `<div class="lever-group"><h3>${it.label}</h3>`; open = true; return; }
+    const pct = it.unit === "fraction", flag = it.unit === "flag";
+    const field = flag
+      ? `<select id="in_${it.key}" data-k="${it.key}"><option value="1">1 · live game</option><option value="0">0 · pre-fix build</option></select>`
+      : `<span><input type="number" class="wide" id="in_${it.key}" data-k="${it.key}" step="${pct ? 5 : "any"}"><span class="unit">${pct ? "%" : it.unit}</span></span>`;
+    h += `<label class="lever" for="in_${it.key}"><span>${it.label}</span>${field}<small>${it.note}</small></label>`;
+  });
+  if (open) h += "</div>";
+  box.innerHTML = h;
+  D.inputs.filter(i => i.key).forEach(it => {
+    const e = document.getElementById("in_" + it.key), v = S.inputs[it.key];
+    e.value = it.unit === "fraction" ? Math.round(v * 100) : v;
+  });
+  box.addEventListener("input", ev => {
+    const e = ev.target, it = D.inputs.find(i => i.key === e.dataset.k); if (!it) return;
+    let v = +e.value; if (!isFinite(v)) return;
+    S.inputs[it.key] = it.unit === "fraction" ? v / 100 : v;
+    save(); render();
+  });
+}
+
+function setText(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
+function pill(ok, a, b) { return `<span class="pill ${ok ? "ok" : "bad"}">${ok ? a : b}</span>`; }
+
+function render() {
+  const m = compute(), I = S.inputs;
+  let tot = { P: 0, Q: 0, X: 0, M: 0, D: 0, E: 0, F: 0 };
+  m.rows.forEach((r, i) => {
+    setText(`c${i}P`, fmtN(r.P, 1)); setText(`c${i}Q`, fmtN(r.Q, 1));
+    setText(`c${i}G`, fmtN(r.gap)); document.getElementById(`c${i}G`).title = r.gapNode;
+    document.getElementById(`c${i}T`).innerHTML = pill(r.gap <= I.GapTarget, "OK", "LONG");
+    setText(`c${i}A`, fmtN(r.avg)); setText(`c${i}W`, fmtN(r.wait, 2));
+    setText(`c${i}N`, fmtE(r.nw)); setText(`c${i}X`, fmtN(r.stars)); setText(`c${i}M`, fmtN(r.spend));
+    document.getElementById(`c${i}B`).innerHTML = r.affordable ? fmtN(r.bank) : `${fmtN(r.bank)} ${pill(false, "", "SHORT")}`;
+    setText(`c${i}D`, fmtN(r.days, 1)); setText(`c${i}E`, fmtN(r.daysAds, 1)); setText(`c${i}F`, fmtN(r.daysPre, 1));
+    tot.P += r.P; tot.Q += r.Q; tot.X += r.stars; tot.M += r.spend; tot.D += r.days; tot.E += r.daysAds; tot.F += r.daysPre;
+  });
+  setText("totP", fmtN(tot.P, 1)); setText("totQ", fmtN(tot.Q, 1)); setText("totX", fmtN(tot.X)); setText("totM", fmtN(tot.M));
+  setText("totD", fmtN(tot.D, 1)); setText("totE", fmtN(tot.E, 1)); setText("totF", fmtN(tot.F, 1));
+
+  const long = m.rows.filter(r => r.gap > I.GapTarget).length, short = m.rows.filter(r => !r.affordable).length;
+  const worst = m.rows.reduce((a, r) => r.gap > a.gap ? r : a, m.rows[0]);
+  const tiles = [
+    [fmtN(tot.P, 1) + " h", "Active play to clear Physics", `pre-fix build: ${fmtN(tot.Q, 1)} h`],
+    [fmtN(tot.E, 1) + " days", "Calendar time with Entropy Surge", `no ads: ${fmtN(tot.D, 1)} days`],
+    [`${long} of ${m.rows.length}`, `Runs with a gap over ${I.GapTarget} min`, `worst: ${fmtN(worst.gap)} min, ${worst.gapNode}`],
+    [fmtN(tot.X) + " ✦", "Earned across all runs", short ? `${short} run(s) can't afford their upgrades` : "every run's upgrades are affordable"],
+  ];
+  document.getElementById("stats").innerHTML = tiles.map(([b, s, sm]) => `<div class="stat"><b>${b}</b><span>${s}</span><small>${sm}</small></div>`).join("");
+  document.getElementById("derived").textContent =
+    `Derived: offline gap between sessions ${fmtN(m.gapH, 2)} h · Entropy Surge ads watched ${fmtN(m.adsPerDay, 1)}/day · ad income ${fmtN(m.adH, 2)} h/day`;
+
+  const r1 = m.rows[0];
+  const f = [
+    `Run 1 prestiges at ${fmtE(r1.nw)} net worth against a ${fmtE(r1.wall)} wall (${fmtN((r1.nw / r1.wall - 1) * 100)}% headroom), earning ${r1.stars} ✦.`,
+    `The worst lull is ${worst.gapNode}: ${fmtN(worst.gap)} active minutes in run ${m.rows.indexOf(worst) + 1}, against a ${I.GapTarget} min target.`,
+    `Research timers barely gate progress: an always-on player waits ${fmtN(m.rows.reduce((a, r) => a + r.wait, 0), 2)} h on timers across all runs. The wait is the entropy grind.`,
+    `Entropy Surge saves about ${fmtN((1 - tot.E / tot.D) * 100)}% of calendar time. The 2026-11-11 fixes (research discounts, live Assembly Line / Quantum Yield) cut active time from ${fmtN(tot.Q, 1)} h to ${fmtN(tot.P, 1)} h.`,
+    `Not modeled: the Cyclotron entropy boost, turnkey pre-placed harvesters, and Entropy Boost / Production Surge / Time Warp ads.`,
+  ];
+  document.getElementById("findings").innerHTML = f.map(x => `<li>${x}</li>`).join("");
+  drawGaps(m.rows, I.GapTarget);
+}
+
+function drawGaps(rows, target) {
+  const svg = document.getElementById("gapchart"), NS = "http://www.w3.org/2000/svg";
+  svg.innerHTML = "";
+  const W = 900, H = 240, L = 48, R = 12, T = 14, B = 46;
+  const max = Math.max(target * 1.25, ...rows.map(r => r.gap)) * 1.08;
+  const step = max > 240 ? 60 : max > 120 ? 30 : 15;
+  const y = v => T + (H - T - B) * (1 - v / max), bw = (W - L - R) / rows.length;
+  const el = (tag, a) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); svg.appendChild(e); return e; };
+  for (let v = 0; v <= max; v += step) {
+    el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--grid)" });
+    el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }).textContent = v;
+  }
+  rows.forEach((r, i) => {
+    const x = L + i * bw + bw * 0.2, w = bw * 0.6, top = y(r.gap);
+    const bar = el("rect", { x, y: top, width: w, height: y(0) - top, rx: 3, fill: r.gap > target ? "var(--crit)" : "var(--good)" });
+    const t = document.createElementNS(NS, "title"); t.textContent = `Run ${i + 1}: ${Math.round(r.gap)} min on ${r.gapNode}`; bar.appendChild(t);
+    el("text", { x: x + w / 2, y: top - 5, "text-anchor": "middle" }).textContent = Math.round(r.gap);
+    el("text", { x: x + w / 2, y: H - B + 16, "text-anchor": "middle" }).textContent = "Run " + (i + 1);
+    const nm = r.gapNode.length > 18 ? r.gapNode.slice(0, 17) + "…" : r.gapNode;
+    el("text", { x: x + w / 2, y: H - B + 31, "text-anchor": "middle", style: "font-size:10px" }).textContent = nm;
+  });
+  el("line", { x1: L, x2: W - R, y1: y(target), y2: y(target), stroke: "var(--ink-3)", "stroke-dasharray": "5 4", "stroke-width": 1.5 });
+  el("text", { x: W - R, y: y(target) - 5, "text-anchor": "end" }).textContent = `target ${target} min`;
+}
+
+function buildRef() {
+  let h = `<thead><tr><th class="num">#</th><th>Research</th><th>Block</th><th class="num">Cost (e)</th><th class="num">Best e/s before</th>
+    <th class="num">Building-min</th><th class="num">Timer (s)</th><th class="num">Memory discount</th></tr></thead><tbody>`;
+  D.research.forEach(r => h += `<tr><td class="num">${r.n}</td><td>${r.name}</td><td>${r.block}</td><td class="num">${fmtN(r.cost)}</td>
+    <td class="num">${fmtN(r.rate, 1)}</td><td class="num">${fmtN(r.cost / r.rate / 60)}</td><td class="num">${fmtN(r.timer)}</td><td class="num">${fmtN(r.mem * 100)}%</td></tr>`);
+  document.getElementById("research").innerHTML = h + "</tbody>";
+  const mx = Math.max(...UP.map(u => u.costs.length));
+  let s = `<thead><tr><th>Upgrade</th>${Array.from({ length: mx }, (_, i) => `<th class="num">Lv ${i + 1}</th>`).join("")}</tr></thead><tbody>`;
+  UP.forEach(u => s += `<tr><td>${u.label}</td>${Array.from({ length: mx }, (_, i) => `<td class="num">${u.costs[i] != null ? fmtN(u.costs[i]) : ""}</td>`).join("")}</tr>`);
+  document.getElementById("shop").innerHTML = s + "</tbody>";
+  document.getElementById("foot").innerHTML = `Generated ${D.generated} by <code>scripts/prestige_plan.py</code> from <code>Assets/Data/game_data.json</code> and <code>scripts/progression_curve.py</code>; shop costs from <code>PersistentUpgradeService.All</code>, ad numbers from <code>AdRewardCalculator</code>. Your edits stay in this browser only. The same model is in <code>docs/balance/prestige-pacing.xlsx</code>.`;
+}
+
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; clearTimeout(toast.h); toast.h = setTimeout(() => t.textContent = "", 2500); }
+document.getElementById("reset").addEventListener("click", () => {
+  try { localStorage.removeItem(LS); } catch (e) {}
+  S = load(); buildPlan(); buildLevers(); render(); toast("Reset to generated values");
+});
+document.getElementById("copy").addEventListener("click", () => {
+  const lines = S.plan.map(p => `    (${JSON.stringify(p.target).padEnd(31)}, ${p.levels.join(", ")}, ${(+p.mgr).toFixed(1)}),`);
+  const txt = "PLAN = [\n" + lines.join("\n") + "\n]";
+  const ok = () => toast("Copied PLAN; paste it into scripts/prestige_plan.py");
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(ok, () => {
+    const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); ok(); } catch (e) { toast("Copy failed; select the plan manually"); } ta.remove();
+  });
+});
+
+buildPlan(); buildLevers(); buildRef(); render();
+</script>
