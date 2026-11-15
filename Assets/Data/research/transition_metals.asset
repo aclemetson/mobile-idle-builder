@@ -55,6 +55,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
   - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.15
   codexEntry: Copper carries electricity better than any common metal. Zinc prevents
     corrosion and is half of brass. Together they defined the Bronze and Brass Ages.

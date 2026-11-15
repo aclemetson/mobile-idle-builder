@@ -53,6 +53,5 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: In red giant stars, free neutrons trickle into heavy nuclei one at
     a time, slowly enough for each unstable result to decay before the next arrives.

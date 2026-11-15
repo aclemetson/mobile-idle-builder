@@ -53,7 +53,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
   - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: "Plutonium does not occur naturally on Earth \u2014 it must be synthesised.
     Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional
     physics."

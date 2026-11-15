@@ -335,7 +335,7 @@ function drawGaps(rows, target) {
 
 function buildRef() {
   let h = `<thead><tr><th class="num">#</th><th>Research</th><th>Block</th><th class="num">Cost (e)</th><th class="num">Best e/s before</th>
-    <th class="num">Building-min</th><th class="num">Timer (s)</th><th class="num">Memory discount</th></tr></thead><tbody>`;
+    <th class="num">Building-min</th><th class="num">Timer (s)</th><th class="num">Memory discount (removed)</th></tr></thead><tbody>`;
   D.research.forEach(r => h += `<tr><td class="num">${r.n}</td><td>${r.name}</td><td>${r.block}</td><td class="num">${fmtN(r.cost)}</td>
     <td class="num">${fmtN(r.rate, 1)}</td><td class="num">${fmtN(r.cost / r.rate / 60)}</td><td class="num">${fmtN(r.timer)}</td><td class="num">${fmtN(r.mem * 100)}%</td></tr>`);
   document.getElementById("research").innerHTML = h + "</tbody>";

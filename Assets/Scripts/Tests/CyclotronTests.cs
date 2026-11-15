@@ -185,11 +185,11 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Insight_DiscountsTheResearchPrice_AndStacks()
         {
-            Assert.AreEqual(8500L, ResearchCost.Effective(10000, 0f, 0f, false, 0.15f));
+            Assert.AreEqual(8500L, ResearchCost.Effective(10000, 0f, 0.15f));
             // 5% Memory Resonance and 15% Insight multiply: 10,000 x 0.95 x 0.85.
-            Assert.AreEqual(8075L, ResearchCost.Effective(10000, 0.05f, 0f, false, 0.15f));
-            Assert.AreEqual(ResearchCost.Effective(10000, 0.05f, 0f, false),
-                            ResearchCost.Effective(10000, 0.05f, 0f, false, 0f), "old overload unchanged");
+            Assert.AreEqual(8075L, ResearchCost.Effective(10000, 0.05f, 0.15f));
+            Assert.AreEqual(ResearchCost.Effective(10000, 0.05f),
+                            ResearchCost.Effective(10000, 0.05f, 0f), "no insight = Memory Resonance only");
         }
 
         [Test]

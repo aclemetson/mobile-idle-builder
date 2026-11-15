@@ -44,7 +44,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Silver has the highest electrical conductivity of any element. Gold
     resists corrosion absolutely \u2014 every circuit connector in space relies on
     it."
