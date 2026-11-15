@@ -15,7 +15,7 @@ MonoBehaviour:
   id: mid_elements
   displayName: Mid-Period Elements
   description: 'Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen,
-    Fluorine, Sodium, Aluminum and Phosphorus.'
+    Fluorine, Sodium, Aluminum and Phosphorus. Hydrogen and Nitrogen now make Ammonia.'
   icon: {fileID: 0}
   branch: 1
   prerequisites:
@@ -35,12 +35,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 83c568384b6970b47a30de4c7097a7da, type: 2}
   - {fileID: 11400000, guid: 31333edf10e38474c90fafe8f7d578e3, type: 2}
   - {fileID: 11400000, guid: 1ee670598b76c72439e7169644de8bb6, type: 2}
+  - {fileID: 11400000, guid: d5b02317e42a8894987ece79732b5188, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 18d8c24fc0a976944b3b0a238ce26f4a, type: 2}
   - {fileID: 11400000, guid: 3cc60278fb985db4f8431f14dce466ff, type: 2}
   - {fileID: 11400000, guid: 63a5048ef762a6940ad1de1bb422d57f, type: 2}
   - {fileID: 11400000, guid: c216c34d551829b46ac369db8907609c, type: 2}
   - {fileID: 11400000, guid: a52840c1a88be6a409efbe174c244e73, type: 2}
+  - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
