@@ -33,7 +33,6 @@ namespace MobileIdleBuilder
 
         private Mesh     _rockMesh;
         private Mesh     _flowMesh;
-        private Mesh     _bedMesh;
         private Material _rockMat;
 
         private World  _world;
@@ -48,7 +47,7 @@ namespace MobileIdleBuilder
         /// port's facing); <paramref name="outputDirs"/> are the output ports' facings.
         /// </summary>
         public void Initialize(Entity entity, int travelDir, IReadOnlyList<int> outputDirs,
-                               Color rockColor, Material flowMaterial, Material bedMaterial)
+                               Color rockColor, Material flowMaterial)
         {
             _entity    = entity;
             _world     = World.DefaultGameObjectInjectionWorld;
@@ -58,7 +57,7 @@ namespace MobileIdleBuilder
             transform.localRotation = Quaternion.Euler(0f, travelDir * 90f, 0f);
 
             BuildRock(rockColor, outputDirs.Count >= 3 ? TeardropMeshBuilder.ThreeWay : TeardropMeshBuilder.TwoWay);
-            BuildRiver(travelDir, outputDirs, flowMaterial, bedMaterial);
+            BuildRiver(travelDir, outputDirs, flowMaterial);
         }
 
         private void BuildRock(Color rockColor, IReadOnlyList<TeardropMeshBuilder.RockProfile> rocks)
@@ -86,7 +85,7 @@ namespace MobileIdleBuilder
             renderer.material = _rockMat;
         }
 
-        private void BuildRiver(int travelDir, IReadOnlyList<int> outputDirs, Material flowMaterial, Material bedMaterial)
+        private void BuildRiver(int travelDir, IReadOnlyList<int> outputDirs, Material flowMaterial)
         {
             float cell = transform.localScale.x;
             int inEdge = (travelDir + 2) % 4;
@@ -97,11 +96,8 @@ namespace MobileIdleBuilder
             river.transform.localRotation = Quaternion.Inverse(transform.localRotation);
             river.transform.localScale    = Vector3.one / cell;
 
-            _bedMesh  = ConveyorFlowMeshBuilder.BuildFork(cell, inEdge, outputDirs,
-                ConveyorFlowMeshBuilder.FloorY, ConveyorFlowMeshBuilder.FloorWidthFrac);
+            // Same field lattice as the belts, straight over the floor (no bed), as on the belts.
             _flowMesh = ConveyorFlowMeshBuilder.BuildFork(cell, inEdge, outputDirs);
-
-            AddLayer("Channel", river.transform, _bedMesh, bedMaterial);
             AddLayer("Flow", river.transform, _flowMesh, flowMaterial);
         }
 
@@ -145,7 +141,6 @@ namespace MobileIdleBuilder
             if (_rockMat  != null) Destroy(_rockMat);
             if (_rockMesh != null) Destroy(_rockMesh);
             if (_flowMesh != null) Destroy(_flowMesh);
-            if (_bedMesh  != null) Destroy(_bedMesh);
         }
     }
 }
