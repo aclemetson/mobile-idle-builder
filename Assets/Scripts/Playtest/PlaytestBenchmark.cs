@@ -55,7 +55,7 @@ namespace MobileIdleBuilder.Playtest
             public Dictionary<string, int> buildings = new();
             public int    buildingTotal;
             public long   entropy;
-            public float  netWorth;
+            public double netWorth;
             public int    tier;
             public bool   prestigeAvailable;
             public int    prestigeRuns;
