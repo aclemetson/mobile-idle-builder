@@ -73,12 +73,16 @@ namespace MobileIdleBuilder
             // uv2 (secondary arms only, when the main arm is straight) is the main arm's sideways axis divided
             // by the half-width: |dot(position.xz, uv2)| < 1 inside the main belt. Zero means "no straight main
             // arm", and the shader falls back to fading by distance along the arm.
+            // uv3 is the flow direction (xz, unit) at each vertex, so the world-lattice shader pushes its lines
+            // along the belt smoothly instead of estimating the direction from screen derivatives (blocky).
             var arms  = new List<Vector2>();
             var mains = new List<Vector2>();
+            var flows = new List<Vector2>();
 
             if (edges.Count <= 1)
             {
                 AppendRibbon(verts, uvs, tris, BuildPath(edges[0], exitDir, center, EdgeMid(edges[0]), EdgeMid(exitDir)), hw, 0f, 1f, y);
+                AddStripFlow(verts, flows);
                 FillArmFlags(arms, verts.Count, false, PathLengthCells(edges[0], exitDir));
             }
             else
@@ -94,6 +98,7 @@ namespace MobileIdleBuilder
                 {
                     AppendRibbon(verts, uvs, tris,
                         BuildPath(e, exitDir, center, EdgeMid(e), EdgeMid(exitDir)), hw, 0f, 1f, y);
+                    AddStripFlow(verts, flows);
                     FillArmFlags(arms, verts.Count, e != main, PathLengthCells(e, exitDir));
                     var axis = e != main ? mainAxis : Vector2.zero;
                     while (mains.Count < verts.Count) mains.Add(axis);
@@ -106,6 +111,7 @@ namespace MobileIdleBuilder
             mesh.SetUVs(0, uvs);
             mesh.SetUVs(1, arms);
             mesh.SetUVs(2, mains);
+            mesh.SetUVs(3, flows);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
@@ -135,6 +141,7 @@ namespace MobileIdleBuilder
             var verts = new List<Vector3>();
             var uvs   = new List<Vector2>();
             var tris  = new List<int>();
+            var flows = new List<Vector2>();
 
             for (int i = 0; i < exits.Count; i++)
             {
@@ -161,6 +168,7 @@ namespace MobileIdleBuilder
                     tris.Add(a); tris.Add(c); tris.Add(b);
                     tris.Add(b); tris.Add(c); tris.Add(d);
                 }
+                AddStripFlow(verts, flows);
             }
 
             var mesh = new Mesh { name = "ConveyorFork" };
@@ -169,6 +177,7 @@ namespace MobileIdleBuilder
             var forkArms = new List<Vector2>(verts.Count);
             FillArmFlags(forkArms, verts.Count, false, 1f);   // branches keep the straight cross-line count
             mesh.SetUVs(1, forkArms);
+            mesh.SetUVs(3, flows);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
@@ -187,6 +196,26 @@ namespace MobileIdleBuilder
         /// <summary>Centreline length of an edge→exit path, in cells: 1 straight, a quarter circle of radius ½ for a turn.</summary>
         public static float PathLengthCells(int inEdgeDir, int exitDir) =>
             inEdgeDir == Opposite(exitDir) || inEdgeDir == exitDir ? 1f : Mathf.PI * 0.25f;
+
+        /// <summary>
+        /// Appends the flow direction for the vertices added since <paramref name="flows"/> last caught up:
+        /// one ribbon strip of left/right pairs, in travel order. Each vertex follows its own side of the strip
+        /// (central difference), so a fork's diverging edges and an arc both get their true direction.
+        /// </summary>
+        private static void AddStripFlow(List<Vector3> verts, List<Vector2> flows)
+        {
+            int start = flows.Count;
+            int pairs = (verts.Count - start) / 2;
+            for (int i = 0; i < pairs; i++)
+            for (int side = 0; side < 2; side++)
+            {
+                int prev = start + Mathf.Max(i - 1, 0) * 2 + side;
+                int next = start + Mathf.Min(i + 1, pairs - 1) * 2 + side;
+                Vector3 d = verts[next] - verts[prev];
+                var f = new Vector2(d.x, d.z);
+                flows.Add(f.sqrMagnitude > 1e-12f ? f.normalized : Vector2.right);
+            }
+        }
 
         private static void FillArmFlags(List<Vector2> arms, int upTo, bool secondary, float lengthCells)
         {

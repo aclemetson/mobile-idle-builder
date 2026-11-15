@@ -21,6 +21,11 @@ Shader "MobileIdleBuilder/ConveyorField"
         _Lanes      ("Lengthwise Lines", Float) = 5
         _Bend       ("Packet Bend", Float) = 0.45
         _EdgeFade   ("Edge Softness", Range(0.001, 0.5)) = 0.18
+        // 0 = lattice stretched along each belt piece (ribbon UVs); 1 = one square lattice in world space,
+        // aligned to the tiles, that every belt reveals; 2 = the world lattice turned 45 degrees (diamond).
+        _Mapping    ("Lattice Mapping", Float) = 0
+        _CellSize   ("Cell Size (world)", Float) = 1.5
+        _GridPerCell ("World Lattice Lines / Cell", Float) = 8
     }
 
     SubShader
@@ -53,6 +58,9 @@ Shader "MobileIdleBuilder/ConveyorField"
                 float  _Lanes;
                 float  _Bend;
                 float  _EdgeFade;
+                float  _Mapping;
+                float  _CellSize;
+                float  _GridPerCell;
             CBUFFER_END
 
             float _BeltPhase;   // global, in cells travelled (see header)
@@ -63,6 +71,7 @@ Shader "MobileIdleBuilder/ConveyorField"
                 float2 uv         : TEXCOORD0;
                 float2 arm        : TEXCOORD1;   // x = 1 on a merge's secondary arm; y = arm length in cells
                 float2 mainAxis   : TEXCOORD2;   // secondary arm: main belt's sideways axis / half-width (0 = none)
+                float2 flowOS     : TEXCOORD3;   // flow direction (xz) at this vertex
             };
 
             struct Varyings
@@ -73,6 +82,8 @@ Shader "MobileIdleBuilder/ConveyorField"
                 float  crossLines  : TEXCOORD2;
                 float2 posXZ       : TEXCOORD3;
                 float2 mainAxis    : TEXCOORD4;
+                float2 posWS       : TEXCOORD5;
+                float2 flowWS      : TEXCOORD6;
             };
 
             Varyings vert (Attributes IN)
@@ -83,6 +94,8 @@ Shader "MobileIdleBuilder/ConveyorField"
                 OUT.secondary   = IN.arm.x;
                 OUT.posXZ       = IN.positionOS.xz;
                 OUT.mainAxis    = IN.mainAxis;
+                OUT.posWS       = TransformObjectToWorld(IN.positionOS.xyz).xz;
+                OUT.flowWS      = TransformObjectToWorldDir(float3(IN.flowOS.x, 0.0, IN.flowOS.y), false).xz;
                 // Whole number of cross lines per piece (so cells still meet line-to-line), scaled to the
                 // piece's centreline length: a quarter-circle corner gets ~6 instead of 8, same spacing.
                 float len       = IN.arm.y > 0.0 ? IN.arm.y : 1.0;
@@ -113,11 +126,36 @@ Shader "MobileIdleBuilder/ConveyorField"
                 float env2 = pow(0.5 + 0.5 * cos(TAU * (uv.y * 2.0 - ph * 2.0 + 0.4)), 8.0) * 0.5;
                 float e    = env + env2;
 
-                // Cross lines bulge downstream through a packet; lengthwise lines pinch toward the centre.
                 float across = sin(PI * uv.x);
-                float cy = uv.y * IN.crossLines - e * _Bend * across;
-                float cx = (0.5 + (uv.x - 0.5) * (1.0 - e * 0.25)) * _Lanes;
-                float lines = max(GridLine(cy, 0.07), GridLine(cx, 0.06) * 0.7);
+                float lines;
+                if (_Mapping < 0.5)
+                {
+                    // Ribbon lattice: cross lines bulge downstream through a packet; lengthwise lines pinch.
+                    float cy = uv.y * IN.crossLines - e * _Bend * across;
+                    float cx = (0.5 + (uv.x - 0.5) * (1.0 - e * 0.25)) * _Lanes;
+                    lines = max(GridLine(cy, 0.07), GridLine(cx, 0.06) * 0.7);
+                }
+                else
+                {
+                    // World lattice: one grid on the ground, so corners stay square and merges/forks share the
+                    // very same lines. Packets push the lines along the belt's flow direction, which the mesh
+                    // carries per vertex (smoothly interpolated round curves and forks).
+                    float2 f = IN.flowWS;
+                    float2 t = dot(f, f) > 1e-8 ? f * rsqrt(dot(f, f)) : float2(1.0, 0.0);
+
+                    float2 q = IN.posWS / _CellSize * _GridPerCell - t * (e * _Bend * across);
+                    if (_Mapping > 1.5)
+                    {
+                        q = float2(q.x + q.y, q.x - q.y) * 0.70710678;
+                        lines = max(GridLine(q.x, 0.07), GridLine(q.y, 0.07)) * 0.9;
+                    }
+                    else
+                    {
+                        // Lines across the flow read stronger than lines along it, as on the ribbon lattice.
+                        lines = max(GridLine(q.x, 0.07) * lerp(0.7, 1.0, abs(t.x)),
+                                    GridLine(q.y, 0.07) * lerp(0.7, 1.0, abs(t.y)));
+                    }
+                }
 
                 float glow = e * (0.35 + 0.65 * across);
 

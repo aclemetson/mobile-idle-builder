@@ -48,6 +48,19 @@ namespace MobileIdleBuilder
     {
         public int   ItemID;
         public float Progress; // 0..1
+
+        /// <summary>
+        /// The edge this item entered its current segment through, as <c>OutputDirection + 1</c>; 0 = not
+        /// recorded (head pulls, tests), meaning the segment's own entry. Visual only: on a merge each item
+        /// follows the arm it actually came in on instead of all items snapping to the latest input.
+        /// </summary>
+        public byte InEdge;
+
+        /// <summary>Stores <paramref name="edgeDir"/> (an OutputDirection value) as <see cref="InEdge"/>.</summary>
+        public static byte EncodeEdge(int edgeDir) => (byte)(edgeDir + 1);
+
+        /// <summary>The recorded entry edge, or <paramref name="fallbackEdge"/> when none was recorded.</summary>
+        public int EntryEdgeOr(int fallbackEdge) => InEdge > 0 ? InEdge - 1 : fallbackEdge;
     }
 
     /// <summary>

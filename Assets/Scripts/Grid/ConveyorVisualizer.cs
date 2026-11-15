@@ -230,9 +230,10 @@ namespace MobileIdleBuilder
                         _itemSpriteIds[slot] = item.ItemID;
                     }
 
-                    // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge.
+                    // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge. On a
+                    // merge, each item rides the arm it came in on, so side items curve onto the belt.
                     Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(
-                        cs, inEdge, exitDir, Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress)));
+                        cs, item.EntryEdgeOr(inEdge), exitDir, Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress)));
                     pos.y       = 0.3f;
                     sphere.transform.localPosition = pos;
 
@@ -623,6 +624,10 @@ namespace MobileIdleBuilder
                 _flowMaterial = new Material(shader);
                 _flowMaterial.SetColor("_LineColor", BeltLineColor);
                 _flowMaterial.SetColor("_GlowColor", BeltGlowColor);
+                // One square lattice in world space, aligned to the tiles (chosen 2026-11-15): corners, merges
+                // and splitter forks all show the same lines, so they blend with no seams or spokes.
+                _flowMaterial.SetFloat("_Mapping", 1f);
+                _flowMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
                 _ownsFlowMaterial = true;
             }
             else
