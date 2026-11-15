@@ -37,7 +37,7 @@ namespace MobileIdleBuilder
         private const string ParticleShader = "MobileIdleBuilder/BeltParticle";
         private const string CloudShader    = "MobileIdleBuilder/ElectronCloud";
 
-        // Draw after the belt water (ConveyorFlow is Transparent+50).
+        // Draw after the belt lattice (ConveyorField is Transparent+50).
         private const int TransparentQueue = 3100;
 
         private static readonly Dictionary<string, Func<Transform, GameObject>> s_Factories = new()
@@ -133,6 +133,11 @@ namespace MobileIdleBuilder
         {
             var mat = new Material(Shader.Find(ParticleShader));
             mat.SetColor("_BaseColor", color);
+            // Approved look (2026-11-14, "D3" in the editor look test): glossy, lightly metallic.
+            mat.SetFloat("_Metal", 0.4f);
+            mat.SetFloat("_Gloss", 0.9f);
+            mat.SetFloat("_TopLight", 0.2f);
+            mat.SetFloat("_Saturation", 1.15f);
             return mat;
         }
 
@@ -150,8 +155,6 @@ namespace MobileIdleBuilder
         {
             if (s_CoreMat != null) return s_CoreMat;
             s_CoreMat = NewParticleMaterial(ElectronCore);
-            s_CoreMat.SetFloat("_TopLight", 0f);
-            s_CoreMat.SetFloat("_Gloss", 0f);
             return s_CoreMat;
         }
 
@@ -173,7 +176,6 @@ namespace MobileIdleBuilder
             cache.SetFloat("_FadeOpen", 0.22f);
             cache.SetFloat("_FadeMin", 0.06f);
             cache.SetFloat("_RimAlpha", 0.85f);
-            cache.SetFloat("_Gloss", 0.2f);
             cache.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
             cache.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             cache.SetFloat("_ZWrite", 0f);

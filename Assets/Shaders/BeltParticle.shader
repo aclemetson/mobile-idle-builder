@@ -25,6 +25,15 @@ Shader "MobileIdleBuilder/BeltParticle"
         _FadeOpen    ("Fade Open Fraction", Range(0.01, 0.9)) = 0.2
         _FadeMin     ("Fade Min Alpha", Range(0, 1)) = 0.06
         _RimAlpha    ("Rim Alpha", Range(0, 1)) = 0.85
+        // Look (defaults = plain shaded colour)
+        _Emission    ("Brightness", Float) = 1.0
+        _Saturation  ("Saturation", Float) = 1.0
+        _RimGlow     ("Rim Glow", Float) = 0.0
+        _RimPower    ("Rim Power", Float) = 3.0
+        _CenterGlow  ("Center Glow", Float) = 0.0
+        _Metal       ("Metallic (fake env)", Range(0, 1)) = 0.0
+        _SkyColor    ("Env Sky", Color) = (0.75, 0.85, 1.0, 1)
+        _GroundColor ("Env Ground", Color) = (0.05, 0.06, 0.08, 1)
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend", Float) = 0
         [Enum(Off, 0, On, 1)] _ZWrite ("ZWrite", Float) = 1
@@ -60,6 +69,14 @@ Shader "MobileIdleBuilder/BeltParticle"
                 float  _FadeOpen;
                 float  _FadeMin;
                 float  _RimAlpha;
+                float  _Emission;
+                float  _Saturation;
+                float  _RimGlow;
+                float  _RimPower;
+                float  _CenterGlow;
+                float  _Metal;
+                float4 _SkyColor;
+                float4 _GroundColor;
             CBUFFER_END
 
             struct Attributes
@@ -144,12 +161,32 @@ Shader "MobileIdleBuilder/BeltParticle"
                 float3 n = normalize(IN.normalWS);
                 float3 v = normalize(IN.viewWS);
 
+                half  ndv    = saturate(dot(n, v));
+                half3 albedo = IN.color.rgb;
+                half  luma   = dot(albedo, half3(0.299, 0.587, 0.114));
+                albedo = max(0.0, lerp(luma.xxx, albedo, _Saturation));
+
                 half  lit  = lerp(1.0 - _TopLight, 1.0 + _TopLight * 0.5, n.y * 0.5 + 0.5);
-                half3 col  = IN.color.rgb * lit;
+                half3 col  = albedo * lit * _Emission;
+
+                // Fake metal: tint a sky/ground gradient reflected off the surface by the albedo.
+                if (_Metal > 0.0)
+                {
+                    float3 r   = reflect(-v, n);
+                    half   sky = smoothstep(-0.15, 0.55, r.y);
+                    half3  env = lerp(_GroundColor.rgb, _SkyColor.rgb, sky);
+                    env += _SkyColor.rgb * 0.6 * exp(-abs(r.y - 0.05) * 18.0);   // bright horizon band
+                    col = lerp(col, albedo * env * 1.5 * _Emission, _Metal);
+                }
+
                 half  spec = pow(saturate(dot(n, normalize(float3(-0.35, 1.0, -0.45)))), 18.0) * _Gloss;
                 col += spec;
 
-                half rim   = pow(1.0 - saturate(dot(n, v)), 2.0);
+                half rimGlow = pow(1.0 - ndv, _RimPower);
+                col += (albedo * 0.6 + 0.4) * rimGlow * _RimGlow;
+                col += albedo * pow(ndv, 3.0) * _CenterGlow;
+
+                half rim   = pow(1.0 - ndv, 2.0);
                 half alpha = max(IN.alpha, rim * _RimAlpha) * IN.color.a;
                 return half4(col, alpha);
             }
