@@ -15,16 +15,16 @@ MonoBehaviour:
   id: rapid_neutron_capture
   displayName: r-Process
   description: 'Unlock Fast mode: a flood of neutrons makes the elements slow capture
-    can''t reach, including Gold and Platinum.'
+    can''t reach, starting with Europium from Samarium.'
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
-  depthInTree: 6
+  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
+  depthInTree: 7
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 16500000
+  costBaseCurrency: 23700000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1
@@ -36,7 +36,7 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: When two neutron stars collide, matter is bathed in so many neutrons

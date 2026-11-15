@@ -60,7 +60,7 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T2_Boron_SellValue()       => AssertSell("boron",      826f);
         [Test] public void T2_Carbon_SellValue()      => AssertSell("carbon",     160f);
         [Test] public void T2_Nitrogen_SellValue()    => AssertSell("nitrogen",   1110f);
-        [Test] public void T2_Oxygen_SellValue()      => AssertSell("oxygen",     1530f);
+        [Test] public void T2_Oxygen_SellValue()      => AssertSell("oxygen",     1090f);
         [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    5230f);
         [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   5390f);
         [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       27200f);   // natural peak
@@ -70,9 +70,9 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       38400f);
         [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 22700f);
         [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     44700f);
-        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   346000f);
-        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   522000f);
-        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       566000f);
+        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   247000f);
+        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   392000f);
+        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       447000f);
         [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    20000f);          // cheap fission floor
         [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  13300f);          // harvested on the Actinide Vein: cheap
         [Test] public void T2_Americium_SellValue()   => AssertSell("americium",  899000f);   // first post-iron synthetic

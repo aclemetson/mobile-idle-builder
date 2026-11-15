@@ -14,18 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: precious_metals
   displayName: Precious Metals
-  description: 'Fast neutron capture for Platinum and Gold: made in nature only by
-    neutron-star mergers.'
+  description: Fast neutron capture from Iridium to Platinum and Gold, made in nature
+    only by neutron-star mergers; Gold into Mercury (Slow mode).
   icon: {fileID: 0}
   branch: 2
   prerequisites:
   - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
-  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
-  depthInTree: 4
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
+  depthInTree: 10
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 19800000
+  costBaseCurrency: 68900000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
@@ -33,15 +33,16 @@ MonoBehaviour:
   unlocksItems:
   - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
   - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
+  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
   - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
+  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
-  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   resetsOnPrestige: 1
   prestigeMemoryDiscount: 0.1
   codexEntry: "Silver has the highest electrical conductivity of any element. Gold
