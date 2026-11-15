@@ -13,7 +13,7 @@ namespace MobileIdleBuilder
     ///
     /// Three shapes, all from one ribbon primitive:
     ///   - straight: a quad strip from the inbound edge through the centre to the exit edge;
-    ///   - bend:     a quadratic-Bézier curve (control = cell centre) so the current sweeps the corner;
+    ///   - bend:     a quarter circle about the shared cell corner (radius half a cell), so the inner edge never pinches;
     ///   - merge:    one FULL edge→exit ribbon per inbound (uv.y 0→1) — the straight-through input is a
     ///               complete straight piece and each turning input a complete bend piece, all sharing
     ///               the exit half. They overlay there and, flowing the same direction under the same
@@ -31,7 +31,7 @@ namespace MobileIdleBuilder
         /// sits straight on the tile); kept for callers that want a second, lower ribbon.</summary>
         public const float FloorWidthFrac = WaterWidthFrac;
 
-        private const int   BendSegments = 6;          // Bézier samples for a 90° turn
+        private const int   BendSegments = 12;         // arc samples for a 90° turn
         private const int   ForkSegments = 16;         // finer: a fork's streaks bend across a widening ribbon
 
         /// <summary>Water ribbon height above the grid plane.</summary>
@@ -66,37 +66,46 @@ namespace MobileIdleBuilder
 
             Vector3 EdgeMid(int dir) => center + DirVec(dir) * half;
 
-            // uv1.x marks a merge's SECONDARY arms (1) vs the main arm (0). The arms overlap in the exit
-            // half, so the belt shader fades a secondary arm's lattice lines there instead of drawing two
-            // grids on top of each other.
-            var arms = new List<Vector2>();
+            // uv1.x marks a merge's SECONDARY arms (1) vs the main arm (0). The arms overlap the main arm, so
+            // the belt shader fades a secondary arm out wherever the main arm covers it (one grid, not two).
+            // uv1.y is the arm's centreline length in cells (1 straight, ~0.79 for a quarter-circle turn) so
+            // the shader can keep cross-line spacing even round corners.
+            // uv2 (secondary arms only, when the main arm is straight) is the main arm's sideways axis divided
+            // by the half-width: |dot(position.xz, uv2)| < 1 inside the main belt. Zero means "no straight main
+            // arm", and the shader falls back to fading by distance along the arm.
+            var arms  = new List<Vector2>();
+            var mains = new List<Vector2>();
 
             if (edges.Count <= 1)
             {
-                var path = BuildPath(edges[0], exitDir, center, EdgeMid(edges[0]), EdgeMid(exitDir));
-                AppendRibbon(verts, uvs, tris, path, hw, 0f, 1f, y);
+                AppendRibbon(verts, uvs, tris, BuildPath(edges[0], exitDir, center, EdgeMid(edges[0]), EdgeMid(exitDir)), hw, 0f, 1f, y);
+                FillArmFlags(arms, verts.Count, false, PathLengthCells(edges[0], exitDir));
             }
             else
             {
                 // Each inbound is drawn as a COMPLETE edge→exit ribbon (uv.y 0→1): the straight-through
                 // input is a full straight piece, every turning input a full bend piece. They all share
-                // the exit half and overlay there; flowing the same direction under the same shader,
-                // they blend into one seamless outflow instead of meeting at a hard centre seam.
-                int main = edges.Contains(Opposite(exitDir)) ? Opposite(exitDir) : edges[0];
+                // the exit half and overlay there; the shader hands each turning arm over to the main one.
+                bool    straightMain = edges.Contains(Opposite(exitDir));
+                int     main         = straightMain ? Opposite(exitDir) : edges[0];
+                Vector3 side         = Vector3.Cross(Vector3.up, DirVec(exitDir)) / hw;
+                var     mainAxis     = straightMain ? new Vector2(side.x, side.z) : Vector2.zero;
                 foreach (var e in edges)
                 {
                     AppendRibbon(verts, uvs, tris,
                         BuildPath(e, exitDir, center, EdgeMid(e), EdgeMid(exitDir)), hw, 0f, 1f, y);
-                    var flag = new Vector2(e == main ? 0f : 1f, 0f);
-                    while (arms.Count < verts.Count) arms.Add(flag);
+                    FillArmFlags(arms, verts.Count, e != main, PathLengthCells(e, exitDir));
+                    var axis = e != main ? mainAxis : Vector2.zero;
+                    while (mains.Count < verts.Count) mains.Add(axis);
                 }
             }
-            while (arms.Count < verts.Count) arms.Add(Vector2.zero);
+            while (mains.Count < verts.Count) mains.Add(Vector2.zero);
 
             var mesh = new Mesh { name = "ConveyorFlow" };
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
             mesh.SetUVs(1, arms);
+            mesh.SetUVs(2, mains);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
@@ -157,6 +166,9 @@ namespace MobileIdleBuilder
             var mesh = new Mesh { name = "ConveyorFork" };
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
+            var forkArms = new List<Vector2>(verts.Count);
+            FillArmFlags(forkArms, verts.Count, false, 1f);   // branches keep the straight cross-line count
+            mesh.SetUVs(1, forkArms);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
@@ -172,20 +184,51 @@ namespace MobileIdleBuilder
             return u * u * start + 2f * u * t * control + t * t * exitCorner;
         }
 
-        /// <summary>Centreline points from the inbound edge to the exit edge: straight if collinear, else a corner Bézier.</summary>
+        /// <summary>Centreline length of an edge→exit path, in cells: 1 straight, a quarter circle of radius ½ for a turn.</summary>
+        public static float PathLengthCells(int inEdgeDir, int exitDir) =>
+            inEdgeDir == Opposite(exitDir) || inEdgeDir == exitDir ? 1f : Mathf.PI * 0.25f;
+
+        private static void FillArmFlags(List<Vector2> arms, int upTo, bool secondary, float lengthCells)
+        {
+            var flag = new Vector2(secondary ? 1f : 0f, lengthCells);
+            while (arms.Count < upTo) arms.Add(flag);
+        }
+
+        /// <summary>
+        /// Centreline points from the inbound edge to the exit edge: straight if collinear, else a quarter
+        /// circle (see <see cref="CenterlinePoint"/>).
+        /// </summary>
         private static Vector3[] BuildPath(int inEdge, int exitDir, Vector3 center, Vector3 inMid, Vector3 outMid)
         {
             if (inEdge == Opposite(exitDir) || inEdge == exitDir)
                 return new[] { inMid, center, outMid };
 
+            float cellSize = (inMid - center).magnitude * 2f;
             var pts = new Vector3[BendSegments + 1];
             for (int i = 0; i <= BendSegments; i++)
-            {
-                float t = (float)i / BendSegments;
-                float u = 1f - t;
-                pts[i] = u * u * inMid + 2f * u * t * center + t * t * outMid; // quadratic Bézier
-            }
+                pts[i] = center + CenterlinePoint(cellSize, inEdge, exitDir, (float)i / BendSegments);
             return pts;
+        }
+
+        /// <summary>
+        /// A point on a cell's belt centreline, relative to the cell centre at y = 0. <paramref name="t"/> runs
+        /// 0 (middle of the <paramref name="inEdgeDir"/> edge) to 1 (middle of the <paramref name="exitDir"/>
+        /// edge), uniformly by distance. A turn is a quarter circle about the cell corner the two edges share,
+        /// radius half a cell: the belt's inner edge keeps a real radius (half a cell minus the half-width), so
+        /// the ribbon never pinches to a point and its lattice lines stay apart. Items follow the same curve.
+        /// </summary>
+        public static Vector3 CenterlinePoint(float cellSize, int inEdgeDir, int exitDir, float t)
+        {
+            float   r    = cellSize * 0.5f;
+            Vector3 inV  = DirVec(inEdgeDir);
+            Vector3 outV = DirVec(exitDir);
+            if (inEdgeDir == Opposite(exitDir) || inEdgeDir == exitDir)
+                return Vector3.Lerp(inV * r, outV * r, t);
+
+            Vector3 corner = (inV + outV) * r;
+            float   a      = t * Mathf.PI * 0.5f;
+            // From the corner, -outV points at the inbound edge midpoint and -inV at the exit edge midpoint.
+            return corner + (-outV * Mathf.Cos(a) - inV * Mathf.Sin(a)) * r;
         }
 
         /// <summary>Emits a flat quad strip along the centreline, width 2*hw, UV.y lerped uvY0→uvY1 by arc length.</summary>

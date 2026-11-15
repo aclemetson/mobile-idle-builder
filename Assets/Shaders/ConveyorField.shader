@@ -61,7 +61,8 @@ Shader "MobileIdleBuilder/ConveyorField"
             {
                 float4 positionOS : POSITION;
                 float2 uv         : TEXCOORD0;
-                float2 arm        : TEXCOORD1;   // x = 1 on a merge's secondary arm (ConveyorFlowMeshBuilder)
+                float2 arm        : TEXCOORD1;   // x = 1 on a merge's secondary arm; y = arm length in cells
+                float2 mainAxis   : TEXCOORD2;   // secondary arm: main belt's sideways axis / half-width (0 = none)
             };
 
             struct Varyings
@@ -69,6 +70,9 @@ Shader "MobileIdleBuilder/ConveyorField"
                 float4 positionHCS : SV_POSITION;
                 float2 uv          : TEXCOORD0;
                 float  secondary   : TEXCOORD1;
+                float  crossLines  : TEXCOORD2;
+                float2 posXZ       : TEXCOORD3;
+                float2 mainAxis    : TEXCOORD4;
             };
 
             Varyings vert (Attributes IN)
@@ -77,7 +81,25 @@ Shader "MobileIdleBuilder/ConveyorField"
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.uv          = IN.uv;
                 OUT.secondary   = IN.arm.x;
+                OUT.posXZ       = IN.positionOS.xz;
+                OUT.mainAxis    = IN.mainAxis;
+                // Whole number of cross lines per piece (so cells still meet line-to-line), scaled to the
+                // piece's centreline length: a quarter-circle corner gets ~6 instead of 8, same spacing.
+                float len       = IN.arm.y > 0.0 ? IN.arm.y : 1.0;
+                OUT.crossLines  = max(1.0, round(_CrossLines * len));
                 return OUT;
+            }
+
+            // An anti-aliased grid line every whole number of c. halfWidth is in line periods, but the line
+            // never gets thinner than ~1.5 px (fwidth), so it stays crisp far away and where a corner squeezes
+            // the lattice; where lines would be packed tighter than ~3 px it fades instead of shimmering.
+            float GridLine(float c, float halfWidth)
+            {
+                float d  = abs(frac(c + 0.5) - 0.5);    // distance to the nearest line, in periods
+                float w  = max(fwidth(c), 1e-4);        // one pixel, in periods
+                float hw = max(halfWidth, w * 0.75);
+                float l  = 1.0 - smoothstep(hw - w * 0.5, hw + w * 0.5, d);
+                return l * saturate(2.0 - w * 4.0);
             }
 
             half4 frag (Varyings IN) : SV_Target
@@ -93,17 +115,29 @@ Shader "MobileIdleBuilder/ConveyorField"
 
                 // Cross lines bulge downstream through a packet; lengthwise lines pinch toward the centre.
                 float across = sin(PI * uv.x);
-                float yl = frac(uv.y * _CrossLines - e * _Bend * across + 0.5) - 0.5;
-                float xl = frac((0.5 + (uv.x - 0.5) * (1.0 - e * 0.25)) * _Lanes) - 0.5;
-                float lines = max(smoothstep(0.08, 0.0, abs(yl)), smoothstep(0.07, 0.0, abs(xl)) * 0.7);
+                float cy = uv.y * IN.crossLines - e * _Bend * across;
+                float cx = (0.5 + (uv.x - 0.5) * (1.0 - e * 0.25)) * _Lanes;
+                float lines = max(GridLine(cy, 0.07), GridLine(cx, 0.06) * 0.7);
 
                 float glow = e * (0.35 + 0.65 * across);
 
-                // A merge's secondary arm hands over to the main arm's lattice where they overlap (exit
-                // half), so the junction shows one grid; its glow halves there so the overlap isn't brighter.
-                float handover = IN.secondary * smoothstep(0.2, 0.55, uv.y);
+                // A merge's secondary arm hands over to the main arm wherever the main belt covers it: off inside
+                // the main belt, fading back in exactly as the main belt's soft edge fades out (_EdgeFade), so the
+                // junction shows one grid and is no brighter than a belt. Without a straight main arm, fall back
+                // to fading along the arm.
+                float handover;
+                if (dot(IN.mainAxis, IN.mainAxis) > 0.0)
+                {
+                    float lat   = abs(dot(IN.posXZ, IN.mainAxis));           // 0 at main centre, 1 at its edge
+                    float inner = 1.0 - 2.0 * _EdgeFade;                     // where the main belt is fully drawn
+                    handover = IN.secondary * smoothstep(1.0, inner, lat);
+                }
+                else
+                {
+                    handover = IN.secondary * smoothstep(0.15, 0.5, uv.y);
+                }
                 lines *= 1.0 - handover;
-                glow  *= 1.0 - 0.5 * handover;
+                glow  *= 1.0 - handover;
 
                 float3 col = _LineColor.rgb * lines * (0.7 + e * 0.8) + _GlowColor.rgb * glow * 0.6;
                 float  a   = lines * (_LineAlpha + e * (1.0 - _LineAlpha)) + glow * _GlowAlpha;
