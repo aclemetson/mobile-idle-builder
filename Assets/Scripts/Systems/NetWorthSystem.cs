@@ -26,21 +26,28 @@ namespace MobileIdleBuilder
             if (!EntityManager.HasBuffer<InventorySlot>(playerEntity)) return;
 
             var slots = EntityManager.GetBuffer<InventorySlot>(playerEntity, isReadOnly: true);
-            float total = 0f;
+            // double, not float: a float holds integers exactly only up to 2^24 (~16.7M), so above
+            // that net worth drifted and the prestige-wall check and the equality early-out below
+            // stopped being reliable (#284).
+            double total = 0d;
             for (int i = 0; i < slots.Length; i++)
             {
                 var slot = slots[i];
                 if (slot.Quantity <= 0) continue;
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
                 if (itemSO == null) continue;
-                total += itemSO.baseSellValue * slot.Quantity;
+                total += (double)itemSO.baseSellValue * slot.Quantity;
             }
 
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
-            float desired = total + (float)(progress.BaseCurrency + progress.TotalEntropySpent) + progress.BaseNetWorth;
+            double desired = Compute(total, progress.BaseCurrency, progress.TotalEntropySpent, progress.BaseNetWorth);
             if (progress.NetWorth == desired) return;
             progress.NetWorth = desired;
             SystemAPI.SetSingleton(progress);
         }
+
+        /// <summary>Net worth from its parts: inventory value + entropy held + entropy spent + dev-skip floor.</summary>
+        internal static double Compute(double inventoryValue, long baseCurrency, long totalEntropySpent, double baseNetWorth)
+            => inventoryValue + (double)(baseCurrency + totalEntropySpent) + baseNetWorth;
     }
 }

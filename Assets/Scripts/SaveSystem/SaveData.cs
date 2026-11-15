@@ -35,7 +35,7 @@ namespace MobileIdleBuilder
         public List<string> codex                           = new();
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
-        public float lastKnownNetWorth;                     // Snapshot written by ECSLoadBridge; used by shop entropy scaling
+        public double lastKnownNetWorth;                    // Snapshot written by ECSLoadBridge; used by shop entropy scaling
         public string speedBoostExpiryUtc;                  // ISO 8601 — null/empty means no active speed boost
         public List<string> achievements                    = new();
         public List<AchievementProgressEntry> achievementProgress = new();
@@ -98,7 +98,7 @@ namespace MobileIdleBuilder
     {
         public long  baseCurrency;
         public long  totalEntropySpent;
-        public float baseNetWorth;
+        public double baseNetWorth;
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();

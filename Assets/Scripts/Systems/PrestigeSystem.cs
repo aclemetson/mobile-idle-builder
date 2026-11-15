@@ -38,7 +38,7 @@ namespace MobileIdleBuilder
             var prestige = SystemAPI.GetSingleton<PrestigeData>();
 
             // Capture pre-reset values for telemetry before the reset below zeroes them.
-            float netWorthBefore = progress.NetWorth;
+            double netWorthBefore = progress.NetWorth;
             int   tierBefore     = progress.CurrentTier;
 
             // --- Calculate prestige currency earned ---
