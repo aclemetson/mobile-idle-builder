@@ -301,6 +301,49 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
         }
 
+        // ── #268: the cap grows to fit a recipe that needs more than it ─────
+
+        private const int Neutron = 11;
+
+        /// <summary>Uranium-like recipe: one craft needs 146 neutrons, more than a 30-per-item cap.</summary>
+        private void SetBigRecipe(Entity building)
+        {
+            _em.AddComponentData(building, new RecipeProcessData { RecipeID = 9, CraftTime = 1f });
+            var inputs = _em.AddBuffer<RecipeInputSlot>(building);
+            inputs.Add(new RecipeInputSlot { ItemID = Neutron, Quantity = 146 });
+        }
+
+        [Test]
+        public void RecipeNeedsMoreThanCap_InputAcceptsPastCap()
+        {
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetBigRecipe(building);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 30);
+            var tail = CreateTail(new int2(0, 0), East, Neutron, Entity.Null);
+
+            Tick();
+
+            Assert.AreEqual(31, CountIn(building, Neutron), "a craft needing 146 must be able to fill past the cap of 30");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail));
+        }
+
+        [Test]
+        public void RecipeNeedsMoreThanCap_AtRecipeQuantity_SellsTheSurplus()
+        {
+            var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
+            SetBigRecipe(building);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 146);
+            CreatePlayerInventory();
+            var progress = _em.CreateEntity();
+            _em.AddComponentData(progress, new PlayerProgressData { BaseCurrency = 100 });
+            var tail = CreateTail(new int2(0, 0), East, Neutron, Entity.Null);
+
+            Tick();
+
+            Assert.AreEqual(146, CountIn(building, Neutron), "the raised cap is the recipe's quantity, no more");
+            Assert.IsFalse(ConveyorItems.Has(_em, tail), "the extra is autosold so the belt keeps moving");
+        }
+
         [Test]
         public void FullInput_NextToAnInputWithRoom_FeedsThatInputInstead()
         {
