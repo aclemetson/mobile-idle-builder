@@ -56,11 +56,22 @@ public static class GoogleSignInBridge
         var tcs = new TaskCompletionSource<GoogleSignInUser>();
         task.ContinueWith(t =>
         {
-            if (t.IsFaulted)        tcs.SetException(t.Exception.InnerException ?? t.Exception);
+            if (t.IsFaulted)        tcs.SetException(Readable(t.Exception.InnerException ?? t.Exception));
             else if (t.IsCanceled)  tcs.SetCanceled();
             else                    tcs.SetResult(t.Result);
         });
         return tcs.Task;
+    }
+
+    // SignInException carries only a status code; give it a message Settings can show, and log it
+    // so logcat has it too.
+    static Exception Readable(Exception ex)
+    {
+        if (!(ex is GoogleSignIn.SignInException sie)) return ex;
+        string text = GoogleSignInErrors.Describe((int)sie.Status, sie.Status.ToString(),
+                                                  Application.platform == RuntimePlatform.Android);
+        Debug.LogWarning($"[GoogleSignInBridge] Sign-in failed: {text}");
+        return new Exception(text, ex);
     }
 }
 #endif
