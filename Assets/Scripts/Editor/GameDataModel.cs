@@ -140,7 +140,6 @@ namespace MobileIdleBuilder.Editor
         public bool     unlocks_grid_expansion = false;
         public string[] unlocks_research       = Array.Empty<string>();
         public bool     resets_on_prestige     = true;
-        public float    prestige_memory_discount = 0.1f;
         public string   codex_entry            = "";
         public string   icon_path              = "TODO";
         public string   block                  = "";    // research_blocks id (game phase)

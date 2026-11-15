@@ -34,6 +34,5 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: A tuned resonance cascade drives field recharge near its physical limit,
     collapsing the cooldown between taps.

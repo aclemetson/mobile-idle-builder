@@ -50,7 +50,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: Chemistry stops being a curiosity and becomes an industry. Catalysts
     lower the energy of reactions, and mined metals become the reactors and reagents
     that drive them.

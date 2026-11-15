@@ -43,9 +43,9 @@ namespace MobileIdleBuilder.Playtest
         {
             public long  entropy;
             public long  totalEntropySpent;
-            public float netWorth;
+            public double netWorth;
             public int   tier;
-            public float prestigeWall;
+            public double prestigeWall;
             public bool  prestigeAvailable;
             public int   prestigeRuns;
             public long  prestigeCurrencyUnspent;

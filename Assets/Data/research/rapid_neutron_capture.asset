@@ -38,7 +38,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: When two neutron stars collide, matter is bathed in so many neutrons
     that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen
     forging gold and platinum.

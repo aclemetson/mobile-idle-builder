@@ -71,7 +71,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: "Beyond fermium, nuclei survive only by slamming lighter atoms together
     at relativistic speed. Each new element exists for fractions of a second \u2014
     and is worth a fortune in captured entropy."

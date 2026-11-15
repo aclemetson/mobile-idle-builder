@@ -877,7 +877,7 @@ namespace MobileIdleBuilder
             }
         }
 
-        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance / prestige memory discount it.</summary>
+        /// <summary>"◈ 750", or "◈ 750 (-25%)" when an upgrade discounts it (Memory Resonance, Cyclotron Insight).</summary>
         internal static string ResearchCostText(long cost, long baseCost)
         {
             if (baseCost <= 0 || cost >= baseCost) return $"◈ {cost:N0}";
@@ -2796,7 +2796,7 @@ namespace MobileIdleBuilder
         /// Calculates how much prestige currency a prestige would award.
         /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth)
+        internal static long CalculatePrestigePreview(double netWorth)
         {
             var cfg    = GameBootstrap.Instance?.gameConfig;
             float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;

@@ -42,7 +42,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: "Organs become organisms, organisms become populations, and populations
     weave into an ecosystem \u2014 a self-sustaining web of life. From quarks to
     a living world."
