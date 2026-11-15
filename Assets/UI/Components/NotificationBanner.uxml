@@ -5,6 +5,8 @@
         optionally swaps the modifier class (warning / danger),
         then removes .hidden. Auto-hides after a delay via C#, or sooner when swiped away.
         blocks-world-input keeps that swipe from panning the map or tapping what is under it.
+        An actionable banner (e.g. an achievement) opens its menu on tap, and the check button
+        accepts it on the spot; both are set per notification by HUDBannerController.
     -->
     <Style src="../tokens.uss" />
     <Style src="../components.uss" />
@@ -12,5 +14,6 @@
     <ui:VisualElement name="notification-banner" class="notification-banner blocks-world-input hidden">
         <ui:Label name="notification-banner__icon"    text="" class="notification-banner__icon" />
         <ui:Label name="notification-banner__message" text=""  class="notification-banner__message" />
+        <ui:Button name="notification-banner__accept" text="" class="notification-banner__accept glyph-host hidden"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
     </ui:VisualElement>
 </ui:UXML>

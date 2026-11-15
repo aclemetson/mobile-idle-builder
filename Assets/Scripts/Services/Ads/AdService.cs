@@ -145,7 +145,21 @@ namespace MobileIdleBuilder
             if (!EnsureProviderIfEnabled()) return false;
             if (_provider == null || !_provider.IsRewardedReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
+            if (!IncomeMeasured(p)) return false;
             return Remaining(p) > 0;
+        }
+
+        /// <summary>
+        /// False while an income-minutes placement (Entropy Surge) cannot price itself yet: the run's income
+        /// has under <see cref="IncomeRateTracker.MinRewardSpanSeconds"/> of samples (just launched, just
+        /// prestiged) or a prestige reload is pending. The offer waits rather than showing its floor.
+        /// Always true for other placements.
+        /// </summary>
+        public bool IncomeMeasured(AdPlacement p)
+        {
+            if (AdRewardCalculator.Def(p).Kind != AdRewardKind.IncomeMinutes) return true;
+            if (PrestigeRunReset.ReloadPending) return false;
+            return IncomeRateTracker.Current != null && IncomeRateTracker.Current.HasRewardRate;
         }
 
         /// <summary>Time left on the placement's cooldown (zero when ready or the placement has none).</summary>
@@ -233,6 +247,11 @@ namespace MobileIdleBuilder
             if (cooldown > TimeSpan.Zero)
             {
                 Finish(onDone, Fail(p, AdShowOutcome.OnCooldown, $"Ready again in {FormatCooldown(cooldown)}."));
+                return;
+            }
+            if (!IncomeMeasured(p))
+            {
+                Finish(onDone, Fail(p, AdShowOutcome.NotReady, "Measuring your income, try again in a few seconds."));
                 return;
             }
             if (_provider == null || !_provider.IsRewardedReady)
