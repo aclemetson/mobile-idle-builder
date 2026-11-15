@@ -30,7 +30,7 @@ building prefabs. Two patterns:
 
 1. **Primitive composition** — `GameObject.CreatePrimitive` cubes/quads/spheres, scaled and
    colored. Used by grid tiles (`GridRenderer`), placeholder building cubes
-   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`).
+   (`BuildingVisualizer`), conveyor item icon tiles and fallback spheres (`ConveyorVisualizer`).
 2. **Procedural mesh builders** — pure static classes that emit a `Mesh` from generated
    vertices/indices, paired with a thin MonoBehaviour and a custom URP shader. This is the
    house pattern for distinctive structures.
@@ -125,10 +125,40 @@ current, not an arrow. Two stacked procedural layers per cell, both from one rib
 - `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns a `Channel` (floor) + `Flow` (water) child per
   segment, sharing one material each (fall back to the opaque primitive material if a shader is missing).
   `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change across
-  the whole graph); item spheres still float on the water. Inbound edges per cell come from neighbours
+  the whole graph); items float on the water (see **Belt item visuals** below). Inbound edges per cell come from neighbours
   whose `ExitDir` points back at the cell — the same geometry `ConveyorPlacer.RelinkAll` uses.
 - `Assets/Scripts/Tests/ConveyorFlowMeshBuilderTests.cs` — EditMode invariants (straight/bend vertex
   counts, merge arms reaching each inbound + exit edge, monotonic flow UVs, flat low profile).
+
+### Belt item visuals (what rides the belts)
+Every item is its menu icon tile on the belt (a camera-facing quad, `CreateItemTile`) **except** the basic
+particles, which are small animated 3D objects that show their physics. Approved via Blender mockups
+(`scripts/belt_particles/mockup_blender.py`, renders gitignored), then built in code like the buildings.
+
+| id | look | motion |
+|---|---|---|
+| `electron` | teal `#4ECDC4` haze of overlapping puffs around a bright core | breathes, swirls, puffs drift (`ElectronCloud`, additive) |
+| `up_quark` / `down_quark` | glossy bead, orange `#FF6B35` / blue-violet `#6E7BFF` | fast irregular shake + squash ("unstable") |
+| `proton` / `neutron` | shell, violet `#D2A8FF` / grey `#8B949E`; inside uud / udd joined by yellow gluon strings | shell turns see-through ~0.9 s every 4.0 s / 4.7 s; quarks circle and shake inside |
+
+- `Assets/Scripts/Grid/BeltItemVisuals.cs` — registry: item id string -> factory. `TryCreate` returns null
+  for unregistered ids or missing shaders, and the visualizer falls back to the icon tile. Meshes and
+  materials are shared statics. To add a particle, register a factory here; keep colours matching the
+  loose quarks so composites read as their parts.
+- `Assets/Scripts/Grid/BeltParticleMeshes.cs` — pure mesh builders (unit sphere, nucleon core = 3 quarks
+  + 6 gluon tube halves in one mesh, electron cloud). Every vertex has a colour and a jitter channel in
+  `uv1` = (seedA, seedB, blend, -): a gluon tube blends between its two quarks' shake so it stays attached.
+  Vertex colours are converted to linear by the caller (the project is linear; `SetColor` converts, mesh
+  colours don't).
+- `Assets/Shaders/BeltParticle.shader` — URP Unlit, fake top light + gloss. Vertex-shader jitter / squash /
+  spin, and a periodic fade with a fresnel rim for shells. Blend/ZWrite/Cull are material properties, so one
+  shader serves the opaque parts (`Geometry`) and the shells (`Transparent+100`, after the belt water).
+- `Assets/Shaders/ElectronCloud.shader` — additive haze, alpha falls off toward each puff's silhouette.
+- **No per-instance state:** each item's animation phase is a hash of its world position (moves smoothly
+  with the item), not a property block. Visuals can therefore be pooled per item id and reused by any
+  item; `ConveyorVisualizer` pools all item visuals (`AcquireItemVisual` / `ReleaseItemVisual`, max 64
+  per id) and never billboards the 3D particles.
+- Both shaders are in `m_AlwaysIncludedShaders`. Tests: `Assets/Scripts/Tests/BeltItemVisualsTests.cs`.
 
 ### Field wire-mesh (tappable resource fields)
 - `Assets/Scripts/Gameplay/FieldWireMeshBuilder.cs` — line-topology grid mesh.
