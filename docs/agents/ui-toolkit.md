@@ -36,6 +36,21 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - Blocked-action feedback (`InventoryPopupController.NotifyWarning`, so `ToastService` and the tutorial gates) shows in the HUD notification banner with the `warning` style, not as world text over the player anchor, which could spawn off-screen (#238).
 - A `<ui:Instance>` in `GameHUD.uxml` that holds an absolutely positioned overlay (dialogue, notification banner, tooltip) needs `picking-mode="Ignore"` and `style="position: absolute; left: 0; right: 0; top: 0; bottom: 0;"`. Without it the TemplateContainer is laid out in the root's flex column below the grid area, so its overlay's `top`/`left` start from the bottom edge: the notification banner sat off screen and only flashed into view while sliding (#238). `HudOverlayInstanceTests` checks this.
 
+## Tutorial sell gate (Maxwell's Demon)
+
+During the hand-crafting phase, which runs up to the last tutorial step that advances on `InventoryZero`, the Demon panel only takes what the current step asks for. `TutorialSellPolicy.CanSell` lets a sell step sell its condition items and `demonHighlightItemIds`, and lets any other step in the phase sell nothing. After that phase, or outside the tutorial, everything sells. Belt deliveries never go through the policy.
+
+How the panel enforces it (`MaxwellsDemonController`):
+- Rows that can't be sold get `demon-item--locked`: they are dimmed and show no value.
+- Tapping or dragging a locked row posts `TutorialSellPolicy.BlockedMessage`.
+- `CommitDeposit` and `DepositAll` skip locked items, and Deposit All is disabled when nothing can be sold.
+
+Why the gate exists: selling quarks on a craft step, where collection is paused, used to strand the player. Saves already stuck that way are recovered by `TutorialCraftRescue`. It works out the raw inputs a `blockCollection` + `InventoryMin` step still lacks, counting held items plus queued crafts and following recipes, and returns the field type to reopen.
+- `ManualFieldCollector.IsCollectionAllowed` honours that field type.
+- `TutorialOverlayController.RefreshCraftRescue` un-dims those fields and shows `RescueMessage` once.
+
+Covered by `TutorialSellPolicyTests`.
+
 ## Tutorial hint banner (minimizable)
 
 `tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. `HUDController.RefreshBannerClearance` runs every frame and calls `HUDBannerController.SetMenuOpen(drawerOpen || any slide panel visible)`, which collapses the banner to the pill (its full-width bottom bar hid the drawer's and the Builder sheet's Place buttons) and restores it when everything closes, unless the player had minimized it. Keep it per-frame, not per open path: an explicit call in one open method missed the Builder sheet, which opens after the drawer closes. Under the hint text, `tutorial-hint-banner__progress` shows live have/need counts for `InventoryMin` steps ("Up Quark 2/4, Down Quark 1/2, Electron 0/2"): `TutorialOverlayController.RefreshHintProgress` (every 0.2s) formats it with the pure `TutorialHintProgress.Format` and pushes it through `HUDBannerController.SetTutorialHintProgress`, which never re-expands a minimized hint (#260). Covered by `TutorialHintMinimizeTests` (runs against the real UXML) and `TutorialHintProgressTests`.
