@@ -141,7 +141,8 @@ namespace MobileIdleBuilder
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            while (sm != null && !sm.CloudReconcileDone && cloudElapsed < kCloudTimeout)
+            // No timeout while the player is choosing between this device's save and the cloud save.
+            while (sm != null && !sm.CloudReconcileDone && (cloudElapsed < kCloudTimeout || sm.AwaitingSaveChoice))
             {
                 cloudElapsed += Time.deltaTime;
                 yield return null;

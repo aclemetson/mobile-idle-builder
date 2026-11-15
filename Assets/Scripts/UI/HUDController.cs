@@ -515,6 +515,7 @@ namespace MobileIdleBuilder
             // Deconstruct mode
             _deconstructOverlay = root.Q("deconstruct-overlay");
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
+            SaveConflictPrompt.Init(root); // "Two saves found": this device vs the cloud save
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)

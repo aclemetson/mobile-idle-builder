@@ -23,5 +23,31 @@ namespace MobileIdleBuilder
 
         /// <summary>Delete the cloud save key for the signed-in player. No-op if unavailable.</summary>
         Task DeleteAsync();
+
+        // ── Account (cross-device saves) ─────────────────────────────────────
+
+        /// <summary>Guest, Google, ... for the Settings account row and the sync rules.</summary>
+        CloudAccountKind AccountKind { get; }
+
+        /// <summary>Google email when signed in with Google (may be null if never reported).</summary>
+        string AccountEmail { get; }
+
+        /// <summary>UGS player id the cloud save is stored under, or null when not signed in.</summary>
+        string AccountPlayerId { get; }
+
+        /// <summary>Why the last Google sign-in attempt failed (null if it didn't).</summary>
+        string LastSignInError { get; }
+
+        /// <summary>
+        /// True when this launch moved the device from a guest player to an existing Google player
+        /// (another device's save), so the local save and that cloud save are unrelated.
+        /// </summary>
+        bool AccountSwitched { get; }
+
+        /// <summary>
+        /// Attaches Google to the signed-in player, or switches to the player that already owns this
+        /// Google account. Never throws.
+        /// </summary>
+        Task<GoogleSignInOutcome> SignInWithGoogleAsync(GoogleAuthMode mode);
     }
 }
