@@ -146,6 +146,7 @@ namespace MobileIdleBuilder
 
             if (remaining <= 0)                  btn.text = "Maxed";
             else if (cooldown > System.TimeSpan.Zero) btn.text = $"Ready in {AdService.FormatCooldown(cooldown)}";
+            else if (ads != null && !ads.IncomeMeasured(placement)) btn.text = "Measuring…";
             else                                 btn.text = "▶ Watch";
             btn.SetEnabled(ads != null && ads.CanWatch(placement));
         }

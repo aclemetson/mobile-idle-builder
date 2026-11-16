@@ -93,6 +93,11 @@ namespace MobileIdleBuilder
 
             var ads  = AdService.Instance;
             var save = SaveManager.Instance?.Current;
+
+            // The measurement restarted under an open card (app was backgrounded): its price is stale, so
+            // close it. The icon returns once the income has been measured again.
+            if (IsOpen && (ads == null || !ads.IncomeMeasured(Placement))) CloseCard();
+
             bool show = ShouldShowIcon(
                 FeatureFlags.AdsEnabled,
                 save?.tutorial.hasCompletedFirstRun ?? false,
