@@ -47,7 +47,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: When a massive star explodes, a shock wave sweeps through its silicon
     and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements
     next to iron, like Manganese and Vanadium.

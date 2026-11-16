@@ -39,6 +39,5 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: Two harvesters on opposing polarity fields can be merged into a single
     Nucleon Harvester, producing protons or neutrons directly without quark combination.

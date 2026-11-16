@@ -358,7 +358,6 @@ namespace MobileIdleBuilder.Editor
             so.effects              = ParseResearchEffects(data);
             so.unlocksGridExpansion = data.unlocks_grid_expansion;
             so.resetsOnPrestige     = data.resets_on_prestige;
-            so.prestigeMemoryDiscount = data.prestige_memory_discount;
             so.codexEntry           = data.codex_entry;
             so.block                = data.block ?? "";
             so.treeX                = data.tree_x;

@@ -45,6 +45,5 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: Carbon bonds to itself without limit, building chains and rings. Hydrocarbons
     and their derivatives are the scaffolding on which all organic matter is assembled.

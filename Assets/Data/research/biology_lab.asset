@@ -50,7 +50,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: 'Chemistry made the parts; biology assembles them into machines that
     copy themselves. The first tier weaves monomers into the four macromolecules
     of life: proteins, carbohydrates, lipid membranes, and nucleic acids.'

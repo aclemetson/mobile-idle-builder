@@ -32,7 +32,7 @@ Keep 2 and 3 in mind if playtests say 1 doesn't work.
 - Bonus: energy >= 90% has a 25% chance of +5 crystals.
 - Everything survives prestige.
 
-**Insight in prices:** `ResearchCost.Effective(..., insight)` stacks it multiplicatively with Memory Resonance and prestige memory, so every research price shown (cards, tree, list) includes it. `ResearchService.Purchase` consumes it (`CyclotronProgress.ConsumeInsight`) once the price is paid.
+**Insight in prices:** `ResearchCost.Effective(..., insight)` stacks it multiplicatively with Memory Resonance, so every research price shown (cards, tree, list) includes it. `ResearchService.Purchase` consumes it (`CyclotronProgress.ConsumeInsight`) once the price is paid.
 
 **UI (`UI/CyclotronController.cs`, `UI/CyclotronView.cs`):** modal `cyclotron-modal` in `GameHUD.uxml` with three steps (`cyclotron__intro` / `__play` / `__result`). `CyclotronView` is a Painter2D `[UxmlElement]` (dees, glowing gap while the particle is in a window, orbit, particle, tap pulse); PointerDown anywhere on it taps. The controller steps the run in <= 1/120 s sub-steps on unscaled time. X mid-run ends the run (still paid); X on the result collects. Android back shares the Surge-offer layer in `BackNavigation`. The modal counts toward `HUDController.MenuOpen` (hides the Surge icon).
 

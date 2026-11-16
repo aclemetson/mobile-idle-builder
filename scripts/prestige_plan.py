@@ -1,7 +1,7 @@
 """Build docs/balance/prestige-pacing.xlsx: a Physics-world prestige pacing plan.
 
 Reads the research curve the game is balanced on (scripts/progression_curve.py: unlock order,
-cost, best earning rate before each node) plus timers and prestige-memory discounts from
+cost, best earning rate before each node) plus timers from
 Assets/Data/game_data.json, then writes a workbook whose plan is driven by live formulas:
 edit the yellow input cells in Excel and every run recalculates.
 
@@ -77,7 +77,11 @@ THIN = Border(bottom=Side(style="thin", color="BFBFBF"))
 
 
 def load_curve():
-    """Physics nodes in unlock order: (id, block, cost, best rate before, timer s, memory discount)."""
+    """Physics nodes in unlock order: (id, block, cost, best rate before, timer s, memory discount).
+
+    The per-node prestige memory discount was removed from the game on 2026-11-15 (research discounts
+    come from upgrades only), so the last field is always 0; the columns stay so old plans compare.
+    """
     out = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "progression_curve.py"), "--report"],
                          capture_output=True, text=True, cwd=ROOT, check=True).stdout
     data = json.load(open(os.path.join(ROOT, "Assets", "Data", "game_data.json"), encoding="utf-8"))
@@ -92,7 +96,7 @@ def load_curve():
         if r["block"] not in PHYSICS_BLOCKS:
             continue
         rows.append((rid, r["block"], float(parts[2].replace(",", "")), float(parts[5].replace(",", "")),
-                     r["duration_seconds"], r["prestige_memory_discount"]))
+                     r["duration_seconds"], 0.0))
     return rows, data["game_config"]
 
 
@@ -147,8 +151,8 @@ def build():
     inputs = [
         ("Scenario", None, None, None),
         ("Wired", "Research discounts applied (1 = live game, 0 = pre-fix build)", 1, "flag",
-         "Live: ResearchService.EffectiveCost applies Memory Resonance and each node's "
-         "prestige_memory_discount (ResearchCost.Effective). 0 models the old build that charged raw cost."),
+         "Live: ResearchService.EffectiveCost applies Memory Resonance "
+         "(ResearchCost.Effective). 0 models the old build that charged raw cost."),
         ("LiveBonuses", "Assembly Line / Quantum Yield affect live production (1 = live game)", 1, "flag",
          "Live: PrestigeData.Speed/OutputMultiplier feed ProductionSystem and CollectorSystem. 0 models "
          "the old build where they only changed idle earnings."),
@@ -224,10 +228,10 @@ def build():
     rs = wb.create_sheet("Research")
     rs["A1"], rs["A1"].font = "Physics research in unlock order", TITLE
     rs["A2"] = ("Source: scripts/progression_curve.py (unlock order, cost, best rate) and game_data.json "
-                "(timer, memory discount). Regenerate with python scripts/prestige_plan.py after a rebalance.")
+                "(timer). Regenerate with python scripts/prestige_plan.py after a rebalance.")
     rs["A2"].font = Font(name=F, italic=True)
     header(rs, 4, ["#", "Research", "Block", "Cost (e)", "Best rate before (e/s per building)",
-                   "Timer (s)", "Previous node's timer (s)", "Memory discount on repeat runs",
+                   "Timer (s)", "Previous node's timer (s)", "Memory discount (removed 2026-11-15, always 0)",
                    "Building-seconds to earn (cost / rate)", "Discounted share (col I x col H)",
                    "Cost x discount (e)"], [5, 30, 18, 15, 18, 10, 14, 14, 18, 18, 16])
     first, last = 5, 4 + n
@@ -341,8 +345,8 @@ def build():
         f["M"] = "=" + "+".join(spend)
         f["N"] = f"=L{R}*IF(LiveBonuses=1,(1+0.1*F{R})*(1+0.1*G{R}),1)"
         f["O"] = f"=1-IF(Wired=1,0.05*D{R},0)"
-        # Prestige memory discount only applies to research finished on an EARLIER run: nodes up to the
-        # furthest target any previous run reached (none on run 1). Mirrors SaveData.researchCompletedEver.
+        # Per-node memory discount (removed from the game 2026-11-15; RBsecMem/RCostMem are now 0). It applied
+        # only to research finished on an EARLIER run: nodes up to the furthest target a previous run reached.
         prev_max = f"MAX($C$4:C{R - 1})"
         mem = f"Wired*(RIdx<={prev_max})"
         earn_arr = f"(RBsec-{mem}*RBsecMem)*O{R}*(1+Overhead)/(Buildings*N{R})"
@@ -399,8 +403,7 @@ def build():
         ("U4", "Time an always-on player waits on a research timer with nothing left to earn for. Near 0 means "
                "timers never gate progress: the grind does."),
         ("W4", "Net worth = entropy earned this run (NetWorthSystem counts spent entropy too)."),
-        ("O4", "Memory Resonance part only. Each node's own memory discount applies only to research finished on "
-               "an earlier run (up to the furthest earlier target), as ResearchCost.Effective charges it."),
+        ("O4", "Memory Resonance (5% per level). Research has no per-node repeat-run discount since 2026-11-15."),
         ("X4", "floor(log10(NW / base) x scale), then x(1 + 5% per Echo level). 0 below the wall."),
         ("Z4", "SHORT = the levels at this run's start cost more ✦ than earlier runs earned."),
         ("AC4", "Hours of full-speed income per day: active play plus offline earnings at the idle rate, "
@@ -509,7 +512,7 @@ def build():
     findings = [
         "Why the game slowed after the first prestige (found 2026-11-11, all three fixes now live):",
         "1. Research costs never got cheaper. Fixed: ResearchService.EffectiveCost applies Memory Resonance "
-        "and each node's prestige_memory_discount on repeat runs.",
+        "(the per-node repeat-run discount was removed 2026-11-15: discounts come from upgrades only).",
         "2. Assembly Line and Quantum Yield only changed idle earnings. Fixed: they now multiply live "
         "production (ProductionSystem / CollectorSystem).",
         "3. Research timers almost never gate progress (Plan col U); the wait is the entropy grind between "

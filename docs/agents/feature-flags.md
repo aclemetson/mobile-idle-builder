@@ -79,7 +79,9 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
 
 - **Splash gate** (`MaintenanceGate.IsUnderMaintenanceAsync`, called from `SplashScreenController`): runs a
   time-boxed UGS init + flag fetch before `SceneLoader.GoTo("GameScene")`. Checked for **every** user.
-- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene; if
+- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene, and
+  immediately when the app returns from the background (at most one check per 10 s;
+  `MaintenancePollSchedule`, #224); if
   maintenance flips on it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
   splash, which re-shows the overlay.
 - **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
