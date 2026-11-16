@@ -35,7 +35,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.3
   codexEntry: As production chains lengthen, a building can starve waiting on its
     conveyors. Larger feedstock buffers smooth intake so multi-input recipes run
     without interruption.

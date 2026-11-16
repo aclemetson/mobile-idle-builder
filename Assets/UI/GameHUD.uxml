@@ -647,8 +647,9 @@
         </ui:VisualElement>
 
         <!-- ═══ CYCLOTRON KICK (CyclotronController.cs) ═══
-             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy becomes
-             Insight (a discount on the next research). Three steps shown one at a time. -->
+             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy sets a
+             timed entropy boost and pays Insight, which buys the two upgrades on the intro step.
+             Three steps shown one at a time. -->
         <ui:VisualElement name="cyclotron-modal" class="idle-return-modal blocks-world-input hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
             <ui:VisualElement class="idle-return-backdrop" />
@@ -661,6 +662,15 @@
                     <ui:Label name="cyclotron__intro-text" text="" class="game-update-message" />
                     <ui:Label name="cyclotron__status" text="" class="cyclotron-status" />
                     <ui:Button name="cyclotron__start" text="Start run" class="craft-btn cyclotron-btn" />
+                    <ui:Label name="cyclotron__insight" text="Insight: 0" class="cyclotron-section-title" />
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__boost-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__boost-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__cooldown-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__cooldown-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="cyclotron__play" class="cyclotron-step hidden">
                     <ui:VisualElement class="cyclotron-hud-row">

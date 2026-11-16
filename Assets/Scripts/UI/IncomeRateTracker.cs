@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using UnityEngine;
 
@@ -40,6 +41,18 @@ namespace MobileIdleBuilder
 
         internal static double RewardRate(double perSecond, double spanSeconds) =>
             spanSeconds >= MinRewardSpanSeconds ? perSecond : 0d;
+
+        /// <summary>
+        /// True once this run has <see cref="MinRewardSpanSeconds"/> of samples, so <see cref="RewardPerSecond"/>
+        /// is the real rate. Before that the Entropy Surge is held back instead of offering its floor, which
+        /// looked like a wrong price next to the Statistics panel's rate right after launch.
+        /// </summary>
+        public bool HasRewardRate => _rate.SpanSeconds(WindowSeconds) >= MinRewardSpanSeconds;
+
+        /// <summary>Seconds of sampling left before <see cref="HasRewardRate"/> turns true (0 once it has).</summary>
+        public double SecondsUntilRewardRate => SecondsUntil(_rate.SpanSeconds(WindowSeconds));
+
+        internal static double SecondsUntil(double spanSeconds) => Math.Max(0d, MinRewardSpanSeconds - spanSeconds);
 
         /// <summary>The live tracker (on the HUD GameObject), or null outside the game scene. Used by the
         /// Entropy Surge ad, whose reward is minutes of this income.</summary>

@@ -14,9 +14,15 @@ namespace MobileIdleBuilder
     {
         [SerializeField] private float notificationDuration = 3f;
 
+        [SerializeField] private float actionableNotificationDuration = 5f;   // a banner you can act on stays a little longer
+
         private VisualElement _notificationBanner;
         private Label         _notificationIcon;
         private Label         _notificationMessage;
+        private Button        _notificationAccept;
+        private System.Action _onTap;      // tap on the banner body (e.g. open the achievements menu)
+        private System.Action _onAccept;   // the check button (e.g. claim the achievement)
+        private float         _currentDuration;
         private Coroutine     _hideNotificationCoroutine;
         private bool          _notificationUp;       // shown and not on its way out
         private int           _swipePointerId = NoSwipe;
@@ -54,6 +60,8 @@ namespace MobileIdleBuilder
             _notificationBanner  = root.Q("notification-banner");
             _notificationIcon    = root.Q<Label>("notification-banner__icon");
             _notificationMessage = root.Q<Label>("notification-banner__message");
+            _notificationAccept  = root.Q<Button>("notification-banner__accept");
+            if (_notificationAccept != null) _notificationAccept.clicked += OnAcceptClicked;
             _pushedControls.Clear();
             _pushedControls.AddRange(root.Query(className: "placement-overlay").ToList());
             _inspectorPanel = root.Q("building-inspector-panel");
@@ -88,13 +96,23 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Shows a transient notification banner that auto-hides after notificationDuration seconds.
         /// modifier can be null (success/green), "warning", or "danger". The player can swipe it away sooner.
+        /// <paramref name="onTap"/> runs when the banner is tapped (not swiped); <paramref name="onAccept"/>, when
+        /// set, shows a check button that runs it. Either one hides the banner. A later notification replaces both.
         /// </summary>
-        public void ShowNotification(string icon, string message, string modifier = null)
+        public void ShowNotification(string icon, string message, string modifier = null,
+                                     System.Action onTap = null, System.Action onAccept = null)
         {
             if (_notificationBanner == null) return;
 
             CancelSwipe(resumeAutoHide: false);
             _notificationBanner.style.translate = StyleKeyword.Null;
+
+            _onTap    = onTap;
+            _onAccept = onAccept;
+            HUDController.SetElementVisible(_notificationAccept, onAccept != null);
+            _currentDuration = onTap != null || onAccept != null
+                ? Mathf.Max(notificationDuration, actionableNotificationDuration)
+                : notificationDuration;
 
             if (_notificationIcon    != null) _notificationIcon.text    = icon;
             if (_notificationMessage != null) _notificationMessage.text = message;
@@ -131,9 +149,25 @@ namespace MobileIdleBuilder
 
         private IEnumerator HideNotificationAfterDelay()
         {
-            yield return new WaitForSeconds(notificationDuration);
+            yield return new WaitForSeconds(_currentDuration > 0f ? _currentDuration : notificationDuration);
             if (_notificationBanner == null) yield break;
             yield return SlideOutAndHide();
+        }
+
+        /// <summary>Slides the banner away now (after a tap or accept) and drops its actions.</summary>
+        private void DismissNotification()
+        {
+            _onTap = _onAccept = null;
+            StopAutoHide();
+            _hideNotificationCoroutine = StartCoroutine(SlideOutAndHide());
+        }
+
+        private void OnAcceptClicked()
+        {
+            var accept = _onAccept;
+            if (accept == null || !_notificationUp) return;
+            DismissNotification();
+            accept();
         }
 
         private IEnumerator SlideOutAndHide()
@@ -187,6 +221,8 @@ namespace MobileIdleBuilder
         private void OnBannerPointerDown(PointerDownEvent e)
         {
             if (_swipePointerId != NoSwipe || !_notificationUp) return;
+            // The check button handles its own press; capturing the pointer here would swallow its click.
+            if (_notificationAccept != null && e.target is VisualElement target && _notificationAccept.Contains(target)) return;
             _swipePointerId = e.pointerId;
             _swipeStart     = e.position;
             StopAutoHide();     // it must not vanish from under the finger
@@ -208,6 +244,16 @@ namespace MobileIdleBuilder
             if (e.pointerId != _swipePointerId) return;
             Vector2 drag = (Vector2)e.position - _swipeStart;
             e.StopPropagation();
+
+            if (BannerSwipe.IsTap(drag) && _onTap != null)
+            {
+                var tap = _onTap;
+                EndSwipe();
+                _notificationBanner.style.translate = StyleKeyword.Null;
+                DismissNotification();
+                tap();
+                return;
+            }
 
             if (!BannerSwipe.Dismisses(drag))
             {

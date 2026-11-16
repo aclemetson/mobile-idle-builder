@@ -43,7 +43,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Silica is the basis of glass and semiconductors. Iron oxide rusts
     and builds \u2014 it is the ore steel begins from. Uranium hexafluoride enables
     isotope separation by gaseous diffusion."

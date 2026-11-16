@@ -40,7 +40,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Matter heavier than iron has no cheap fusion route \u2014 it must
     enter the economy from a fissile field. Harvest uranium and plutonium to feed
     the fission ladder back down toward iron."

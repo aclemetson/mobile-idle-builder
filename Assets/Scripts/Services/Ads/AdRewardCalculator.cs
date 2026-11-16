@@ -113,7 +113,7 @@ namespace MobileIdleBuilder
         // ── Reward amounts ────────────────────────────────────────────────────
 
         /// <summary>Entropy granted by the EntropyBoost placement: a % of net worth with a floor.</summary>
-        public static long CalcEntropyReward(float lastKnownNetWorth)
+        public static long CalcEntropyReward(double lastKnownNetWorth)
         {
             var def = Def(AdPlacement.EntropyBoost);
             long fromNetWorth = (long)(lastKnownNetWorth * def.NetWorthFraction);

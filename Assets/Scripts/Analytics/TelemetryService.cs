@@ -76,7 +76,7 @@ namespace MobileIdleBuilder
 
         // NetWorth-delta baseline for the income-rate proxy (see CaptureSnapshot).
         bool  _haveNetWorthBaseline;
-        float _lastNetWorth;
+        double _lastNetWorth;
         float _lastNetWorthTime;
 
         // Self-bootstrap before any scene loads (same rationale as FeatureFlagService): no serialized
@@ -194,7 +194,7 @@ namespace MobileIdleBuilder
         // ── Event API (called from gameplay taps; all no-op unless collecting) ─
 
         /// <summary>Prestige completed. Pass the pre-reset values captured in PrestigeSystem.</summary>
-        public void RecordPrestige(long runCount, float netWorthBefore, long prestigeCurrencyEarned,
+        public void RecordPrestige(long runCount, double netWorthBefore, long prestigeCurrencyEarned,
                                    int buildingCount, int highestTier)
         {
             if (!ShouldRecord) return;
@@ -306,14 +306,14 @@ namespace MobileIdleBuilder
             if (!TryReadEcs(out var progress, out var prestige, out int buildingCount)) return;
 
             float now      = Time.realtimeSinceStartup;
-            float netWorth = progress.NetWorth;
+            double netWorth = progress.NetWorth;
 
-            float entropyPerSec = 0f;
+            double entropyPerSec = 0d;
             if (_haveNetWorthBaseline)
             {
                 float dt = now - _lastNetWorthTime;
                 if (dt > 0.001f)
-                    entropyPerSec = Mathf.Max(0f, (netWorth - _lastNetWorth) / dt);
+                    entropyPerSec = System.Math.Max(0d, (netWorth - _lastNetWorth) / dt);
             }
             _lastNetWorth         = netWorth;
             _lastNetWorthTime     = now;

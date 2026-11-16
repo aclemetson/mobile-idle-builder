@@ -91,7 +91,7 @@ def main():
             g.insert_after("research", last, {
                 "id": rid, **values, "depth_in_tree": 0, "cost_prestige_currency": 0, "unlocks_items": [],
                 "unlocks_recipes": [], "unlocks_buildings": [], "unlocks_grid_expansion": 0, "unlocks_research": [],
-                "resets_on_prestige": True, "prestige_memory_discount": 0.0, "codex_entry": "", "icon_path": "TODO"})
+                "resets_on_prestige": True, "codex_entry": "", "icon_path": "TODO"})
     for rid in current:
         if rid not in wanted and not references(gd, rid):
             g.delete("research", rid)

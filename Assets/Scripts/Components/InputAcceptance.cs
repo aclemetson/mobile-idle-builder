@@ -34,6 +34,10 @@ namespace MobileIdleBuilder
     /// item type (the data field is <c>base_max_input_items_per_slot</c>), not a total. A total cap let
     /// one fast input fill the whole buffer and lock the other out, stalling e.g. a proton Combiner
     /// fed by separate up/down quark belts.</item>
+    /// <item><b>Creation buffer.</b> The cap applies to the input only. ProductionSystem moves recipe items
+    /// on into the building's creation buffer (<see cref="CraftStaging"/>), which holds up to one craft, so a
+    /// recipe needing more than the cap (Uranium: 146 Neutrons) still crafts while the input queues the
+    /// next one (#268).</item>
     /// <item><b>Recipe filter.</b> Once a recipe is set, items it does not use are not taken in.</item>
     /// <item><b>Full-input autosell.</b> An item the recipe uses that arrives when that item's buffer is at
     /// its cap is taken and sold at the surplus price (<see cref="SurplusSale"/>: 50%, raised by the Surplus

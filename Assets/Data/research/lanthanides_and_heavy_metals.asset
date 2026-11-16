@@ -14,17 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: lanthanides_and_heavy_metals
   displayName: Lanthanides and Heavy Metals
-  description: Neutron capture from Europium up to Rhenium, and Gold into Mercury
-    (Slow mode).
+  description: Neutron capture from Europium up to Rhenium (Slow mode).
   icon: {fileID: 0}
   branch: 2
   prerequisites:
-  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
-  depthInTree: 6
+  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  depthInTree: 8
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 69700000
+  costBaseCurrency: 33600000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1
@@ -42,7 +41,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa28db57f21966c4a8e83f8e24d93c0f, type: 2}
   - {fileID: 11400000, guid: 54e1be32f8019c0439fd8701f11665a9, type: 2}
   - {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
-  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: be4d4efbb269a894393ab8e80f216fb5, type: 2}
   - {fileID: 11400000, guid: 814bc6309c745c640aab5d5e4e7fa02a, type: 2}
@@ -56,11 +54,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 06368f52d399dd64ebe5fb4ae75ebd71, type: 2}
   - {fileID: 11400000, guid: 054883ddea8164c40a85c606d83d5e8f, type: 2}
   - {fileID: 11400000, guid: 5ca742bbee3a9bf4597da1c46ce9b0e2, type: 2}
-  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: The rare earths power magnets, lasers, and phosphors; the heavy metals
     below them mark the edge of stability where the first natural radioactivity appears.

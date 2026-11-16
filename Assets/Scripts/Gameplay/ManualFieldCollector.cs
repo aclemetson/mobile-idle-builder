@@ -279,10 +279,18 @@ namespace MobileIdleBuilder
             var flow = TutorialFlowSO.Current;
             if (flow == null || state.CurrentStepIndex >= flow.steps.Length) return true;
 
-            var enter = flow.steps[state.CurrentStepIndex].onEnter;
+            var step  = flow.steps[state.CurrentStepIndex];
+            var enter = step.onEnter;
             if (enter == null) return true;
 
-            if (enter.blockCollection) return false;
+            if (enter.blockCollection)
+            {
+                // A craft step the player can no longer finish reopens the fields it needs.
+                string rescue = TutorialCraftRescue.FieldsNeededNow(step);
+                if (rescue == null) return false;
+                collectionFilter = rescue;
+                return true;
+            }
 
             collectionFilter = enter.collectionFilter;
             return true;
