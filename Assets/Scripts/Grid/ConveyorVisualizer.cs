@@ -52,6 +52,15 @@ namespace MobileIdleBuilder
         // Per-frame scratch, reused so Update allocates nothing.
         private readonly HashSet<(Entity, int)> _seenSlots  = new();
         private readonly List<(Entity, int)>    _staleSlots = new();
+        // Redraw scratch (belt placed/removed/relinked), reused so a redraw allocates no collections (#278).
+        private readonly Dictionary<(int, int), int>       _exitMap    = new();
+        private readonly Dictionary<(int, int, int), bool> _inputPorts = new();
+        private readonly HashSet<(int, int)>               _beltCells  = new();
+        private readonly List<int>                         _inbound    = new(4);
+        private readonly bool[] _feeds = new bool[4];
+        private readonly bool[] _sinks = new bool[4];
+        // One property block for every visual made here; SetPropertyBlock copies it, so reuse is safe.
+        private static MaterialPropertyBlock s_mpb;
 
         // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
@@ -365,7 +374,8 @@ namespace MobileIdleBuilder
             // Map every cell to its output direction so we can detect inbound edges (merges). A cell
             // whose output is blocked (a dead-end that runs up to but does not merge with a neighbour)
             // is omitted, so the neighbour it points at is not drawn as a merge junction.
-            var exitMap = new Dictionary<(int, int), int>(entities.Length);
+            var exitMap = _exitMap;
+            exitMap.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
@@ -374,8 +384,8 @@ namespace MobileIdleBuilder
             }
 
             var inputPorts = CollectInputPorts(em);
-            var feeds      = new bool[4];
-            var sinks      = new bool[4];
+            var feeds      = _feeds;
+            var sinks      = _sinks;
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -390,7 +400,7 @@ namespace MobileIdleBuilder
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
 
-                var inbound = ComputeInboundEdges(seg.Cell, exitMap);
+                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _inbound);   // read by Build, not kept
                 _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
             }
 
@@ -431,8 +441,8 @@ namespace MobileIdleBuilder
             var em       = world.EntityManager;
             var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
             var inputPorts = CollectInputPorts(em);
-            var feeds = new bool[4];
-            var sinks = new bool[4];
+            var feeds = _feeds;
+            var sinks = _sinks;
             bool any = false;
 
             for (int i = 0; i < entities.Length; i++)
@@ -454,10 +464,12 @@ namespace MobileIdleBuilder
         /// Every building input port as (cell x, cell y, facing) -> whether its building is an entropy
         /// sink. A tail at cell C feeds direction d when (C + d, d) is a key, the same test as
         /// ConveyorSystem.HasMatchingPort; the sink flag feeds TailInputPriority (Demon last).
+        /// Returns the reused <c>_inputPorts</c> map, refilled on each call.
         /// </summary>
         private Dictionary<(int, int, int), bool> CollectInputPorts(EntityManager em)
         {
-            var map = new Dictionary<(int, int, int), bool>();
+            var map = _inputPorts;
+            map.Clear();
             if (_portQuery.IsEmpty) return map;
             var buildings = _portQuery.ToEntityArray(Allocator.Temp);
             for (int b = 0; b < buildings.Length; b++)
@@ -514,7 +526,8 @@ namespace MobileIdleBuilder
             var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
             float cs     = gridRenderer.CellSize;
 
-            var allCells = new HashSet<(int, int)>(entities.Length);
+            var allCells = _beltCells;
+            allCells.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
@@ -572,10 +585,10 @@ namespace MobileIdleBuilder
             return _gapMaterial;
         }
 
-        /// <summary>Returns the edge directions (0..3) from which conveyor flow enters this cell.</summary>
-        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap)
+        /// <summary>Fills <paramref name="edges"/> with the directions (0..3) from which conveyor flow enters this cell.</summary>
+        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap, List<int> edges)
         {
-            var edges = new List<int>();
+            edges.Clear();
             for (int d = 0; d < 4; d++)
             {
                 int2 nc = Adjacent(cell, d);
@@ -652,9 +665,16 @@ namespace MobileIdleBuilder
         // Helpers
         // ----------------------------------------------------------------
 
+        private static MaterialPropertyBlock SharedBlock()
+        {
+            s_mpb ??= new MaterialPropertyBlock();
+            s_mpb.Clear();
+            return s_mpb;
+        }
+
         private static void SetMeshColor(MeshRenderer mr, Color color)
         {
-            var mpb = new MaterialPropertyBlock();
+            var mpb = SharedBlock();
             mpb.SetColor("_BaseColor", color);
             mr.SetPropertyBlock(mpb);
         }
@@ -682,7 +702,7 @@ namespace MobileIdleBuilder
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
 
-            var mpb = new MaterialPropertyBlock();
+            var mpb = SharedBlock();
             mpb.SetTexture("_BaseMap", tex);
             mpb.SetColor("_BaseColor", Color.white);
             mr.SetPropertyBlock(mpb);
