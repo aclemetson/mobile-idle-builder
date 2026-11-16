@@ -78,7 +78,7 @@ namespace MobileIdleBuilder
         internal static string IncomeText(double perSecond) => NumberFormat.Entropy(perSecond) + " /s";
 
         /// <summary>Live net worth, or a dash before the game has loaded.</summary>
-        internal static string NetWorthText(float? netWorth) =>
+        internal static string NetWorthText(double? netWorth) =>
             netWorth.HasValue ? NumberFormat.Entropy(netWorth.Value) : "—";
 
         internal static double IdleProjection(double perSecond, float rate, float adMult)

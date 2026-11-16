@@ -281,7 +281,7 @@ namespace MobileIdleBuilder.Tests
         public void ResearchPrice_NoLongerTakesACyclotronDiscount()
         {
             // Insight used to discount research; it is now an upgrade currency only.
-            Assert.AreEqual(9500L, ResearchCost.Effective(10000, 0.05f, 0f, false));
+            Assert.AreEqual(9500L, ResearchCost.Effective(10000, 0.05f));
         }
 
         // ── Save ───────────────────────────────────────────────────────────

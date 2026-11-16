@@ -42,7 +42,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.15
   codexEntry: An element's identity is its proton count, but its neutron count determines
     its isotope. Isotopes of the same element have identical chemical properties
     but vastly different nuclear behaviour.

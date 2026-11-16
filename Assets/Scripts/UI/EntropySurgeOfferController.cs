@@ -61,8 +61,8 @@ namespace MobileIdleBuilder
         /// </summary>
         public static bool ShouldShowIcon(bool adsEnabled, bool firstPrestigeDone, bool gameLoaded, bool adReady,
                                           int remainingToday, TimeSpan cooldownLeft, bool cardOpen,
-                                          bool menuOpen = false)
-            => adsEnabled && firstPrestigeDone && gameLoaded && adReady
+                                          bool menuOpen = false, bool incomeMeasured = true)
+            => adsEnabled && firstPrestigeDone && gameLoaded && adReady && incomeMeasured
                && remainingToday > 0 && cooldownLeft <= TimeSpan.Zero && !cardOpen && !menuOpen;
 
         void Update()
@@ -101,7 +101,8 @@ namespace MobileIdleBuilder
                 ads?.Remaining(Placement) ?? 0,
                 ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero,
                 IsOpen,
-                _menuOpen);
+                _menuOpen,
+                ads != null && ads.IncomeMeasured(Placement));
             SetIconVisible(show);
             _skipNextPop = false;
         }

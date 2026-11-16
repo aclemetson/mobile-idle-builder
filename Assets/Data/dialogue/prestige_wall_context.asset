@@ -22,8 +22,8 @@ MonoBehaviour:
     action: 
   - speakerName: The Architect
     text: "The reset clears your inventory, buildings, and entropy. What you keep:
-      prestige currency and a research memory discount on nodes you have already
-      unlocked. Initiate it \u2014 you will return faster than you left."
+      prestige currency, to spend on permanent upgrades that speed up every run.
+      Initiate it \u2014 you will return faster than you left."
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

@@ -16,7 +16,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `idleSnapshot` + `idleCollectionApplied` | active site's offline-earnings chain snapshot + double-apply guard timestamp |
 | `siteSnapshots` (List<IdleCollectionSnapshot>) | per-site offline snapshots, index = site index. Mirrors `idleSnapshot` at the active index; inactive sites keep producing from their stored entries. Populated by `GridSaveService.MirrorActiveSiteSnapshot` on every flush/load. Run state — cleared on prestige by `PrestigeRunReset.ResetSitesForPrestige` |
 | `unlockedRecipes / unlockedResearch / codex` | knowledge; `unlockedResearch` is per-run (cleared by PrestigeSystem) |
-| `researchCompletedEver` | every research finished on any run; survives prestige. A listed node costs less on later runs by its `prestige_memory_discount` (`ResearchService.EffectiveCost` → `ResearchCost.Effective`, with Memory Resonance). Backfilled on load from this run's unlocks and, for older saves, from research whose gated recipes are all known (recipe knowledge survives prestige) |
+| ~~`researchCompletedEver`~~ | removed 2026-11-15 with the per-node prestige memory discount. Older saves still carry it; `JsonUtility` ignores it on load and drops it on the next save |
 | `adLastWatch` (`AdLastWatchEntry` id/utc) | last watch per ad placement (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge, 15 min). Survives prestige |
 | `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |

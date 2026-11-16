@@ -215,7 +215,7 @@ namespace MobileIdleBuilder
 
         private void BuildEntropyCards()
         {
-            float netWorth = SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f;
+            double netWorth = SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0d;
             _contextLabel.text = netWorth > 0f
                 ? $"Based on last net worth: {netWorth:N0}◈"
                 : "Based on last run's net worth (start a run first)";

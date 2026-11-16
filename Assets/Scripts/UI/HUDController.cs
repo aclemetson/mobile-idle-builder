@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         private ManagersSubController               _managers;
         private StatsSubController                  _stats;
         private EntropySurgeOfferController         _surgeOffer;
+        private MenuReminderController              _reminders;
         private TestAdOverlayController             _testAd;
         private CyclotronController                 _cyclotron;
         private MegastructureSubController          _megastructure;
@@ -196,6 +197,7 @@ namespace MobileIdleBuilder
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
+            _reminders    = GetComponent<MenuReminderController>() ?? gameObject.AddComponent<MenuReminderController>();
             _testAd       = GetComponent<TestAdOverlayController>() ?? gameObject.AddComponent<TestAdOverlayController>();
             _cyclotron    = GetComponent<CyclotronController>() ?? gameObject.AddComponent<CyclotronController>();
         }
@@ -519,6 +521,7 @@ namespace MobileIdleBuilder
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
+            InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
             _tooltipPopup = root.Q("tooltip-popup");
@@ -874,7 +877,7 @@ namespace MobileIdleBuilder
             }
         }
 
-        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance / prestige memory discount it.</summary>
+        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance discounts it.</summary>
         internal static string ResearchCostText(long cost, long baseCost)
         {
             if (baseCost <= 0 || cost >= baseCost) return $"◈ {cost:N0}";
@@ -1295,11 +1298,22 @@ namespace MobileIdleBuilder
             SetElementVisible(_achievementsLockedHint, !unlocked);
         }
 
-        private void OpenAchievementsPanel()
+        private void OpenAchievementsPanel() => OpenAchievementsPanel(FirstClaimableCategory());
+
+        /// <summary>The first tab with a reward waiting, so the menu opens where the red dot is; Daily otherwise.</summary>
+        private AchievementCategory FirstClaimableCategory()
+        {
+            foreach (AchievementCategory c in new[] { AchievementCategory.Daily, AchievementCategory.Weekly,
+                                                      AchievementCategory.Monthly, AchievementCategory.Progression })
+                if (achievementService != null && achievementService.HasClaimable(c)) return c;
+            return AchievementCategory.Daily;
+        }
+
+        private void OpenAchievementsPanel(AchievementCategory category)
         {
             DismissAchievementsHint();
             CloseAllPanels();
-            _achActiveCategory = AchievementCategory.Daily;
+            _achActiveCategory = category;
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
         }
@@ -2459,6 +2473,60 @@ namespace MobileIdleBuilder
         public void ShowNotification(string icon, string message, string modifier = null) =>
             _banner?.ShowNotification(icon, message, modifier);
 
+        /// <summary>
+        /// "Achievement unlocked" banner. Once achievements are unlocked (first prestige), tapping it opens the
+        /// achievements menu on that achievement's tab and its check button claims the reward right away.
+        /// Before that the menu is locked, so the banner is a plain notice.
+        /// </summary>
+        public void ShowAchievementNotification(AchievementSO achievement, string message)
+        {
+            if (_banner == null) return;
+            bool unlocked = AchievementsUnlocked;
+            if (achievement == null || !unlocked) { _banner.ShowNotification("🏆", message); return; }
+
+            string id       = achievement.id;
+            var    category = achievement.category;
+            _banner.ShowNotification("🏆", message, null,
+                onTap:    () => TryOpenPanel(() => OpenAchievementsPanel(category)),
+                onAccept: () => ClaimAchievementFromBanner(id));
+        }
+
+        private bool AchievementsUnlocked => SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+
+        /// <summary>
+        /// Registers the reminder dots. Menu rows also light the ≡ handle; add future ones (shop, daily) here
+        /// with <c>menuRow: true</c>.
+        /// </summary>
+        private void InitReminders(VisualElement root)
+        {
+            if (_reminders == null) return;
+            _reminders.Register("btn-achievements",
+                () => AchievementsUnlocked && achievementService != null && achievementService.ClaimableCount > 0,
+                menuRow: true);
+            RegisterAchTabReminder("ach-tab-daily",       AchievementCategory.Daily);
+            RegisterAchTabReminder("ach-tab-weekly",      AchievementCategory.Weekly);
+            RegisterAchTabReminder("ach-tab-monthly",     AchievementCategory.Monthly);
+            RegisterAchTabReminder("ach-tab-progression", AchievementCategory.Progression);
+            _reminders.Init(root);
+        }
+
+        private void RegisterAchTabReminder(string tab, AchievementCategory category) =>
+            _reminders.Register(tab,
+                () => AchievementsUnlocked && achievementService != null && achievementService.HasClaimable(category),
+                menuRow: false);
+
+        private void ClaimAchievementFromBanner(string id)
+        {
+            var service = achievementService;
+            if (service == null || !service.IsClaimable(id)) return;
+            var a = service.GetAll()?.FirstOrDefault(x => x != null && x.id == id);
+            service.ClaimReward(id);
+            if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
+                BuildAchievementsList();
+            if (a != null)
+                _banner?.ShowNotification("♦", $"Claimed: {a.displayName}");   // not ✓: blank on Android
+        }
+
         public void ShowFieldBanner(FieldSO field)   => _banner?.ShowFieldBanner(field);
         public void HideFieldBanner()                => _banner?.HideFieldBanner();
         public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
@@ -2728,7 +2796,7 @@ namespace MobileIdleBuilder
         /// Calculates how much prestige currency a prestige would award.
         /// Must stay in sync with the formula in <see cref="PrestigeSystem"/>.
         /// </summary>
-        internal static long CalculatePrestigePreview(float netWorth)
+        internal static long CalculatePrestigePreview(double netWorth)
         {
             var cfg    = GameBootstrap.Instance?.gameConfig;
             float pbase  = cfg != null ? cfg.prestigeBaseValue     : 5000f;
