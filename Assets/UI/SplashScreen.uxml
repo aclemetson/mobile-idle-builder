@@ -17,5 +17,16 @@
             <ui:Button name="btn-maintenance-retry" text="Retry"           class="maintenance-retry-btn" />
         </ui:VisualElement>
 
+        <!-- Boot-time update prompt (AppUpdateCheck). Reuses the maintenance panel's layout and styles. -->
+        <ui:VisualElement name="update-panel" class="maintenance-panel hidden">
+            <ui:Label  name="update-title"     text="Update Available" class="maintenance-title" />
+            <ui:Label  name="update-message"   text=""                 class="maintenance-message" />
+            <ui:Label  name="update-versions"  text=""                 class="maintenance-time" />
+            <ui:VisualElement class="update-buttons">
+                <ui:Button name="btn-update"       text="Update" class="maintenance-retry-btn" />
+                <ui:Button name="btn-update-later" text="Later"  class="maintenance-retry-btn update-later-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>

@@ -90,3 +90,24 @@
     font-size: var(--font-size-md);
     -unity-font-style: bold;
 }
+
+/* ---- Update prompt (update-panel reuses the maintenance-panel classes above) ---- */
+
+.update-buttons {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.update-buttons > .maintenance-retry-btn {
+    margin-left: var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.update-later-btn {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--color-text-secondary);
+    border-width: 1px;
+    border-color: var(--color-text-secondary);
+}

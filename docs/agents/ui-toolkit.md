@@ -6,7 +6,7 @@
 
 ## The one true document
 
-`Assets/UI/GameHUD.uxml` is the ONLY gameplay HUD loaded at runtime (via `UIDocument` on the HUD GameObject in GameScene). `SplashScreen.uxml` and `LoadingScreen.uxml` cover their own scenes. **Any other UXML file is suspect — grep that it is loaded before editing it** (CLAUDE.md rule; standalone modal UXMLs have burned us before).
+`Assets/UI/GameHUD.uxml` is the ONLY gameplay HUD loaded at runtime (via `UIDocument` on the HUD GameObject in GameScene). `SplashScreen.uxml` and `LoadingScreen.uxml` cover their own scenes (the splash also hosts the maintenance and update-prompt panels; see `feature-flags.md`). **Any other UXML file is suspect — grep that it is loaded before editing it** (CLAUDE.md rule; standalone modal UXMLs have burned us before).
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 

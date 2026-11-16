@@ -79,6 +79,11 @@ jobs:
     name: Archive and Upload to TestFlight
     needs: build
     runs-on: macos-latest
+    env:
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
     # 90 (not 60): the Unity + 9-pod CocoaPods workspace archive can take ~50 min
     # on some Xcode versions, leaving little headroom at 60.
     timeout-minutes: 90
@@ -107,6 +112,19 @@ jobs:
         run: |
           chmod +x scripts/archive-upload-ios.sh
           scripts/archive-upload-ios.sh
+
+      # In-game update prompt: tell older TestFlight builds that this version is out
+      # (Remote Config update.latest.ios in the development environment). TestFlight
+      # processing takes 10-30 min, so the prompt can arrive a little before the build
+      # is installable. Skipped until the UGS secrets exist; never fails the release.
+      - name: Publish latest iOS version for the update prompt
+        if: env.UGS_SERVICE_KEY_ID != ''
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $content = Get-Content "ProjectSettings/ProjectSettings.asset" -Raw
+          if ($content -notmatch 'bundleVersion:\s*(\d+\.\d+\.\d+)') { Write-Error "No bundleVersion"; exit 1 }
+          ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -Key update.latest.ios -Value $Matches[1]
 
       - uses: actions/upload-artifact@v4
         if: always()
