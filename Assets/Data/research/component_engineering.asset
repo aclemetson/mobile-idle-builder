@@ -44,7 +44,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: Quantum processors harness superposition for computation. Plasma containment
     rings confine stellar material. Antimatter cells store energy at matter-annihilation
     density.

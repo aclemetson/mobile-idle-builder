@@ -193,6 +193,9 @@ namespace MobileIdleBuilder
         // ================================================================
 
         private const string CSS_ItemTutorial = "demon-item--tutorial-highlight";
+        private const string CSS_ItemLocked   = "demon-item--locked";
+
+        private static bool CanSell(int itemId) => TutorialSellPolicy.CanSell(itemId);
 
         public void HighlightTutorialItem(int itemId)
         {
@@ -271,7 +274,12 @@ namespace MobileIdleBuilder
                     Vector2.Distance(evt.position, _rowPointerDownPos) > DragThreshold)
                 {
                     int qty = GetInventoryQuantity(_pendingDragItemId);
-                    if (qty > 0)
+                    if (qty > 0 && !CanSell(_pendingDragItemId))
+                    {
+                        InventoryPopupController.NotifyWarning(TutorialSellPolicy.BlockedMessage);
+                        _pendingDragItemId = -1;   // one warning per gesture
+                    }
+                    else if (qty > 0)
                         BeginChipDrag(_pendingDragItemId, qty, evt.pointerId, evt.position);
                 }
                 evt.StopImmediatePropagation();
@@ -312,6 +320,12 @@ namespace MobileIdleBuilder
             {
                 if (!row.worldBound.Contains(_rowPointerDownPos)) return;
                 if (!(row.userData is int itemId)) return;
+
+                if (!CanSell(itemId))
+                {
+                    InventoryPopupController.NotifyWarning(TutorialSellPolicy.BlockedMessage);
+                    return;
+                }
 
                 if (_selectedItemId == itemId)
                     DeselectItem();
@@ -376,7 +390,7 @@ namespace MobileIdleBuilder
 
             GameLogger.Develop($"[Demon] Buffer length={buffer.Length}");
 
-            bool anyItems = false;
+            bool anyItems = false, anySellable = false;
             for (int i = 0; i < buffer.Length; i++)
             {
                 var slot = buffer[i];
@@ -385,9 +399,12 @@ namespace MobileIdleBuilder
                 if (slot.Quantity <= 0) continue;
                 if (itemSO == null) continue;
 
-                _inventoryGrid.Add(BuildItemRow(itemSO, slot.Quantity));
+                bool sellable = CanSell(slot.ItemID);
+                _inventoryGrid.Add(BuildItemRow(itemSO, slot.Quantity, sellable));
                 anyItems = true;
+                anySellable |= sellable;
             }
+            _btnDepositAll?.SetEnabled(anySellable);
 
             if (!anyItems)
             {
@@ -434,15 +451,16 @@ namespace MobileIdleBuilder
         // ── Row builder ───────────────────────────────────────────────────
         // Rows are tap-only. Dragging is done exclusively via the ghost chip
         // that appears when a drag gesture is detected (BeginChipDrag).
-        private VisualElement BuildItemRow(ItemSO item, int quantity)
+        private VisualElement BuildItemRow(ItemSO item, int quantity, bool sellable = true)
         {
             var row = new VisualElement();
             row.AddToClassList(CSS_Item);
+            row.EnableInClassList(CSS_ItemLocked, !sellable);
             row.userData = item.itemId;
 
             var nameLabel  = new Label(item.displayName);  nameLabel.AddToClassList("demon-item__name");
             var countLabel = new Label($"×{quantity}");    countLabel.AddToClassList("demon-item__count");
-            var valLabel   = new Label($"+{CalcEntropy(item, quantity)}"); valLabel.AddToClassList("demon-item__value");
+            var valLabel   = new Label(sellable ? $"+{CalcEntropy(item, quantity)}" : ""); valLabel.AddToClassList("demon-item__value");
             row.Add(nameLabel);
             row.Add(countLabel);
             row.Add(valLabel);
@@ -655,6 +673,11 @@ namespace MobileIdleBuilder
 
             var itemSO = ItemDatabase.GetStatic(itemId);
             if (itemSO == null) return;
+            if (!CanSell(itemId))
+            {
+                InventoryPopupController.NotifyWarning(TutorialSellPolicy.BlockedMessage);
+                return;
+            }
 
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity);
@@ -699,6 +722,7 @@ namespace MobileIdleBuilder
 
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
                 if (itemSO == null) continue;
+                if (!CanSell(slot.ItemID)) continue;
 
                 totalEarned += CalcEntropy(itemSO, slot.Quantity);
 
@@ -707,7 +731,11 @@ namespace MobileIdleBuilder
                 buffer[i] = updated;
             }
 
-            if (totalEarned <= 0) return;
+            if (totalEarned <= 0)
+            {
+                if (HasAnyItems(buffer)) InventoryPopupController.NotifyWarning(TutorialSellPolicy.BlockedMessage);
+                return;
+            }
 
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency += totalEarned;
@@ -722,13 +750,22 @@ namespace MobileIdleBuilder
         // Entropy calculation
         // ================================================================
 
+        private static bool HasAnyItems(DynamicBuffer<InventorySlot> buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+                if (buffer[i].Quantity > 0) return true;
+            return false;
+        }
+
         private long CalcEntropy(ItemSO item, int quantity)
         {
             float multiplier = GetMultiplier(item);
             return (long)(item.baseSellValue * quantity * multiplier);
         }
 
-        protected virtual float GetMultiplier(ItemSO item) => 1f;
+        // The Cyclotron Kick entropy boost (1 when none is running); shared by the sale and the earn preview.
+        protected virtual float GetMultiplier(ItemSO item) =>
+            CyclotronProgress.BoostMultiplier(SaveManager.Instance?.Current, GameClock.UtcNow);
 
         // ================================================================
         // Earn preview
@@ -756,7 +793,7 @@ namespace MobileIdleBuilder
                 var slot = buffer[i];
                 if (slot.Quantity <= 0) continue;
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
-                if (itemSO == null) continue;
+                if (itemSO == null || !CanSell(slot.ItemID)) continue;
                 total += CalcEntropy(itemSO, slot.Quantity);
             }
 

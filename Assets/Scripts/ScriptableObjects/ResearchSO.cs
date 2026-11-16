@@ -43,7 +43,6 @@ namespace MobileIdleBuilder
 
         [Header("Prestige Behavior")]
         public bool resetsOnPrestige;       // always true currently
-        public float prestigeMemoryDiscount; // % cost reduction on repeat runs
 
         [Header("Codex")]
         [TextArea(2, 5)]

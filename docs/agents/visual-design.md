@@ -30,7 +30,7 @@ building prefabs. Two patterns:
 
 1. **Primitive composition** — `GameObject.CreatePrimitive` cubes/quads/spheres, scaled and
    colored. Used by grid tiles (`GridRenderer`), placeholder building cubes
-   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`).
+   (`BuildingVisualizer`), conveyor item icon tiles and fallback spheres (`ConveyorVisualizer`).
 2. **Procedural mesh builders** — pure static classes that emit a `Mesh` from generated
    vertices/indices, paired with a thin MonoBehaviour and a custom URP shader. This is the
    house pattern for distinctive structures.
@@ -103,32 +103,77 @@ To change a shape, edit `ICONS` in `scripts/currency_icons/build_font.py` (24x24
 
 ## Reference implementations
 
-### Conveyor "river" channel (belts)
-Conveyors are flowing **water** on a flat dark **bed** (no rails/walls) — direction reads from the moving
-current, not an arrow. Two stacked procedural layers per cell, both from one ribbon builder:
+### Conveyor "quantum field" lattice (belts)
+Belts are a **field lattice** drawn straight over the floor tile (no bed, no rails): warm-white grid lines whose
+**wave packets** roll downstream, bending the lines and glowing as they pass. The packets are what push the
+particles, so direction reads from them, not an arrow. Chosen 2026-11-14 over water, virtual pairs, |psi|^2 and
+vacuum foam; warm white contrasts with every world's dark, cool tiles (`#1e2233` / `#123039` / `#17301c`).
 - `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` — pure static ribbon builder in cell-local XZ.
-  `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the channel.
-  Shapes from one primitive: **straight** (quad strip), **bend** (quadratic Bézier, centre as control),
-  and **merge** (each inbound is drawn as a *full* edge→exit ribbon with `uv.y` 0→1 — the straight-through
-  input a complete straight piece, every turning input a complete bend piece — all sharing the exit half,
-  so they overlay and blend into one seamless outflow). A `widthFrac` arg builds the **floor**
-  (`FloorWidthFrac` == `WaterWidthFrac`, at `FloorY`) under the inner **water** (`WaterWidthFrac`, `FlowY`).
-- `Assets/Shaders/ConveyorFlow.shader` — URP Unlit **translucent** water (`Transparent+50`, above the
-  transparent grid tiles or they overdraw it at some camera angles). Lengthwise streaks (functions of
-  `uv.x`) drift downstream; every `uv.y` wave uses a whole number of cycles/cell so the flow is
-  continuous across collinear edges. Soft (alpha-faded) banks.
-- `Assets/Shaders/ConveyorChannel.shader` — **opaque**, flat dark bed (drawn at `Geometry`, writes depth so
-  it sits over the grid tiles). Same footprint as the water; it only gives the translucent ribbon a base
-  and occludes the grid tiles beneath (no rails or bolts).
-- Both custom shaders are registered in `GraphicsSettings.asset` `m_AlwaysIncludedShaders` (else magenta
-  on Android).
-- `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns a `Channel` (floor) + `Flow` (water) child per
-  segment, sharing one material each (fall back to the opaque primitive material if a shader is missing).
-  `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change across
-  the whole graph); item spheres still float on the water. Inbound edges per cell come from neighbours
-  whose `ExitDir` points back at the cell — the same geometry `ConveyorPlacer.RelinkAll` uses.
-- `Assets/Scripts/Tests/ConveyorFlowMeshBuilderTests.cs` — EditMode invariants (straight/bend vertex
-  counts, merge arms reaching each inbound + exit edge, monotonic flow UVs, flat low profile).
+  `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the belt.
+  Shapes from one primitive: **straight** (quad strip), **bend** (a quarter circle about the cell corner the
+  two edges share, radius ½ cell, 12 segments — `CenterlinePoint`), and **merge** (each inbound is drawn as a
+  *full* edge→exit ribbon with `uv.y` 0→1, all sharing the exit half). Bends were a quadratic Bézier through
+  the cell centre until 2026-11-15: its radius at the apex (~0.35 cell) equalled the half-width, so the inner
+  edge pinched to a point and the lattice lines crowded into a blur on device.
+  - `uv1.x` = 1 on a merge's secondary (turning) arms; `uv1.y` = the arm's centreline length in cells
+    (`PathLengthCells`: 1 straight, π/4 for a turn).
+  - `uv2` (secondary arms, only when a straight main arm exists) = the main belt's sideways axis / half-width.
+    The shader fades a secondary arm out wherever the main belt covers it (`|dot(pos.xz, uv2)| < 1`), matching
+    the main belt's soft edge, so a junction shows ONE lattice. Without a straight main arm it falls back to
+    fading along the arm (`uv.y`).
+  - Items follow the same centreline: `ConveyorVisualizer` places them with `CenterlinePoint` (inset 5% at
+    each edge), so they ride round the arc instead of cutting the corner.
+- `Assets/Shaders/ConveyorField.shader` — URP Unlit translucent (`Transparent+50`, above the transparent grid
+  tiles). Cross lines and lengthwise lines (`_Lanes`); a main packet per cell plus a smaller one at 2×. Every
+  `uv.y` pattern is a whole number of cycles per cell, so cells, bends and merges meet seamlessly. Soft
+  (alpha-faded) edges.
+  - Cross lines per piece = `round(_CrossLines * uv1.y)`: 8 on a straight, 6 on a corner, so spacing along the
+    centreline is the same everywhere and line ends still meet at cell edges.
+  - Lines are anti-aliased with `fwidth` (`GridLine`): never thinner than ~1.5 px, and they fade instead of
+    shimmering where they'd be packed tighter than ~3 px (the inside of a corner, far zoom).
+- **Speed sync:** the packets read a GLOBAL `_BeltPhase` (cells travelled). `ConveyorVisualizer.UpdateBeltPhase`
+  advances it each frame by `dt * ResearchEffects.ConveyorSpeedMult` — the same rate `ConveyorSystem` advances
+  `ConveyorItem.Progress` (every `TransportTime` is 1) — so a crest travels with the particles riding it and
+  speeds up with conveyor research. Wrapped at 64 (whole number) by `AdvanceBeltPhase`.
+- Registered in `GraphicsSettings.asset` `m_AlwaysIncludedShaders` (else magenta on Android). The old
+  `ConveyorFlow` (water) and `ConveyorChannel` (bed) shaders were removed.
+- `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns one `Flow` child per segment sharing one material
+  (`GetFlowMaterial`, falls back to the opaque primitive material if the shader is missing; the Belt Splitter
+  uses it too). `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change
+  across the whole graph). Inbound edges per cell come from neighbours whose `ExitDir` points back at the cell —
+  the same geometry `ConveyorPlacer.RelinkAll` uses.
+- Tests: `ConveyorFlowMeshBuilderTests.cs` (vertex counts, merge arms reaching each edge, monotonic flow UVs,
+  flat low profile, bend inner radius, centreline arc, arm length / main-axis UVs) and `ConveyorBeltPhaseTests.cs` (phase advances at item speed, wraps, speed fallback).
+
+### Belt item visuals (what rides the belts)
+Every item is its menu icon tile on the belt (a camera-facing quad, `CreateItemTile`) **except** the basic
+particles, which are small animated 3D objects that show their physics. Approved via Blender mockups
+(`scripts/belt_particles/mockup_blender.py`, renders gitignored), then built in code like the buildings.
+
+| id | look | motion |
+|---|---|---|
+| `electron` | teal `#4ECDC4` haze of overlapping puffs around a bright core | breathes, swirls, puffs drift (`ElectronCloud`, additive) |
+| `up_quark` / `down_quark` | glossy bead, orange `#FF6B35` / blue-violet `#6E7BFF` | fast irregular shake + squash ("unstable") |
+| `proton` / `neutron` | shell, violet `#D2A8FF` / grey `#8B949E`; inside uud / udd joined by yellow gluon strings | shell turns see-through ~0.9 s every 4.0 s / 4.7 s; quarks circle and shake inside |
+
+- `Assets/Scripts/Grid/BeltItemVisuals.cs` — registry: item id string -> factory. `TryCreate` returns null
+  for unregistered ids or missing shaders, and the visualizer falls back to the icon tile. Meshes and
+  materials are shared statics. To add a particle, register a factory here; keep colours matching the
+  loose quarks so composites read as their parts.
+- `Assets/Scripts/Grid/BeltParticleMeshes.cs` — pure mesh builders (unit sphere, nucleon core = 3 quarks
+  + 6 gluon tube halves in one mesh, electron cloud). Every vertex has a colour and a jitter channel in
+  `uv1` = (seedA, seedB, blend, -): a gluon tube blends between its two quarks' shake so it stays attached.
+  Vertex colours are converted to linear by the caller (the project is linear; `SetColor` converts, mesh
+  colours don't).
+- `Assets/Shaders/BeltParticle.shader` — URP Unlit, fake top light + gloss. Vertex-shader jitter / squash /
+  spin, and a periodic fade with a fresnel rim for shells. Blend/ZWrite/Cull are material properties, so one
+  shader serves the opaque parts (`Geometry`) and the shells (`Transparent+100`, after the belt lattice).
+- `Assets/Shaders/ElectronCloud.shader` — additive haze, alpha falls off toward each puff's silhouette.
+- **No per-instance state:** each item's animation phase is a hash of its world position (moves smoothly
+  with the item), not a property block. Visuals can therefore be pooled per item id and reused by any
+  item; `ConveyorVisualizer` pools all item visuals (`AcquireItemVisual` / `ReleaseItemVisual`, max 64
+  per id) and never billboards the 3D particles.
+- Both shaders are in `m_AlwaysIncludedShaders`. Tests: `Assets/Scripts/Tests/BeltItemVisualsTests.cs`.
 
 ### Field wire-mesh (tappable resource fields)
 - `Assets/Scripts/Gameplay/FieldWireMeshBuilder.cs` — line-topology grid mesh.
@@ -181,13 +226,13 @@ footprint, so one local unit spans it. **No port arrows:** Pass 3 skips them for
 for conveyor deposits); bespoke input visuals are planned later.
 
 ### Belt Splitter "river meeting a rock" structure
-The belt's water forks around a teardrop rock with its point upstream; a 3-way uses two smaller rocks with a
-channel between them. Selected by `BuildingStructureKind.BeltSplitter`. The water shows the flow, so Pass 3
+The belt's field lattice forks around a teardrop rock with its point upstream; a 3-way uses two smaller rocks with a
+channel between them. Selected by `BuildingStructureKind.BeltSplitter`. The lattice shows the flow, so Pass 3
 draws no holes for it, though unconnected ports still get ground arrows.
 
 - `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` `BuildFork`: each exit takes its own slice of the inbound
   edge and widens to a full belt by its exit, so branches never overlap. Overlapping full ribbons, like a merge,
-  looked wrong here: the translucent water doubled up and the streaks crossed. Both ends match the neighbouring
+  looked wrong here: the translucent ribbons doubled up and their lines crossed. Both ends match the neighbouring
   belts' width and `uv.x`.
 - `Assets/Scripts/Gameplay/TeardropMeshBuilder.cs`: rock(s) as one mesh, `uv.y` = 1 at the tip and high along the crown.
 - `Assets/Scripts/Gameplay/SplitterStructure.cs`: reuses the registered `CollectorStructure` shader and the belts'
@@ -214,7 +259,7 @@ orbit rings that each carry a bright electron. Holes are separate fixtures at th
 
 `Assets/Scripts/Grid/PortGroundArrow.cs`: two flat chevrons on the tile in front of a port, gold pointing away for an output, blue
 pointing in for an input, with the far chevron larger and dimmer so an input reads as a funnel and an output as a spray. Built in code
-(`ChevronMeshBuilder`) with meshes shared across arrows, drawn just above belt water, with a dark outline for contrast on any
+(`ChevronMeshBuilder`) with meshes shared across arrows, drawn just above the belt lattice, with a dark outline for contrast on any
 tile. The placement ghost uses the same arrows.
 
 An arrow means **"this port still needs a belt"**. `PortArrowRules.ShouldShow` mirrors `ConveyorSystem`: an output feeds a belt that

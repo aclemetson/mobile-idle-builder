@@ -31,6 +31,11 @@ namespace MobileIdleBuilder
         private Button _btnPrivacyPolicy;
         private Label  _versionLabel;
 
+        private Label  _accountLabel;
+        private Button _btnGoogleSignIn;
+        private bool   _signingIn;
+        private string _accountStatus;   // result of the last Settings sign-in, shown under the account
+
         private Button _btnClose;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
@@ -57,6 +62,7 @@ namespace MobileIdleBuilder
             if (_toggleInvertTilt    != null) _toggleInvertTilt.UnregisterValueChangedCallback(OnInvertTiltChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         -= OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        -= OnPrivacyPolicy;
+            if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         -= OnGoogleSignIn;
         }
 
         private void OnDisable() => Cleanup();
@@ -66,6 +72,7 @@ namespace MobileIdleBuilder
         public void Open()
         {
             SyncFromSettings();
+            RefreshAccount();
             HUDController.SetElementVisible(_panel, true);
         }
 
@@ -90,6 +97,8 @@ namespace MobileIdleBuilder
             _btnSendFeedback      = root.Q<Button>("btn-send-feedback");
             _btnPrivacyPolicy     = root.Q<Button>("btn-privacy-policy");
             _versionLabel         = root.Q<Label>("settings-version");
+            _accountLabel         = root.Q<Label>("settings-account");
+            _btnGoogleSignIn      = root.Q<Button>("btn-google-sign-in");
 
             if (_versionLabel != null) _versionLabel.text = VersionLabel.Format();
         }
@@ -108,6 +117,7 @@ namespace MobileIdleBuilder
             if (_toggleInvertTilt    != null) _toggleInvertTilt.RegisterValueChangedCallback(OnInvertTiltChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         += OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        += OnPrivacyPolicy;
+            if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         += OnGoogleSignIn;
         }
 
         private void SyncFromSettings()
@@ -171,6 +181,64 @@ namespace MobileIdleBuilder
 
         private void OnInvertTiltChanged(ChangeEvent<bool> evt)
             => SettingsService.Instance?.SetInvertTilt(evt.newValue);
+
+        // ── Account (cross-device saves) ──────────────────────────────────────
+
+        private void RefreshAccount()
+        {
+            var cloud = SaveManager.Instance?.Cloud;
+            var kind  = cloud?.AccountKind ?? CloudAccountKind.None;
+            if (_accountLabel != null)
+                _accountLabel.text = AccountText(kind, cloud?.AccountEmail, cloud?.AccountPlayerId,
+                                                 kind == CloudAccountKind.Guest ? cloud?.LastSignInError : null,
+                                                 _accountStatus);
+            if (_btnGoogleSignIn != null)
+            {
+                HUDController.SetElementVisible(_btnGoogleSignIn, kind == CloudAccountKind.Guest);
+                _btnGoogleSignIn.SetEnabled(!_signingIn);
+                _btnGoogleSignIn.text = _signingIn ? "Signing in..." : "Sign in with Google";
+            }
+        }
+
+        /// <summary>
+        /// The account row: who the save belongs to and a short player id, so two devices can be checked
+        /// against each other (same id = same save).
+        /// </summary>
+        internal static string AccountText(CloudAccountKind kind, string email, string playerId,
+                                           string signInError, string status)
+        {
+            string text = kind switch
+            {
+                CloudAccountKind.Google => string.IsNullOrEmpty(email) ? "Signed in with Google" : $"Google: {email}",
+                CloudAccountKind.Guest  => "Guest: progress is saved for this device only. Sign in with Google to play it on your other devices.",
+                CloudAccountKind.Other  => "Signed in (test account)",
+                _                       => "Offline: progress is saved on this device.",
+            };
+            if (kind != CloudAccountKind.None && !string.IsNullOrEmpty(playerId))
+                text += $"\nPlayer ID {ShortId(playerId)}";
+            if (!string.IsNullOrEmpty(status))
+                text += $"\n{status}";
+            else if (!string.IsNullOrEmpty(signInError))
+                text += $"\nLast Google sign-in failed: {signInError}";
+            return text;
+        }
+
+        internal static string ShortId(string playerId) =>
+            playerId.Length <= 8 ? playerId : playerId.Substring(0, 8);
+
+        private void OnGoogleSignIn()
+        {
+            if (_signingIn || SaveManager.Instance == null) return;
+            _signingIn = true;
+            _accountStatus = null;
+            RefreshAccount();
+            SaveManager.Instance.StartCoroutine(SaveManager.Instance.SignInWithGoogleFromSettings(msg =>
+            {
+                _signingIn = false;
+                _accountStatus = msg;
+                if (this != null) RefreshAccount();
+            }));
+        }
 
         // ── Support links ─────────────────────────────────────────────────────
 

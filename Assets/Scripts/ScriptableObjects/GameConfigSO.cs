@@ -32,8 +32,8 @@ namespace MobileIdleBuilder
         public long startingEntropy;
 
         [Header("Idle Collection")]
-        [Tooltip("Base maximum idle time in seconds before idle collection stops (2 hours).")]
-        public float idleBaseMaxSeconds = 7200f;
+        [Tooltip("Base maximum idle time in seconds before idle collection stops (30 minutes; Dormant Resonance adds 30 min per level).")]
+        public float idleBaseMaxSeconds = 1800f;
         [Tooltip("Hard cap on idle time regardless of upgrades (12 hours).")]
         public float idleAbsoluteMaxSeconds = 43200f;
         [Tooltip("Fraction of active-play output collected while idle before upgrades (0..1).")]

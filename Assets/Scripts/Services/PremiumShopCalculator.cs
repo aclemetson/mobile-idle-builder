@@ -100,7 +100,7 @@ namespace MobileIdleBuilder
         // ── Entropy Helpers ───────────────────────────────────────────────────
 
         /// <summary>Calculates the entropy amount for a tier given the last known net worth.</summary>
-        public static long CalcEntropyAmount(int tierIndex, float lastKnownNetWorth)
+        public static long CalcEntropyAmount(int tierIndex, double lastKnownNetWorth)
         {
             if (tierIndex < 0 || tierIndex >= EntropyTiers.Length)
                 throw new ArgumentOutOfRangeException(nameof(tierIndex));
@@ -142,7 +142,7 @@ namespace MobileIdleBuilder
         public static PurchaseResult TryBuyEntropy(
             int tierIndex,
             long currentCrystals,
-            float lastKnownNetWorth,
+            double lastKnownNetWorth,
             out long newCrystals,
             out long entropyGranted)
         {

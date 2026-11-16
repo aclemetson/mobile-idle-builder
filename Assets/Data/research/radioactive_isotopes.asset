@@ -65,6 +65,5 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Some isotopes are inherently unstable, shedding mass as alpha or beta
     particles. With proper containment, decay is not a hazard \u2014 it is a resource."

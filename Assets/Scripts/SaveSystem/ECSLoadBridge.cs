@@ -141,7 +141,8 @@ namespace MobileIdleBuilder
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            while (sm != null && !sm.CloudReconcileDone && cloudElapsed < kCloudTimeout)
+            // No timeout while the player is choosing between this device's save and the cloud save.
+            while (sm != null && !sm.CloudReconcileDone && (cloudElapsed < kCloudTimeout || sm.AwaitingSaveChoice))
             {
                 cloudElapsed += Time.deltaTime;
                 yield return null;
@@ -364,7 +365,7 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Live net worth from the ECS singleton; null before the world is loaded.</summary>
-        public float? LiveNetWorth =>
+        public double? LiveNetWorth =>
             IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().NetWorth : null;
 
         /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>

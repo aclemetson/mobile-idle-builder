@@ -310,7 +310,8 @@ namespace MobileIdleBuilder
                 ? $"Achievement unlocked: {achievement.displayName}"
                 : $"Achievement unlocked: {achievement.displayName} — {rewardHint}";
 
-            hudController?.ShowNotification("🏆", msg);
+            // Tappable: opens the achievements menu on this one's tab; the check button claims it on the spot.
+            hudController?.ShowAchievementNotification(achievement, msg);
             OnAchievementUnlocked?.Invoke(achievement);
 
             GameLogger.Info($"[Achievements] Unlocked: {achievement.id}");
@@ -416,6 +417,18 @@ namespace MobileIdleBuilder
 
         public bool IsClaimable(string id)   => _unclaimed.Contains(id);
         public int  ClaimableCount           => _unclaimed.Count;
+
+        /// <summary>True if any achievement in <paramref name="category"/> has a reward waiting (the tab's red dot).</summary>
+        public bool HasClaimable(AchievementCategory category)
+        {
+            if (database == null) return false;
+            foreach (var id in _unclaimed)
+            {
+                var a = database.Get(id);
+                if (a != null && a.category == category) return true;
+            }
+            return false;
+        }
 
         // ── Query API (for panel) ─────────────────────────────────────────────
 

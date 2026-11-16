@@ -260,6 +260,37 @@
     padding: 0;
 }
 
+/* Red reminder dot (MenuReminderController): top-right of a drawer row, a tab, or the drawer handle.
+   Sits inside the button's bounds so no parent clips it. */
+.reminder-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: var(--color-danger);
+    border-width: 1px;
+    border-color: rgba(10, 14, 26, 0.9);
+}
+
+.drawer-nav-btn > .reminder-dot {
+    top: 50%;
+    margin-top: -5px;
+    right: var(--spacing-md);
+}
+
+/* The achievement tabs are short pills: a smaller dot, centred on the pill's right end, so it never
+   hangs below the tab. */
+.achievements-tab > .reminder-dot {
+    top: 50%;
+    margin-top: -4px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+}
+
 .drawer-handle:hover {
     background-color: var(--color-surface-raised);
     border-color: var(--color-primary);
@@ -355,6 +386,14 @@
     font-size: var(--font-size-lg);
     color: var(--color-text-primary);
     padding: var(--spacing-xs) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+}
+
+/* Settings account row: Google / guest and a short player id, so two devices can be compared. */
+.settings-account {
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    white-space: normal;
+    padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
 }
 
 .drawer-nav-btn {
@@ -1648,6 +1687,36 @@
     background-color: var(--color-primary);
 }
 
+/* Upgrades (Insight) under the Start button. */
+.cyclotron-section-title {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.cyclotron-upgrade-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.cyclotron-upgrade-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-right: var(--spacing-sm);
+}
+
+.cyclotron-upgrade-btn {
+    flex-shrink: 0;
+    min-width: 96px;
+}
+
 /* Square play area; taps anywhere on it kick the particle. */
 .cyclotron-view {
     width: 100%;
@@ -1660,4 +1729,32 @@
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     min-height: 32px;
+}
+
+/* ── Save choice (SaveConflictPrompt.cs) ─────────────────────────────────── */
+.save-choice__options {
+    padding: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.save-choice__option {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    min-height: 72px;
+}
+
+.save-choice__option-title {
+    font-size: var(--font-size-lg);
+    -unity-font-style: bold;
+    color: var(--color-primary);
+    -unity-text-align: middle-left;
+}
+
+.save-choice__option-summary {
+    font-size: var(--font-size-md);
+    color: var(--color-text-primary);
+    white-space: normal;
+    -unity-text-align: middle-left;
+    margin-top: var(--spacing-xs);
 }

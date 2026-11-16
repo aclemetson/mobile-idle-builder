@@ -35,7 +35,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.25
   codexEntry: A field is only a region where the vacuum is unusually generous. Pump
     enough entropy into empty space and it learns to give up particles too, though
     every new field strains the vacuum more than the last.

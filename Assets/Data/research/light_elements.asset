@@ -41,6 +41,5 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: 'The lightest solid elements: beryllium, harder than steel and lighter
     than aluminium; boron, an exotic metalloid with industrial and nuclear applications.'

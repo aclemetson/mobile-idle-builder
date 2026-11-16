@@ -10,30 +10,63 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// ICloudSaveService backed by Unity Gaming Services Cloud Save.
-    /// Uses Google Sign-In on Android device; falls back to anonymous in Editor and unsupported platforms.
+    /// Signs in with Google on Android and iOS devices (GoogleSignInBridge); anonymous (guest) in the
+    /// Editor and on unsupported platforms, or when Google sign-in fails.
+    ///
+    /// Cross-device saves (docs/agents/save-system.md): a device that ends up as a guest keeps trying a
+    /// silent Google sign-in on later launches. Google is linked to the guest player when the Google
+    /// account is new to the game, or the device switches to the player that already owns that Google
+    /// account (<see cref="AccountSwitched"/>; SaveManager then asks which save to keep).
     /// Call InitializeAsync() once before FetchAsync / PushAsync.
     /// </summary>
     public class UGSCloudSaveService : ICloudSaveService
     {
         const string k_SaveKey = "save_v1";
+        const string k_GoogleProvider = "google.com";
+
+        /// <summary>PlayerPrefs: email of the Google account last signed in on this device (display only).</summary>
+        public const string k_GoogleEmailKey = "auth_google_email";
 
         bool _initialized;
         bool _initFailed;
+        bool _hasGoogle;
         string _env;
 
-        // Set by GoogleSignInBridge on Android before InitializeAsync is called.
+        // Set by GoogleSignInBridge on Android / iOS devices before InitializeAsync is called.
         // Null = fall back to anonymous sign-in (Editor, unsupported platforms).
-        public static Func<Task<string>> GoogleAuthProvider;
+        public static Func<GoogleAuthMode, Task<GoogleCredential>> GoogleAuthProvider;
 
 #if UNITY_EDITOR
         // Set by UGSEditorAuth before scene load. Calls SignInWithUsernamePasswordAsync internally.
         public static Func<Task> EditorAuthProvider;
+        bool _editorAccount;
 #endif
 
         public bool IsAvailable =>
             _initialized &&
             !_initFailed &&
             Application.internetReachability != NetworkReachability.NotReachable;
+
+        public CloudAccountKind AccountKind
+        {
+            get
+            {
+                if (!_initialized || _initFailed || !AuthenticationService.Instance.IsSignedIn) return CloudAccountKind.None;
+                if (_hasGoogle) return CloudAccountKind.Google;
+#if UNITY_EDITOR
+                if (_editorAccount) return CloudAccountKind.Other;
+#endif
+                return CloudAccountKind.Guest;
+            }
+        }
+
+        public string AccountEmail => _hasGoogle ? PlayerPrefs.GetString(k_GoogleEmailKey, null) : null;
+
+        public string AccountPlayerId =>
+            _initialized && !_initFailed ? AuthenticationService.Instance.PlayerId : null;
+
+        public string LastSignInError { get; private set; }
+        public bool   AccountSwitched { get; private set; }
 
         // Idempotent. On any failure IsAvailable stays false and SaveManager falls back to local-only.
         public async Task InitializeAsync()
@@ -48,77 +81,196 @@ namespace MobileIdleBuilder
                 var initOptions = new InitializationOptions().SetOption("com.unity.services.core.environment-name", _env);
                 await UnityServices.InitializeAsync(initOptions);
 
-                bool sessionExists = AuthenticationService.Instance.SessionTokenExists;
+                var auth = AuthenticationService.Instance;
+                bool sessionExists = auth.SessionTokenExists;
                 GameLogger.Info($"[UGSCloudSave] SessionTokenExists={sessionExists}");
 
-                if (!AuthenticationService.Instance.IsSignedIn)
+                // Restore a cached UGS session first, which avoids Google Sign-In on every cold start.
+                // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when a
+                // session token is present, per UGS Auth docs.
+                bool restored = false;
+                if (!auth.IsSignedIn && sessionExists)
                 {
-                    // Restore a cached UGS session first — avoids Google Sign-In on every cold start.
-                    // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when
-                    // a session token is present, per UGS Auth docs.
-                    if (sessionExists)
+                    try
                     {
-                        try
-                        {
-                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                            GameLogger.Info("[UGSCloudSave] Restored cached UGS session.");
-                        }
-                        catch (Exception sessionEx)
-                        {
-                            GameLogger.Info($"[UGSCloudSave] Cached session restore failed ({sessionEx.Message}); proceeding to Google Sign-In.");
-                        }
+                        await auth.SignInAnonymouslyAsync();
+                        restored = true;
+                        GameLogger.Info("[UGSCloudSave] Restored cached UGS session.");
+                    }
+                    catch (Exception sessionEx)
+                    {
+                        GameLogger.Info($"[UGSCloudSave] Cached session restore failed ({sessionEx.Message}); proceeding to Google Sign-In.");
                     }
                 }
 
-                if (!AuthenticationService.Instance.IsSignedIn)
+                if (!auth.IsSignedIn)
                 {
 #if UNITY_EDITOR
                     if (EditorAuthProvider != null)
+                    {
                         await EditorAuthProvider();
+                        _editorAccount = true;
+                    }
                     else
 #endif
                     if (GoogleAuthProvider != null)
-                    {
-                        try
-                        {
-                            string idToken = await GoogleAuthProvider();
-                            try
-                            {
-                                await AuthenticationService.Instance.SignInWithGoogleAsync(idToken);
-                            }
-                            catch (Exception googleEx)
-                            {
-                                // UGS Google provider may not be configured in the dashboard yet.
-                                // Fall back to anonymous so the session token gets stored on device —
-                                // this guarantees silent restore on the next cold start.
-                                GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); falling back to anonymous session.");
-                                await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                            }
-                        }
-                        catch (Exception silentEx)
-                        {
-                            // Google silent sign-in is unavailable (no cached credential, Play Services
-                            // issue, etc.) and policy did not permit an interactive prompt.  Sign in
-                            // anonymously so the session token is stored and future launches are silent.
-                            // The 30/90-day policy will trigger a full interactive re-auth when due.
-                            GameLogger.Info($"[UGSCloudSave] Google silent sign-in unavailable ({silentEx.Message}); using anonymous session.");
-                            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                        }
-                    }
+                        await SignInFreshAsync();
                     else
-                    {
-                        await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                    }
+                        await auth.SignInAnonymouslyAsync();
                 }
 
                 _initialized = true;
-                GameLogger.Info($"[UGSCloudSave] Initialized. Env: {_env}  PlayerId: {AuthenticationService.Instance.PlayerId}");
+
+                if (restored)
+                {
+                    _hasGoogle = await HasGoogleIdentityAsync();
+                    // A device that fell back to guest once used to stay a guest forever, with its own
+                    // save. Keep trying a silent Google sign-in (no UI) so it rejoins the Google account.
+                    if (!_hasGoogle && GoogleAuthProvider != null)
+                    {
+                        var outcome = await SignInWithGoogleAsync(GoogleAuthMode.Silent);
+                        GameLogger.Info($"[UGSCloudSave] Guest session; silent Google sign-in: {outcome}" +
+                                        (LastSignInError != null ? $" ({LastSignInError})" : ""));
+                    }
+                }
+
+                GameLogger.Info($"[UGSCloudSave] Initialized. Env: {_env}  PlayerId: {auth.PlayerId}  " +
+                                $"Account: {AccountKind}{(AccountSwitched ? " (switched from guest)" : "")}");
             }
             catch (Exception ex)
             {
+                _initialized = false;
                 _initFailed = true;
                 GameLogger.Warning($"[UGSCloudSave] Init failed — falling back to local-only. Reason: {ex.Message}");
             }
+        }
+
+        // No cached session: sign in with Google (account picker when AuthSessionPolicy asks for it), or
+        // as a guest if Google is unavailable. A guest is retried silently on every later launch and
+        // from Settings, so the fallback is no longer permanent.
+        async Task SignInFreshAsync()
+        {
+            var auth = AuthenticationService.Instance;
+            GoogleCredential cred;
+            try
+            {
+                cred = await GoogleAuthProvider(GoogleAuthMode.Policy);
+            }
+            catch (Exception silentEx)
+            {
+                LastSignInError = silentEx.Message;
+                GameLogger.Info($"[UGSCloudSave] Google sign-in unavailable ({silentEx.Message}); using a guest session.");
+                await auth.SignInAnonymouslyAsync();
+                return;
+            }
+
+            try
+            {
+                await auth.SignInWithGoogleAsync(cred.IdToken);
+                _hasGoogle = true;
+                RememberEmail(cred.Email);
+            }
+            catch (Exception googleEx)
+            {
+                // Usually the UGS Google identity provider rejecting the token (e.g. the iOS client id
+                // is not in its allowed list). Guest keeps the save on this device until it's fixed.
+                LastSignInError = googleEx.Message;
+                GameLogger.Warning($"[UGSCloudSave] SignInWithGoogleAsync failed ({googleEx.Message}); using a guest session.");
+                await auth.SignInAnonymouslyAsync();
+            }
+        }
+
+        public async Task<GoogleSignInOutcome> SignInWithGoogleAsync(GoogleAuthMode mode)
+        {
+            if (!_initialized || _initFailed || GoogleAuthProvider == null)
+            {
+                LastSignInError = GoogleAuthProvider == null ? "Google sign-in is not available on this platform." : "Not connected.";
+                return GoogleSignInOutcome.Failed;
+            }
+            if (_hasGoogle) return GoogleSignInOutcome.AlreadyGoogle;
+
+            var auth = AuthenticationService.Instance;
+            GoogleCredential cred;
+            try
+            {
+                cred = await GoogleAuthProvider(mode);
+            }
+            catch (Exception ex)
+            {
+                LastSignInError = ex.Message;
+                return GoogleSignInOutcome.Failed;
+            }
+
+            try
+            {
+                // Not forceLink: that would take the Google account away from the player that owns it.
+                await auth.LinkWithGoogleAsync(cred.IdToken);
+                _hasGoogle = true;
+                LastSignInError = null;
+                RememberEmail(cred.Email);
+                GameLogger.Info($"[UGSCloudSave] Linked Google to guest player {auth.PlayerId}.");
+                return GoogleSignInOutcome.Linked;
+            }
+            catch (AuthenticationException ex) when (ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
+            {
+                // The Google account already has a player (the other device's progress): switch to it.
+                // SignOut keeps the guest's session token, so a failed switch can restore the guest.
+                string guestId = auth.PlayerId;
+                auth.SignOut();
+                try
+                {
+                    await auth.SignInWithGoogleAsync(cred.IdToken);
+                    _hasGoogle = true;
+                    AccountSwitched = true;
+                    LastSignInError = null;
+                    RememberEmail(cred.Email);
+                    GameLogger.Info($"[UGSCloudSave] Google account already used by {auth.PlayerId}; switched from guest {guestId}.");
+                    return GoogleSignInOutcome.SwitchedAccount;
+                }
+                catch (Exception switchEx)
+                {
+                    LastSignInError = switchEx.Message;
+                    GameLogger.Warning($"[UGSCloudSave] Switching to the Google player failed ({switchEx.Message}); restoring guest.");
+                    if (!auth.IsSignedIn) await auth.SignInAnonymouslyAsync();
+                    return GoogleSignInOutcome.Failed;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastSignInError = ex.Message;
+                GameLogger.Warning($"[UGSCloudSave] LinkWithGoogleAsync failed: {ex.Message}");
+                return GoogleSignInOutcome.Failed;
+            }
+        }
+
+        static async Task<bool> HasGoogleIdentityAsync()
+        {
+            var auth = AuthenticationService.Instance;
+            if (HasGoogle(auth.PlayerInfo)) return true;
+            try
+            {
+                return HasGoogle(await auth.GetPlayerInfoAsync());
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Warning($"[UGSCloudSave] GetPlayerInfoAsync failed ({ex.Message}); treating as guest.");
+                return false;
+            }
+        }
+
+        static bool HasGoogle(PlayerInfo info)
+        {
+            if (info?.Identities == null) return false;
+            foreach (var id in info.Identities)
+                if (id?.TypeId == k_GoogleProvider) return true;
+            return false;
+        }
+
+        static void RememberEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return;
+            PlayerPrefs.SetString(k_GoogleEmailKey, email);
+            PlayerPrefs.Save();
         }
 
         /// <summary>

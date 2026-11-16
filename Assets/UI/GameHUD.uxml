@@ -401,6 +401,9 @@
                     <ui:Label text="Invert Tilt" class="settings-label" />
                     <ui:Toggle name="toggle-invert-tilt" value="false" class="settings-toggle" />
                 </ui:VisualElement>
+                <ui:Label text="ACCOUNT" class="drawer-section-title" />
+                <ui:Label name="settings-account" text="" class="settings-account" />
+                <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
                 <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
@@ -644,8 +647,9 @@
         </ui:VisualElement>
 
         <!-- ═══ CYCLOTRON KICK (CyclotronController.cs) ═══
-             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy becomes
-             Insight (a discount on the next research). Three steps shown one at a time. -->
+             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy sets a
+             timed entropy boost and pays Insight, which buys the two upgrades on the intro step.
+             Three steps shown one at a time. -->
         <ui:VisualElement name="cyclotron-modal" class="idle-return-modal blocks-world-input hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
             <ui:VisualElement class="idle-return-backdrop" />
@@ -658,6 +662,15 @@
                     <ui:Label name="cyclotron__intro-text" text="" class="game-update-message" />
                     <ui:Label name="cyclotron__status" text="" class="cyclotron-status" />
                     <ui:Button name="cyclotron__start" text="Start run" class="craft-btn cyclotron-btn" />
+                    <ui:Label name="cyclotron__insight" text="Insight: 0" class="cyclotron-section-title" />
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__boost-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__boost-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__cooldown-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__cooldown-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="cyclotron__play" class="cyclotron-step hidden">
                     <ui:VisualElement class="cyclotron-hud-row">
@@ -692,6 +705,34 @@
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="test-ad__skip" text="Skip" class="craft-btn confirm-prompt__btn surge-offer__decline" />
                     <ui:Button name="test-ad__finish" text="Finish" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ SAVE CHOICE (SaveConflictPrompt.cs) ═══
+             This device and the cloud save progressed separately (two devices, or a guest device that just
+             signed in with Google). Pick one, then confirm. No close button: one save has to win. -->
+        <ui:VisualElement name="save-choice-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 120;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Two saves found" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="save-choice__message" text="" class="game-update-message" />
+                <ui:VisualElement name="save-choice__options" class="save-choice__options">
+                    <ui:Button name="save-choice__local" text="" class="craft-btn save-choice__option">
+                        <ui:Label text="Keep this device's save" class="save-choice__option-title" picking-mode="Ignore" />
+                        <ui:Label name="save-choice__local-summary" text="" class="save-choice__option-summary" picking-mode="Ignore" />
+                    </ui:Button>
+                    <ui:Button name="save-choice__cloud" text="" class="craft-btn save-choice__option">
+                        <ui:Label text="Use the cloud save" class="save-choice__option-title" picking-mode="Ignore" />
+                        <ui:Label name="save-choice__cloud-summary" text="" class="save-choice__option-summary" picking-mode="Ignore" />
+                    </ui:Button>
+                </ui:VisualElement>
+                <ui:VisualElement name="save-choice__confirm-row" class="confirm-prompt__buttons hidden">
+                    <ui:Button name="save-choice__back" text="Back" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="save-choice__confirm" text="Confirm" class="craft-btn confirm-prompt__btn" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

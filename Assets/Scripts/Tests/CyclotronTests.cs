@@ -5,7 +5,7 @@ namespace MobileIdleBuilder.Tests
 {
     /// <summary>
     /// Cyclotron Kick (docs/agents/tasks/feature-cyclotron-kick.md): the run's kick rules, the charge clock,
-    /// the Insight it pays and how Insight stacks into the research price.
+    /// the timed entropy boost, the Insight it pays and the upgrades Insight buys.
     /// </summary>
     [TestFixture]
     public class CyclotronTests
@@ -144,6 +144,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void FasterRecharge_ShortensTheCooldown()
+        {
+            var save = new SaveData { cyclotronCooldownLevel = 2 };   // 60 - 2 x 5 = 50 min
+            Assert.AreEqual(50.0, CyclotronProgress.CooldownMinutes(save), 1e-9);
+            CyclotronProgress.TryStartRun(save, Noon);
+            Assert.IsFalse(CyclotronProgress.IsReady(save, Noon.AddMinutes(49)));
+            Assert.IsTrue(CyclotronProgress.IsReady(save, Noon.AddMinutes(50)));
+            Assert.AreEqual(30.0, CyclotronProgress.CooldownMinutes(99), 1e-9, "capped at the max level");
+        }
+
+        [Test]
         public void Cooldown_RunsWhileAway()
         {
             var save = new SaveData();
@@ -151,22 +162,106 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(CyclotronProgress.IsReady(save, Noon.AddHours(5)));
         }
 
-        // ── Rewards ────────────────────────────────────────────────────────
+        // ── Boost ──────────────────────────────────────────────────────────
 
         [Test]
-        public void Insight_ScalesWithEnergy()
+        public void Multiplier_ScalesWithEnergy()
         {
-            Assert.AreEqual(0.04f, CyclotronProgress.InsightFor(0f), 1e-5f);
-            Assert.AreEqual(0.15f, CyclotronProgress.InsightFor(1f), 1e-5f);
-            Assert.Greater(CyclotronProgress.InsightFor(0.6f), CyclotronProgress.InsightFor(0.3f));
+            Assert.AreEqual(1.5f, CyclotronProgress.MultiplierFor(0f), 1e-5f);
+            Assert.AreEqual(3.0f, CyclotronProgress.MultiplierFor(1f), 1e-5f);
+            Assert.AreEqual(2.3f, CyclotronProgress.MultiplierFor(0.55f), 1e-5f, "rounded to one decimal");
+            Assert.AreEqual(3.0f, CyclotronProgress.MultiplierFor(5f), 1e-5f, "clamped");
         }
 
         [Test]
-        public void Collect_StacksInsight_UpToTheCap()
+        public void Collect_StartsTheBoost_ForFiveMinutes()
         {
             var save = new SaveData();
-            for (int i = 0; i < 10; i++) CyclotronProgress.Collect(save, 1f, roll: 0.99, out _);
-            Assert.AreEqual(CyclotronProgress.MaxInsight, save.researchInsight, 1e-5f);
+            CyclotronProgress.Collect(save, 1f, roll: 0.99, Noon, out float mult, out _, out _);
+            Assert.AreEqual(3f, mult, 1e-5f);
+            Assert.AreEqual(3f, CyclotronProgress.BoostMultiplier(save, Noon.AddMinutes(4)), 1e-5f);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), CyclotronProgress.BoostLeft(save, Noon.AddMinutes(4)));
+            Assert.AreEqual(1f, CyclotronProgress.BoostMultiplier(save, Noon.AddMinutes(5)), "over after 5 min");
+        }
+
+        [Test]
+        public void LongerBoost_AddsAMinuteALevel()
+        {
+            var save = new SaveData { cyclotronBoostLevel = 3 };
+            Assert.AreEqual(8.0, CyclotronProgress.BoostMinutes(save), 1e-9);
+            CyclotronProgress.Collect(save, 0f, roll: 0.99, Noon, out _, out _, out _);
+            Assert.AreEqual(1.5f, CyclotronProgress.BoostMultiplier(save, Noon.AddMinutes(7.9)), 1e-5f);
+            Assert.AreEqual(1f, CyclotronProgress.BoostMultiplier(save, Noon.AddMinutes(8)));
+            Assert.AreEqual(15.0, CyclotronProgress.BoostMinutes(99), 1e-9, "capped at the max level");
+        }
+
+        [Test]
+        public void LongestBoost_IsShorterThanTheShortestCooldown()
+        {
+            Assert.Less(CyclotronProgress.BoostMinutes(CyclotronProgress.MaxBoostLevel),
+                        CyclotronProgress.CooldownMinutes(CyclotronProgress.MaxCooldownLevel),
+                        "two boosts must never overlap");
+        }
+
+        [Test]
+        public void NoBoost_IsTimesOne()
+        {
+            Assert.AreEqual(1f, CyclotronProgress.BoostMultiplier(new SaveData(), Noon));
+            Assert.AreEqual(1f, CyclotronProgress.BoostMultiplier(null, Noon));
+        }
+
+        // ── Insight and upgrades ───────────────────────────────────────────
+
+        [Test]
+        public void Insight_OnePlusOnePerQuarter()
+        {
+            Assert.AreEqual(1, CyclotronProgress.InsightFor(0f));
+            Assert.AreEqual(1, CyclotronProgress.InsightFor(0.24f));
+            Assert.AreEqual(2, CyclotronProgress.InsightFor(0.25f));
+            Assert.AreEqual(4, CyclotronProgress.InsightFor(0.8f));
+            Assert.AreEqual(5, CyclotronProgress.InsightFor(1f));
+        }
+
+        [Test]
+        public void Collect_BanksInsight()
+        {
+            var save = new SaveData();
+            CyclotronProgress.Collect(save, 1f, roll: 0.99, Noon, out _, out int insight, out _);
+            CyclotronProgress.Collect(save, 0.5f, roll: 0.99, Noon.AddHours(1), out _, out _, out _);
+            Assert.AreEqual(5, insight);
+            Assert.AreEqual(8, save.cyclotronInsight);
+        }
+
+        [Test]
+        public void Upgrade_SpendsInsight_AndRaisesTheLevel()
+        {
+            var save = new SaveData { cyclotronInsight = 10 };
+            Assert.IsTrue(CyclotronProgress.TryUpgrade(save, CyclotronProgress.Upgrade.Boost));       // costs 3
+            Assert.AreEqual(1, save.cyclotronBoostLevel);
+            Assert.AreEqual(7, save.cyclotronInsight);
+            Assert.IsTrue(CyclotronProgress.TryUpgrade(save, CyclotronProgress.Upgrade.Cooldown));    // costs 4
+            Assert.AreEqual(1, save.cyclotronCooldownLevel);
+            Assert.AreEqual(3, save.cyclotronInsight);
+            Assert.IsFalse(CyclotronProgress.TryUpgrade(save, CyclotronProgress.Upgrade.Boost), "next costs 5");
+            Assert.AreEqual(3, save.cyclotronInsight, "a refused upgrade spends nothing");
+        }
+
+        [Test]
+        public void Upgrade_StopsAtTheMaxLevel()
+        {
+            var save = new SaveData { cyclotronInsight = 999, cyclotronCooldownLevel = CyclotronProgress.MaxCooldownLevel };
+            Assert.IsTrue(CyclotronProgress.IsMaxed(save, CyclotronProgress.Upgrade.Cooldown));
+            Assert.IsFalse(CyclotronProgress.TryUpgrade(save, CyclotronProgress.Upgrade.Cooldown));
+            Assert.AreEqual(999, save.cyclotronInsight);
+        }
+
+        [Test]
+        public void UpgradeCosts_Rise()
+        {
+            Assert.AreEqual(3, CyclotronProgress.UpgradeCost(CyclotronProgress.Upgrade.Boost, 0));
+            Assert.AreEqual(5, CyclotronProgress.UpgradeCost(CyclotronProgress.Upgrade.Boost, 1));
+            Assert.AreEqual(4, CyclotronProgress.UpgradeCost(CyclotronProgress.Upgrade.Cooldown, 0));
+            Assert.AreEqual(7, CyclotronProgress.UpgradeCost(CyclotronProgress.Upgrade.Cooldown, 1));
         }
 
         [Test]
@@ -177,27 +272,16 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(0, CyclotronProgress.BonusCrystalsFor(0.5f, 0.0));
 
             var save = new SaveData();
-            CyclotronProgress.Collect(save, 1f, roll: 0.0, out int crystals);
+            CyclotronProgress.Collect(save, 1f, roll: 0.0, Noon, out _, out _, out int crystals);
             Assert.AreEqual(CyclotronProgress.BonusCrystals, crystals);
             Assert.AreEqual(CyclotronProgress.BonusCrystals, save.paidCurrency);
         }
 
         [Test]
-        public void Insight_DiscountsTheResearchPrice_AndStacks()
+        public void ResearchPrice_NoLongerTakesACyclotronDiscount()
         {
-            Assert.AreEqual(8500L, ResearchCost.Effective(10000, 0f, 0f, false, 0.15f));
-            // 5% Memory Resonance and 15% Insight multiply: 10,000 x 0.95 x 0.85.
-            Assert.AreEqual(8075L, ResearchCost.Effective(10000, 0.05f, 0f, false, 0.15f));
-            Assert.AreEqual(ResearchCost.Effective(10000, 0.05f, 0f, false),
-                            ResearchCost.Effective(10000, 0.05f, 0f, false, 0f), "old overload unchanged");
-        }
-
-        [Test]
-        public void ConsumeInsight_ResetsIt()
-        {
-            var save = new SaveData { researchInsight = 0.3f };
-            CyclotronProgress.ConsumeInsight(save);
-            Assert.AreEqual(0f, save.researchInsight);
+            // Insight used to discount research; it is now an upgrade currency only.
+            Assert.AreEqual(9500L, ResearchCost.Effective(10000, 0.05f));
         }
 
         // ── Save ───────────────────────────────────────────────────────────
@@ -205,53 +289,90 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void OldSave_WithoutCyclotronFields_LoadsAsNeverPlayed()
         {
-            var save = UnityEngine.JsonUtility.FromJson<SaveData>("{\"prestigeCount\": 3}");
+            var save = UnityEngine.JsonUtility.FromJson<SaveData>("{\"prestigeCount\": 3, \"researchInsight\": 0.3}");
             Assert.IsTrue(string.IsNullOrEmpty(save.cyclotronLastRunUtc));
-            Assert.AreEqual(0f, save.researchInsight);
+            Assert.AreEqual(0, save.cyclotronInsight);
+            Assert.AreEqual(0, save.cyclotronBoostLevel);
+            Assert.AreEqual(1f, CyclotronProgress.BoostMultiplier(save, Noon));
             Assert.IsTrue(CyclotronProgress.IsReady(save, Noon), "a first run is available straight away");
         }
 
         [Test]
         public void CyclotronFields_RoundTrip()
         {
-            var save = new SaveData { cyclotronLastRunUtc = "2026-11-14T12:00:00.0000000Z", researchInsight = 0.27f };
+            var save = new SaveData
+            {
+                cyclotronLastRunUtc      = "2026-11-14T12:00:00.0000000Z",
+                cyclotronBoostExpiryUtc  = "2026-11-14T12:05:00.0000000Z",
+                cyclotronBoostMultiplier = 2.4f,
+                cyclotronInsight         = 7,
+                cyclotronBoostLevel      = 2,
+                cyclotronCooldownLevel   = 1,
+            };
             var back = UnityEngine.JsonUtility.FromJson<SaveData>(UnityEngine.JsonUtility.ToJson(save));
-            Assert.AreEqual(save.cyclotronLastRunUtc, back.cyclotronLastRunUtc);
-            Assert.AreEqual(0.27f, back.researchInsight, 1e-6f);
-            Assert.AreEqual(TimeSpan.FromMinutes(45), CyclotronProgress.CooldownLeft(back, Noon.AddMinutes(15)));
+            Assert.AreEqual(7, back.cyclotronInsight);
+            Assert.AreEqual(2, back.cyclotronBoostLevel);
+            Assert.AreEqual(1, back.cyclotronCooldownLevel);
+            Assert.AreEqual(2.4f, CyclotronProgress.BoostMultiplier(back, Noon.AddMinutes(2)), 1e-6f);
+            Assert.AreEqual(TimeSpan.FromMinutes(40), CyclotronProgress.CooldownLeft(back, Noon.AddMinutes(15)), "55 min at level 1");
         }
 
         // ── UI text ────────────────────────────────────────────────────────
 
         [Test]
-        public void StatusText_ShowsCountdownAndInsight()
+        public void StatusText_ShowsCountdownAndBoost()
         {
-            string s = CyclotronController.StatusText(TimeSpan.FromSeconds(754), 0.12f);
-            StringAssert.Contains("Next run in 12m 34s", s);
-            StringAssert.Contains("12% off your next research", s);
-            StringAssert.Contains("Ready to run", CyclotronController.StatusText(TimeSpan.Zero, 0f));
+            string s = CyclotronController.StatusText(TimeSpan.FromSeconds(754), 55, 5);
+            StringAssert.Contains("Next run in 12m 34s (one run every 55 min)", s);
+            StringAssert.Contains("boost lasts 5 min", s);
+            string active = CyclotronController.StatusText(TimeSpan.FromMinutes(50), 60, 5, 2.4f, TimeSpan.FromSeconds(192));
+            StringAssert.Contains("Boost active: x2.4 entropy for 3m 12s", active);
+            StringAssert.Contains("Ready to run", CyclotronController.StatusText(TimeSpan.Zero, 60, 5));
         }
 
         [Test]
-        public void IntroText_PointsAtTheVerticalGap()
+        public void IntroText_DescribesTheBoostAndInsight()
         {
             StringAssert.Contains("crosses the vertical gap", CyclotronController.IntroText);
+            StringAssert.Contains("entropy boost", CyclotronController.IntroText);
+            StringAssert.DoesNotContain("research", CyclotronController.IntroText);
             StringAssert.DoesNotContain("dees", CyclotronController.IntroText);
         }
 
         [Test]
-        public void DrawerLabel_ShowsReadyOrMinutesLeft()
+        public void DrawerLabel_ShowsBoostReadyOrMinutesLeft()
         {
             Assert.AreEqual("Cyclotron (ready)", CyclotronController.DrawerLabel(TimeSpan.Zero));
             Assert.AreEqual("Cyclotron (42m)", CyclotronController.DrawerLabel(TimeSpan.FromSeconds(41 * 60 + 5)), "rounds up");
             Assert.AreEqual("Cyclotron (1m)", CyclotronController.DrawerLabel(TimeSpan.FromSeconds(20)));
+            Assert.AreEqual("Cyclotron (x2.4 4m)",
+                CyclotronController.DrawerLabel(TimeSpan.FromMinutes(50), 2.4f, TimeSpan.FromSeconds(200)));
         }
 
         [Test]
-        public void ResultText_SingularKick()
+        public void FormatMult_DropsTheDecimalForWholeNumbers()
         {
-            StringAssert.Contains("(1 kick, 1 perfect)", CyclotronController.ResultText(0.02f, 1, 1));
-            StringAssert.Contains("(3 kicks,", CyclotronController.ResultText(0.1f, 3, 0));
+            Assert.AreEqual("x3", CyclotronController.FormatMult(3f));
+            Assert.AreEqual("x1.5", CyclotronController.FormatMult(1.5f));
+        }
+
+        [Test]
+        public void ResultText_NamesTheBoostAndInsight()
+        {
+            string s = CyclotronController.ResultText(1f, 3, 2, 6);
+            StringAssert.Contains("(3 kicks, 2 perfect)", s);
+            StringAssert.Contains("x3 entropy for 6 min", s);
+            StringAssert.Contains("+5 Insight", s);
+            StringAssert.Contains("(1 kick, 1 perfect)", CyclotronController.ResultText(0.02f, 1, 1, 5));
+        }
+
+        [Test]
+        public void UpgradeText_ShowsNowAndNext_OrMax()
+        {
+            Assert.AreEqual("Longer Boost (Lv 2): boost lasts 7 min -> 8 min",
+                CyclotronController.UpgradeText(CyclotronProgress.Upgrade.Boost, 2));
+            Assert.AreEqual("Faster Recharge (Lv 6, max): one run every 30 min",
+                CyclotronController.UpgradeText(CyclotronProgress.Upgrade.Cooldown, 6));
         }
 
         [TestCase("btn-cyclotron")]
@@ -259,6 +380,9 @@ namespace MobileIdleBuilder.Tests
         [TestCase("cyclotron__view")]
         [TestCase("cyclotron__start")]
         [TestCase("cyclotron__collect")]
+        [TestCase("cyclotron__insight")]
+        [TestCase("cyclotron__boost-upgrade")]
+        [TestCase("cyclotron__cooldown-upgrade")]
         public void GameHudUxml_HasCyclotronElement(string name)
         {
             var doc = System.Xml.Linq.XDocument.Load("Assets/UI/GameHUD.uxml");

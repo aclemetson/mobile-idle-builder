@@ -119,6 +119,17 @@ namespace MobileIdleBuilder
             return null;
         }
 
+        /// <summary>
+        /// Hash of <paramref name="data"/>'s content without its <c>lastSaved</c> stamp, the same value
+        /// <see cref="LastWrittenContentHash"/> holds after writing it. Leaves the stamp unchanged.
+        /// </summary>
+        public static ulong ContentHash(SaveData data)
+        {
+            if (data == null) return 0;
+            Serialize(data, data.lastSaved, out ulong hash);
+            return hash;
+        }
+
         /// <summary>Atomically writes <paramref name="data"/> to save.json. Leaves the .bak untouched.</summary>
         public void Save(SaveData data) => Write(data, rotateBackup: false);
 

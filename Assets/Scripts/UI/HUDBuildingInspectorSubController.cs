@@ -317,6 +317,31 @@ namespace MobileIdleBuilder
             // at x0 when absent) and an always-present Empty button that is merely disabled when there is
             // nothing to empty. Adding/removing chips as items flow in and out moved buttons out from
             // under the finger.
+            // The creation buffer: how much of the next craft is gathered, e.g. Neutron 112/146 (#268).
+            if (_em.HasBuffer<CraftStagingSlot>(_inspectorEntity) && _em.HasBuffer<RecipeInputSlot>(_inspectorEntity)
+                && !_em.HasComponent<EntropySinkTag>(_inspectorEntity))
+            {
+                var recipeIn = _em.GetBuffer<RecipeInputSlot>(_inspectorEntity, isReadOnly: true);
+                var stage    = _em.GetBuffer<CraftStagingSlot>(_inspectorEntity, isReadOnly: true);
+                if (recipeIn.Length > 0)
+                {
+                    var craftLine = new VisualElement();
+                    craftLine.AddToClassList("inspector-buffers");
+                    var group = new VisualElement();
+                    group.AddToClassList("inspector-buffer-group");
+                    var title = new Label("CRAFT");
+                    title.AddToClassList("inspector-buffer-label");
+                    group.Add(title);
+                    for (int i = 0; i < recipeIn.Length; i++)
+                    {
+                        int have = CraftStaging.Count(stage, recipeIn[i].ItemID);
+                        group.Add(MakeItemChip(recipeIn[i].ItemID, have, StagedCountText(have, recipeIn[i].Quantity)));
+                    }
+                    craftLine.Add(group);
+                    _inspectorStatic.Add(craftLine);
+                }
+            }
+
             var bufferLine = new VisualElement();
             bufferLine.AddToClassList("inspector-buffers");
 
@@ -1356,6 +1381,10 @@ namespace MobileIdleBuilder
             foreach (var (item, qty) in recipe.ProducedOutputs())
                 outputBuf.Add(new RecipeOutputSlot { ItemID = item.itemId, Quantity = qty });
 
+            // A half-gathered craft goes back to the input first, so the rule below sells what the new
+            // recipe does not use and the new recipe re-gathers the rest (CraftStaging).
+            if (_em.HasBuffer<CraftStagingSlot>(entity) && _em.HasBuffer<BuildingInputSlot>(entity))
+                CraftStaging.ReturnToInput(_em.GetBuffer<CraftStagingSlot>(entity), _em.GetBuffer<BuildingInputSlot>(entity));
             SellInputsTheRecipeDoesNotUse(entity);
             MoveOutputsTheRecipeDoesNotMake(entity);
 
@@ -1544,8 +1573,11 @@ namespace MobileIdleBuilder
             return group;
         }
 
+        /// <summary>A creation-buffer chip's count: gathered of needed, e.g. "112/146".</summary>
+        internal static string StagedCountText(int have, int need) => $"{have}/{need}";
+
         /// <summary>An item's periodic-table tile (or its name when it has no icon) and its count.</summary>
-        private static VisualElement MakeItemChip(int itemId, int quantity)
+        private static VisualElement MakeItemChip(int itemId, int quantity, string countText = null)
         {
             var chip = new VisualElement { pickingMode = PickingMode.Ignore };
             chip.AddToClassList("inspector-chip");
@@ -1566,7 +1598,7 @@ namespace MobileIdleBuilder
                 chip.Add(name);
             }
 
-            var count = new Label($"×{quantity}") { pickingMode = PickingMode.Ignore };
+            var count = new Label(countText ?? $"×{quantity}") { pickingMode = PickingMode.Ignore };
             count.AddToClassList("inspector-chip__count");
             chip.Add(count);
             return chip;

@@ -115,7 +115,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["hydrogen_synthesis", "nucleon_harvesting", "rapid_extraction_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -136,7 +135,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["atomic_assembly", "automation_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "The simplest atom: one proton orbited by one electron. Hydrogen is the most abundant element in the universe and the gateway to all atomic chemistry.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -157,7 +155,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["surplus_containment", "field_synthesis"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.5,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -179,7 +176,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "A field is only a region where the vacuum is unusually generous. Pump enough entropy into empty space and it learns to give up particles too, though every new field strains the vacuum more than the last.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -200,7 +196,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["deuterium_synthesis", "isotopes", "heavy_elements", "molecular_synthesis", "power_distribution"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Combining protons, neutrons, and electrons into stable atoms. Each element's identity is defined by its proton count — change it and you change the element.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -221,7 +216,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["fusion_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing bare protons, which is why every fusion experiment on Earth starts with it.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -242,7 +236,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "Power need not be generated where it is used. A resonant relay re-radiates the grid's existing eV field across a far wider area than any single generator can reach, decoupling where you make power from where you spend it.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -263,7 +256,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Two harvesters on opposing polarity fields can be merged into a single Nucleon Harvester, producing protons or neutrons directly without quark combination.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -286,7 +278,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["rapid_extraction_ii"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "Refining the extraction pulse lets a field recharge faster after each manual tap, shortening the wait between collections.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -308,7 +299,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "A tuned resonance cascade drives field recharge near its physical limit, collapsing the cooldown between taps.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -329,7 +319,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["radioactive_isotopes"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "An element's identity is its proton count, but its neutron count determines its isotope. Isotopes of the same element have identical chemical properties but vastly different nuclear behaviour.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -350,7 +339,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["radioactive_isotopes", "transuranic_elements"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Beyond iron, fusion in stars becomes energy-negative. Only cosmic violence — supernovae, neutron star collisions — forges the heavy elements. We replicate that violence, precisely.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -371,7 +359,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Some isotopes are inherently unstable, shedding mass as alpha or beta particles. With proper containment, decay is not a hazard — it is a resource.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -394,7 +381,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The lightest solid elements: beryllium, harder than steel and lighter than aluminium; boron, an exotic metalloid with industrial and nuclear applications.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -402,20 +388,19 @@
     {
       "id": "mid_elements",
       "display_name": "Mid-Period Elements",
-      "description": "Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen, Fluorine, Sodium, Aluminum and Phosphorus.",
+      "description": "Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen, Fluorine, Sodium, Aluminum and Phosphorus. Hydrogen and Nitrogen now make Ammonia.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 5930000,
+      "cost_base_currency": 4010000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus"],
-      "unlocks_recipes": ["capture_nitrogen", "capture_fluorine", "capture_sodium", "capture_aluminum", "capture_phosphorus"],
+      "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus", "ammonia"],
+      "unlocks_recipes": ["capture_nitrogen", "capture_fluorine", "capture_sodium", "capture_aluminum", "capture_phosphorus", "ammonia"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_molecules", "chemistry_lab"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable batteries.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -436,7 +421,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["precious_metals", "materials_science"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Copper carries electricity better than any common metal. Zinc prevents corrosion and is half of brass. Together they defined the Bronze and Brass Ages.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -444,20 +428,19 @@
     {
       "id": "precious_metals",
       "display_name": "Precious Metals",
-      "description": "Fast neutron capture for Platinum and Gold: made in nature only by neutron-star mergers.",
+      "description": "Fast neutron capture from Iridium to Platinum and Gold, made in nature only by neutron-star mergers; Gold into Mercury (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["transition_metals", "rapid_neutron_capture"],
-      "depth_in_tree": 4,
-      "cost_base_currency": 19800000,
+      "prerequisites": ["transition_metals", "exotic_metals"],
+      "depth_in_tree": 10,
+      "cost_base_currency": 68900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
-      "unlocks_items": ["platinum", "gold"],
-      "unlocks_recipes": ["r_capture_platinum", "r_capture_gold"],
+      "unlocks_items": ["platinum", "gold", "mercury"],
+      "unlocks_recipes": ["r_capture_platinum", "r_capture_gold", "s_capture_mercury"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["exotic_metals", "advanced_materials", "heavy_transition_metals"],
+      "unlocks_research": ["advanced_materials", "transuranic_elements"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Silver has the highest electrical conductivity of any element. Gold resists corrosion absolutely — every circuit connector in space relies on it.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -465,20 +448,19 @@
     {
       "id": "exotic_metals",
       "display_name": "Exotic Metals",
-      "description": "Fast neutron capture for Osmium and Iridium, the densest metals there are.",
+      "description": "Fast neutron capture from Rhenium to Osmium and Iridium, the densest metals there are.",
       "branch": "Materials",
-      "prerequisites": ["precious_metals"],
-      "depth_in_tree": 5,
-      "cost_base_currency": 23700000,
+      "prerequisites": ["lanthanides_and_heavy_metals"],
+      "depth_in_tree": 9,
+      "cost_base_currency": 49700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["osmium", "iridium"],
       "unlocks_recipes": ["r_capture_osmium", "r_capture_iridium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["transuranic_elements", "lanthanides_and_heavy_metals"],
+      "unlocks_research": ["precious_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Platinum catalyses the reactions that make fuel cells possible. Tungsten has the highest melting point of any element — used in rocket nozzles and light filaments.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -488,8 +470,8 @@
       "display_name": "Transuranic Synthesis",
       "description": "Unlock plutonium — heavier than uranium, only stable in carefully controlled nuclear conditions.",
       "branch": "Nuclear",
-      "prerequisites": ["heavy_transition_metals", "exotic_metals"],
-      "depth_in_tree": 6,
+      "prerequisites": ["precious_metals"],
+      "depth_in_tree": 11,
       "cost_base_currency": 315000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
@@ -499,7 +481,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["component_engineering", "superheavy_synthesis"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Plutonium does not occur naturally on Earth — it must be synthesised. Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional physics.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -516,13 +497,12 @@
       "cost_base_currency": 184000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["liquid_hydrogen", "water", "methane", "ammonia"],
-      "unlocks_recipes": ["liquid_hydrogen", "water", "methane", "ammonia"],
+      "unlocks_items": ["liquid_hydrogen", "methane"],
+      "unlocks_recipes": ["liquid_hydrogen", "methane"],
       "unlocks_buildings": ["molecular_synthesizer"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_molecules", "feedstock_buffers"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Atoms combine into molecules through covalent and ionic bonds. Water, methane, and ammonia are the feedstocks of planetary chemistry — and industrial civilisation.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -543,7 +523,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["materials_science"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Silica is the basis of glass and semiconductors. Iron oxide rusts and builds — it is the ore steel begins from. Uranium hexafluoride enables isotope separation by gaseous diffusion.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -555,7 +534,7 @@
       "branch": "Materials",
       "prerequisites": ["transition_metals"],
       "depth_in_tree": 5,
-      "cost_base_currency": 80900000,
+      "cost_base_currency": 81000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["steel", "carbon_fiber", "titanium_alloy"],
@@ -564,7 +543,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_materials"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Steel defined the industrial age. Carbon fibre enables spacecraft. Titanium alloys survive re-entry. Materials science is the discipline that turns molecules into civilisation.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -585,7 +563,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["component_engineering"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Semiconductor wafers are the substrate of computation. Aerogel is the lightest solid material. Superconductors carry current with zero resistance. Metamaterials bend light and gravity around themselves.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -606,7 +583,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["megastructure_theory"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Quantum processors harness superposition for computation. Plasma containment rings confine stellar material. Antimatter cells store energy at matter-annihilation density.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -627,7 +603,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "A Dyson sphere captures all energy output of a star. Dyson nodes are the structural anchors. Orbital frames are the load-bearing superstructure. Graviton lenses stabilise the whole assembly against tidal forces.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -649,7 +624,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.3,
       "codex_entry": "Once production runs unattended, the bottleneck shifts from speed to storage. Containment fields let a building hold far more finished output before it must pause — the foundation of idle stockpiling.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -670,7 +644,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.3,
       "codex_entry": "As production chains lengthen, a building can starve waiting on its conveyors. Larger feedstock buffers smooth intake so multi-input recipes run without interruption.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -680,18 +653,17 @@
       "display_name": "Heavy Transition Metals",
       "description": "Neutron capture from Cerium: Praseodymium, Neodymium, Promethium and Samarium (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["precious_metals"],
-      "depth_in_tree": 5,
-      "cost_base_currency": 28500000,
+      "prerequisites": ["slow_neutron_capture"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 16500000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["praseodymium", "neodymium", "promethium", "samarium"],
       "unlocks_recipes": ["s_capture_praseodymium", "s_capture_neodymium", "s_capture_promethium", "s_capture_samarium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["rapid_neutron_capture"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The second row of transition metals: catalytic, refractory, and the rare-earth precursors. Bridging the periodic table from the everyday metals toward the lanthanides.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -699,20 +671,19 @@
     {
       "id": "lanthanides_and_heavy_metals",
       "display_name": "Lanthanides and Heavy Metals",
-      "description": "Neutron capture from Europium up to Rhenium, and Gold into Mercury (Slow mode).",
+      "description": "Neutron capture from Europium up to Rhenium (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["exotic_metals"],
-      "depth_in_tree": 6,
-      "cost_base_currency": 69700000,
+      "prerequisites": ["rapid_neutron_capture"],
+      "depth_in_tree": 8,
+      "cost_base_currency": 33600000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
-      "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "mercury"],
-      "unlocks_recipes": ["s_capture_tungsten", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_rhenium", "s_capture_mercury"],
+      "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium"],
+      "unlocks_recipes": ["s_capture_tungsten", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_rhenium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["exotic_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The rare earths power magnets, lasers, and phosphors; the heavy metals below them mark the edge of stability where the first natural radioactivity appears.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -733,7 +704,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Beyond fermium, nuclei survive only by slamming lighter atoms together at relativistic speed. Each new element exists for fractions of a second \u2014 and is worth a fortune in captured entropy.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -754,7 +724,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["light_elements", "fusion_ii", "fissile_extraction"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Stars fuse hydrogen into helium and onward, releasing binding energy at every step up to iron. The Fusion Reactor reproduces that ladder: combine two cheap light nuclei into one heavier, more valuable atom.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -762,20 +731,19 @@
     {
       "id": "fusion_ii",
       "display_name": "Alpha Process",
-      "description": "Unlock the alpha-capture chain \u2014 oxygen through silicon by successive helium fusion.",
+      "description": "Unlock the alpha-capture chain: oxygen through silicon by successive helium fusion. Hydrogen and Oxygen now make Water.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
       "cost_base_currency": 2350000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["oxygen", "neon", "magnesium", "silicon"],
-      "unlocks_recipes": ["fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon"],
+      "unlocks_items": ["oxygen", "neon", "magnesium", "silicon", "water"],
+      "unlocks_recipes": ["fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon", "water"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["mid_elements", "fusion_iii"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "In evolved stars, helium nuclei (alpha particles) are captured one at a time: oxygen, neon, magnesium, silicon. Each capture climbs the fusion ladder by two protons.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -787,7 +755,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 7110000,
+      "cost_base_currency": 5700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["sulfur", "argon", "calcium", "titanium", "chromium", "iron"],
@@ -796,7 +764,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["explosive_burning"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The last day of a massive star: silicon burning forges its way to iron-56, the most tightly bound nucleus. Fusion can climb no further \u2014 beyond iron it costs more energy than it yields.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -808,7 +775,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_iii"],
       "depth_in_tree": 6,
-      "cost_base_currency": 8530000,
+      "cost_base_currency": 8280000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["chlorine", "potassium", "scandium", "vanadium", "manganese"],
@@ -817,7 +784,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["transition_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "When a massive star explodes, a shock wave sweeps through its silicon and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements next to iron, like Manganese and Vanadium.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -838,7 +804,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["fission_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Matter heavier than iron has no cheap fusion route \u2014 it must enter the economy from a fissile field. Harvest uranium and plutonium to feed the fission ladder back down toward iron.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -859,7 +824,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["slow_neutron_capture"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "A slow neutron splits a heavy fissile nucleus into two mid-weight fragments \u2014 each closer to iron, and each worth far more than the cheap fuel that produced it. The fragments and spare neutrons are caught for reuse.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -878,9 +842,8 @@
       "unlocks_recipes": ["s_capture_silver", "s_capture_technetium", "s_capture_ruthenium", "s_capture_rhodium", "s_capture_palladium", "s_capture_cadmium", "s_capture_indium", "s_capture_lanthanum"],
       "unlocks_buildings": ["neutron_capture"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["rapid_neutron_capture"],
+      "unlocks_research": ["heavy_transition_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "In red giant stars, free neutrons trickle into heavy nuclei one at a time, slowly enough for each unstable result to decay before the next arrives.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -888,20 +851,19 @@
     {
       "id": "rapid_neutron_capture",
       "display_name": "r-Process",
-      "description": "Unlock Fast mode: a flood of neutrons makes the elements slow capture can't reach, including Gold and Platinum.",
+      "description": "Unlock Fast mode: a flood of neutrons makes the elements slow capture can't reach, starting with Europium from Samarium.",
       "branch": "Nuclear",
-      "prerequisites": ["slow_neutron_capture"],
-      "depth_in_tree": 6,
-      "cost_base_currency": 16500000,
+      "prerequisites": ["heavy_transition_metals"],
+      "depth_in_tree": 7,
+      "cost_base_currency": 23700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["europium"],
       "unlocks_recipes": ["r_capture_europium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["precious_metals"],
+      "unlocks_research": ["lanthanides_and_heavy_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "When two neutron stars collide, matter is bathed in so many neutrons that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen forging gold and platinum.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -914,7 +876,7 @@
       "branch": "Chemistry",
       "prerequisites": ["mid_elements"],
       "depth_in_tree": 3,
-      "cost_base_currency": 56700000,
+      "cost_base_currency": 56900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 300,
       "unlocks_items": ["carbon_dioxide", "table_salt", "sulfuric_acid"],
@@ -923,7 +885,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["reaction_engineering"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The bridge from physics to chemistry. Where nuclear synthesis forged the elements one nucleus at a time, chemistry mines them in bulk and recombines them into molecules \u2014 the first step toward life.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -945,7 +906,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["organic_chemistry"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Chemistry stops being a curiosity and becomes an industry. Catalysts lower the energy of reactions, and mined metals become the reactors and reagents that drive them.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -966,7 +926,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["biochem_precursors"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Carbon bonds to itself without limit, building chains and rings. Hydrocarbons and their derivatives are the scaffolding on which all organic matter is assembled.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -987,7 +946,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["biology_lab"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The last step of chemistry and the first of biology. Carbon, nitrogen, and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides \u2014 the monomers from which life will build itself.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1000,7 +958,7 @@
       "branch": "Biology",
       "prerequisites": ["biochem_precursors"],
       "depth_in_tree": 6,
-      "cost_base_currency": 872000000,
+      "cost_base_currency": 874000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
@@ -1009,7 +967,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["cell_biology"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Chemistry made the parts; biology assembles them into machines that copy themselves. The first tier weaves monomers into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1031,7 +988,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["multicellular_life"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The macromolecules find their common cause: enclosed by a membrane, running on ribosomes and mitochondria, the first cell is a chemistry that keeps itself alive.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1052,7 +1008,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["ecosystems"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Cells stop living alone. Nucleated and specialised, they bind into tissues and organs — a division of labour that lets life grow large.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1073,7 +1028,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Organs become organisms, organisms become populations, and populations weave into an ecosystem — a self-sustaining web of life. From quarks to a living world.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1097,7 +1051,6 @@
       "unlocks_grid_expansion": 0,
       "unlocks_research": ["transportation_2"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.0,
       "codex_entry": "",
       "icon_path": "TODO",
       "block": "foundations"
@@ -1121,7 +1074,6 @@
       "unlocks_grid_expansion": 0,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.0,
       "codex_entry": "",
       "icon_path": "TODO",
       "advances_curve": false,
@@ -1370,7 +1322,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The third most abundant element in the universe. Highly reactive and essential for combustion and respiration. Makes up 21% of Earth's atmosphere.",
-      "base_sell_value": 1530.0,
+      "base_sell_value": 1090.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1808,7 +1760,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chemically inert, immune to corrosion, and malleable beyond any other metal. Every connector in space hardware is gold-plated. Its rarity is a product of neutron star collisions.",
-      "base_sell_value": 566000.0,
+      "base_sell_value": 447000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1832,7 +1784,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature. Rarer than gold.",
-      "base_sell_value": 522000.0,
+      "base_sell_value": 392000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1856,7 +1808,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing components in fusion reactors all rely on tungsten's thermal extremity.",
-      "base_sell_value": 346000.0,
+      "base_sell_value": 247000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3422,7 +3374,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Praseodymium (Pr), element number 59 with mass number 141. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 31800.0,
+      "base_sell_value": 25900.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3446,7 +3398,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neodymium (Nd), element number 60 with mass number 142. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 46500.0,
+      "base_sell_value": 34700.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3470,7 +3422,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Promethium (Pm), element number 61 with mass number 145. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 61200.0,
+      "base_sell_value": 43500.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3494,7 +3446,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Samarium (Sm), element number 62 with mass number 152. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 75900.0,
+      "base_sell_value": 52300.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3518,7 +3470,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Europium (Eu), element number 63 with mass number 153. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 104000.0,
+      "base_sell_value": 71800.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3542,7 +3494,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gadolinium (Gd), element number 64 with mass number 158. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 126000.0,
+      "base_sell_value": 87300.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3566,7 +3518,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Terbium (Tb), element number 65 with mass number 159. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 148000.0,
+      "base_sell_value": 103000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3590,7 +3542,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dysprosium (Dy), element number 66 with mass number 164. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 170000.0,
+      "base_sell_value": 119000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3614,7 +3566,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Holmium (Ho), element number 67 with mass number 165. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 192000.0,
+      "base_sell_value": 135000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3638,7 +3590,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Erbium (Er), element number 68 with mass number 166. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 214000.0,
+      "base_sell_value": 151000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3662,7 +3614,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thulium (Tm), element number 69 with mass number 169. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 236000.0,
+      "base_sell_value": 167000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3686,7 +3638,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ytterbium (Yb), element number 70 with mass number 174. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 258000.0,
+      "base_sell_value": 183000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3710,7 +3662,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lutetium (Lu), element number 71 with mass number 175. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 280000.0,
+      "base_sell_value": 199000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3734,7 +3686,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hafnium (Hf), element number 72 with mass number 180. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 302000.0,
+      "base_sell_value": 215000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3758,7 +3710,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tantalum (Ta), element number 73 with mass number 181. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 324000.0,
+      "base_sell_value": 231000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3782,7 +3734,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhenium (Re), element number 75 with mass number 187. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 368000.0,
+      "base_sell_value": 263000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3806,7 +3758,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Osmium (Os), element number 76 with mass number 192. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 423000.0,
+      "base_sell_value": 300000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3830,7 +3782,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iridium (Ir), element number 77 with mass number 193. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 478000.0,
+      "base_sell_value": 337000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3854,7 +3806,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mercury (Hg), element number 80 with mass number 202. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 588000.0,
+      "base_sell_value": 469000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -6117,7 +6069,7 @@
       "valid_buildings": ["molecular_synthesizer"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "molecular_synthesis",
+      "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -6169,7 +6121,7 @@
       "valid_buildings": ["molecular_synthesizer"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "molecular_synthesis",
+      "required_research": "mid_elements",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -9224,7 +9176,7 @@
       "valid_buildings": ["neutron_capture"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
+      "required_research": "precious_metals",
       "unlocks_research": null,
       "is_simplified": true,
       "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
@@ -9273,7 +9225,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 50.0,
+      "base_craft_time": 40.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9301,7 +9253,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 50.0,
+      "base_craft_time": 40.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9329,7 +9281,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 40.0,
+      "base_craft_time": 50.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9357,7 +9309,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 40.0,
+      "base_craft_time": 50.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -12777,7 +12729,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "The reset clears your inventory, buildings, and entropy. What you keep: prestige currency and a research memory discount on nodes you have already unlocked. Initiate it — you will return faster than you left.",
+          "text": "The reset clears your inventory, buildings, and entropy. What you keep: prestige currency, to spend on permanent upgrades that speed up every run. Initiate it — you will return faster than you left.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",

@@ -127,6 +127,11 @@ jobs:
     name: Google Play Internal
     needs: build
     runs-on: ubuntu-latest
+    env:
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
 
     steps:
       - uses: actions/download-artifact@v4
@@ -146,3 +151,18 @@ jobs:
           releaseFiles: ${{ steps.aab.outputs.path }}
           track: internal
           status: completed
+
+      # In-game update prompt: tell older internal builds that this version is out
+      # (Remote Config update.latest.android in the development environment, read by
+      # AppUpdateCheck on the splash). Skipped until the UGS secrets exist; a Remote
+      # Config failure never fails the release.
+      - uses: actions/checkout@v4
+        if: env.UGS_SERVICE_KEY_ID != ''
+        with:
+          sparse-checkout: scripts
+
+      - name: Publish latest Android version for the update prompt
+        if: env.UGS_SERVICE_KEY_ID != ''
+        continue-on-error: true
+        shell: pwsh
+        run: ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -Key update.latest.android -Value "${{ needs.build.outputs.version }}"

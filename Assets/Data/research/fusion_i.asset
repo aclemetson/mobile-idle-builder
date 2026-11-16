@@ -45,7 +45,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
   - {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.15
   codexEntry: 'Stars fuse hydrogen into helium and onward, releasing binding energy
     at every step up to iron. The Fusion Reactor reproduces that ladder: combine
     two cheap light nuclei into one heavier, more valuable atom.'

@@ -35,7 +35,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.3
   codexEntry: "Once production runs unattended, the bottleneck shifts from speed
     to storage. Containment fields let a building hold far more finished output before
     it must pause \u2014 the foundation of idle stockpiling."

@@ -10,13 +10,16 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Syncs ECS conveyor data to visual GameObjects.
     ///
-    /// Each cell is a flat "river" ribbon (<see cref="ConveyorFlowMeshBuilder"/>) shaded by the
-    /// <c>MobileIdleBuilder/ConveyorFlow</c> shader, which scrolls a current pattern toward the exit
-    /// edge — so the flow direction reads from the moving water, with no arrows. Straight, bend and
-    /// 2-3 input merge-junction shapes are all built from the same ribbon primitive.
+    /// Each cell is a flat ribbon (<see cref="ConveyorFlowMeshBuilder"/>) shaded by the
+    /// <c>MobileIdleBuilder/ConveyorField</c> shader: a quantum field lattice drawn over the floor tile,
+    /// whose wave packets roll toward the exit edge at item speed (the global <c>_BeltPhase</c>, advanced
+    /// here) — so the flow direction reads from the packets carrying the particles, with no arrows.
+    /// Straight, bend and 2-3 input merge-junction shapes are all built from the same ribbon primitive.
     ///
-    /// Item visuals: colored spheres that float on the river, interpolating between a segment's entry
-    /// and exit edge by each ConveyorItem.Progress (several items per tile).
+    /// Item visuals float on the belt, interpolating between a segment's entry and exit edge by each
+    /// ConveyorItem.Progress (several items per tile). The basic particles are animated 3D objects
+    /// (<see cref="BeltItemVisuals"/>); every other item is its icon tile, billboarded to the camera.
+    /// Visuals are pooled per item id.
     ///
     /// Call RefreshAll() after placing/removing segments (links may have changed across the whole
     /// graph). Item visuals update every frame in Update().
@@ -40,6 +43,25 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(Entity, int), GameObject> _itemSpheres = new();
         private readonly Dictionary<(Entity, int), int>       _itemSpriteIds = new();   // which item each visual shows
 
+        // Item visuals are pooled per item id instead of destroyed: a slot changes item every time the
+        // item at the front of a belt leaves, and the 3D particles cost more to build than a quad.
+        private const int MaxPooledPerItem = 64;
+        private readonly Dictionary<int, Stack<GameObject>> _itemPool = new();
+        // Item ids drawn as 3D particles (BeltItemVisuals): never billboarded.
+        private readonly HashSet<int> _particleItemIds = new();
+        // Per-frame scratch, reused so Update allocates nothing.
+        private readonly HashSet<(Entity, int)> _seenSlots  = new();
+        private readonly List<(Entity, int)>    _staleSlots = new();
+        // Redraw scratch (belt placed/removed/relinked), reused so a redraw allocates no collections (#278).
+        private readonly Dictionary<(int, int), int>       _exitMap    = new();
+        private readonly Dictionary<(int, int, int), bool> _inputPorts = new();
+        private readonly HashSet<(int, int)>               _beltCells  = new();
+        private readonly List<int>                         _inbound    = new(4);
+        private readonly bool[] _feeds = new bool[4];
+        private readonly bool[] _sinks = new bool[4];
+        // One property block for every visual made here; SetPropertyBlock copies it, so reuse is safe.
+        private static MaterialPropertyBlock s_mpb;
+
         // Red "not connected" seam markers: a belt whose forward output is blocked (drawn up to
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
         // items do not flow across. Rebuilt in RefreshAll alongside the belts.
@@ -52,16 +74,30 @@ namespace MobileIdleBuilder
         // collides with the real Refresh map). Lives only while a single candidate is pending.
         private GameObject _previewBelt;
 
-        // Shared materials (created from the custom shaders once; fall back to the opaque primitive
-        // material if a shader is missing so belts never render magenta).
+        // Shared belt material (created from the custom shader once; falls back to the opaque primitive
+        // material if the shader is missing so belts never render magenta).
         private Material _flowMaterial;
         private bool     _ownsFlowMaterial;
-        private Material _channelMaterial;
-        private bool     _ownsChannelMaterial;
         private Camera   _cam;
 
-        private static readonly Color FlowDeep  = new Color(0.06f, 0.20f, 0.35f);
-        private static readonly Color FlowCrest = new Color(0.30f, 0.80f, 1.00f);
+        // Warm white (chosen 2026-11-14): contrasts with every world's dark, cool tiles and with the particles.
+        private static readonly Color BeltLineColor = new Color(1.00f, 0.95f, 0.84f);
+        private static readonly Color BeltGlowColor = new Color(1.00f, 0.70f, 0.42f);
+
+        // The field lattice's wave packets travel with the items: _BeltPhase advances in cells at the same
+        // rate ConveyorSystem advances ConveyorItem.Progress (dt * ConveyorSpeedMult / TransportTime, and
+        // every segment's TransportTime is 1). Wrapped at a whole number so the shader pattern is unchanged.
+        internal static readonly int BeltPhaseId = Shader.PropertyToID("_BeltPhase");
+        private const float BeltPhaseWrap = 64f;
+        private EntityQuery _effectsQuery;
+        private float       _beltPhase;
+
+        /// <summary>The next belt phase: <paramref name="phase"/> advanced by <paramref name="speedCellsPerSecond"/> * dt, wrapped.</summary>
+        internal static float AdvanceBeltPhase(float phase, float dt, float speedCellsPerSecond)
+        {
+            if (speedCellsPerSecond <= 0f) speedCellsPerSecond = 1f;   // same fallback as ConveyorSystem
+            return Mathf.Repeat(phase + dt * speedCellsPerSecond, BeltPhaseWrap);
+        }
 
         // ----------------------------------------------------------------
         // Unity lifecycle
@@ -81,6 +117,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<ConveyorItem>()
             );
             _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
+            _effectsQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ResearchEffects>());
             _queriesReady = true;
         }
 
@@ -92,10 +129,14 @@ namespace MobileIdleBuilder
                 _segmentQuery.Dispose();
                 _itemQuery.Dispose();
                 _portQuery.Dispose();
+                _effectsQuery.Dispose();
             }
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
             foreach (var go in _itemSpheres.Values)  if (go) Destroy(go);
+            foreach (var stack in _itemPool.Values)
+                foreach (var go in stack) if (go) Destroy(go);
+            _itemPool.Clear();
             TailDeliveryLog.Clear();   // scene reload (e.g. prestige): the next layout starts fresh
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
@@ -104,7 +145,6 @@ namespace MobileIdleBuilder
             ClearSinglePreview();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
-            if (_ownsChannelMaterial && _channelMaterial != null) Destroy(_channelMaterial);
             if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
         }
 
@@ -141,13 +181,15 @@ namespace MobileIdleBuilder
         void Update()
         {
             if (!_queriesReady) return;
+            UpdateBeltPhase();
             RedrawTailsIfDeliveryChanged();
             if (_itemQuery.IsEmpty)
             {
                 // No belts left: drop any item visuals still showing.
                 if (_itemSpheres.Count > 0)
                 {
-                    foreach (var go in _itemSpheres.Values) if (go) Destroy(go);
+                    foreach (var kvp in _itemSpheres)
+                        ReleaseItemVisual(_itemSpriteIds.TryGetValue(kvp.Key, out int id) ? id : -1, kvp.Value);
                     _itemSpheres.Clear();
                     _itemSpriteIds.Clear();
                 }
@@ -163,7 +205,9 @@ namespace MobileIdleBuilder
 
             // Track which item slots (segment, index in its buffer) we saw this frame to detect removals.
             // A slot's visual follows whichever item sits in it; position is recomputed every frame.
-            var seen = new HashSet<(Entity, int)>();
+            var seen = _seenSlots;
+            seen.Clear();
+            if (_cam == null) _cam = Camera.main;
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -172,9 +216,8 @@ namespace MobileIdleBuilder
                 var items = em.GetBuffer<ConveyorItem>(e, isReadOnly: true);
 
                 Vector3 cellCenter = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
-                Vector3 entryEdge  = cellCenter + DirOffset(OppositeDir(seg.EntryDir), cs * 0.45f);
+                int     inEdge     = OppositeDir(seg.EntryDir);
                 int     exitDir    = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
-                Vector3 exitEdge   = cellCenter + DirOffset(exitDir, cs * 0.45f);
 
                 for (int k = 0; k < items.Length; k++)
                 {
@@ -182,34 +225,30 @@ namespace MobileIdleBuilder
                     var slot = (e, k);
                     seen.Add(slot);
 
-                    // Prefer the item's periodic-table tile sprite as a camera-facing billboard; fall back to
-                    // a colour-coded sphere when no icon is available (e.g. in tests without an ItemDatabase).
-                    // The sprite must follow the item, not the slot: items move between slots (#334).
+                    // The visual must follow the item, not the slot: items move between slots (#334).
                     if (_itemSpheres.TryGetValue(slot, out var sphere) && VisualIsStale(_itemSpriteIds, slot, item.ItemID))
                     {
-                        if (sphere) Destroy(sphere);
+                        ReleaseItemVisual(_itemSpriteIds[slot], sphere);
                         _itemSpheres.Remove(slot);
                         sphere = null;
                     }
                     if (sphere == null)
                     {
-                        var icon = ItemDatabase.Instance?.Get(item.ItemID)?.icon;
-                        sphere = (icon != null && icon.texture != null)
-                            ? CreateItemTile(gridRenderer.transform, icon.texture)
-                            : CreateItemSphere(gridRenderer.transform, item.ItemID);
+                        sphere = AcquireItemVisual(item.ItemID);
                         _itemSpheres[slot]   = sphere;
                         _itemSpriteIds[slot] = item.ItemID;
                     }
 
-                    // Animate position: lerp from entry edge to exit edge
-                    Vector3 pos = Vector3.Lerp(entryEdge, exitEdge, Mathf.Clamp01(item.Progress));
+                    // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge. On a
+                    // merge, each item rides the arm it came in on, so side items curve onto the belt.
+                    Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(
+                        cs, item.EntryEdgeOr(inEdge), exitDir, Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress)));
                     pos.y       = 0.3f;
                     sphere.transform.localPosition = pos;
 
                     // Billboard tile quads to face the camera so the sprite stays readable as the
-                    // camera orbits (harmless no-op for the symmetric sphere fallback).
-                    if (_cam == null) _cam = Camera.main;
-                    if (_cam != null)
+                    // camera orbits. 3D particles are round and animate in their own space: leave them.
+                    if (_cam != null && !_particleItemIds.Contains(item.ItemID))
                         sphere.transform.rotation =
                             Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
                 }
@@ -218,16 +257,75 @@ namespace MobileIdleBuilder
             entities.Dispose();
 
             // Remove visuals for slots that no longer hold an item
-            var toRemove = new List<(Entity, int)>();
+            var toRemove = _staleSlots;
+            toRemove.Clear();
             foreach (var kvp in _itemSpheres)
             {
                 if (!seen.Contains(kvp.Key))
                 {
-                    if (kvp.Value) Destroy(kvp.Value);
+                    ReleaseItemVisual(_itemSpriteIds.TryGetValue(kvp.Key, out int id) ? id : -1, kvp.Value);
                     toRemove.Add(kvp.Key);
                 }
             }
             foreach (var slot in toRemove) { _itemSpheres.Remove(slot); _itemSpriteIds.Remove(slot); }
+        }
+
+        /// <summary>Advances the global <c>_BeltPhase</c> at the current conveyor speed (see <see cref="BeltPhaseId"/>).</summary>
+        private void UpdateBeltPhase()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            float speed = 1f;
+            if (world != null && world.IsCreated && !_effectsQuery.IsEmpty)
+                speed = _effectsQuery.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
+            _beltPhase = AdvanceBeltPhase(_beltPhase, Time.deltaTime, speed);
+            Shader.SetGlobalFloat(BeltPhaseId, _beltPhase);
+        }
+
+        // ----------------------------------------------------------------
+        // Item visual pool
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// A visual for <paramref name="itemId"/>, from the pool when one is free. Prefers an animated 3D
+        /// particle (<see cref="BeltItemVisuals"/>), then the item's tile sprite as a billboard, then a
+        /// colour-coded sphere (e.g. in tests without an ItemDatabase).
+        /// </summary>
+        private GameObject AcquireItemVisual(int itemId)
+        {
+            if (_itemPool.TryGetValue(itemId, out var stack))
+            {
+                while (stack.Count > 0)
+                {
+                    var pooled = stack.Pop();
+                    if (pooled == null) continue;
+                    pooled.SetActive(true);
+                    return pooled;
+                }
+            }
+
+            var so = ItemDatabase.Instance != null ? ItemDatabase.Instance.Get(itemId) : null;
+            var particle = so != null ? BeltItemVisuals.TryCreate(so.id, gridRenderer.transform) : null;
+            if (particle != null)
+            {
+                _particleItemIds.Add(itemId);
+                return particle;
+            }
+            var icon = so != null ? so.icon : null;
+            return (icon != null && icon.texture != null)
+                ? CreateItemTile(gridRenderer.transform, icon.texture)
+                : CreateItemSphere(gridRenderer.transform, itemId);
+        }
+
+        /// <summary>Hides <paramref name="go"/> in the pool for <paramref name="itemId"/> (destroyed when the pool is full).</summary>
+        private void ReleaseItemVisual(int itemId, GameObject go)
+        {
+            if (go == null) return;
+            if (itemId < 0) { Destroy(go); return; }
+            if (!_itemPool.TryGetValue(itemId, out var stack))
+                _itemPool[itemId] = stack = new Stack<GameObject>();
+            if (stack.Count >= MaxPooledPerItem) { Destroy(go); return; }
+            go.SetActive(false);
+            stack.Push(go);
         }
 
         // ----------------------------------------------------------------
@@ -276,7 +374,8 @@ namespace MobileIdleBuilder
             // Map every cell to its output direction so we can detect inbound edges (merges). A cell
             // whose output is blocked (a dead-end that runs up to but does not merge with a neighbour)
             // is omitted, so the neighbour it points at is not drawn as a merge junction.
-            var exitMap = new Dictionary<(int, int), int>(entities.Length);
+            var exitMap = _exitMap;
+            exitMap.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
@@ -285,8 +384,8 @@ namespace MobileIdleBuilder
             }
 
             var inputPorts = CollectInputPorts(em);
-            var feeds      = new bool[4];
-            var sinks      = new bool[4];
+            var feeds      = _feeds;
+            var sinks      = _sinks;
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -301,7 +400,7 @@ namespace MobileIdleBuilder
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
 
-                var inbound = ComputeInboundEdges(seg.Cell, exitMap);
+                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _inbound);   // read by Build, not kept
                 _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
             }
 
@@ -342,8 +441,8 @@ namespace MobileIdleBuilder
             var em       = world.EntityManager;
             var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
             var inputPorts = CollectInputPorts(em);
-            var feeds = new bool[4];
-            var sinks = new bool[4];
+            var feeds = _feeds;
+            var sinks = _sinks;
             bool any = false;
 
             for (int i = 0; i < entities.Length; i++)
@@ -365,10 +464,12 @@ namespace MobileIdleBuilder
         /// Every building input port as (cell x, cell y, facing) -> whether its building is an entropy
         /// sink. A tail at cell C feeds direction d when (C + d, d) is a key, the same test as
         /// ConveyorSystem.HasMatchingPort; the sink flag feeds TailInputPriority (Demon last).
+        /// Returns the reused <c>_inputPorts</c> map, refilled on each call.
         /// </summary>
         private Dictionary<(int, int, int), bool> CollectInputPorts(EntityManager em)
         {
-            var map = new Dictionary<(int, int, int), bool>();
+            var map = _inputPorts;
+            map.Clear();
             if (_portQuery.IsEmpty) return map;
             var buildings = _portQuery.ToEntityArray(Allocator.Temp);
             for (int b = 0; b < buildings.Length; b++)
@@ -425,7 +526,8 @@ namespace MobileIdleBuilder
             var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
             float cs     = gridRenderer.CellSize;
 
-            var allCells = new HashSet<(int, int)>(entities.Length);
+            var allCells = _beltCells;
+            allCells.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
@@ -483,10 +585,10 @@ namespace MobileIdleBuilder
             return _gapMaterial;
         }
 
-        /// <summary>Returns the edge directions (0..3) from which conveyor flow enters this cell.</summary>
-        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap)
+        /// <summary>Fills <paramref name="edges"/> with the directions (0..3) from which conveyor flow enters this cell.</summary>
+        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap, List<int> edges)
         {
-            var edges = new List<int>();
+            edges.Clear();
             for (int d = 0; d < 4; d++)
             {
                 int2 nc = Adjacent(cell, d);
@@ -507,20 +609,7 @@ namespace MobileIdleBuilder
             root.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
             root.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
 
-            // Opaque dark bed (same footprint as the water, no rails) — gives the translucent ribbon a
-            // base and writes depth so the grid tiles beneath are occluded and the water draws on top.
-            var channel = new GameObject("Channel", typeof(MeshFilter), typeof(MeshRenderer));
-            channel.transform.SetParent(root.transform, worldPositionStays: false);
-            channel.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.Build(
-                cs, entryDir, exitDir, inboundEdges,
-                ConveyorFlowMeshBuilder.FloorY, ConveyorFlowMeshBuilder.FloorWidthFrac);
-
-            var cmr = channel.GetComponent<MeshRenderer>();
-            cmr.sharedMaterial    = GetChannelMaterial();
-            cmr.shadowCastingMode = ShadowCastingMode.Off;
-            cmr.receiveShadows    = false;
-
-            // Flowing water ribbon (translucent) on top, inside the channel.
+            // The field lattice ribbon, drawn straight over the grid tiles (no bed: the tile shows through).
             var flow = new GameObject("Flow", typeof(MeshFilter), typeof(MeshRenderer));
             flow.transform.SetParent(root.transform, worldPositionStays: false);
             flow.GetComponent<MeshFilter>().sharedMesh =
@@ -534,46 +623,33 @@ namespace MobileIdleBuilder
             return root;
         }
 
-        /// <summary>The shared belt water material; a Belt Splitter's river draws with it to match its belts.</summary>
+        /// <summary>
+        /// The shared belt material (the <c>ConveyorField</c> lattice); a Belt Splitter's river draws with it
+        /// to match its belts. Line colours contrast with every world's dark tiles.
+        /// </summary>
         public Material GetFlowMaterial()
         {
             if (_flowMaterial != null) return _flowMaterial;
 
-            var shader = Shader.Find("MobileIdleBuilder/ConveyorFlow");
+            var shader = Shader.Find("MobileIdleBuilder/ConveyorField");
             if (shader != null)
             {
                 _flowMaterial = new Material(shader);
-                _flowMaterial.SetColor("_BaseColor", FlowDeep);
-                _flowMaterial.SetColor("_FlowColor", FlowCrest);
+                _flowMaterial.SetColor("_LineColor", BeltLineColor);
+                _flowMaterial.SetColor("_GlowColor", BeltGlowColor);
+                // One square lattice in world space, aligned to the tiles (chosen 2026-11-15): corners, merges
+                // and splitter forks all show the same lines, so they blend with no seams or spokes.
+                _flowMaterial.SetFloat("_Mapping", 1f);
+                _flowMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
                 _ownsFlowMaterial = true;
             }
             else
             {
-                GameLogger.Warning("[ConveyorVisualizer] Shader 'MobileIdleBuilder/ConveyorFlow' not found — belts fall back to flat opaque.");
+                GameLogger.Warning("[ConveyorVisualizer] Shader 'MobileIdleBuilder/ConveyorField' not found — belts fall back to flat opaque.");
                 _flowMaterial     = RenderingMaterials.Instance?.Opaque;
                 _ownsFlowMaterial = false;
             }
             return _flowMaterial;
-        }
-
-        /// <summary>The shared belt bed material; see <see cref="GetFlowMaterial"/>.</summary>
-        public Material GetChannelMaterial()
-        {
-            if (_channelMaterial != null) return _channelMaterial;
-
-            var shader = Shader.Find("MobileIdleBuilder/ConveyorChannel");
-            if (shader != null)
-            {
-                _channelMaterial     = new Material(shader);
-                _ownsChannelMaterial = true;
-            }
-            else
-            {
-                GameLogger.Warning("[ConveyorVisualizer] Shader 'MobileIdleBuilder/ConveyorChannel' not found — channel falls back to flat opaque.");
-                _channelMaterial     = RenderingMaterials.Instance?.Opaque;
-                _ownsChannelMaterial = false;
-            }
-            return _channelMaterial;
         }
 
         /// <summary>Destroys a belt root and its procedural meshes (avoids leaking meshes on RefreshAll).</summary>
@@ -589,9 +665,16 @@ namespace MobileIdleBuilder
         // Helpers
         // ----------------------------------------------------------------
 
+        private static MaterialPropertyBlock SharedBlock()
+        {
+            s_mpb ??= new MaterialPropertyBlock();
+            s_mpb.Clear();
+            return s_mpb;
+        }
+
         private static void SetMeshColor(MeshRenderer mr, Color color)
         {
-            var mpb = new MaterialPropertyBlock();
+            var mpb = SharedBlock();
             mpb.SetColor("_BaseColor", color);
             mr.SetPropertyBlock(mpb);
         }
@@ -619,7 +702,7 @@ namespace MobileIdleBuilder
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows    = false;
 
-            var mpb = new MaterialPropertyBlock();
+            var mpb = SharedBlock();
             mpb.SetTexture("_BaseMap", tex);
             mpb.SetColor("_BaseColor", Color.white);
             mr.SetPropertyBlock(mpb);

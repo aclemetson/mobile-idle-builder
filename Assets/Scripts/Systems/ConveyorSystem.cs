@@ -190,11 +190,13 @@ namespace MobileIdleBuilder
             if (overflows.Count > 0)
             {
                 float fraction = SurplusSale.CurrentFraction();
+                // Cyclotron Kick boost (1 when none is running) multiplies what the sales pay.
+                double boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1d;
                 float now      = UnityEngine.Time.time;
                 foreach (var (from, itemID, bldg) in overflows)
                 {
                     if (!FrontIsReady(from, itemID)) continue;
-                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction);
+                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction) * boost;
                     _surplusCarry += value;
                     SurplusSaleLog.Record(bldg, value, now);
                     ConveyorItems.RemoveFront(EntityManager, from);
@@ -209,7 +211,8 @@ namespace MobileIdleBuilder
                     if (SystemAPI.TryGetSingletonEntity<AutomationIncome>(out Entity incomeEnt))
                     {
                         var income = EntityManager.GetComponentData<AutomationIncome>(incomeEnt);
-                        income.Total += earned;
+                        income.Total     += earned;
+                        income.Unboosted += earned / boost;
                         EntityManager.SetComponentData(incomeEnt, income);
                     }
                 }
@@ -255,7 +258,8 @@ namespace MobileIdleBuilder
                 EntityManager.GetBuffer<ConveyorItem>(target).Add(new ConveyorItem
                 {
                     ItemID   = chosenItem.ItemID,
-                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f)
+                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f),
+                    InEdge   = ConveyorItem.EncodeEdge(chosenDir)   // the edge it came through (merge arm)
                 });
                 ConveyorItems.RemoveFront(EntityManager, chosen);
 
@@ -458,7 +462,8 @@ namespace MobileIdleBuilder
 
             var  recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
             bool uses         = InputAcceptance.RecipeUses(recipeInputs, itemID);
-            if (uses) return count < cap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
+            if (uses)   // a craft bigger than the cap is gathered in the creation buffer (CraftStaging, #268)
+                return count < cap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
 
             return InputAcceptance.Decide(count, cap, recipeSet: true, uses,
                 NeededItemBehind(tail, recipeInputs, inputBuf));
