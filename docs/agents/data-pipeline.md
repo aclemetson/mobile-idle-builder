@@ -103,7 +103,7 @@ Copy the `ResearchSO` handling end-to-end:
 `buildings[]` entries carry three parallel per-building upgrade arrays, all mapped by `GameDataImporter` to `BuildingSO` and bought in the inspector:
 - `upgrade_levels` → `upgradeLevels` (speed / power scaling)
 - `storage_upgrade_levels` → `storageUpgradeLevels` (output buffer capacity)
-- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity **per item type**; `max_input_items` per tier; enforced by `InputAcceptance` in `ConveyorSystem`; for an item the active recipe uses, the cap is raised to at least that recipe's quantity so one craft always fits, #268)
+- `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity **per item type**; `max_input_items` per tier; enforced by `InputAcceptance` in `ConveyorSystem`; the cap is the input's only: a recipe needing more than it gathers in the building's creation buffer, `CraftStagingSlot` / `CraftStaging`, #268)
 
 The two capacity tracks are research-gated in the UI (`surplus_containment` for output, `feedstock_buffers` for input — see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
 

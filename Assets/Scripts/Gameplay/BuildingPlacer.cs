@@ -57,6 +57,7 @@ namespace MobileIdleBuilder
                 typeof(PlacedPortData),
                 typeof(BuildingOutputSlot),
                 typeof(BuildingInputSlot),
+                typeof(CraftStagingSlot),       // creation buffer for the current craft (CraftStaging)
                 typeof(BuildingInventoryConfig),
                 typeof(CraftedOutputEvent)   // drained each frame by ProductionAchievementBridge
             );

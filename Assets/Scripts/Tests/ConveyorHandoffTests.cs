@@ -301,7 +301,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(100, _em.GetComponentData<PlayerProgressData>(progress).BaseCurrency);
         }
 
-        // ── #268: the cap grows to fit a recipe that needs more than it ─────
+        // ── #268: a recipe bigger than the cap is gathered in the creation buffer, not the input ─
 
         private const int Neutron = 11;
 
@@ -314,25 +314,26 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void RecipeNeedsMoreThanCap_InputAcceptsPastCap()
+        public void RecipeNeedsMoreThanCap_InputStillFillsToTheCap()
         {
             var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
             SetBigRecipe(building);
-            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 30);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 29);
             var tail = CreateTail(new int2(0, 0), East, Neutron, Entity.Null);
 
             Tick();
 
-            Assert.AreEqual(31, CountIn(building, Neutron), "a craft needing 146 must be able to fill past the cap of 30");
+            Assert.AreEqual(30, CountIn(building, Neutron));
             Assert.IsFalse(ConveyorItems.Has(_em, tail));
         }
 
         [Test]
-        public void RecipeNeedsMoreThanCap_AtRecipeQuantity_SellsTheSurplus()
+        public void RecipeNeedsMoreThanCap_InputAtCap_SellsTheSurplus()
         {
+            // The input keeps its normal cap; the creation buffer (ProductionSystem) drains it toward 146.
             var building = CreateBuildingWithInput(new int2(1, 0), East, inputCapacity: 30);
             SetBigRecipe(building);
-            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 146);
+            SlotBufferUtils.AddToInputBuffer(_em.GetBuffer<BuildingInputSlot>(building), Neutron, 30);
             CreatePlayerInventory();
             var progress = _em.CreateEntity();
             _em.AddComponentData(progress, new PlayerProgressData { BaseCurrency = 100 });
@@ -340,7 +341,7 @@ namespace MobileIdleBuilder.Tests
 
             Tick();
 
-            Assert.AreEqual(146, CountIn(building, Neutron), "the raised cap is the recipe's quantity, no more");
+            Assert.AreEqual(30, CountIn(building, Neutron), "the input cap does not grow with the recipe");
             Assert.IsFalse(ConveyorItems.Has(_em, tail), "the extra is autosold so the belt keeps moving");
         }
 

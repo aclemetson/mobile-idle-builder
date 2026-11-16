@@ -85,6 +85,7 @@ namespace MobileIdleBuilder
 
                 // Local inventory buffers (required for conveyor connectivity)
                 AddBuffer<BuildingInputSlot>(entity);
+                AddBuffer<CraftStagingSlot>(entity);   // creation buffer (CraftStaging)
                 AddBuffer<BuildingOutputSlot>(entity);
                 // Crafts are recorded here by ProductionSystem and drained by ProductionAchievementBridge.
                 AddBuffer<CraftedOutputEvent>(entity);

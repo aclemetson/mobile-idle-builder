@@ -459,12 +459,8 @@ namespace MobileIdleBuilder
 
             var  recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
             bool uses         = InputAcceptance.RecipeUses(recipeInputs, itemID);
-            if (uses)
-            {
-                // A craft that needs more than the cap still fits (#268).
-                int effectiveCap = InputAcceptance.EffectiveCap(cap, InputAcceptance.RecipeQuantity(recipeInputs, itemID));
-                return count < effectiveCap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
-            }
+            if (uses)   // a craft bigger than the cap is gathered in the creation buffer (CraftStaging, #268)
+                return count < cap ? InputDecision.Accept : InputDecision.Overflow; // skip the belt walk
 
             return InputAcceptance.Decide(count, cap, recipeSet: true, uses,
                 NeededItemBehind(tail, recipeInputs, inputBuf));

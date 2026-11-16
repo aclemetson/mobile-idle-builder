@@ -39,20 +39,6 @@ namespace MobileIdleBuilder.Tests
         public void Recipe_UnusedItem_JammingNeededItem_Overflows()
             => Assert.AreEqual(InputDecision.Overflow, InputAcceptance.Decide(0, 30, true, false, true));
 
-        // ── Cap fits the recipe (#268) ────────────────────────────────────────
-
-        [Test]
-        public void EffectiveCap_RecipeNeedsMore_RaisesCapToRecipe()
-            => Assert.AreEqual(146, InputAcceptance.EffectiveCap(30, 146));
-
-        [Test]
-        public void EffectiveCap_RecipeNeedsLess_KeepsBuildingCap()
-            => Assert.AreEqual(30, InputAcceptance.EffectiveCap(30, 2));
-
-        [Test]
-        public void EffectiveCap_ItemNotInRecipe_KeepsBuildingCap()
-            => Assert.AreEqual(30, InputAcceptance.EffectiveCap(30, 0));
-
         // ── Tail input priority (#275) ────────────────────────────────────────
 
         [Test]
