@@ -32,7 +32,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 | Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
-| Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 60 s avg of this run only, history cleared on prestige, floor until 30 s of samples; floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
+| Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 180 s avg of `AutomationIncome.Unboosted` (Cyclotron boost excluded), this run only; history restarts on prestige, reload, falling total or a >5 s sample gap (pause); first 10 s after a restart ignored (load backlog); offer held as "Measuring income" until 60 s of settled samples (side icon hidden, rewards-panel button disabled and labelled "Measuring…", an open card closes if the measurement restarts); amount is quoted before the ad plays and that quote is granted (the ad pauses the app, which restarts the measurement); floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
 
 Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
@@ -77,7 +77,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 - **Field purchase (Field Synthesis, 250e after Automation I)**: extra fields bought from the Build menu cost `purchase_cost_base × purchase_cost_multiplier^n`, n = purchases of that field this run (reset on prestige). Quark fields sell as a pair at 300e → 900e → 2,700e → 8,100e…; a lepton field 200e → 600e → 1,800e…. Both ×3, lowered from ×10 on 2026-11-11 so a second hydrogen line (quarks and its electrons) is reachable soon after a prestige. The growth is still exponential so fields never become a repeatable income lever. Prestige `CostReduction` does not apply. Owner: `FieldPurchaseService`.
 - **Building purchase scaling**: `base_cost × multiplier^(n-1)`, n = same-type buildings already placed; multiplier 1.5 (T1), 1.4 (T2), 1.3 (T3+) (`game_config.building_purchase_multiplier_*`).
 - **Power (proximity grid, single shared eV pool)**: a consumer runs only if within a generator's `InfluenceRadius`; global `Draw` (Σ connected consumers' `DrawEV × manager PowerDiscount`) vs `Supply` (Σ generator output eV) gives `ratio = min(1, Supply/Draw)` — connected buildings craft at `ratio` speed (brownout), disconnected at 0. Generator (Basic Generator) scales **50 → 100 → 200 → 400 eV**, radius **3 → 4 → 5 → 6** tiles by level. Per-building draw eV (L1, `base_power_cost_ev`, scales with speed level): SFC 10, Atom Generator 20, Isotopic Manipulator 25, Radioactive Containment 30, Molecular Synthesizer 50, Materials Forge 100, Component Fabricator 200. (v1 uses static per-level draw; the old `power_cost_is_dynamic` mass/neutron formulas are superseded and out of scope. Harvester, Maxwell's Demon, Basic Generator draw nothing.)
-- **Idle/offline**: collects `idleBaseCollectionRate = 20%` of active output, max `idleBaseMaxSeconds = 2h` base, hard cap 12h (`GameConfigSO.cs:34-40`); both raisable by prestige-shop upgrades (`IdleCollectionRate`, `IdleTimeCap`).
+- **Idle/offline**: collects `idleBaseCollectionRate = 20%` of active output, max `idleBaseMaxSeconds = 30 min` base (cut from 2h on 2026-11-16 to bring players back to collect), hard cap 12h (`GameConfigSO.cs:34-40`); both raisable by prestige-shop upgrades (`IdleCollectionRate`, `IdleTimeCap`).
 - **Speed boost (premium)**: timed multiplier composed onto `PrestigeData.SpeedMultiplier` at load (`ECSLoadBridge.cs:148`), stripped at save (`:236`).
 
 ## Progression phases & research gates (distilled from `game_data.json`)
@@ -140,7 +140,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | `turnkey_builder` | Turnkey Builder | +1 pre-placed Harvester / run | per-lvl |
 | `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
 | `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
-| `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 2h, max 12h) | per-lvl |
+| `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 30 min, max 12h; 23 levels, 5✦ → 700✦, no prereq) | 23 |
 | `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 20%, max 100%) | per-lvl |
 | `salvage_protocols` | Salvage Protocols | +10% removal refund (base 50%, max 100%; prereq Efficient Layouts 1) | 5 |
 | `surplus_resale` | Surplus Brokerage | +10% of the Demon price for auto-sold unused items (base 50%, max 100%) | 5 |

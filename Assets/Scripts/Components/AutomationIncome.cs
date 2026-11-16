@@ -10,6 +10,13 @@ namespace MobileIdleBuilder
     /// </summary>
     public struct AutomationIncome : IComponentData
     {
+        /// <summary>Everything automation paid, Cyclotron Kick boost included (the Statistics rate).</summary>
         public double Total;
+
+        /// <summary>
+        /// The same income with the Cyclotron Kick boost divided out. The Entropy Surge prices itself from
+        /// this, so a 5-minute boost does not inflate a 10-minute payout.
+        /// </summary>
+        public double Unboosted;
     }
 }

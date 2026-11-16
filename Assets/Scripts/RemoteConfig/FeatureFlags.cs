@@ -42,6 +42,14 @@ namespace MobileIdleBuilder
         public const string GameDataOverridesKey   = "gamedata.overrides";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
+        public const string UpdateEnabledKey       = "update.enabled";
+        public const string UpdateLatestAndroidKey = "update.latest.android";
+        public const string UpdateLatestIosKey     = "update.latest.ios";
+        public const string UpdateMinimumAndroidKey = "update.minimum.android";
+        public const string UpdateMinimumIosKey    = "update.minimum.ios";
+        public const string UpdateUrlAndroidKey    = "update.url.android";
+        public const string UpdateUrlIosKey        = "update.url.ios";
+        public const string UpdateMessageKey       = "update.message";
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
@@ -72,6 +80,12 @@ namespace MobileIdleBuilder
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
+        // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
+        // blank versions never prompt. CI writes update.latest.* after each store upload
+        // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.
+        public const bool   UpdateEnabledDefault = false;
+        public const string UpdateVersionDefault = "";   // latest / minimum, both platforms
+        public const string UpdateMessageDefault = "A new version of Quantum Foundry is available.";
 
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
@@ -94,6 +108,14 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataOverridesKey,     FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
+            new FlagDef(UpdateEnabledKey,         FlagType.Bool),
+            new FlagDef(UpdateLatestAndroidKey,   FlagType.String),
+            new FlagDef(UpdateLatestIosKey,       FlagType.String),
+            new FlagDef(UpdateMinimumAndroidKey,  FlagType.String),
+            new FlagDef(UpdateMinimumIosKey,      FlagType.String),
+            new FlagDef(UpdateUrlAndroidKey,      FlagType.String),
+            new FlagDef(UpdateUrlIosKey,          FlagType.String),
+            new FlagDef(UpdateMessageKey,         FlagType.String),
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
@@ -133,6 +155,11 @@ namespace MobileIdleBuilder
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
+        public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);
+        public static string UpdateMessage        => GetString(UpdateMessageKey,        UpdateMessageDefault);
+
+        /// <summary>Raw string flag read (used by AppUpdateCheck for its per-platform keys).</summary>
+        public static string GetStringFlag(string key, string fallback) => GetString(key, fallback);
 
         static bool GetBool(string key, bool fallback)
         {

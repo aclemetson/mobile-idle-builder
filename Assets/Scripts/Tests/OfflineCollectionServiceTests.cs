@@ -335,6 +335,26 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ShippedConfig_IdleCapStartsAtThirtyMinutes()
+        {
+            var cfg = ScriptableObject.CreateInstance<GameConfigSO>();
+            try { Assert.AreEqual(1800f, OfflineCollectionService.GetEffectiveIdleCap(cfg, null), 0.01f); }
+            finally { UnityEngine.Object.DestroyImmediate(cfg); }
+        }
+
+        [Test]
+        public void DormantResonance_IsCheapEarly_AndReachesTheAbsoluteMax()
+        {
+            var def = System.Array.Find(PersistentUpgradeService.All, d => d.id == "idle_time_cap");
+            Assert.AreEqual(0, def.prereqs.Length, "no prerequisite: buyable right after the first prestige");
+            Assert.AreEqual(5, def.levelCosts[0]);
+            Assert.LessOrEqual(def.levelCosts[0] + def.levelCosts[1] + def.levelCosts[2] + def.levelCosts[3], 50,
+                "first four levels (back to the old 2.5 h) fit in a first prestige's currency");
+            Assert.AreEqual(def.maxLevel, def.levelCosts.Length);
+            Assert.AreEqual(43200f, 1800f + def.maxLevel * def.effectPerLevel, 0.01f, "30 min base + max levels = 12 h");
+        }
+
+        [Test]
         public void GetEffectiveIdleCap_WithUpgrades_AddsCorrectly()
         {
             // 3 levels of idle_time_cap: 3 × 35/40/46 → levels 1,2,3; effect = 3 × 1800 = 5400

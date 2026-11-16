@@ -55,7 +55,77 @@ namespace MobileIdleBuilder
             if (maintTask.Result)
                 ShowMaintenance(root);
             else
+                ContinueOrPromptUpdate(root);
+        }
+
+        /// <summary>
+        /// Update prompt (<see cref="AppUpdateCheck"/>, flag <c>update.enabled</c>): uses the flags the
+        /// maintenance gate just fetched, or the cached ones when it timed out. An older build pauses here
+        /// with an Update link; "Later" continues unless the build is below the minimum.
+        /// </summary>
+        private void ContinueOrPromptUpdate(VisualElement root)
+        {
+            string current = Application.version;
+            var kind = AppUpdateCheck.Evaluate(current);
+            GameLogger.Info($"[Update] current={current} latest={AppUpdateCheck.LatestVersion} " +
+                            $"min={AppUpdateCheck.MinimumVersion} enabled={FeatureFlags.UpdateEnabled} -> {kind}");
+
+            if (kind == AppUpdateKind.None || !ShowUpdate(root, kind, current))
                 SceneLoader.GoTo("GameScene");
+        }
+
+        /// <summary>Shows the update panel. False if the panel is missing from the UXML (then the game just loads).</summary>
+        private bool ShowUpdate(VisualElement root, AppUpdateKind kind, string current)
+        {
+            var panel    = root.Q("update-panel");
+            var message  = root.Q<Label>("update-message");
+            var versions = root.Q<Label>("update-versions");
+            var update   = root.Q<Button>("btn-update");
+            var later    = root.Q<Button>("btn-update-later");
+            if (panel == null)
+            {
+                GameLogger.Warning("[Update] update-panel missing from SplashScreen.uxml; loading the game.");
+                return false;
+            }
+
+            string url = AppUpdateCheck.UpdateUrl;
+            bool required = kind == AppUpdateKind.Required;
+
+            var content = root.Q("splash-content");
+            if (content != null) content.style.display = DisplayStyle.None;
+
+            if (message != null)
+            {
+                string body = FeatureFlags.UpdateMessage;
+                if (required) body += "\nThis version is no longer supported. Please update to keep playing.";
+                if (string.IsNullOrEmpty(url))
+                    body += AppUpdateCheck.IsIos ? "\nUpdate from the App Store." : "\nUpdate from the Play Store.";
+                message.text = body;
+            }
+            if (versions != null)
+            {
+                string target = required && string.IsNullOrEmpty(AppUpdateCheck.LatestVersion)
+                    ? AppUpdateCheck.MinimumVersion : AppUpdateCheck.LatestVersion;
+                versions.text = $"Installed {current}  ·  Available {target}";
+            }
+
+            if (update != null)
+            {
+                update.style.display = string.IsNullOrEmpty(url) ? DisplayStyle.None : DisplayStyle.Flex;
+                update.clicked += () =>
+                {
+                    GameLogger.Info($"[Update] Opening {url}");
+                    Application.OpenURL(url);
+                };
+            }
+            if (later != null)
+            {
+                later.style.display = required ? DisplayStyle.None : DisplayStyle.Flex;
+                later.clicked += () => SceneLoader.GoTo("GameScene");
+            }
+
+            panel.RemoveFromClassList("hidden");
+            return true;
         }
 
         private void ShowMaintenance(VisualElement root)
@@ -93,7 +163,10 @@ namespace MobileIdleBuilder
             yield return new WaitUntil(() => task.IsCompleted);
 
             if (!task.Result)
-                SceneLoader.GoTo("GameScene");
+            {
+                root.Q("maintenance-panel")?.AddToClassList("hidden");
+                ContinueOrPromptUpdate(root);
+            }
             else if (retry != null)
                 retry.SetEnabled(true); // still under maintenance — allow another retry
         }
