@@ -21,6 +21,7 @@ import sys
 
 from openpyxl import Workbook
 from openpyxl.comments import Comment
+from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -55,8 +56,9 @@ UPGRADES = [
     ("quantum_yield",        "Quantum Yield (+10% output)",             [40, 80, 160, 320, 640]),
     ("entropy_echo",         "Entropy Echo (+5% prestige currency)",    [200, 600, 1800, 5400]),
     ("entropy_headstart",    "Entropy Headstart (+250e start)",         [5, 10, 20, 40, 80]),
-    ("idle_time_cap",        "Dormant Resonance (+30 min idle cap)",    [35, 40, 46, 53, 61, 70, 81, 93, 107, 123,
-                                                                         142, 163, 188, 216, 249, 286, 329, 379, 436, 502]),
+    ("idle_time_cap",        "Dormant Resonance (+30 min idle cap)",    [5, 10, 15, 20, 25, 30, 40, 50, 60, 75,
+                                                                         90, 110, 130, 155, 185, 220, 260, 305, 360, 425,
+                                                                         500, 590, 700]),
     ("idle_collection_rate", "Idle Efficiency (+5% idle rate)",         [80, 120, 180, 270, 405, 608, 912, 1368, 2052, 3078]),
 ]
 
@@ -98,6 +100,13 @@ def load_curve():
         rows.append((rid, r["block"], float(parts[2].replace(",", "")), float(parts[5].replace(",", "")),
                      r["duration_seconds"], 0.0))
     return rows, data["game_config"]
+
+
+def idle_base_hours():
+    """GameConfigSO.idleBaseMaxSeconds from the shipped asset, in hours (the model's idle cap base)."""
+    import re
+    text = open(os.path.join(ROOT, "Assets", "Data", "settings", "game_config.asset"), encoding="utf-8").read()
+    return float(re.search(r"^\s*idleBaseMaxSeconds:\s*([0-9.]+)", text, re.M).group(1)) / 3600
 
 
 def write_html(curve, inputs):
@@ -168,6 +177,8 @@ def build():
         ("PWall", "prestige_wall_multiplier", cfg["prestige_wall_multiplier"], "x base",
          "Prestige unlocks at net worth >= base x wall (50,000e)."),
         ("StartE", "starting_entropy", cfg["starting_entropy"], "e", "game_data.json game_config"),
+        ("IdleBaseH", "Base idle cap (idleBaseMaxSeconds)", idle_base_hours(), "h",
+         "Assets/Data/settings/game_config.asset; Dormant Resonance adds 0.5 h per level, max 12 h."),
         ("Player pattern", None, None, None),
         ("ActiveMin", "Active play per day", 90, "min", "Assumption: an engaged mobile idle player."),
         ("Sessions", "Sessions per day", 5, "count",
@@ -258,7 +269,7 @@ def build():
     sh["A1"], sh["A1"].font = "Prestige shop costs (✦)", TITLE
     sh["A2"] = "Source: PersistentUpgradeService.All. Top table = cost of each level; bottom = total to own that level."
     sh["A2"].font = Font(name=F, italic=True)
-    maxlv = 20
+    maxlv = max(len(costs) for _, _, costs in UPGRADES)
     header(sh, 4, ["Upgrade", "id"] + [f"Lv {i}" for i in range(1, maxlv + 1)],
            [40, 22] + [8] * maxlv)
     for u, (uid, label, costs) in enumerate(UPGRADES):
@@ -339,7 +350,8 @@ def build():
         spend = []
         for uc, (uid, _, _) in zip(up_cols, UPGRADES):
             cr = cum_rows[uid]
-            rng = f"Shop!$B${cr}:$W${cr}"
+            last = get_column_letter(2 + maxlv)   # Lv 0 in column B, Lv maxlv after it
+            rng = f"Shop!$B${cr}:${last}${cr}"
             prev = f"{uc}{R - 1}" if i else "0"
             spend.append(f"INDEX({rng},{uc}{R}+1)-INDEX({rng},{prev}+1)")
         f["M"] = "=" + "+".join(spend)
@@ -364,12 +376,12 @@ def build():
         f["Y"] = (f"=Y{R - 1}-M{R}+X{R}" if i else f"=-M{R}+X{R}")
         f["Z"] = (f'=IF(Y{R - 1}-M{R}>=0,"OK","SHORT")' if i else f'=IF(M{R}=0,"OK","SHORT")')
         f["AA"] = f"=MIN(1,0.2+0.05*K{R})"
-        f["AB"] = f"=MIN(12,2+0.5*J{R})"
+        f["AB"] = f"=MIN(12,IdleBaseH+0.5*J{R})"
         f["AC"] = f"=ActiveMin/60+Sessions*MIN(GapH,AB{R})*AA{R}"
         f["AD"] = f"=MAX(P{R}/AC{R},V{R}/24)"
         f["AE"] = f"=MAX(P{R}/(AC{R}+AdHoursPerDay),V{R}/24)"
         f["AF"] = f"=1-AE{R}/AD{R}"
-        f["AG"] = f"=MAX(Q{R}/(ActiveMin/60+Sessions*MIN(GapH,2)*0.2),V{R}/24)"
+        f["AG"] = f"=MAX(Q{R}/(ActiveMin/60+Sessions*MIN(GapH,IdleBaseH)*0.2),V{R}/24)"
         f["AH"] = f"=AH{R - 1}+AE{R}" if i else f"=AE{R}"
         f["AI"] = f"=CurBoostFrac*P{R}/2"
         fmts = {"C": "0", "M": "#,##0", "N": "0.00x", "O": "0%", "P": "0.0", "Q": "0.0", "R": "0",
