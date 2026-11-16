@@ -1687,6 +1687,36 @@
     background-color: var(--color-primary);
 }
 
+/* Upgrades (Insight) under the Start button. */
+.cyclotron-section-title {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.cyclotron-upgrade-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.cyclotron-upgrade-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    white-space: normal;
+    margin-right: var(--spacing-sm);
+}
+
+.cyclotron-upgrade-btn {
+    flex-shrink: 0;
+    min-width: 96px;
+}
+
 /* Square play area; taps anywhere on it kick the particle. */
 .cyclotron-view {
     width: 100%;

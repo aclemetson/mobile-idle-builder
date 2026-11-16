@@ -877,7 +877,7 @@ namespace MobileIdleBuilder
             }
         }
 
-        /// <summary>"◈ 750", or "◈ 750 (-25%)" when an upgrade discounts it (Memory Resonance, Cyclotron Insight).</summary>
+        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance discounts it.</summary>
         internal static string ResearchCostText(long cost, long baseCost)
         {
             if (baseCost <= 0 || cost >= baseCost) return $"◈ {cost:N0}";

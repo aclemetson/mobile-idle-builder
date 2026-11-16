@@ -50,7 +50,7 @@ Each task file opens with its own Required-reading line and a Status line — up
 | `tasks/feature-ignition-rebalance.md` - quarks-to-Carbon craft times + harvester upgrades that actually apply | done (PR pending) | M |
 | `tasks/feature-full-input-autosell.md` - items reaching a full input are sold at the Surplus Brokerage rate | done (PR pending) | M |
 | `tasks/feature-belt-speed-research.md` - Transportation I/II as x2/x4 belt speed tiers | done (PR pending) | M |
-| `tasks/feature-cyclotron-kick.md` - post-Carbon pacing: Foundations ramp + Cyclotron Kick minigame (Insight research discount) | done, testing (PR pending) | L |
+| `tasks/feature-cyclotron-kick.md` - post-Carbon pacing: Foundations ramp + Cyclotron Kick minigame (timed entropy boost + Insight upgrades) | done, testing (PR pending) | L |
 
 Session prompt format: *"Read docs/agents/README.md, then implement docs/agents/tasks/feature-X.md."*
 

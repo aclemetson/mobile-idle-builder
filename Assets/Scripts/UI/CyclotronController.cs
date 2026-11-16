@@ -1,4 +1,5 @@
 using System;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,12 +8,16 @@ namespace MobileIdleBuilder
     /// <summary>
     /// The Cyclotron Kick minigame (docs/agents/tasks/feature-cyclotron-kick.md): a drawer button, unlocked at
     /// the second prestige, opens a card with three steps:
-    ///  - <b>intro</b>: the description, time until the next run (one an hour), Insight banked, Start;
+    ///  - <b>intro</b>: the description, time until the next run, the boost running (if any), Start, and
+    ///    the two Insight upgrades (Longer Boost, Faster Recharge);
     ///  - <b>play</b>: a 30 s <see cref="CyclotronRun"/> drawn by <see cref="CyclotronView"/>; tap the view
     ///    as the particle crosses the gap;
-    ///  - <b>result</b>: the energy reached and the Insight it pays; Collect banks it
-    ///    (<see cref="CyclotronProgress.Collect"/>).
+    ///  - <b>result</b>: the energy reached, the entropy boost and the Insight it pays; Collect starts the
+    ///    boost and banks the Insight (<see cref="CyclotronProgress.Collect"/>).
     /// Closing mid-run ends the run and still pays for the energy reached; closing on the result collects.
+    ///
+    /// It also keeps the <see cref="EntropyIncomeBoost"/> ECS singleton in step with the save's boost, so the
+    /// income systems apply it and drop it the moment it runs out.
     ///
     /// Added to the HUD GameObject by <see cref="HUDController"/> (GetComponent ?? AddComponent), so no
     /// scene wiring is needed.
@@ -27,13 +32,18 @@ namespace MobileIdleBuilder
         Button        _drawerButton;
         VisualElement _modal, _intro, _play, _result, _energyFill;
         Label         _introText, _status, _energyLabel, _timerLabel, _feedback, _resultText;
-        Button        _start;
+        Label         _insightLabel, _boostUpText, _cooldownUpText;
+        Button        _start, _boostUp, _cooldownUp;
         CyclotronView _view;
         CyclotronRun  _run;
         Step          _step = Step.Closed;
         float         _feedbackLeft, _nextStatus;
         readonly System.Random _rng = new System.Random();
         readonly object _modalOwner = new();
+        EntityManager _em;
+        EntityQuery   _boostQuery;
+        bool          _ecsReady;
+        float         _syncedBoost = -1f;
 
         public bool IsOpen => _step != Step.Closed;
 
@@ -60,6 +70,13 @@ namespace MobileIdleBuilder
             _feedback    = _modal.Q<Label>("cyclotron__feedback");
             _resultText  = _modal.Q<Label>("cyclotron__result-text");
             _view        = _modal.Q<CyclotronView>("cyclotron__view");
+            _insightLabel   = _modal.Q<Label>("cyclotron__insight");
+            _boostUpText    = _modal.Q<Label>("cyclotron__boost-upgrade-text");
+            _cooldownUpText = _modal.Q<Label>("cyclotron__cooldown-upgrade-text");
+            _boostUp        = _modal.Q<Button>("cyclotron__boost-upgrade");
+            _cooldownUp     = _modal.Q<Button>("cyclotron__cooldown-upgrade");
+            if (_boostUp != null)    _boostUp.clicked    += () => BuyUpgrade(CyclotronProgress.Upgrade.Boost);
+            if (_cooldownUp != null) _cooldownUp.clicked += () => BuyUpgrade(CyclotronProgress.Upgrade.Cooldown);
 
             _drawerButton.clicked += Open;
             if (_start != null) _start.clicked += StartRun;
@@ -77,7 +94,8 @@ namespace MobileIdleBuilder
 
         internal const string IntroText =
             "Kick the particle each time it crosses the vertical gap. Every good kick adds energy and " +
-            "widens its orbit. The energy you reach in 30 s becomes Insight: a discount on your next research.";
+            "widens its orbit. The energy you reach in 30 s sets an entropy boost (x1.5 to x3 on everything " +
+            "your factory earns) and pays Insight, which upgrades the cyclotron below.";
 
         void Update()
         {
@@ -86,11 +104,15 @@ namespace MobileIdleBuilder
             bool loaded = ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
             bool unlocked = loaded && CyclotronProgress.IsUnlocked(save);
             HUDController.SetElementVisible(_drawerButton, unlocked);
+            if (loaded) SyncBoost(CyclotronProgress.BoostMultiplier(save, GameClock.UtcNow));
 
             if (unlocked && Time.unscaledTime >= _nextStatus)
             {
                 _nextStatus = Time.unscaledTime + 1f;
-                _drawerButton.text = DrawerLabel(CyclotronProgress.CooldownLeft(save, GameClock.UtcNow));
+                var now = GameClock.UtcNow;
+                _drawerButton.text = DrawerLabel(CyclotronProgress.CooldownLeft(save, now),
+                                                 CyclotronProgress.BoostMultiplier(save, now),
+                                                 CyclotronProgress.BoostLeft(save, now));
                 if (_step == Step.Intro) RefreshIntro(save);
             }
 
@@ -115,12 +137,27 @@ namespace MobileIdleBuilder
             if (_run.Done) ShowResult();
         }
 
-        /// <summary>"Cyclotron (ready)", or the time left rounded up to the minute: "Cyclotron (42m)".</summary>
-        internal static string DrawerLabel(TimeSpan left) =>
-            left <= TimeSpan.Zero ? "Cyclotron (ready)" : $"Cyclotron ({(int)Math.Ceiling(left.TotalMinutes)}m)";
+        /// <summary>
+        /// "Cyclotron (x2.4 4m)" while a boost runs, else "Cyclotron (ready)" or the cooldown rounded up to
+        /// the minute, "Cyclotron (42m)".
+        /// </summary>
+        internal static string DrawerLabel(TimeSpan cooldownLeft, float boost = 1f, TimeSpan boostLeft = default)
+        {
+            if (boost > 1f && boostLeft > TimeSpan.Zero)
+                return $"Cyclotron ({FormatMult(boost)} {CeilMinutes(boostLeft)}m)";
+            return cooldownLeft <= TimeSpan.Zero ? "Cyclotron (ready)" : $"Cyclotron ({CeilMinutes(cooldownLeft)}m)";
+        }
+
+        static int CeilMinutes(TimeSpan t) => (int)Math.Ceiling(t.TotalMinutes);
 
         /// <summary>Countdown for the card: "42m 05s".</summary>
         internal static string FormatLeft(TimeSpan left) => $"{(int)left.TotalMinutes}m {left.Seconds:00}s";
+
+        /// <summary>"x2.4"; whole multipliers drop the decimal: "x3".</summary>
+        internal static string FormatMult(float m) =>
+            "x" + m.ToString(Math.Abs(m - Mathf.Round(m)) < 0.05f ? "0" : "0.0", System.Globalization.CultureInfo.InvariantCulture);
+
+        static string FormatMinutes(double minutes) => $"{minutes:0} min";
 
         void Open()
         {
@@ -136,21 +173,86 @@ namespace MobileIdleBuilder
         void RefreshIntro(SaveData save)
         {
             if (save == null) return;
-            var left = CyclotronProgress.CooldownLeft(save, GameClock.UtcNow);
-            if (_status != null) _status.text = StatusText(left, save.researchInsight);
+            var now  = GameClock.UtcNow;
+            var left = CyclotronProgress.CooldownLeft(save, now);
+            if (_status != null)
+                _status.text = StatusText(left, CyclotronProgress.CooldownMinutes(save), CyclotronProgress.BoostMinutes(save),
+                                          CyclotronProgress.BoostMultiplier(save, now), CyclotronProgress.BoostLeft(save, now));
             if (_start != null)
             {
                 _start.SetEnabled(left <= TimeSpan.Zero);
                 _start.text = left <= TimeSpan.Zero ? "Start run" : $"Ready in {FormatLeft(left)}";
             }
+            if (_insightLabel != null) _insightLabel.text = $"Insight: {save.cyclotronInsight}";
+            RefreshUpgrade(save, CyclotronProgress.Upgrade.Boost,    _boostUpText,    _boostUp);
+            RefreshUpgrade(save, CyclotronProgress.Upgrade.Cooldown, _cooldownUpText, _cooldownUp);
         }
 
-        internal static string StatusText(TimeSpan left, float insight)
+        void RefreshUpgrade(SaveData save, CyclotronProgress.Upgrade u, Label text, Button button)
         {
-            string s = left <= TimeSpan.Zero ? "Ready to run" : $"Next run in {FormatLeft(left)} (one run an hour)";
-            s += $"\nInsight banked: {Mathf.RoundToInt(insight * 100f)}% off your next research " +
-                 $"(max {Mathf.RoundToInt(CyclotronProgress.MaxInsight * 100f)}%)";
+            int level = CyclotronProgress.Level(save, u);
+            bool maxed = CyclotronProgress.IsMaxed(save, u);
+            if (text != null) text.text = UpgradeText(u, level);
+            if (button == null) return;
+            button.text = maxed ? "Maxed" : $"{CyclotronProgress.UpgradeCost(u, level)} Insight";
+            button.SetEnabled(CyclotronProgress.CanUpgrade(save, u));
+        }
+
+        /// <summary>"Longer Boost (Lv 2): boost lasts 7 min -> 8 min"; at the cap just the current value.</summary>
+        internal static string UpgradeText(CyclotronProgress.Upgrade u, int level)
+        {
+            bool boost = u == CyclotronProgress.Upgrade.Boost;
+            string name = boost ? "Longer Boost" : "Faster Recharge";
+            string what = boost ? "boost lasts" : "one run every";
+            double cur = boost ? CyclotronProgress.BoostMinutes(level) : CyclotronProgress.CooldownMinutes(level);
+            if (level >= CyclotronProgress.MaxLevel(u))
+                return $"{name} (Lv {level}, max): {what} {FormatMinutes(cur)}";
+            double next = boost ? CyclotronProgress.BoostMinutes(level + 1) : CyclotronProgress.CooldownMinutes(level + 1);
+            return $"{name} (Lv {level}): {what} {FormatMinutes(cur)} -> {FormatMinutes(next)}";
+        }
+
+        internal static string StatusText(TimeSpan left, double cooldownMinutes, double boostMinutes,
+                                          float boost = 1f, TimeSpan boostLeft = default)
+        {
+            string s = left <= TimeSpan.Zero ? "Ready to run"
+                                             : $"Next run in {FormatLeft(left)} (one run every {FormatMinutes(cooldownMinutes)})";
+            s += boost > 1f && boostLeft > TimeSpan.Zero
+                ? $"\nBoost active: {FormatMult(boost)} entropy for {FormatLeft(boostLeft)}"
+                : $"\nA run's boost lasts {FormatMinutes(boostMinutes)}";
             return s;
+        }
+
+        void BuyUpgrade(CyclotronProgress.Upgrade u)
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!CyclotronProgress.TryUpgrade(save, u)) return;
+            SaveManager.Instance.SaveLocal();
+            RefreshIntro(save);
+        }
+
+        /// <summary>
+        /// Writes the live boost into the <see cref="EntropyIncomeBoost"/> singleton (creating it the first
+        /// time) whenever it changes, so the income systems start and stop applying it on the same frame.
+        /// </summary>
+        void SyncBoost(float mult)
+        {
+            if (!_ecsReady)
+            {
+                var world = World.DefaultGameObjectInjectionWorld;
+                if (world == null || !world.IsCreated) return;
+                _em = world.EntityManager;
+                _boostQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<EntropyIncomeBoost>());
+                _ecsReady = true;
+            }
+            if (_boostQuery.IsEmptyIgnoreFilter)
+            {
+                var e = _em.CreateEntity(typeof(EntropyIncomeBoost));
+                _em.SetName(e, "EntropyIncomeBoost");
+                _syncedBoost = -1f;
+            }
+            if (Mathf.Approximately(mult, _syncedBoost)) return;
+            _boostQuery.SetSingleton(new EntropyIncomeBoost { Mult = mult });
+            _syncedBoost = mult;
         }
 
         void StartRun()
@@ -186,21 +288,27 @@ namespace MobileIdleBuilder
         {
             if (_run == null) return;
             ShowStep(Step.Result);
-            if (_resultText != null) _resultText.text = ResultText(_run.Energy, _run.Kicks, _run.Perfects);
+            if (_resultText != null)
+                _resultText.text = ResultText(_run.Energy, _run.Kicks, _run.Perfects,
+                                              CyclotronProgress.BoostMinutes(SaveManager.Instance?.Current));
         }
 
-        internal static string ResultText(float energy, int kicks, int perfects) =>
+        internal static string ResultText(float energy, int kicks, int perfects, double boostMinutes) =>
             $"Collision at {Mathf.RoundToInt(energy * 100f)}% energy ({kicks} kick{(kicks == 1 ? "" : "s")}, {perfects} perfect).\n" +
-            $"+{Mathf.RoundToInt(CyclotronProgress.InsightFor(energy) * 100f)}% Insight off your next research.";
+            $"{FormatMult(CyclotronProgress.MultiplierFor(energy))} entropy for {FormatMinutes(boostMinutes)} " +
+            $"and +{CyclotronProgress.InsightFor(energy)} Insight.";
 
         void CollectAndClose()
         {
             var save = SaveManager.Instance?.Current;
             if (_run != null && save != null)
             {
-                float added = CyclotronProgress.Collect(save, _run.Energy, _rng.NextDouble(), out int crystals);
+                CyclotronProgress.Collect(save, _run.Energy, _rng.NextDouble(), GameClock.UtcNow,
+                                          out float mult, out int insight, out int crystals);
                 SaveManager.Instance.SaveLocal();
-                string msg = $"Cyclotron: +{Mathf.RoundToInt(added * 100f)}% Insight (now {Mathf.RoundToInt(save.researchInsight * 100f)}% off your next research)";
+                SyncBoost(mult);
+                string msg = $"Cyclotron: {FormatMult(mult)} entropy for {FormatMinutes(CyclotronProgress.BoostMinutes(save))}, " +
+                             $"+{insight} Insight";
                 if (crystals > 0) msg += $", +{crystals} crystals";
                 _hud?.ShowNotification("⚛", msg);
             }

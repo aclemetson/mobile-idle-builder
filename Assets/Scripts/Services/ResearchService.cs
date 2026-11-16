@@ -194,15 +194,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// What this research costs now: the authored cost less upgrade discounts (Memory Resonance and
-        /// banked Cyclotron Insight). Use for every price shown and charged (<see cref="ResearchCost"/>).
+        /// What this research costs now: the authored cost less the Memory Resonance upgrade discount.
+        /// Use for every price shown and charged (<see cref="ResearchCost"/>).
         /// </summary>
         public long EffectiveCost(ResearchSO research)
         {
             if (research == null) return 0;
             float global  = PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.GlobalResearchDiscount) ?? 0f;
-            float insight = SaveManager.Instance?.Current?.researchInsight ?? 0f;   // Cyclotron Kick reward
-            return ResearchCost.Effective(research.costBaseCurrency, global, insight);
+            return ResearchCost.Effective(research.costBaseCurrency, global);
         }
 
         /// <summary>Effective research time after the Research Overdrive prestige bonus (capped at -50%).</summary>
@@ -229,9 +228,6 @@ namespace MobileIdleBuilder
             long cost = EffectiveCost(research);
             if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
             AchievementService.Instance?.NotifyEntropySpent(cost);
-            // Banked Cyclotron Insight was in that price; this research uses it up (saved just below or on
-            // the instant-complete path's save).
-            CyclotronProgress.ConsumeInsight(SaveManager.Instance?.Current);
 
             int effective = EffectiveDurationSeconds(research);
             if (effective <= 0)
