@@ -129,13 +129,16 @@ namespace MobileIdleBuilder
                 new[]{ ("entropy_headstart", 3), ("memory_resonance", 3) }),
 
             // ── Idle collection ───────────────────────────────────────────────
+            // A short 30 min base cap brings players back to collect; the first levels are cheap and have
+            // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.
+            // 23 levels take the cap from 30 min to the 12 h absolute max.
             new UpgradeDef(
                 "idle_time_cap", "Dormant Resonance",
-                "Idle harvesters keep running for +30 min longer per level (base 2 h, max 12 h).",
-                UpgradeEffectType.IdleTimeCap, 1800f, 20,
-                new[]{ 35, 40, 46, 53, 61, 70, 81, 93, 107, 123,
-                       142, 163, 188, 216, 249, 286, 329, 379, 436, 502 },
-                new[]{ ("entropy_headstart", 1) }),
+                "Idle harvesters keep running for +30 min longer per level (base 30 min, max 12 h).",
+                UpgradeEffectType.IdleTimeCap, 1800f, 23,
+                new[]{ 5, 10, 15, 20, 25, 30, 40, 50, 60, 75,
+                       90, 110, 130, 155, 185, 220, 260, 305, 360, 425,
+                       500, 590, 700 }),
 
             new UpgradeDef(
                 "idle_collection_rate", "Idle Efficiency",

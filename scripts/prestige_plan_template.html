@@ -137,7 +137,7 @@ code { font-family: var(--f-mono); font-size: .92em; }
 const D = /*DATA*/null;
 const LS = "prestige-pacing:v1:" + D.generated;
 const UP = D.upgrades;                       // [{id, label, short, costs}]
-const CUM = UP.map(u => { const c = [0]; for (let i = 0; i < 20; i++) c.push(c[i] + (u.costs[i] || 0)); return c; });
+const CUM = UP.map(u => { const c = [0]; for (let i = 0; i < u.costs.length; i++) c.push(c[i] + u.costs[i]); return c; });
 const RIDX = Object.fromEntries(D.research.map((r, i) => [r.id, i + 1]));
 
 function load() {
@@ -165,7 +165,7 @@ function compute() {
     const lv = p.levels, [mr, ro, al, qy, echo, head, cap, rate] = lv;
     const k = RIDX[p.target] || 1;
     let spend = 0;
-    UP.forEach((u, j) => { const prev = i ? S.plan[i - 1].levels[j] : 0; spend += CUM[j][clampLv(lv[j])] - CUM[j][clampLv(prev)]; });
+    UP.forEach((u, j) => { const prev = i ? S.plan[i - 1].levels[j] : 0; const top = CUM[j].length - 1; spend += CUM[j][Math.min(top, clampLv(lv[j]))] - CUM[j][Math.min(top, clampLv(prev))]; });
     const N = p.mgr * (I.LiveBonuses ? (1 + 0.1 * al) * (1 + 0.1 * qy) : 1);
     const O = 1 - (I.Wired ? 0.05 * mr : 0);
     const roF = 1 - 0.05 * ro;
@@ -185,11 +185,11 @@ function compute() {
     const stars = nw >= I.PBase * I.PWall ? Math.floor(Math.floor(Math.log10(nw / I.PBase) * I.PScale) * (1 + 0.05 * echo)) : 0;
     const affordable = bank - spend >= 0;
     bank = bank - spend + stars;
-    const idleRate = Math.min(1, 0.2 + 0.05 * rate), idleCap = Math.min(12, 2 + 0.5 * cap);
+    const idleRate = Math.min(1, 0.2 + 0.05 * rate), idleCap = Math.min(12, I.IdleBaseH + 0.5 * cap);
     const daily = I.ActiveMin / 60 + I.Sessions * Math.min(gapH, idleCap) * idleRate;
     const days = Math.max(P / daily, timer / 24);
     const daysAds = Math.max(P / (daily + adH), timer / 24);
-    const daysPre = Math.max(Q / (I.ActiveMin / 60 + I.Sessions * Math.min(gapH, 2) * 0.2), timer / 24);
+    const daysPre = Math.max(Q / (I.ActiveMin / 60 + I.Sessions * Math.min(gapH, I.IdleBaseH) * 0.2), timer / 24);
     cumDays += daysAds;
     out.push({ k, spend, N, O, P, Q, gap, gapNode, avg: P * 60 / k, wait, timer, nw, stars, bank, affordable,
                idleRate, idleCap, daily, days, daysAds, saved: 1 - daysAds / days, daysPre, cumDays,
@@ -198,7 +198,8 @@ function compute() {
   });
   return { rows: out, gapH, adsPerDay, adH };
 }
-const clampLv = v => Math.max(0, Math.min(20, Math.round(+v || 0)));
+const MAXLV = Math.max(...UP.map(u => u.costs.length));
+const clampLv = v => Math.max(0, Math.min(MAXLV, Math.round(+v || 0)));
 
 // ── Plan table ──
 function buildPlan() {
