@@ -200,7 +200,8 @@ namespace MobileIdleBuilder
                 if (SystemAPI.HasSingleton<AutomationIncome>())
                 {
                     var income = SystemAPI.GetSingletonRW<AutomationIncome>();
-                    income.ValueRW.Total += escapedEntropy;
+                    income.ValueRW.Total     += escapedEntropy;
+                    income.ValueRW.Unboosted += escapedEntropy / (double)entropyBoost;
                 }
             }
         }

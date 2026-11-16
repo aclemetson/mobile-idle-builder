@@ -260,6 +260,10 @@ namespace MobileIdleBuilder
                 return;
             }
 
+            // Income-minutes rewards are priced now, before the ad: the ad pauses the app, which restarts
+            // the income measurement, so pricing afterwards would pay the floor. The player gets what was shown.
+            long quotedIncome = AdRewardCalculator.Def(p).Kind == AdRewardKind.IncomeMinutes ? PreviewIncomeReward(p) : 0;
+
             _provider.ShowRewarded(earned =>
             {
                 if (!earned)
@@ -269,7 +273,7 @@ namespace MobileIdleBuilder
                     return;
                 }
 
-                bool granted = GrantReward(save, p, doubleOfflineResult, out string message);
+                bool granted = GrantReward(save, p, doubleOfflineResult, quotedIncome, out string message);
                 _provider.LoadRewarded();
 
                 if (!granted)
@@ -290,7 +294,7 @@ namespace MobileIdleBuilder
         /// Returns false (with no mutation that counts) when there is nothing to grant — e.g. a Time Warp
         /// while nothing is producing. Out <paramref name="message"/> is a toast-ready summary.
         /// </summary>
-        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, out string message)
+        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, long quotedIncome, out string message)
         {
             var def = AdRewardCalculator.Def(p);
             switch (def.Kind)
@@ -305,7 +309,7 @@ namespace MobileIdleBuilder
                 }
                 case AdRewardKind.IncomeMinutes:
                 {
-                    long amount = PreviewIncomeReward(p);
+                    long amount = quotedIncome;
                     save.currentRun.baseCurrency += amount;
                     ApplyEntropyToECS(amount);
                     message = $"+{amount:N0} entropy";

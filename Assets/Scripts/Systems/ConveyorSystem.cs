@@ -211,7 +211,8 @@ namespace MobileIdleBuilder
                     if (SystemAPI.TryGetSingletonEntity<AutomationIncome>(out Entity incomeEnt))
                     {
                         var income = EntityManager.GetComponentData<AutomationIncome>(incomeEnt);
-                        income.Total += earned;
+                        income.Total     += earned;
+                        income.Unboosted += earned / boost;
                         EntityManager.SetComponentData(incomeEnt, income);
                     }
                 }

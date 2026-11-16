@@ -122,7 +122,7 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Entropy granted by an income-minutes placement (Entropy Surge): <paramref name="incomePerSecond"/>
-        /// (automation income, the Statistics panel's 60 s average) x the placement's minutes, never below
+        /// (IncomeRateTracker.RewardPerSecond: unboosted automation income, 180 s average) x the placement's minutes, never below
         /// its floor so a player with nothing automated yet still gets something.
         /// </summary>
         public static long CalcIncomeReward(AdPlacement p, double incomePerSecond)
