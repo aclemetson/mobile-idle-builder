@@ -10,7 +10,7 @@
 
 Singletons (one entity each, baked in the SubScene): `PlayerProgressData`, `PrestigeData`, `TutorialStateData`, `PlayerInventoryTag` (+ `InventorySlot` dynamic buffer).
 
-Per-building: `BuildingData` (type, level, `ProductionSpeed`, `IsActive`), `GridPosition`, `BuildingTransformData`, `BuildingFootprint`, `RecipeProcessData` (RecipeID, CraftTime, Progress, IsCrafting, InputsSatisfied), `PlacedPortData`, `OutputDirectionData`, `BuildingLocalInventory`/`BuildingInventoryConfig`, buffers `RecipeInputSlot`, `RecipeOutputSlot`, `BuildingInputSlot`, `BuildingOutputSlot`. Tags: `EntropySinkTag`. Other: `ConveyorData`, `CollectorData`, `PowerNodeData` (generators + relays; incl. `LinkRadius`/`IsGridLinked`), `PowerConsumer` + `PowerStatus` (powered buildings), `ItemData`. Singleton: `PowerGridState`.
+Per-building: `BuildingData` (type, level, `ProductionSpeed`, `IsActive`), `GridPosition`, `BuildingTransformData`, `BuildingFootprint`, `RecipeProcessData` (RecipeID, CraftTime, Progress, IsCrafting, InputsSatisfied), `PlacedPortData`, `OutputDirectionData`, `BuildingLocalInventory`/`BuildingInventoryConfig`, buffers `RecipeInputSlot`, `RecipeOutputSlot`, `BuildingInputSlot`, `CraftStagingSlot` (creation buffer, one craft's inputs; `CraftStaging`), `BuildingOutputSlot`. Tags: `EntropySinkTag`. Other: `ConveyorData`, `CollectorData`, `PowerNodeData` (generators + relays; incl. `LinkRadius`/`IsGridLinked`), `PowerConsumer` + `PowerStatus` (powered buildings), `ItemData`. Singleton: `PowerGridState`.
 
 Buffer helpers live in `Assets/Scripts/Components/SlotBufferUtils.cs` (count/add/remove for inventory and slot buffers) — always use these, never hand-roll buffer loops.
 
