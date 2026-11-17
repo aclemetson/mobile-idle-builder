@@ -8,6 +8,12 @@
 > To run the CI test job on demand, dispatch it on a branch: `gh workflow run "PR Tests" --ref <branch>`
 > (or Actions > PR Tests > Run workflow). It runs EditMode and PlayMode tests on the self-hosted runner.
 >
+> To ship an internal build of a release branch on demand: `gh workflow enable "Release Internal"` (it is
+> disabled in GitHub while paused), then `gh workflow run "Release Internal" --ref release/<x.y>`. It builds
+> the signed `.aab` on the runner, uploads it to the Play **internal** track, and sets
+> `update.latest.android` in the UGS **development** environment so older internal builds show the update
+> prompt. A manual run only builds `release/*` branches.
+>
 > **To re-enable:**
 > 1. Restore the commented `on:` block in each workflow.
 > 2. Re-enable the workflows in GitHub (`gh workflow enable "<name>"`).
