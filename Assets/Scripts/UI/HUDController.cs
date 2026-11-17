@@ -113,6 +113,7 @@ namespace MobileIdleBuilder
         // ---- Placement controls ----
         private Button        _btnRotateOutput;
         private Button        _btnFlipBuilding;
+        private Button        _btnRemoveBuilding; // edit mode only
         private VisualElement _placementConfirmPopup;
         private VisualElement _placementBar;
         private Button        _btnConfirmPlace;
@@ -493,6 +494,7 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _btnRemoveBuilding = root.Q<Button>("btn-remove-building");
             _placementConfirmPopup = root.Q("placement-confirm-popup");
             _placementBar          = root.Q("placement-bar");
             _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
@@ -633,6 +635,8 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnRemoveBuilding != null)
+                _btnRemoveBuilding.clicked += () => placementController?.RequestRemoveEditedBuilding();
             if (_btnConfirmPlace != null)
                 _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
             if (_btnCancelCandidate != null)
@@ -2262,13 +2266,17 @@ namespace MobileIdleBuilder
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
+            bool editing   = isPlacing && (placementController?.IsEditing ?? false);
             SetElementVisible(_btnRotateOutput, canRotate);
             SetElementVisible(_btnFlipBuilding, canFlip);
+            SetElementVisible(_btnRemoveBuilding, editing);
 
             if (isPlacing && _placementLabel != null)
             {
                 string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
-                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
+                _placementLabel.text = editing
+                    ? $"Tap a tile to move it  ·  confirm to keep it there{rotateHint}"
+                    : $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
             }
         }
 

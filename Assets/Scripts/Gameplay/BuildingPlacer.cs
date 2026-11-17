@@ -212,6 +212,48 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// Moves the placed building <paramref name="e"/> to (gridX, gridY) with a new rotation and flip,
+        /// keeping its entity (and so its items, progress, recipe, upgrades and manager). Swaps its grid
+        /// occupancy from the old footprint to the new one; returns false, changing nothing, if the new
+        /// footprint is taken by anything else. The caller redraws the building and belts.
+        /// </summary>
+        public bool MoveBuilding(Entity e, BuildingSO building, int gridX, int gridY,
+                                 int rotation, bool flipped, int? outputDirection)
+        {
+            if (!_em.Exists(e) || !_em.HasComponent<GridPosition>(e)) return false;
+
+            var old = _em.GetComponentData<GridPosition>(e).Cell;
+            int ow = 1, oh = 1;
+            if (_em.HasComponent<BuildingFootprint>(e))
+            {
+                var ofp = _em.GetComponentData<BuildingFootprint>(e);
+                ow = ofp.Width;
+                oh = ofp.Height;
+            }
+
+            var baseFp = building == null
+                ? new UnityEngine.Vector2Int(1, 1)
+                : new UnityEngine.Vector2Int(Mathf.Max(1, building.footprint.x), Mathf.Max(1, building.footprint.y));
+            var fp = PortUtils.RotatedFootprint(baseFp, rotation);
+
+            var occupancy = GridOccupancy.Instance;
+            if (occupancy != null)
+            {
+                occupancy.ReleaseRect(old.x, old.y, ow, oh);
+                if (!occupancy.TryOccupyRect(gridX, gridY, fp.x, fp.y))
+                {
+                    occupancy.RegisterRect(old.x, old.y, ow, oh);
+                    GameLogger.Develop($"[BuildingPlacer] Move to ({gridX},{gridY}) {fp.x}x{fp.y} blocked; building stays at ({old.x},{old.y}).");
+                    return false;
+                }
+            }
+
+            BuildingMove.Apply(_em, e, building, gridX, gridY, rotation, flipped, outputDirection);
+            GameLogger.Develop($"[BuildingPlacer] Moved '{building?.displayName ?? "Building"}' ({old.x},{old.y}) -> ({gridX},{gridY}) rotation={rotation} flipped={flipped}");
+            return true;
+        }
+
+        /// <summary>
         /// Filter (#321) or a building with assignable outputs (#322): its routing rules (saved ones, or
         /// "everything goes straight through" for a new one). Straight through = the output facing the same
         /// way items enter.
