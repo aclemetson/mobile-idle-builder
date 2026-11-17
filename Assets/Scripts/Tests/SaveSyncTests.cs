@@ -55,6 +55,45 @@ namespace MobileIdleBuilder.Tests
         public void BothChanged_Asks() =>
             Assert.AreEqual(SaveSyncAction.AskPlayer, Decide(Save(T11), 6, Save(T10), Marker(P, T9, 5)));
 
+        // The marker is written before a push. If the app dies before the push lands, the cloud still holds
+        // an older save than the marker names: our lost push, not another device. Seen on device 2026-11-17:
+        // every launch took the older cloud save, and with an unpushed autosave it asked during the load.
+
+        [Test]
+        public void CloudOlderThanMarker_LostPush_KeepsLocal() =>
+            Assert.AreEqual(SaveSyncAction.KeepLocal, Decide(Save(T11), 5, Save(T9), Marker(P, T10, 5)),
+                "the device log case: cloud 16:09:12, marker = local 16:09:33");
+
+        [Test]
+        public void CloudOlderThanMarker_WithLocalAutosaveOnTop_KeepsLocalWithoutAsking() =>
+            Assert.AreEqual(SaveSyncAction.KeepLocal, Decide(Save(T11), 6, Save(T9), Marker(P, T10, 5)),
+                "the stuck-at-99% case: used to ask 'which save?' during the load");
+
+        [Test]
+        public void CloudNewerThanMarker_StillTakesCloud() =>
+            Assert.AreEqual(SaveSyncAction.TakeCloud, Decide(Save(T11), 5, Save(T11), Marker(P, T10, 5)),
+                "another device's push carries a newer stamp");
+
+        [Test]
+        public void CloudChangedSince_UnreadableStampsCountAsChanged()
+        {
+            Assert.IsFalse(SaveSync.CloudChangedSince(T10, T10));
+            Assert.IsFalse(SaveSync.CloudChangedSince(T9, T10));
+            Assert.IsTrue(SaveSync.CloudChangedSince(T11, T10));
+            Assert.IsTrue(SaveSync.CloudChangedSince("garbage", T10));
+            Assert.IsTrue(SaveSync.CloudChangedSince(T9, "garbage"));
+            Assert.IsTrue(SaveSync.CloudChangedSince(null, T10));
+        }
+
+        [Test]
+        public void SigningBackInAsTheSamePlayer_IsNotAnAccountSwitch()
+        {
+            Assert.IsFalse(UGSCloudSaveService.IsAccountSwitch("player-1", "player-1"),
+                "Google was already linked: same player, same save, nothing to ask");
+            Assert.IsTrue(UGSCloudSaveService.IsAccountSwitch("guest-7", "player-1"));
+            Assert.IsFalse(UGSCloudSaveService.IsAccountSwitch("guest-7", null));
+        }
+
         [Test]
         public void AccountSwitched_Asks() =>
             Assert.AreEqual(SaveSyncAction.AskPlayer, Decide(Save(T11), 6, Save(T10), default, switched: true));

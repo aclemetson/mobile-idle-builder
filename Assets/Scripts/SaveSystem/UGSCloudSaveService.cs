@@ -83,7 +83,10 @@ namespace MobileIdleBuilder
 
                 var auth = AuthenticationService.Instance;
                 bool sessionExists = auth.SessionTokenExists;
-                GameLogger.Info($"[UGSCloudSave] SessionTokenExists={sessionExists}");
+                // The splash's MaintenanceGate signs in from the cached session before this runs, so an
+                // already-signed-in session is a restored one too.
+                bool signedInBefore = auth.IsSignedIn;
+                GameLogger.Info($"[UGSCloudSave] SessionTokenExists={sessionExists}  AlreadySignedIn={signedInBefore}");
 
                 // Restore a cached UGS session first, which avoids Google Sign-In on every cold start.
                 // SignInAnonymouslyAsync re-signs the existing player (Google-linked or not) when a
@@ -121,7 +124,10 @@ namespace MobileIdleBuilder
 
                 _initialized = true;
 
-                if (restored)
+                // Either way the session was resumed from the cached token, which may belong to a
+                // Google-linked player. Checking only when this method resumed it left the splash-resumed
+                // session marked Guest on every launch, so a Google sign-in never seemed to stick.
+                if (restored || signedInBefore)
                 {
                     _hasGoogle = await HasGoogleIdentityAsync();
                     // A device that fell back to guest once used to stay a guest forever, with its own
@@ -221,9 +227,18 @@ namespace MobileIdleBuilder
                 {
                     await auth.SignInWithGoogleAsync(cred.IdToken);
                     _hasGoogle = true;
-                    AccountSwitched = true;
                     LastSignInError = null;
                     RememberEmail(cred.Email);
+
+                    // The Google account was already linked to THIS player (the session just wasn't known to
+                    // be Google). Same player, same cloud save: not a switch, so nothing to choose between.
+                    if (!IsAccountSwitch(guestId, auth.PlayerId))
+                    {
+                        GameLogger.Info($"[UGSCloudSave] Google was already linked to this player ({auth.PlayerId}).");
+                        return GoogleSignInOutcome.AlreadyGoogle;
+                    }
+
+                    AccountSwitched = true;
                     GameLogger.Info($"[UGSCloudSave] Google account already used by {auth.PlayerId}; switched from guest {guestId}.");
                     return GoogleSignInOutcome.SwitchedAccount;
                 }
@@ -242,6 +257,13 @@ namespace MobileIdleBuilder
                 return GoogleSignInOutcome.Failed;
             }
         }
+
+        /// <summary>
+        /// True when signing in with Google moved the device to a different player. Signing back in as the
+        /// same player (Google was already linked to it) is not a switch.
+        /// </summary>
+        internal static bool IsAccountSwitch(string previousPlayerId, string newPlayerId) =>
+            !string.IsNullOrEmpty(newPlayerId) && newPlayerId != previousPlayerId;
 
         static async Task<bool> HasGoogleIdentityAsync()
         {

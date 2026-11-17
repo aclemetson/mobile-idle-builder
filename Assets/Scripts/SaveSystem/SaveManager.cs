@@ -137,6 +137,9 @@ namespace MobileIdleBuilder
         {
             if (_cloud == null || !_cloud.IsAvailable) return;
             if (!FeatureFlags.CloudSaveEnabled) return;   // honor the cloud-save kill-switch
+            // The game now runs this device's save while "which save?" is open; pushing it would overwrite
+            // the cloud save the player may still pick.
+            if (AwaitingSaveChoice) return;
             _ = PushAndRecord();
         }
 
@@ -628,7 +631,7 @@ namespace MobileIdleBuilder
             return cand > cur;
         }
 
-        static bool TryParseStamp(string s, out DateTime utc)
+        internal static bool TryParseStamp(string s, out DateTime utc)
         {
             utc = default;
             if (string.IsNullOrEmpty(s)) return false;

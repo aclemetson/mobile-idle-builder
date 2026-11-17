@@ -138,24 +138,41 @@ namespace MobileIdleBuilder
             // seeded from the local save while a slower cloud fetch replaces Current afterward,
             // and the next FlushToSave would write the stale ECS state back over the cloud data.
             // Bounded so a slow or offline network never blocks the load indefinitely.
+            //
+            // Never waits on the "which save?" choice: that prompt lives on the HUD, which stays hidden
+            // until the loading screen finishes, and the prompt itself waits for the transition to end. Waiting
+            // here deadlocked both until the prompt's 30 s fallback, with the bar stuck at 99%. Instead this
+            // device's save loads now, the prompt opens over the running game, and choosing the cloud save
+            // reloads the scene from it (SaveManager.TakeCloudSave, live path).
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            // No timeout while the player is choosing between this device's save and the cloud save.
-            while (sm != null && !sm.CloudReconcileDone && (cloudElapsed < kCloudTimeout || sm.AwaitingSaveChoice))
+            while (sm != null && !sm.CloudReconcileDone && !sm.AwaitingSaveChoice && cloudElapsed < kCloudTimeout)
             {
-                cloudElapsed += Time.deltaTime;
+                cloudElapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
-            if (sm != null && !sm.CloudReconcileDone)
+            if (sm != null && sm.AwaitingSaveChoice)
+                GameLogger.Info("[ECSLoadBridge] Saves differ — loading this device's save; the player chooses after the load.");
+            else if (sm != null && !sm.CloudReconcileDone)
                 GameLogger.Warning($"[ECSLoadBridge] Cloud reconcile not done after {cloudElapsed:F1}s — applying current save anyway.");
 
             GameLogger.Info("[ECSLoadBridge] Applying save to ECS");
-            ApplyLoadedSave();
-            GridSaveService.Instance?.LoadGrid();
-            SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
+            try
+            {
+                ApplyLoadedSave();
+                GridSaveService.Instance?.LoadGrid();
+                SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
+            }
+            catch (System.Exception ex)
+            {
+                // An exception here used to end this coroutine before IsLoaded was set, leaving the loading
+                // screen at 99% for good. Finish the load instead; SaveApplied stays false, so no flush can
+                // write the half-applied state over the good save on disk, and the next launch retries.
+                GameLogger.Error($"[ECSLoadBridge] Applying the save failed: {ex}. SaveApplied stays false; the on-disk save is kept.");
+            }
             IsLoaded = true;
-            GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
+            GameLogger.Info($"[ECSLoadBridge] Load finished — IsLoaded=true  SaveApplied={SaveApplied}");
 
             // Session login tick. This is the only point that is both once-per-session and late
             // enough to count: SaveManager.Current is final (cloud reconcile awaited above), and
