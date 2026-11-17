@@ -2,6 +2,21 @@
 
 Notable changes per release. Builds are versioned `major.minor.patch`, and the patch number increases on every commit. Pull request numbers link the detail.
 
+## 0.6 (in progress)
+
+Building and belt editing that works with fingers, and a startup that keeps your account and your newest save.
+
+### Gameplay and UX
+- **Building edit mode**: press and hold a placed building to move, rotate or flip it without destroying it. Its contents, recipe, upgrades, manager and filter rules move with it, and moving is free. A Remove button deletes it after a confirmation; delete mode stays for clearing several buildings (#430).
+- **Belt tracing**: tap a start, tap each point along the route, and confirm to place the whole belt. It routes itself between points, never crosses itself, and can join an existing belt. Undo removes the last point (#432).
+- **Taps vs. pans and zooms**: one shared rule for the map. Pinches, pans, glide stops and resting fingers no longer place or delete anything, and the tap allowance scales with screen density so real taps aren't lost to finger wobble (#432).
+- The achievement reset countdown ticks while the panel is open (#429).
+
+### Fixes
+- **Sign-in sticks**: a Google-linked account no longer shows as Guest after a restart (#431).
+- **Newest save wins**: an upload that never reached the cloud no longer lets an older cloud save replace this device's progress (#431).
+- **No more hang at 99%**: when the device and cloud saves differ, the game loads and then asks which to keep, instead of waiting behind the loading screen (#431).
+
 ## 0.5 (November 2026)
 
 The post-tutorial game: pacing past the first Carbon atom, belts that scale, and a production-ready platform layer.
