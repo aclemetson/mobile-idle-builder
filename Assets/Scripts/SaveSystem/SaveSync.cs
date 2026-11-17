@@ -90,10 +90,30 @@ namespace MobileIdleBuilder
                 return SaveManager.IsNewerStamp(cloud.lastSaved, local.lastSaved)
                     ? SaveSyncAction.TakeCloud : SaveSyncAction.KeepLocal;
 
-            bool cloudChanged = cloud.lastSaved != marker.CloudStamp;
+            bool cloudChanged = CloudChangedSince(cloud.lastSaved, marker.CloudStamp);
             bool localChanged = localHash == 0 || localHash != marker.LocalHash;
             if (cloudChanged && localChanged) return SaveSyncAction.AskPlayer;
             return cloudChanged ? SaveSyncAction.TakeCloud : SaveSyncAction.KeepLocal;
+        }
+
+        /// <summary>
+        /// Whether another device wrote the cloud save since the marker. The marker is written
+        /// optimistically before a push (a push on backgrounding often finishes after the OS suspends the
+        /// app), so when the app dies before that push lands the cloud still holds an OLDER save than the
+        /// marker names. That is our own lost push, not another device's change: treating it as a change
+        /// took the older cloud save over this device's progress on every launch, and with an unpushed
+        /// autosave on top it asked "which save?" behind the loading screen (stuck at 99%). Another device
+        /// stamps its save when it writes, so its save is newer than the marker.
+        /// </summary>
+        internal static bool CloudChangedSince(string cloudStamp, string markerStamp)
+        {
+            if (cloudStamp == markerStamp) return false;
+            // Only when both stamps read as times; anything unreadable still counts as a change.
+            if (SaveManager.TryParseStamp(cloudStamp, out var cloud) &&
+                SaveManager.TryParseStamp(markerStamp, out var marker) &&
+                cloud < marker)
+                return false; // our push never landed
+            return true;
         }
 
         public static string FormatMarker(string playerId, string cloudStamp, ulong localHash) =>

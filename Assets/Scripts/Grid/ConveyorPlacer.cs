@@ -63,31 +63,39 @@ namespace MobileIdleBuilder
         /// reused (so a run can merge into an existing belt, and saved merge routes replay cleanly).
         /// Rejects a run that would fork a cell's output or push a merge past 3 inbounds.
         /// </summary>
-        public void PlaceConveyorChain(List<Vector2Int> path, OutputDirection? singleDir = null)
+        public bool PlaceConveyorChain(List<Vector2Int> path, OutputDirection? singleDir = null) =>
+            PlaceConveyorChain(path, out _, singleDir);
+
+        /// <summary>
+        /// Why a run along <paramref name="path"/> can't be placed (it would fork a belt's output or overfill
+        /// a merge), as a short player-facing line, or null when it can. Lets the trace refuse the tap that
+        /// would cause it instead of failing silently at ✓.
+        /// </summary>
+        public string RejectReason(List<Vector2Int> path)
         {
-            if (!_queryReady || path == null || path.Count == 0) return;
+            if (!_queryReady || path == null || path.Count == 0) return null;
+            SnapshotBelts(out _, out var cellExit);
+            return ConveyorTopology.CanPlace(cellExit, ToInt2(path), MaxInbounds, out string reason)
+                ? null : PlayerReason(reason);
+        }
+
+        /// <summary>Lays the run; false (with a player-facing <paramref name="refusal"/>) when it is rejected.</summary>
+        public bool PlaceConveyorChain(List<Vector2Int> path, out string refusal, OutputDirection? singleDir = null)
+        {
+            refusal = null;
+            if (!_queryReady || path == null || path.Count == 0) return false;
 
             int count = path.Count;
 
             // Snapshot existing geometry: cell→entity (to reuse cells) and cell→ExitDir (to validate).
-            var cellMap  = new Dictionary<Vector2Int, Entity>();
-            var cellExit = new Dictionary<int2, int>();
-            var existing = _segmentQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < existing.Length; i++)
-            {
-                var seg = _em.GetComponentData<ConveyorSegmentData>(existing[i]);
-                cellMap[new Vector2Int(seg.Cell.x, seg.Cell.y)] = existing[i];
-                cellExit[seg.Cell] = seg.ExitDir;
-            }
-            existing.Dispose();
-
-            var pathCells = new int2[count];
-            for (int i = 0; i < count; i++) pathCells[i] = new int2(path[i].x, path[i].y);
+            SnapshotBelts(out var cellMap, out var cellExit);
+            var pathCells = ToInt2(path);
 
             if (!ConveyorTopology.CanPlace(cellExit, pathCells, MaxInbounds, out string reason))
             {
                 GameLogger.Warning($"[ConveyorPlacer] Placement rejected: {reason}.");
-                return;
+                refusal = PlayerReason(reason);
+                return false;
             }
 
             var newCells = new HashSet<int2>();
@@ -143,6 +151,41 @@ namespace MobileIdleBuilder
             conveyorVisualizer?.RefreshAll();
 
             GameLogger.Develop($"[ConveyorPlacer] Placed run {path[0]} -> {path[count - 1]} ({count} cell(s)).");
+            return true;
+        }
+
+        /// <summary>Existing belts: cell → entity (to reuse cells) and cell → ExitDir (to validate).</summary>
+        private void SnapshotBelts(out Dictionary<Vector2Int, Entity> cellMap, out Dictionary<int2, int> cellExit)
+        {
+            cellMap  = new Dictionary<Vector2Int, Entity>();
+            cellExit = new Dictionary<int2, int>();
+            var existing = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < existing.Length; i++)
+            {
+                var seg = _em.GetComponentData<ConveyorSegmentData>(existing[i]);
+                cellMap[new Vector2Int(seg.Cell.x, seg.Cell.y)] = existing[i];
+                cellExit[seg.Cell] = seg.ExitDir;
+            }
+            existing.Dispose();
+        }
+
+        private static int2[] ToInt2(List<Vector2Int> path)
+        {
+            var cells = new int2[path.Count];
+            for (int i = 0; i < path.Count; i++) cells[i] = new int2(path[i].x, path[i].y);
+            return cells;
+        }
+
+        /// <summary>
+        /// ConveyorTopology's rejection (written for logs, with cells and enum names) as a short banner line.
+        /// The banner doesn't wrap, so keep these short.
+        /// </summary>
+        internal static string PlayerReason(string topologyReason)
+        {
+            if (string.IsNullOrEmpty(topologyReason)) return null;
+            if (topologyReason.Contains("inbounds")) return "That belt already takes 3 belts in.";
+            if (topologyReason.Contains("fork"))     return "A belt can't split. Pick another path.";
+            return "That belt can't go there.";
         }
 
         /// <summary>

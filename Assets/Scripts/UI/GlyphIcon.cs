@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Vector-drawn UI icon (close / check / rotate / flip / info / empty) used in place of the ✕ ✓ ↻ ⇄ ⓘ ⤓
-    /// text glyphs.
+    /// Vector-drawn UI icon (close / check / rotate / flip / info / empty / trash / undo) used in place of
+    /// the ✕ ✓ ↻ ⇄ ⓘ ⤓ 🗑 ↶ text glyphs.
     /// The Android default font has none of those glyphs, so text buttons rendered blank on device
     /// (issue #165, Option B: vector icons instead of a symbol font). Drawing with Painter2D removes the font
     /// dependency entirely and stays crisp at any DPI.
@@ -19,7 +19,8 @@ namespace MobileIdleBuilder
     [UxmlElement]
     public partial class GlyphIcon : VisualElement
     {
-        public enum Kind { Close, Check, Rotate, Flip, Info, Empty }
+        // Append only: UXML names the icon, and code may store the value.
+        public enum Kind { Close, Check, Rotate, Flip, Info, Empty, Trash, Undo }
 
         public const string UssClass     = "glyph-icon";
         public const string HostUssClass = "glyph-host";
@@ -109,6 +110,8 @@ namespace MobileIdleBuilder
                 case Kind.Flip:   DrawFlip(p, c, h);   break;
                 case Kind.Info:   DrawInfo(p, c, h);   break;
                 case Kind.Empty:  DrawEmpty(p, c, h);  break;
+                case Kind.Trash:  DrawTrash(p, c, h);  break;
+                case Kind.Undo:   DrawUndo(p, c, h);   break;
             }
         }
 
@@ -210,6 +213,55 @@ namespace MobileIdleBuilder
             p.LineTo(c + new Vector2(0f,  0.2f  * h));
             p.Stroke();
             FillArrowhead(p, c + new Vector2(0f, 0.25f * h), new Vector2(0f, 1f), h * 0.6f);
+        }
+
+        // ↶: a hooked arrow. A line runs left, curls up and back over to the right, and the arrowhead at
+        // its left end points back the way it came ("take the last step back").
+        static void DrawUndo(Painter2D p, Vector2 c, float h)
+        {
+            float r = h * 0.42f;
+            Vector2 arcCentre = c + new Vector2(0.25f * h, 0.05f * h);
+
+            p.BeginPath();
+            p.MoveTo(c + new Vector2(-0.55f * h, -0.37f * h));           // top line, from the arrowhead
+            p.LineTo(arcCentre + new Vector2(0f, -r));
+            p.Arc(arcCentre, r, new Angle(-90f, AngleUnit.Degree), new Angle(90f, AngleUnit.Degree),
+                  ArcDirection.Clockwise);                                 // round the right side
+            p.LineTo(c + new Vector2(-0.35f * h, arcCentre.y - c.y + r));   // bottom tail
+            p.Stroke();
+
+            FillArrowhead(p, c + new Vector2(-0.6f * h, -0.37f * h), new Vector2(-1f, 0f), h * 0.55f);
+        }
+
+        // A bin: a lid with a handle over a can that narrows to the bottom, with two ribs.
+        static void DrawTrash(Painter2D p, Vector2 c, float h)
+        {
+            float lidY = -0.5f * h;
+            p.BeginPath();                                    // lid
+            p.MoveTo(c + new Vector2(-0.85f * h, lidY));
+            p.LineTo(c + new Vector2( 0.85f * h, lidY));
+            p.Stroke();
+
+            p.BeginPath();                                    // handle
+            p.MoveTo(c + new Vector2(-0.3f * h, lidY));
+            p.LineTo(c + new Vector2(-0.3f * h, -0.82f * h));
+            p.LineTo(c + new Vector2( 0.3f * h, -0.82f * h));
+            p.LineTo(c + new Vector2( 0.3f * h, lidY));
+            p.Stroke();
+
+            p.BeginPath();                                    // can
+            p.MoveTo(c + new Vector2(-0.62f * h, -0.3f * h));
+            p.LineTo(c + new Vector2(-0.48f * h,  0.85f * h));
+            p.LineTo(c + new Vector2( 0.48f * h,  0.85f * h));
+            p.LineTo(c + new Vector2( 0.62f * h, -0.3f * h));
+            p.Stroke();
+
+            p.BeginPath();                                    // ribs
+            p.MoveTo(c + new Vector2(-0.17f * h, -0.05f * h));
+            p.LineTo(c + new Vector2(-0.14f * h,  0.55f * h));
+            p.MoveTo(c + new Vector2( 0.17f * h, -0.05f * h));
+            p.LineTo(c + new Vector2( 0.14f * h,  0.55f * h));
+            p.Stroke();
         }
 
         static void FillArrowhead(Painter2D p, Vector2 at, Vector2 dir, float size)

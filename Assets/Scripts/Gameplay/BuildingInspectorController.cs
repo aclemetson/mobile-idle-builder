@@ -123,34 +123,18 @@ namespace MobileIdleBuilder
                 return false;
             }
 
-            // World-position based detection avoids cell-rounding convention mismatches.
-            // Tiles are visually centered at (cell * cellSize), so the footprint of a building
-            // at cell (fx, fy) with size (fw, fh) covers world
-            //   X: [fx*cs - halfCs,  (fx+fw)*cs - halfCs)
-            //   Z: [fy*cs - halfCs,  (fy+fh)*cs - halfCs)
+            // Hit-testing is in world space (FindBuildingAtWorld), which avoids cell-rounding mismatches.
             if (!ScreenToWorldGround(screenPos, out Vector3 worldPos))
             {
                 GameLogger.Develop("[Inspector] TrySelectBuildingAt early-exit: ScreenToWorldGround failed (no camera?)");
                 return false;
             }
 
-            float      cs     = gridRenderer.CellSize;
-            float      halfCs = cs * 0.5f;
-            Vector2Int cell   = WorldToCell(screenPos); // used only for IsInBounds fast-exit
-            GameLogger.Develop($"[Inspector] worldPos=({worldPos.x:F2},{worldPos.z:F2}) cell=({cell.x},{cell.y}) cs={cs} inBounds={gridRenderer.IsInBounds(cell.x, cell.y)}");
+            Vector2Int cell = WorldToCell(screenPos); // used only for IsInBounds fast-exit
+            GameLogger.Develop($"[Inspector] worldPos=({worldPos.x:F2},{worldPos.z:F2}) cell=({cell.x},{cell.y}) inBounds={gridRenderer.IsInBounds(cell.x, cell.y)}");
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return false;
 
-            // Tutorial gating: read restriction from current step definition
-            var buildingGate = BuildingInteractionGate.None;
-            if (!_tutorialQuery.IsEmpty)
-            {
-                var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
-                var flow = TutorialFlowSO.Current;
-                if (tutState.IsActive && flow != null &&
-                    tutState.CurrentStepIndex < flow.steps.Length)
-                    buildingGate = flow.steps[tutState.CurrentStepIndex].onEnter?.buildingInteractionGate
-                                   ?? BuildingInteractionGate.None;
-            }
+            var buildingGate = CurrentGate();
             GameLogger.Develop($"[Inspector] buildingGate={buildingGate}");
 
             if (buildingGate == BuildingInteractionGate.BlockAll)
@@ -167,32 +151,7 @@ namespace MobileIdleBuilder
                 return false;
             }
 
-            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
-            GameLogger.Develop($"[Inspector] Searching {entities.Length} building entities for worldPos=({worldPos.x:F2},{worldPos.z:F2})");
-            Entity found = Entity.Null;
-
-            for (int i = 0; i < entities.Length; i++)
-            {
-                var e   = entities[i];
-                var pos = _em.GetComponentData<GridPosition>(e);
-                int fx = pos.Cell.x, fy = pos.Cell.y, fw = 1, fh = 1;
-
-                if (_em.HasComponent<BuildingFootprint>(e))
-                {
-                    var fp = _em.GetComponentData<BuildingFootprint>(e);
-                    fw = fp.Width; fh = fp.Height;
-                }
-
-                float xMin = fx * cs - halfCs, xMax = (fx + fw) * cs - halfCs;
-                float zMin = fy * cs - halfCs, zMax = (fy + fh) * cs - halfCs;
-                bool hit = worldPos.x >= xMin && worldPos.x < xMax &&
-                           worldPos.z >= zMin && worldPos.z < zMax;
-                GameLogger.Develop($"[Inspector]   entity[{i}] cell=({fx},{fy}) fw={fw}fh={fh} worldBounds X:[{xMin:F2},{xMax:F2}) Z:[{zMin:F2},{zMax:F2}) hit={hit}");
-
-                if (hit) { found = e; break; }
-            }
-            entities.Dispose();
-
+            Entity found = FindBuildingAtWorld(worldPos);
             if (found == Entity.Null)
             {
                 GameLogger.Develop("[Inspector] No entity found — returning false");
@@ -248,9 +207,73 @@ namespace MobileIdleBuilder
             maxwellsDemon?.Close();
         }
 
+        /// <summary>
+        /// The building under <paramref name="screenPos"/> if a press-and-hold may put it into edit mode.
+        /// Not while a tutorial step restricts building interaction, and never Maxwell's Demon: it is baked
+        /// from the SubScene and its saved cell is never restored, so a moved Demon would jump back on load.
+        /// </summary>
+        public bool TryGetEditableBuildingAt(Vector2 screenPos, out Entity found)
+        {
+            found = Entity.Null;
+            if (!_ecsReady || gridRenderer == null) return false;
+            if (CurrentGate() != BuildingInteractionGate.None) return false;
+            if (!ScreenToWorldGround(screenPos, out Vector3 worldPos)) return false;
+
+            var e = FindBuildingAtWorld(worldPos);
+            if (e == Entity.Null || _em.HasComponent<EntropySinkTag>(e)) return false;
+            found = e;
+            return true;
+        }
+
         // ================================================================
         // Private helpers
         // ================================================================
+
+        /// <summary>The current tutorial step's building-interaction restriction, or None.</summary>
+        private BuildingInteractionGate CurrentGate()
+        {
+            if (_tutorialQuery.IsEmpty) return BuildingInteractionGate.None;
+            var tutState = _tutorialQuery.GetSingleton<TutorialStateData>();
+            var flow     = TutorialFlowSO.Current;
+            if (!tutState.IsActive || flow == null || tutState.CurrentStepIndex >= flow.steps.Length)
+                return BuildingInteractionGate.None;
+            return flow.steps[tutState.CurrentStepIndex].onEnter?.buildingInteractionGate
+                   ?? BuildingInteractionGate.None;
+        }
+
+        /// <summary>
+        /// The building whose footprint covers a ground-plane point, or Entity.Null. Tested in world space,
+        /// which avoids cell-rounding convention mismatches: tiles are centred at (cell * cellSize), so a
+        /// building at (fx, fy) of size (fw, fh) covers X [fx*cs - cs/2, (fx+fw)*cs - cs/2) and likewise Z.
+        /// </summary>
+        private Entity FindBuildingAtWorld(Vector3 worldPos)
+        {
+            float cs     = gridRenderer.CellSize;
+            float halfCs = cs * 0.5f;
+
+            var entities = _buildingQuery.ToEntityArray(Allocator.Temp);
+            try
+            {
+                for (int i = 0; i < entities.Length; i++)
+                {
+                    var e   = entities[i];
+                    var pos = _em.GetComponentData<GridPosition>(e);
+                    int fx = pos.Cell.x, fy = pos.Cell.y, fw = 1, fh = 1;
+
+                    if (_em.HasComponent<BuildingFootprint>(e))
+                    {
+                        var fp = _em.GetComponentData<BuildingFootprint>(e);
+                        fw = fp.Width; fh = fp.Height;
+                    }
+
+                    if (worldPos.x >= fx * cs - halfCs && worldPos.x < (fx + fw) * cs - halfCs &&
+                        worldPos.z >= fy * cs - halfCs && worldPos.z < (fy + fh) * cs - halfCs)
+                        return e;
+                }
+            }
+            finally { entities.Dispose(); }
+            return Entity.Null;
+        }
 
         private string GetBuildingDisplayName(Entity e)
         {

@@ -47,8 +47,21 @@ namespace MobileIdleBuilder
         // Default tilt is flipped from the raw drag direction; the invert setting restores it.
         private static float TiltSign       => InvertTilt ? 1f : -1f;
 
-        // ── Shared threshold (PlayerInputRouter reads this) ──────────────────
-        public const float TapThreshold = 20f;  // pixels
+        // ── Shared threshold ─────────────────────────────────────────────────
+        /// <summary>
+        /// Pixels a finger may move from its press point before the press becomes a pan. The same slop
+        /// <see cref="TapGesture"/> uses to rule a press out as a tap (density-aware, at least 20 px).
+        /// </summary>
+        public static float TapThreshold => TapGesture.SlopPixels;
+
+        /// <summary>
+        /// True while the map still glides after a pan was released. A press then only stops the map, so
+        /// <see cref="TapGesture"/> does not count it as a tap. Set in LateUpdate (read by the next frame's taps).
+        /// </summary>
+        public static bool IsGliding { get; private set; }
+
+        // A glide slower than this (world units/s) is not noticeable, so a press then can still tap.
+        internal const float GlideTapBlockSpeed = 0.3f;
 
         // ── Tutorial pan API (matches old IsometricCameraFollow) ─────────────
         public void PanTo(Vector3 worldPos) => _panTarget = worldPos;
@@ -66,6 +79,7 @@ namespace MobileIdleBuilder
         // ── Private state ────────────────────────────────────────────────────
         private Camera   _cam;
         private Vector2  _panPrev;
+        private Vector2  _pressStart;
         private bool     _isPanActive;
         private bool     _panLocked;
         private bool     _pressOverUI;
@@ -191,8 +205,12 @@ namespace MobileIdleBuilder
             if (_panTarget.HasValue)
                 _pivot = Vector3.Lerp(_pivot, _panTarget.Value, tutorialPanSpeed * Time.unscaledDeltaTime);
 
+            IsGliding = !_isPanActive && _panVelocity.sqrMagnitude > GlideTapBlockSpeed * GlideTapBlockSpeed;
+
             ApplyRig();
         }
+
+        void OnDisable() => IsGliding = false;
 
         // ── Swipe pan ────────────────────────────────────────────────────────
 
@@ -212,6 +230,7 @@ namespace MobileIdleBuilder
             if (InputUtils.WasPointerPressed())
             {
                 _panPrev     = InputUtils.GetPointerPosition();
+                _pressStart  = _panPrev;
                 // A press that starts on a menu/panel/button must never pan the map.
                 _pressOverUI = UIInputBlocker.IsPointerOverUI(_panPrev);
                 _isPanActive = !_pressOverUI;
@@ -221,9 +240,10 @@ namespace MobileIdleBuilder
 
             if (InputUtils.IsPointerHeld() && _isPanActive)
             {
-                Vector2 cur   = InputUtils.GetPointerPosition();
-                float   delta = Vector2.Distance(cur, _panPrev);
-                _dragAccum += delta;
+                Vector2 cur = InputUtils.GetPointerPosition();
+                // Farthest distance from the press point (not the summed path), the same measure
+                // TapGesture uses, so a press can't both pan the map and count as a tap.
+                _dragAccum = Mathf.Max(_dragAccum, Vector2.Distance(cur, _pressStart));
 
                 if (_dragAccum > TapThreshold)
                 {
@@ -400,14 +420,7 @@ namespace MobileIdleBuilder
         /// Iterates the fixed-size touch array rather than relying on EnhancedTouch,
         /// which requires an explicit Enable() call.
         /// </summary>
-        private static int ActiveTouchCount()
-        {
-            if (Touchscreen.current == null) return 0;
-            int count = 0;
-            foreach (var touch in Touchscreen.current.touches)
-                if (touch.press.isPressed) count++;
-            return count;
-        }
+        private static int ActiveTouchCount() => InputUtils.ActiveTouchCount();
 
         /// <summary>
         /// Projects a screen-space point onto the Y=0 ground plane.
