@@ -419,6 +419,8 @@
                           class="placement-label" />
                 <ui:Button name="btn-rotate-output" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Rotate" /><ui:Label text="Rotate" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-flip-building" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Flip" /><ui:Label text="Flip" picking-mode="Ignore" class="glyph-label" /></ui:Button>
+                <!-- Edit mode only (press and hold a placed building): delete it, after a confirmation. -->
+                <ui:Button name="btn-remove-building" class="rotate-output-btn remove-building-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Trash" /><ui:Label text="Remove" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
