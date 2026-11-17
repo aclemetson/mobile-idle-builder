@@ -41,6 +41,7 @@ The post-tutorial game: pacing past the first Carbon atom, belts that scale, and
 ### Repository
 - Documentation rewrite: README, ADRs, runbooks, community files and a source-available license.
 - CI/CD paused (manual-only workflows), actions pinned to SHAs, and the unused AWS Terraform removed.
+- Docs, design pages and the privacy policy use the game's name, Quantum Foundry.
 
 ## 0.4 (October 2026)
 
