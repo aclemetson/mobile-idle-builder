@@ -89,9 +89,9 @@ namespace MobileIdleBuilder.PlayModeTests
             save.currentRun.inventoryKeys.Add("49");
             save.currentRun.inventoryValues.Add(50);
 
-            // Mirror the prestige reset performed by PrestigeSaveWatcher.OnPrestige.
+            // Mirror the prestige reset performed by PrestigeRunReset.ResetRun.
             save.currentRun = new CurrentRunData();
-            PrestigeSaveWatcher.ResetSitesForPrestige(save);
+            PrestigeRunReset.ResetSitesForPrestige(save);
             save.unlockedResearch = new List<string>();
 
             Assert.AreEqual(2, save.megastructureStage, "Completed stages survive prestige");

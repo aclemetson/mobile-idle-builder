@@ -5,8 +5,11 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// Each frame:
-    ///  1. Checks the building's local input inventory (BuildingInputSlot) for recipe inputs,
-    ///     falling back to the global InventorySlot singleton when the local buffer is empty.
+    ///  1. Tops up the building's creation buffer (CraftStagingSlot) from its local input buffer
+    ///     (BuildingInputSlot), up to each recipe quantity (<see cref="CraftStaging"/>). A craft is ready
+    ///     once the creation buffer holds the whole recipe, so a recipe needing more than the input's
+    ///     per-item cap still crafts, and the input queues the next craft meanwhile. With both buffers
+    ///     empty (or no creation buffer), falls back to the global InventorySlot singleton.
     ///  2. Advances production progress while inputs are satisfied.
     ///  3. On completion: consumes inputs, deposits output into BuildingOutputSlot (local output
     ///     buffer), pausing production if the output buffer is at capacity.
@@ -31,9 +34,12 @@ namespace MobileIdleBuilder
             float deltaTime = SystemAPI.Time.DeltaTime;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
             long escapedEntropy = 0;
+            // Cyclotron Kick boost (1 when none is running) multiplies the byproduct entropy paid below.
+            float entropyBoost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1f;
 
-            // Global production multipliers from the megastructure (1 = no bonus when the singleton is absent,
-            // e.g. in tests that never bake it).
+            // Global production multipliers (1 = no bonus when a singleton is absent, e.g. in tests that
+            // never bake it): megastructure stage rewards and the prestige shop (Assembly Line speed,
+            // Quantum Yield output). The same factors feed the idle snapshot, so live == idle.
             float globalSpeedMult  = 1f;
             float globalOutputMult = 1f;
             if (SystemAPI.HasSingleton<GlobalProductionBonus>())
@@ -41,6 +47,12 @@ namespace MobileIdleBuilder
                 var gb = SystemAPI.GetSingleton<GlobalProductionBonus>();
                 globalSpeedMult  = gb.SpeedMult;
                 globalOutputMult = gb.OutputMult;
+            }
+            if (SystemAPI.HasSingleton<PrestigeData>())
+            {
+                var pd = SystemAPI.GetSingleton<PrestigeData>();
+                if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
+                if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
             }
 
             foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
@@ -65,16 +77,28 @@ namespace MobileIdleBuilder
                     : 1f;
 
                 // ---- Input availability check (drives InputsSatisfied flag for UI) ----
+                // Optional buffer (probed, not queried): entities built without it keep the old path.
+                bool hasStage = SystemAPI.HasBuffer<CraftStagingSlot>(entity);
+                DynamicBuffer<CraftStagingSlot> stage = hasStage ? SystemAPI.GetBuffer<CraftStagingSlot>(entity) : default;
+                bool useStage      = hasStage && (stage.Length > 0 || localIn.Length > 0);
+                bool useLocalInput = !useStage && localIn.Length > 0;
+
                 bool satisfied = true;
-                bool useLocalInput = localIn.Length > 0;
-
-                for (int i = 0; i < inputs.Length; i++)
+                if (useStage)
                 {
-                    int have = useLocalInput
-                        ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
-                        : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
+                    CraftStaging.Fill(inputs, localIn, stage);
+                    satisfied = CraftStaging.IsReady(inputs, stage);
+                }
+                else
+                {
+                    for (int i = 0; i < inputs.Length; i++)
+                    {
+                        int have = useLocalInput
+                            ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
+                            : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
 
-                    if (have < inputs[i].Quantity) { satisfied = false; break; }
+                        if (have < inputs[i].Quantity) { satisfied = false; break; }
+                    }
                 }
                 process.ValueRW.InputsSatisfied = satisfied;
 
@@ -104,32 +128,43 @@ namespace MobileIdleBuilder
 
                 // ---- Recipe completion: re-verify inputs ----
                 bool canComplete = true;
-                for (int i = 0; i < inputs.Length; i++)
-                {
-                    int have = useLocalInput
-                        ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
-                        : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
+                if (useStage)
+                    canComplete = CraftStaging.IsReady(inputs, stage);
+                else
+                    for (int i = 0; i < inputs.Length; i++)
+                    {
+                        int have = useLocalInput
+                            ? SlotBufferUtils.CountInInputBuffer(localIn, inputs[i].ItemID)
+                            : SlotBufferUtils.CountInInventory(inventory, inputs[i].ItemID);
 
-                    if (have < inputs[i].Quantity) { canComplete = false; break; }
-                }
+                        if (have < inputs[i].Quantity) { canComplete = false; break; }
+                    }
 
                 if (canComplete)
                 {
                     // Consume inputs
-                    for (int i = 0; i < inputs.Length; i++)
-                    {
-                        if (useLocalInput)
-                            SlotBufferUtils.RemoveFromInputBuffer(localIn, inputs[i].ItemID, inputs[i].Quantity);
-                        else
-                            SlotBufferUtils.RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
-                    }
+                    if (useStage)
+                        CraftStaging.Consume(inputs, stage);
+                    else
+                        for (int i = 0; i < inputs.Length; i++)
+                        {
+                            if (useLocalInput)
+                                SlotBufferUtils.RemoveFromInputBuffer(localIn, inputs[i].ItemID, inputs[i].Quantity);
+                            else
+                                SlotBufferUtils.RemoveFromInventory(ref inventory, inputs[i].ItemID, inputs[i].Quantity);
+                        }
 
                     // Deposit outputs to local output buffer. An OutputQuantity manager (if assigned)
                     // multiplies the deposited amount; AppliedOutputMult is 1 for every other case.
                     float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
                         ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                         : 1f;
-                    outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
+                    outMult *= globalOutputMult; // global output bonuses compose on top of managers
+                    // Whole crafts' worth to deposit; the leftover fraction carries to the next craft so a
+                    // 1.1x bonus on a 1-item recipe pays out instead of flooring to nothing.
+                    float carry = process.ValueRO.OutputCarry;
+                    int crafts  = OutputCarry.Take(outMult, ref carry);
+                    process.ValueRW.OutputCarry = carry;
                     // Optional buffer: only entities built with the current archetype carry it, and a
                     // missing one must never stop production — so probe rather than widen the query.
                     bool logCrafts = SystemAPI.HasBuffer<CraftedOutputEvent>(entity);
@@ -139,7 +174,7 @@ namespace MobileIdleBuilder
 
                     for (int i = 0; i < outputs.Length; i++)
                     {
-                        int qty = (int)(outputs[i].Quantity * outMult); // floor; outMult >= 1
+                        int qty = outputs[i].Quantity * crafts;
                         SlotBufferUtils.AddToOutputBuffer(localOut, outputs[i].ItemID, qty);
 
                         // Record the craft where it happens. Diffing output-buffer totals downstream
@@ -151,7 +186,7 @@ namespace MobileIdleBuilder
                     // Escaping byproducts (neutrinos, gamma photons) leave the building and are paid
                     // out as entropy right away, scaled like the main output.
                     if (process.ValueRO.ByproductEntropy > 0f)
-                        escapedEntropy += (long)(process.ValueRO.ByproductEntropy * outMult);
+                        escapedEntropy += (long)(process.ValueRO.ByproductEntropy * outMult * entropyBoost);
                 }
 
                 process.ValueRW.Progress   = 0f;
@@ -162,6 +197,12 @@ namespace MobileIdleBuilder
             {
                 var progress = SystemAPI.GetSingletonRW<PlayerProgressData>();
                 progress.ValueRW.BaseCurrency += escapedEntropy;
+                if (SystemAPI.HasSingleton<AutomationIncome>())
+                {
+                    var income = SystemAPI.GetSingletonRW<AutomationIncome>();
+                    income.ValueRW.Total     += escapedEntropy;
+                    income.ValueRW.Unboosted += escapedEntropy / (double)entropyBoost;
+                }
             }
         }
 

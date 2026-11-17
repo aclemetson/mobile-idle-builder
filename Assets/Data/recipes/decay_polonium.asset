@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_polonium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_polonium
-  displayName: Polonium Decay
+  displayName: Lead
+  methodLabel: 
   recipeId: 235
   tier: 2
   category: 4

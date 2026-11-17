@@ -22,15 +22,24 @@
             <ui:Button name="btn-prestige"          text="⬆ Prestige" class="prestige-btn" />
             <ui:Label  name="entropy-label"         text="◈ 0"       class="entropy-label" />
             <ui:Label  name="prestige-topbar-label" text="✦ 0"       class="prestige-topbar-label" />
-            <ui:Label  name="crystal-label"         text="◆ 0"       class="crystal-label" />
-            <ui:Label  name="power-label"  text="⚡ 0 eV"   class="power-label" />
+            <ui:Label  name="crystal-label"         text="♦ 0"       class="crystal-label" />
             <ui:Button name="btn-power-toggle" text="⚡" class="settings-btn power-toggle-btn" />
             <ui:Button name="btn-settings" text="⚙"         class="settings-btn" />
+        </ui:VisualElement>
+
+        <!-- ═══ POWER STRIP (hidden until there is power to report; no room for it in the top bar) ═══ -->
+        <ui:VisualElement name="power-status" class="power-status hidden" picking-mode="Ignore">
+            <ui:Label name="power-label" text="" class="power-label" picking-mode="Ignore" />
         </ui:VisualElement>
 
         <!-- ═══ ACTIVE RESEARCH STRIP (shown only while a research timer runs) ═══ -->
         <ui:VisualElement name="research-status" class="research-status hidden">
             <ui:Label name="research-status-label" text="" class="research-status-label" />
+        </ui:VisualElement>
+
+        <!-- ═══ ACTIVE CRAFT STRIP (shown only while the recipe craft queue is cooking) ═══ -->
+        <ui:VisualElement name="craft-status" class="research-status craft-status hidden">
+            <ui:Label name="craft-status-label" text="" class="research-status-label craft-status-label" />
         </ui:VisualElement>
 
         <!-- ═══ GRID AREA ═══ -->
@@ -66,7 +75,9 @@
                 <ui:Button name="btn-buildings"    text="Builder"      class="drawer-nav-btn" />
                 <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
                 <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
+                <ui:Button name="btn-stats"        text="Statistics"   class="drawer-nav-btn" />
                 <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
+                <ui:Button name="btn-cyclotron"    text="Cyclotron"    class="drawer-nav-btn hidden" />
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
@@ -77,7 +88,7 @@
                 <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
                 <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
-                <ui:Button name="btn-shop"         text="◆ Shop"       class="drawer-nav-btn" />
+                <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -138,6 +149,47 @@
             <ui:ScrollView name="upgrades-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ═══ STATISTICS PANEL ═══ -->
+        <ui:VisualElement name="stats-panel" class="slide-panel hidden">
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:Label text="Statistics" class="panel-title" />
+                <ui:Button name="btn-close-stats" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+            </ui:VisualElement>
+            <ui:ScrollView name="stats-list" class="recipe-list"
+                           vertical-scroller-visibility="Auto"
+                           horizontal-scroller-visibility="Hidden">
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Net worth" class="upgrade-row-name" />
+                        <ui:Label name="stats-networth-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label text="Entropy you hold and have spent this run, plus your items. Prestige pays out from this." class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Automation income" class="upgrade-row-name" />
+                        <ui:Label name="stats-income-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-income-sub" text="" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="If you go idle" class="upgrade-row-name" />
+                        <ui:Label name="stats-idle-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-idle-sub" text="" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Idle earnings cap" class="upgrade-row-name" />
+                        <ui:Label name="stats-cap-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label text="Hours of time away that count toward idle earnings" class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:Label name="stats-footnote" text="" class="upgrade-row-desc" />
+            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ MANAGERS PANEL ═══ -->
@@ -277,7 +329,7 @@
             <!-- Leaderboard section -->
             <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
                 <ui:Label text="Leaderboard" class="panel-title" />
-                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="close-btn" />
+                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="craft-btn panel-header-action" />
             </ui:VisualElement>
             <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
@@ -288,7 +340,7 @@
         <ui:VisualElement name="shop-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label text="Premium Shop" class="panel-title" />
-                <ui:Label name="shop-crystal-balance" text="◆ 0" class="shop-crystal-balance" />
+                <ui:Label name="shop-crystal-balance" text="♦ 0" class="shop-crystal-balance" />
                 <ui:Button name="btn-close-shop" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="shop-tabs" class="shop-tabs">
@@ -296,7 +348,7 @@
                 <ui:Button name="shop-tab-timewarp"  text="⏩ Warp"     class="shop-tab" />
                 <ui:Button name="shop-tab-entropy"   text="◈ Entropy"  class="shop-tab" />
                 <ui:Button name="shop-tab-prestige"  text="✦ Prestige" class="shop-tab" />
-                <ui:Button name="shop-tab-crystals"  text="◆ Buy"      class="shop-tab" />
+                <ui:Button name="shop-tab-crystals"  text="♦ Buy"      class="shop-tab" />
             </ui:VisualElement>
             <ui:Label name="shop-context-label" text="" class="shop-context-label" />
             <ui:ScrollView name="shop-tier-list" class="shop-tier-list"
@@ -349,6 +401,9 @@
                     <ui:Label text="Invert Tilt" class="settings-label" />
                     <ui:Toggle name="toggle-invert-tilt" value="false" class="settings-toggle" />
                 </ui:VisualElement>
+                <ui:Label text="ACCOUNT" class="drawer-section-title" />
+                <ui:Label name="settings-account" text="" class="settings-account" />
+                <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
                 <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
@@ -387,6 +442,14 @@
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
+            <ui:VisualElement name="conveyor-legend" class="conveyor-legend" picking-mode="Ignore">
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--endpoint" picking-mode="Ignore" />
+                <ui:Label text="Start / end" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--path" picking-mode="Ignore" />
+                <ui:Label text="Path preview" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--guide" picking-mode="Ignore" />
+                <ui:Label text="Guide" class="conveyor-legend__text" picking-mode="Ignore" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ DECONSTRUCT OVERLAY ═══ -->
@@ -419,6 +482,7 @@
         <ui:VisualElement name="building-inspector-panel" class="output-selector hidden">
             <ui:VisualElement class="panel-header">
                 <ui:Label name="inspector-building-name" text="Building" class="panel-title" />
+                <ui:Button name="btn-inspector-info" text="" class="inspector-info-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Info" /></ui:Button>
                 <ui:Button name="btn-close-inspector" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="inspector-static" class="inspector-static" />
@@ -428,6 +492,13 @@
             <ui:ScrollView name="inspector-upgrades" class="inspector-scroll inspector-scroll--upgrades"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+            <!-- Details behind the (i) button (HUDBuildingInspectorSubController): floats over the
+                 recipe/upgrade lists so opening it never moves them. Tap (i) or the card to close.
+                 Must stay the LAST child: UI Toolkit draws later siblings on top, so anywhere earlier
+                 the recipe buttons paint over it. Its top is set from the header's height in code. -->
+            <ui:VisualElement name="inspector-info-card" class="inspector-info-card hidden">
+                <ui:VisualElement name="inspector-info" class="inspector-info" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ MAXWELL'S DEMON PANEL (particle deposit → entropy conversion) ═══ -->
@@ -548,6 +619,121 @@
                 </ui:VisualElement>
                 <ui:Label name="game-update-message" text="" class="game-update-message" />
                 <ui:Button name="btn-game-update-ok" text="OK" class="craft-btn" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ ENTROPY SURGE OFFER (EntropySurgeOfferController.cs) ═══
+             The side icon appears when the Entropy Surge ad is off cooldown (every 15 min). Tapping it
+             opens the card: Watch plays the ad, No thanks restarts the cooldown, the X just closes the
+             card and leaves the icon (the amount is recalculated on the next tap). -->
+        <ui:Button name="surge-offer-btn" text="" class="surge-offer-btn blocks-world-input hidden">
+            <ui:Label text="◈" class="surge-offer-btn__icon" picking-mode="Ignore" />
+            <ui:Label text="Surge" class="surge-offer-btn__label" picking-mode="Ignore" />
+        </ui:Button>
+        <ui:VisualElement name="surge-offer-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 102;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Entropy Surge" class="panel-title" />
+                    <ui:Button name="surge-offer__close" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                </ui:VisualElement>
+                <ui:Label name="surge-offer__message" text="" class="game-update-message" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="surge-offer__decline" text="No thanks" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="surge-offer__watch" text="▶ Watch ad" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ CYCLOTRON KICK (CyclotronController.cs) ═══
+             Downtime minigame from the 2nd prestige: tap as the particle crosses the gap; energy sets a
+             timed entropy boost and pays Insight, which buys the two upgrades on the intro step.
+             Three steps shown one at a time. -->
+        <ui:VisualElement name="cyclotron-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card cyclotron-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Cyclotron" class="panel-title" />
+                    <ui:Button name="cyclotron__close" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__intro" class="cyclotron-step">
+                    <ui:Label name="cyclotron__intro-text" text="" class="game-update-message" />
+                    <ui:Label name="cyclotron__status" text="" class="cyclotron-status" />
+                    <ui:Button name="cyclotron__start" text="Start run" class="craft-btn cyclotron-btn" />
+                    <ui:Label name="cyclotron__insight" text="Insight: 0" class="cyclotron-section-title" />
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__boost-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__boost-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cyclotron-upgrade-row">
+                        <ui:Label name="cyclotron__cooldown-upgrade-text" text="" class="cyclotron-upgrade-text" />
+                        <ui:Button name="cyclotron__cooldown-upgrade" text="" class="craft-btn cyclotron-upgrade-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__play" class="cyclotron-step hidden">
+                    <ui:VisualElement class="cyclotron-hud-row">
+                        <ui:Label name="cyclotron__energy" text="Energy 0%" class="cyclotron-hud-label" />
+                        <ui:Label name="cyclotron__timer" text="30s" class="cyclotron-hud-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cyclotron-energy-bar">
+                        <ui:VisualElement name="cyclotron__energy-fill" class="cyclotron-energy-fill" />
+                    </ui:VisualElement>
+                    <MobileIdleBuilder.CyclotronView name="cyclotron__view" class="cyclotron-view" />
+                    <ui:Label name="cyclotron__feedback" text="" class="cyclotron-feedback" />
+                </ui:VisualElement>
+                <ui:VisualElement name="cyclotron__result" class="cyclotron-step hidden">
+                    <ui:Label name="cyclotron__result-text" text="" class="game-update-message" />
+                    <ui:Button name="cyclotron__collect" text="Collect" class="craft-btn cyclotron-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ TEST AD (TestAdOverlayController.cs) ═══
+             Dev builds with ads.test_mode on show this card instead of a real ad. Finish = ad watched
+             (reward granted), Skip / back = closed early (no reward). Sits above every other modal, like
+             a full-screen ad would. -->
+        <ui:VisualElement name="test-ad-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 110;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Test Ad" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label text="Ad test mode is on, so no real ad was shown.&#10;Finish to receive the reward, or Skip to close it like an ad dismissed early." class="game-update-message" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="test-ad__skip" text="Skip" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="test-ad__finish" text="Finish" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ SAVE CHOICE (SaveConflictPrompt.cs) ═══
+             This device and the cloud save progressed separately (two devices, or a guest device that just
+             signed in with Google). Pick one, then confirm. No close button: one save has to win. -->
+        <ui:VisualElement name="save-choice-modal" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 120;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label text="Two saves found" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="save-choice__message" text="" class="game-update-message" />
+                <ui:VisualElement name="save-choice__options" class="save-choice__options">
+                    <ui:Button name="save-choice__local" text="" class="craft-btn save-choice__option">
+                        <ui:Label text="Keep this device's save" class="save-choice__option-title" picking-mode="Ignore" />
+                        <ui:Label name="save-choice__local-summary" text="" class="save-choice__option-summary" picking-mode="Ignore" />
+                    </ui:Button>
+                    <ui:Button name="save-choice__cloud" text="" class="craft-btn save-choice__option">
+                        <ui:Label text="Use the cloud save" class="save-choice__option-title" picking-mode="Ignore" />
+                        <ui:Label name="save-choice__cloud-summary" text="" class="save-choice__option-summary" picking-mode="Ignore" />
+                    </ui:Button>
+                </ui:VisualElement>
+                <ui:VisualElement name="save-choice__confirm-row" class="confirm-prompt__buttons hidden">
+                    <ui:Button name="save-choice__back" text="Back" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="save-choice__confirm" text="Confirm" class="craft-btn confirm-prompt__btn" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 

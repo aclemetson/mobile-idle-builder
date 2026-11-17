@@ -4,13 +4,15 @@
 > Port holes + Atom Generator structure + per-building drafts added 2026-06-27.
 > Element tile icons added 2026-07-02.
 > Power Relay "broadcast pylon" structure + placement radius ring/highlight added 2026-07-03.
+> Belt Splitter structure + selection-only tile highlight added 2026-11-08; tutorial buildings redesigned ("the physics made visible") 2026-11-08.
 
 How buildings and field structures are rendered, and the art direction they should follow.
 Read this when touching structure visuals, procedural geometry, or shaders.
 
 ## Art direction
 
-Structures should feel **fluid and woven into the fabric of the universe — not alien, not
+**A building's shape shows the process it performs** ("the physics made visible"): a Fusion Reactor is a star
+in a magnetic bottle, Maxwell's Demon is the thought experiment itself. Structures should feel **fluid and woven into the fabric of the universe — not alien, not
 mechanical boxes**. The visual language is **round bodies that taper to sharp points
 (singularities)**. Geometry is organic and continuous rather than faceted or hard-edged;
 motion is slow and alive (drifting, breathing, glowing) rather than mechanical.
@@ -28,7 +30,7 @@ building prefabs. Two patterns:
 
 1. **Primitive composition** — `GameObject.CreatePrimitive` cubes/quads/spheres, scaled and
    colored. Used by grid tiles (`GridRenderer`), placeholder building cubes
-   (`BuildingVisualizer`), conveyor item spheres (`ConveyorVisualizer`), port arrows (`OutputArrow`).
+   (`BuildingVisualizer`), conveyor item icon tiles and fallback spheres (`ConveyorVisualizer`).
 2. **Procedural mesh builders** — pure static classes that emit a `Mesh` from generated
    vertices/indices, paired with a thin MonoBehaviour and a custom URP shader. This is the
    house pattern for distinctive structures.
@@ -73,34 +75,105 @@ above do not apply.
   `HUDController.MakeItemIcon(sprite, ussClass)`; USS classes `.item-icon` / `.recipe-input-icon`
   / `.codex-icon` live in `Assets/UI/components.uss`. A null icon is skipped, never fatal.
 
+### Blender-rendered molecule icons
+Molecules built only from H, C, N and O use a 3D ball-and-stick render on the same grey tile instead of
+a text tile. `scripts/molecule_icons/` holds the pipeline; re-run it to add or change one (add the item
+to `molecules.json` first):
+1. `fetch_structures.py` downloads PubChem 3D structures into `structures.json` and checks each formula.
+2. `render_blender.py` runs inside Blender (5.2 tested) and writes `renders/<id>.png` (gitignored). It
+   replaces all meshes in the open scene. It picks the camera angle with the least atom overlap.
+3. `compose_icons.py` installs `Assets/Art/Icons/Elements/<id>.png`, lists the id in
+   `Assets/Art/Icons/rendered_icons.txt`, and writes `renders/contact_sheet.png`. **Check the sheet at
+   the UI sizes** (48/28/18): things that look fine at 256 can fail there.
+
+- **`ElementIconGenerator` skips ids in `rendered_icons.txt`**, so regenerating can't overwrite them.
+  `ItemIconTests` checks each listed id is a real item with a PNG.
+- **Atom colours** match the element tiles: H `#d2a8ff` (genesis), C `#3fb950` (fusion). N `#2dd4bf` and
+  O `#d9e45c` are deliberate departures, because fusion green covers all three of C, N and O.
+- **Large molecules** set `hide_h` with thicker `chunk`/`bond_chunk`; long chains also set `diagonal`.
+- **Representative structures** for generic items: `amino_acid` = glycine (the recipe's exact atoms),
+  `polymer_precursor` = ethylene, `fatty_acid` = octanoic acid (C8; the recipe implies C16, which is a
+  hairline at icon size).
+
+## Currency icons
+
+Entropy, prestige, crystals and power are single-colour glyphs in a small custom font, so they work inside any text string and take the label's colour. Entropy is Maxwell's Demon's chamber, prestige a star held by four arcs, crystals a cut gem, power a bolt in a ring.
+
+To change a shape, edit `ICONS` in `scripts/currency_icons/build_font.py` (24x24 grid, y down; `solid()` / `hole()` set the winding), run it (needs `pip install fonttools`), then run **MobileIdleBuilder > Build Currency Icon Font**. That bakes a static SDF asset, `Assets/Fonts/CurrencyIcons SDF.asset`, and wires it into `gamePanelSettings`. A new symbol must be one the default font lacks (check `FontAsset.HasCharacter`), or it never reaches the fallback. Check the result at 13px in the running game.
+
 ## Reference implementations
 
-### Conveyor "river" channel (belts)
-Conveyors are flowing **water** on a flat dark **bed** (no rails/walls) — direction reads from the moving
-current, not an arrow. Two stacked procedural layers per cell, both from one ribbon builder:
+### Conveyor "quantum field" lattice (belts)
+Belts are a **field lattice** drawn straight over the floor tile (no bed, no rails): warm-white grid lines whose
+**wave packets** roll downstream, bending the lines and glowing as they pass. The packets are what push the
+particles, so direction reads from them, not an arrow. Chosen 2026-11-14 over water, virtual pairs, |psi|^2 and
+vacuum foam; warm white contrasts with every world's dark, cool tiles (`#1e2233` / `#123039` / `#17301c`).
 - `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` — pure static ribbon builder in cell-local XZ.
-  `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the channel.
-  Shapes from one primitive: **straight** (quad strip), **bend** (quadratic Bézier, centre as control),
-  and **merge** (each inbound is drawn as a *full* edge→exit ribbon with `uv.y` 0→1 — the straight-through
-  input a complete straight piece, every turning input a complete bend piece — all sharing the exit half,
-  so they overlay and blend into one seamless outflow). A `widthFrac` arg builds the **floor**
-  (`FloorWidthFrac` == `WaterWidthFrac`, at `FloorY`) under the inner **water** (`WaterWidthFrac`, `FlowY`).
-- `Assets/Shaders/ConveyorFlow.shader` — URP Unlit **translucent** water (`Transparent+50`, above the
-  transparent grid tiles or they overdraw it at some camera angles). Lengthwise streaks (functions of
-  `uv.x`) drift downstream; every `uv.y` wave uses a whole number of cycles/cell so the flow is
-  continuous across collinear edges. Soft (alpha-faded) banks.
-- `Assets/Shaders/ConveyorChannel.shader` — **opaque**, flat dark bed (drawn at `Geometry`, writes depth so
-  it sits over the grid tiles). Same footprint as the water; it only gives the translucent ribbon a base
-  and occludes the grid tiles beneath (no rails or bolts).
-- Both custom shaders are registered in `GraphicsSettings.asset` `m_AlwaysIncludedShaders` (else magenta
-  on Android).
-- `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns a `Channel` (floor) + `Flow` (water) child per
-  segment, sharing one material each (fall back to the opaque primitive material if a shader is missing).
-  `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change across
-  the whole graph); item spheres still float on the water. Inbound edges per cell come from neighbours
-  whose `ExitDir` points back at the cell — the same geometry `ConveyorPlacer.RelinkAll` uses.
-- `Assets/Scripts/Tests/ConveyorFlowMeshBuilderTests.cs` — EditMode invariants (straight/bend vertex
-  counts, merge arms reaching each inbound + exit edge, monotonic flow UVs, flat low profile).
+  `uv.y` runs 0 (inbound edge) → 1 (outbound edge) along the flow; `uv.x` runs 0→1 across the belt.
+  Shapes from one primitive: **straight** (quad strip), **bend** (a quarter circle about the cell corner the
+  two edges share, radius ½ cell, 12 segments — `CenterlinePoint`), and **merge** (each inbound is drawn as a
+  *full* edge→exit ribbon with `uv.y` 0→1, all sharing the exit half). Bends were a quadratic Bézier through
+  the cell centre until 2026-11-15: its radius at the apex (~0.35 cell) equalled the half-width, so the inner
+  edge pinched to a point and the lattice lines crowded into a blur on device.
+  - `uv1.x` = 1 on a merge's secondary (turning) arms; `uv1.y` = the arm's centreline length in cells
+    (`PathLengthCells`: 1 straight, π/4 for a turn).
+  - `uv2` (secondary arms, only when a straight main arm exists) = the main belt's sideways axis / half-width.
+    The shader fades a secondary arm out wherever the main belt covers it (`|dot(pos.xz, uv2)| < 1`), matching
+    the main belt's soft edge, so a junction shows ONE lattice. Without a straight main arm it falls back to
+    fading along the arm (`uv.y`).
+  - Items follow the same centreline: `ConveyorVisualizer` places them with `CenterlinePoint` (inset 5% at
+    each edge), so they ride round the arc instead of cutting the corner.
+- `Assets/Shaders/ConveyorField.shader` — URP Unlit translucent (`Transparent+50`, above the transparent grid
+  tiles). Cross lines and lengthwise lines (`_Lanes`); a main packet per cell plus a smaller one at 2×. Every
+  `uv.y` pattern is a whole number of cycles per cell, so cells, bends and merges meet seamlessly. Soft
+  (alpha-faded) edges.
+  - Cross lines per piece = `round(_CrossLines * uv1.y)`: 8 on a straight, 6 on a corner, so spacing along the
+    centreline is the same everywhere and line ends still meet at cell edges.
+  - Lines are anti-aliased with `fwidth` (`GridLine`): never thinner than ~1.5 px, and they fade instead of
+    shimmering where they'd be packed tighter than ~3 px (the inside of a corner, far zoom).
+- **Speed sync:** the packets read a GLOBAL `_BeltPhase` (cells travelled). `ConveyorVisualizer.UpdateBeltPhase`
+  advances it each frame by `dt * ResearchEffects.ConveyorSpeedMult` — the same rate `ConveyorSystem` advances
+  `ConveyorItem.Progress` (every `TransportTime` is 1) — so a crest travels with the particles riding it and
+  speeds up with conveyor research. Wrapped at 64 (whole number) by `AdvanceBeltPhase`.
+- Registered in `GraphicsSettings.asset` `m_AlwaysIncludedShaders` (else magenta on Android). The old
+  `ConveyorFlow` (water) and `ConveyorChannel` (bed) shaders were removed.
+- `Assets/Scripts/Grid/ConveyorVisualizer.cs` — spawns one `Flow` child per segment sharing one material
+  (`GetFlowMaterial`, falls back to the opaque primitive material if the shader is missing; the Belt Splitter
+  uses it too). `RefreshAll()` rebuilds every belt after placement/removal (links and merge geometry can change
+  across the whole graph). Inbound edges per cell come from neighbours whose `ExitDir` points back at the cell —
+  the same geometry `ConveyorPlacer.RelinkAll` uses.
+- Tests: `ConveyorFlowMeshBuilderTests.cs` (vertex counts, merge arms reaching each edge, monotonic flow UVs,
+  flat low profile, bend inner radius, centreline arc, arm length / main-axis UVs) and `ConveyorBeltPhaseTests.cs` (phase advances at item speed, wraps, speed fallback).
+
+### Belt item visuals (what rides the belts)
+Every item is its menu icon tile on the belt (a camera-facing quad, `CreateItemTile`) **except** the basic
+particles, which are small animated 3D objects that show their physics. Approved via Blender mockups
+(`scripts/belt_particles/mockup_blender.py`, renders gitignored), then built in code like the buildings.
+
+| id | look | motion |
+|---|---|---|
+| `electron` | teal `#4ECDC4` haze of overlapping puffs around a bright core | breathes, swirls, puffs drift (`ElectronCloud`, additive) |
+| `up_quark` / `down_quark` | glossy bead, orange `#FF6B35` / blue-violet `#6E7BFF` | fast irregular shake + squash ("unstable") |
+| `proton` / `neutron` | shell, violet `#D2A8FF` / grey `#8B949E`; inside uud / udd joined by yellow gluon strings | shell turns see-through ~0.9 s every 4.0 s / 4.7 s; quarks circle and shake inside |
+
+- `Assets/Scripts/Grid/BeltItemVisuals.cs` — registry: item id string -> factory. `TryCreate` returns null
+  for unregistered ids or missing shaders, and the visualizer falls back to the icon tile. Meshes and
+  materials are shared statics. To add a particle, register a factory here; keep colours matching the
+  loose quarks so composites read as their parts.
+- `Assets/Scripts/Grid/BeltParticleMeshes.cs` — pure mesh builders (unit sphere, nucleon core = 3 quarks
+  + 6 gluon tube halves in one mesh, electron cloud). Every vertex has a colour and a jitter channel in
+  `uv1` = (seedA, seedB, blend, -): a gluon tube blends between its two quarks' shake so it stays attached.
+  Vertex colours are converted to linear by the caller (the project is linear; `SetColor` converts, mesh
+  colours don't).
+- `Assets/Shaders/BeltParticle.shader` — URP Unlit, fake top light + gloss. Vertex-shader jitter / squash /
+  spin, and a periodic fade with a fresnel rim for shells. Blend/ZWrite/Cull are material properties, so one
+  shader serves the opaque parts (`Geometry`) and the shells (`Transparent+100`, after the belt lattice).
+- `Assets/Shaders/ElectronCloud.shader` — additive haze, alpha falls off toward each puff's silhouette.
+- **No per-instance state:** each item's animation phase is a hash of its world position (moves smoothly
+  with the item), not a property block. Visuals can therefore be pooled per item id and reused by any
+  item; `ConveyorVisualizer` pools all item visuals (`AcquireItemVisual` / `ReleaseItemVisual`, max 64
+  per id) and never billboards the 3D particles.
+- Both shaders are in `m_AlwaysIncludedShaders`. Tests: `Assets/Scripts/Tests/BeltItemVisualsTests.cs`.
 
 ### Field wire-mesh (tappable resource fields)
 - `Assets/Scripts/Gameplay/FieldWireMeshBuilder.cs` — line-topology grid mesh.
@@ -108,102 +181,92 @@ current, not an arrow. Two stacked procedural layers per cell, both from one rib
 - `Assets/Scripts/Gameplay/WireBounce.cs` — pure exponential-decay envelope (reusable).
 - `Assets/Shaders/FieldWireMesh.shader` — URP Unlit, `_Time`-driven noise + radial bounce.
 
-### Field-collector "spindle" structure (the Harvester building)
-A round bulb tapering to a single sharp apex, rounded on every side **except a flat front
-facade** that carries a glowing emission aperture. Replaces the placeholder cube for **any
-building carrying `CollectorData`** (data-driven — no hardcoded id).
+### Field-collector "field drawn to a point" structure (the Harvester building)
+A low cone with a long concave taper to a sharp tip. Rings on the ground contract towards it, a particle condenses at
+the tip as the harvest timer fills, and each harvest flares it and fires a burst from a black doorway on the cone's flat
+front. Used by **any building carrying `CollectorData`** (data-driven, no hardcoded id).
 
-- `Assets/Scripts/Gameplay/CollectorMeshBuilder.cs` — surface-of-revolution builder. The
-  `SpindleProfile` (`Height`, `BulbRadius`, `BaseRadius`, `ApexSharpness`, `FrontFlattenFrac`)
-  and `Radius(u, p)` define the silhouette; the top collapses to **one shared apex vertex**
-  (the sharp point); the **front (+Z) is sliced flat** at `FrontFlatZ(p)` so the building has a
-  clear "front"; `uv.y` runs 0 (base) → 1 (apex) so the shader can glow the tip.
-- `Assets/Scripts/Gameplay/ApertureMeshBuilder.cs` — `BuildArchDoor(width, height, segs)`: a solid,
-  double-sided filled "doorway" (rectangle + semicircular arch top) on the flat front face, coloured
-  solid black so it reads as a hole the particles stream out of.
-- `Assets/Scripts/Gameplay/CollectorStructure.cs` — MonoBehaviour. Builds the spindle + aperture
-  + a forward-firing particle jet, tints everything to the field colour, and orients the front to
-  the building's **output direction** (`OutputDirectionData.Direction`, enum × 90° on Y; defaults
-  to South when unset). Polls `CollectorData.Timer`: `CollectorSystem` subtracts the production
-  interval on each deposit, so a frame-over-frame **drop** in the timer means an item was produced
-  → fire a decaying `_PulseAmp` flare (reuses `WireBounce`) **and** `Emit()` a particle burst out
-  the hole. The aperture particle material reuses `FieldGenerator.ParticleMaterialTemplate` (the
-  Android-safe additive field material).
-- `Assets/Shaders/CollectorStructure.shader` — URP Unlit, shading only: body emission + apex tip
-  glow ramped by `uv.y` (`_TipColor` = brightened field colour), `_PulseAmp` spikes the flare on
-  each harvest. `_BaseColor` is left for `PresenceReceiver` to drive. The bob/breathe/pulse **motion
-  is on the host transform** (`CollectorStructure.AnimateTransform`), NOT the shader — so the child
-  door + particles inherit it and stay locked to the surface (a shader-side bob would slide the
-  surface over the stationary door and make the hole clip in and out).
-- `Assets/Scripts/Tests/CollectorMeshBuilderTests.cs` — EditMode invariants (counts, single apex
-  on-axis, flattened front / round back, bounds, unit normals).
+- `Assets/Scripts/Gameplay/CollectorMeshBuilder.cs`: surface-of-revolution builder, called with `CollectorStructure.ConeProfile`.
+  The top collapses to one shared apex vertex; the **front (+Z) is sliced flat** at `FrontFlatZ(p)`.
+- `Assets/Scripts/Gameplay/ApertureMeshBuilder.cs`: `BuildArchDoor(width, height, segs)`, the black doorway on the flat front.
+- `Assets/Scripts/Gameplay/CollectorStructure.cs`: builds the cone, door, particle jet, `GroundRipples` and bead, tints them
+  to the field colour, and orients the front to `OutputDirectionData.Direction` (enum x 90 degrees on Y; defaults to South).
+  `CollectorSystem` subtracts the interval on each deposit, so a frame-over-frame **drop** in `CollectorData.Timer` means an
+  item was produced. Pulse motion is on the host transform, not the shader, so the door and particles stay on the surface.
+- `Assets/Shaders/CollectorStructure.shader`: URP Unlit, shading only (body emission + tip glow by `uv.y`, `_PulseAmp` flare).
+- `Assets/Scripts/Tests/CollectorMeshBuilderTests.cs`: EditMode invariants.
 
-Wiring: `BuildingVisualizer.Refresh()` Pass 2 detects collectors via
-`em.HasComponent<CollectorData>(entity)`, sits the host on the grid plane (`localPosition.y = 0`,
-uniform `cellSize` scale), and attaches `CollectorStructure`. The collector's **base colour is the
-field colour** (`FieldGenerator.GetFieldAt(x,y).fieldColor`) instead of white; `BuildingVisualizer`
-now tracks a per-cell `_baseColors` map so power/hover tints restore to the field colour, not white.
-On **load**, a collector's visual can be created before its field has spawned from save, so
-`GetFieldAt` returns null; those cells go into `_pendingFieldColor` and `ResolvePendingFieldColors()`
-(called from `Update`) applies the field colour to the body + `CollectorStructure.SetFieldColor` once
-the field appears (giving up after 10s).
+Wiring: `BuildingVisualizer.Refresh()` Pass 2 detects collectors via `em.HasComponent<CollectorData>(entity)`. The base colour is
+the field colour (`FieldGenerator.GetFieldAt(x,y).fieldColor`), tracked per cell in `_baseColors` so tints restore to it. On
+**load** a collector can be created before its field has spawned, so such cells wait in `_pendingFieldColor` until
+`ResolvePendingFieldColors()` (from `Update`) applies the colour, giving up after 10s.
 
-### Entropy-sink "torus" structure (Maxwell's Demon)
-A flat gold donut that fills the 3x3 footprint, surfaced with swirling gold patterns that a C#
-script crossfades between at random. Replaces the placeholder cube for **any building carrying
-`EntropySinkTag`** (the Maxwell's Demon marker — data-driven, no hardcoded id).
+### Nucleon Harvester "two wells, one nucleon" structure (the 2x1 collector)
+The 2x1 harvester declares `structure_kind: NucleonHarvester`, which Pass 2 checks before the generic collector branch, so its
+`CollectorData` still drives it. A cone on each cell draws on its field, and arcs from both tips feed a cluster of quarks between them; each
+harvest flies a nucleon to the output door. It has no door of its own: Pass 3 draws one from the placed port (a low hole fixture), and
+`NucleonHarvesterStructure.PortEdgeLocal` aims the flight at the same spot, so both follow rotation. The 1x1 door is centred because
+its only cell is its centre; **any multi-cell collector must use its port, not its centre.** `NucleonHarvesterStructureTests` pins this.
 
-- `Assets/Scripts/Gameplay/TorusMeshBuilder.cs` — surface-of-revolution builder: a small circular
-  tube (`MinorRadius`) swept around the Y axis at `MajorRadius`, so the ring lies **flat** in XZ
-  with its hole facing up. `Default` outer diameter ≈ 1 local unit (host is scaled to fill 3x3).
-  Seam column **and** row are duplicated for a clean wrap; `uv.x` runs around the ring, `uv.y` around
-  the tube — these drive the shader patterns.
-- `Assets/Scripts/Gameplay/EntropySinkStructure.cs` — MonoBehaviour. Builds the torus, gold material,
-  and is the **random pattern swapper**: holds a pattern for a random dwell (3–6 s), then crossfades
-  (`_Blend` 0→1) to a new random pattern and repeats; only writes `_Blend` while fading (idle
-  otherwise). Also turns the ring slowly on Y. The per-pixel swirl itself is `_Time`-driven in the
-  shader.
-- `Assets/Shaders/EntropySinkTorus.shader` — URP Unlit, gold `_BaseColor` (left for `PresenceReceiver`
-  to drive) + `_AccentColor` highlights tracing one of **5 procedural patterns** (spiral stripes,
-  radial bands, woven checker, sunburst, drifting noise) selected by `_PatternA`/`_PatternB` and
-  crossfaded by `_Blend`; `_SwirlSpeed` scrolls them via `_Time`. No textures (mobile safe).
-- `Assets/Scripts/Tests/TorusMeshBuilderTests.cs` — EditMode invariants (vertex/triangle counts,
-  central hole exists, flat low profile, bounds, unit normals).
+### Entropy-sink "the thought experiment" structure (Maxwell's Demon)
+Maxwell's thought experiment made literal: a gold ring holds two chambers split by a wall, with fast hot particles on one side
+and slow cold ones on the other. A small demon rides a gate in the wall, which lifts on a timer to let one particle through,
+warming it up. Used by **any building carrying `EntropySinkTag`** (data-driven, no hardcoded id).
 
-Wiring: `BuildingVisualizer.Refresh()` Pass 2 detects sinks via `em.HasComponent<EntropySinkTag>(entity)`,
-sits the host on the grid plane (`localPosition.y = 0`) scaled to the full footprint, gives it a **gold
-base colour** (so power/hover tints restore to gold, not white), and attaches `EntropySinkStructure`.
+- `Assets/Scripts/Gameplay/EntropySinkStructure.cs`: the ring (`TorusMeshBuilder`) is the host's mesh so it keeps the hover tint.
+  Floors are `RevolveMeshBuilder.BuildSector` halves; the wall, gate, demon and particles are primitives moved on the CPU. It is
+  also the **random pattern swapper** for the ring: it holds a pattern for 3-6 s, then crossfades `_Blend` 0 to 1. The gate is
+  time-driven, not tied to real deposits.
+- `Assets/Shaders/EntropySinkTorus.shader`: URP Unlit, `_BaseColor` (left for `PresenceReceiver`) + `_AccentColor` tracing one of
+  **5 procedural patterns** selected by `_PatternA`/`_PatternB`, crossfaded by `_Blend`, scrolled by `_SwirlSpeed`. No textures.
+  The Fusion Reactor reuses it for plasma.
 
-Two sink-specific deviations from the normal building visuals:
-- **No port arrows.** Pass 3 skips arrow creation for the sink (the input ports still exist in ECS for
-  conveyor deposits); bespoke input visuals are planned later.
-- **Selection-only grid highlight.** Instead of permanently colouring its footprint tiles like every
-  other building, the sink's anchor is added to `_deferHighlight` and its tiles light up only while it is
-  selected. `BuildingInspectorController` drives this via `BuildingVisualizer.SelectBuilding(x,y)` /
-  `DeselectBuilding()`, the latter also hooked to `MaxwellsDemonController.OnClosed` so the X button keeps
-  the highlight in sync. `SelectBuilding`/`DeselectBuilding` are no-ops for non-deferred buildings.
+Wiring: `BuildingVisualizer.Refresh()` Pass 2 detects sinks via `em.HasComponent<EntropySinkTag>(entity)` and scales the host to the
+footprint, so one local unit spans it. **No port arrows:** Pass 3 skips them for the sink (the input ports still exist in ECS
+for conveyor deposits); bespoke input visuals are planned later.
 
-### Atom Generator "orbital nucleus" structure (the Atom Generator building)
-A round glowing nucleus circled by tilted electron orbit rings, each carrying a bright electron that
-travels around it. The body is **round on every side** (no flat front facade) — its holes are placed
-as separate fixtures at the port edges (see "Port holes" below), so the nucleus stays a clean atom.
-Selected **data-drivenly** by `BuildingStructureKind.AtomGenerator` (see "Choosing a structure" below),
-not a hardcoded id.
+### Belt Splitter "river meeting a rock" structure
+The belt's field lattice forks around a teardrop rock with its point upstream; a 3-way uses two smaller rocks with a
+channel between them. Selected by `BuildingStructureKind.BeltSplitter`. The lattice shows the flow, so Pass 3
+draws no holes for it, though unconnected ports still get ground arrows.
 
-- `Assets/Scripts/Gameplay/AtomNucleusMeshBuilder.cs` — surface-of-revolution builder. An ellipse
-  silhouette (perfect round dome) peaking at the equator, with a small planted base floor; the top
-  collapses to **one shared apex vertex**; `uv.y` runs 0 (base) → 1 (apex) so the shader can glow the
-  core + tip. Unlike `CollectorMeshBuilder` it does **not** flatten the front.
-- `Assets/Scripts/Gameplay/AtomGeneratorStructure.cs` — MonoBehaviour. Builds the nucleus + 3 tilted
-  electron orbits (thin `TorusMeshBuilder` rings; the whole pivot spins about its own normal so the
-  symmetric ring looks fixed while the attached electron orbits) + slow breathe motion. Polls
-  `RecipeProcessData.Progress`: `ProductionSystem` resets it to 0 on completion, so a frame-over-frame
-  **drop** means an atom was assembled → fire a decaying `_PulseAmp` flare (reuses `WireBounce`).
-- `Assets/Shaders/AtomGenerator.shader` — URP Unlit, shading only: body emission + a hot nucleus core
-  glowing brightest at the equator and apex, `_PulseAmp` flares it on each assembly. `_BaseColor` is
-  left for `PresenceReceiver` to drive (warm gold base).
-- `Assets/Scripts/Tests/AtomNucleusMeshBuilderTests.cs` — EditMode invariants (counts, single apex
-  on-axis, **round** cross-section, bounds, unit normals).
+- `Assets/Scripts/Grid/ConveyorFlowMeshBuilder.cs` `BuildFork`: each exit takes its own slice of the inbound
+  edge and widens to a full belt by its exit, so branches never overlap. Overlapping full ribbons, like a merge,
+  looked wrong here: the translucent ribbons doubled up and their lines crossed. Both ends match the neighbouring
+  belts' width and `uv.x`.
+- `Assets/Scripts/Gameplay/TeardropMeshBuilder.cs`: rock(s) as one mesh, `uv.y` = 1 at the tip and high along the crown.
+- `Assets/Scripts/Gameplay/SplitterStructure.cs`: reuses the registered `CollectorStructure` shader and the belts'
+  own materials (`ConveyorVisualizer.GetFlowMaterial` / `GetChannelMaterial`), so no new always-included shader. The
+  tip flares when `SplitterState.NextFacing` changes. Host rotation points the tip upstream; the `River` child
+  undoes it, because belt meshes are built in world directions and units.
+- `Assets/Scripts/Tests/TeardropMeshBuilderTests.cs`: rock shape and fork coverage, slices, and side order.
+
+### Atom Generator "an atom being built" structure (the Atom Generator building)
+A nucleus you can see is made of separate protons and neutrons, clustered around a slim glowing core, circled by tilted electron
+orbit rings that each carry a bright electron. Holes are separate fixtures at the port edges (see "Port holes" below). Selected
+**data-drivenly** by `BuildingStructureKind.AtomGenerator` (see "Choosing a structure" below), not a hardcoded id.
+
+- `Assets/Scripts/Gameplay/AtomNucleusMeshBuilder.cs`: surface-of-revolution builder for the core; the top collapses to one
+  shared apex vertex; `uv.y` runs 0 (base) to 1 (apex).
+- `Assets/Scripts/Gameplay/AtomGeneratorStructure.cs`: builds the core (`CoreProfile`), 14 nucleon spheres spread evenly over a
+  sphere, and 3 tilted orbits (thin `TorusMeshBuilder` rings; each pivot spins about its normal so the ring looks fixed while its
+  electron orbits). A **drop** in `RecipeProcessData.Progress` means an atom was assembled: it fires a decaying `_PulseAmp` flare
+  (`WireBounce`) and bursts the cluster outward.
+- `Assets/Shaders/AtomGenerator.shader`: URP Unlit, shading only; `_BaseColor` is left for `PresenceReceiver`.
+- `Assets/Scripts/Tests/AtomNucleusMeshBuilderTests.cs`: EditMode invariants.
+
+## Port arrows (on the ground)
+
+`Assets/Scripts/Grid/PortGroundArrow.cs`: two flat chevrons on the tile in front of a port, gold pointing away for an output, blue
+pointing in for an input, with the far chevron larger and dimmer so an input reads as a funnel and an output as a spray. Built in code
+(`ChevronMeshBuilder`) with meshes shared across arrows, drawn just above the belt lattice, with a dark outline for contrast on any
+tile. The placement ghost uses the same arrows.
+
+An arrow means **"this port still needs a belt"**. `PortArrowRules.ShouldShow` mirrors `ConveyorSystem`: an output feeds a belt that
+**starts** on the front tile, an input is fed by a belt that **ends** there, and a belt only passing by connects nothing, so its
+arrow stays on top of it. An arrow also hides when the tile is off the grid or holds a building. `BuildingVisualizer.RefreshPortArrows`
+re-evaluates after every `ConveyorVisualizer.BeltsChanged` and `Refresh`, so deleting a belt brings its arrow back.
+Maxwell's Demon has no arrows (Pass 3 skips it).
 
 ## Port holes (building input/output apertures)
 
@@ -223,7 +286,7 @@ glance. Two distinct shapes (the grammar):
   `local_facing: "West"`, etc. See the `_note_ports` on `atomic_assembler`.) The Atom Generator is 2x1 since #275 (four intakes, one output); `BuildingVisualizer` centres the nucleus on the footprint and grows it 25% per extra tile, since a round body can't stretch.
 
 **Mechanism:** `BuildingVisualizer.Refresh()` Pass 3 already iterates `PlacedPortData` per building to
-draw the port arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per
+draw the ground arrows; for any building carrying `BuildingVisualStyle` it also spawns a hole fixture per
 port (`CreateHoleFixture`) at the resolved edge, rotated so the fixture's local +Z faces outward. The
 arch-door / intake meshes and their materials are **shared singletons** built once at the cell size
 (`EnsureHoleAssets`) so holes are allocation-free; they're tracked in `_spawnedPortArrows` for cleanup.
@@ -231,6 +294,10 @@ arch-door / intake meshes and their materials are **shared singletons** built on
 **Future polish (not yet done):** holes are tinted by a generic output-warm / input-cool scheme.
 `PlacedPortData` does not carry which input *slot* (item) a port feeds, so per-item tinting (proton =
 gold, neutron = grey, electron = blue, as in the drafts below) needs a port→slot mapping first.
+
+## Selection highlight
+
+A building tints its grid tiles teal (`GridRenderer.occupiedColor`) **only while selected**: `BuildingVisualizer.SelectBuilding` / `DeselectBuilding`, driven by `BuildingInspectorController`. `GridRenderer.RestoreCell` paints teal from its selected set, not from `GridOccupancy`, so ghosts and power previews can't bring it back. The inspector's `Hidden` event (X button, back navigation, building gone) reaches the controller through `HUDController.BuildingInspectorHidden`, so the highlight can't stick.
 
 ## Choosing a structure (data-driven, no hardcoded ids)
 
@@ -249,21 +316,24 @@ selected via `structureKind`). All follow the house language (solid rounded bodi
 alive motion; mobile-safe unlit shaders) and — except the two non-conveyor cases — carry the port-hole
 door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Progress`).
 
-- **Basic Generator — "energy spire"** (`BasicGeneratorStructure`, Power, no holes): tall thin round
-  spindle (`CollectorMeshBuilder`, FrontFlattenFrac=1) tapering to a crackling tip; electric cyan; a
-  ~1.5s heartbeat flares the tip and emits expanding, fading flat light-rings (`TorusMeshBuilder`) on the
-  ground — power broadcasting. Not a producer, so the pulse is time-driven.
+- **Basic Generator: "Tesla coil"** (`BasicGeneratorStructure`, Power, no holes): a stepped column (`RevolveMeshBuilder`, tinted cyan)
+  wound with copper rings, topped by a toroidal crown and a glowing tip. A ~1.5s heartbeat flares the tip and strikes lightning
+  (`LineRenderer`) from the crown to the ground, while `GroundRipples` spread outward: power broadcasting. Not a producer, so the
+  pulse is time-driven.
 - **Power Relay — "broadcast pylon"** (`PowerRelayStructure`, Power `1×2`, no holes): a tall smooth amber
   mast (`RoundedBoxMeshBuilder`, narrow, sized to the footprint) crowned by a horizontal spinning
   broadcast ring (`TorusMeshBuilder`), emitting **wider, slower** ground ripples than the generator.
   Deliberately distinct from the generator's thin cyan spire (taller, amber, prominent crown ring). A
   spreader, not a source — extends coverage but generates no eV; the pulse is time-driven. Reuses the
   registered `MobileIdleBuilder/CollectorStructure` shader (no new shader/GraphicsSettings entry).
-- **Strong Force Combiner** (`StrongForceCombinerStructure`, 2×1): a soft **rounded rectangular prism**
-  (`RoundedBoxMeshBuilder` — a superellipsoid dome that fills the footprint, Roundness 0.5) flowing from
-  its two inlet faces to its single outlet face, doors flush on the flat faces. A binding glow builds
-  with craft progress, then flares when a nucleon is forged. (An earlier orbiting-quark "knot" was
-  dropped — it read too flat.)
+- **Strong Force Combiner: "quark confinement"** (`StrongForceCombinerStructure`, 2x1): above a rounded housing
+  (`RoundedBoxMeshBuilder`, tall enough for the door fixtures), three quarks in the three colour charges circle each other, joined
+  by flux tubes (`StructureParts.StretchBetween`). With craft progress they spin faster and the tubes pull tighter, then a white
+  nucleon flashes when one is forged.
+- **Fusion Reactor: "star in a magnetic bottle"** (`FusionReactorStructure`, 1x1): a low plinth (host, so it takes the power tint), a
+  plasma ring (`TorusMeshBuilder` + the `EntropySinkTorus` shader) inside six field coils, and a small star (`AtomNucleusMeshBuilder` +
+  the `AtomGenerator` shader) that swells with craft progress and flares on fusion. Its port holes are scaled down and sit low
+  (`CreateHoleFixture`'s `low`), because the plinth has little face to fill. `fission_reactor` is still a placeholder cube.
 - **Isotopic Manipulator — "breathing nucleus"** (`IsotopicManipulatorStructure`, 1×1): the Atom
   Generator's body + shader, green-tinged, with a slow heavy breathing swell and one tilted equatorial
   ring whose grey neutrons drift radially IN and OUT (opposite phase) — slower by design.
@@ -285,7 +355,10 @@ door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Pro
 
 `RoundedBoxMeshBuilder` (superellipsoid dome) is the reusable form for footprint-filling solid bodies;
 `CollectorMeshBuilder` (with FrontFlattenFrac=1) gives round spindles; `AtomNucleusMeshBuilder` gives the
-nucleus bulb. Pick/compose these for any future building rather than adding one-off builders.
+nucleus bulb; `RevolveMeshBuilder` turns any profile into a revolved part, or makes a flat sector. Pick/compose
+these for any future building rather than adding one-off builders. `StructureParts` adds child parts (no colliders,
+shadows or probes) and owns their meshes and materials; its `Shaded` material makes a sphere primitive read as lit from
+above using an already registered shader. `GroundRipples` draws travelling rings on the ground.
 
 ## Placement power-radius preview
 

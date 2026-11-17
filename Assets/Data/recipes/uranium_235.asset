@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: uranium_235
   displayName: Uranium-235
+  methodLabel: 
   recipeId: 17
   tier: 2
   category: 4

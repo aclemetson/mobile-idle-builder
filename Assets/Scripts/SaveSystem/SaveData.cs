@@ -35,7 +35,7 @@ namespace MobileIdleBuilder
         public List<string> codex                           = new();
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
-        public float lastKnownNetWorth;                     // Snapshot written by ECSLoadBridge; used by shop entropy scaling
+        public double lastKnownNetWorth;                    // Snapshot written by ECSLoadBridge; used by shop entropy scaling
         public string speedBoostExpiryUtc;                  // ISO 8601 — null/empty means no active speed boost
         public List<string> achievements                    = new();
         public List<AchievementProgressEntry> achievementProgress = new();
@@ -54,7 +54,15 @@ namespace MobileIdleBuilder
         // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
         public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
         public string adWatchResetUtc;                                       // ISO 8601 — when adWatchCounts were last zeroed (00:00 UTC)
+        public List<AdLastWatchEntry> adLastWatch = new();                  // id = AdPlacement name -> last watch (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge). Survives prestige.
         public string adsIdleBoostExpiryUtc;                                 // ISO 8601 — null/empty = no active +50% idle-rate boost
+        // Cyclotron Kick minigame (CyclotronProgress) — survives prestige. Unlocks at the 2nd prestige.
+        public string cyclotronLastRunUtc;      // ISO 8601 — when the last run started; next run a cooldown (60 min, less with upgrades) later. null = never played (ready)
+        public string cyclotronBoostExpiryUtc;  // ISO 8601 — when the current entropy boost ends; null/past = no boost
+        public float  cyclotronBoostMultiplier; // x1.5..x3 — entropy multiplier of the current boost (only while unexpired)
+        public int    cyclotronInsight;         // Insight points banked; spent on the two Cyclotron upgrades
+        public int    cyclotronBoostLevel;      // Longer Boost level, 0..10 (+1 min boost each)
+        public int    cyclotronCooldownLevel;   // Faster Recharge level, 0..6 (-5 min cooldown each)
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared
@@ -94,7 +102,7 @@ namespace MobileIdleBuilder
     {
         public long  baseCurrency;
         public long  totalEntropySpent;
-        public float baseNetWorth;
+        public double baseNetWorth;
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();
@@ -232,6 +240,14 @@ namespace MobileIdleBuilder
     {
         public string id;
         public int count;
+    }
+
+    /// <summary>When a rewarded-ad placement was last watched (starts its cooldown).</summary>
+    [Serializable]
+    public class AdLastWatchEntry
+    {
+        public string id;   // AdPlacement name
+        public string utc;  // ISO 8601 UTC
     }
 
     /// <summary>

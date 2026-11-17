@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fission_pu239_ce_kr
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fission_pu239_ce_kr
-  displayName: 'Split Plutonium: Cerium + Krypton'
+  displayName: Cerium
+  methodLabel: 
   recipeId: 249
   tier: 2
   category: 9

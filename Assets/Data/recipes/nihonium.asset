@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: nihonium
   displayName: Nihonium
+  methodLabel: 
   recipeId: 142
   tier: 2
   category: 3

@@ -21,7 +21,7 @@
 
     /* ---- Currency colours ---- */
     --color-currency-entropy: #00e5ff;  /* ◈ Entropy — matches research cost labels */
-    --color-currency-crystal: #FFD700;  /* ◆ Crystals (paid) — gold */
+    --color-currency-crystal: #FFD700;  /* ♦ Crystals (paid) — gold */
 
     /* ---- Spacing ---- */
     --spacing-xs: 6px;

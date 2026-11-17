@@ -158,7 +158,11 @@ namespace MobileIdleBuilder
                 // Don't clear the hint when ended by prestige — HUDController shows the
                 // achievements unlock hint on the same frame and we must not stomp it.
                 if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                {
                     hudController?.HideTutorialHint();
+                    // Real active -> complete transition only (_wasActive is never set by a save that loads complete).
+                    hudController?.ShowNotification("★", "Tutorial complete! The Foundry is yours.", "success");
+                }
                 dialogueController?.HideDialogue();
                 _lastHintProgress = null;
                 hudController?.SetTutorialHintProgress(null);
@@ -192,6 +196,7 @@ namespace MobileIdleBuilder
             {
                 _nextHintProgressAt = Time.unscaledTime + HintProgressInterval;
                 RefreshHintProgress(state.CurrentStepIndex);
+                RefreshCraftRescue(state.CurrentStepIndex);
             }
         }
 
@@ -540,17 +545,55 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFieldLockStates(TutorialOnEnter enter)
         {
+            _rescueFields = null;
+            ApplyFieldLockStates(enter.blockCollection, enter.collectionFilter);
+        }
+
+        private static void ApplyFieldLockStates(bool blockCollection, string collectionFilter)
+        {
             foreach (var fi in FieldGenerator.AllInstances)
             {
                 if (fi == null || fi.Field == null) continue;
                 bool locked;
-                if (enter.blockCollection)
+                if (blockCollection)
                     locked = true;
-                else if (!FieldTypes.IsUnrestricted(enter.collectionFilter))
-                    locked = fi.Field.fieldType != enter.collectionFilter;
+                else if (!FieldTypes.IsUnrestricted(collectionFilter))
+                    locked = fi.Field.fieldType != collectionFilter;
                 else
                     locked = false;
                 fi.SetLocked(locked);
+            }
+        }
+
+        // ── Craft-step rescue ─────────────────────────────────────────────────
+
+        internal const string RescueMessage = "Out of inputs. Collect a few more to finish crafting.";
+
+        // Field type reopened by TutorialCraftRescue on the current step; null when none is.
+        private string _rescueFields;
+
+        /// <summary>
+        /// On a craft step that pauses collection, a player who no longer holds the inputs could neither
+        /// craft nor collect. ManualFieldCollector lets them collect again; this un-dims those fields.
+        /// </summary>
+        private void RefreshCraftRescue(int stepIndex)
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow == null || stepIndex < 0 || stepIndex >= flow.steps.Length) return;
+            var step = flow.steps[stepIndex];
+            if (step.onEnter == null || !step.onEnter.blockCollection) return;
+
+            string rescue = TutorialCraftRescue.FieldsNeededNow(step);
+            if (rescue == _rescueFields) return;
+
+            bool started = _rescueFields == null;
+            _rescueFields = rescue;
+            if (rescue == null)
+                ApplyFieldLockStates(true, step.onEnter.collectionFilter);
+            else
+            {
+                ApplyFieldLockStates(false, rescue);
+                if (started) hudController?.ShowNotification("⚠", RescueMessage, "warning");
             }
         }
 

@@ -16,9 +16,7 @@ MonoBehaviour:
   - speakerName: The Architect
     text: "Nucleosynthesis is active. Helium-4 is now craftable \u2014 two protons,
       two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on
-      its own it earns no more. Its real value is as fuel for something far bigger.
-      First, move your neutron belt off the Demon and into the Atom Generator. Then
-      set the Atom Generator to Helium-4."
+      its own it earns no more. Its real value is as fuel for something far bigger."
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
@@ -26,6 +24,14 @@ MonoBehaviour:
   - speakerName: The Architect
     text: Helium-4 is as far as the Atom Generator goes. Every heavier element must
       be fused from lighter ones, and that road starts with Helium.
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
+    text: Helium-4 is as far as the Atom Generator goes. You have protons and electrons.
+      Neutrons are what is missing, and both of your quark fields already feed the
+      Combiner. Research Field Synthesis to condense new fields of your own.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

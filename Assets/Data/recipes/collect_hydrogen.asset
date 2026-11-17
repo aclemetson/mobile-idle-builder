@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: collect_hydrogen
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_hydrogen
-  displayName: Mine Hydrogen
-  recipeId: 164
-  tier: 3
+  displayName: Hydrogen
+  methodLabel: 
+  recipeId: 0
+  tier: 1
   category: 3
   inputs: []
   neutronAdjustment: []

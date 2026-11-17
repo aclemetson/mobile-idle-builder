@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: r_capture_osmium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: r_capture_osmium
-  displayName: 'Fast capture: Osmium'
+  displayName: Osmium
+  methodLabel: 
   recipeId: 285
   tier: 2
   category: 4
@@ -28,7 +29,7 @@ MonoBehaviour:
   byproducts:
   - item: {fileID: 11400000, guid: 2aa3f256dbe6a324c89dcd09b44631e5, type: 2}
     quantity: 1
-  baseCraftTime: 50
+  baseCraftTime: 40
   manualCraftTime: 30
   powerCostIsDynamic: 0
   fixedPowerCostEV: 180

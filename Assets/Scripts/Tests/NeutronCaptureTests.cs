@@ -59,8 +59,9 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Fast_ComesLater_TakesLonger_AndDrawsMorePower()
         {
-            var rp = _gd.research.Single(r => r.id == "rapid_neutron_capture");
-            CollectionAssert.Contains(rp.prerequisites, "slow_neutron_capture");
+            // Since 2026-11-15 the r-Process sits behind Heavy Transition Metals (Europium needs its Samarium),
+            // which itself requires the s-Process, so fast capture still comes after slow.
+            Assert.IsTrue(Requires("rapid_neutron_capture", "slow_neutron_capture"), "r-Process must come after s-Process");
             // Capture groups are gated by the old element-group nodes (#322 phase 4); fast ones must still
             // sit behind the r-Process.
             foreach (var r in _fast)

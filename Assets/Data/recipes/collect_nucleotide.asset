@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_nucleotide
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_nucleotide
-  displayName: Harvest Nucleotide
+  displayName: Nucleotide
+  methodLabel: 
   recipeId: 192
   tier: 3
   category: 5

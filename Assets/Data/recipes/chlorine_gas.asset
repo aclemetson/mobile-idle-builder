@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: chlorine_gas
   displayName: Chlorine Gas
+  methodLabel: 
   recipeId: 177
   tier: 3
   category: 5

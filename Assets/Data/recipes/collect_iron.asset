@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_iron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_iron
-  displayName: Mine Iron
+  displayName: Iron
+  methodLabel: 
   recipeId: 173
   tier: 3
   category: 3

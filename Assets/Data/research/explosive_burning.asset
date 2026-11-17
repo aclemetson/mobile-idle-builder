@@ -25,10 +25,11 @@ MonoBehaviour:
   block: stellar_forge
   treeX: -1
   treeY: -1
-  costBaseCurrency: 8530000
+  costBaseCurrency: 8280000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
   - {fileID: 11400000, guid: 89b33da28615202459096ab75d854a0d, type: 2}
@@ -46,7 +47,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: When a massive star explodes, a shock wave sweeps through its silicon
     and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements
     next to iron, like Manganese and Vanadium.

@@ -29,6 +29,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 60
   fieldCooldownMult: 1
+  effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings:
@@ -36,7 +37,6 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.25
   codexEntry: Power need not be generated where it is used. A resonant relay re-radiates
     the grid's existing eV field across a far wider area than any single generator
     can reach, decoupling where you make power from where you spend it.

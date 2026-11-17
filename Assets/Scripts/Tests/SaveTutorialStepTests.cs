@@ -61,6 +61,34 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ResolveStepIndex_DemonNeutronSteps_ResumeAtTheAtomGeneratorBelt()
+        {
+            MakeFlow("buy_atomic_assembly", "route_neutrons_to_atom_gen", "craft_first_helium");
+            Assert.AreEqual(1, ECSLoadBridge.ResolveStepIndex("route_neutrons_to_demon"));
+            Assert.AreEqual(1, ECSLoadBridge.ResolveStepIndex("reroute_neutrons_to_atom_gen"));
+        }
+
+        [Test]
+        public void SavePastTheResearchWithoutIt_GoesBackToBuyIt()
+        {
+            MakeFlow("hydrogen_loop_complete", "buy_atomic_assembly", "place_neutron_harvesters", "craft_first_helium");
+            var none = new System.Collections.Generic.List<string>();
+            Assert.AreEqual(1, ECSLoadBridge.ResumeAtUnboughtNucleosynthesis(2, none));
+            Assert.AreEqual(1, ECSLoadBridge.ResumeAtUnboughtNucleosynthesis(3, null));
+        }
+
+        [Test]
+        public void SaveWithTheResearch_OrNotYetAtIt_StaysPut()
+        {
+            MakeFlow("hydrogen_loop_complete", "buy_atomic_assembly", "place_neutron_harvesters");
+            var bought = new System.Collections.Generic.List<string> { "atomic_assembly" };
+            var none   = new System.Collections.Generic.List<string>();
+            Assert.AreEqual(2, ECSLoadBridge.ResumeAtUnboughtNucleosynthesis(2, bought));
+            Assert.AreEqual(0, ECSLoadBridge.ResumeAtUnboughtNucleosynthesis(0, none));
+            Assert.AreEqual(1, ECSLoadBridge.ResumeAtUnboughtNucleosynthesis(1, none));
+        }
+
+        [Test]
         public void RetiredSteps_AreGoneFromTheFlow_AndPointAtLiveSteps()
         {
             var json = System.IO.File.ReadAllText("Assets/Data/game_data.json");

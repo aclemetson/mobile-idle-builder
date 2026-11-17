@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_manganese
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_manganese
-  displayName: Fuse Manganese
+  displayName: Manganese
+  methodLabel: 
   recipeId: 221
   tier: 2
   category: 8

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: cell_membrane
   displayName: Cell Membrane
+  methodLabel: 
   recipeId: 199
   tier: 3
   category: 5

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: orbital_frame
   displayName: Orbital Frame
+  methodLabel: 
   recipeId: 48
   tier: 5
   category: 7

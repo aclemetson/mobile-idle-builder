@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_nickel
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_nickel
-  displayName: Mine Nickel
+  displayName: Nickel
+  methodLabel: 
   recipeId: 176
   tier: 3
   category: 3

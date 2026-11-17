@@ -2,7 +2,7 @@
 //
 // This file only compiles when the LEVELPLAY_ADS define is set AND com.unity.services.levelplay is
 // present in Packages/manifest.json. Until then the game uses MockAdProvider, so the Editor, tests, and
-// CI all build and run without the SDK. See docs/levelplay-ads-setup.md for the go-live runbook
+// CI all build and run without the SDK. See docs/runbooks/levelplay-ads-setup.md for the go-live runbook
 // (dashboard app + per-platform ad-unit IDs, the LEVELPLAY_ADS define, ATT/privacy, and test mode).
 //
 // NOTE: this is a scaffold. The exact LevelPlay API surface (class/method names) varies by SDK version;
@@ -27,7 +27,7 @@ namespace MobileIdleBuilder
         // secrets, so they live in source. NOTE: AppKey is the LevelPlay App Key, NOT the numeric Unity
         // Ads Game ID; the Game IDs / Org Core ID configure the Unity Ads network in the dashboard. The
         // server-side reporting API secret (LevelPlay > API Management) is the only thing that must stay
-        // out of source. See docs/levelplay-ads-setup.md.
+        // out of source. See docs/runbooks/levelplay-ads-setup.md.
 #if UNITY_IOS
         const string AppKey         = "26db953ad";
         const string RewardedAdUnit = "ziuxnckkd9sinb69";
@@ -39,6 +39,8 @@ namespace MobileIdleBuilder
         LevelPlayRewardedAd _rewarded;
         Action<bool>        _pending;
         bool                _earned;
+        readonly AdLoadRetry _loadRetry = new();
+        bool                _retryPending;
 
         public bool IsRewardedReady => _rewarded != null && _rewarded.IsAdReady();
 
@@ -47,25 +49,72 @@ namespace MobileIdleBuilder
             // iOS App Tracking Transparency must be requested before SDK init on iOS 14+.
             await AdConsent.RequestIfNeededAsync();
 
-            // Development builds opt into the LevelPlay Test Suite (must be set before Init). Never enabled
-            // in a release build, so production players can't reach it.
-            if (UnityEngine.Debug.isDebugBuild)
+            // Dev builds opt into the LevelPlay Test Suite (must be set before Init). Keyed off the
+            // DEV_ENVIRONMENT compile symbol, not Debug.isDebugBuild: our internal-track builds are
+            // non-debuggable release builds (Play rejects debuggable ones), so isDebugBuild is false there.
+            // Production builds compile without DEV_ENVIRONMENT, so players can't reach the Test Suite.
+            if (FeatureFlags.IsDevBuild)
                 LevelPlay.SetMetaData("is_test_suite", "enable");
 
-            var tcs = new TaskCompletionSource<bool>();
-            LevelPlay.OnInitSuccess += _ => tcs.TrySetResult(true);
-            LevelPlay.OnInitFailed  += err => { GameLogger.Warning($"[Ads] LevelPlay init failed: {err}"); tcs.TrySetResult(false); };
-            LevelPlay.Init(AppKey);
-            await tcs.Task;
+            // Init can fail when the phone is offline at launch. Retry with backoff rather than giving up
+            // for the whole session. Handlers are subscribed once; each attempt gets a fresh completion.
+            TaskCompletionSource<bool> attempt = null;
+            LevelPlay.OnInitSuccess += _ => attempt?.TrySetResult(true);
+            LevelPlay.OnInitFailed  += err =>
+            {
+                GameLogger.Warning($"[Ads] LevelPlay init failed: {err}");
+                attempt?.TrySetResult(false);
+            };
+            var initRetry = new AdLoadRetry();
+            while (true)
+            {
+                attempt = new TaskCompletionSource<bool>();
+                LevelPlay.Init(AppKey);
+                if (await attempt.Task) break;
+                float wait = initRetry.OnFailed();
+                GameLogger.Info($"[Ads] Retrying LevelPlay init in {wait:0}s (attempt {initRetry.Failures + 1}).");
+                await Task.Delay(TimeSpan.FromSeconds(wait));
+            }
+            GameLogger.Info("[Ads] LevelPlay initialised.");
 
             _rewarded = new LevelPlayRewardedAd(RewardedAdUnit);
+            _rewarded.OnAdLoaded     += _ => { _loadRetry.OnSucceeded(); GameLogger.Info("[Ads] Rewarded ad loaded."); };
+            _rewarded.OnAdLoadFailed += OnLoadFailed;
             _rewarded.OnAdRewarded += (_, __) => _earned = true;
             _rewarded.OnAdClosed   += _ => { var cb = _pending; _pending = null; cb?.Invoke(_earned); LoadRewarded(); };
             _rewarded.OnAdDisplayFailed += (_, __) => { var cb = _pending; _pending = null; cb?.Invoke(false); LoadRewarded(); };
-            LoadRewarded();
+            // AdService calls LoadRewarded() once this returns.
         }
 
         public void LoadRewarded() => _rewarded?.LoadAd();
+
+        /// <summary>
+        /// A failed load (no fill, offline) used to leave the session with no ad at all. Schedule another
+        /// load with backoff; only one retry is ever pending.
+        /// </summary>
+        void OnLoadFailed(LevelPlayAdError err)
+        {
+            float wait = _loadRetry.OnFailed();
+            GameLogger.Warning($"[Ads] Rewarded load failed ({err}); retrying in {wait:0}s.");
+            if (_retryPending) return;
+            _retryPending = true;
+            _ = RetryLoadAfter(wait);
+        }
+
+        async Task RetryLoadAfter(float seconds)
+        {
+            try
+            {
+                // Unity's synchronisation context resumes this on the main thread.
+                await Task.Delay(TimeSpan.FromSeconds(seconds));
+            }
+            finally
+            {
+                _retryPending = false;
+            }
+            if (_rewarded != null && !_rewarded.IsAdReady())
+                LoadRewarded();
+        }
 
         public void LaunchTestSuite() => LevelPlay.LaunchTestSuite();
 

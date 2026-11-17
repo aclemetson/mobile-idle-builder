@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: water
   displayName: Water
+  methodLabel: 
   recipeId: 31
   tier: 3
   category: 5
@@ -34,7 +35,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

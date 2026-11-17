@@ -57,6 +57,7 @@ namespace MobileIdleBuilder
                 typeof(PlacedPortData),
                 typeof(BuildingOutputSlot),
                 typeof(BuildingInputSlot),
+                typeof(CraftStagingSlot),       // creation buffer for the current craft (CraftStaging)
                 typeof(BuildingInventoryConfig),
                 typeof(CraftedOutputEvent)   // drained each frame by ProductionAchievementBridge
             );
@@ -150,7 +151,8 @@ namespace MobileIdleBuilder
             // calls above, and regardless of whether the building defines a port layout.
             if (building?.placementRule == PlacementRule.MustBeOnField)
             {
-                float rate = building.baseOutputRate > 0f ? building.baseOutputRate : 1f;
+                // At the building's speed level: a load restores upgraded harvesters at their real rate.
+                float rate = BuildingSO.CollectorRateForLevel(building, speedLevel);
                 _em.AddComponentData(entity, new CollectorData { OutputRate = rate, Timer = 0f });
             }
 
@@ -198,6 +200,12 @@ namespace MobileIdleBuilder
 
             if (building != null && (building.isItemFilter || building.assignableOutputs))
                 AddFilterComponents(entity, portFilters, building.isItemFilter);
+
+            if (building != null && building.isSplitter)
+            {
+                _em.AddComponent<SplitterTag>(entity);
+                _em.AddComponentData(entity, new SplitterState { NextFacing = -1 });
+            }
 
             GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
             return true;

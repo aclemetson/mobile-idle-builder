@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_radium_227
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_radium_227
-  displayName: Radium-227 Decay
+  displayName: Actinium
+  methodLabel: 
   recipeId: 237
   tier: 2
   category: 4

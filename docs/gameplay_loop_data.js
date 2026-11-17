@@ -1174,7 +1174,7 @@ design_gaps: [
     default_date:'2026-05-28' },
   { id:'gap-7', cat:'Visualization',
     issue:'Post-tutorial loop not mapped',
-    detail:'Doc ends at prestige (step 33). Run 2 onward — Atomic Assembly, Isotopes, research memory discounts, prestige upgrades — has no visualization.',
+    detail:'Doc ends at prestige (step 33). Run 2 onward — Atomic Assembly, Isotopes, prestige upgrades — has no visualization.',
     default_sol:'Added full phase mapping for Phases ⑦–⑪ in the Overview tab: ⑦ Run 2 Ramp-Up, ⑧ Atomic Assembly, ⑨ Heavy Elements (Uranium), ⑩ Isotopes, ⑪ Radioactive Decay. Each phase shows buildings, research gates, and entropy values.',
     default_date:'2026-05-28' },
   { id:'gap-8', cat:'Visualization',

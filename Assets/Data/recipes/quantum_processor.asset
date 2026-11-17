@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: quantum_processor
   displayName: Quantum Processor
+  methodLabel: 
   recipeId: 44
   tier: 5
   category: 7

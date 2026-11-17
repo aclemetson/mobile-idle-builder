@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_rhodium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_rhodium
-  displayName: 'Slow capture: Rhodium'
+  displayName: Rhodium
+  methodLabel: 
   recipeId: 261
   tier: 2
   category: 4

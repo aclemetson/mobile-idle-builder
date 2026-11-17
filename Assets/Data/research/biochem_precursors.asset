@@ -29,6 +29,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1
+  effects: []
   unlocksItems: []
   unlocksRecipes:
   - {fileID: 11400000, guid: 6c36476a5233f714990fafb65b13d44d, type: 2}
@@ -40,7 +41,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: "The last step of chemistry and the first of biology. Carbon, nitrogen,
     and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides
     \u2014 the monomers from which life will build itself."

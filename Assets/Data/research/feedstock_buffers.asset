@@ -24,17 +24,17 @@ MonoBehaviour:
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 901000
+  costBaseCurrency: 1810000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
+  effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.3
   codexEntry: As production chains lengthen, a building can starve waiting on its
     conveyors. Larger feedstock buffers smooth intake so multi-input recipes run
     without interruption.

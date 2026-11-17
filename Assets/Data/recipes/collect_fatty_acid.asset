@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_fatty_acid
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_fatty_acid
-  displayName: Harvest Fatty Acid
+  displayName: Fatty Acid
+  methodLabel: 
   recipeId: 191
   tier: 3
   category: 5

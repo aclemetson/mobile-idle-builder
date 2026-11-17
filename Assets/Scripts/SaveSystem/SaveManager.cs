@@ -146,12 +146,20 @@ namespace MobileIdleBuilder
         // Unity's main-thread SynchronizationContext, so the 64-bit field write is never torn.
         // A failed push still counts toward the interval: offline devices retry on the next window
         // rather than every autosave.
+        //
+        // The sync marker (SaveSync) is written before the await: a push on backgrounding often finishes
+        // after the OS suspends the app, and its continuation never runs. If the push does report a
+        // failure, the previous marker is put back so the unpushed progress still counts as local change.
         async Task<bool> PushAndRecord()
         {
             ulong hash = _local.LastWrittenContentHash;
             _lastPushStartedAt = RealtimeNow();
+            var previousMarker = SaveSync.LoadMarker();
+            string playerId = _cloud.AccountPlayerId;
+            SaveSync.SaveMarker(playerId, _current.lastSaved, hash);
             bool ok = await _cloud.PushAsync(_current);
             if (ok) _lastPushedHash = hash;
+            else if (!string.IsNullOrEmpty(playerId)) SaveSync.RestoreMarker(previousMarker);
             return ok;
         }
 
@@ -270,25 +278,234 @@ namespace MobileIdleBuilder
             var fetchTask = _cloud.FetchAsync(_current.playerId);
             yield return new WaitUntil(() => fetchTask.IsCompleted);
 
-            if (fetchTask.Result != null && IsCloudNewer(fetchTask.Result))
+            yield return SyncWithCloudSave(fetchTask.Result, IsNewGame, _cloud.AccountSwitched);
+        }
+
+        // ── Cross-device sync (docs/agents/save-system.md, "Cross-device saves") ──
+
+        /// <summary>
+        /// True while the "which save?" choice is open. ECSLoadBridge keeps waiting past its cloud
+        /// timeout meanwhile, so the chosen save is the one applied to ECS.
+        /// </summary>
+        public bool AwaitingSaveChoice { get; private set; }
+
+        /// <summary>The cloud service, for the Settings account row. Null in tests without one.</summary>
+        public ICloudSaveService Cloud => _cloud;
+
+        /// <summary>Test seam: answers the "which save?" choice instead of the HUD prompt.</summary>
+        internal static Func<SaveData, SaveData, SaveSyncAction> SaveChoiceOverrideForTests;
+
+        /// <summary>How long to wait for the HUD before the choice falls back to newest-wins.</summary>
+        const float PromptReadyTimeoutSeconds = 30f;
+
+        internal const string ReplacedLocalFile = "save.replaced-local.json";
+        internal const string ReplacedCloudFile = "save.replaced-cloud.json";
+
+        /// <summary>Decides between the local and the fetched cloud save (<see cref="SaveSync.Decide"/>) and applies it.</summary>
+        IEnumerator SyncWithCloudSave(SaveData cloudSave, bool localIsNew, bool accountSwitched)
+        {
+            string playerId = _cloud.AccountPlayerId ?? _current.playerId;
+            var marker = SaveSync.LoadMarker();
+            ulong localHash = LocalSaveService.ContentHash(_current);
+            var action = SaveSync.Decide(_current, localHash, localIsNew, cloudSave, marker, playerId, accountSwitched);
+            GameLogger.Info($"[SaveManager] Cloud sync: {action} (cloud {(cloudSave == null ? "none" : cloudSave.lastSaved)}, " +
+                            $"local {_current.lastSaved}, marker {(marker.IsSet ? marker.CloudStamp : "none")}, switched={accountSwitched})");
+
+            bool asked = action == SaveSyncAction.AskPlayer;
+            if (asked)
+                yield return AskWhichSave(cloudSave, a => action = a);
+
+            switch (action)
             {
-                _local.SaveWithBackup(_current);
-                _current = fetchTask.Result;
-                _local.Save(_current);
-                GameLogger.Info("[SaveManager] Reconciled with cloud (cloud was newer).");
+                case SaveSyncAction.TakeCloud:
+                    if (asked) KeepCopy(_current, ReplacedLocalFile);
+                    TakeCloudSave(cloudSave, playerId);
+                    break;
+
+                case SaveSyncAction.KeepLocal when asked:
+                    // The player kept this device's save: it replaces the cloud copy right away.
+                    KeepCopy(cloudSave, ReplacedCloudFile);
+                    SaveLocal();
+                    if (FeatureFlags.CloudSaveEnabled && _cloud.IsAvailable)
+                    {
+                        var push = PushAndRecord();
+                        yield return new WaitUntil(() => push.IsCompleted);
+                    }
+                    break;
+
+                case SaveSyncAction.KeepLocal:
+                    // Nothing changed on either side: remember that both are in sync.
+                    if (cloudSave != null && marker.IsSet && cloudSave.lastSaved == marker.CloudStamp)
+                        SaveSync.SaveMarker(playerId, cloudSave.lastSaved, localHash);
+                    break;
             }
+        }
+
+        void TakeCloudSave(SaveData cloudSave, string playerId)
+        {
+            bool live = ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.SaveApplied;
+            string cloudStamp = cloudSave.lastSaved;
+
+            if (live)
+            {
+                // ECS already runs this device's save (the cloud answered after the load timeout, or the
+                // player switched accounts from Settings). Swapping Current under it would be overwritten
+                // by the next flush, so reload the scene from the cloud save instead.
+                GameLogger.Info("[SaveManager] Cloud save chosen while the game is running — reloading the scene.");
+                _current  = cloudSave;
+                IsNewGame = false;
+                _local.SaveWithBackup(_current);
+                SaveSync.SaveMarker(playerId, cloudStamp, _local.LastWrittenContentHash);
+                PrestigeRunReset.BeginReload();   // the same guarded reload prestige uses
+                return;
+            }
+
+            _local.SaveWithBackup(_current);
+            _current  = cloudSave;
+            // A fresh install that pulls a cloud save is no longer a new game: without this, ECSLoadBridge
+            // and GridSaveService skipped the currency, inventory and grid of the pulled save, and the next
+            // flush wrote the baked defaults back over it (and pushed them to the cloud).
+            IsNewGame = false;
+            _local.Save(_current);
+            SaveSync.SaveMarker(playerId, cloudStamp, _local.LastWrittenContentHash);
+            GameLogger.Info("[SaveManager] Reconciled with cloud (took the cloud save).");
+        }
+
+        IEnumerator AskWhichSave(SaveData cloudSave, Action<SaveSyncAction> answer)
+        {
+            AwaitingSaveChoice = true;
+            try
+            {
+                if (SaveChoiceOverrideForTests != null)
+                {
+                    answer(SaveChoiceOverrideForTests(_current, cloudSave));
+                    yield break;
+                }
+
+                float giveUpAt = RealtimeNow() + PromptReadyTimeoutSeconds;
+                while (!SaveConflictPrompt.IsReady && RealtimeNow() < giveUpAt)
+                    yield return null;
+
+                if (!SaveConflictPrompt.IsReady)
+                {
+                    bool cloudNewer = IsNewerStamp(cloudSave.lastSaved, _current.lastSaved);
+                    GameLogger.Warning($"[SaveManager] Save choice prompt never became ready; keeping the newer save ({(cloudNewer ? "cloud" : "local")}).");
+                    answer(cloudNewer ? SaveSyncAction.TakeCloud : SaveSyncAction.KeepLocal);
+                    yield break;
+                }
+
+                bool? keepLocal = null;
+                var now = GameClock.UtcNow;
+                SaveConflictPrompt.Show(SaveSync.Summary(_current, now), SaveSync.Summary(cloudSave, now),
+                                        k => keepLocal = k);
+                while (keepLocal == null) yield return null;
+                answer(keepLocal.Value ? SaveSyncAction.KeepLocal : SaveSyncAction.TakeCloud);
+            }
+            finally
+            {
+                AwaitingSaveChoice = false;
+            }
+        }
+
+        static void KeepCopy(SaveData data, string fileName)
+        {
+            if (data == null) return;
+            try
+            {
+                System.IO.File.WriteAllText(System.IO.Path.Combine(LocalSaveService.SaveDirectory, fileName),
+                                            JsonUtility.ToJson(data));
+                GameLogger.Info($"[SaveManager] Kept the replaced save as {fileName}.");
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Warning($"[SaveManager] Could not keep a copy of the replaced save: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Settings "Sign in with Google": shows the account picker, then links Google to this guest
+        /// player, or switches to the player that already owns the Google account and settles the two
+        /// saves (asking the player if both have progress). <paramref name="onDone"/> gets a message to show.
+        /// </summary>
+        public IEnumerator SignInWithGoogleFromSettings(Action<string> onDone)
+        {
+            if (_cloud == null) { onDone?.Invoke("Cloud save is not available."); yield break; }
+
+            var task = _cloud.SignInWithGoogleAsync(GoogleAuthMode.Interactive);
+            yield return new WaitUntil(() => task.IsCompleted);
+            var outcome = task.IsFaulted ? GoogleSignInOutcome.Failed : task.Result;
+
+            switch (outcome)
+            {
+                case GoogleSignInOutcome.Failed:
+                    onDone?.Invoke($"Google sign-in failed: {_cloud.LastSignInError ?? "unknown error"}");
+                    yield break;
+
+                case GoogleSignInOutcome.AlreadyGoogle:
+                    onDone?.Invoke("Already signed in with Google.");
+                    yield break;
+
+                case GoogleSignInOutcome.Linked:
+                    // Same player, so the same cloud save: push now so other devices see it.
+                    if (FeatureFlags.CloudSaveEnabled && _cloud.IsAvailable)
+                    {
+                        SaveLocal();
+                        var push = PushAndRecord();
+                        yield return new WaitUntil(() => push.IsCompleted);
+                    }
+                    onDone?.Invoke("Signed in with Google. Your progress now syncs across your devices.");
+                    yield break;
+            }
+
+            // SwitchedAccount: this Google account already had a save (another device's).
+            _current.playerId = _cloud.AccountPlayerId ?? _current.playerId;
+            if (!FeatureFlags.CloudSaveEnabled || !_cloud.IsAvailable)
+            {
+                onDone?.Invoke("Signed in with Google.");
+                yield break;
+            }
+
+            SaveLocal();
+            var fetch = _cloud.FetchAsync(_current.playerId);
+            yield return new WaitUntil(() => fetch.IsCompleted);
+            var cloudSave = fetch.IsFaulted ? null : fetch.Result;
+
+            if (cloudSave == null)
+            {
+                var push = PushAndRecord();
+                yield return new WaitUntil(() => push.IsCompleted);
+                onDone?.Invoke("Signed in with Google. Your progress now syncs across your devices.");
+                yield break;
+            }
+
+            // localIsNew: false. IsNewGame only describes the save found at launch; this session has played since.
+            yield return SyncWithCloudSave(cloudSave, localIsNew: false, accountSwitched: true);
+            onDone?.Invoke("Signed in with Google.");
         }
 
         public void SaveLocal(bool skipGridFlush = false, bool skipECSFlush = false)
         {
-            // If the load never applied to ECS (e.g. baked SubScene entities timed out after a recompile),
-            // ECS holds baked defaults. Flushing those would overwrite the good on-disk save with zeros.
-            // Skip both ECS and grid snapshots; _current still holds the save loaded at startup, so writing
-            // it back below is harmless (and the disk file is preserved).
-            if (ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded && !ECSLoadBridge.Instance.SaveApplied)
+            // Until the save has been applied to ECS, ECS holds baked defaults and an EMPTY grid. Flushing
+            // that would overwrite the good save: currency with zeros, and every building, belt and field
+            // with nothing. Skip both ECS and grid snapshots; _current still holds the save loaded at
+            // startup, so writing it back below is harmless (and the disk file is preserved).
+            //
+            // This covers both the timed-out load (IsLoaded && !SaveApplied) AND the window before the load
+            // finishes (!IsLoaded). The second one wiped grids on device: a research timer that finished
+            // while the app was closed completes in ResearchService.Start, which calls SaveLocal seconds
+            // before LoadGrid has re-placed anything. Backgrounding during the load does the same.
+            if (ECSLoadBridge.Instance != null && !ECSLoadBridge.Instance.SaveApplied)
             {
-                GameLogger.Warning("[Save] Load did not apply to ECS (entities not ready) — skipping ECS/grid " +
-                    "flush so the on-disk save is not overwritten with defaults.");
+                GameLogger.Warning("[Save] Save not applied to ECS yet (still loading, or load timed out) — " +
+                    "skipping ECS/grid flush so the on-disk save is not overwritten with defaults.");
+                skipECSFlush  = true;
+                skipGridFlush = true;
+            }
+
+            // Prestige already wrote the reset run into _current; the old scene's grid and ECS state
+            // (still live until the reload lands) must not be flushed back over it.
+            if (PrestigeRunReset.ReloadPending)
+            {
                 skipECSFlush  = true;
                 skipGridFlush = true;
             }
@@ -397,8 +614,6 @@ namespace MobileIdleBuilder
                 yield return AutoSaveTick();
             }
         }
-
-        bool IsCloudNewer(SaveData cloud) => IsNewerStamp(cloud.lastSaved, _current.lastSaved);
 
         /// <summary>
         /// True if ISO 8601 stamp <paramref name="candidate"/> is later than <paramref name="current"/>.

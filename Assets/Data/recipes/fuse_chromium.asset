@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: fuse_chromium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: fuse_chromium
-  displayName: Fuse Chromium
+  displayName: Chromium
+  methodLabel: 
   recipeId: 158
   tier: 2
   category: 8

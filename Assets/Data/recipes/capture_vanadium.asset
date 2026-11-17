@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_vanadium
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_vanadium
-  displayName: Fuse Vanadium
+  displayName: Vanadium
+  methodLabel: 
   recipeId: 220
   tier: 2
   category: 8

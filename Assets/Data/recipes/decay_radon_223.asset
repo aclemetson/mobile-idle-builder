@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_radon_223
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_radon_223
-  displayName: Radon-223 Decay
+  displayName: Francium
+  methodLabel: 
   recipeId: 238
   tier: 2
   category: 4

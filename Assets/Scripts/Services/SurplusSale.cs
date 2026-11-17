@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
@@ -53,6 +54,42 @@ namespace MobileIdleBuilder
                 inputBuffer.RemoveAt(i);
             }
             return (long)System.Math.Floor(total);
+        }
+    }
+
+    /// <summary>
+    /// Recent surplus sales per building, for the inspector's "Selling surplus" row. Main thread only
+    /// (written by the managed ConveyorSystem). Keeps a few seconds of history per building.
+    /// </summary>
+    public static class SurplusSaleLog
+    {
+        public const float WindowSeconds = 5f;
+
+        private static readonly Dictionary<Entity, Queue<(float time, double value)>> Sales = new();
+
+        public static void Record(Entity building, double value, float now)
+        {
+            if (!Sales.TryGetValue(building, out var q)) Sales[building] = q = new Queue<(float, double)>();
+            q.Enqueue((now, value));
+            Trim(q, now);
+        }
+
+        /// <summary>Items sold per second and entropy paid per second over the last <see cref="WindowSeconds"/>.</summary>
+        public static (float itemsPerSecond, double entropyPerSecond) Rate(Entity building, float now)
+        {
+            if (!Sales.TryGetValue(building, out var q)) return (0f, 0d);
+            Trim(q, now);
+            if (q.Count == 0) { Sales.Remove(building); return (0f, 0d); }
+            double total = 0;
+            foreach (var (_, v) in q) total += v;
+            return (q.Count / WindowSeconds, total / WindowSeconds);
+        }
+
+        public static void Clear() => Sales.Clear();
+
+        private static void Trim(Queue<(float time, double value)> q, float now)
+        {
+            while (q.Count > 0 && now - q.Peek().time > WindowSeconds) q.Dequeue();
         }
     }
 }

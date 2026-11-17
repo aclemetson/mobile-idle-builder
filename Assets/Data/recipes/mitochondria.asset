@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: mitochondria
   displayName: Mitochondria
+  methodLabel: 
   recipeId: 198
   tier: 3
   category: 5

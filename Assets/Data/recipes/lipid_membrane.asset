@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: lipid_membrane
   displayName: Lipid Membrane
+  methodLabel: 
   recipeId: 195
   tier: 3
   category: 5

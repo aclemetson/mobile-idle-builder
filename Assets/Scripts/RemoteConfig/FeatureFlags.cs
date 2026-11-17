@@ -27,6 +27,7 @@ namespace MobileIdleBuilder
         public const string PvpEnabledKey         = "pvp.enabled";
         public const string IapEnabledKey         = "iap.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
+        public const string AdsTestModeKey        = "ads.test_mode";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
         public const string DailyEventsEnabledKey = "dailyevents.enabled";
         public const string MaintenanceEnabledKey = "maintenance.enabled";
@@ -41,12 +42,24 @@ namespace MobileIdleBuilder
         public const string GameDataOverridesKey   = "gamedata.overrides";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
+        public const string UpdateEnabledKey       = "update.enabled";
+        public const string UpdateLatestAndroidKey = "update.latest.android";
+        public const string UpdateLatestIosKey     = "update.latest.ios";
+        public const string UpdateMinimumAndroidKey = "update.minimum.android";
+        public const string UpdateMinimumIosKey    = "update.minimum.ios";
+        public const string UpdateUrlAndroidKey    = "update.url.android";
+        public const string UpdateUrlIosKey        = "update.url.ios";
+        public const string UpdateMessageKey       = "update.message";
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
         public const bool PvpEnabledDefault         = false; // server backend not live yet
         public const bool IapEnabledDefault         = true;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
+        // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
+        // build can never show a real ad unless the dashboard explicitly turns it off. Only read in dev
+        // builds (see AdsTestMode), so production ignores the key entirely.
+        public const bool AdsTestModeDefault        = true;
         public const bool CloudSaveEnabledDefault   = true;
         public const bool DailyEventsEnabledDefault = true;
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
@@ -67,6 +80,12 @@ namespace MobileIdleBuilder
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
+        // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
+        // blank versions never prompt. CI writes update.latest.* after each store upload
+        // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.
+        public const bool   UpdateEnabledDefault = false;
+        public const string UpdateVersionDefault = "";   // latest / minimum, both platforms
+        public const string UpdateMessageDefault = "A new version of Quantum Foundry is available.";
 
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
@@ -74,6 +93,7 @@ namespace MobileIdleBuilder
             new FlagDef(PvpEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
+            new FlagDef(AdsTestModeKey,        FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
             new FlagDef(DailyEventsEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
@@ -88,12 +108,39 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataOverridesKey,     FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
+            new FlagDef(UpdateEnabledKey,         FlagType.Bool),
+            new FlagDef(UpdateLatestAndroidKey,   FlagType.String),
+            new FlagDef(UpdateLatestIosKey,       FlagType.String),
+            new FlagDef(UpdateMinimumAndroidKey,  FlagType.String),
+            new FlagDef(UpdateMinimumIosKey,      FlagType.String),
+            new FlagDef(UpdateUrlAndroidKey,      FlagType.String),
+            new FlagDef(UpdateUrlIosKey,          FlagType.String),
+            new FlagDef(UpdateMessageKey,         FlagType.String),
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
         public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
+
+        /// <summary>
+        /// True in the Editor and in builds compiled with DEV_ENVIRONMENT (the ones that talk to the UGS
+        /// "development" environment, see UgsEnvironment). Production builds compile this to false.
+        /// </summary>
+#if UNITY_EDITOR || DEV_ENVIRONMENT
+        public const bool IsDevBuild = true;
+#else
+        public const bool IsDevBuild = false;
+#endif
+
+        /// <summary>
+        /// Test ads (<c>ads.test_mode</c>): AdService uses <see cref="TestAdProvider"/> instead of the real
+        /// ad network. Dev builds only; always false in a production build, whatever the dashboard says.
+        /// </summary>
+        public static bool AdsTestMode => ResolveAdsTestMode(IsDevBuild, GetBool(AdsTestModeKey, AdsTestModeDefault));
+
+        /// <summary>Pure rule behind <see cref="AdsTestMode"/>, unit-tested.</summary>
+        public static bool ResolveAdsTestMode(bool devBuild, bool flagValue) => devBuild && flagValue;
         public static bool CloudSaveEnabled   => GetBool(CloudSaveEnabledKey,   CloudSaveEnabledDefault);
         public static bool DailyEventsEnabled => GetBool(DailyEventsEnabledKey, DailyEventsEnabledDefault);
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
@@ -108,6 +155,11 @@ namespace MobileIdleBuilder
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
+        public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);
+        public static string UpdateMessage        => GetString(UpdateMessageKey,        UpdateMessageDefault);
+
+        /// <summary>Raw string flag read (used by AppUpdateCheck for its per-platform keys).</summary>
+        public static string GetStringFlag(string key, string fallback) => GetString(key, fallback);
 
         static bool GetBool(string key, bool fallback)
         {

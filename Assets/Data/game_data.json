@@ -25,11 +25,13 @@
     "environment": "Dev",
     "api_base_url": "TODO",
     "starting_entropy": 250,
+    "_comment_belt_items_per_tile": "Items one belt tile holds (1-4). Belt throughput = belt speed (tiles/s, 1 base, raised by ConveyorSpeed research) x this.",
+    "belt_items_per_tile": 2,
     "_comment_purchase_scaling": "Each successive placement of the same building type costs more. Formula: base_cost × multiplier^(n-1) where n = number of buildings of that type already placed.",
     "building_purchase_multiplier_t1": 1.5,
     "building_purchase_multiplier_t2": 1.4,
     "building_purchase_multiplier_t3_plus": 1.3,
-    "_reserved_research_ids": ["place_extras_in_inventory", "sell_excess_inputs"]
+    "_reserved_research_ids": ["place_extras_in_inventory"]
   },
 
   "tiers": [
@@ -88,7 +90,7 @@
   "_research_blocks_note": "Game phases. Each research node names its block; target_hours is how long a player (5 buildings working) should spend clearing the block. scripts/rebalance_curve.py derives research costs from these; the tutorial block (anchor) keeps its tuned costs.",
   "research_blocks": [
     {"id": "ignition", "name": "Ignition", "order": 1, "target_hours": 1, "anchor": true, "description": "The tutorial: quarks to the first Carbon from fusion.", "start_prestige_count": 0, "start_prestige_currency_earned": 0, "start_permanent_upgrades": [], "start_entropy": 0, "start_sites": []},
-    {"id": "foundations", "name": "Foundations", "order": 2, "target_hours": 3, "anchor": false, "description": "Broaden the base after the tutorial: faster belts and harvesters, isotopes, the first molecules and the Uranium on-ramp.", "start_prestige_count": 0, "start_prestige_currency_earned": 0, "start_permanent_upgrades": [], "start_entropy": 52000, "start_sites": []},
+    {"id": "foundations", "name": "Foundations", "order": 2, "target_hours": 3, "ramp": 1.7, "anchor": false, "description": "Broaden the base after the tutorial: faster belts and harvesters, isotopes, the first molecules and the Uranium on-ramp.", "start_prestige_count": 0, "start_prestige_currency_earned": 0, "start_permanent_upgrades": [], "start_entropy": 52000, "start_sites": []},
     {"id": "stellar_forge", "name": "Stellar Forge", "order": 3, "target_hours": 12, "anchor": false, "description": "Climb the fusion ladder to Iron, then past it with explosive burning.", "start_prestige_count": 1, "start_prestige_currency_earned": 150, "start_permanent_upgrades": ["assembly_line:1", "memory_resonance:1", "entropy_headstart:2", "quantum_yield:1", "idle_time_cap:1", "efficient_layouts:1"], "start_entropy": 2350000, "start_sites": []},
     {"id": "actinide_frontier", "name": "Actinide Frontier", "order": 4, "target_hours": 20, "anchor": false, "description": "Work back from Uranium: decay, fission and neutron capture to the precious metals.", "start_prestige_count": 4, "start_prestige_currency_earned": 700, "start_permanent_upgrades": ["assembly_line:2", "memory_resonance:2", "entropy_headstart:2", "quantum_yield:2", "idle_time_cap:2", "research_overdrive:1", "idle_collection_rate:2", "efficient_layouts:1", "surplus_resale:2", "expanded_vault:1", "field_cooldown:1", "salvage_protocols:1"], "start_entropy": 4040000, "start_sites": []},
     {"id": "chemistry_world", "name": "Chemistry World", "order": 5, "target_hours": 20, "anchor": false, "description": "Molecules, the Chemistry world and engineered materials.", "start_prestige_count": 8, "start_prestige_currency_earned": 2000, "start_permanent_upgrades": ["assembly_line:3", "memory_resonance:3", "entropy_headstart:4", "quantum_yield:3", "idle_time_cap:3", "research_overdrive:2", "idle_collection_rate:3", "efficient_layouts:3", "surplus_resale:3", "expanded_vault:3", "field_cooldown:3", "salvage_protocols:2", "turnkey_builder:1"], "start_entropy": 39900000, "start_sites": ["site_actinide_vein"]},
@@ -113,7 +115,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["hydrogen_synthesis", "nucleon_harvesting", "rapid_extraction_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -134,7 +135,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["atomic_assembly", "automation_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "The simplest atom: one proton orbited by one electron. Hydrogen is the most abundant element in the universe and the gateway to all atomic chemistry.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -142,7 +142,7 @@
     {
       "id": "automation_i",
       "display_name": "Automation I",
-      "description": "Unlocks the Harvester — a field collector that gathers particles continuously without manual input.",
+      "description": "Unlocks the Harvester — a field collector that gathers particles continuously without manual input. Also unlocks the Filter and the Belt Splitters for routing belts.",
       "branch": "Engineering",
       "prerequisites": ["hydrogen_synthesis"],
       "depth_in_tree": 2,
@@ -151,11 +151,10 @@
       "duration_seconds": 20,
       "unlocks_items": [],
       "unlocks_recipes": [],
-      "unlocks_buildings": ["harvester", "filter"],
+      "unlocks_buildings": ["harvester", "filter", "splitter_2", "splitter_3"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["surplus_containment", "field_synthesis"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.5,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -177,7 +176,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "A field is only a region where the vacuum is unusually generous. Pump enough entropy into empty space and it learns to give up particles too, though every new field strains the vacuum more than the last.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -198,7 +196,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["deuterium_synthesis", "isotopes", "heavy_elements", "molecular_synthesis", "power_distribution"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Combining protons, neutrons, and electrons into stable atoms. Each element's identity is defined by its proton count — change it and you change the element.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -219,7 +216,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["fusion_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing bare protons, which is why every fusion experiment on Earth starts with it.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -240,7 +236,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "Power need not be generated where it is used. A resonant relay re-radiates the grid's existing eV field across a far wider area than any single generator can reach, decoupling where you make power from where you spend it.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -252,7 +247,7 @@
       "branch": "Engineering",
       "prerequisites": ["field_synthesis"],
       "depth_in_tree": 1,
-      "cost_base_currency": 74800,
+      "cost_base_currency": 18600,
       "cost_prestige_currency": 0,
       "duration_seconds": 30,
       "unlocks_items": [],
@@ -261,7 +256,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Two harvesters on opposing polarity fields can be merged into a single Nucleon Harvester, producing protons or neutrons directly without quark combination.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -284,7 +278,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["rapid_extraction_ii"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.25,
       "codex_entry": "Refining the extraction pulse lets a field recharge faster after each manual tap, shortening the wait between collections.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -296,7 +289,7 @@
       "branch": "Engineering",
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 2,
-      "cost_base_currency": 52000,
+      "cost_base_currency": 6430,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
       "field_cooldown_mult": 0.8,
@@ -306,7 +299,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "A tuned resonance cascade drives field recharge near its physical limit, collapsing the cooldown between taps.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -318,7 +310,7 @@
       "branch": "Nuclear",
       "prerequisites": ["atomic_assembly"],
       "depth_in_tree": 2,
-      "cost_base_currency": 89800,
+      "cost_base_currency": 31600,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
       "unlocks_items": ["tritium", "carbon_14"],
@@ -327,7 +319,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["radioactive_isotopes"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "An element's identity is its proton count, but its neutron count determines its isotope. Isotopes of the same element have identical chemical properties but vastly different nuclear behaviour.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -339,7 +330,7 @@
       "branch": "Nuclear",
       "prerequisites": ["isotopes"],
       "depth_in_tree": 2,
-      "cost_base_currency": 631000,
+      "cost_base_currency": 894000,
       "cost_prestige_currency": 0,
       "duration_seconds": 300,
       "unlocks_items": ["uranium"],
@@ -348,7 +339,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["radioactive_isotopes", "transuranic_elements"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Beyond iron, fusion in stars becomes energy-negative. Only cosmic violence — supernovae, neutron star collisions — forges the heavy elements. We replicate that violence, precisely.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -369,7 +359,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Some isotopes are inherently unstable, shedding mass as alpha or beta particles. With proper containment, decay is not a hazard — it is a resource.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -379,11 +368,11 @@
       "_comment": "--- TIER 2 ELEMENT GATES ---",
       "id": "light_elements",
       "display_name": "Light Elements",
-      "description": "Fuse Lithium (Helium + Deuterium), then Beryllium and Boron by adding one proton at a time.",
+      "description": "Make Lithium from Helium and Deuterium, then Beryllium and Boron by adding one proton at a time.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
-      "cost_base_currency": 442000,
+      "cost_base_currency": 443000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
       "unlocks_items": ["lithium", "beryllium", "boron"],
@@ -392,7 +381,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The lightest solid elements: beryllium, harder than steel and lighter than aluminium; boron, an exotic metalloid with industrial and nuclear applications.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -400,20 +388,19 @@
     {
       "id": "mid_elements",
       "display_name": "Mid-Period Elements",
-      "description": "Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen, Fluorine, Sodium, Aluminum and Phosphorus.",
+      "description": "Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen, Fluorine, Sodium, Aluminum and Phosphorus. Hydrogen and Nitrogen now make Ammonia.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 5930000,
+      "cost_base_currency": 4010000,
       "cost_prestige_currency": 0,
       "duration_seconds": 120,
-      "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus"],
-      "unlocks_recipes": ["capture_nitrogen", "capture_fluorine", "capture_sodium", "capture_aluminum", "capture_phosphorus"],
+      "unlocks_items": ["nitrogen", "fluorine", "sodium", "aluminum", "phosphorus", "ammonia"],
+      "unlocks_recipes": ["capture_nitrogen", "capture_fluorine", "capture_sodium", "capture_aluminum", "capture_phosphorus", "ammonia"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_molecules", "chemistry_lab"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable batteries.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -434,7 +421,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["precious_metals", "materials_science"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Copper carries electricity better than any common metal. Zinc prevents corrosion and is half of brass. Together they defined the Bronze and Brass Ages.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -442,20 +428,19 @@
     {
       "id": "precious_metals",
       "display_name": "Precious Metals",
-      "description": "Fast neutron capture for Platinum and Gold: made in nature only by neutron-star mergers.",
+      "description": "Fast neutron capture from Iridium to Platinum and Gold, made in nature only by neutron-star mergers; Gold into Mercury (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["transition_metals", "rapid_neutron_capture"],
-      "depth_in_tree": 4,
-      "cost_base_currency": 19800000,
+      "prerequisites": ["transition_metals", "exotic_metals"],
+      "depth_in_tree": 10,
+      "cost_base_currency": 68900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
-      "unlocks_items": ["platinum", "gold"],
-      "unlocks_recipes": ["r_capture_platinum", "r_capture_gold"],
+      "unlocks_items": ["platinum", "gold", "mercury"],
+      "unlocks_recipes": ["r_capture_platinum", "r_capture_gold", "s_capture_mercury"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["exotic_metals", "advanced_materials", "heavy_transition_metals"],
+      "unlocks_research": ["advanced_materials", "transuranic_elements"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Silver has the highest electrical conductivity of any element. Gold resists corrosion absolutely — every circuit connector in space relies on it.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -463,20 +448,19 @@
     {
       "id": "exotic_metals",
       "display_name": "Exotic Metals",
-      "description": "Fast neutron capture for Osmium and Iridium, the densest metals there are.",
+      "description": "Fast neutron capture from Rhenium to Osmium and Iridium, the densest metals there are.",
       "branch": "Materials",
-      "prerequisites": ["precious_metals"],
-      "depth_in_tree": 5,
-      "cost_base_currency": 23700000,
+      "prerequisites": ["lanthanides_and_heavy_metals"],
+      "depth_in_tree": 9,
+      "cost_base_currency": 49700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["osmium", "iridium"],
       "unlocks_recipes": ["r_capture_osmium", "r_capture_iridium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["transuranic_elements", "lanthanides_and_heavy_metals"],
+      "unlocks_research": ["precious_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Platinum catalyses the reactions that make fuel cells possible. Tungsten has the highest melting point of any element — used in rocket nozzles and light filaments.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -486,8 +470,8 @@
       "display_name": "Transuranic Synthesis",
       "description": "Unlock plutonium — heavier than uranium, only stable in carefully controlled nuclear conditions.",
       "branch": "Nuclear",
-      "prerequisites": ["heavy_transition_metals", "exotic_metals"],
-      "depth_in_tree": 6,
+      "prerequisites": ["precious_metals"],
+      "depth_in_tree": 11,
       "cost_base_currency": 315000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
@@ -497,7 +481,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["component_engineering", "superheavy_synthesis"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Plutonium does not occur naturally on Earth — it must be synthesised. Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional physics.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -511,16 +494,15 @@
       "branch": "Chemistry",
       "prerequisites": ["atomic_assembly"],
       "depth_in_tree": 3,
-      "cost_base_currency": 260000,
+      "cost_base_currency": 184000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["liquid_hydrogen", "water", "methane", "ammonia"],
-      "unlocks_recipes": ["liquid_hydrogen", "water", "methane", "ammonia"],
+      "unlocks_items": ["liquid_hydrogen", "methane"],
+      "unlocks_recipes": ["liquid_hydrogen", "methane"],
       "unlocks_buildings": ["molecular_synthesizer"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_molecules", "feedstock_buffers"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Atoms combine into molecules through covalent and ionic bonds. Water, methane, and ammonia are the feedstocks of planetary chemistry — and industrial civilisation.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -541,7 +523,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["materials_science"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Silica is the basis of glass and semiconductors. Iron oxide rusts and builds — it is the ore steel begins from. Uranium hexafluoride enables isotope separation by gaseous diffusion.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -553,7 +534,7 @@
       "branch": "Materials",
       "prerequisites": ["transition_metals"],
       "depth_in_tree": 5,
-      "cost_base_currency": 80900000,
+      "cost_base_currency": 81000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["steel", "carbon_fiber", "titanium_alloy"],
@@ -562,7 +543,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["advanced_materials"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Steel defined the industrial age. Carbon fibre enables spacecraft. Titanium alloys survive re-entry. Materials science is the discipline that turns molecules into civilisation.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -583,7 +563,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["component_engineering"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Semiconductor wafers are the substrate of computation. Aerogel is the lightest solid material. Superconductors carry current with zero resistance. Metamaterials bend light and gravity around themselves.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -604,7 +583,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["megastructure_theory"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Quantum processors harness superposition for computation. Plasma containment rings confine stellar material. Antimatter cells store energy at matter-annihilation density.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -625,7 +603,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "A Dyson sphere captures all energy output of a star. Dyson nodes are the structural anchors. Orbital frames are the load-bearing superstructure. Graviton lenses stabilise the whole assembly against tidal forces.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -638,7 +615,7 @@
       "branch": "Engineering",
       "prerequisites": ["automation_i"],
       "depth_in_tree": 3,
-      "cost_base_currency": 217000,
+      "cost_base_currency": 108000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
       "unlocks_items": [],
@@ -647,7 +624,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.3,
       "codex_entry": "Once production runs unattended, the bottleneck shifts from speed to storage. Containment fields let a building hold far more finished output before it must pause — the foundation of idle stockpiling.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -659,7 +635,7 @@
       "branch": "Engineering",
       "prerequisites": ["molecular_synthesis"],
       "depth_in_tree": 4,
-      "cost_base_currency": 901000,
+      "cost_base_currency": 1810000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": [],
@@ -668,7 +644,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.3,
       "codex_entry": "As production chains lengthen, a building can starve waiting on its conveyors. Larger feedstock buffers smooth intake so multi-input recipes run without interruption.",
       "icon_path": "TODO",
       "block": "foundations"
@@ -678,18 +653,17 @@
       "display_name": "Heavy Transition Metals",
       "description": "Neutron capture from Cerium: Praseodymium, Neodymium, Promethium and Samarium (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["precious_metals"],
-      "depth_in_tree": 5,
-      "cost_base_currency": 28500000,
+      "prerequisites": ["slow_neutron_capture"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 16500000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["praseodymium", "neodymium", "promethium", "samarium"],
       "unlocks_recipes": ["s_capture_praseodymium", "s_capture_neodymium", "s_capture_promethium", "s_capture_samarium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["rapid_neutron_capture"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The second row of transition metals: catalytic, refractory, and the rare-earth precursors. Bridging the periodic table from the everyday metals toward the lanthanides.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -697,20 +671,19 @@
     {
       "id": "lanthanides_and_heavy_metals",
       "display_name": "Lanthanides and Heavy Metals",
-      "description": "Neutron capture from Europium up to Rhenium, and Gold into Mercury (Slow mode).",
+      "description": "Neutron capture from Europium up to Rhenium (Slow mode).",
       "branch": "Materials",
-      "prerequisites": ["exotic_metals"],
-      "depth_in_tree": 6,
-      "cost_base_currency": 69700000,
+      "prerequisites": ["rapid_neutron_capture"],
+      "depth_in_tree": 8,
+      "cost_base_currency": 33600000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
-      "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium", "mercury"],
-      "unlocks_recipes": ["s_capture_tungsten", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_rhenium", "s_capture_mercury"],
+      "unlocks_items": ["tungsten", "gadolinium", "terbium", "dysprosium", "holmium", "erbium", "thulium", "ytterbium", "lutetium", "hafnium", "tantalum", "rhenium"],
+      "unlocks_recipes": ["s_capture_tungsten", "s_capture_gadolinium", "s_capture_terbium", "s_capture_dysprosium", "s_capture_holmium", "s_capture_erbium", "s_capture_thulium", "s_capture_ytterbium", "s_capture_lutetium", "s_capture_hafnium", "s_capture_tantalum", "s_capture_rhenium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": [],
+      "unlocks_research": ["exotic_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The rare earths power magnets, lasers, and phosphors; the heavy metals below them mark the edge of stability where the first natural radioactivity appears.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -731,7 +704,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.05,
       "codex_entry": "Beyond fermium, nuclei survive only by slamming lighter atoms together at relativistic speed. Each new element exists for fractions of a second \u2014 and is worth a fortune in captured entropy.",
       "icon_path": "TODO",
       "block": "synthetic_frontier"
@@ -752,7 +724,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["light_elements", "fusion_ii", "fissile_extraction"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.15,
       "codex_entry": "Stars fuse hydrogen into helium and onward, releasing binding energy at every step up to iron. The Fusion Reactor reproduces that ladder: combine two cheap light nuclei into one heavier, more valuable atom.",
       "icon_path": "TODO",
       "block": "ignition"
@@ -760,20 +731,19 @@
     {
       "id": "fusion_ii",
       "display_name": "Alpha Process",
-      "description": "Unlock the alpha-capture chain \u2014 oxygen through silicon by successive helium fusion.",
+      "description": "Unlock the alpha-capture chain: oxygen through silicon by successive helium fusion. Hydrogen and Oxygen now make Water.",
       "branch": "Nuclear",
       "prerequisites": ["fusion_i"],
       "depth_in_tree": 4,
       "cost_base_currency": 2350000,
       "cost_prestige_currency": 0,
       "duration_seconds": 600,
-      "unlocks_items": ["oxygen", "neon", "magnesium", "silicon"],
-      "unlocks_recipes": ["fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon"],
+      "unlocks_items": ["oxygen", "neon", "magnesium", "silicon", "water"],
+      "unlocks_recipes": ["fuse_oxygen", "fuse_neon", "fuse_magnesium", "fuse_silicon", "water"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["mid_elements", "fusion_iii"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "In evolved stars, helium nuclei (alpha particles) are captured one at a time: oxygen, neon, magnesium, silicon. Each capture climbs the fusion ladder by two protons.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -785,7 +755,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_ii"],
       "depth_in_tree": 5,
-      "cost_base_currency": 7110000,
+      "cost_base_currency": 5700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["sulfur", "argon", "calcium", "titanium", "chromium", "iron"],
@@ -794,7 +764,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["explosive_burning"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "The last day of a massive star: silicon burning forges its way to iron-56, the most tightly bound nucleus. Fusion can climb no further \u2014 beyond iron it costs more energy than it yields.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -806,7 +775,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["fusion_iii"],
       "depth_in_tree": 6,
-      "cost_base_currency": 8530000,
+      "cost_base_currency": 8280000,
       "cost_prestige_currency": 0,
       "duration_seconds": 1800,
       "unlocks_items": ["chlorine", "potassium", "scandium", "vanadium", "manganese"],
@@ -815,7 +784,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["transition_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "When a massive star explodes, a shock wave sweeps through its silicon and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements next to iron, like Manganese and Vanadium.",
       "icon_path": "TODO",
       "block": "stellar_forge"
@@ -836,7 +804,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["fission_i"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "Matter heavier than iron has no cheap fusion route \u2014 it must enter the economy from a fissile field. Harvest uranium and plutonium to feed the fission ladder back down toward iron.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -857,7 +824,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["slow_neutron_capture"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "A slow neutron splits a heavy fissile nucleus into two mid-weight fragments \u2014 each closer to iron, and each worth far more than the cheap fuel that produced it. The fragments and spare neutrons are caught for reuse.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -876,9 +842,8 @@
       "unlocks_recipes": ["s_capture_silver", "s_capture_technetium", "s_capture_ruthenium", "s_capture_rhodium", "s_capture_palladium", "s_capture_cadmium", "s_capture_indium", "s_capture_lanthanum"],
       "unlocks_buildings": ["neutron_capture"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["rapid_neutron_capture"],
+      "unlocks_research": ["heavy_transition_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "In red giant stars, free neutrons trickle into heavy nuclei one at a time, slowly enough for each unstable result to decay before the next arrives.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -886,20 +851,19 @@
     {
       "id": "rapid_neutron_capture",
       "display_name": "r-Process",
-      "description": "Unlock Fast mode: a flood of neutrons makes the elements slow capture can't reach, including Gold and Platinum.",
+      "description": "Unlock Fast mode: a flood of neutrons makes the elements slow capture can't reach, starting with Europium from Samarium.",
       "branch": "Nuclear",
-      "prerequisites": ["slow_neutron_capture"],
-      "depth_in_tree": 6,
-      "cost_base_currency": 16500000,
+      "prerequisites": ["heavy_transition_metals"],
+      "depth_in_tree": 7,
+      "cost_base_currency": 23700000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["europium"],
       "unlocks_recipes": ["r_capture_europium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["precious_metals"],
+      "unlocks_research": ["lanthanides_and_heavy_metals"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.1,
       "codex_entry": "When two neutron stars collide, matter is bathed in so many neutrons that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen forging gold and platinum.",
       "icon_path": "TODO",
       "block": "actinide_frontier"
@@ -912,7 +876,7 @@
       "branch": "Chemistry",
       "prerequisites": ["mid_elements"],
       "depth_in_tree": 3,
-      "cost_base_currency": 56700000,
+      "cost_base_currency": 56900000,
       "cost_prestige_currency": 0,
       "duration_seconds": 300,
       "unlocks_items": ["carbon_dioxide", "table_salt", "sulfuric_acid"],
@@ -921,7 +885,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["reaction_engineering"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The bridge from physics to chemistry. Where nuclear synthesis forged the elements one nucleus at a time, chemistry mines them in bulk and recombines them into molecules \u2014 the first step toward life.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -943,7 +906,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["organic_chemistry"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Chemistry stops being a curiosity and becomes an industry. Catalysts lower the energy of reactions, and mined metals become the reactors and reagents that drive them.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -964,7 +926,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["biochem_precursors"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Carbon bonds to itself without limit, building chains and rings. Hydrocarbons and their derivatives are the scaffolding on which all organic matter is assembled.",
       "icon_path": "TODO",
       "block": "chemistry_world"
@@ -985,7 +946,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["biology_lab"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The last step of chemistry and the first of biology. Carbon, nitrogen, and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides \u2014 the monomers from which life will build itself.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -998,7 +958,7 @@
       "branch": "Biology",
       "prerequisites": ["biochem_precursors"],
       "depth_in_tree": 6,
-      "cost_base_currency": 872000000,
+      "cost_base_currency": 874000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 7200,
       "unlocks_items": ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
@@ -1007,7 +967,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["cell_biology"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Chemistry made the parts; biology assembles them into machines that copy themselves. The first tier weaves monomers into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1029,7 +988,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["multicellular_life"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "The macromolecules find their common cause: enclosed by a membrane, running on ribosomes and mitochondria, the first cell is a chemistry that keeps itself alive.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1050,7 +1008,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": ["ecosystems"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Cells stop living alone. Nucleated and specialised, they bind into tissues and organs — a division of labour that lets life grow large.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1071,7 +1028,6 @@
       "unlocks_grid_expansion": false,
       "unlocks_research": [],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.2,
       "codex_entry": "Organs become organisms, organisms become populations, and populations weave into an ecosystem — a self-sustaining web of life. From quarks to a living world.",
       "icon_path": "TODO",
       "block": "biology_world"
@@ -1080,9 +1036,12 @@
       "id": "transportation_1",
       "display_name": "Transportation I",
       "branch": "Engineering",
-      "cost_base_currency": 62400,
+      "cost_base_currency": 11000,
       "duration_seconds": 45,
-      "description": "Increases conveyor belt speed by 10%.",
+      "description": "Doubles conveyor belt speed (2 items/s per belt becomes 4), so Lv3 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 1.0 }
+      ],
       "prerequisites": ["rapid_extraction_i"],
       "depth_in_tree": 0,
       "cost_prestige_currency": 0,
@@ -1090,11 +1049,34 @@
       "unlocks_recipes": [],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": 0,
-      "unlocks_research": [],
+      "unlocks_research": ["transportation_2"],
       "resets_on_prestige": true,
-      "prestige_memory_discount": 0.0,
       "codex_entry": "",
       "icon_path": "TODO",
+      "block": "foundations"
+    },
+    {
+      "id": "transportation_2",
+      "display_name": "Transportation II",
+      "branch": "Engineering",
+      "cost_base_currency": 3080000,
+      "duration_seconds": 90,
+      "description": "Doubles conveyor belt speed again (8 items/s per belt), so Lv4 buildings can run full.",
+      "effects": [
+        { "type": "ConveyorSpeed", "value": 2.0 }
+      ],
+      "prerequisites": ["transportation_1"],
+      "depth_in_tree": 1,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": 0,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "codex_entry": "",
+      "icon_path": "TODO",
+      "advances_curve": false,
       "block": "foundations"
     }
   ],
@@ -1340,7 +1322,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The third most abundant element in the universe. Highly reactive and essential for combustion and respiration. Makes up 21% of Earth's atmosphere.",
-      "base_sell_value": 1530.0,
+      "base_sell_value": 1090.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1778,7 +1760,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Chemically inert, immune to corrosion, and malleable beyond any other metal. Every connector in space hardware is gold-plated. Its rarity is a product of neutron star collisions.",
-      "base_sell_value": 566000.0,
+      "base_sell_value": 447000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1802,7 +1784,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The premier catalytic metal. Platinum in catalytic converters eliminates toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature. Rarer than gold.",
-      "base_sell_value": 522000.0,
+      "base_sell_value": 392000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -1826,7 +1808,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The highest melting point of any element — 3,422°C. Rocket nozzles, light filaments, and plasma-facing components in fusion reactors all rely on tungsten's thermal extremity.",
-      "base_sell_value": 346000.0,
+      "base_sell_value": 247000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3392,7 +3374,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Praseodymium (Pr), element number 59 with mass number 141. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 31800.0,
+      "base_sell_value": 25900.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3416,7 +3398,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neodymium (Nd), element number 60 with mass number 142. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 46500.0,
+      "base_sell_value": 34700.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3440,7 +3422,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Promethium (Pm), element number 61 with mass number 145. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 61200.0,
+      "base_sell_value": 43500.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3464,7 +3446,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Samarium (Sm), element number 62 with mass number 152. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 75900.0,
+      "base_sell_value": 52300.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3488,7 +3470,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Europium (Eu), element number 63 with mass number 153. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 104000.0,
+      "base_sell_value": 71800.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3512,7 +3494,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Gadolinium (Gd), element number 64 with mass number 158. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 126000.0,
+      "base_sell_value": 87300.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3536,7 +3518,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Terbium (Tb), element number 65 with mass number 159. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 148000.0,
+      "base_sell_value": 103000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3560,7 +3542,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dysprosium (Dy), element number 66 with mass number 164. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 170000.0,
+      "base_sell_value": 119000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3584,7 +3566,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Holmium (Ho), element number 67 with mass number 165. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 192000.0,
+      "base_sell_value": 135000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3608,7 +3590,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Erbium (Er), element number 68 with mass number 166. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 214000.0,
+      "base_sell_value": 151000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3632,7 +3614,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Thulium (Tm), element number 69 with mass number 169. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 236000.0,
+      "base_sell_value": 167000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3656,7 +3638,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ytterbium (Yb), element number 70 with mass number 174. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 258000.0,
+      "base_sell_value": 183000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3680,7 +3662,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lutetium (Lu), element number 71 with mass number 175. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 280000.0,
+      "base_sell_value": 199000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3704,7 +3686,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hafnium (Hf), element number 72 with mass number 180. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 302000.0,
+      "base_sell_value": 215000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3728,7 +3710,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tantalum (Ta), element number 73 with mass number 181. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 324000.0,
+      "base_sell_value": 231000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3752,7 +3734,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rhenium (Re), element number 75 with mass number 187. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 368000.0,
+      "base_sell_value": 263000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3776,7 +3758,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Osmium (Os), element number 76 with mass number 192. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 423000.0,
+      "base_sell_value": 300000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3800,7 +3782,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iridium (Ir), element number 77 with mass number 193. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 478000.0,
+      "base_sell_value": 337000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -3824,7 +3806,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mercury (Hg), element number 80 with mass number 202. A fission fragment on the long descent from the heavy actinides back toward iron.",
-      "base_sell_value": 588000.0,
+      "base_sell_value": 469000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -5625,7 +5607,7 @@
     {
       "_comment": "--- RAW RESOURCE COLLECTION (one recipe per harvested item) ---",
       "id": "collect_up_quark",
-      "display_name": "Collect Up Quark",
+      "display_name": "Up Quark",
       "recipe_id": 1,
       "tier": 1,
       "category": "Quark",
@@ -5648,7 +5630,7 @@
     },
     {
       "id": "collect_down_quark",
-      "display_name": "Collect Down Quark",
+      "display_name": "Down Quark",
       "recipe_id": 2,
       "tier": 1,
       "category": "Quark",
@@ -5671,7 +5653,7 @@
     },
     {
       "id": "collect_electron",
-      "display_name": "Collect Electron",
+      "display_name": "Electron",
       "recipe_id": 3,
       "tier": 1,
       "category": "Lepton",
@@ -5694,7 +5676,7 @@
     },
     {
       "id": "harvest_proton",
-      "display_name": "Harvest Proton",
+      "display_name": "Proton",
       "recipe_id": 222,
       "tier": 1,
       "category": "Nucleon",
@@ -5717,7 +5699,7 @@
     },
     {
       "id": "harvest_neutron",
-      "display_name": "Harvest Neutron",
+      "display_name": "Neutron",
       "recipe_id": 223,
       "tier": 1,
       "category": "Nucleon",
@@ -5753,7 +5735,7 @@
       "output_item": "proton",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.0,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 0.0,
@@ -5779,7 +5761,7 @@
       "output_item": "neutron",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.0,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 0.0,
@@ -5849,7 +5831,7 @@
     },
     {
       "id": "assemble_deuterium",
-      "display_name": "Assemble Deuterium",
+      "display_name": "Deuterium",
       "recipe_id": 207,
       "tier": 2,
       "category": "Isotope",
@@ -5862,7 +5844,7 @@
       "output_item": "deuterium",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1.5,
+      "base_craft_time": 2.0,
       "manual_craft_time": 1.5,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 10.0,
@@ -6087,7 +6069,7 @@
       "valid_buildings": ["molecular_synthesizer"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "molecular_synthesis",
+      "required_research": "fusion_ii",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -6139,7 +6121,7 @@
       "valid_buildings": ["molecular_synthesizer"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "molecular_synthesis",
+      "required_research": "mid_elements",
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
@@ -7241,7 +7223,8 @@
     },
     {
       "id": "fuse_helium",
-      "display_name": "Fuse Helium-4 (p-p chain)",
+      "display_name": "Helium-4",
+      "method_label": "p-p chain",
       "recipe_id": 148,
       "tier": 2,
       "category": "Fusion",
@@ -7255,7 +7238,7 @@
         { "item": "neutrino", "quantity": 2 },
         { "item": "gamma_photon", "quantity": 2 }
       ],
-      "base_craft_time": 2.0,
+      "base_craft_time": 4.0,
       "manual_craft_time": 2.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 10.0,
@@ -7269,7 +7252,7 @@
     },
     {
       "id": "fuse_carbon",
-      "display_name": "Fuse Carbon",
+      "display_name": "Carbon",
       "recipe_id": 149,
       "tier": 2,
       "category": "Fusion",
@@ -7296,7 +7279,7 @@
     },
     {
       "id": "fuse_oxygen",
-      "display_name": "Fuse Oxygen",
+      "display_name": "Oxygen",
       "recipe_id": 150,
       "tier": 2,
       "category": "Fusion",
@@ -7324,7 +7307,7 @@
     },
     {
       "id": "fuse_neon",
-      "display_name": "Fuse Neon",
+      "display_name": "Neon",
       "recipe_id": 151,
       "tier": 2,
       "category": "Fusion",
@@ -7352,7 +7335,7 @@
     },
     {
       "id": "fuse_magnesium",
-      "display_name": "Fuse Magnesium",
+      "display_name": "Magnesium",
       "recipe_id": 152,
       "tier": 2,
       "category": "Fusion",
@@ -7380,7 +7363,7 @@
     },
     {
       "id": "fuse_silicon",
-      "display_name": "Fuse Silicon",
+      "display_name": "Silicon",
       "recipe_id": 153,
       "tier": 2,
       "category": "Fusion",
@@ -7408,7 +7391,7 @@
     },
     {
       "id": "fuse_sulfur",
-      "display_name": "Fuse Sulfur",
+      "display_name": "Sulfur",
       "recipe_id": 154,
       "tier": 2,
       "category": "Fusion",
@@ -7436,7 +7419,7 @@
     },
     {
       "id": "fuse_argon",
-      "display_name": "Fuse Argon",
+      "display_name": "Argon",
       "recipe_id": 155,
       "tier": 2,
       "category": "Fusion",
@@ -7464,7 +7447,7 @@
     },
     {
       "id": "fuse_calcium",
-      "display_name": "Fuse Calcium",
+      "display_name": "Calcium",
       "recipe_id": 156,
       "tier": 2,
       "category": "Fusion",
@@ -7492,7 +7475,7 @@
     },
     {
       "id": "fuse_titanium",
-      "display_name": "Fuse Titanium",
+      "display_name": "Titanium",
       "recipe_id": 157,
       "tier": 2,
       "category": "Fusion",
@@ -7520,7 +7503,7 @@
     },
     {
       "id": "fuse_chromium",
-      "display_name": "Fuse Chromium",
+      "display_name": "Chromium",
       "recipe_id": 158,
       "tier": 2,
       "category": "Fusion",
@@ -7548,7 +7531,7 @@
     },
     {
       "id": "fuse_iron",
-      "display_name": "Fuse Iron",
+      "display_name": "Iron",
       "recipe_id": 159,
       "tier": 2,
       "category": "Fusion",
@@ -7576,7 +7559,8 @@
     },
     {
       "id": "fuse_deuterium",
-      "display_name": "Fuse Deuterium",
+      "display_name": "Helium-4",
+      "method_label": "D-D fusion",
       "recipe_id": 208,
       "tier": 2,
       "category": "Fusion",
@@ -7589,7 +7573,7 @@
       "byproducts": [
         { "item": "gamma_photon", "quantity": 1 }
       ],
-      "base_craft_time": 1.0,
+      "base_craft_time": 4.0,
       "manual_craft_time": 1.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 5.0,
@@ -7603,7 +7587,7 @@
     },
     {
       "id": "capture_lithium",
-      "display_name": "Fuse Lithium",
+      "display_name": "Lithium",
       "recipe_id": 209,
       "tier": 2,
       "category": "Fusion",
@@ -7631,7 +7615,7 @@
     },
     {
       "id": "capture_beryllium",
-      "display_name": "Fuse Beryllium",
+      "display_name": "Beryllium",
       "recipe_id": 210,
       "tier": 2,
       "category": "Fusion",
@@ -7659,7 +7643,7 @@
     },
     {
       "id": "capture_boron",
-      "display_name": "Fuse Boron",
+      "display_name": "Boron",
       "recipe_id": 211,
       "tier": 2,
       "category": "Fusion",
@@ -7687,7 +7671,7 @@
     },
     {
       "id": "capture_nitrogen",
-      "display_name": "Fuse Nitrogen",
+      "display_name": "Nitrogen",
       "recipe_id": 212,
       "tier": 2,
       "category": "Fusion",
@@ -7715,7 +7699,7 @@
     },
     {
       "id": "capture_fluorine",
-      "display_name": "Fuse Fluorine",
+      "display_name": "Fluorine",
       "recipe_id": 213,
       "tier": 2,
       "category": "Fusion",
@@ -7743,7 +7727,7 @@
     },
     {
       "id": "capture_sodium",
-      "display_name": "Fuse Sodium",
+      "display_name": "Sodium",
       "recipe_id": 214,
       "tier": 2,
       "category": "Fusion",
@@ -7771,7 +7755,7 @@
     },
     {
       "id": "capture_aluminum",
-      "display_name": "Fuse Aluminum",
+      "display_name": "Aluminum",
       "recipe_id": 215,
       "tier": 2,
       "category": "Fusion",
@@ -7799,7 +7783,7 @@
     },
     {
       "id": "capture_phosphorus",
-      "display_name": "Fuse Phosphorus",
+      "display_name": "Phosphorus",
       "recipe_id": 216,
       "tier": 2,
       "category": "Fusion",
@@ -7827,7 +7811,7 @@
     },
     {
       "id": "capture_chlorine",
-      "display_name": "Fuse Chlorine",
+      "display_name": "Chlorine",
       "recipe_id": 217,
       "tier": 2,
       "category": "Fusion",
@@ -7855,7 +7839,7 @@
     },
     {
       "id": "capture_potassium",
-      "display_name": "Fuse Potassium",
+      "display_name": "Potassium",
       "recipe_id": 218,
       "tier": 2,
       "category": "Fusion",
@@ -7883,7 +7867,7 @@
     },
     {
       "id": "capture_scandium",
-      "display_name": "Fuse Scandium",
+      "display_name": "Scandium",
       "recipe_id": 219,
       "tier": 2,
       "category": "Fusion",
@@ -7911,7 +7895,7 @@
     },
     {
       "id": "capture_vanadium",
-      "display_name": "Fuse Vanadium",
+      "display_name": "Vanadium",
       "recipe_id": 220,
       "tier": 2,
       "category": "Fusion",
@@ -7939,7 +7923,7 @@
     },
     {
       "id": "capture_manganese",
-      "display_name": "Fuse Manganese",
+      "display_name": "Manganese",
       "recipe_id": 221,
       "tier": 2,
       "category": "Fusion",
@@ -7967,7 +7951,7 @@
     },
     {
       "id": "fission_u235",
-      "display_name": "Split U-235: Barium + Krypton",
+      "display_name": "Barium",
       "recipe_id": 160,
       "tier": 2,
       "category": "Fission",
@@ -7995,7 +7979,7 @@
     },
     {
       "id": "fission_u235_xe_sr",
-      "display_name": "Split U-235: Xenon + Strontium",
+      "display_name": "Xenon",
       "recipe_id": 242,
       "tier": 2,
       "category": "Fission",
@@ -8023,7 +8007,7 @@
     },
     {
       "id": "fission_u235_cs_rb",
-      "display_name": "Split U-235: Cesium + Rubidium",
+      "display_name": "Cesium",
       "recipe_id": 243,
       "tier": 2,
       "category": "Fission",
@@ -8051,7 +8035,7 @@
     },
     {
       "id": "fission_u235_i_y",
-      "display_name": "Split U-235: Iodine + Yttrium",
+      "display_name": "Iodine",
       "recipe_id": 244,
       "tier": 2,
       "category": "Fission",
@@ -8079,7 +8063,7 @@
     },
     {
       "id": "fission_u235_te_zr",
-      "display_name": "Split U-235: Tellurium + Zirconium",
+      "display_name": "Tellurium",
       "recipe_id": 245,
       "tier": 2,
       "category": "Fission",
@@ -8107,7 +8091,7 @@
     },
     {
       "id": "fission_u235_sb_nb",
-      "display_name": "Split U-235: Antimony + Niobium",
+      "display_name": "Antimony",
       "recipe_id": 246,
       "tier": 2,
       "category": "Fission",
@@ -8135,7 +8119,7 @@
     },
     {
       "id": "fission_u235_sn_mo",
-      "display_name": "Split U-235: Tin + Molybdenum",
+      "display_name": "Tin",
       "recipe_id": 247,
       "tier": 2,
       "category": "Fission",
@@ -8163,7 +8147,7 @@
     },
     {
       "id": "fission_pu239",
-      "display_name": "Split Plutonium: Xenon + Zirconium",
+      "display_name": "Xenon",
       "recipe_id": 161,
       "tier": 2,
       "category": "Fission",
@@ -8191,7 +8175,7 @@
     },
     {
       "id": "fission_pu239_ba_sr",
-      "display_name": "Split Plutonium: Barium + Strontium",
+      "display_name": "Barium",
       "recipe_id": 248,
       "tier": 2,
       "category": "Fission",
@@ -8219,7 +8203,7 @@
     },
     {
       "id": "fission_pu239_ce_kr",
-      "display_name": "Split Plutonium: Cerium + Krypton",
+      "display_name": "Cerium",
       "recipe_id": 249,
       "tier": 2,
       "category": "Fission",
@@ -8247,7 +8231,7 @@
     },
     {
       "id": "s_capture_cobalt",
-      "display_name": "Slow capture: Cobalt",
+      "display_name": "Cobalt",
       "recipe_id": 250,
       "tier": 2,
       "category": "Isotope",
@@ -8275,7 +8259,7 @@
     },
     {
       "id": "s_capture_nickel",
-      "display_name": "Slow capture: Nickel",
+      "display_name": "Nickel",
       "recipe_id": 251,
       "tier": 2,
       "category": "Isotope",
@@ -8303,7 +8287,7 @@
     },
     {
       "id": "s_capture_copper",
-      "display_name": "Slow capture: Copper",
+      "display_name": "Copper",
       "recipe_id": 252,
       "tier": 2,
       "category": "Isotope",
@@ -8331,7 +8315,7 @@
     },
     {
       "id": "s_capture_zinc",
-      "display_name": "Slow capture: Zinc",
+      "display_name": "Zinc",
       "recipe_id": 253,
       "tier": 2,
       "category": "Isotope",
@@ -8359,7 +8343,7 @@
     },
     {
       "id": "s_capture_gallium",
-      "display_name": "Slow capture: Gallium",
+      "display_name": "Gallium",
       "recipe_id": 254,
       "tier": 2,
       "category": "Isotope",
@@ -8387,7 +8371,7 @@
     },
     {
       "id": "s_capture_germanium",
-      "display_name": "Slow capture: Germanium",
+      "display_name": "Germanium",
       "recipe_id": 255,
       "tier": 2,
       "category": "Isotope",
@@ -8415,7 +8399,7 @@
     },
     {
       "id": "s_capture_arsenic",
-      "display_name": "Slow capture: Arsenic",
+      "display_name": "Arsenic",
       "recipe_id": 256,
       "tier": 2,
       "category": "Isotope",
@@ -8443,7 +8427,7 @@
     },
     {
       "id": "s_capture_selenium",
-      "display_name": "Slow capture: Selenium",
+      "display_name": "Selenium",
       "recipe_id": 257,
       "tier": 2,
       "category": "Isotope",
@@ -8471,7 +8455,7 @@
     },
     {
       "id": "s_capture_bromine",
-      "display_name": "Slow capture: Bromine",
+      "display_name": "Bromine",
       "recipe_id": 258,
       "tier": 2,
       "category": "Isotope",
@@ -8499,7 +8483,7 @@
     },
     {
       "id": "s_capture_technetium",
-      "display_name": "Slow capture: Technetium",
+      "display_name": "Technetium",
       "recipe_id": 259,
       "tier": 2,
       "category": "Isotope",
@@ -8527,7 +8511,7 @@
     },
     {
       "id": "s_capture_ruthenium",
-      "display_name": "Slow capture: Ruthenium",
+      "display_name": "Ruthenium",
       "recipe_id": 260,
       "tier": 2,
       "category": "Isotope",
@@ -8555,7 +8539,7 @@
     },
     {
       "id": "s_capture_rhodium",
-      "display_name": "Slow capture: Rhodium",
+      "display_name": "Rhodium",
       "recipe_id": 261,
       "tier": 2,
       "category": "Isotope",
@@ -8583,7 +8567,7 @@
     },
     {
       "id": "s_capture_palladium",
-      "display_name": "Slow capture: Palladium",
+      "display_name": "Palladium",
       "recipe_id": 262,
       "tier": 2,
       "category": "Isotope",
@@ -8611,7 +8595,7 @@
     },
     {
       "id": "s_capture_silver",
-      "display_name": "Slow capture: Silver",
+      "display_name": "Silver",
       "recipe_id": 263,
       "tier": 2,
       "category": "Isotope",
@@ -8639,7 +8623,7 @@
     },
     {
       "id": "s_capture_cadmium",
-      "display_name": "Slow capture: Cadmium",
+      "display_name": "Cadmium",
       "recipe_id": 264,
       "tier": 2,
       "category": "Isotope",
@@ -8667,7 +8651,7 @@
     },
     {
       "id": "s_capture_indium",
-      "display_name": "Slow capture: Indium",
+      "display_name": "Indium",
       "recipe_id": 265,
       "tier": 2,
       "category": "Isotope",
@@ -8695,7 +8679,7 @@
     },
     {
       "id": "s_capture_lanthanum",
-      "display_name": "Slow capture: Lanthanum",
+      "display_name": "Lanthanum",
       "recipe_id": 266,
       "tier": 2,
       "category": "Isotope",
@@ -8723,7 +8707,7 @@
     },
     {
       "id": "s_capture_praseodymium",
-      "display_name": "Slow capture: Praseodymium",
+      "display_name": "Praseodymium",
       "recipe_id": 267,
       "tier": 2,
       "category": "Isotope",
@@ -8751,7 +8735,7 @@
     },
     {
       "id": "s_capture_neodymium",
-      "display_name": "Slow capture: Neodymium",
+      "display_name": "Neodymium",
       "recipe_id": 268,
       "tier": 2,
       "category": "Isotope",
@@ -8779,7 +8763,7 @@
     },
     {
       "id": "s_capture_promethium",
-      "display_name": "Slow capture: Promethium",
+      "display_name": "Promethium",
       "recipe_id": 269,
       "tier": 2,
       "category": "Isotope",
@@ -8807,7 +8791,7 @@
     },
     {
       "id": "s_capture_samarium",
-      "display_name": "Slow capture: Samarium",
+      "display_name": "Samarium",
       "recipe_id": 270,
       "tier": 2,
       "category": "Isotope",
@@ -8835,7 +8819,7 @@
     },
     {
       "id": "s_capture_gadolinium",
-      "display_name": "Slow capture: Gadolinium",
+      "display_name": "Gadolinium",
       "recipe_id": 271,
       "tier": 2,
       "category": "Isotope",
@@ -8863,7 +8847,7 @@
     },
     {
       "id": "s_capture_terbium",
-      "display_name": "Slow capture: Terbium",
+      "display_name": "Terbium",
       "recipe_id": 272,
       "tier": 2,
       "category": "Isotope",
@@ -8891,7 +8875,7 @@
     },
     {
       "id": "s_capture_dysprosium",
-      "display_name": "Slow capture: Dysprosium",
+      "display_name": "Dysprosium",
       "recipe_id": 273,
       "tier": 2,
       "category": "Isotope",
@@ -8919,7 +8903,7 @@
     },
     {
       "id": "s_capture_holmium",
-      "display_name": "Slow capture: Holmium",
+      "display_name": "Holmium",
       "recipe_id": 274,
       "tier": 2,
       "category": "Isotope",
@@ -8947,7 +8931,7 @@
     },
     {
       "id": "s_capture_erbium",
-      "display_name": "Slow capture: Erbium",
+      "display_name": "Erbium",
       "recipe_id": 275,
       "tier": 2,
       "category": "Isotope",
@@ -8975,7 +8959,7 @@
     },
     {
       "id": "s_capture_thulium",
-      "display_name": "Slow capture: Thulium",
+      "display_name": "Thulium",
       "recipe_id": 276,
       "tier": 2,
       "category": "Isotope",
@@ -9003,7 +8987,7 @@
     },
     {
       "id": "s_capture_ytterbium",
-      "display_name": "Slow capture: Ytterbium",
+      "display_name": "Ytterbium",
       "recipe_id": 277,
       "tier": 2,
       "category": "Isotope",
@@ -9031,7 +9015,7 @@
     },
     {
       "id": "s_capture_lutetium",
-      "display_name": "Slow capture: Lutetium",
+      "display_name": "Lutetium",
       "recipe_id": 278,
       "tier": 2,
       "category": "Isotope",
@@ -9059,7 +9043,7 @@
     },
     {
       "id": "s_capture_hafnium",
-      "display_name": "Slow capture: Hafnium",
+      "display_name": "Hafnium",
       "recipe_id": 279,
       "tier": 2,
       "category": "Isotope",
@@ -9087,7 +9071,7 @@
     },
     {
       "id": "s_capture_tantalum",
-      "display_name": "Slow capture: Tantalum",
+      "display_name": "Tantalum",
       "recipe_id": 280,
       "tier": 2,
       "category": "Isotope",
@@ -9115,7 +9099,7 @@
     },
     {
       "id": "s_capture_tungsten",
-      "display_name": "Slow capture: Tungsten",
+      "display_name": "Tungsten",
       "recipe_id": 281,
       "tier": 2,
       "category": "Isotope",
@@ -9143,7 +9127,7 @@
     },
     {
       "id": "s_capture_rhenium",
-      "display_name": "Slow capture: Rhenium",
+      "display_name": "Rhenium",
       "recipe_id": 282,
       "tier": 2,
       "category": "Isotope",
@@ -9171,7 +9155,7 @@
     },
     {
       "id": "s_capture_mercury",
-      "display_name": "Slow capture: Mercury",
+      "display_name": "Mercury",
       "recipe_id": 283,
       "tier": 2,
       "category": "Isotope",
@@ -9192,14 +9176,14 @@
       "valid_buildings": ["neutron_capture"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "lanthanides_and_heavy_metals",
+      "required_research": "precious_metals",
       "unlocks_research": null,
       "is_simplified": true,
       "simplification_note": "One neutron is absorbed, then a beta decay turns a neutron into a proton (Z + 1)."
     },
     {
       "id": "r_capture_europium",
-      "display_name": "Fast capture: Europium",
+      "display_name": "Europium",
       "recipe_id": 284,
       "tier": 2,
       "category": "Isotope",
@@ -9227,7 +9211,7 @@
     },
     {
       "id": "r_capture_osmium",
-      "display_name": "Fast capture: Osmium",
+      "display_name": "Osmium",
       "recipe_id": 285,
       "tier": 2,
       "category": "Isotope",
@@ -9241,7 +9225,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 50.0,
+      "base_craft_time": 40.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9255,7 +9239,7 @@
     },
     {
       "id": "r_capture_iridium",
-      "display_name": "Fast capture: Iridium",
+      "display_name": "Iridium",
       "recipe_id": 286,
       "tier": 2,
       "category": "Isotope",
@@ -9269,7 +9253,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 50.0,
+      "base_craft_time": 40.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9283,7 +9267,7 @@
     },
     {
       "id": "r_capture_platinum",
-      "display_name": "Fast capture: Platinum",
+      "display_name": "Platinum",
       "recipe_id": 287,
       "tier": 2,
       "category": "Isotope",
@@ -9297,7 +9281,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 40.0,
+      "base_craft_time": 50.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9311,7 +9295,7 @@
     },
     {
       "id": "r_capture_gold",
-      "display_name": "Fast capture: Gold",
+      "display_name": "Gold",
       "recipe_id": 288,
       "tier": 2,
       "category": "Isotope",
@@ -9325,7 +9309,7 @@
       "byproducts": [
         { "item": "neutrino", "quantity": 1 }
       ],
-      "base_craft_time": 40.0,
+      "base_craft_time": 50.0,
       "manual_craft_time": 30.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 180.0,
@@ -9339,7 +9323,7 @@
     },
     {
       "id": "collect_uranium",
-      "display_name": "Harvest Uranium",
+      "display_name": "Uranium",
       "recipe_id": 162,
       "tier": 2,
       "category": "Element",
@@ -9362,7 +9346,7 @@
     },
     {
       "id": "collect_plutonium",
-      "display_name": "Harvest Plutonium",
+      "display_name": "Plutonium",
       "recipe_id": 163,
       "tier": 2,
       "category": "Element",
@@ -9385,7 +9369,7 @@
     },
     {
       "id": "collect_neutron",
-      "display_name": "Collect Neutron",
+      "display_name": "Neutron",
       "recipe_id": 224,
       "tier": 2,
       "category": "Nucleon",
@@ -9408,7 +9392,7 @@
     },
     {
       "id": "irradiate_thorium",
-      "display_name": "Irradiate Thorium",
+      "display_name": "Thorium-233",
       "recipe_id": 225,
       "tier": 2,
       "category": "Isotope",
@@ -9434,7 +9418,7 @@
     },
     {
       "id": "irradiate_radium",
-      "display_name": "Irradiate Radium",
+      "display_name": "Radium-227",
       "recipe_id": 226,
       "tier": 2,
       "category": "Isotope",
@@ -9460,7 +9444,7 @@
     },
     {
       "id": "irradiate_radon",
-      "display_name": "Irradiate Radon",
+      "display_name": "Radon-223",
       "recipe_id": 227,
       "tier": 2,
       "category": "Isotope",
@@ -9486,7 +9470,7 @@
     },
     {
       "id": "irradiate_lead",
-      "display_name": "Irradiate Lead",
+      "display_name": "Lead-209",
       "recipe_id": 228,
       "tier": 2,
       "category": "Isotope",
@@ -9512,7 +9496,7 @@
     },
     {
       "id": "strip_radon",
-      "display_name": "Strip Radon",
+      "display_name": "Radon-211",
       "recipe_id": 229,
       "tier": 2,
       "category": "Isotope",
@@ -9539,7 +9523,7 @@
     },
     {
       "id": "strip_lead",
-      "display_name": "Strip Lead",
+      "display_name": "Lead-201",
       "recipe_id": 230,
       "tier": 2,
       "category": "Isotope",
@@ -9566,7 +9550,7 @@
     },
     {
       "id": "decay_uranium",
-      "display_name": "Uranium Decay",
+      "display_name": "Thorium",
       "recipe_id": 231,
       "tier": 2,
       "category": "Isotope",
@@ -9593,7 +9577,7 @@
     },
     {
       "id": "decay_thorium",
-      "display_name": "Thorium Decay",
+      "display_name": "Radium",
       "recipe_id": 232,
       "tier": 2,
       "category": "Isotope",
@@ -9620,7 +9604,7 @@
     },
     {
       "id": "decay_radium",
-      "display_name": "Radium Decay",
+      "display_name": "Radon",
       "recipe_id": 233,
       "tier": 2,
       "category": "Isotope",
@@ -9647,7 +9631,7 @@
     },
     {
       "id": "decay_radon",
-      "display_name": "Radon Decay",
+      "display_name": "Polonium",
       "recipe_id": 234,
       "tier": 2,
       "category": "Isotope",
@@ -9674,7 +9658,7 @@
     },
     {
       "id": "decay_polonium",
-      "display_name": "Polonium Decay",
+      "display_name": "Lead",
       "recipe_id": 235,
       "tier": 2,
       "category": "Isotope",
@@ -9701,7 +9685,7 @@
     },
     {
       "id": "decay_thorium_233",
-      "display_name": "Thorium-233 Decay",
+      "display_name": "Protactinium",
       "recipe_id": 236,
       "tier": 2,
       "category": "Isotope",
@@ -9728,7 +9712,7 @@
     },
     {
       "id": "decay_radium_227",
-      "display_name": "Radium-227 Decay",
+      "display_name": "Actinium",
       "recipe_id": 237,
       "tier": 2,
       "category": "Isotope",
@@ -9755,7 +9739,7 @@
     },
     {
       "id": "decay_radon_223",
-      "display_name": "Radon-223 Decay",
+      "display_name": "Francium",
       "recipe_id": 238,
       "tier": 2,
       "category": "Isotope",
@@ -9782,7 +9766,7 @@
     },
     {
       "id": "decay_lead_209",
-      "display_name": "Lead-209 Decay",
+      "display_name": "Bismuth",
       "recipe_id": 239,
       "tier": 2,
       "category": "Isotope",
@@ -9809,7 +9793,7 @@
     },
     {
       "id": "decay_radon_211",
-      "display_name": "Radon-211 Decay",
+      "display_name": "Astatine",
       "recipe_id": 240,
       "tier": 2,
       "category": "Isotope",
@@ -9836,7 +9820,7 @@
     },
     {
       "id": "decay_lead_201",
-      "display_name": "Lead-201 Decay",
+      "display_name": "Thallium",
       "recipe_id": 241,
       "tier": 2,
       "category": "Isotope",
@@ -9863,19 +9847,19 @@
     },
 
     { "_comment": "--- CHEMISTRY C1: element harvest recipes (Element Harvester) + inorganic synthesis (Compound Synthesizer). Chem/Bio Phase 4a. ---",
-      "id": "collect_hydrogen", "display_name": "Mine Hydrogen", "recipe_id": 164, "tier": 3, "category": "Element",
+      "id": "collect_hydrogen", "display_name": "Hydrogen",
       "inputs": [], "neutron_adjustment": [], "output_item": "hydrogen", "output_quantity": 1, "byproducts": [],
       "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
-    { "id": "collect_carbon", "display_name": "Mine Carbon", "recipe_id": 165, "tier": 3, "category": "Element",
+    { "id": "collect_carbon", "display_name": "Carbon",
       "inputs": [], "neutron_adjustment": [], "output_item": "carbon", "output_quantity": 1, "byproducts": [],
       "base_craft_time": 2.0, "manual_craft_time": 2.0, "power_cost_is_dynamic": false, "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["element_harvester"], "can_craft_manually": true, "known_from_start": false,
       "required_research": "chemistry_lab", "unlocks_research": null, "is_simplified": false, "simplification_note": "" },
     {
       "id": "collect_oxygen",
-      "display_name": "Mine Oxygen",
+      "display_name": "Oxygen",
       "recipe_id": 166,
       "tier": 3,
       "category": "Element",
@@ -9898,7 +9882,7 @@
     },
     {
       "id": "collect_sodium",
-      "display_name": "Mine Sodium",
+      "display_name": "Sodium",
       "recipe_id": 167,
       "tier": 3,
       "category": "Element",
@@ -9921,7 +9905,7 @@
     },
     {
       "id": "collect_chlorine",
-      "display_name": "Mine Chlorine",
+      "display_name": "Chlorine",
       "recipe_id": 168,
       "tier": 3,
       "category": "Element",
@@ -9944,7 +9928,7 @@
     },
     {
       "id": "collect_sulfur",
-      "display_name": "Mine Sulfur",
+      "display_name": "Sulfur",
       "recipe_id": 169,
       "tier": 3,
       "category": "Element",
@@ -9988,7 +9972,7 @@
     {
       "_comment": "--- CHEMISTRY C2: metal harvest (Metal Harvester) + reactions/catalysis (Catalytic Reactor). Chem/Bio Phase 4b. ---",
       "id": "collect_iron",
-      "display_name": "Mine Iron",
+      "display_name": "Iron",
       "recipe_id": 173,
       "tier": 3,
       "category": "Element",
@@ -10011,7 +9995,7 @@
     },
     {
       "id": "collect_copper",
-      "display_name": "Mine Copper",
+      "display_name": "Copper",
       "recipe_id": 174,
       "tier": 3,
       "category": "Element",
@@ -10034,7 +10018,7 @@
     },
     {
       "id": "collect_aluminum",
-      "display_name": "Mine Aluminum",
+      "display_name": "Aluminum",
       "recipe_id": 175,
       "tier": 3,
       "category": "Element",
@@ -10057,7 +10041,7 @@
     },
     {
       "id": "collect_nickel",
-      "display_name": "Mine Nickel",
+      "display_name": "Nickel",
       "recipe_id": 176,
       "tier": 3,
       "category": "Element",
@@ -10159,7 +10143,7 @@
     {
       "_comment": "--- BIOLOGY B1: organic-compound harvest (Organic Harvester) + biomolecule synthesis (Biosynthesizer). Chem/Bio Biology track. ---",
       "id": "collect_glucose",
-      "display_name": "Harvest Glucose",
+      "display_name": "Glucose",
       "recipe_id": 189,
       "tier": 3,
       "category": "Molecule",
@@ -10182,7 +10166,7 @@
     },
     {
       "id": "collect_amino_acid",
-      "display_name": "Harvest Amino Acid",
+      "display_name": "Amino Acid",
       "recipe_id": 190,
       "tier": 3,
       "category": "Molecule",
@@ -10205,7 +10189,7 @@
     },
     {
       "id": "collect_fatty_acid",
-      "display_name": "Harvest Fatty Acid",
+      "display_name": "Fatty Acid",
       "recipe_id": 191,
       "tier": 3,
       "category": "Molecule",
@@ -10228,7 +10212,7 @@
     },
     {
       "id": "collect_nucleotide",
-      "display_name": "Harvest Nucleotide",
+      "display_name": "Nucleotide",
       "recipe_id": 192,
       "tier": 3,
       "category": "Molecule",
@@ -10419,6 +10403,7 @@
       "input_slot_labels": [],
       "is_entropy_sink": false,
       "footprint": [2, 1],
+      "structure_kind": "NucleonHarvester",
       "ports": [
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
@@ -10499,6 +10484,105 @@
       "decay_collection_rate": 0.0,
       "codex_entry": "A sorting gate. Every item that arrives is checked against your rules and sent out of the matching side, so one belt can carry several items to several buildings.",
       "is_item_filter": true
+    },
+    {
+      "id": "splitter_2",
+      "display_name": "Belt Splitter (2-way)",
+      "description": "Forks one belt into two. Items come in one side and leave by the left and right sides in turn, so each branch gets half. Any item, no sorting.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 27,
+      "tier": 1,
+      "category": "Core",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": false,
+      "is_power_source": false,
+      "base_power_cost_ev": 0.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": [],
+      "input_slot_count": 0,
+      "input_slot_labels": [],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 40,
+      "base_max_output_items": 10,
+      "base_max_input_items_per_slot": 10,
+      "upgrade_levels": [],
+      "storage_upgrade_levels": [],
+      "input_upgrade_levels": [],
+      "has_special_upgrade": false,
+      "special_upgrade_id": "",
+      "required_research": "automation_i",
+      "available_from_start": false,
+      "tutorial_note": "Not taught in the tutorial. Pure logistics: no recipe, no power, no craft time.",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A fork in the flow. Whatever arrives is dealt out to the outgoing belts one at a time, taking turns, so a single line of particles can feed two buildings at once. A blocked branch is skipped until it clears.",
+      "is_splitter": true,
+      "structure_kind": "BeltSplitter"
+    },
+    {
+      "id": "splitter_3",
+      "display_name": "Belt Splitter (3-way)",
+      "description": "Forks one belt into three. Items come in one side and leave by the left, front and right sides in turn, so each branch gets a third. Any item, no sorting.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 28,
+      "tier": 1,
+      "category": "Core",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": false,
+      "is_power_source": false,
+      "base_power_cost_ev": 0.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": [],
+      "input_slot_count": 0,
+      "input_slot_labels": [],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 60,
+      "base_max_output_items": 10,
+      "base_max_input_items_per_slot": 10,
+      "upgrade_levels": [],
+      "storage_upgrade_levels": [],
+      "input_upgrade_levels": [],
+      "has_special_upgrade": false,
+      "special_upgrade_id": "",
+      "required_research": "automation_i",
+      "available_from_start": false,
+      "tutorial_note": "Not taught in the tutorial. Pure logistics: no recipe, no power, no craft time.",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A three-way fork. Each item that arrives goes out the next side in turn, left, ahead, right, so one belt can feed three buildings evenly. A blocked branch is skipped until it clears.",
+      "is_splitter": true,
+      "structure_kind": "BeltSplitter"
     },
     {
       "id": "neutron_capture",
@@ -11174,7 +11258,7 @@
       "input_slot_labels": ["Nucleus A", "Nucleus B"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
-      "structure_kind": "None",
+      "structure_kind": "FusionReactor",
       "_note_ports": "Inputs on E/W/N edges, output on the S edge (mirrors the Atom Generator).",
       "ports": [
         { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
@@ -11867,7 +11951,7 @@
       "_note_purchase": "Bought from the Build menu after field_synthesis. Always placed as a pair (one Harvester per quark flavour). Price = base x multiplier^(pairs bought this run).",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 300,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 2,
       "codex_entry": "A region of space dense with confined quarks. Positive-polarity zones yield Up Quarks; negative-polarity zones yield Down Quarks. Tap to extract a particle, then wait out the field's recharge."
     },
@@ -11883,7 +11967,7 @@
       "field_icon_path": "TODO",
       "purchase_research": "field_synthesis",
       "purchase_cost_base": 200,
-      "purchase_cost_multiplier": 10.0,
+      "purchase_cost_multiplier": 3.0,
       "purchase_group_size": 1,
       "codex_entry": "A region saturated with free leptons. Tap to collect an Electron, then wait out the field's recharge. Electrons are essential for completing any atom."
     },
@@ -12645,7 +12729,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "The reset clears your inventory, buildings, and entropy. What you keep: prestige currency and a research memory discount on nodes you have already unlocked. Initiate it — you will return faster than you left.",
+          "text": "The reset clears your inventory, buildings, and entropy. What you keep: prestige currency, to spend on permanent upgrades that speed up every run. Initiate it — you will return faster than you left.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12877,7 +12961,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Every element above hydrogen needs neutrons as well as protons, and both of your quark fields already feed the Combiner. Research Field Synthesis to condense new fields of your own.",
+          "text": "Every element above hydrogen needs neutrons as well as protons. Before you build for them, teach the Atom Generator what to do with them.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -12932,7 +13016,7 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs. Your Atom Generator can only make hydrogen for now, so sell the neutrons at the Demon until Nucleosynthesis teaches it helium.",
+          "text": "Protons from one Combiner, neutrons from the other, electrons from your lepton field. That is everything helium needs, and your Atom Generator already knows what to do with it.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -13119,7 +13203,7 @@
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger. First, move your neutron belt off the Demon and into the Atom Generator. Then set the Atom Generator to Helium-4.",
+          "text": "Nucleosynthesis is active. Helium-4 is now craftable — two protons, two neutrons, two electrons. It sells for ten entropy, twice hydrogen, so on its own it earns no more. Its real value is as fuel for something far bigger.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",
@@ -13128,6 +13212,14 @@
         {
           "speaker_name": "The Architect",
           "text": "Helium-4 is as far as the Atom Generator goes. Every heavier element must be fused from lighter ones, and that road starts with Helium.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Helium-4 is as far as the Atom Generator goes. You have protons and electrons. Neutrons are what is missing, and both of your quark fields already feed the Combiner. Research Field Synthesis to condense new fields of your own.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -14090,6 +14182,33 @@
       "on_enter": { "dialogue_id": "hydrogen_loop_context" }
     },
 
+    { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
+
+    { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
+    {
+      "id": "post_tutorial_intro",
+      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "post_tutorial_intro" }
+    },
+
+    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
+    {
+      "id": "buy_atomic_assembly",
+      "hint": "Purchase Nucleosynthesis in the Research panel to unlock Helium-4.",
+      "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
+      "on_enter": {
+        "dialogue_id": "intro_atomic_assembly_context",
+        "pulse_button_id": "btn-research"
+      }
+    },
+    {
+      "id": "atomic_assembly_unlocked",
+      "hint": "",
+      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
+      "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
+    },
+
     { "_comment": "--- PHASE 6b: FIELD SYNTHESIS (more quark fields, so a second Combiner can make neutrons for helium) ---" },
     {
       "id": "buy_field_synthesis",
@@ -14135,45 +14254,11 @@
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:harvester>strong_force_combiner", "highlight_mode": "Full" }
     },
     {
-      "_comment": "The Atom Generator makes only Hydrogen until Nucleosynthesis, so neutrons fed into it sat unused (#307). Sell them at the Demon until then; reroute_neutrons_to_atom_gen moves the belt after the research. Saves on the old route_neutrons_to_atom_gen step resume here (ECSLoadBridge.RetiredSteps).",
-      "id": "route_neutrons_to_demon",
-      "hint": "Belt the Neutron Combiner's output into Maxwell's Demon. Your Atom Generator can't use neutrons until Nucleosynthesis, so sell them for now.",
-      "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "maxwells_demon", "min_count": 1 },
-      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>maxwells_demon", "highlight_mode": "Full" }
-    },
-
-    { "_comment": "--- PHASE ⑦ (building upgrades) was removed: the 1,000 entropy speed upgrade stalled the early game. Saves on those steps resume at post_tutorial_intro (ECSLoadBridge.RetiredSteps). ---" },
-
-    { "_comment": "--- PHASE ⑧: ATOMIC ASSEMBLY ---" },
-    {
-      "id": "post_tutorial_intro",
-      "hint": "Your hydrogen loop is running. Save up 500 entropy to research Nucleosynthesis.",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": { "dialogue_id": "post_tutorial_intro" }
-    },
-
-    { "_comment": "--- ⑧a: Nucleosynthesis unlock (insert motivation/pacing steps before this if needed) ---" },
-    {
-      "id": "buy_atomic_assembly",
-      "hint": "Purchase Nucleosynthesis in the Research panel to unlock Helium-4.",
-      "advance_condition": { "type": "ResearchUnlocked", "research_id": "atomic_assembly" },
-      "on_enter": {
-        "dialogue_id": "intro_atomic_assembly_context",
-        "pulse_button_id": "btn-research"
-      }
-    },
-    {
-      "id": "atomic_assembly_unlocked",
-      "hint": "",
-      "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
-      "on_enter": { "dialogue_id": "atomic_assembly_unlocked_context" }
-    },
-    {
-      "_comment": "#307: the neutron belt went to the Demon until now. Its output tile is taken, so the route glow appears once that belt is removed (route searches wait for it). Both Combiners must feed the Atom Generator: protons and neutrons.",
-      "id": "reroute_neutrons_to_atom_gen",
-      "hint": "Remove the Neutron Combiner's belt to the Demon (Build menu, Deconstruct), then belt the Neutron Combiner into the Atom Generator's free input.",
+      "_comment": "Nucleosynthesis now comes before the neutron line, so this belt goes straight in and Helium works as soon as neutrons arrive; selling neutrons at the Demon first made the player lay it twice. Both Combiners must feed the Atom Generator: protons and neutrons. Saves on the retired Demon and reroute steps resume here (ECSLoadBridge.RetiredSteps) and may still have a Demon belt on this output, so the hint covers removing it; the route glow waits for the tile to free up.",
+      "id": "route_neutrons_to_atom_gen",
+      "hint": "Belt the Neutron Combiner's output into the Atom Generator's free input. If that output already has a belt, remove it first (belt tool: switch Create to Destroy).",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "strong_force_combiner", "building_id": "atomic_assembler", "min_count": 2 },
-      "on_enter": { "pulse_button_id": "btn-deconstruct", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
+      "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:strong_force_combiner>atomic_assembler", "highlight_mode": "Full" }
     },
 
     { "_comment": "--- ⑧b: First element — He-4 (insert per-element steps here; Li, C, O, Si, Fe can each get a step) ---" },
@@ -14211,7 +14296,7 @@
     {
       "_comment": "ItemCraftedMin: the Atom Generator's belt still runs to the Demon, which sells the Deuterium before it reaches the inventory.",
       "id": "craft_first_deuterium",
-      "hint": "Tap the Atom Generator and set its recipe to Assemble Deuterium: 1 proton, 1 neutron, 1 electron.",
+      "hint": "Tap the Atom Generator and set its recipe to Deuterium: 1 proton, 1 neutron, 1 electron.",
       "advance_condition": {
         "type": "ItemCraftedMin",
         "items": [{ "item_id": 14, "quantity": 2 }]
@@ -14255,14 +14340,14 @@
     {
       "_comment": "Was route_helium_to_reactor (saves map across via ECSLoadBridge.RetiredSteps). The Atom Generator's output still has its belt to the Demon, so the player removes it first; the route guide only lights a free output front.",
       "id": "route_deuterium_to_reactor",
-      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
+      "hint": "Remove the belt from the Atom Generator to Maxwell's Demon (belt tool: switch Create to Destroy, or Builder, Deconstruct), then belt the Atom Generator's Deuterium into the Fusion Reactor.",
       "advance_condition": { "type": "ConveyorLinked", "from_building_id": "atomic_assembler", "building_id": "fusion_reactor", "min_count": 1 },
       "on_enter": { "pulse_button_id": "btn-place-conveyor", "highlight_target": "route:atomic_assembler>fusion_reactor", "highlight_mode": "Full" }
     },
     {
       "_comment": "BuildingRecipeSet, not ItemCraftedMin: Helium was already crafted this session by the Atom Generator. The reward covers the second reactor (1,500e) and its generator (150e).",
       "id": "fuse_first_helium",
-      "hint": "Tap the Fusion Reactor and set its recipe to Fuse Deuterium. Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.",
+      "hint": "Tap the Fusion Reactor and set its recipe to Helium-4 from 2 Deuterium (D-D fusion). Two Deuterium become one Helium, and the gamma ray that escapes pays bonus entropy.",
       "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 208 },
       "reward_entropy": 1800,
       "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
@@ -14283,7 +14368,7 @@
     {
       "_comment": "Set before routing: the reactor-to-reactor route glow picks its start and end from the reactors' recipes (Helium maker to Helium user).",
       "id": "set_carbon_recipe",
-      "hint": "Tap the new Fusion Reactor and set its recipe to Fuse Carbon. Three Helium-4 become one Carbon.",
+      "hint": "Tap the new Fusion Reactor and set its recipe to Carbon. Three Helium-4 become one Carbon.",
       "advance_condition": { "type": "BuildingRecipeSet", "building_id": "fusion_reactor", "recipe_id": 149 },
       "on_enter": { "highlight_target": "fusion_reactor", "highlight_mode": "VisualOnly" }
     },

@@ -28,6 +28,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 45
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: beb5636689c5d6044aa328785598c25c, type: 2}
   unlocksRecipes:
@@ -37,7 +38,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen
     atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing
     bare protons, which is why every fusion experiment on Earth starts with it.

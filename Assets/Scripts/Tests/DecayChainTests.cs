@@ -164,8 +164,8 @@ namespace MobileIdleBuilder.Tests
             world.SetTime(new TimeData(0, 0.1f));
             world.Update();
 
-            Assert.AreEqual(Thorium, em.GetComponentData<ConveyorItemData>(east).ItemID, "the element leaves East");
-            Assert.AreEqual(Alpha,   em.GetComponentData<ConveyorItemData>(south).ItemID, "the alpha particle leaves South");
+            Assert.AreEqual(Thorium, ConveyorItems.Front(em, east).ItemID, "the element leaves East");
+            Assert.AreEqual(Alpha,   ConveyorItems.Front(em, south).ItemID, "the alpha particle leaves South");
         }
     }
 }

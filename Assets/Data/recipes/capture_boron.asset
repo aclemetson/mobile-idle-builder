@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: capture_boron
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: capture_boron
-  displayName: Fuse Boron
+  displayName: Boron
+  methodLabel: 
   recipeId: 211
   tier: 2
   category: 8

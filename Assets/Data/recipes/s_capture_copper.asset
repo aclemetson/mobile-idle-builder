@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_copper
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_copper
-  displayName: 'Slow capture: Copper'
+  displayName: Copper
+  methodLabel: 
   recipeId: 252
   tier: 2
   category: 4

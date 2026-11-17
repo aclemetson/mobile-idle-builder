@@ -4,9 +4,10 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Vector-drawn UI icon (close / check / rotate / flip) used in place of the ✕ ✓ ↻ ⇄ text glyphs.
+    /// Vector-drawn UI icon (close / check / rotate / flip / info / empty) used in place of the ✕ ✓ ↻ ⇄ ⓘ ⤓
+    /// text glyphs.
     /// The Android default font has none of those glyphs, so text buttons rendered blank on device
-    /// (issue #165, docs/mobile-icon-font-fix.md, Option B). Drawing with Painter2D removes the font
+    /// (issue #165, Option B: vector icons instead of a symbol font). Drawing with Painter2D removes the font
     /// dependency entirely and stays crisp at any DPI.
     ///
     /// The stroke uses the inherited text <c>color</c>, so existing button color rules (and
@@ -18,7 +19,7 @@ namespace MobileIdleBuilder
     [UxmlElement]
     public partial class GlyphIcon : VisualElement
     {
-        public enum Kind { Close, Check, Rotate, Flip }
+        public enum Kind { Close, Check, Rotate, Flip, Info, Empty }
 
         public const string UssClass     = "glyph-icon";
         public const string HostUssClass = "glyph-host";
@@ -106,6 +107,8 @@ namespace MobileIdleBuilder
                 case Kind.Check:  DrawCheck(p, c, h);  break;
                 case Kind.Rotate: DrawRotate(p, c, h); break;
                 case Kind.Flip:   DrawFlip(p, c, h);   break;
+                case Kind.Info:   DrawInfo(p, c, h);   break;
+                case Kind.Empty:  DrawEmpty(p, c, h);  break;
             }
         }
 
@@ -170,6 +173,43 @@ namespace MobileIdleBuilder
             p.LineTo(c + new Vector2(-x,  y));
             p.LineTo(c + new Vector2(-x + head,  y + head));
             p.Stroke();
+        }
+
+        // ⓘ: a circle with a dot over a short stem.
+        static void DrawInfo(Painter2D p, Vector2 c, float h)
+        {
+            float radius = h * 0.82f;
+            p.BeginPath();
+            p.Arc(c, radius, new Angle(0f, AngleUnit.Degree), new Angle(360f, AngleUnit.Degree));
+            p.Stroke();
+
+            p.BeginPath();
+            p.MoveTo(c + new Vector2(0f, -0.05f * h));
+            p.LineTo(c + new Vector2(0f,  0.45f * h));
+            p.Stroke();
+
+            p.BeginPath();
+            p.Arc(c + new Vector2(0f, -0.38f * h), p.lineWidth * 0.6f,
+                  new Angle(0f, AngleUnit.Degree), new Angle(360f, AngleUnit.Degree));
+            p.Fill();
+        }
+
+        // ⤓ into a tray: "empty this into the inventory". A down arrow dropping into an open box.
+        static void DrawEmpty(Painter2D p, Vector2 c, float h)
+        {
+            float w = h * 0.8f;
+            p.BeginPath();                                    // tray: open-topped U
+            p.MoveTo(c + new Vector2(-w, 0.15f * h));
+            p.LineTo(c + new Vector2(-w, 0.8f  * h));
+            p.LineTo(c + new Vector2( w, 0.8f  * h));
+            p.LineTo(c + new Vector2( w, 0.15f * h));
+            p.Stroke();
+
+            p.BeginPath();                                    // arrow shaft
+            p.MoveTo(c + new Vector2(0f, -0.85f * h));
+            p.LineTo(c + new Vector2(0f,  0.2f  * h));
+            p.Stroke();
+            FillArrowhead(p, c + new Vector2(0f, 0.25f * h), new Vector2(0f, 1f), h * 0.6f);
         }
 
         static void FillArrowhead(Painter2D p, Vector2 at, Vector2 dir, float size)

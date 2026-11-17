@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: decay_lead_209
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: decay_lead_209
-  displayName: Lead-209 Decay
+  displayName: Bismuth
+  methodLabel: 
   recipeId: 239
   tier: 2
   category: 4

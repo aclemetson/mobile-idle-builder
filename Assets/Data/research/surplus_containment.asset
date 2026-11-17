@@ -24,17 +24,17 @@ MonoBehaviour:
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 217000
+  costBaseCurrency: 108000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
+  effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch: []
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.3
   codexEntry: "Once production runs unattended, the bottleneck shifts from speed
     to storage. Containment fields let a building hold far more finished output before
     it must pause \u2014 the foundation of idle stockpiling."

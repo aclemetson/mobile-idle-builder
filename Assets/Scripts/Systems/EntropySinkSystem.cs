@@ -25,6 +25,8 @@ namespace MobileIdleBuilder
         {
             var db = ItemDatabase.Instance;
             long totalEntropy = 0;
+            // Cyclotron Kick boost (1 when none is running).
+            float boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1f;
 
             foreach (var (building, inputSlots) in
                 SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<BuildingInputSlot>>()
@@ -46,7 +48,7 @@ namespace MobileIdleBuilder
                         if (itemSO != null && itemSO.baseSellValue > 0f) sellValue = itemSO.baseSellValue;
                     }
 
-                    totalEntropy += (long)(sellValue * quantity);
+                    totalEntropy += (long)(sellValue * quantity * boost);
                 }
 
                 inputSlots.Clear();
@@ -57,6 +59,14 @@ namespace MobileIdleBuilder
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency += totalEntropy;
             SystemAPI.SetSingleton(progress);
+
+            if (SystemAPI.HasSingleton<AutomationIncome>())
+            {
+                var income = SystemAPI.GetSingleton<AutomationIncome>();
+                income.Total     += totalEntropy;
+                income.Unboosted += totalEntropy / (double)boost;
+                SystemAPI.SetSingleton(income);
+            }
         }
     }
 }

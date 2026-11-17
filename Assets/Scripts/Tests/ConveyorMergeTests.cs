@@ -63,9 +63,9 @@ namespace MobileIdleBuilder.Tests
         }
 
         private void PutItem(Entity e, float progress = 1f) =>
-            _em.AddComponentData(e, new ConveyorItemData { ItemID = ItemId, Progress = progress });
+            ConveyorItems.Add(_em, e, ItemId, progress);
 
-        private bool HasItem(Entity e) => _em.HasComponent<ConveyorItemData>(e);
+        private bool HasItem(Entity e) => ConveyorItems.Has(_em, e);
 
         // ── Two inbounds alternate (round-robin) ─────────────────────────────
 
@@ -87,13 +87,43 @@ namespace MobileIdleBuilder.Tests
                 "the merge cursor advanced past the branch it served");
 
             // Drain the merge cell and re-arm the served branch; the OTHER branch must go next.
-            _em.RemoveComponent<ConveyorItemData>(merge);
+            ConveyorItems.Clear(_em, merge);
             PutItem(north);
 
             Tick();
             Assert.IsTrue(HasItem(merge));
             Assert.IsFalse(HasItem(west),  "the west branch is served on the second turn");
             Assert.IsTrue(HasItem(north),  "the north branch now waits");
+        }
+
+        // ── Each item remembers the arm it came in on (visuals) ──────────────
+
+        [Test]
+        public void MergedItems_RecordTheEdgeTheyEnteredThrough()
+        {
+            var merge = Seg(new int2(1, 0), East, Entity.Null);
+            var west  = Seg(new int2(0, 0), East,  merge);
+            var north = Seg(new int2(1, 1), South, merge);
+            PutItem(west);
+            PutItem(north);
+
+            Tick();   // cursor 0 serves north first
+            var first = _em.GetBuffer<ConveyorItem>(merge)[0];
+            Assert.AreEqual(North, first.EntryEdgeOr(-1), "the north branch's item entered through the north edge");
+
+            ConveyorItems.Clear(_em, merge);
+            Tick();   // then west
+            var second = _em.GetBuffer<ConveyorItem>(merge)[0];
+            Assert.AreEqual(West, second.EntryEdgeOr(-1), "the west branch's item entered through the west edge");
+        }
+
+        [Test]
+        public void ItemWithoutARecordedEdge_UsesTheFallback()
+        {
+            var item = new ConveyorItem { ItemID = ItemId, Progress = 0.5f };
+            Assert.AreEqual(South, item.EntryEdgeOr(South));
+            item.InEdge = ConveyorItem.EncodeEdge(North);
+            Assert.AreEqual(North, item.EntryEdgeOr(South));
         }
 
         // ── Three inbounds: cell accepts from a third side ───────────────────

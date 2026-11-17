@@ -28,6 +28,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 900
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
   - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
@@ -39,7 +40,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Matter heavier than iron has no cheap fusion route \u2014 it must
     enter the economy from a fissile field. Harvest uranium and plutonium to feed
     the fission ladder back down toward iron."

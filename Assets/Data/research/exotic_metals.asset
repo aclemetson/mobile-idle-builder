@@ -14,20 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: exotic_metals
   displayName: Exotic Metals
-  description: Fast neutron capture for Osmium and Iridium, the densest metals there
-    are.
+  description: Fast neutron capture from Rhenium to Osmium and Iridium, the densest
+    metals there are.
   icon: {fileID: 0}
   branch: 2
   prerequisites:
-  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
-  depthInTree: 5
+  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
+  depthInTree: 9
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 23700000
+  costBaseCurrency: 49700000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
   - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
@@ -37,10 +38,8 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
-  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: "Platinum catalyses the reactions that make fuel cells possible. Tungsten
     has the highest melting point of any element \u2014 used in rocket nozzles and
     light filaments."

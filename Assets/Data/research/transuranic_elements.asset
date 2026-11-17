@@ -19,9 +19,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
-  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
-  depthInTree: 6
+  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
+  depthInTree: 11
   block: synthetic_frontier
   treeX: -1
   treeY: -1
@@ -29,6 +28,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
   - {fileID: 11400000, guid: 2f5ade56dc84849479196cd977a31212, type: 2}
@@ -53,7 +53,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
   - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: "Plutonium does not occur naturally on Earth \u2014 it must be synthesised.
     Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional
     physics."

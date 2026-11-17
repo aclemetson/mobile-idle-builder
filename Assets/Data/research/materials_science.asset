@@ -24,10 +24,11 @@ MonoBehaviour:
   block: chemistry_world
   treeX: -1
   treeY: -1
-  costBaseCurrency: 80900000
+  costBaseCurrency: 81000000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
   - {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
@@ -42,7 +43,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.1
   codexEntry: Steel defined the industrial age. Carbon fibre enables spacecraft.
     Titanium alloys survive re-entry. Materials science is the discipline that turns
     molecules into civilisation.

@@ -30,10 +30,25 @@ namespace MobileIdleBuilder
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
 
-            // Global output multiplier from the megastructure (1 when the singleton is absent).
-            float globalOutputMult = SystemAPI.HasSingleton<GlobalProductionBonus>()
-                ? SystemAPI.GetSingleton<GlobalProductionBonus>().OutputMult
-                : 1f;
+            // Global multipliers (1 when a singleton is absent): megastructure and prestige shop. Speed now
+            // applies to harvesters too, as it always has in the idle snapshot (IdleGraphAnalyzer scales
+            // collector rates by the global speed); without it a speed bonus could never lift a chain that
+            // starts at a harvester.
+            float globalOutputMult = 1f;
+            float globalSpeedMult  = 1f;
+            if (SystemAPI.HasSingleton<GlobalProductionBonus>())
+            {
+                var gb = SystemAPI.GetSingleton<GlobalProductionBonus>();
+                globalOutputMult = gb.OutputMult;
+                globalSpeedMult  = gb.SpeedMult;
+            }
+            if (SystemAPI.HasSingleton<PrestigeData>())
+            {
+                var pd = SystemAPI.GetSingleton<PrestigeData>();
+                if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
+                if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
+            }
+            if (globalSpeedMult <= 0f) globalSpeedMult = 1f;
 
             foreach (var (collector, building, recipeOutputSlots, outputSlots, invConfig, entity) in
                 SystemAPI.Query<
@@ -46,7 +61,7 @@ namespace MobileIdleBuilder
                 if (!building.ValueRO.IsActive) continue;
                 if (recipeOutputSlots.Length == 0) continue;
 
-                collector.ValueRW.Timer += deltaTime;
+                collector.ValueRW.Timer += deltaTime * globalSpeedMult;
 
                 float rate     = collector.ValueRO.OutputRate > 0f ? collector.ValueRO.OutputRate : 1f;
                 float interval = 1f / rate;
@@ -62,10 +77,16 @@ namespace MobileIdleBuilder
                 float outMult = SystemAPI.HasComponent<ManagerAssignmentData>(entity)
                     ? SystemAPI.GetComponent<ManagerAssignmentData>(entity).AppliedOutputMult
                     : 1f;
-                outMult *= globalOutputMult; // megastructure global output bonus composes on top of managers
+                outMult *= globalOutputMult; // global output bonuses compose on top of managers
 
                 if (total < invConfig.ValueRO.OutputCapacity)
-                    SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, (int)outMult);
+                {
+                    float carry = collector.ValueRO.OutputCarry;
+                    int amount  = OutputCarry.Take(outMult, ref carry);
+                    collector.ValueRW.OutputCarry = carry;
+                    if (amount > 0)
+                        SlotBufferUtils.AddToOutputBuffer(outputSlots, recipeOutputSlots[0].ItemID, amount);
+                }
 
                 // Subtract interval rather than resetting to preserve sub-interval remainder
                 collector.ValueRW.Timer -= interval;

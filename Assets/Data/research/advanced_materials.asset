@@ -28,6 +28,7 @@ MonoBehaviour:
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: e1f450e49f29d4345adf780f9cd764d9, type: 2}
   - {fileID: 11400000, guid: 68bacbabcb8064e4ca18c105b0c9f292, type: 2}
@@ -43,7 +44,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.05
   codexEntry: Semiconductor wafers are the substrate of computation. Aerogel is the
     lightest solid material. Superconductors carry current with zero resistance.
     Metamaterials bend light and gravity around themselves.

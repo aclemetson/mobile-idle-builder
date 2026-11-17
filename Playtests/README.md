@@ -124,7 +124,7 @@ Tips:
 ## Driver rules (token budget)
 
 `/playtest` runs a cheap **driver** model to play the game and a stronger **reviewer** model to
-write the report (see `.claude/skills/playtest/SKILL.md` for which models run each scenario).
+write the report (the local `/playtest` Claude Code skill picks which models run each scenario).
 Drivers keep context small:
 
 - **State first.** `playtest_state` and the change-only summaries are the main view. Take a

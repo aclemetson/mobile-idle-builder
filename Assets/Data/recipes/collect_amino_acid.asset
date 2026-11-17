@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: collect_amino_acid
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: collect_amino_acid
-  displayName: Harvest Amino Acid
+  displayName: Amino Acid
+  methodLabel: 
   recipeId: 190
   tier: 3
   category: 5

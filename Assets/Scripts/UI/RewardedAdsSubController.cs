@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         // Placements surfaced in the panel, in display order (DoubleOffline handled by the idle modal).
         static readonly AdPlacement[] PanelPlacements =
         {
+            AdPlacement.EntropySurge,
             AdPlacement.EntropyBoost,
             AdPlacement.IdleRateBoost,
             AdPlacement.SpeedBoost,
@@ -26,6 +27,9 @@ namespace MobileIdleBuilder
         VisualElement _rows;
         Label         _info;
 
+        // Rows whose text changes while the panel is open (cooldown countdown, reward preview).
+        readonly System.Collections.Generic.List<(AdPlacement placement, Label desc, Button btn)> _liveRows = new();
+
         public void Init(VisualElement root, HUDController hud)
         {
             _hud   = hud;
@@ -35,6 +39,9 @@ namespace MobileIdleBuilder
 
             if (_panel == null)
                 GameLogger.Warning("[Ads] rewards-panel not found in GameHUD.uxml — Free Rewards panel will not display.");
+
+            // Once a second: tick the cooldown countdowns and the entropy reward previews (income and net worth move).
+            _rows?.schedule.Execute(UpdateLiveRows).Every(1000);
         }
 
         /// <summary>Rebuilds the panel rows from current AdService state.</summary>
@@ -42,10 +49,15 @@ namespace MobileIdleBuilder
         {
             if (_rows == null) return;
             _rows.Clear();
+            _liveRows.Clear();
 
-            // Development-only: open the LevelPlay Test Suite to verify mediation on a device without
-            // registering advertising IDs. Never present in a release build.
-            if (UnityEngine.Debug.isDebugBuild)
+            var ads = AdService.Instance;
+            bool testMode = ads != null && ads.IsTestMode;
+
+            // Dev builds only: open the LevelPlay Test Suite to verify mediation on a device without
+            // registering advertising IDs. Not compiled into production builds, and hidden in ad test
+            // mode (no ad network is running then).
+            if (FeatureFlags.IsDevBuild && !testMode)
             {
                 var testBtn = new Button { text = "🧪 Launch Ad Test Suite" };
                 testBtn.AddToClassList("craft-btn");
@@ -53,11 +65,12 @@ namespace MobileIdleBuilder
                 _rows.Add(testBtn);
             }
 
-            var ads = AdService.Instance;
             if (_info != null)
             {
                 _info.text = (ads != null && FeatureFlags.AdsEnabled)
-                    ? "Watch a short ad for a bonus. Limited per day."
+                    ? (testMode
+                        ? "TEST ADS: no real ads are shown (ads.test_mode). Limited per day."
+                        : "Watch a short ad for a bonus. Limited per day.")
                     : "Free rewards are currently unavailable.";
             }
 
@@ -83,12 +96,59 @@ namespace MobileIdleBuilder
                 watchBtn.AddToClassList("craft-btn");
                 watchBtn.SetEnabled(canWatch);
 
+                if (def.Kind == AdRewardKind.IncomeMinutes || def.Kind == AdRewardKind.Entropy || def.CooldownMinutes > 0f)
+                {
+                    _liveRows.Add((placement, descLabel, watchBtn));
+                    ApplyLiveText(placement, descLabel, watchBtn);
+                }
+
                 var captured = placement;
                 watchBtn.clicked += () => OnWatchPressed(captured);
                 row.Add(watchBtn);
 
                 _rows.Add(row);
             }
+        }
+
+        void UpdateLiveRows()
+        {
+            if (_panel == null || _panel.resolvedStyle.display == DisplayStyle.None) return;
+            foreach (var (placement, desc, btn) in _liveRows)
+                ApplyLiveText(placement, desc, btn);
+        }
+
+        /// <summary>" (12 s)" while the income tracker warms up; empty when there is no tracker or a reload is pending.</summary>
+        static string MeasuringEta()
+        {
+            var t = IncomeRateTracker.Current;
+            if (t == null || PrestigeRunReset.ReloadPending) return "";
+            return $" ({System.Math.Ceiling(t.SecondsUntilRewardRate):0} s)";
+        }
+
+        static void ApplyLiveText(AdPlacement placement, Label desc, Button btn)
+        {
+            var ads = AdService.Instance;
+            var def = AdRewardCalculator.Def(placement);
+            int remaining = ads?.Remaining(placement) ?? 0;
+            var cooldown  = ads?.CooldownRemaining(placement) ?? System.TimeSpan.Zero;
+
+            string reward = def.Kind switch
+            {
+                AdRewardKind.IncomeMinutes when ads != null && !ads.IncomeMeasured(placement) =>
+                    $"Measuring income{MeasuringEta()}… ({def.IncomeMinutes:0} min of income)",
+                AdRewardKind.IncomeMinutes when ads != null =>
+                    $"+{NumberFormat.Compact(ads.PreviewIncomeReward(placement))} entropy ({def.IncomeMinutes:0} min of income)",
+                AdRewardKind.Entropy when ads != null =>
+                    $"+{NumberFormat.Compact(ads.PreviewEntropyReward())} entropy ({def.NetWorthFraction * 100f:0}% of net worth, min {NumberFormat.Compact(def.MinimumFloor)})",
+                _ => def.Description,
+            };
+            desc.text = $"{reward}   ({remaining}/{def.DailyCap} left today)";
+
+            if (remaining <= 0)                  btn.text = "Maxed";
+            else if (cooldown > System.TimeSpan.Zero) btn.text = $"Ready in {AdService.FormatCooldown(cooldown)}";
+            else if (ads != null && !ads.IncomeMeasured(placement)) btn.text = "Measuring…";
+            else                                 btn.text = "▶ Watch";
+            btn.SetEnabled(ads != null && ads.CanWatch(placement));
         }
 
         void OnWatchPressed(AdPlacement placement)

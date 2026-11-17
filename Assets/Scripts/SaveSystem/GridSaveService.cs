@@ -630,6 +630,8 @@ namespace MobileIdleBuilder
             // output onto each source's output multiplier (alongside the per-building manager bonus).
             float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
             float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
+            // Quantum Yield (prestige output) composes the same way it does live in ProductionSystem.
+            if (save.prestigeOutputMultiplier > 0f) megaOutputMult *= save.prestigeOutputMultiplier;
             float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;
@@ -653,7 +655,10 @@ namespace MobileIdleBuilder
                 getManagerOutputMultiplier,
                 getRecipeInfo,
                 SurplusSale.CurrentFraction(),
-                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter);
+                id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
+                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter,
+                bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
+                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f);
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from

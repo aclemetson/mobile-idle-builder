@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -13,10 +14,29 @@ namespace MobileIdleBuilder
     {
         [SerializeField] private float notificationDuration = 3f;
 
+        [SerializeField] private float actionableNotificationDuration = 5f;   // a banner you can act on stays a little longer
+
         private VisualElement _notificationBanner;
         private Label         _notificationIcon;
         private Label         _notificationMessage;
+        private Button        _notificationAccept;
+        private System.Action _onTap;      // tap on the banner body (e.g. open the achievements menu)
+        private System.Action _onAccept;   // the check button (e.g. claim the achievement)
+        private float         _currentDuration;
         private Coroutine     _hideNotificationCoroutine;
+        private bool          _notificationUp;       // shown and not on its way out
+        private int           _swipePointerId = NoSwipe;
+        private Vector2       _swipeStart;
+        private const int     NoSwipe = -1;
+        private const float   ControlsGapPx = 6f;
+
+        // Mode bars (placement, conveyor, deconstruct) start where the banner does, so they move down for it.
+        private readonly List<VisualElement> _pushedControls = new();
+        // The inspector starts there too, but moving it would shift its buttons under the finger, and its upgrades
+        // are what raise the banner. So while it is open the banner sits over the top bar instead.
+        private VisualElement _inspectorPanel;
+        private VisualElement _topBar;
+        private bool          _inspectorOpen;
 
         private VisualElement _tutorialHintBanner;
         private Label         _tutorialHintMessage;
@@ -40,6 +60,21 @@ namespace MobileIdleBuilder
             _notificationBanner  = root.Q("notification-banner");
             _notificationIcon    = root.Q<Label>("notification-banner__icon");
             _notificationMessage = root.Q<Label>("notification-banner__message");
+            _notificationAccept  = root.Q<Button>("notification-banner__accept");
+            if (_notificationAccept != null) _notificationAccept.clicked += OnAcceptClicked;
+            _pushedControls.Clear();
+            _pushedControls.AddRange(root.Query(className: "placement-overlay").ToList());
+            _inspectorPanel = root.Q("building-inspector-panel");
+            _topBar         = root.Q("top-bar");
+            if (_notificationBanner != null)
+            {
+                // A wrapped message is taller, so the push follows the banner's real height.
+                _notificationBanner.RegisterCallback<GeometryChangedEvent>(_ => ApplyNotificationClearance());
+                _notificationBanner.RegisterCallback<PointerDownEvent>(OnBannerPointerDown);
+                _notificationBanner.RegisterCallback<PointerMoveEvent>(OnBannerPointerMove);
+                _notificationBanner.RegisterCallback<PointerUpEvent>(OnBannerPointerUp);
+                _notificationBanner.RegisterCallback<PointerCancelEvent>(_ => CancelSwipe(resumeAutoHide: true));
+            }
 
             _tutorialHintBanner  = root.Q("tutorial-hint-banner");
             _tutorialHintMessage  = root.Q<Label>("tutorial-hint-banner__message");
@@ -60,11 +95,24 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Shows a transient notification banner that auto-hides after notificationDuration seconds.
-        /// modifier can be null (success/green), "warning", or "danger".
+        /// modifier can be null (success/green), "warning", or "danger". The player can swipe it away sooner.
+        /// <paramref name="onTap"/> runs when the banner is tapped (not swiped); <paramref name="onAccept"/>, when
+        /// set, shows a check button that runs it. Either one hides the banner. A later notification replaces both.
         /// </summary>
-        public void ShowNotification(string icon, string message, string modifier = null)
+        public void ShowNotification(string icon, string message, string modifier = null,
+                                     System.Action onTap = null, System.Action onAccept = null)
         {
             if (_notificationBanner == null) return;
+
+            CancelSwipe(resumeAutoHide: false);
+            _notificationBanner.style.translate = StyleKeyword.Null;
+
+            _onTap    = onTap;
+            _onAccept = onAccept;
+            HUDController.SetElementVisible(_notificationAccept, onAccept != null);
+            _currentDuration = onTap != null || onAccept != null
+                ? Mathf.Max(notificationDuration, actionableNotificationDuration)
+                : notificationDuration;
 
             if (_notificationIcon    != null) _notificationIcon.text    = icon;
             if (_notificationMessage != null) _notificationMessage.text = message;
@@ -81,23 +129,159 @@ namespace MobileIdleBuilder
             _notificationBanner.schedule.Execute(
                 () => _notificationBanner?.AddToClassList("notification-banner--shown"));
 
+            _notificationUp = true;
+            ApplyNotificationClearance();
+            RestartAutoHide();
+        }
+
+        private void RestartAutoHide()
+        {
+            StopAutoHide();
+            _hideNotificationCoroutine = StartCoroutine(HideNotificationAfterDelay());
+        }
+
+        private void StopAutoHide()
+        {
             if (_hideNotificationCoroutine != null)
                 StopCoroutine(_hideNotificationCoroutine);
-            _hideNotificationCoroutine = StartCoroutine(HideNotificationAfterDelay());
+            _hideNotificationCoroutine = null;
         }
 
         private IEnumerator HideNotificationAfterDelay()
         {
-            yield return new WaitForSeconds(notificationDuration);
+            yield return new WaitForSeconds(_currentDuration > 0f ? _currentDuration : notificationDuration);
             if (_notificationBanner == null) yield break;
+            yield return SlideOutAndHide();
+        }
 
-            // Slide back up; CSS transition (300ms) handles the animation.
+        /// <summary>Slides the banner away now (after a tap or accept) and drops its actions.</summary>
+        private void DismissNotification()
+        {
+            _onTap = _onAccept = null;
+            StopAutoHide();
+            _hideNotificationCoroutine = StartCoroutine(SlideOutAndHide());
+        }
+
+        private void OnAcceptClicked()
+        {
+            var accept = _onAccept;
+            if (accept == null || !_notificationUp) return;
+            DismissNotification();
+            accept();
+        }
+
+        private IEnumerator SlideOutAndHide()
+        {
+            // Slide away; CSS transition (300ms) handles the animation. Controls return at the same time.
             _notificationBanner.RemoveFromClassList("notification-banner--shown");
+            _notificationUp = false;
+            ApplyNotificationClearance();
 
             // After the transition completes, restore display:none so the element is
             // truly hidden and can't receive stray pointer events.
             yield return new WaitForSeconds(0.35f);
             _notificationBanner.style.display = UnityEngine.UIElements.DisplayStyle.None;
+            _notificationBanner.style.translate = StyleKeyword.Null;
+        }
+
+        // ── Notification clearance ───────────────────────────────────────────
+
+        /// <summary>Called every frame by HUDController, because the inspector can open while the banner is up.</summary>
+        public void RefreshNotificationClearance()
+        {
+            bool open = _inspectorPanel != null && !_inspectorPanel.ClassListContains("hidden");
+            if (open == _inspectorOpen) return;
+            _inspectorOpen = open;
+            ApplyNotificationClearance();
+        }
+
+        private void ApplyNotificationClearance()
+        {
+            if (_notificationBanner == null) return;
+
+            if (_inspectorOpen && _topBar != null && _notificationBanner.parent != null)
+                _notificationBanner.style.top = _topBar.worldBound.yMin - _notificationBanner.parent.worldBound.yMin;
+            else
+                _notificationBanner.style.top = StyleKeyword.Null;
+
+            float height = _notificationBanner.layout.height;
+            bool  push   = _notificationUp && !_inspectorOpen && height > 0f;   // false for an unresolved NaN too
+            ApplyControlsPush(push ? height + ControlsGapPx : 0f);
+        }
+
+        /// <summary>Moves the mode bars down by this many panel pixels.</summary>
+        internal void ApplyControlsPush(float px)
+        {
+            foreach (var control in _pushedControls)
+                control.style.paddingTop = px;
+        }
+
+        // ── Notification swipe ───────────────────────────────────────────────
+
+        private void OnBannerPointerDown(PointerDownEvent e)
+        {
+            if (_swipePointerId != NoSwipe || !_notificationUp) return;
+            // The check button handles its own press; capturing the pointer here would swallow its click.
+            if (_notificationAccept != null && e.target is VisualElement target && _notificationAccept.Contains(target)) return;
+            _swipePointerId = e.pointerId;
+            _swipeStart     = e.position;
+            StopAutoHide();     // it must not vanish from under the finger
+            _notificationBanner.AddToClassList("notification-banner--dragging");
+            _notificationBanner.CapturePointer(e.pointerId);
+            e.StopPropagation();
+        }
+
+        private void OnBannerPointerMove(PointerMoveEvent e)
+        {
+            if (e.pointerId != _swipePointerId) return;
+            var moved = BannerSwipe.Follow((Vector2)e.position - _swipeStart);
+            _notificationBanner.style.translate = new Translate(moved.x, moved.y);
+            e.StopPropagation();
+        }
+
+        private void OnBannerPointerUp(PointerUpEvent e)
+        {
+            if (e.pointerId != _swipePointerId) return;
+            Vector2 drag = (Vector2)e.position - _swipeStart;
+            e.StopPropagation();
+
+            if (BannerSwipe.IsTap(drag) && _onTap != null)
+            {
+                var tap = _onTap;
+                EndSwipe();
+                _notificationBanner.style.translate = StyleKeyword.Null;
+                DismissNotification();
+                tap();
+                return;
+            }
+
+            if (!BannerSwipe.Dismisses(drag))
+            {
+                CancelSwipe(resumeAutoHide: true);
+                return;
+            }
+
+            EndSwipe();
+            var exit = BannerSwipe.ExitOffset(drag, _notificationBanner.layout.width);
+            _notificationBanner.style.translate = new Translate(exit.x, exit.y);
+            _hideNotificationCoroutine = StartCoroutine(SlideOutAndHide());
+        }
+
+        /// <summary>Lets go of an unfinished swipe, so the banner slides back home.</summary>
+        private void CancelSwipe(bool resumeAutoHide)
+        {
+            if (_swipePointerId == NoSwipe) return;
+            EndSwipe();
+            _notificationBanner.style.translate = StyleKeyword.Null;
+            if (resumeAutoHide) RestartAutoHide();
+        }
+
+        private void EndSwipe()
+        {
+            if (_notificationBanner.HasPointerCapture(_swipePointerId))
+                _notificationBanner.ReleasePointer(_swipePointerId);
+            _swipePointerId = NoSwipe;
+            _notificationBanner.RemoveFromClassList("notification-banner--dragging");
         }
 
         // ── Field proximity banner ───────────────────────────────────────────

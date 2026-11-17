@@ -24,10 +24,11 @@ MonoBehaviour:
   block: biology_world
   treeX: -1
   treeY: -1
-  costBaseCurrency: 872000000
+  costBaseCurrency: 874000000
   costPrestigeCurrency: 0
   durationSeconds: 7200
   fieldCooldownMult: 1
+  effects: []
   unlocksItems:
   - {fileID: 11400000, guid: 5f83ae9a620d1ba4cafcc198b79ab9a2, type: 2}
   - {fileID: 11400000, guid: 933bfad7e4cfc524288f0b7f1a391b82, type: 2}
@@ -49,7 +50,6 @@ MonoBehaviour:
   unlocksResearch:
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   resetsOnPrestige: 1
-  prestigeMemoryDiscount: 0.2
   codexEntry: 'Chemistry made the parts; biology assembles them into machines that
     copy themselves. The first tier weaves monomers into the four macromolecules
     of life: proteins, carbohydrates, lipid membranes, and nucleic acids.'

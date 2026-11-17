@@ -40,7 +40,8 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 |---|---|---|---|
 | `pvp.enabled` | bool | `false` | `PVPService.RefreshState` forces Locked; HUD hides `btn-pvp`. Default off — backend not live. |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
-| `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/levelplay-ads-setup.md`). |
+| `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/runbooks/levelplay-ads-setup.md`). |
+| `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
@@ -55,6 +56,11 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
 | `links.feedbackEmail` | string | `"aclemetson12492@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
 | `links.privacyPolicyUrl` | string | GitHub Pages `privacy-policy.html` URL | Opened by Settings > Support > **Privacy Policy**. Source is `docs/privacy-policy.html`, served from `develop:/docs`. Read at tap time. |
+| `update.enabled` | bool | `false` | Master switch for the boot-time update prompt. See "App update prompt" below. Default off: a fetch failure never prompts. |
+| `update.latest.android` / `update.latest.ios` | string | `""` | Newest published build version (semver, matches `Application.version`). An older build shows "Update" / "Later". Written by CI in **development** after each Play internal / TestFlight upload; set by hand in **production** when a release goes live. Blank: no prompt. |
+| `update.minimum.android` / `update.minimum.ios` | string | `""` | Oldest supported version. A build below it gets a blocking prompt (no "Later"). Set by hand for breaking save/economy changes. Blank: never forced. |
+| `update.url.android` / `update.url.ios` | string | `""` | Link the Update button opens. Blank falls back to the Play listing (Android, dev and prod; opted-in internal testers get the test build there), `itms-beta://` (iOS dev, opens TestFlight), or no button (iOS prod: set the App Store link in production before launch). |
+| `update.message` | string | (generic) | Body text of the update prompt. |
 
 ## Game-data overrides
 
@@ -78,7 +84,9 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
 
 - **Splash gate** (`MaintenanceGate.IsUnderMaintenanceAsync`, called from `SplashScreenController`): runs a
   time-boxed UGS init + flag fetch before `SceneLoader.GoTo("GameScene")`. Checked for **every** user.
-- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene; if
+- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene, and
+  immediately when the app returns from the background (at most one check per 10 s;
+  `MaintenancePollSchedule`, #224); if
   maintenance flips on it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
   splash, which re-shows the overlay.
 - **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
@@ -86,6 +94,15 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
   then `SignOut(clearCredentials: true)` when maintenance is off, so GameScene's Google/anon sign-in is
   untouched. Env name is shared via `UgsEnvironment.Name`.
 - Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`.
+
+## App update prompt
+
+On boot, an out-of-date build pauses on the splash and offers a link to update.
+
+- **Decision** (`AppUpdateCheck.Decide`, pure, `AppUpdateCheckTests`): disabled or unparseable current version: none; current < `update.minimum.*`: **Required** (Update only); current < `update.latest.*`: **Optional** (Update / Later). Versions compare numerically via `System.Version` (`0.5.9 < 0.5.52`, missing parts = 0, `-suffix` ignored). The platform's keys are picked with `#if UNITY_IOS` (the Editor follows the active build target).
+- **Where:** `SplashScreenController.ContinueOrPromptUpdate`, after the maintenance gate answers (and after a maintenance Retry succeeds). It uses the flags the gate just fetched, or the cached ones if the gate timed out. UI: `update-panel` in `SplashScreen.uxml` (reuses the maintenance panel classes; `.update-buttons`, `.update-later-btn` in `SplashScreen.uss`). Update calls `Application.OpenURL` and stays on the panel; Later loads GameScene.
+- **CI writer:** `scripts/set-remote-config.ps1 -EnvironmentId <id> -Key <key> -Value <value>` (Remote Config Admin API, service-account Basic auth; GETs the environment's settings config, changes one key, PUTs the whole array back; `-DryRun` available). Called after the upload in `release-internal.yml` (`update.latest.android`) and `release-ios.yml` (`update.latest.ios`), both in **development**. The step is skipped while the secrets are missing and never fails the release (`continue-on-error`). `prod-release.yml` uploads a Play **draft**, so production's `update.latest.*` is set by hand when the release goes live.
+- **Secrets:** `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` (a UGS service account with a Remote Config edit role; the workflows map them onto the script's generic `UGS_SERVICE_KEY_ID` / `UGS_SERVICE_SECRET`, so another account can reuse the script), `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` (not used by CI yet: production versions are set by hand).
 
 ## Adding a flag
 

@@ -16,14 +16,22 @@ name: Release iOS
 # Tests are NOT re-run: pr-tests.yml already gated the PRs into the release branch
 # and into develop. TestFlight rejecting a duplicate build number is the backstop,
 # mirroring the Google Play upload on the Android side.
+# DISABLED (portfolio mode): nothing here runs automatically right now.
+# The original triggers are kept below, commented out; restore them to re-enable.
+# See docs/runbooks/ci-setup.md.
+# on:
+#   push:
+#     branches: [develop]
+#   workflow_dispatch:
 on:
-  push:
-    branches: [develop]
   workflow_dispatch:
 
 concurrency:
   group: release-ios
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   # -- Compile the Unity iOS Xcode project on Linux (cheap, Docker activation) ----
@@ -45,18 +53,18 @@ jobs:
           sudo docker image prune --all --force || true
           echo "Disk after cleanup:"; df -h /
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           lfs: true
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: Library
           key: Library-iOS-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: Library-iOS-
 
       - name: Build Unity iOS Xcode project
-        uses: game-ci/unity-builder@v4
+        uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -67,7 +75,7 @@ jobs:
           targetPlatform: iOS
           buildMethod: MobileIdleBuilder.Editor.BuildScript.BuildIOS
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ios-xcode-project
           path: build/iOS
@@ -79,13 +87,18 @@ jobs:
     name: Archive and Upload to TestFlight
     needs: build
     runs-on: macos-latest
+    env:
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
     # 90 (not 60): the Unity + 9-pod CocoaPods workspace archive can take ~50 min
     # on some Xcode versions, leaving little headroom at 60.
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ios-xcode-project
           path: build/iOS
@@ -94,7 +107,7 @@ jobs:
       # runner to Xcode 26.5, which made the archive ~3x slower (~50 min) and
       # nearly hit the timeout. 26.3 is the known-good, fast version that
       # archived this project in ~17 min. Bump deliberately, not implicitly.
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
           xcode-version: '26.3'
 
@@ -108,7 +121,20 @@ jobs:
           chmod +x scripts/archive-upload-ios.sh
           scripts/archive-upload-ios.sh
 
-      - uses: actions/upload-artifact@v4
+      # In-game update prompt: tell older TestFlight builds that this version is out
+      # (Remote Config update.latest.ios in the development environment). TestFlight
+      # processing takes 10-30 min, so the prompt can arrive a little before the build
+      # is installable. Skipped until the UGS secrets exist; never fails the release.
+      - name: Publish latest iOS version for the update prompt
+        if: env.UGS_SERVICE_KEY_ID != ''
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $content = Get-Content "ProjectSettings/ProjectSettings.asset" -Raw
+          if ($content -notmatch 'bundleVersion:\s*(\d+\.\d+\.\d+)') { Write-Error "No bundleVersion"; exit 1 }
+          ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -Key update.latest.ios -Value $Matches[1]
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: ios-archive-log-${{ github.run_number }}

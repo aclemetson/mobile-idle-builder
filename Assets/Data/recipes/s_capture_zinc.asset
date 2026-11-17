@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: s_capture_zinc
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: s_capture_zinc
-  displayName: 'Slow capture: Zinc'
+  displayName: Zinc
+  methodLabel: 
   recipeId: 253
   tier: 2
   category: 4

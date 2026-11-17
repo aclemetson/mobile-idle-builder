@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
   id: meitnerium
   displayName: Meitnerium
+  methodLabel: 
   recipeId: 138
   tier: 2
   category: 3
