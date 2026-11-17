@@ -9,7 +9,7 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// The Ignition rebalance (docs/agents/tasks/feature-ignition-rebalance.md): Harvester speed upgrades
+    /// The Ignition rebalance (docs/agents/tasks/archive/feature-ignition-rebalance.md): Harvester speed upgrades
     /// apply, and quark-to-Carbon craft times are matched to their suppliers so every line runs full.
     /// </summary>
     [TestFixture]

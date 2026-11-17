@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// Full-input autosell (docs/agents/tasks/feature-full-input-autosell.md): an item the recipe uses that
+    /// Full-input autosell (docs/agents/tasks/archive/feature-full-input-autosell.md): an item the recipe uses that
     /// reaches a full input is sold at the surplus price. The decision and belt behaviour are covered in
     /// InputAcceptanceTests and ConveyorHandoffTests; this covers the inspector rate and offline earnings.
     /// </summary>

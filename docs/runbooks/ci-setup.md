@@ -1,5 +1,33 @@
 # CI/CD Setup Guide
 
+> **Current status (2026-11-17): paused.** Every workflow in `.github/workflows/` is set to
+> `workflow_dispatch` only, so nothing builds, signs or uploads on a PR, merge or push. The original
+> triggers are kept in each file as a commented `# on:` block. Tests run locally before each commit
+> (`scripts/test-local.ps1`, see `docs/agents/testing.md`).
+>
+> **To re-enable:**
+> 1. Restore the commented `on:` block in each workflow.
+> 2. Re-enable the workflows in GitHub (`gh workflow enable "<name>"`).
+> 3. Re-add `Edit Mode Tests` as a required status check on the repository ruleset.
+>
+> The rest of this guide describes the pipeline as it ran through release 0.5.
+
+## At a glance
+
+```mermaid
+flowchart LR
+  PR["PR into integration/**, release/**,<br/>develop or main"] --> T["pr-tests.yml<br/>EditMode + PlayMode tests<br/>(self-hosted Windows runner)"]
+  T -->|merge into release/**| A["release-internal.yml<br/>signed .aab -> Google Play internal"]
+  A -->|release/** merged into develop| I["release-ios.yml<br/>.ipa -> TestFlight"]
+  I -.->|manual| P["prod-release.yml<br/>.aab -> Play production (draft)"]
+```
+
+Hardening that stays in place while the pipeline is paused:
+- Every action is pinned to a full commit SHA (with the tag in a comment), and Dependabot proposes updates.
+- Each workflow declares least-privilege `permissions:`. Only the two jobs that push a tag or commit get `contents: write`.
+- Self-hosted jobs only run for same-repository PRs. Fork PRs never reach the build machine.
+- Signing keys, the Play service account and Apple credentials live only in GitHub Actions secrets. They are never in the repo.
+
 One-time setup steps to activate the GitHub Actions pipeline.
 
 ## Branch → Track Model

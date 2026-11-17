@@ -3,7 +3,7 @@ using NUnit.Framework;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// Belt speed research (docs/agents/tasks/feature-belt-speed-research.md): the inspector warns when a speed
+    /// Belt speed research (docs/agents/tasks/archive/feature-belt-speed-research.md): the inspector warns when a speed
     /// upgrade would outrun the belts and names the research that fixes it.
     /// </summary>
     [TestFixture]
