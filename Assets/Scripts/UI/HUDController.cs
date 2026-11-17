@@ -156,6 +156,7 @@ namespace MobileIdleBuilder
         private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
         private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
         private Label  _achResetLabel;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _achResetTicker;
         private Button _achClaimAllBtn;
 
         // ---- Achievements gate ----
@@ -1316,6 +1317,32 @@ namespace MobileIdleBuilder
             _achActiveCategory = category;
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
+
+            // Keep the reset countdown live while the panel is open (paused when it closes).
+            if (_achResetLabel == null) return;
+            if (_achResetTicker == null)
+                _achResetTicker = _achResetLabel.schedule.Execute(TickAchievementResetLabel).Every(1000);
+            else
+                _achResetTicker.Resume();
+        }
+
+        private void TickAchievementResetLabel()
+        {
+            if (_achievementsPanel == null || _achievementsPanel.ClassListContains("hidden"))
+            {
+                _achResetTicker?.Pause();
+                return;
+            }
+            UpdateAchievementResetLabel();
+        }
+
+        // Sets only the label, so the tick does not rebuild the list and reset its scroll position.
+        private void UpdateAchievementResetLabel()
+        {
+            if (_achResetLabel == null) return;
+            _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                ? ""
+                : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
         }
 
         private void StartAchievementsHintPulse() =>
@@ -2088,13 +2115,7 @@ namespace MobileIdleBuilder
             // Update category tab highlights
             UpdateAchievementTabHighlights();
 
-            // Update reset countdown
-            if (_achResetLabel != null)
-            {
-                _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
-                    ? ""
-                    : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
-            }
+            UpdateAchievementResetLabel();
 
             var all = achievementService?.GetAll();
             if (all == null || all.Count == 0)
