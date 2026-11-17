@@ -5,6 +5,9 @@
 > triggers are kept in each file as a commented `# on:` block. Tests run locally before each commit
 > (`scripts/test-local.ps1`, see `docs/agents/testing.md`).
 >
+> To run the CI test job on demand, dispatch it on a branch: `gh workflow run "PR Tests" --ref <branch>`
+> (or Actions > PR Tests > Run workflow). It runs EditMode and PlayMode tests on the self-hosted runner.
+>
 > **To re-enable:**
 > 1. Restore the commented `on:` block in each workflow.
 > 2. Re-enable the workflows in GitHub (`gh workflow enable "<name>"`).

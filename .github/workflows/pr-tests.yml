@@ -6,11 +6,13 @@ name: PR Tests
 # on:
 #   pull_request:
 #     branches: [develop, main, 'release/**', 'integration/**']
+# A manual run (Actions > PR Tests > Run workflow, or `gh workflow run "PR Tests" --ref <branch>`)
+# tests the chosen branch. Only users with write access can dispatch, so it skips the approval gate.
 on:
   workflow_dispatch:
 
 concurrency:
-  group: pr-tests-${{ github.event.pull_request.number }}
+  group: pr-tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -40,7 +42,7 @@ jobs:
     # always() is required so a skipped `needs` job does not skip this job.
     if: >-
       always() &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) &&
       (needs.approval-gate.result == 'success' || needs.approval-gate.result == 'skipped')
     runs-on: [self-hosted, windows, unity]
 
