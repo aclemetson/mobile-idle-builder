@@ -31,7 +31,7 @@ The `agents/` folder is also the context pack for AI coding sessions; [agents/RE
 | [progression-map.html](progression-map.html), [progression-deck.html](progression-deck.html) | Whole-game progression map and overview deck |
 | [gameplay-loop.html](gameplay-loop.html), [balance-editor.html](balance-editor.html), [crystal-economy.html](crystal-economy.html) | Earlier design references (may lag the code; `game_data.json` is authoritative) |
 
-The HTML pages are served by GitHub Pages. "Quantum Foundry" in some page titles is an earlier working title.
+The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repository and the app package keep the original `mobile-idle-builder` name.
 
 ## Testing
 
