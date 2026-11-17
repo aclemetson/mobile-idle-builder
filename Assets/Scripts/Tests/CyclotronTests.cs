@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// Cyclotron Kick (docs/agents/tasks/feature-cyclotron-kick.md): the run's kick rules, the charge clock,
+    /// Cyclotron Kick (docs/agents/tasks/archive/feature-cyclotron-kick.md): the run's kick rules, the charge clock,
     /// the timed entropy boost, the Insight it pays and the upgrades Insight buys.
     /// </summary>
     [TestFixture]

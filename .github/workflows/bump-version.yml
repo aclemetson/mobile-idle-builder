@@ -26,8 +26,13 @@ name: Bump Version
 # AndroidBundleVersionCode is intentionally left untouched: it must stay globally monotonic
 # for Google Play, and is owned by the local pre-commit hook + the version-code guard, not
 # by semantic bumps.
+# DISABLED (portfolio mode): nothing here runs automatically right now.
+# The original triggers are kept below, commented out; restore them to re-enable.
+# See docs/runbooks/ci-setup.md.
+# on:
+#   create:
 on:
-  create:
+  workflow_dispatch:
 
 concurrency:
   group: bump-version-${{ github.event.ref }}
@@ -43,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.ref }}
 

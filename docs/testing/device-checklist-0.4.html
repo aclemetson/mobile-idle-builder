@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0.4 Device Checklist</title>
+<meta name="description" content="On-platform test checklist for Mobile Idle Builder release 0.4 (Android internal track). Saves state locally and exports results as JSON for review.">
+<style>
+:root {
+  --bg: #f6f5f1; --surface: #ffffff; --surface-2: #efede7; --border: #dcd8ce;
+  --text: #1d1c19; --muted: #6b675d; --accent: #3a5bd9; --accent-soft: #e4e9fb;
+  --pass: #1f7a4d; --pass-soft: #def2e6; --fail: #b3261e; --fail-soft: #f9e0de;
+  --blocked: #9a6400; --blocked-soft: #fbeccc; --na: #6b675d; --na-soft: #e8e6e0;
+  --radius: 10px; --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141412; --surface: #1d1d1a; --surface-2: #262622; --border: #36352f;
+    --text: #ecebe6; --muted: #9c988c; --accent: #8ea4ff; --accent-soft: #232b4a;
+    --pass: #5cc98f; --pass-soft: #183326; --fail: #ff8a80; --fail-soft: #3a1c1a;
+    --blocked: #f0b44c; --blocked-soft: #3a2c10; --na: #9c988c; --na-soft: #2a2a26;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141412; --surface: #1d1d1a; --surface-2: #262622; --border: #36352f;
+  --text: #ecebe6; --muted: #9c988c; --accent: #8ea4ff; --accent-soft: #232b4a;
+  --pass: #5cc98f; --pass-soft: #183326; --fail: #ff8a80; --fail-soft: #3a1c1a;
+  --blocked: #f0b44c; --blocked-soft: #3a2c10; --na: #9c988c; --na-soft: #2a2a26;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px 80px; }
+header.top { padding: 28px 0 8px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0; }
+.bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 16px; }
+.bar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.progress { flex: 1 1 220px; min-width: 180px; }
+.progress-track { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; display: flex; }
+.progress-track span { display: block; height: 100%; }
+.progress-label { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] button.primary { color: #10131f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primary { color: #10131f; } }
+input[type=text], input[type=search], input[type=number], select, textarea {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+input[type=search] { flex: 1 1 180px; min-width: 140px; }
+textarea { width: 100%; resize: vertical; min-height: 38px; }
+.save-state { font-size: 12px; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.panel h2 { font-size: 1.05rem; margin: 0 0 10px; }
+.grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.grid-fields label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); }
+.grid-fields input { color: var(--text); font-size: 14px; }
+.readiness { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.readiness h3 { font-size: 0.9rem; margin: 0 0 6px; }
+.readiness ul { margin: 0; padding-left: 18px; }
+.readiness li { margin-bottom: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.tag.quant { border-color: var(--accent); color: var(--accent); }
+.tag.p0 { border-color: var(--fail); color: var(--fail); }
+.tag.p1 { border-color: var(--blocked); color: var(--blocked); }
+section.sec { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+.sec-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; user-select: none; }
+.sec-head h2 { font-size: 1rem; margin: 0; flex: 1; }
+.sec-head .chev { transition: transform .15s; color: var(--muted); }
+section.sec.collapsed .chev { transform: rotate(-90deg); }
+section.sec.collapsed .sec-body { display: none; }
+.sec-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sec-mini { width: 70px; height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; display: flex; }
+.sec-mini span { display: block; height: 100%; }
+.sec-body { border-top: 1px solid var(--border); }
+.sec-intro { padding: 10px 16px; color: var(--muted); font-size: 13px; background: var(--surface-2); }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.item:first-of-type { border-top: 0; }
+.item[data-status=pass] { box-shadow: inset 3px 0 0 var(--pass); }
+.item[data-status=fail] { box-shadow: inset 3px 0 0 var(--fail); background: color-mix(in srgb, var(--fail-soft) 45%, transparent); }
+.item[data-status=blocked] { box-shadow: inset 3px 0 0 var(--blocked); }
+.item[data-status=na] { box-shadow: inset 3px 0 0 var(--na); opacity: 0.75; }
+.item-title { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.item-id { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 400; }
+.item-detail { grid-column: 1 / -1; color: var(--muted); font-size: 13.5px; }
+.item-detail ol, .item-detail ul { margin: 4px 0; padding-left: 20px; }
+.expect { color: var(--text); }
+.expect b { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+.status { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 32px; }
+.status button { border: 0; border-radius: 0; padding: 0 10px; background: transparent; font-size: 12px; font-weight: 600; color: var(--muted); border-left: 1px solid var(--border); }
+.status button:first-child { border-left: 0; }
+.status button[aria-pressed=true][data-v=pass] { background: var(--pass-soft); color: var(--pass); }
+.status button[aria-pressed=true][data-v=fail] { background: var(--fail-soft); color: var(--fail); }
+.status button[aria-pressed=true][data-v=blocked] { background: var(--blocked-soft); color: var(--blocked); }
+.status button[aria-pressed=true][data-v=na] { background: var(--na-soft); color: var(--na); }
+.item-inputs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.metric { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.metric input { width: 120px; }
+.metric .target { color: var(--muted); font-size: 12px; }
+.metric .verdict { font-size: 12px; font-weight: 600; }
+.metric .verdict.ok { color: var(--pass); } .metric .verdict.bad { color: var(--fail); }
+.rating { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; }
+.rating button { width: 32px; height: 32px; padding: 0; }
+.rating button[aria-pressed=true] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.note-wrap { flex: 1 1 100%; }
+.note-wrap textarea { font-size: 13.5px; }
+.note-toggle { font-size: 12px; padding: 3px 9px; }
+.sec-notes { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
+.sec-notes label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+.hidden { display: none !important; }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+.toast.show { opacity: 1; }
+@media (max-width: 640px) {
+  .item { grid-template-columns: 1fr; }
+  .status { width: 100%; }
+  .status button { flex: 1; padding: 0 4px; }
+  .sec-mini { display: none; }
+}
+@media print {
+  .bar, .note-toggle, button { display: none !important; }
+  section.sec.collapsed .sec-body { display: block; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Release 0.4 on-device checklist</h1>
+    <p class="sub">Android internal track, Mobile Idle Builder. Everything you enter is saved in this browser automatically. Use <b>Save results file</b> to write a JSON copy Claude can read later.</p>
+  </header>
+
+  <div class="bar">
+    <div class="bar-row">
+      <div class="progress">
+        <div class="progress-track" id="overall-track"></div>
+        <div class="progress-label" id="overall-label"></div>
+      </div>
+      <input type="search" id="search" placeholder="Filter tests..." aria-label="Filter tests">
+      <select id="filter" aria-label="Show">
+        <option value="all">All</option>
+        <option value="open">Untested</option>
+        <option value="fail">Failures</option>
+        <option value="blocked">Blocked</option>
+        <option value="noted">Has notes</option>
+        <option value="quant">Quantitative only</option>
+        <option value="p0">P0 only</option>
+      </select>
+    </div>
+    <div class="bar-row" style="margin-top:8px">
+      <button class="primary" id="btn-save-file" title="Pick a JSON file once; later changes are written to it automatically (Chrome/Edge)">Save results file</button>
+      <button id="btn-load-file">Load results</button>
+      <button id="btn-copy-md" title="Copy failures, blocked items and notes as Markdown">Copy summary</button>
+      <button id="btn-expand">Expand all</button>
+      <button id="btn-collapse">Collapse all</button>
+      <button id="btn-theme" aria-label="Toggle theme">Theme</button>
+      <button id="btn-reset">Reset</button>
+      <span class="save-state" id="save-state"></span>
+      <input type="file" id="file-input" accept="application/json,.json" class="hidden">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Test session</h2>
+    <div class="grid-fields" id="session-fields"></div>
+    <div style="margin-top:10px">
+      <label for="general-notes" style="font-size:12px;color:var(--muted)">General notes: overall impressions, ideas for improvements, things to fix that do not fit a test</label>
+      <textarea id="general-notes" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Readiness</h2>
+    <div class="readiness">
+      <div>
+        <h3>Ready now</h3>
+        <ul>
+          <li>0.4.18 (versionCode 221) built on server-windows and uploaded to the internal track on 2026-10-10 (Play edit 12336369542816318285). It includes #177 to #182 (via PR #183) and the version-label fix (PR #184).</li>
+          <li>Fixes waiting for on-device checks: vector icons (#165), hint minimize, Settings links (#166), and the #171 backlog.</li>
+          <li>Telemetry, Remote Config, Cloud Save and diagnostics code all ship in this build.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Manual dashboard work these tests depend on</h3>
+        <ul>
+          <li>#164 internal testers and license testers. Needed for everything below.</li>
+          <li>#167 Remote Config keys in the <code>development</code> env. Needed for section 4, and section 5 depends on it.</li>
+          <li>#170 analytics event schemas registered. Needed for section 5.</li>
+          <li>#168 Cloud Diagnostics and symbols. Needed for section 6.</li>
+          <li>#172 IAP products and #173 LevelPlay test mode. Needed for sections 7 and 8.</li>
+        </ul>
+        <p style="margin:6px 0 0;font-size:13px;color:var(--muted)">If a dashboard step isn't done yet, mark the test <b>Blocked</b> and keep going.</p>
+      </div>
+    </div>
+    <div class="legend">
+      <span><span class="tag quant">QUANT</span> record a measured number</span>
+      <span><span class="tag">QUAL</span> judgement or observation</span>
+      <span><span class="tag p0">P0</span> alpha blocker</span>
+      <span><span class="tag p1">P1</span> high</span>
+      <span>Device builds report to UGS env <code>development</code> (DEV_ENVIRONMENT)</span>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CHECKLIST_ID = "mib-device-checklist-0.4";
+const SCHEMA = 1;
+const REPO = "https://github.com/aclemetson/mobile-idle-builder";
+
+// type: "qual" | "quant" (metric) | "rating" (1-5 score)
+// metric: { unit, target, op: "<=" | ">=" , goal: number } - goal enables an automatic within/outside-target hint
+const SECTIONS = [
+{ id: "dist", title: "1. Distribution and install", intro: "Play Console and install path. Do these first, since every later section needs a Play-installed build.", items: [
+  { id: "dist.track", p: "p0", type: "qual", ref: "#164", title: "Internal track release 0.4.18 (221) is rolled out", detail: "Play Console > Test and release > Testing > Internal testing > Releases. If managed publishing is on, also check Publishing overview. If the phone does not show the update, clear the Play Store cache and confirm the active Play account is the opted-in tester.", expect: "Release status is Available to internal testers, with versionCode 220 or later." },
+  { id: "dist.testers", p: "p0", type: "qual", ref: "#164", title: "Tester list and opt-in link work", detail: "Add your tester email list, open the opt-in URL on the test device's Google account, and accept.", expect: "Opt-in page says you are a tester, and the Play Store listing shows the internal build." },
+  { id: "dist.license", p: "p1", type: "qual", ref: "#164", title: "Tester accounts are license testers", detail: "Setup > License testing. Add the same accounts and set RESPOND_NORMALLY.", expect: "The account is listed. IAP test purchases show a 'test card, you will not be charged' banner." },
+  { id: "dist.install", p: "p0", type: "qual", title: "Install from Play Store (not sideload)", detail: "Uninstall any older sideloaded or debug copy first, so signing keys don't conflict.", expect: "Installs cleanly. App icon and name are correct in the launcher." },
+  { id: "dist.size", type: "quant", title: "Download / install size", detail: "Play Store listing download size, plus Settings > Apps > Mobile Idle Builder > Storage (app size).", metric: { unit: "MB", target: "Record (baseline for future builds)" } },
+  { id: "dist.version", type: "qual", title: "In-game version matches the build", detail: "Check the loading screen (centered under the bar), Settings > About, and the Play listing About this app.", expect: "Shows v0.4.18 in both places, readable and not clipped by curved edges." },
+  { id: "dist.content", p: "p0", type: "qual", ref: "#163", title: "App content declarations complete", detail: "Policy and programs > App content: Data safety, Ads, Content rating, Target audience, App access. Privacy policy URL set.", expect: "No outstanding red items. (Closed testing requires this. Internal testing doesn't.)" },
+  { id: "dist.adid", type: "qual", ref: "#163", title: "AD_ID permission present in the bundle", detail: "Play Console > App bundle explorer > 221 > Permissions, or bundletool dump.", expect: "<code>com.google.android.gms.permission.AD_ID</code> is listed." },
+]},
+{ id: "launch", title: "2. First launch and app lifecycle", intro: "Start from a fresh install. Time it with a stopwatch, or use the adb command if the device is plugged in.", items: [
+  { id: "launch.cold", type: "quant", title: "Cold start: icon tap to interactive game scene", detail: "Force stop, then tap the icon and time until you can interact with the map. Optional: <code>adb shell am start -W -n com.clemtek.mobileidlebuilder/com.unity3d.player.UnityPlayerGameActivity</code> (TotalTime covers the first frame only).", metric: { unit: "s", target: "<= 10 s on a mid-range device", op: "<=", goal: 10 } },
+  { id: "launch.flow", type: "qual", title: "Splash > Loading > Game flow is clean", expect: "No flash of magenta, black frames longer than about 1 s, or a stuck loading bar. Intro dialogue starts on a fresh install." },
+  { id: "launch.signin", type: "qual", ref: "auth", title: "First-install sign-in behaviour", detail: "The first install may show the Google account picker (interactive policy).", expect: "Picker appears at most once. Cancelling it still lets you play (anonymous fallback)." },
+  { id: "launch.relaunch", type: "qual", title: "Second launch shows no account picker", expect: "Silent sign-in. No Google picker on relaunch (2026-06-05 fix)." },
+  { id: "launch.resume", type: "qual", title: "Background / resume (home button, app switcher)", detail: "Background the app for about 30 s, then return. Repeat while a menu is open and while a research timer is running.", expect: "Resumes in place. No reload, no lost menu state, timers advanced correctly." },
+  { id: "launch.back", type: "qual", title: "Android back button / back gesture", expect: "Closes the top-most menu or panel first. It doesn't kill the app or skip a tutorial step without confirming." },
+  { id: "launch.rotate", type: "qual", title: "Rotation / orientation lock", expect: "Stays in the intended orientation. Rotating the device doesn't break the layout." },
+  { id: "launch.safearea", type: "qual", title: "Notch / punch-hole / gesture-bar safe area", expect: "No HUD buttons under the camera cutout or the bottom gesture bar. Every corner button can be tapped." },
+  { id: "launch.interrupt", type: "qual", title: "Interruptions: incoming call / alarm / notification shade", expect: "Audio pauses and resumes. Game state is intact afterwards." },
+  { id: "launch.killsave", type: "qual", title: "Force-kill right after a purchase / placement", detail: "Place a building or buy research, then swipe the app away within 2 s and relaunch.", expect: "The action persisted. If not, record how many seconds were lost; the autosave interval is 60 s plus a pause save." },
+]},
+{ id: "fixes", title: "3. 0.4 fix verification", intro: "Fixes that have only been verified in the Editor so far (#171, #165, #166, hint minimize, version label). File a new issue for each failure.", items: [
+  { id: "fix.icons", p: "p1", type: "qual", ref: "#165", title: "Close / check / rotate / flip icons render (GlyphIcon vectors)", detail: "Open several menus, the building placement controls, and the inspector.", expect: "Every icon is visible and crisp. No empty squares or blank buttons." },
+  { id: "fix.versionlabel", type: "qual", ref: "#184", title: "Version label moved off the screen corner", detail: "Splash screen, then loading screen, then Settings > About.", expect: "Splash has no corner label. Loading screen shows the version centered under the bar. Settings > About shows it in large text. Neither is clipped." },
+  { id: "fix.hintmin", type: "qual", ref: "#182", title: "Tutorial hint banner can be minimized and restored", expect: "Minimize collapses it to a small tab, and tapping restores it. Its state survives the next tutorial step and doesn't cover the tutorial-advance UI." },
+  { id: "fix.settingslinks", type: "qual", ref: "#166", title: "Settings > Send Feedback / Privacy Policy", expect: "Send Feedback opens the mail app with version, player id and device prefilled. Privacy Policy opens the hosted page; a 404 means develop hasn't been published to Pages yet." },
+  { id: "fix.scrolltap", type: "qual", ref: "#157", title: "Taps on buttons inside scroll lists register", detail: "Recipe menu craft buttons and research list Start buttons. Try light taps, and taps right after a scroll.", expect: "A tap fires the action, a drag scrolls, and no taps get swallowed." },
+  { id: "fix.inspectorbounce", type: "qual", ref: "#158", title: "Building inspector doesn't bounce", detail: "Watch a producing building's inspector for 30 s while items come and go.", expect: "Layout stays stable. Rows don't jump." },
+  { id: "fix.camera", type: "qual", ref: "#133", title: "Camera: pan inertia, twist rotate, two-finger tilt", expect: "Pan glides naturally, two-finger twist rotates without fighting zoom, and tilt direction feels right by default." },
+  { id: "fix.camsettings", type: "qual", ref: "#133", title: "Pan Sensitivity + Invert Tilt settings take effect", expect: "The slider changes drag speed immediately, Invert Tilt flips the direction, and both persist after a restart." },
+  { id: "fix.timers", type: "qual", ref: "#135", title: "Inspector craft-progress bar + recipe craft-time label", expect: "Progress bar fills smoothly and the recipe menu shows craft time." },
+  { id: "fix.seam", type: "qual", ref: "#135", title: "Conveyor red seam bar on aligned-but-unconnected belts", detail: "Delete a belt and re-add it next to another without selecting the head or tail.", expect: "A red seam bar shows where it looks connected but isn't." },
+  { id: "fix.demon", type: "qual", ref: "#136", title: "No extra Maxwell's demon at game start", expect: "Only the intended demon(s). Nothing at the bottom of the map." },
+  { id: "fix.magenta", type: "qual", title: "Field particles aren't magenta", expect: "Quark, lepton and other field particles render in their themed colours." },
+  { id: "fix.achievements", type: "qual", ref: "#147", title: "Achievements stay dormant until first prestige", expect: "No achievements button or progress before prestige 1, and no purple panel flickering during the tutorial." },
+  { id: "fix.entropybuy", type: "qual", ref: "#134", title: "Purchase button re-enables when automation pushes entropy over the cost", expect: "With the menu left open, the Buy button becomes active once you can afford it." },
+  { id: "fix.empty", type: "qual", ref: "#134", title: "Building Empty input/output buttons", expect: "Moves contents into the player inventory. Counts add up exactly." },
+]},
+{ id: "rc", title: "4. Remote Config (UGS, development env)", intro: "Each flag is fetched once per launch, so after changing a value in the dashboard, force-stop and relaunch the app. Restore every flag to its alpha value at the end.", items: [
+  { id: "rc.keys", p: "p1", type: "qual", ref: "#167", title: "All keys exist in the development environment", detail: "pvp.enabled, iap.enabled, ads.enabled, cloudsave.enabled, dailyevents.enabled, maintenance.enabled/message/untilUtc, analytics.enabled/phase, gamedata.updatedUtc/version/noticeTitle/noticeMessage/overrides, links.feedbackEmail/privacyPolicyUrl.", expect: "Every key is present with the right type (bool/string/int). Config is published." },
+  { id: "rc.flip", p: "p1", type: "qual", ref: "#167", title: "Kill-switch flip takes effect (dailyevents.enabled = false)", detail: "Set it to false, launch once (that fetch fills the cache), then launch again.", expect: "The Daily button is hidden on the launch after the fetch. Setting it back to true brings it back." },
+  { id: "rc.iap", type: "qual", title: "iap.enabled = false hides the Crystals tab", expect: "Premium shop has no Crystals tab, and the other shop tabs still work." },
+  { id: "rc.ads", type: "qual", title: "ads.enabled = false hides Free Rewards + idle Double", expect: "No rewards button and no 'Double (Watch Ad)' on the idle-return modal." },
+  { id: "rc.maint", p: "p1", type: "qual", title: "Maintenance mode at launch", detail: "Set maintenance.enabled = true with a message and an untilUtc time.", expect: "Splash shows the maintenance overlay with that message and time, and the game doesn't load." },
+  { id: "rc.maintlive", type: "quant", title: "Maintenance kicks a live session (5-min watcher)", detail: "With the game running, flip maintenance.enabled to true and time how long until you're sent back to the splash screen.", metric: { unit: "min", target: "<= 5 min, and the save is flushed first", op: "<=", goal: 5.5 } },
+  { id: "rc.maintoff", type: "qual", title: "Offline launch while maintenance is configured (fail-open)", detail: "Airplane mode, then cold start.", expect: "The game loads. Being offline never locks a player out." },
+  { id: "rc.notice", type: "qual", title: "Game update notice shows once", detail: "Bump gamedata.updatedUtc and gamedata.version, then set the title and message.", expect: "The modal shows once on the next launch and not again after that." },
+  { id: "rc.override", type: "qual", title: "gamedata.overrides applies a scalar change", detail: "Example: override one research cost, then cold start twice.", expect: "The new cost shows in the research panel. Setting it back to <code>{}</code> restores the baseline." },
+  { id: "rc.links", type: "qual", title: "links.* change without a rebuild", expect: "Changing links.feedbackEmail changes the mailto recipient (read at tap time, after a relaunch)." },
+  { id: "rc.restore", p: "p1", type: "qual", title: "Flags restored to alpha values", expect: "Write the final values of iap/ads/analytics/maintenance in the note." },
+]},
+{ id: "analytics", title: "5. Analytics / telemetry (UGS Analytics)", intro: "Run <code>analytics status</code> in the dev console (shake the device) to check client state. 'Accepted' only means the SDK took an event. The dashboard is the source of truth. A VPN or ad-blocking DNS on the device drops events until it's disabled (they're buffered, not lost).", items: [
+  { id: "an.schemas", p: "p1", type: "qual", ref: "#170", title: "Event schemas registered in Event Manager", detail: "prestige_completed, building_placed, research_completed, tier_reached, megastructure_stage, game_update_notice, player_snapshot, dev_console_used. Each one also has player_id and collection_phase. Names and types are listed in docs/agents/analytics.md.", expect: "All 8 exist and their param types match exactly." },
+  { id: "an.enable", p: "p1", type: "qual", ref: "#170", title: "analytics.enabled = true, analytics.phase = alpha-1", detail: "Relaunch, then run <code>analytics status</code>.", expect: "Shows collecting, phase alpha-1, services initialised, signedIn true, env development." },
+  { id: "an.fire", type: "quant", title: "<code>analytics fire</code>: events accepted by the backend", detail: "This counts as dev-console use and marks this player id as dev. That's fine for a smoke test.", metric: { unit: "of 8", target: "8 / 8 accepted, 0 refused", op: ">=", goal: 8 } },
+  { id: "an.latency", type: "quant", title: "Time until fired events appear as valid in Event Manager", metric: { unit: "min", target: "Record (typically < 15 min)", op: "<=", goal: 30 } },
+  { id: "an.invalid", type: "quant", title: "Invalid events in Event Manager for this session", metric: { unit: "events", target: "0", op: "<=", goal: 0 } },
+  { id: "an.snapshot", type: "quant", title: "player_snapshot count in a 30-min active session", detail: "Use a clean player id that hasn't used the console for this.", metric: { unit: "snapshots", target: "about 6 (every 5 min)", op: ">=", goal: 5 } },
+  { id: "an.organic", type: "qual", title: "Organic events from real play", expect: "building_placed, research_completed and tier_reached appear for a non-console player with sensible param values." },
+  { id: "an.prestige", type: "qual", title: "prestige_completed on a real prestige", expect: "One event with pre-reset values (networth_before > 0, run_count incremented) and a player_snapshot emitted alongside it." },
+  { id: "an.devflag", type: "qual", ref: "#169", title: "Dev-console use is flagged", expect: "After a console command, a dev_console_used event appears and later snapshots carry dev_console_used = true." },
+  { id: "an.offlinebuf", type: "qual", title: "Offline buffering self-heals", detail: "Play 10 min in airplane mode, then reconnect.", expect: "The buffered events upload later and none are lost." },
+  { id: "an.csv", type: "qual", ref: "#170", title: "CSV export works in docs/analytics/dashboard.html", expect: "Data Explorer CSV export loads and the charts render with alpha data." },
+]},
+{ id: "diag", title: "6. Cloud Diagnostics (crashes and exceptions)", intro: "Runbook: docs/cloud-diagnostics-setup.md. Android builds use IL2CPP ARM64, so traces are raw addresses without symbols.", items: [
+  { id: "dg.enabled", p: "p1", type: "qual", ref: "#168", title: "Crashes and Exceptions enabled in the Unity Dashboard", expect: "Project shows the service on and is accepting reports." },
+  { id: "dg.symbols", type: "qual", ref: "#168", title: "symbols.zip uploaded for versionCode 221", expect: "Dashboard lists symbols for this build." },
+  { id: "dg.force", p: "p1", type: "qual", ref: "#168", title: "Forced exception arrives symbolicated", detail: "Trigger a known exception on the device; use a temporary dev-console hook or other method.", expect: "Shows up in the dashboard within minutes, with a readable C# stack trace (file and line)." },
+  { id: "dg.clean", type: "quant", title: "Exceptions in logcat during a clean 10-min session", detail: "<code>adb logcat -s Unity | findstr /i \"exception error\"</code>", metric: { unit: "count", target: "0", op: "<=", goal: 0 } },
+  { id: "dg.dashcount", type: "quant", title: "Distinct exception groups in the dashboard after testing", metric: { unit: "groups", target: "Record; triage each one" } },
+]},
+{ id: "save", title: "7. Auth and Cloud Save (UGS)", intro: "Cloud Save key is <code>save_v1</code>. Check the dashboard under Player Management > the player id > Cloud Save.", items: [
+  { id: "sv.player", p: "p1", type: "qual", title: "Player appears in UGS Player Management", expect: "The player id matches the one in the Send Feedback mail body. Google is linked if you signed in." },
+  { id: "sv.cloudkey", p: "p1", type: "qual", title: "save_v1 written and updated", expect: "Key exists, with a timestamp from the last couple of minutes after you play." },
+  { id: "sv.persist", p: "p0", type: "qual", title: "Progress persists across force-stop", expect: "Currency, buildings, research and tutorial step are the same after relaunch. No 0-currency reset (save clobber guard)." },
+  { id: "sv.reinstall", p: "p1", type: "qual", title: "Uninstall/reinstall with Google sign-in restores the cloud save", expect: "Google-linked account gets its progress back. Anonymous-only is expected to start fresh; note which case you tested." },
+  { id: "sv.twodev", type: "qual", title: "Second device, same Google account", expect: "The newer save wins and there's no corruption. Note which device's progress was kept." },
+  { id: "sv.offline", type: "qual", title: "Offline play, then reconnect", detail: "Airplane mode, play 5 min, quit, reconnect, relaunch.", expect: "Offline progress isn't overwritten by the older cloud copy." },
+  { id: "sv.cloudoff", type: "qual", title: "cloudsave.enabled = false runs local-only", expect: "Game works, save_v1 stops updating, and Remote Config still loads." },
+  { id: "sv.savesize", type: "quant", title: "save_v1 size (mid-game)", detail: "Read the value size in the UGS dashboard (run-as is unavailable on release builds).", metric: { unit: "KB", target: "Record; flag if > 500 KB", op: "<=", goal: 500 } },
+]},
+{ id: "iap", title: "8. In-app purchases (crystal packs)", intro: "Runbook: docs/google-play-iap-testing.md. Use a license-tester account so no real charge happens.", items: [
+  { id: "iap.products", p: "p1", type: "qual", ref: "#172", title: "4 products Active with exact IDs", detail: "crystals_tier1..4, priced $0.99 / $4.99 / $9.99 / $19.99.", expect: "All Active, and the store shows localized prices in the Crystals tab." },
+  { id: "iap.t1", type: "quant", title: "Buy crystals_tier1: crystal delta", metric: { unit: "crystals", target: "+600", op: ">=", goal: 600 } },
+  { id: "iap.t2", type: "quant", title: "Buy crystals_tier2: crystal delta", metric: { unit: "crystals", target: "+3200", op: ">=", goal: 3200 } },
+  { id: "iap.t3", type: "quant", title: "Buy crystals_tier3: crystal delta", metric: { unit: "crystals", target: "+7500", op: ">=", goal: 7500 } },
+  { id: "iap.t4", type: "quant", title: "Buy crystals_tier4: crystal delta", metric: { unit: "crystals", target: "+20000", op: ">=", goal: 20000 } },
+  { id: "iap.cancel", type: "qual", title: "Cancel / back out of the purchase sheet", expect: "No crystals granted, no stuck spinner, and the UI is usable." },
+  { id: "iap.declined", type: "qual", title: "Test card 'always declines'", expect: "Clear failure message and no grant." },
+  { id: "iap.persist", type: "qual", title: "Crystals persist after a purchase plus force-kill", expect: "Balance survives relaunch and appears in save_v1 (paidCurrency)." },
+  { id: "iap.spend", type: "qual", title: "Spend crystals in the premium shop", expect: "Deducts the exact price and the item or effect is applied." },
+]},
+{ id: "ads", title: "9. Rewarded ads (LevelPlay 9.4.1)", intro: "Turn on test mode or register this device in the LevelPlay dashboard first, so you don't generate real impressions.", items: [
+  { id: "ad.test", p: "p1", type: "qual", ref: "#173", title: "Test device / test mode configured", expect: "Ads show a 'test ad' label." },
+  { id: "ad.suite", type: "qual", ref: "#173", title: "Ad Test Suite launches (Free Rewards > Launch Ad Test Suite)", expect: "Suite opens and shows the network adapters initialised (ironSource Bidding at minimum)." },
+  { id: "ad.fill", type: "quant", title: "Rewarded fill: ads shown / ads requested", detail: "Try about 10 requests across the placements.", metric: { unit: "%", target: ">= 80% in test mode", op: ">=", goal: 80 } },
+  { id: "ad.entropy", type: "qual", title: "Entropy Boost grants entropy (cap 5/day)", expect: "Grants max(10% of net worth, 500). The 6th attempt that day is blocked." },
+  { id: "ad.idle", type: "qual", title: "+50% Idle (4 h, cap 3/day)", expect: "Boost timer shows, and offline earnings are 1.5x while it's active." },
+  { id: "ad.surge", type: "qual", title: "Production Surge (2x for 30 min, cap 2/day)", expect: "Production visibly doubles, and the timer counts down." },
+  { id: "ad.warp", type: "qual", title: "Time Warp (1 h of production, cap 2/day)", expect: "Grants about 1 h of current income immediately." },
+  { id: "ad.crystal", type: "qual", title: "Crystal Drop (+25, cap 1/day)", expect: "Exactly +25 crystals." },
+  { id: "ad.double", type: "qual", title: "Idle-return Double (cap 3/day)", expect: "Offline earnings exactly doubled." },
+  { id: "ad.early", type: "qual", title: "Close the ad early", expect: "No reward, no crash, and game audio resumes." },
+  { id: "ad.noads", type: "qual", title: "No network / no fill", expect: "Friendly 'no ad available' message. The button doesn't hang." },
+  { id: "ad.caps", type: "qual", title: "Daily caps reset at the day boundary", expect: "Counts reset the next day (or after changing the device clock; note any exploit)." },
+]},
+{ id: "game", title: "10. Core gameplay end to end", intro: "One honest playthrough on a fresh install with no dev console, so the analytics player id stays clean. Use a second install or <code>clear all save</code> for the console-assisted checks.", items: [
+  { id: "g.tutorial", p: "p0", type: "quant", title: "Full tutorial playthrough to step 32 with no soft-lock", detail: "Note any step where you were confused or stuck in the note.", metric: { unit: "min", target: "Record total time; note stuck points" } },
+  { id: "g.dialogue", type: "qual", title: "Tutorial dialogue accuracy", expect: "Button names match the dialogue ('Done', etc.). The quark/lepton energy claims are correct, and no step asks for something impossible." },
+  { id: "g.fields", type: "qual", title: "Field collection (tap fields)", expect: "Taps register reliably, the cooldown is visible, and counts increase by the expected amount." },
+  { id: "g.research", type: "qual", title: "Research purchase + timer", expect: "Cost is deducted, the timer runs (also in the background), and unlocks apply." },
+  { id: "g.place", type: "qual", title: "Building place / rotate / move / delete", expect: "The ghost preview is accurate, rotate works, deleting refunds as designed, and nothing overlaps." },
+  { id: "g.conveyor", type: "qual", title: "Conveyors: draw, connect head/tail, delete", expect: "Items flow, splits and joins behave, and there are no orphaned items." },
+  { id: "g.power", type: "qual", title: "Power grid (proximity) + eV pool", expect: "Unpowered buildings are clearly marked, and linking a generator powers them." },
+  { id: "g.managers", type: "qual", title: "Managers + star upgrades", expect: "Bonuses apply and the star tiers display correctly." },
+  { id: "g.offline", type: "quant", title: "Offline earnings after 30 min away", detail: "Note the income/sec before closing, force-stop, wait 30 min, relaunch.", metric: { unit: "% of expected", target: "Within about 10% of income x 1800 s (after the offline multiplier)", op: ">=", goal: 90 } },
+  { id: "g.daily", type: "qual", title: "Daily events", expect: "Today's event shows, progress tracks, and the reward is claimable once." },
+  { id: "g.prestige", p: "p1", type: "qual", title: "Prestige (real or <code>set prestige available</code>)", expect: "Reset is clean, prestige currency is granted, the first-prestige notification shows, and achievements unlock afterwards." },
+  { id: "g.pshop", type: "qual", title: "Prestige shop upgrades", expect: "Purchases persist through the next prestige, and effects are visible where wired." },
+  { id: "g.achv", type: "qual", title: "Achievements after prestige: progress + claim", expect: "Daily, Weekly and Progression progress update, and claim grants crystals." },
+  { id: "g.worlds", type: "qual", title: "Sites and worlds (Chem / Bio) travel", detail: "Use <code>world list</code> / <code>world unlock</code> on the console install if you can't reach them naturally.", expect: "World theming applies, the grid switches correctly, and travelling back keeps the original site intact." },
+  { id: "g.mega", type: "qual", title: "Megastructure (Dyson Sphere) stage progress", expect: "Stage deducts and completes, the global bonus applies, and the stage survives prestige." },
+  { id: "g.economy", type: "rating", title: "Early-game pacing (first 30 min)", detail: "1 = too slow or grindy, 3 = right, 5 = too fast or trivial." },
+]},
+{ id: "perf", title: "11. Performance and resources", intro: "Measure on the lowest-spec device you have. Plug in via USB with USB debugging on; device model and Android version go in the session fields.", items: [
+  { id: "pf.fps", type: "quant", title: "Steady-state FPS mid-game (busy factory)", detail: "Developer options > Profile HWUI rendering bars, or <code>adb shell dumpsys gfxinfo com.clemtek.mobileidlebuilder</code> (look at janky frames %).", metric: { unit: "fps", target: ">= 30 sustained (60 on high-end)", op: ">=", goal: 30 } },
+  { id: "pf.jank", type: "quant", title: "Janky frames % (gfxinfo) over 2 min of play", metric: { unit: "%", target: "<= 10%", op: "<=", goal: 10 } },
+  { id: "pf.mem", type: "quant", title: "Memory (TOTAL PSS) mid-game", detail: "<code>adb shell dumpsys meminfo com.clemtek.mobileidlebuilder</code>", metric: { unit: "MB", target: "<= 600 MB", op: "<=", goal: 600 } },
+  { id: "pf.battery", type: "quant", title: "Battery drain, 30 min active play, screen at 50%", metric: { unit: "% / 30 min", target: "<= 8%", op: "<=", goal: 8 } },
+  { id: "pf.heat", type: "qual", title: "Thermal: device warmth after 30 min", expect: "Warm is OK. It shouldn't get hot or throttle (FPS dropping over time)." },
+  { id: "pf.prestigehitch", type: "quant", title: "Prestige / world-switch hitch duration", metric: { unit: "s", target: "<= 2 s", op: "<=", goal: 2 } },
+  { id: "pf.load", type: "quant", title: "Warm start (from background after 10 min)", metric: { unit: "s", target: "<= 2 s", op: "<=", goal: 2 } },
+  { id: "pf.data", type: "quant", title: "Network data used, 30 min session", detail: "Settings > Apps > Mobile data usage (ads excluded if possible).", metric: { unit: "MB", target: "Record (baseline)" } },
+]},
+{ id: "robust", title: "12. Robustness and edge cases", items: [
+  { id: "rb.airplane", type: "qual", title: "Cold start in airplane mode", expect: "Game loads with cached flags. Cloud and ads fail quietly (no error spam, no hang on splash)." },
+  { id: "rb.dropout", type: "qual", title: "Network drops mid-session (toggle Wi-Fi off/on)", expect: "No freeze. Cloud save resumes later." },
+  { id: "rb.clock", type: "qual", title: "Device clock moved forward 24 h", expect: "Note the offline-earnings behaviour and the daily/ad cap resets (exploit check). Restore the clock afterwards." },
+  { id: "rb.locale", type: "qual", title: "Non-English locale with comma decimals (e.g. German)", expect: "Numbers format correctly and the save loads (no float-parse bugs)." },
+  { id: "rb.fontscale", type: "qual", title: "Largest system font / display size", expect: "Text isn't clipped and buttons stay tappable." },
+  { id: "rb.lowstorage", type: "qual", title: "Low storage (if practical)", expect: "Save failure doesn't corrupt the existing save (.bak fallback)." },
+  { id: "rb.spam", type: "qual", title: "Rapid tapping / double-tap on buy buttons", expect: "No double purchases and no negative currency." },
+  { id: "rb.multitouch", type: "qual", title: "Pinch while a menu is open; tap during a camera fling", expect: "No accidental placements or stuck input state." },
+]},
+{ id: "feel", title: "13. Qualitative experience", intro: "Rate 1 to 5 (5 = great) and use the notes for detail. These ratings are the baseline to compare against alpha tester feedback.", items: [
+  { id: "fl.clarity", type: "rating", title: "Clarity: I always knew what to do next" },
+  { id: "fl.controls", type: "rating", title: "Touch controls feel natural (camera, placement, menus)" },
+  { id: "fl.readability", type: "rating", title: "Readability: text size, contrast, icons on a phone screen" },
+  { id: "fl.visual", type: "rating", title: "Visual polish: buildings, particles, world theming" },
+  { id: "fl.audio", type: "rating", title: "Audio: music/SFX balance, volume sliders work" },
+  { id: "fl.reward", type: "rating", title: "Reward feel: research, unlocks, prestige are satisfying" },
+  { id: "fl.monet", type: "rating", title: "Monetization feels fair (ads optional, IAP not pushy)" },
+  { id: "fl.edu", type: "rating", title: "Educational value: the science reads as accurate and interesting" },
+  { id: "fl.return", type: "rating", title: "I want to come back tomorrow" },
+]},
+];
+
+// ---------- state ----------
+const LS_KEY = CHECKLIST_ID + ":v" + SCHEMA;
+const UI_KEY = CHECKLIST_ID + ":ui";
+const SESSION_FIELDS = [
+  ["build", "Build (version / code)", "0.4.18 / 221"],
+  ["tester", "Tester", ""],
+  ["date", "Date", new Date().toISOString().slice(0, 10)],
+  ["device", "Device model", ""],
+  ["android", "Android version", ""],
+  ["account", "Google account type (license tester?)", ""],
+  ["network", "Network (Wi-Fi / cellular / VPN?)", ""],
+];
+let state = blankState();
+let fileHandle = null;
+
+function blankState() {
+  const s = { checklist: CHECKLIST_ID, schema: SCHEMA, session: {}, generalNotes: "", sectionNotes: {}, items: {} };
+  for (const [k, , d] of SESSION_FIELDS) s.session[k] = d;
+  return s;
+}
+function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } }
+function itemState(id) { return state.items[id] || (state.items[id] = { status: "", value: "", rating: 0, note: "" }); }
+
+function load() {
+  const raw = safeGet(LS_KEY);
+  if (!raw) return;
+  try { merge(JSON.parse(raw)); } catch {}
+}
+function merge(data) {
+  if (!data || typeof data !== "object") return;
+  const s = blankState();
+  Object.assign(s.session, data.session || {});
+  s.generalNotes = data.generalNotes || "";
+  s.sectionNotes = data.sectionNotes || {};
+  if (data.items) for (const [id, v] of Object.entries(data.items)) {
+    s.items[id] = { status: v.status || "", value: v.value ?? "", rating: v.rating || 0, note: v.note || "", updated: v.updated };
+  }
+  state = s;
+}
+
+// Export: flatten the definitions alongside the results so the JSON is readable on its own.
+function exportData() {
+  const out = {
+    checklist: CHECKLIST_ID, schema: SCHEMA, exportedAt: new Date().toISOString(),
+    session: state.session, generalNotes: state.generalNotes, summary: counts(allItems()),
+    sections: SECTIONS.map(sec => ({
+      id: sec.id, title: sec.title, notes: state.sectionNotes[sec.id] || "",
+      items: sec.items.map(it => {
+        const st = state.items[it.id] || {};
+        const row = { id: it.id, title: strip(it.title), type: it.type, priority: it.p || "", ref: it.ref || "", status: st.status || "untested" };
+        if (it.metric) { row.measured = st.value ?? ""; row.unit = it.metric.unit; row.target = it.metric.target; const v = verdict(it, st.value); if (v) row.withinTarget = v === "ok"; }
+        if (it.type === "rating") row.rating = st.rating || null;
+        if (st.note) row.note = st.note;
+        if (st.updated) row.updated = st.updated;
+        return row;
+      }),
+    })),
+  };
+  return JSON.stringify(out, null, 2);
+}
+// Import accepts both the export format (sections[].items[]) and the raw localStorage format.
+function importData(data) {
+  if (data.sections) {
+    const raw = { session: data.session, generalNotes: data.generalNotes, sectionNotes: {}, items: {} };
+    for (const sec of data.sections) {
+      if (sec.notes) raw.sectionNotes[sec.id] = sec.notes;
+      for (const it of sec.items) raw.items[it.id] = { status: it.status === "untested" ? "" : it.status, value: it.measured ?? "", rating: it.rating || 0, note: it.note || "", updated: it.updated };
+    }
+    merge(raw);
+  } else merge(data);
+}
+
+let writeTimer = null;
+function persist() {
+  const ok = safeSet(LS_KEY, JSON.stringify(state));
+  setSaveState(ok ? "Saved in browser" : "Browser storage unavailable: use Save results file");
+  if (fileHandle) { clearTimeout(writeTimer); writeTimer = setTimeout(writeFile, 600); }
+  renderProgress();
+}
+async function writeFile() {
+  if (!fileHandle) return;
+  try {
+    const w = await fileHandle.createWritable();
+    await w.write(exportData()); await w.close();
+    setSaveState("Saved in browser + " + fileHandle.name);
+  } catch (e) { setSaveState("File write failed: " + e.message); fileHandle = null; }
+}
+function setSaveState(t) { document.getElementById("save-state").textContent = t; }
+
+// ---------- helpers ----------
+function allItems() { return SECTIONS.flatMap(s => s.items); }
+function strip(html) { const d = document.createElement("div"); d.innerHTML = html; return d.textContent; }
+function counts(items) {
+  const c = { total: items.length, pass: 0, fail: 0, blocked: 0, na: 0, untested: 0 };
+  for (const it of items) { const s = (state.items[it.id] || {}).status; if (s && c[s] !== undefined) c[s]++; else c.untested++; }
+  return c;
+}
+function verdict(it, raw) {
+  if (!it.metric || it.metric.goal === undefined || raw === "" || raw === undefined || raw === null) return "";
+  const v = parseFloat(raw); if (isNaN(v)) return "";
+  const g = it.metric.goal;
+  return (it.metric.op === ">=" ? v >= g : v <= g) ? "ok" : "bad";
+}
+function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function refLink(ref) {
+  if (!ref) return "";
+  const m = /^#(\d+)$/.exec(ref);
+  if (!m) return `<span class="tag">${esc(ref)}</span>`;
+  const n = +m[1];
+  // Issues #161+ are the alpha milestone; lower numbers are PRs. GitHub redirects /issues/N to the PR anyway.
+  return `<a class="tag" href="${REPO}/issues/${n}" target="_blank" rel="noopener">${esc(ref)}</a>`;
+}
+function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 1800); }
+function barSpans(c) {
+  const seg = (n, color) => n ? `<span style="width:${(n / c.total * 100).toFixed(2)}%;background:${color}"></span>` : "";
+  return seg(c.pass, "var(--pass)") + seg(c.fail, "var(--fail)") + seg(c.blocked, "var(--blocked)") + seg(c.na, "var(--na)");
+}
+
+// ---------- render ----------
+function renderSession() {
+  const host = document.getElementById("session-fields");
+  host.innerHTML = SESSION_FIELDS.map(([k, label]) =>
+    `<label>${esc(label)}<input type="text" data-session="${k}" value="${esc(state.session[k] || "")}"></label>`).join("");
+  host.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { state.session[inp.dataset.session] = inp.value; persist(); }));
+  const gn = document.getElementById("general-notes");
+  gn.value = state.generalNotes;
+  gn.oninput = () => { state.generalNotes = gn.value; persist(); };
+}
+
+function renderSections() {
+  const ui = (() => { try { return JSON.parse(safeGet(UI_KEY) || "{}"); } catch { return {}; } })();
+  const host = document.getElementById("sections");
+  host.innerHTML = SECTIONS.map(sec => `
+    <section class="sec${ui.collapsed && ui.collapsed[sec.id] ? " collapsed" : ""}" data-sec="${sec.id}">
+      <div class="sec-head" role="button" tabindex="0" aria-label="Toggle ${esc(sec.title)}">
+        <span class="chev">&#9662;</span>
+        <h2>${esc(sec.title)}</h2>
+        <div class="sec-mini" data-mini="${sec.id}"></div>
+        <span class="sec-count" data-count="${sec.id}"></span>
+      </div>
+      <div class="sec-body">
+        ${sec.intro ? `<div class="sec-intro">${sec.intro}</div>` : ""}
+        ${sec.items.map(renderItem).join("")}
+        <div class="sec-notes">
+          <label for="sn-${sec.id}">Section notes</label>
+          <textarea id="sn-${sec.id}" data-secnote="${sec.id}" rows="2">${esc(state.sectionNotes[sec.id] || "")}</textarea>
+        </div>
+      </div>
+    </section>`).join("");
+
+  host.querySelectorAll(".sec-head").forEach(h => {
+    const toggle = () => { h.parentElement.classList.toggle("collapsed"); saveUi(); };
+    h.addEventListener("click", toggle);
+    h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  });
+  host.querySelectorAll("[data-secnote]").forEach(t => t.addEventListener("input", () => { state.sectionNotes[t.dataset.secnote] = t.value; persist(); }));
+  host.querySelectorAll(".item").forEach(bindItem);
+}
+
+function renderItem(it) {
+  const st = state.items[it.id] || {};
+  const tags = [
+    it.type === "quant" ? `<span class="tag quant">QUANT</span>` : it.type === "rating" ? `<span class="tag quant">RATING</span>` : `<span class="tag">QUAL</span>`,
+    it.p ? `<span class="tag ${it.p}">${it.p.toUpperCase()}</span>` : "",
+    refLink(it.ref),
+  ].join(" ");
+  let detail = "";
+  if (it.detail) detail += `<div>${it.detail}</div>`;
+  if (it.expect) detail += `<div class="expect"><b>Expect</b> ${it.expect}</div>`;
+  let inputs = "";
+  if (it.metric) {
+    const v = verdict(it, st.value);
+    inputs += `<div class="metric"><label>Measured <input type="number" step="any" inputmode="decimal" data-metric value="${esc(st.value ?? "")}"></label> <span>${esc(it.metric.unit)}</span>
+      <span class="target">Target: ${esc(it.metric.target)}</span><span class="verdict ${v}" data-verdict>${v === "ok" ? "within target" : v === "bad" ? "outside target" : ""}</span></div>`;
+  }
+  if (it.type === "rating") {
+    inputs += `<div class="rating" role="group" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button data-rate="${n}" aria-pressed="${st.rating === n}">${n}</button>`).join("")}</div>`;
+  }
+  const hasNote = !!st.note;
+  inputs += `<button class="note-toggle" data-notetoggle>${hasNote ? "Hide note" : "+ Note"}</button>
+    <div class="note-wrap${hasNote ? "" : " hidden"}"><textarea data-note rows="2" placeholder="What happened? Repro steps, screenshots filename, improvement ideas...">${esc(st.note || "")}</textarea></div>`;
+  const status = it.type === "rating" ? "" : `<div class="status" role="group" aria-label="Result">
+      ${[["pass", "Pass"], ["fail", "Fail"], ["blocked", "Blocked"], ["na", "N/A"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${st.status === v}">${l}</button>`).join("")}
+    </div>`;
+  return `<div class="item" data-id="${it.id}" data-status="${st.status || ""}" data-type="${it.type}" data-p="${it.p || ""}">
+    <div class="item-title">${it.title} ${tags} <span class="item-id">${it.id}</span></div>
+    ${status || "<div></div>"}
+    ${detail ? `<div class="item-detail">${detail}</div>` : ""}
+    <div class="item-inputs">${inputs}</div>
+  </div>`;
+}
+
+function bindItem(el) {
+  const id = el.dataset.id;
+  const it = allItems().find(x => x.id === id);
+  const stamp = s => { s.updated = new Date().toISOString(); };
+  el.querySelectorAll(".status button").forEach(b => b.addEventListener("click", () => {
+    const s = itemState(id);
+    s.status = s.status === b.dataset.v ? "" : b.dataset.v; stamp(s);
+    el.dataset.status = s.status;
+    el.querySelectorAll(".status button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === s.status));
+    if (s.status === "fail" || s.status === "blocked") openNote(el);
+    persist();
+  }));
+  el.querySelectorAll("[data-rate]").forEach(b => b.addEventListener("click", () => {
+    const s = itemState(id); const n = +b.dataset.rate;
+    s.rating = s.rating === n ? 0 : n; s.status = s.rating ? "pass" : ""; stamp(s);
+    el.dataset.status = s.status;
+    el.querySelectorAll("[data-rate]").forEach(x => x.setAttribute("aria-pressed", +x.dataset.rate === s.rating));
+    persist();
+  }));
+  const m = el.querySelector("[data-metric]");
+  if (m) m.addEventListener("input", () => {
+    const s = itemState(id); s.value = m.value; stamp(s);
+    const v = verdict(it, m.value); const vEl = el.querySelector("[data-verdict]");
+    vEl.className = "verdict " + v; vEl.textContent = v === "ok" ? "within target" : v === "bad" ? "outside target" : "";
+    persist();
+  });
+  el.querySelector("[data-notetoggle]").addEventListener("click", () => {
+    const wrap = el.querySelector(".note-wrap");
+    if (wrap.classList.contains("hidden")) openNote(el); else { wrap.classList.add("hidden"); el.querySelector("[data-notetoggle]").textContent = itemState(id).note ? "Show note" : "+ Note"; }
+  });
+  el.querySelector("[data-note]").addEventListener("input", e => { const s = itemState(id); s.note = e.target.value; stamp(s); persist(); });
+}
+function openNote(el) {
+  el.querySelector(".note-wrap").classList.remove("hidden");
+  el.querySelector("[data-notetoggle]").textContent = "Hide note";
+  const t = el.querySelector("[data-note]"); if (!t.value) t.focus();
+}
+
+function renderProgress() {
+  const c = counts(allItems());
+  document.getElementById("overall-track").innerHTML = barSpans(c);
+  const done = c.total - c.untested;
+  document.getElementById("overall-label").textContent =
+    `${done}/${c.total} done  |  ${c.pass} pass  ${c.fail} fail  ${c.blocked} blocked  ${c.na} n/a`;
+  for (const sec of SECTIONS) {
+    const sc = counts(sec.items);
+    const mini = document.querySelector(`[data-mini="${sec.id}"]`); if (mini) mini.innerHTML = barSpans(sc);
+    const cnt = document.querySelector(`[data-count="${sec.id}"]`);
+    if (cnt) cnt.textContent = `${sc.total - sc.untested}/${sc.total}` + (sc.fail ? `  (${sc.fail} fail)` : "");
+  }
+}
+
+function applyFilter() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const f = document.getElementById("filter").value;
+  document.querySelectorAll("section.sec").forEach(secEl => {
+    let shown = 0;
+    secEl.querySelectorAll(".item").forEach(el => {
+      const st = state.items[el.dataset.id] || {};
+      let ok = !q || el.textContent.toLowerCase().includes(q);
+      if (ok && f === "open") ok = !st.status;
+      if (ok && f === "fail") ok = st.status === "fail";
+      if (ok && f === "blocked") ok = st.status === "blocked";
+      if (ok && f === "noted") ok = !!st.note;
+      if (ok && f === "quant") ok = el.dataset.type !== "qual";
+      if (ok && f === "p0") ok = el.dataset.p === "p0";
+      el.classList.toggle("hidden", !ok);
+      if (ok) shown++;
+    });
+    secEl.classList.toggle("hidden", shown === 0);
+    if ((q || f !== "all") && shown) secEl.classList.remove("collapsed");
+  });
+}
+function saveUi() {
+  const collapsed = {};
+  document.querySelectorAll("section.sec.collapsed").forEach(s => collapsed[s.dataset.sec] = true);
+  safeSet(UI_KEY, JSON.stringify({ collapsed, theme: document.documentElement.dataset.theme || "" }));
+}
+
+function markdownSummary() {
+  const c = counts(allItems());
+  const L = [`# ${CHECKLIST_ID} results`, "", `Build ${state.session.build} | ${state.session.device} | Android ${state.session.android} | ${state.session.date}`, "",
+    `${c.pass} pass, ${c.fail} fail, ${c.blocked} blocked, ${c.na} n/a, ${c.untested} untested`, ""];
+  if (state.generalNotes) L.push("## General notes", "", state.generalNotes, "");
+  for (const sec of SECTIONS) {
+    const rows = [];
+    for (const it of sec.items) {
+      const st = state.items[it.id] || {};
+      const interesting = st.status === "fail" || st.status === "blocked" || st.note || (it.metric && st.value !== "" && st.value !== undefined) || st.rating;
+      if (!interesting) continue;
+      let line = `- **${(st.status || "untested").toUpperCase()}** \`${it.id}\` ${strip(it.title)}`;
+      if (it.metric && st.value !== "" && st.value !== undefined) line += ` | measured ${st.value} ${it.metric.unit} (target ${it.metric.target})`;
+      if (st.rating) line += ` | rating ${st.rating}/5`;
+      rows.push(line);
+      if (st.note) rows.push("  - " + st.note.replace(/\n/g, "\n    "));
+    }
+    const sn = state.sectionNotes[sec.id];
+    if (rows.length || sn) { L.push(`## ${sec.title}`, ""); if (sn) L.push(`_${sn}_`, ""); L.push(...rows, ""); }
+  }
+  return L.join("\n");
+}
+
+// ---------- actions ----------
+document.getElementById("search").addEventListener("input", applyFilter);
+document.getElementById("filter").addEventListener("change", applyFilter);
+document.getElementById("btn-expand").onclick = () => { document.querySelectorAll("section.sec").forEach(s => s.classList.remove("collapsed")); saveUi(); };
+document.getElementById("btn-collapse").onclick = () => { document.querySelectorAll("section.sec").forEach(s => s.classList.add("collapsed")); saveUi(); };
+document.getElementById("btn-theme").onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark"; saveUi();
+};
+document.getElementById("btn-save-file").onclick = async () => {
+  const name = `device-results-${(state.session.build || "0.4").split(/[ /]/)[0]}-${state.session.date || "session"}.json`;
+  if (window.showSaveFilePicker) {
+    try {
+      fileHandle = await showSaveFilePicker({ suggestedName: name, types: [{ description: "JSON", accept: { "application/json": [".json"] } }] });
+      await writeFile(); toast("Linked: further changes auto-save to " + fileHandle.name);
+    } catch (e) { if (e.name !== "AbortError") toast("Save failed: " + e.message); }
+  } else {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([exportData()], { type: "application/json" }));
+    a.download = name; a.click(); URL.revokeObjectURL(a.href);
+    toast("Downloaded " + name);
+  }
+};
+document.getElementById("btn-load-file").onclick = () => document.getElementById("file-input").click();
+document.getElementById("file-input").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { importData(JSON.parse(await f.text())); persist(); renderAll(); toast("Loaded " + f.name); }
+  catch (err) { toast("Could not read file: " + err.message); }
+  e.target.value = "";
+};
+document.getElementById("btn-copy-md").onclick = async () => {
+  try { await navigator.clipboard.writeText(markdownSummary()); toast("Summary copied as Markdown"); }
+  catch { toast("Clipboard blocked by the browser"); }
+};
+document.getElementById("btn-reset").onclick = () => {
+  if (!confirm("Clear every result and note in this browser? Save a results file first if you want to keep them.")) return;
+  state = blankState(); fileHandle = null; persist(); renderAll(); toast("Checklist reset");
+};
+
+function renderAll() { renderSession(); renderSections(); renderProgress(); applyFilter(); }
+
+(function init() {
+  try { const ui = JSON.parse(safeGet(UI_KEY) || "{}"); if (ui.theme) document.documentElement.dataset.theme = ui.theme; } catch {}
+  load(); renderAll();
+  setSaveState(safeGet(LS_KEY) ? "Restored from browser" : "Not saved yet");
+})();
+</script>
+</body>
+</html>

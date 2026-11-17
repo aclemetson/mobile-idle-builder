@@ -2,7 +2,7 @@
 //
 // This file only compiles when the LEVELPLAY_ADS define is set AND com.unity.services.levelplay is
 // present in Packages/manifest.json. Until then the game uses MockAdProvider, so the Editor, tests, and
-// CI all build and run without the SDK. See docs/levelplay-ads-setup.md for the go-live runbook
+// CI all build and run without the SDK. See docs/runbooks/levelplay-ads-setup.md for the go-live runbook
 // (dashboard app + per-platform ad-unit IDs, the LEVELPLAY_ADS define, ATT/privacy, and test mode).
 //
 // NOTE: this is a scaffold. The exact LevelPlay API surface (class/method names) varies by SDK version;
@@ -27,7 +27,7 @@ namespace MobileIdleBuilder
         // secrets, so they live in source. NOTE: AppKey is the LevelPlay App Key, NOT the numeric Unity
         // Ads Game ID; the Game IDs / Org Core ID configure the Unity Ads network in the dashboard. The
         // server-side reporting API secret (LevelPlay > API Management) is the only thing that must stay
-        // out of source. See docs/levelplay-ads-setup.md.
+        // out of source. See docs/runbooks/levelplay-ads-setup.md.
 #if UNITY_IOS
         const string AppKey         = "26db953ad";
         const string RewardedAdUnit = "ziuxnckkd9sinb69";

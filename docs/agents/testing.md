@@ -2,14 +2,14 @@
 
 **Scope:** Test layout, exact runner invocation, and what kind of test each change needs. Read before committing anything.
 
-> Verified against: `deea0a4`, 2026-06-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; file counts refreshed 2026-11-17. If code contradicts this doc, trust the code and update this doc.
 
 ## Layout
 
 | Suite | Location | Assembly | Notes |
 |---|---|---|---|
-| EditMode (19 files) | `Assets/Scripts/Tests/` | `MobileIdleBuilder.Tests` | Pure logic + manually-ticked ECS worlds. Fast. |
-| PlayMode (8 files) | `Assets/Scripts/PlayModeTests/` | `MobileIdleBuilder.PlayModeTests` | Scene/service integration (save round-trips, services). |
+| EditMode (146 files) | `Assets/Scripts/Tests/` | `MobileIdleBuilder.Tests` | Pure logic + manually-ticked ECS worlds. Fast. |
+| PlayMode (21 files) | `Assets/Scripts/PlayModeTests/` | `MobileIdleBuilder.PlayModeTests` | Scene/service integration (save round-trips, services). |
 
 ## Running (the only sanctioned way)
 
