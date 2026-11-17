@@ -37,7 +37,7 @@ jobs:
       version: ${{ steps.version.outputs.value }}
 
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
 
@@ -117,14 +117,14 @@ jobs:
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name internal
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: build-log-internal-${{ github.run_number }}
           path: build-android.log
           retention-days: 14
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-aab-${{ github.run_number }}
           path: build/Android/*.aab
@@ -142,7 +142,7 @@ jobs:
       UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
 
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-aab-${{ github.run_number }}
           path: dist/
@@ -164,7 +164,7 @@ jobs:
       # (Remote Config update.latest.android in the development environment, read by
       # AppUpdateCheck on the splash). Skipped until the UGS secrets exist; a Remote
       # Config failure never fails the release.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.UGS_SERVICE_KEY_ID != ''
         with:
           sparse-checkout: scripts
