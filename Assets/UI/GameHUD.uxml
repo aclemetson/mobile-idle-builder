@@ -435,18 +435,19 @@
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden" picking-mode="Ignore">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
+                <ui:Label name="conveyor-label" text="Tap a start"
                           class="placement-label" />
                 <ui:Button name="btn-conveyor-rotate" text="" tooltip="Bend route" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Rotate" /></ui:Button>
                 <ui:Button name="btn-conveyor-confirm" text="" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
-                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Clear" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Start from a new cell" class="conveyor-mode-btn hidden" />
+                <!-- Undo: removes the last traced point (name kept from the old Clear button). -->
+                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Undo point" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Undo" /></ui:Button>
+                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Clear and start a new belt" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
             <ui:VisualElement name="conveyor-legend" class="conveyor-legend" picking-mode="Ignore">
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--endpoint" picking-mode="Ignore" />
-                <ui:Label text="Start / end" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:Label text="Points" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--path" picking-mode="Ignore" />
                 <ui:Label text="Path preview" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--guide" picking-mode="Ignore" />

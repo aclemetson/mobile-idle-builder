@@ -442,8 +442,8 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// On a ConveyorLinked step, a placed belt that adds no link used to leave the step stuck with no
-        /// word why. Each confirm auto-chains from the segment's end, so a route is often drawn in several
-        /// segments: remember the count before the first one and judge the whole chain once it ends.
+        /// word why. Remember the count before the belt and judge it once the trace ends (the controller clears
+        /// the trace after every confirmed belt, raising OnStartChanged(false)).
         /// </summary>
         private void NoteBeltPlaced()
         {
