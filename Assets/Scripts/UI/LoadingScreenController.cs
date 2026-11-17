@@ -95,19 +95,21 @@ namespace MobileIdleBuilder
             if (hasBridge)
             {
                 float logTimer = 0f;
-                while (!ECSLoadBridge.Instance.IsLoaded)
+                // The bridge is a scene object: if it goes away mid-wait there is nothing left to wait for.
+                while (ECSLoadBridge.Instance != null && !ECSLoadBridge.Instance.IsLoaded)
                 {
                     displayed = Mathf.MoveTowards(displayed, 0.99f, Time.deltaTime * 0.05f);
                     UpdateProgress(displayed * 100f);
-                    logTimer += Time.deltaTime;
+                    logTimer += Time.unscaledDeltaTime;
                     if (logTimer >= 2f)
                     {
                         logTimer = 0f;
-                        GameLogger.Info($"[LoadingScreen] Phase2 still waiting — IsLoaded=false  displayed={displayed:F2}");
+                        GameLogger.Info($"[LoadingScreen] Phase2 still waiting — IsLoaded=false  displayed={displayed:F2}  " +
+                                        $"awaitingSaveChoice={SaveManager.Instance?.AwaitingSaveChoice ?? false}");
                     }
                     yield return null;
                 }
-                GameLogger.Info("[LoadingScreen] Phase2 complete — ECSLoadBridge.IsLoaded=true");
+                GameLogger.Info($"[LoadingScreen] Phase2 complete — bridge {(ECSLoadBridge.Instance != null ? "loaded" : "gone")}");
             }
 
             // Phase 3 — done; snap to 100%, brief hold, reveal destination UI, remove overlay.
