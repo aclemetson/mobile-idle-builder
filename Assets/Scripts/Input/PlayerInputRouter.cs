@@ -8,10 +8,9 @@ namespace MobileIdleBuilder
     /// Routes confirmed tap input to building selection, field collection, and
     /// ARCH's presence anchor. Swipe-to-pan is handled entirely by CameraController.
     ///
-    /// Tap vs. swipe discrimination:
-    ///   - On pointer DOWN  : record start position.
-    ///   - While held       : accumulate drag distance.
-    ///   - On pointer UP    : if drag distance &lt; CameraController.TapThreshold → treat as tap.
+    /// Tap vs. swipe discrimination is <see cref="TapGesture"/> (shared with the placement modes): a press
+    /// that moved past the slop, had a second finger, stopped a gliding map, rested over a second, or began
+    /// on UI is not a tap.
     ///
     /// Taps fire on RELEASE (not press) so swipes never accidentally trigger gameplay.
     ///
@@ -34,8 +33,8 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private Transform                    tapAnchor;
 
+        private readonly TapGesture _tap = new();
         private Vector2 _pressStart;
-        private float   _dragAccum;
         private bool    _pressWasOnUI;
         private bool    _warnedMissingCollectorWiring;
 
@@ -64,37 +63,32 @@ namespace MobileIdleBuilder
         {
             UpdateFieldHover();
 
-            // Track gesture on press start
-            if (InputUtils.WasPointerPressed())
+            // TapGesture rules out pans, pinches, glide stops, long rests and presses that began on UI
+            // (that last one also handles click-through when a panel closes on the release frame).
+            bool pressed = InputUtils.WasPointerPressed();
+            bool tapped  = InputUtils.PumpTap(_tap, IsPointerOverUI, out Vector2 screenPos);
+
+            if (pressed)
             {
-                _pressStart    = InputUtils.GetPointerPosition();
-                _dragAccum     = 0f;
-                _pressWasOnUI  = IsPointerOverUI(_pressStart);
+                _pressStart   = _tap.PressPosition;
+                _pressWasOnUI = IsPointerOverUI(_pressStart);
                 BeginHold();
             }
 
-            // Accumulate drag while held
-            if (InputUtils.IsPointerHeld())
-            {
-                _dragAccum = Vector2.Distance(InputUtils.GetPointerPosition(), _pressStart);
-                UpdateHold();
-            }
+            if (InputUtils.IsPointerHeld()) UpdateHold();
 
-            // Only act on confirmed tap (release + small drag)
             if (!InputUtils.WasPointerReleased()) return;
             bool holdConsumed = _holdConsumed;
             CancelHold();
             _holdConsumed = false;
             if (holdConsumed) return; // the press became an edit, not a tap
-            if (_dragAccum > CameraController.TapThreshold) return;
+            if (!tapped) return;
 
             // Exclusive modes consume all taps
             if (AnyModeActive()) return;
 
-            Vector2 screenPos = InputUtils.GetPointerPosition();
-            // Block the tap if the press started on UI (handles click-through when panels
-            // close on the same frame as the release) or if UI still covers the release pos.
-            if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
+            // UI may still cover the release point (a panel opened during the press).
+            if (IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
             bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);
@@ -163,7 +157,8 @@ namespace MobileIdleBuilder
         private void UpdateHold()
         {
             if (_holdEntity == Entity.Null) return;
-            if (_dragAccum > CameraController.TapThreshold || AnyModeActive()) { CancelHold(); return; }
+            // A pan, a second finger (pinch/rotate) or a glide stop can't become an edit either.
+            if (_tap.IsDisqualified || AnyModeActive()) { CancelHold(); return; }
 
             float held = Time.unscaledTime - _holdStart;
             if (LongPress.IsComplete(held))

@@ -173,10 +173,10 @@ namespace MobileIdleBuilder
         // ---- Candidate / confirm state ----
         private bool       _hasCandidate;
         private Vector2Int _candidateCell;
-        private bool       _pointerDown;
-        private Vector2    _pointerPrev;
-        private float      _dragAccum;
-        private bool       _pressOverUI;
+        private readonly TapGesture _tap = new();
+
+        private bool IsPressOverPlacementUI(Vector2 p) =>
+            (IsPointerOverPlacementUI?.Invoke(p) ?? false) || UIInputBlocker.IsPointerOverUI(p);
 
         /// <summary>True once the player has tapped a cell and is being asked to confirm placement.</summary>
         public bool HasCandidate => _hasCandidate;
@@ -415,8 +415,7 @@ namespace MobileIdleBuilder
             _flipped           = false;
             IsPlacing          = true;
             _hasCandidate      = false;
-            _pointerDown       = false;
-            _dragAccum         = 0f;
+            _tap.Cancel(); // the press that started placement (or edit mode) is never a cell tap
             // Leave the camera unlocked so the player can press-and-drag to pan while positioning.
             cameraController?.SetPanLocked(false);
 
@@ -477,7 +476,7 @@ namespace MobileIdleBuilder
             if (!IsPlacing) return;
 
             // Edit mode's "Remove?" prompt is open: it owns input until it closes.
-            if (ConfirmPrompt.IsOpen) { _pointerDown = false; return; }
+            if (ConfirmPrompt.IsOpen) { _tap.Cancel(); return; }
 
             // Cancel: back out of a pending candidate first, otherwise exit placement entirely.
             if (InputUtils.WasCancelPressed())
@@ -494,32 +493,11 @@ namespace MobileIdleBuilder
                 if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
             }
 
-            // ---- Tap vs. drag detection ----
-            // A drag (movement beyond the tap threshold) is a camera pan and must NOT place a building;
-            // only a stationary tap that did not begin on the confirm popup selects a cell.
-            bool    tapped      = false;
-            Vector2 tapPosition = default;
-
-            if (InputUtils.WasPointerPressed())
-            {
-                _pointerDown = true;
-                _pointerPrev = InputUtils.GetPointerPosition();
-                _dragAccum   = 0f;
-                _pressOverUI = (IsPointerOverPlacementUI?.Invoke(_pointerPrev) ?? false)
-                               || UIInputBlocker.IsPointerOverUI(_pointerPrev);
-            }
-            if (_pointerDown && InputUtils.IsPointerHeld())
-            {
-                Vector2 cur = InputUtils.GetPointerPosition();
-                _dragAccum += Vector2.Distance(cur, _pointerPrev);
-                _pointerPrev = cur;
-            }
-            if (_pointerDown && InputUtils.WasPointerReleased())
-            {
-                _pointerDown = false;
-                tapPosition  = InputUtils.GetPointerPosition();
-                tapped       = _dragAccum <= CameraController.TapThreshold && !_pressOverUI;
-            }
+            // ---- Tap vs. pan/zoom (TapGesture) ----
+            // A pan, a pinch or rotate, a touch that stops a gliding map, or a press on the confirm popup
+            // must NOT pick a cell. A press that began before placement started (the hold that opened edit
+            // mode) never began here, so its release is not a tap either.
+            bool tapped = InputUtils.PumpTap(_tap, IsPressOverPlacementUI, out Vector2 tapPosition);
 
             // Desktop hover preview while no candidate is locked in (mobile has no hover).
             if (!_hasCandidate && Touchscreen.current == null && Mouse.current != null)

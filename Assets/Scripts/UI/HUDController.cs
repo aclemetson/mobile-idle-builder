@@ -282,6 +282,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
                 conveyorController.OnStartChanged     += OnConveyorStartChanged;
+                conveyorController.OnTraceChanged     += UpdateConveyorBar;
                 conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
             }
@@ -345,6 +346,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
                 conveyorController.OnStartChanged     -= OnConveyorStartChanged;
+                conveyorController.OnTraceChanged     -= UpdateConveyorBar;
                 conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = null;
             }
@@ -654,7 +656,7 @@ namespace MobileIdleBuilder
             if (_btnConveyorConfirm != null)
                 _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
             if (_btnConveyorCancelCandidate != null)
-                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.UndoLastNode();
             if (_btnConveyorNewStart != null)
                 _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
             if (_btnConveyorMode != null)
@@ -2371,10 +2373,8 @@ namespace MobileIdleBuilder
 
             if (isPlacing)
             {
-                // Mode always re-enters in Create with no pending start or candidate.
+                // Mode always re-enters in Create with no pending trace (this also refreshes the bar).
                 OnConveyorModeChanged(false);
-                OnConveyorCandidateChanged(false);
-                OnConveyorStartChanged(false);
             }
         }
 
@@ -2388,34 +2388,39 @@ namespace MobileIdleBuilder
                 else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
             }
 
+            UpdateConveyorBar();
+        }
+
+        private void OnConveyorCandidateChanged(bool hasCandidate) => UpdateConveyorBar();
+        private void OnConveyorStartChanged(bool hasStart)         => UpdateConveyorBar();
+
+        /// <summary>
+        /// The conveyor bar for the current trace: Bend and Place once there is a belt to place, Undo and New
+        /// once a start is set, and a short instruction that never repeats the button names.
+        /// </summary>
+        private void UpdateConveyorBar()
+        {
+            var  cc        = conveyorController;
+            bool destroy   = IsDestroyModeActive();
+            bool hasStart  = cc != null && !destroy && cc.HasStart;
+            bool candidate = cc != null && !destroy && cc.HasCandidate;
+
+            SetElementVisible(_btnConveyorRotate,          candidate);
+            SetElementVisible(_btnConveyorConfirm,         candidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasStart);
+            SetElementVisible(_btnConveyorNewStart,        hasStart);
+
             if (_conveyorLabel != null)
-                _conveyorLabel.text = isDestroy
-                    ? "Tap a belt to remove"
-                    : "Tap a start, then an end";
-
-            // Switching mode always clears any pending candidate.
-            if (isDestroy) OnConveyorCandidateChanged(false);
+                _conveyorLabel.text = ConveyorBarLabel(destroy, hasStart, candidate, cc != null && cc.IsTraceEnded);
         }
 
-        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
-        private void OnConveyorCandidateChanged(bool hasCandidate)
+        /// <summary>The conveyor bar's instruction for a trace state. Pure (unit-tested); short so it fits the bar.</summary>
+        internal static string ConveyorBarLabel(bool destroy, bool hasStart, bool canPlace, bool ended)
         {
-            SetElementVisible(_btnConveyorRotate,          hasCandidate);
-            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
-            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
-
-            // The label is a short instruction only — it must not repeat the button names.
-            if (_conveyorLabel != null && !IsDestroyModeActive())
-                _conveyorLabel.text = hasCandidate
-                    ? "Place the belt, or adjust it"
-                    : "Tap a start, then an end";
-        }
-
-        /// <summary>Shows the "start from a new cell" reset button whenever a start anchor is pending
-        /// (e.g. after auto-chaining), so the player can begin a fresh run without leaving build mode.</summary>
-        private void OnConveyorStartChanged(bool hasStart)
-        {
-            SetElementVisible(_btnConveyorNewStart, hasStart && !IsDestroyModeActive());
+            if (destroy)   return "Tap a belt to remove";
+            if (!hasStart) return "Tap a start";
+            if (ended)     return "Joins a belt: place it";
+            return canPlace ? "Tap the next point, or place" : "Tap the next point";
         }
 
         private bool IsDestroyModeActive() =>
