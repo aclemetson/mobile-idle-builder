@@ -1,12 +1,20 @@
 name: PR Tests
 
+# DISABLED (portfolio mode): nothing here runs automatically right now.
+# The original triggers are kept below, commented out; restore them to re-enable.
+# See docs/runbooks/ci-setup.md.
+# on:
+#   pull_request:
+#     branches: [develop, main, 'release/**', 'integration/**']
 on:
-  pull_request:
-    branches: [develop, main, 'release/**', 'integration/**']
+  workflow_dispatch:
 
 concurrency:
   group: pr-tests-${{ github.event.pull_request.number }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   # Manual gate before anything runs on the self-hosted runner. Bound to the
@@ -37,7 +45,7 @@ jobs:
     runs-on: [self-hosted, windows, unity]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           lfs: true
 
@@ -63,7 +71,7 @@ jobs:
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name tests
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: test-results-${{ github.run_number }}
@@ -78,11 +86,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.x'
 

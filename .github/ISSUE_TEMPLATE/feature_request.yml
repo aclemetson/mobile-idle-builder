@@ -1,0 +1,20 @@
+name: Suggestion
+description: An idea for gameplay, balance or quality of life
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem or opportunity?
+      description: What felt slow, confusing or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Suggested change
+  - type: textarea
+    id: context
+    attributes:
+      label: Where in the game
+      description: Which stage of progression, panel or building?
