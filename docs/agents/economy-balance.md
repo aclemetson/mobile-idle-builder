@@ -22,7 +22,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 
 **Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 3 daily challenges (15◆ each), daily achievements (2/3/3/6/10 + 15 on full clear), weekly/monthly achievements, one-time progression. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr); daily achievements are kept low to avoid double-paying the daily challenges for the same actions.
 
-**Rewarded ads (free, opt-in — `AdRewardCalculator.Placements`):** watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Gated by `ads.enabled`; ships on a mock provider until LevelPlay is wired (`docs/levelplay-ads-setup.md`).
+**Rewarded ads (free, opt-in — `AdRewardCalculator.Placements`):** watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Gated by `ads.enabled`; ships on a mock provider until LevelPlay is wired (`docs/runbooks/levelplay-ads-setup.md`).
 
 | Placement | Reward | Daily cap |
 |---|---|---|

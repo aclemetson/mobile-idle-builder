@@ -7,7 +7,7 @@ namespace MobileIdleBuilder
     /// Tracking Transparency (ATT) before initialising; on Android no runtime prompt is required.
     ///
     /// This is intentionally a thin scaffold: it returns immediately so the Mock/CI path never blocks.
-    /// The real ATT request is wired at go-live (see docs/levelplay-ads-setup.md) — either via the
+    /// The real ATT request is wired at go-live (see docs/runbooks/levelplay-ads-setup.md) — either via the
     /// LevelPlay consent API or Unity's iOS ATT plugin — and the Info.plist must carry
     /// NSUserTrackingUsageDescription (injected in scripts/archive-upload-ios.sh).
     /// </summary>

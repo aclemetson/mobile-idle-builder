@@ -7,16 +7,24 @@ name: Release Internal
 # required checks on the PR (pr-tests.yml) before the merge was allowed. This
 # workflow only builds and uploads. The Play upload itself is the final backstop
 # -- it rejects a duplicate version code at upload time.
+# DISABLED (portfolio mode): nothing here runs automatically right now.
+# The original triggers are kept below, commented out; restore them to re-enable.
+# See docs/runbooks/ci-setup.md.
+# on:
+#   pull_request:
+#     types: [closed]
+#     branches: ['release/**']
 on:
-  pull_request:
-    types: [closed]
-    branches: ['release/**']
+  workflow_dispatch:
 
 # One internal build per release branch; a burst of merges collapses to the
 # latest (cancel the in-flight build instead of queueing several Unity builds).
 concurrency:
   group: release-internal-${{ github.base_ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   # ── Build the AAB on the local Windows machine ───────────────────────────────
@@ -29,7 +37,7 @@ jobs:
       version: ${{ steps.version.outputs.value }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           lfs: true
 
@@ -109,14 +117,14 @@ jobs:
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File .\scripts\ci-library-stash.ps1 -Action Save -Name internal
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: build-log-internal-${{ github.run_number }}
           path: build-android.log
           retention-days: 14
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: android-aab-${{ github.run_number }}
           path: build/Android/*.aab
@@ -134,7 +142,7 @@ jobs:
       UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: android-aab-${{ github.run_number }}
           path: dist/
@@ -144,7 +152,7 @@ jobs:
         run: echo "path=$(ls dist/*.aab | head -1)" >> "$GITHUB_OUTPUT"
 
       - name: Upload to Google Play Internal Testing
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName: com.clemtek.mobileidlebuilder
@@ -156,7 +164,7 @@ jobs:
       # (Remote Config update.latest.android in the development environment, read by
       # AppUpdateCheck on the splash). Skipped until the UGS secrets exist; a Remote
       # Config failure never fails the release.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         if: env.UGS_SERVICE_KEY_ID != ''
         with:
           sparse-checkout: scripts

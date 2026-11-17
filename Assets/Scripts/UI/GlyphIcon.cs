@@ -7,7 +7,7 @@ namespace MobileIdleBuilder
     /// Vector-drawn UI icon (close / check / rotate / flip / info / empty) used in place of the ✕ ✓ ↻ ⇄ ⓘ ⤓
     /// text glyphs.
     /// The Android default font has none of those glyphs, so text buttons rendered blank on device
-    /// (issue #165, docs/mobile-icon-font-fix.md, Option B). Drawing with Painter2D removes the font
+    /// (issue #165, Option B: vector icons instead of a symbol font). Drawing with Painter2D removes the font
     /// dependency entirely and stays crisp at any DPI.
     ///
     /// The stroke uses the inherited text <c>color</c>, so existing button color rules (and

@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+Project rules for AI coding agents (Claude Code loads this file automatically). Most rules here were added after a real bug or a failed run; see `docs/agents/README.md` for the full context pack and `CONTRIBUTING.md` for the human-facing version.
+
 ## Agent Context Pack
 - Before implementing anything, read `docs/agents/README.md` and `docs/agents/architecture.md`, then ONLY the deep-dive docs the README routing table names for your task type
 - Feature assignments live in `docs/agents/tasks/` — follow the task file's "Required reading" line; do not re-explore the codebase for facts those docs already state
@@ -7,7 +11,7 @@
 ## Git Workflow
 - All work merges into `develop` only via a release branch (e.g., `release/0.3`) through a PR — never commit directly to `develop` or `main`
 - After running tests and committing on a feature branch, open a PR targeting the correct release branch (confirm the target before creating)
-- `gh api` ruleset/branch-protection commands require GitHub Pro on private repos — do not assume they work without checking the plan (403 otherwise)
+- CI/CD is paused: workflows are `workflow_dispatch` only (see `docs/runbooks/ci-setup.md`), so run the test suite locally before every PR
 
 ## Testing
 - Always run the full Unity test suite (`scripts/test-local.ps1`) before committing
