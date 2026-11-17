@@ -67,7 +67,7 @@ namespace MobileIdleBuilder.PlayModeTests
 
         // Spawns SaveManager then AchievementService with the injected test database.
         // Database is set before RunStart so it is available when Start() → LoadFromSave() runs.
-        void SpawnServices()
+        void SpawnServices(bool start = true)
         {
             _saveManagerGO = new GameObject("SaveManager");
             { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
@@ -80,7 +80,47 @@ namespace MobileIdleBuilder.PlayModeTests
             var svc = _achievementGO.AddComponent<AchievementService>();
             RunAwake(svc);
             s_dbField.SetValue(svc, _testDb);
-            RunStart(svc);
+            if (start) RunStart(svc);
+        }
+
+        // ── Loading waits for the final save ──────────────────────────────────
+        // State loads once the save is final (after the cloud check). Without start, the service is in
+        // that wait: it has not read the save yet.
+
+        [Test]
+        public void EventBeforeLoad_DoesNotRecompleteAClaimedAchievement()
+        {
+            SpawnServices(start: false);
+            SaveManager.Instance.Current.achievements.Add("test_craft_5"); // completed and claimed earlier
+
+            AchievementService.Instance.NotifyCraft("hydrogen", 5);
+            CollectionAssert.Contains(SaveManager.Instance.Current.achievements, "test_craft_5",
+                "a held event must not flush empty state over the save");
+
+            AchievementService.Instance.InitPostPrestige(); // the save is final: load, then replay
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("test_craft_5"));
+            Assert.IsFalse(AchievementService.Instance.IsClaimable("test_craft_5"),
+                "a claimed achievement must not come back as claimable");
+        }
+
+        [Test]
+        public void EventBeforeLoad_IsReplayedAfterLoad()
+        {
+            SpawnServices(start: false);
+
+            AchievementService.Instance.NotifyCraft("hydrogen", 3);
+            Assert.IsFalse(AchievementService.Instance.IsInitialized);
+            Assert.AreEqual(0, AchievementService.Instance.GetProgress("test_craft_5"), "held, not counted yet");
+
+            AchievementService.Instance.InitPostPrestige();
+            Assert.AreEqual(3, AchievementService.Instance.GetProgress("test_craft_5"), "replayed once loaded");
+        }
+
+        [Test]
+        public void Start_WithNoSaveLoaderToWaitFor_LoadsAtOnce()
+        {
+            SpawnServices();
+            Assert.IsTrue(AchievementService.Instance.IsInitialized);
         }
 
         // ── Progress tracking ─────────────────────────────────────────────────

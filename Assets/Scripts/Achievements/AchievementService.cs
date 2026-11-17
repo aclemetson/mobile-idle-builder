@@ -20,8 +20,11 @@ namespace MobileIdleBuilder
     /// or reaches save. HUDController flips the gate and calls InitPostPrestige() when the
     /// first prestige lands mid-session.
     ///
+    /// Loading: saved state is read once the save is final (ECSLoadBridge.IsLoaded, which follows the
+    /// cloud check), not at scene start. Events before then are held and replayed.
+    ///
     /// Period reset:
-    ///   On Start(), CheckPeriodResets() compares current UTC date to stored reset
+    ///   On load, CheckPeriodResets() compares current UTC date to stored reset
     ///   timestamps. If a period has expired the completed set and progress for that
     ///   category are wiped and the reset timestamp is advanced.
     /// </summary>
@@ -54,9 +57,36 @@ namespace MobileIdleBuilder
         static bool AchievementsUnlocked =>
             SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
 
+        // Achievement events that arrived before the save was final, replayed by Initialize.
+        readonly List<(AchievementTrigger trigger, string targetId, int delta, bool absolute)> _pendingEvents = new();
+
+        /// <summary>Longest wait for the save load before initializing anyway (the load has its own timeouts).</summary>
+        internal const float SaveWaitTimeoutSeconds = 30f;
+
         void Start()
         {
             if (!AchievementsUnlocked) return;
+            if (IsSaveFinal) Initialize();   // nothing to wait for (no bridge, or already loaded)
+            else             StartCoroutine(InitializeWhenSaveIsFinal());
+        }
+
+        static bool IsSaveFinal => ECSLoadBridge.Instance == null || ECSLoadBridge.Instance.IsLoaded;
+
+        /// <summary>
+        /// Waits for <see cref="ECSLoadBridge.IsLoaded"/> before loading state. The bridge only finishes after
+        /// the cloud check, which can replace <see cref="SaveManager.Current"/> with the cloud save. Loading
+        /// achievements at scene start, as before, read the save that was about to be replaced, and the next
+        /// completion or claim wrote that stale state over the newer save, so a claimed daily or weekly could
+        /// come back.
+        /// </summary>
+        System.Collections.IEnumerator InitializeWhenSaveIsFinal()
+        {
+            float waited = 0f;
+            while (!IsSaveFinal && waited < SaveWaitTimeoutSeconds)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
             Initialize();
         }
 
@@ -79,7 +109,16 @@ namespace MobileIdleBuilder
             _initialized = true;
             LoadFromSave();
             CheckPeriodResets();
+
+            if (_pendingEvents.Count == 0) return;
+            var pending = new List<(AchievementTrigger, string, int, bool)>(_pendingEvents);
+            _pendingEvents.Clear();
+            foreach (var (trigger, targetId, delta, absolute) in pending)
+                Evaluate(trigger, targetId, delta, absolute);
         }
+
+        /// <summary>True once saved state is loaded (test seam).</summary>
+        internal bool IsInitialized => _initialized;
 
         // ── Load / flush ──────────────────────────────────────────────────────
 
@@ -264,6 +303,14 @@ namespace MobileIdleBuilder
             // Single funnel for every Notify*() call, so this one check keeps the whole feature
             // dormant pre-prestige. CheckCategoryComplete is only reached from here.
             if (!AchievementsUnlocked) return;
+
+            // Before the saved state is loaded, counting against empty sets would complete achievements the
+            // player already has, and the flush would write those empty sets over the save. Hold the event.
+            if (!_initialized)
+            {
+                _pendingEvents.Add((trigger, targetId, delta, absolute));
+                return;
+            }
 
             bool dirty = false;
             // Track every category that had at least one completion this call
