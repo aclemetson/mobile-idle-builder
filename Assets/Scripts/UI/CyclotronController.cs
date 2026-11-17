@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// The Cyclotron Kick minigame (docs/agents/tasks/feature-cyclotron-kick.md): a drawer button, unlocked at
+    /// The Cyclotron Kick minigame (docs/agents/tasks/archive/feature-cyclotron-kick.md): a drawer button, unlocked at
     /// the second prestige, opens a card with three steps:
     ///  - <b>intro</b>: the description, time until the next run, the boost running (if any), Start, and
     ///    the two Insight upgrades (Longer Boost, Faster Recharge);
