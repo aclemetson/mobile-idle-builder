@@ -1,4 +1,4 @@
-/* Idle Builder balancing dashboard — pure client-side.
+/* Quantum Foundry balancing dashboard — pure client-side.
  * Loads a CSV exported from Unity Data Explorer, detects the event type by its columns,
  * and renders the relevant balancing charts with Chart.js. No server, no keys.
  *
