@@ -10,6 +10,12 @@
 ![Tests](https://img.shields.io/badge/tests-1700%2B%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-source--available-lightgrey)
 
+<p>
+  <img src="docs/media/factory.png" alt="A factory: harvesters on quantum fields feeding belts of particles into machines" width="300">
+  &nbsp;&nbsp;
+  <img src="docs/media/research-tree.png" alt="The research tree panel over the factory" width="300">
+</p>
+
 </div>
 
 Mobile Idle Builder is a mobile idle/automation game, built solo in Unity with the Data-Oriented Technology Stack (DOTS/ECS). You start with a handful of subatomic particles, harvest them from quantum fields, and wire up harvesters, belts and machines that turn quarks into nucleons, nucleons into elements through fusion and decay chains, and elements into molecules. Every building is "physics made visible": its shape shows the process it performs. The game keeps producing while you're away, and prestige resets trade a run for permanent upgrades.
