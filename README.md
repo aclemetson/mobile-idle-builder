@@ -1,6 +1,6 @@
 <div align="center">
 
-# Mobile Idle Builder
+# Quantum Foundry
 
 **An idle factory game where you build matter itself, from quarks and electrons to atoms, molecules and a Dyson Sphere.**
 
@@ -18,7 +18,7 @@
 
 </div>
 
-Mobile Idle Builder is a mobile idle/automation game, built solo in Unity with the Data-Oriented Technology Stack (DOTS/ECS). You start with a handful of subatomic particles, harvest them from quantum fields, and wire up harvesters, belts and machines that turn quarks into nucleons, nucleons into elements through fusion and decay chains, and elements into molecules. Every building is "physics made visible": its shape shows the process it performs. The game keeps producing while you're away, and prestige resets trade a run for permanent upgrades.
+Quantum Foundry is a mobile idle/automation game, built solo in Unity with the Data-Oriented Technology Stack (DOTS/ECS). You start with a handful of subatomic particles, harvest them from quantum fields, and wire up harvesters, belts and machines that turn quarks into nucleons, nucleons into elements through fusion and decay chains, and elements into molecules. Every building is "physics made visible": its shape shows the process it performs. The game keeps producing while you're away, and prestige resets trade a run for permanent upgrades.
 
 It's in closed testing on Google Play's internal track and TestFlight (release 0.5).
 
