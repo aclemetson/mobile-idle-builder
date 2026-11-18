@@ -100,7 +100,7 @@ namespace MobileIdleBuilder.Tests
 
         [Test] public void T3_LiquidHydrogen_SellValue()       => AssertSell("liquid_hydrogen",  1190f);
         [Test] public void T3_Water_SellValue()                 => AssertSell("water",            15600f);
-        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          5530f);
+        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          2460f);
         [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          20000f);
         [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           233000f);
         [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       376000f);
@@ -142,8 +142,8 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 
-        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              2450000f);
-        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       1460000f);
+        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              2440000f);
+        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       1450000f);
         [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     3130000f);
         [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 2740000f);
         [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            2570000f);

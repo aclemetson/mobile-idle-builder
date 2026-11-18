@@ -123,6 +123,17 @@ namespace MobileIdleBuilder.Tests
             RequireInput(r, "electron", quantity: 1);
         }
 
+        [Test]
+        public void Methane_IsCH4_4Hydrogen_1Carbon_40s()
+        {
+            // CH4: one carbon. It once took 6, starving Methane lines of Carbon (fixed 2026-11-18,
+            // craft time halved with the atom count: 10 atoms / 80 s -> 5 atoms / 40 s).
+            var r = RequireRecipe("methane");
+            RequireInput(r, "hydrogen", quantity: 4);
+            RequireInput(r, "carbon",   quantity: 1);
+            Assert.AreEqual(40f, r.base_craft_time, 0.001f);
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         private RecipeJson RequireRecipe(string id)
