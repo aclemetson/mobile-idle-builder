@@ -35,6 +35,8 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
+            // Period resets need server time; tests use the (shiftable) game clock instead of the network.
+            ServerClock.TestNowOverride = () => GameClock.UtcNow;
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
@@ -76,6 +78,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [TearDown]
         public void TearDown()
         {
+            ServerClock.TestNowOverride = null;
             if (_achievementGO != null) { Object.DestroyImmediate(_achievementGO); _achievementGO = null; }
             if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 

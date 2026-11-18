@@ -26,6 +26,8 @@ namespace MobileIdleBuilder.Tests
         [SetUp]
         public void SetUp()
         {
+            // EnsureToday / the no-arg claim API use server time; tests use the game clock instead of the network.
+            ServerClock.TestNowOverride = () => GameClock.UtcNow;
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
@@ -34,6 +36,7 @@ namespace MobileIdleBuilder.Tests
         [TearDown]
         public void TearDown()
         {
+            ServerClock.TestNowOverride = null;
             if (_serviceGO    != null) { UnityEngine.Object.DestroyImmediate(_serviceGO);    _serviceGO    = null; }
             if (_saveManagerGO != null) { UnityEngine.Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
             if (_content      != null) { UnityEngine.Object.DestroyImmediate(_content);      _content      = null; }
@@ -295,6 +298,58 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(svc.ClaimLoginReward(new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc)));
             Assert.AreEqual(0, SaveManager.Instance.Current.loginStreakIndex,
                 "calendar loops back to day 1 after the final day");
+        }
+
+        // ── Server time ───────────────────────────────────────────────────────
+
+        [Test]
+        public void NoServerTime_LoginRewardCannotBeClaimed()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+            ServerClock.TestNowOverride = () => null;   // offline
+
+            Assert.IsTrue(svc.WaitingForServerTime);
+            Assert.IsFalse(svc.CanClaimLoginReward(), "the device clock is not trusted for the login reward");
+            Assert.IsFalse(svc.ClaimLoginReward());
+            Assert.AreEqual(0, SaveManager.Instance.Current.paidCurrency);
+        }
+
+        [Test]
+        public void WithServerTime_LoginRewardClaimsOncePerDay()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+
+            Assert.IsTrue(svc.ClaimLoginReward());
+            Assert.IsFalse(svc.ClaimLoginReward(), "second claim on the same server day is refused");
+            Assert.AreEqual(10, SaveManager.Instance.Current.paidCurrency);
+        }
+
+        [Test]
+        public void EventBeforeDayCheck_IsHeldThenCountsTowardTodaysSet()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+
+            svc.NotifyCraft("any", 3);   // e.g. the session login tick, before today's set is known
+            Assert.AreEqual(0, svc.GetChallengeProgress("craft5"), "held, not counted yet");
+
+            svc.CheckDailyReset(new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc));
+            Assert.AreEqual(3, svc.GetChallengeProgress("craft5"), "replayed into today's set");
+        }
+
+        [Test]
+        public void ChallengeDeadlineFromFastClock_IsClampedWithoutReroll()
+        {
+            var svc = SpawnService(ThreeChallengePool());
+            var now = new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc);
+            svc.CheckDailyReset(now);
+            svc.NotifyCraft("any", 2);
+
+            // Written while the phone's date was a week ahead.
+            SaveManager.Instance.Current.dailyChallengeResetUtc = now.Date.AddDays(8).ToString("o");
+            svc.CheckDailyReset(now);
+
+            Assert.AreEqual(2, svc.GetChallengeProgress("craft5"), "clamping must not re-roll");
+            Assert.AreEqual(now.Date.AddDays(1).ToString("o"), SaveManager.Instance.Current.dailyChallengeResetUtc);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
