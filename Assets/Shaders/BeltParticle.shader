@@ -21,6 +21,9 @@ Shader "MobileIdleBuilder/BeltParticle"
         _JitterFreq  ("Jitter Frequency", Float) = 30.0
         _SquashAmp   ("Squash Amplitude", Float) = 0.0
         _SpinSpeed   ("Spin Speed (rad/s)", Float) = 0.0
+        // 1 = start each item's spin at a random angle (from its position); 0 = keep the mesh's own orientation
+        // (atom rings built facing the camera, a comet tail or wave pointing along the belt).
+        _PhaseSpin   ("Phase Spin", Float) = 1.0
         _FadePeriod  ("Fade Period (s, 0 = never)", Float) = 0.0
         _FadeOpen    ("Fade Open Fraction", Range(0.01, 0.9)) = 0.2
         _FadeMin     ("Fade Min Alpha", Range(0, 1)) = 0.06
@@ -65,6 +68,7 @@ Shader "MobileIdleBuilder/BeltParticle"
                 float  _JitterFreq;
                 float  _SquashAmp;
                 float  _SpinSpeed;
+                float  _PhaseSpin;
                 float  _FadePeriod;
                 float  _FadeOpen;
                 float  _FadeMin;
@@ -129,7 +133,7 @@ Shader "MobileIdleBuilder/BeltParticle"
                     pos *= s;
                 }
 
-                float spin = _SpinSpeed * t + phase;
+                float spin = _SpinSpeed * t + phase * _PhaseSpin;
                 pos = RotateY(pos, spin);
                 nrm = RotateY(nrm, spin);
 
