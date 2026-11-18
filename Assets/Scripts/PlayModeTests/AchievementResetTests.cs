@@ -33,6 +33,8 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
+            // Period resets need server time; tests use the (shiftable) game clock instead of the network.
+            ServerClock.TestNowOverride = () => GameClock.UtcNow;
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
@@ -75,6 +77,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [TearDown]
         public void TearDown()
         {
+            ServerClock.TestNowOverride = null;
             if (_achievementGO != null) { UnityEngine.Object.DestroyImmediate(_achievementGO); _achievementGO = null; }
             if (_saveManagerGO != null) { UnityEngine.Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
@@ -245,6 +248,82 @@ namespace MobileIdleBuilder.PlayModeTests
 
             Assert.IsTrue(AchievementService.Instance.IsCompleted("prog_first_craft"),
                 "Progression achievements must survive daily reset");
+        }
+
+        // ── Mid-session checks and server time ────────────────────────────────
+
+        [Test]
+        public void PeriodCheck_MidSession_ResetsExpiredDailyAndFiresEvent()
+        {
+            SpawnServices();
+            AchievementService.Instance.NotifyCraft("any", 2);
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_craft_2"));
+
+            // The day ends while the game is still running (no restart).
+            SaveManager.Instance.Current.dailyResetUtc = DateTime.UtcNow.AddMinutes(-1).ToString("o");
+            bool fired = false;
+            AchievementService.Instance.OnPeriodReset += () => fired = true;
+
+            AchievementService.Instance.RequestPeriodCheck("test");
+
+            Assert.IsFalse(AchievementService.Instance.IsCompleted("daily_craft_2"), "an expired daily must re-lock mid-session");
+            Assert.IsTrue(fired, "OnPeriodReset lets an open menu rebuild");
+            Assert.IsTrue(DateTime.Parse(SaveManager.Instance.Current.dailyResetUtc, null,
+                              System.Globalization.DateTimeStyles.RoundtripKind) > DateTime.UtcNow,
+                          "the next deadline must be in the future");
+        }
+
+        [Test]
+        public void PeriodCheck_DeadlineNotReached_KeepsCompletedDaily()
+        {
+            SpawnServices();
+            AchievementService.Instance.NotifyCraft("any", 2);
+
+            AchievementService.Instance.RequestPeriodCheck("test");
+
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_craft_2"));
+            Assert.IsTrue(AchievementService.Instance.IsClaimable("daily_craft_2"));
+        }
+
+        [Test]
+        public void PeriodCheck_NoServerTime_DoesNotReset()
+        {
+            SpawnServices();
+            AchievementService.Instance.NotifyCraft("any", 2);
+            SaveManager.Instance.Current.dailyResetUtc = DateTime.UtcNow.AddDays(-1).ToString("o");
+
+            ServerClock.TestNowOverride = () => null;   // offline: the sync finds no server time
+            AchievementService.Instance.RequestPeriodCheck("test");
+
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_craft_2"),
+                "without server time the device clock is not trusted, so nothing resets");
+        }
+
+        [Test]
+        public void PeriodCheck_DeadlineFromFastClock_IsClampedWithoutReset()
+        {
+            SpawnServices();
+            AchievementService.Instance.NotifyCraft("any", 2);
+            // Written while the phone's date was set a week ahead.
+            SaveManager.Instance.Current.dailyResetUtc = DateTime.UtcNow.Date.AddDays(8).ToString("o");
+
+            AchievementService.Instance.RequestPeriodCheck("test");
+
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_craft_2"), "clamping must not reset");
+            var stored = DateTime.Parse(SaveManager.Instance.Current.dailyResetUtc, null,
+                                        System.Globalization.DateTimeStyles.RoundtripKind);
+            Assert.AreEqual(DateTime.UtcNow.Date.AddDays(1), stored.ToUniversalTime(),
+                "deadline is pulled back to the end of the current day");
+        }
+
+        [Test]
+        public void ServerClock_ParsesHttpDateHeaderAsUtc()
+        {
+            Assert.IsTrue(ServerClock.TryParseHttpDate("Wed, 18 Nov 2026 07:28:05 GMT", out var utc));
+            Assert.AreEqual(new DateTime(2026, 11, 18, 7, 28, 5, DateTimeKind.Utc), utc);
+            Assert.AreEqual(DateTimeKind.Utc, utc.Kind);
+            Assert.IsFalse(ServerClock.TryParseHttpDate("", out _));
+            Assert.IsFalse(ServerClock.TryParseHttpDate("not a date", out _));
         }
 
         // ── ResetInMemory ─────────────────────────────────────────────────────

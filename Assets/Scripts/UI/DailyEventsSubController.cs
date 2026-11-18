@@ -40,6 +40,13 @@ namespace MobileIdleBuilder
         public void Refresh()
         {
             var svc = DailyEventService.Instance;
+            // Redraw when a server-time sync finishes (claimable/rolled state can change after this returns).
+            if (svc != null && _subscribedTo != svc)
+            {
+                if (_subscribedTo != null) _subscribedTo.OnChanged -= Redraw;
+                svc.OnChanged += Redraw;
+                _subscribedTo = svc;
+            }
             // Roll/refresh today's set now that everything is initialized (survives Start() init races).
             svc?.EnsureToday();
 
@@ -57,10 +64,27 @@ namespace MobileIdleBuilder
             RefreshChallenges(svc);
         }
 
+        private DailyEventService _subscribedTo;
+
+        /// <summary>Redraws an open panel from current state without re-running the day check.</summary>
+        private void Redraw()
+        {
+            if (_panel == null || _panel.ClassListContains("hidden")) return;
+            var svc = DailyEventService.Instance;
+            RefreshLoginSection(svc);
+            RefreshChallenges(svc);
+        }
+
+        private void OnDestroy()
+        {
+            if (_subscribedTo != null) _subscribedTo.OnChanged -= Redraw;
+        }
+
         private void RefreshLoginSection(DailyEventService svc)
         {
             var reward = svc?.CurrentLoginReward;
             bool canClaim = svc != null && svc.CanClaimLoginReward();
+            bool offline  = svc != null && svc.WaitingForServerTime;
 
             if (_loginInfo != null)
             {
@@ -71,14 +95,15 @@ namespace MobileIdleBuilder
                     var sb = new StringBuilder($"Day {reward.day}:  ♦ {reward.crystals}");
                     if (reward.entropy > 0)          sb.Append($"   e {reward.entropy:N0}");
                     if (reward.prestigeCurrency > 0) sb.Append($"   ✦ {reward.prestigeCurrency}");
-                    if (!canClaim) sb.Append("\nClaimed — come back tomorrow!");
+                    if (offline)        sb.Append("\nConnect to the internet to claim.");
+                    else if (!canClaim) sb.Append("\nClaimed — come back tomorrow!");
                     _loginInfo.text = sb.ToString();
                 }
             }
 
             if (_claimLoginBtn != null)
             {
-                _claimLoginBtn.text = canClaim ? "Claim" : "Claimed";
+                _claimLoginBtn.text = canClaim ? "Claim" : offline ? "Offline" : "Claimed";
                 _claimLoginBtn.SetEnabled(canClaim);
             }
         }
@@ -90,7 +115,9 @@ namespace MobileIdleBuilder
 
             if (svc == null || svc.TodaysChallengeIds.Count == 0)
             {
-                var empty = new Label("No challenges available.");
+                var empty = new Label(svc != null && svc.WaitingForServerTime
+                    ? "Connect to the internet to get today's challenges."
+                    : "No challenges available.");
                 empty.AddToClassList("recipe-inputs"); // visible on the dark theme
                 _challengesList.Add(empty);
                 return;
