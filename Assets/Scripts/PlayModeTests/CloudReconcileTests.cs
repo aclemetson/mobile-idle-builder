@@ -115,6 +115,63 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         [Test]
+        public void OnApplicationFocus_Lost_PushesToCloud()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            Pump(sm.InitialCloudReconcile());   // focus-loss pushes only once the save is final
+            int before = cloud.PushCount;
+
+            InvokePrivate(sm, "OnApplicationFocus", false);
+
+            Assert.AreEqual(before + 1, cloud.PushCount, "Losing focus pushes while the app can still finish the upload");
+        }
+
+        [Test]
+        public void OnApplicationFocus_Gained_DoesNotPush()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            Pump(sm.InitialCloudReconcile());
+            int before = cloud.PushCount;
+
+            InvokePrivate(sm, "OnApplicationFocus", true);
+
+            Assert.AreEqual(before, cloud.PushCount);
+        }
+
+        [Test]
+        public void FocusLossThenPause_SameState_PushesOnce()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            sm.RealtimeNow = () => 0f;
+            Pump(sm.InitialCloudReconcile());
+            sm.Current.prestigeCount = 3;       // state the cloud has not seen
+            int before = cloud.PushCount;
+
+            InvokePrivate(sm, "OnApplicationFocus", false);
+            InvokePrivate(sm, "OnApplicationPause", true);   // Android follows focus loss with pause
+
+            Assert.AreEqual(before + 1, cloud.PushCount, "the pause must not upload the state focus loss just pushed");
+        }
+
+        [Test]
+        public void OnApplicationFocus_LostBeforeReconcile_DoesNotPush()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+
+            InvokePrivate(sm, "OnApplicationFocus", false);
+
+            Assert.AreEqual(0, cloud.PushCount, "nothing final to upload while still loading");
+        }
+
+        [Test]
         public void OnApplicationQuit_PushesToCloud()
         {
             var sm    = NewSaveManager();
@@ -261,11 +318,11 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual(1, cloud.PushCount, "First autosave pushes");
 
             sm.Current.prestigeCount++;
-            now += 60f;                                    // t=1060: 60s after the last push started
+            now += 30f;                                    // t=1030: 30s after the last push started
             Pump(sm.AutoSaveTick());
             Assert.AreEqual(1, cloud.PushCount, "Changed, but within the push interval: local save only");
 
-            now += 240f;                                   // t=1300: 300s after the last push started
+            now += 30f;                                    // t=1060: 60s (the interval) after the last push started
             Pump(sm.AutoSaveTick());
             Assert.AreEqual(2, cloud.PushCount, "Changed and interval elapsed: push");
 
