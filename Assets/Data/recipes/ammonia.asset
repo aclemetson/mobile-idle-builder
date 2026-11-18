@@ -22,12 +22,12 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
     quantity: 3
   - item: {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
-    quantity: 7
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: d5b02317e42a8894987ece79732b5188, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 90
+  baseCraftTime: 36
   manualCraftTime: 0
   powerCostIsDynamic: 0
   fixedPowerCostEV: 450
