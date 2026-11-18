@@ -99,12 +99,12 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 3 — Molecular ───────────────────────────────────────────────
 
         [Test] public void T3_LiquidHydrogen_SellValue()       => AssertSell("liquid_hydrogen",  1190f);
-        [Test] public void T3_Water_SellValue()                 => AssertSell("water",            15600f);
+        [Test] public void T3_Water_SellValue()                 => AssertSell("water",            2810f);
         [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          2460f);
-        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          20000f);
-        [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           233000f);
-        [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       376000f);
-        [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 603000f);
+        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          6010f);
+        [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           46500f);
+        [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       188000f);
+        [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 399000f);
 
         // ── Tier 3 — Chemistry compounds (C1 P4a, C2-C3 P4b). First-pass values, re-tier in Phase 6. ──
 
@@ -142,22 +142,22 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 
-        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              2440000f);
-        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       1450000f);
-        [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     3130000f);
-        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 2740000f);
-        [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            2570000f);
-        [Test] public void T4_Superconductor_SellValue()    => AssertSell("superconductor",     9040000f);
-        [Test] public void T4_Metamaterial_SellValue()      => AssertSell("metamaterial",       26200000f);
+        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              1500000f);
+        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       887000f);
+        [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     1820000f);
+        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 1800000f);
+        [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            1980000f);
+        [Test] public void T4_Superconductor_SellValue()    => AssertSell("superconductor",     7250000f);
+        [Test] public void T4_Metamaterial_SellValue()      => AssertSell("metamaterial",       20800000f);
 
         // ── Tier 5 — Components ──────────────────────────────────────────────
 
-        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       32600000f);
-        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 119000000f);
-        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         94300000f);
-        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              322000000f);
-        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           679000000f);
-        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           1580000000f);
+        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       26200000f);
+        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 94700000f);
+        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         76900000f);
+        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              261000000f);
+        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           553000000f);
+        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           1300000000f);
 
         // ── Helper ───────────────────────────────────────────────────────────
 
