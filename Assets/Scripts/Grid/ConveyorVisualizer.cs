@@ -17,8 +17,9 @@ namespace MobileIdleBuilder
     /// Straight, bend and 2-3 input merge-junction shapes are all built from the same ribbon primitive.
     ///
     /// Item visuals float on the belt, interpolating between a segment's entry and exit edge by each
-    /// ConveyorItem.Progress (several items per tile). The basic particles are animated 3D objects
-    /// (<see cref="BeltItemVisuals"/>); every other item is its icon tile, billboarded to the camera.
+    /// ConveyorItem.Progress (several items per tile). Particles, elements and isotopes are animated 3D objects
+    /// (<see cref="BeltItemVisuals"/>), turned per their <see cref="BeltItemVisuals.Facing"/>; every other item is
+    /// its icon tile, billboarded to the camera.
     /// Visuals are pooled per item id.
     ///
     /// Call RefreshAll() after placing/removing segments (links may have changed across the whole
@@ -47,8 +48,8 @@ namespace MobileIdleBuilder
         // item at the front of a belt leaves, and the 3D particles cost more to build than a quad.
         private const int MaxPooledPerItem = 64;
         private readonly Dictionary<int, Stack<GameObject>> _itemPool = new();
-        // Item ids drawn as 3D particles (BeltItemVisuals): never billboarded.
-        private readonly HashSet<int> _particleItemIds = new();
+        // Item ids drawn as 3D visuals (BeltItemVisuals) and how each is turned; anything else is a billboarded tile.
+        private readonly Dictionary<int, BeltItemVisuals.Facing> _particleFacing = new();
         // Per-frame scratch, reused so Update allocates nothing.
         private readonly HashSet<(Entity, int)> _seenSlots  = new();
         private readonly List<(Entity, int)>    _staleSlots = new();
@@ -241,16 +242,25 @@ namespace MobileIdleBuilder
 
                     // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge. On a
                     // merge, each item rides the arm it came in on, so side items curve onto the belt.
-                    Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(
-                        cs, item.EntryEdgeOr(inEdge), exitDir, Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress)));
+                    int   entry = item.EntryEdgeOr(inEdge);
+                    float t     = Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress));
+                    Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, t);
                     pos.y       = 0.3f;
                     sphere.transform.localPosition = pos;
 
-                    // Billboard tile quads to face the camera so the sprite stays readable as the
-                    // camera orbits. 3D particles are round and animate in their own space: leave them.
-                    if (_cam != null && !_particleItemIds.Contains(item.ItemID))
+                    // Tiles and atoms face the camera so they stay readable as it orbits; a comet tail or wave
+                    // packet points along the belt (round on corners too); round particles are left alone.
+                    var facing = _particleFacing.TryGetValue(item.ItemID, out var f) ? f : BeltItemVisuals.Facing.Camera;
+                    if (facing == BeltItemVisuals.Facing.Camera && _cam != null)
                         sphere.transform.rotation =
                             Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
+                    else if (facing == BeltItemVisuals.Facing.AlongBelt)
+                    {
+                        Vector3 dir = ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Min(1f, t + 0.02f))
+                                    - ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Max(0f, t - 0.02f));
+                        dir.y = 0f;
+                        if (dir.sqrMagnitude > 1e-8f) sphere.transform.localRotation = Quaternion.LookRotation(dir, Vector3.up);
+                    }
                 }
             }
 
@@ -304,10 +314,10 @@ namespace MobileIdleBuilder
             }
 
             var so = ItemDatabase.Instance != null ? ItemDatabase.Instance.Get(itemId) : null;
-            var particle = so != null ? BeltItemVisuals.TryCreate(so.id, gridRenderer.transform) : null;
+            var particle = so != null ? BeltItemVisuals.TryCreate(so, gridRenderer.transform) : null;
             if (particle != null)
             {
-                _particleItemIds.Add(itemId);
+                _particleFacing[itemId] = BeltItemVisuals.FacingOf(so);
                 return particle;
             }
             var icon = so != null ? so.icon : null;
