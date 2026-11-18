@@ -30,8 +30,8 @@ namespace MobileIdleBuilder
         [SerializeField] GameConfigSO gameConfig;
         [SerializeField] float autoSaveIntervalSeconds = 60f;
         [Tooltip("Minimum seconds between autosave cloud pushes. Autosave still writes locally every " +
-                 "autoSaveIntervalSeconds; background/quit and explicit SaveToCloud() always push.")]
-        [SerializeField] float cloudPushIntervalSeconds = 300f;
+                 "autoSaveIntervalSeconds; focus loss, background, quit and explicit SaveToCloud() push too.")]
+        [SerializeField] float cloudPushIntervalSeconds = 60f;   // was 300: a short session never reached the cloud
 
         LocalSaveService _local;
         ICloudSaveService _cloud;
@@ -112,12 +112,28 @@ namespace MobileIdleBuilder
                 PlayerPrefs.SetString(BackgroundTimestampKey, GameClock.UtcNow.ToString("o"));
                 PlayerPrefs.Save();
                 SaveLocal();
-                PushToCloudBestEffort();
+                PushToCloudBestEffort(skipIfAlreadyPushed: true);   // focus loss usually pushed this already
             }
             else
             {
                 OnReturnFromBackground();
             }
+        }
+
+        /// <summary>
+        /// Focus is lost before Android suspends the app (app switcher, home gesture, notification shade),
+        /// while the player loop still runs, so a push started here usually finishes. A push started at
+        /// OnApplicationPause(true) often does not: on 0.6.5 a backgrounded session never reached the cloud.
+        /// Skipped when the content matches the last pushed or in-flight save, so the pause that usually
+        /// follows (and focus flicker from dialogs or the keyboard) does not upload the same state again.
+        /// </summary>
+        void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus) return;
+            if (_current == null || !CloudReconcileDone) return;   // still loading: nothing final to upload
+            SaveLocal();
+            GameLogger.Info($"[Save] Focus lost: saved locally{(IsAlreadyPushed(_local.LastWrittenContentHash) ? "; cloud already has this state" : "; pushing to cloud")}.");
+            PushToCloudBestEffort(skipIfAlreadyPushed: true);
         }
 
         void OnApplicationQuit()
@@ -133,14 +149,27 @@ namespace MobileIdleBuilder
         // the network write then proceeds on whatever background grace window the OS grants.
         // Best-effort by design: local save (above) remains the source of truth, and the next
         // cold start's reconcile pulls cloud if it happens to be newer.
-        void PushToCloudBestEffort()
+        void PushToCloudBestEffort(bool skipIfAlreadyPushed = false)
         {
             if (_cloud == null || !_cloud.IsAvailable) return;
             if (!FeatureFlags.CloudSaveEnabled) return;   // honor the cloud-save kill-switch
             // The game now runs this device's save while "which save?" is open; pushing it would overwrite
             // the cloud save the player may still pick.
             if (AwaitingSaveChoice) return;
+            if (skipIfAlreadyPushed && IsAlreadyPushed(_local.LastWrittenContentHash)) return;
             _ = PushAndRecord();
+        }
+
+        // Hash of the push in flight, and the window in which it counts as "already being uploaded".
+        ulong _pushingHash;
+        const float InFlightPushWindowSeconds = 15f;
+
+        /// <summary>True when <paramref name="hash"/> already reached the cloud, or is being uploaded right now.</summary>
+        bool IsAlreadyPushed(ulong hash)
+        {
+            if (hash == 0) return false;   // unknown content: always push
+            if (hash == _lastPushedHash) return true;
+            return hash == _pushingHash && RealtimeNow() - _lastPushStartedAt < InFlightPushWindowSeconds;
         }
 
         // Starts a cloud push of _current and records its content hash once it succeeds. Everything up
@@ -156,6 +185,7 @@ namespace MobileIdleBuilder
         async Task<bool> PushAndRecord()
         {
             ulong hash = _local.LastWrittenContentHash;
+            _pushingHash = hash;
             _lastPushStartedAt = RealtimeNow();
             var previousMarker = SaveSync.LoadMarker();
             string playerId = _cloud.AccountPlayerId;

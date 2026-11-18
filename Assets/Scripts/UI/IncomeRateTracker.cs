@@ -30,7 +30,7 @@ namespace MobileIdleBuilder
         /// Seconds of settled income the Entropy Surge needs before it prices itself. Until then the offer is
         /// held back ("Measuring income") instead of guessing from a few seconds.
         /// </summary>
-        public const double MinRewardSpanSeconds = 60.0;
+        public const double MinRewardSpanSeconds = 15.0;
 
         /// <summary>Seconds after a restart whose income the Surge ignores (load / resume backlog).</summary>
         public const double SettleSeconds = 10.0;
