@@ -24,9 +24,11 @@ namespace MobileIdleBuilder
     /// cloud check), not at scene start. Events before then are held and replayed.
     ///
     /// Period reset:
-    ///   On load, CheckPeriodResets() compares current UTC date to stored reset
-    ///   timestamps. If a period has expired the completed set and progress for that
-    ///   category are wiped and the reset timestamp is advanced.
+    ///   RequestPeriodCheck() runs on load, on resume from background, and while the menu is open.
+    ///   It compares SERVER time (ServerClock, not the phone's clock) to the stored deadlines; an
+    ///   expired period wipes that category's completed/unclaimed/progress and stores the next
+    ///   deadline. With no server time (offline) nothing resets. Every decision is logged under
+    ///   "[Achievements]" for on-device diagnosis.
     /// </summary>
     public class AchievementService : SingletonMonoBehaviour<AchievementService>
     {
@@ -46,7 +48,20 @@ namespace MobileIdleBuilder
         readonly HashSet<string>         _completed   = new();
         readonly HashSet<string>         _unclaimed   = new();
 
-        bool _initialized;
+        bool _initialized;   // LoadFromSave has run
+        bool _ready;         // ...and the first period check has run; events are evaluated from here on
+
+        // Period checks need server time. One sync at a time; after a failure, timer-driven checks wait.
+        bool  _syncing;
+        float _lastSyncFailedAt = float.NegativeInfinity;
+        const float SyncRetrySeconds = 30f;
+
+        // Diagnostics: the save object state was loaded from, to spot it being swapped underneath us.
+        SaveData _loadedFrom;
+        bool     _warnedSaveReplaced;
+
+        /// <summary>Fired after a period reset re-locks achievements, so an open menu can rebuild.</summary>
+        public event Action OnPeriodReset;
 
         /// <summary>
         /// Achievements stay entirely dormant until the player's first prestige: no progress
@@ -65,7 +80,11 @@ namespace MobileIdleBuilder
 
         void Start()
         {
-            if (!AchievementsUnlocked) return;
+            if (!AchievementsUnlocked)
+            {
+                GameLogger.Info("[Achievements] Dormant: first prestige not done (tutorial.hasCompletedFirstRun=false).");
+                return;
+            }
             if (IsSaveFinal) Initialize();   // nothing to wait for (no bridge, or already loaded)
             else             StartCoroutine(InitializeWhenSaveIsFinal());
         }
@@ -87,6 +106,11 @@ namespace MobileIdleBuilder
                 waited += Time.unscaledDeltaTime;
                 yield return null;
             }
+            if (IsSaveFinal)
+                GameLogger.Info($"[Achievements] Save final after {waited:0.0}s; loading achievement state.");
+            else
+                GameLogger.Warning($"[Achievements] Save still NOT final after {waited:0.0}s; loading anyway. " +
+                                   "If the cloud save replaces it later, achievement state will be stale.");
             Initialize();
         }
 
@@ -108,24 +132,39 @@ namespace MobileIdleBuilder
             if (_initialized) return;
             _initialized = true;
             LoadFromSave();
-            CheckPeriodResets();
+            // Events stay held until this first period check is done, so today's progress is not counted
+            // against yesterday's completions and then wiped by the reset.
+            RequestPeriodCheck("load");
+        }
+
+        /// <summary>Replays events held while loading. Runs once, after the first period check (or its failure).</summary>
+        void MarkReady()
+        {
+            if (_ready) return;
+            _ready = true;
 
             if (_pendingEvents.Count == 0) return;
+            GameLogger.Info($"[Achievements] Replaying {_pendingEvents.Count} event(s) held during load.");
             var pending = new List<(AchievementTrigger, string, int, bool)>(_pendingEvents);
             _pendingEvents.Clear();
             foreach (var (trigger, targetId, delta, absolute) in pending)
                 Evaluate(trigger, targetId, delta, absolute);
         }
 
-        /// <summary>True once saved state is loaded (test seam).</summary>
-        internal bool IsInitialized => _initialized;
+        /// <summary>True once saved state is loaded and the first period check has run (test seam).</summary>
+        internal bool IsInitialized => _ready;
 
         // ── Load / flush ──────────────────────────────────────────────────────
 
         void LoadFromSave()
         {
             var save = SaveManager.Instance?.Current;
-            if (save == null) return;
+            if (save == null)
+            {
+                GameLogger.Warning("[Achievements] LoadFromSave: no SaveManager.Current; starting empty.");
+                return;
+            }
+            _loadedFrom = save;
 
             _completed.Clear();
             _progress.Clear();
@@ -139,12 +178,35 @@ namespace MobileIdleBuilder
 
             foreach (var id in save.unclaimedAchievements)
                 _unclaimed.Add(id);
+
+            GameLogger.Info($"[Achievements] Loaded from save (player={save.playerId}, lastSaved={save.lastSaved}): " +
+                            $"completed {DescribeByCategory(_completed)}; unclaimed {DescribeByCategory(_unclaimed)}; " +
+                            $"in progress {DescribeByCategory(_progress.Keys)}; deadlines daily={Show(save.dailyResetUtc)} " +
+                            $"weekly={Show(save.weeklyResetUtc)} monthly={Show(save.monthlyResetUtc)}");
         }
 
-        void FlushToSave()
+        void FlushToSave(bool resetting = false)
         {
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
+
+            // Diagnostics for "achievements came back / disappeared": the save we loaded from was swapped
+            // (cloud pick after load), or this flush removes completions that nothing here reset.
+            if (!ReferenceEquals(save, _loadedFrom) && !_warnedSaveReplaced)
+            {
+                _warnedSaveReplaced = true;
+                GameLogger.Warning($"[Achievements] SaveManager.Current was REPLACED after achievements loaded " +
+                                   $"(loaded lastSaved={_loadedFrom?.lastSaved}, now lastSaved={save.lastSaved}). " +
+                                   $"Writing in-memory state over the new save: completed {DescribeByCategory(_completed)}; " +
+                                   $"new save had {save.achievements.Count} completed.");
+            }
+            if (!resetting)
+            {
+                var dropped = save.achievements.Where(id => !_completed.Contains(id)).ToList();
+                if (dropped.Count > 0)
+                    GameLogger.Warning($"[Achievements] Flush is removing {dropped.Count} completed achievement(s) " +
+                                       $"outside a period reset: {string.Join(", ", dropped)}");
+            }
 
             save.achievements        = new List<string>(_completed);
             save.achievementProgress = _progress
@@ -156,64 +218,187 @@ namespace MobileIdleBuilder
         // ── Period reset ──────────────────────────────────────────────────────
 
         /// <summary>
-        /// Checks whether the daily, weekly, and monthly periods have expired.
-        /// If a period has expired: completed achievements for that category are
-        /// re-locked, in-progress counts are cleared, and a new reset timestamp
-        /// is written. The bonus "all-complete" achievement is also re-locked.
+        /// Runs the daily/weekly/monthly reset check against server time. Safe to call any number of
+        /// times: on load, on resume from background, and when the achievements menu opens. With no
+        /// server time yet it syncs first; if the sync fails, nothing resets (the device clock is not
+        /// trusted, since moving it forward would re-arm dailies and pay out crystals again).
         /// </summary>
-        void CheckPeriodResets()
+        public void RequestPeriodCheck(string reason)
+        {
+            if (!_initialized) return;
+
+            var now = ServerClock.UtcNow;
+            if (now.HasValue)
+            {
+                CheckPeriodResets(now.Value, reason);
+                MarkReady();
+                return;
+            }
+
+            if (_syncing) return;   // the running sync will do the check
+            if (_ready && Time.realtimeSinceStartup - _lastSyncFailedAt < SyncRetrySeconds) return;
+
+            _syncing = true;
+            GameLogger.Info($"[Achievements] Period check ({reason}): fetching server time.");
+            ServerClock.StartSync(this, ok =>
+            {
+                _syncing = false;
+                var synced = ServerClock.UtcNow;
+                if (ok && synced.HasValue)
+                {
+                    CheckPeriodResets(synced.Value, reason);
+                }
+                else
+                {
+                    _lastSyncFailedAt = Time.realtimeSinceStartup;
+                    GameLogger.Warning($"[Achievements] Period check ({reason}) SKIPPED: no server time (offline?). " +
+                                       $"Nothing resets until a sync succeeds. Device now {DateTime.UtcNow:o}.");
+                }
+                MarkReady();
+            });
+        }
+
+        /// <summary>
+        /// Cheap check for the open menu's 1 s tick: requests a period check only when a deadline has
+        /// passed (or server time is missing and the retry window is open).
+        /// </summary>
+        public void CheckPeriodsIfDue()
+        {
+            if (!_ready) return;
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+
+            var now = ServerClock.UtcNow;
+            if (!now.HasValue) { RequestPeriodCheck("menu tick, no server time"); return; }
+
+            if (IsDue(save.dailyResetUtc, now.Value) || IsDue(save.weeklyResetUtc, now.Value) ||
+                IsDue(save.monthlyResetUtc, now.Value))
+                RequestPeriodCheck("deadline passed while menu open");
+        }
+
+        static bool IsDue(string stored, DateTime now) => !TryParseUtc(stored, out var at) || now >= at;
+
+        /// <summary>
+        /// For each period: if its stored deadline has passed (or is missing), re-lock that category's
+        /// achievements (bonus included), clear their progress and unclaimed rewards, and store the next
+        /// deadline. Every decision is logged, because "achievements reset when they shouldn't" can only
+        /// be diagnosed from what this saw on the device.
+        /// </summary>
+        void CheckPeriodResets(DateTime now, string reason)
         {
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
-            var now = GameClock.UtcNow;
-            bool dirty = false;
+            GameLogger.Info($"[Achievements] Period check ({reason}): server now {now:o}, device now {DateTime.UtcNow:o} " +
+                            $"(device skew {ServerClock.FormatSkew(ServerClock.LastSkew)}), save lastSaved={save.lastSaved}");
 
-            // Daily — resets at 00:00 UTC each day
-            var nextDaily = ParseOrEpoch(save.dailyResetUtc);
-            if (now >= nextDaily)
-            {
-                ResetCategory(AchievementCategory.Daily);
-                save.dailyResetUtc = NextMidnightUtc(now).ToString("o");
-                dirty = true;
-            }
+            bool reset = false, dirty = false;
+            CheckPeriod(AchievementCategory.Daily,   ref save.dailyResetUtc,   now, NextMidnightUtc,   ref reset, ref dirty);
+            CheckPeriod(AchievementCategory.Weekly,  ref save.weeklyResetUtc,  now, NextMondayUtc,     ref reset, ref dirty);
+            CheckPeriod(AchievementCategory.Monthly, ref save.monthlyResetUtc, now, NextMonthStartUtc, ref reset, ref dirty);
 
-            // Weekly — resets every Monday 00:00 UTC
-            var nextWeekly = ParseOrEpoch(save.weeklyResetUtc);
-            if (now >= nextWeekly)
-            {
-                ResetCategory(AchievementCategory.Weekly);
-                save.weeklyResetUtc = NextMondayUtc(now).ToString("o");
-                dirty = true;
-            }
-
-            // Monthly — resets on the 1st of each month 00:00 UTC
-            var nextMonthly = ParseOrEpoch(save.monthlyResetUtc);
-            if (now >= nextMonthly)
-            {
-                ResetCategory(AchievementCategory.Monthly);
-                save.monthlyResetUtc = NextMonthStartUtc(now).ToString("o");
-                dirty = true;
-            }
-
-            if (dirty) FlushToSave();
+            if (dirty) FlushToSave(resetting: true);
+            if (reset) OnPeriodReset?.Invoke();
         }
 
-        void ResetCategory(AchievementCategory category)
+        void CheckPeriod(AchievementCategory category, ref string stored, DateTime now,
+                         Func<DateTime, DateTime> nextDeadline, ref bool reset, ref bool dirty)
         {
-            if (database == null) return;
+            var fresh = nextDeadline(now);
+            bool parsed = TryParseUtc(stored, out var deadline);
+
+            if (parsed && now < deadline)
+            {
+                // A deadline later than a brand-new period's was written from a clock running ahead (an old
+                // device-clock save, or a moved phone date). Pull it back without resetting, or the period
+                // would be stuck until that future date.
+                if (deadline > fresh)
+                {
+                    GameLogger.Warning($"[Achievements]   {category}: deadline {deadline:o} is past the current period's end " +
+                                       $"{fresh:o} (written from a fast clock); clamping, no reset.");
+                    stored = fresh.ToString("o");
+                    dirty = true;
+                    return;
+                }
+                GameLogger.Info($"[Achievements]   {category}: keep (resets {deadline:o}, in {deadline - now:d\\.hh\\:mm\\:ss}).");
+                return;
+            }
+
+            string why = parsed                     ? $"deadline {deadline:o} passed"
+                       : string.IsNullOrEmpty(stored) ? "NO stored deadline (new save, or field lost)"
+                       : $"UNPARSEABLE deadline '{stored}'";
+
+            var cleared = ResetCategory(category);
+            stored = fresh.ToString("o");
+            reset = dirty = true;
+
+            string msg = $"[Achievements]   {category}: RESET ({why}). Cleared {cleared}. Next deadline {stored}.";
+            if (!parsed && cleared != "nothing") GameLogger.Warning(msg + " Progress existed without a deadline, which is suspicious.");
+            else                                 GameLogger.Info(msg);
+        }
+
+        /// <summary>Re-locks one category; returns a log line of what it cleared.</summary>
+        string ResetCategory(AchievementCategory category)
+        {
+            if (database == null) return "nothing (no database)";
+            var completed = new List<string>();
+            var unclaimed = new List<string>();
+            var progress  = new List<string>();
             foreach (var a in database.All)
             {
                 if (a == null || a.category != category) continue;
-                _completed.Remove(a.id);
-                _unclaimed.Remove(a.id);
-                _progress.Remove(a.id);
+                if (_completed.Remove(a.id)) completed.Add(a.id);
+                if (_unclaimed.Remove(a.id)) unclaimed.Add(a.id);
+                if (_progress.TryGetValue(a.id, out int n) && _progress.Remove(a.id)) progress.Add($"{a.id}={n}");
             }
+            if (completed.Count + unclaimed.Count + progress.Count == 0) return "nothing";
+            return $"completed [{string.Join(", ", completed)}], UNCLAIMED [{string.Join(", ", unclaimed)}], " +
+                   $"progress [{string.Join(", ", progress)}]";
         }
 
-        static DateTime ParseOrEpoch(string iso) =>
-            DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
-                ? dt : DateTime.MinValue;
+        /// <summary>Parses a stored ISO 8601 deadline as UTC, independent of the phone's culture.</summary>
+        static bool TryParseUtc(string iso, out DateTime utc)
+        {
+            if (!string.IsNullOrEmpty(iso) &&
+                DateTime.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture,
+                                  System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+            {
+                utc = dt.Kind switch
+                {
+                    DateTimeKind.Local       => dt.ToUniversalTime(),
+                    DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+                    _                        => dt
+                };
+                return true;
+            }
+            utc = default;
+            return false;
+        }
+
+        // ── Diagnostics helpers ───────────────────────────────────────────────
+
+        static string Show(string s) => string.IsNullOrEmpty(s) ? "<none>" : s;
+
+        string DescribeByCategory(IEnumerable<string> ids)
+        {
+            var groups = ids
+                .GroupBy(id => database?.Get(id)?.category.ToString() ?? "Unknown")
+                .Select(g => $"{g.Key}: {string.Join(",", g)}")
+                .ToList();
+            return groups.Count == 0 ? "(none)" : "{" + string.Join(" | ", groups) + "}";
+        }
+
+        /// <summary>
+        /// On resume the server clock may be stale (its stopwatch can stop while the phone sleeps), and a
+        /// period may have ended while backgrounded; re-sync and check. A cold start goes through Initialize.
+        /// </summary>
+        void OnApplicationPause(bool paused)
+        {
+            if (paused || !_initialized) return;
+            ServerClock.Invalidate();
+            _lastSyncFailedAt = float.NegativeInfinity;
+            RequestPeriodCheck("resume from background");
+        }
 
         static DateTime NextMidnightUtc(DateTime from) =>
             from.Date.AddDays(1); // 00:00 UTC tomorrow
@@ -306,7 +491,7 @@ namespace MobileIdleBuilder
 
             // Before the saved state is loaded, counting against empty sets would complete achievements the
             // player already has, and the flush would write those empty sets over the save. Hold the event.
-            if (!_initialized)
+            if (!_ready)
             {
                 _pendingEvents.Add((trigger, targetId, delta, absolute));
                 return;
@@ -503,10 +688,10 @@ namespace MobileIdleBuilder
                 _                           => null
             };
 
-            if (!DateTime.TryParse(raw, null, System.Globalization.DateTimeStyles.RoundtripKind, out var resetAt))
+            if (!TryParseUtc(raw, out var resetAt))
                 return "";
 
-            var remaining = resetAt - GameClock.UtcNow;
+            var remaining = resetAt - (ServerClock.UtcNow ?? GameClock.UtcNow);
             if (remaining <= TimeSpan.Zero) return "Resetting…";
 
             if (remaining.TotalDays >= 1)
@@ -548,7 +733,10 @@ namespace MobileIdleBuilder
             _unclaimed.Clear();
             // A cleared save is pre-prestige again, so the service must be re-initializable.
             _initialized = false;
-            GameLogger.Debug("[Achievements] In-memory state cleared by ResetInMemory().");
+            _ready       = false;
+            _loadedFrom  = null;
+            _warnedSaveReplaced = false;
+            GameLogger.Info("[Achievements] In-memory state cleared by ResetInMemory() (dev save wipe).");
         }
     }
 }

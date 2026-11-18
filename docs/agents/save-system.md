@@ -22,7 +22,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |
 | `speedBoostExpiryUtc` | ISO 8601; empty = no boost. THE pattern to copy for any timed effect |
-| `dailyResetUtc / weeklyResetUtc / monthlyResetUtc` | achievement period reset timestamps (UTC) |
+| `dailyResetUtc / weeklyResetUtc / monthlyResetUtc` | achievement period deadlines (ISO 8601 UTC, the time each period next expires); compared against `ServerClock` by `AchievementService.RequestPeriodCheck` |
 | `loginStreakIndex / lastLoginRewardUtc` | daily login calendar position + last-claim date (UTC); survives prestige |
 | `dailyChallengeResetUtc / dailyChallengeIds / dailyChallengeProgress / dailyChallengesClaimed` | rotating daily-challenge set, progress, and claims (UTC reset); survives prestige |
 | `achievements / achievementProgress / unclaimedAchievements` | achievement state |

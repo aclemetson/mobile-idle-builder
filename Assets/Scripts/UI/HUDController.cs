@@ -291,7 +291,10 @@ namespace MobileIdleBuilder
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
 
             if (achievementService != null)
+            {
                 achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
+                achievementService.OnPeriodReset         += OnAchievementPeriodReset;
+            }
 
             if (pvpService != null)
                 pvpService.OnStateChanged += OnPVPStateChanged;
@@ -355,7 +358,10 @@ namespace MobileIdleBuilder
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
 
             if (achievementService != null)
+            {
                 achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
+                achievementService.OnPeriodReset         -= OnAchievementPeriodReset;
+            }
 
             if (pvpService != null)
                 pvpService.OnStateChanged -= OnPVPStateChanged;
@@ -1321,6 +1327,8 @@ namespace MobileIdleBuilder
             DismissAchievementsHint();
             CloseAllPanels();
             _achActiveCategory = category;
+            // A period may have ended since the last check (long session); a reset rebuilds via OnPeriodReset.
+            achievementService?.RequestPeriodCheck("menu opened");
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
 
@@ -1339,6 +1347,7 @@ namespace MobileIdleBuilder
                 _achResetTicker?.Pause();
                 return;
             }
+            achievementService?.CheckPeriodsIfDue();   // countdown hit zero: reset now, not on next launch
             UpdateAchievementResetLabel();
         }
 
@@ -1396,6 +1405,8 @@ namespace MobileIdleBuilder
             if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
                 BuildAchievementsList();
         }
+
+        private void OnAchievementPeriodReset() => OnAchievementUnlocked(null);
 
         // ============================================================
         // PVP panel
