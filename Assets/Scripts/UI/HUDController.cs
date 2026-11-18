@@ -113,6 +113,7 @@ namespace MobileIdleBuilder
         // ---- Placement controls ----
         private Button        _btnRotateOutput;
         private Button        _btnFlipBuilding;
+        private Button        _btnRemoveBuilding; // edit mode only
         private VisualElement _placementConfirmPopup;
         private VisualElement _placementBar;
         private Button        _btnConfirmPlace;
@@ -156,6 +157,7 @@ namespace MobileIdleBuilder
         private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
         private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
         private Label  _achResetLabel;
+        private UnityEngine.UIElements.IVisualElementScheduledItem _achResetTicker;
         private Button _achClaimAllBtn;
 
         // ---- Achievements gate ----
@@ -280,6 +282,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      += OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
                 conveyorController.OnStartChanged     += OnConveyorStartChanged;
+                conveyorController.OnTraceChanged     += UpdateConveyorBar;
                 conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
             }
@@ -288,7 +291,10 @@ namespace MobileIdleBuilder
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
 
             if (achievementService != null)
+            {
                 achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
+                achievementService.OnPeriodReset         += OnAchievementPeriodReset;
+            }
 
             if (pvpService != null)
                 pvpService.OnStateChanged += OnPVPStateChanged;
@@ -343,6 +349,7 @@ namespace MobileIdleBuilder
                 conveyorController.OnModeChanged      -= OnConveyorModeChanged;
                 conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
                 conveyorController.OnStartChanged     -= OnConveyorStartChanged;
+                conveyorController.OnTraceChanged     -= UpdateConveyorBar;
                 conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
                 conveyorController.IsPointerOverConveyorUI = null;
             }
@@ -351,7 +358,10 @@ namespace MobileIdleBuilder
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
 
             if (achievementService != null)
+            {
                 achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
+                achievementService.OnPeriodReset         -= OnAchievementPeriodReset;
+            }
 
             if (pvpService != null)
                 pvpService.OnStateChanged -= OnPVPStateChanged;
@@ -492,6 +502,7 @@ namespace MobileIdleBuilder
             _placementLabel   = root.Q<Label>("placement-label");
             _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
             _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
+            _btnRemoveBuilding = root.Q<Button>("btn-remove-building");
             _placementConfirmPopup = root.Q("placement-confirm-popup");
             _placementBar          = root.Q("placement-bar");
             _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
@@ -632,6 +643,8 @@ namespace MobileIdleBuilder
                 _btnRotateOutput.clicked += () => placementController?.Rotate();
             if (_btnFlipBuilding != null)
                 _btnFlipBuilding.clicked += () => placementController?.Flip();
+            if (_btnRemoveBuilding != null)
+                _btnRemoveBuilding.clicked += () => placementController?.RequestRemoveEditedBuilding();
             if (_btnConfirmPlace != null)
                 _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
             if (_btnCancelCandidate != null)
@@ -649,7 +662,7 @@ namespace MobileIdleBuilder
             if (_btnConveyorConfirm != null)
                 _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
             if (_btnConveyorCancelCandidate != null)
-                _btnConveyorCancelCandidate.clicked += () => conveyorController?.ClearCandidate();
+                _btnConveyorCancelCandidate.clicked += () => conveyorController?.UndoLastNode();
             if (_btnConveyorNewStart != null)
                 _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
             if (_btnConveyorMode != null)
@@ -1314,8 +1327,37 @@ namespace MobileIdleBuilder
             DismissAchievementsHint();
             CloseAllPanels();
             _achActiveCategory = category;
+            // A period may have ended since the last check (long session); a reset rebuilds via OnPeriodReset.
+            achievementService?.RequestPeriodCheck("menu opened");
             BuildAchievementsList();
             SetElementVisible(_achievementsPanel, true);
+
+            // Keep the reset countdown live while the panel is open (paused when it closes).
+            if (_achResetLabel == null) return;
+            if (_achResetTicker == null)
+                _achResetTicker = _achResetLabel.schedule.Execute(TickAchievementResetLabel).Every(1000);
+            else
+                _achResetTicker.Resume();
+        }
+
+        private void TickAchievementResetLabel()
+        {
+            if (_achievementsPanel == null || _achievementsPanel.ClassListContains("hidden"))
+            {
+                _achResetTicker?.Pause();
+                return;
+            }
+            achievementService?.CheckPeriodsIfDue();   // countdown hit zero: reset now, not on next launch
+            UpdateAchievementResetLabel();
+        }
+
+        // Sets only the label, so the tick does not rebuild the list and reset its scroll position.
+        private void UpdateAchievementResetLabel()
+        {
+            if (_achResetLabel == null) return;
+            _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                ? ""
+                : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
         }
 
         private void StartAchievementsHintPulse() =>
@@ -1363,6 +1405,8 @@ namespace MobileIdleBuilder
             if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
                 BuildAchievementsList();
         }
+
+        private void OnAchievementPeriodReset() => OnAchievementUnlocked(null);
 
         // ============================================================
         // PVP panel
@@ -2088,13 +2132,7 @@ namespace MobileIdleBuilder
             // Update category tab highlights
             UpdateAchievementTabHighlights();
 
-            // Update reset countdown
-            if (_achResetLabel != null)
-            {
-                _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
-                    ? ""
-                    : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
-            }
+            UpdateAchievementResetLabel();
 
             var all = achievementService?.GetAll();
             if (all == null || all.Count == 0)
@@ -2241,13 +2279,17 @@ namespace MobileIdleBuilder
 
             bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
             bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
+            bool editing   = isPlacing && (placementController?.IsEditing ?? false);
             SetElementVisible(_btnRotateOutput, canRotate);
             SetElementVisible(_btnFlipBuilding, canFlip);
+            SetElementVisible(_btnRemoveBuilding, editing);
 
             if (isPlacing && _placementLabel != null)
             {
                 string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
-                _placementLabel.text = $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
+                _placementLabel.text = editing
+                    ? $"Tap a tile to move it  ·  confirm to keep it there{rotateHint}"
+                    : $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
             }
         }
 
@@ -2342,10 +2384,8 @@ namespace MobileIdleBuilder
 
             if (isPlacing)
             {
-                // Mode always re-enters in Create with no pending start or candidate.
+                // Mode always re-enters in Create with no pending trace (this also refreshes the bar).
                 OnConveyorModeChanged(false);
-                OnConveyorCandidateChanged(false);
-                OnConveyorStartChanged(false);
             }
         }
 
@@ -2359,34 +2399,39 @@ namespace MobileIdleBuilder
                 else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
             }
 
+            UpdateConveyorBar();
+        }
+
+        private void OnConveyorCandidateChanged(bool hasCandidate) => UpdateConveyorBar();
+        private void OnConveyorStartChanged(bool hasStart)         => UpdateConveyorBar();
+
+        /// <summary>
+        /// The conveyor bar for the current trace: Bend and Place once there is a belt to place, Undo and New
+        /// once a start is set, and a short instruction that never repeats the button names.
+        /// </summary>
+        private void UpdateConveyorBar()
+        {
+            var  cc        = conveyorController;
+            bool destroy   = IsDestroyModeActive();
+            bool hasStart  = cc != null && !destroy && cc.HasStart;
+            bool candidate = cc != null && !destroy && cc.HasCandidate;
+
+            SetElementVisible(_btnConveyorRotate,          candidate);
+            SetElementVisible(_btnConveyorConfirm,         candidate);
+            SetElementVisible(_btnConveyorCancelCandidate, hasStart);
+            SetElementVisible(_btnConveyorNewStart,        hasStart);
+
             if (_conveyorLabel != null)
-                _conveyorLabel.text = isDestroy
-                    ? "Tap a belt to remove"
-                    : "Tap a start, then an end";
-
-            // Switching mode always clears any pending candidate.
-            if (isDestroy) OnConveyorCandidateChanged(false);
+                _conveyorLabel.text = ConveyorBarLabel(destroy, hasStart, candidate, cc != null && cc.IsTraceEnded);
         }
 
-        /// <summary>Shows or hides the Bend / Place / Clear candidate controls.</summary>
-        private void OnConveyorCandidateChanged(bool hasCandidate)
+        /// <summary>The conveyor bar's instruction for a trace state. Pure (unit-tested); short so it fits the bar.</summary>
+        internal static string ConveyorBarLabel(bool destroy, bool hasStart, bool canPlace, bool ended)
         {
-            SetElementVisible(_btnConveyorRotate,          hasCandidate);
-            SetElementVisible(_btnConveyorConfirm,         hasCandidate);
-            SetElementVisible(_btnConveyorCancelCandidate, hasCandidate);
-
-            // The label is a short instruction only — it must not repeat the button names.
-            if (_conveyorLabel != null && !IsDestroyModeActive())
-                _conveyorLabel.text = hasCandidate
-                    ? "Place the belt, or adjust it"
-                    : "Tap a start, then an end";
-        }
-
-        /// <summary>Shows the "start from a new cell" reset button whenever a start anchor is pending
-        /// (e.g. after auto-chaining), so the player can begin a fresh run without leaving build mode.</summary>
-        private void OnConveyorStartChanged(bool hasStart)
-        {
-            SetElementVisible(_btnConveyorNewStart, hasStart && !IsDestroyModeActive());
+            if (destroy)   return "Tap a belt to remove";
+            if (!hasStart) return "Tap a start";
+            if (ended)     return "Joins a belt: place it";
+            return canPlace ? "Tap the next point, or place" : "Tap the next point";
         }
 
         private bool IsDestroyModeActive() =>

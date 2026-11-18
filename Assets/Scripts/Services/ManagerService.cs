@@ -315,6 +315,28 @@ namespace MobileIdleBuilder
                 RemoveBonusFrom(e);
         }
 
+        /// <summary>
+        /// Follows a building that moved on the active site from <paramref name="oldPosKey"/> to
+        /// <paramref name="newPosKey"/>. The entity keeps its baked bonus, so only the anchor keys change.
+        /// </summary>
+        public void MoveBuilding(int oldPosKey, int newPosKey)
+        {
+            if (oldPosKey == newPosKey) return;
+            if (!_loaded) LoadFromSave();
+
+            int  site = ActiveSiteIndex;
+            long from = BKey(site, oldPosKey);
+            if (!_managerByBuilding.TryGetValue(from, out var managerId)) return;
+
+            _managerByBuilding.Remove(from);
+            _managerByBuilding[BKey(site, newPosKey)] = managerId;
+            if (_assignByManager.TryGetValue(managerId, out var entry))
+                entry.buildingPosKey = newPosKey;
+
+            FlushToSave();
+            OnChanged?.Invoke();
+        }
+
         // ── ECS bake/unbake ───────────────────────────────────────────────────
 
         /// <summary>Bakes manager <paramref name="managerIndex"/>'s bonus into the building entity,

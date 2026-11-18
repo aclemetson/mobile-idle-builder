@@ -1218,6 +1218,13 @@
     font-size: var(--font-size-sm);
 }
 
+/* Edit mode's Remove: a rotate-style bar button in the danger colour. */
+.remove-building-btn {
+    background-color: rgba(255, 23, 68, 0.14);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
 /* Compact icon-only buttons (Bend / Place / Clear) so the whole bar fits a phone width. */
 .conveyor-icon-btn {
     width: 40px;

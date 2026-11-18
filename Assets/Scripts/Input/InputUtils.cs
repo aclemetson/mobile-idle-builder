@@ -55,9 +55,46 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Returns true if the player pressed a cancel input this frame —
-        /// Escape key or right mouse button.
+        /// Number of fingers on the screen now. Iterates the fixed-size touch array rather than relying on
+        /// EnhancedTouch, which requires an explicit Enable() call.
         /// </summary>
+        public static int ActiveTouchCount()
+        {
+            if (Touchscreen.current == null) return 0;
+            int count = 0;
+            foreach (var touch in Touchscreen.current.touches)
+                if (touch.press.isPressed) count++;
+            return count;
+        }
+
+        /// <summary>
+        /// Feeds <paramref name="tap"/> from this frame's input: begins it on press (asking
+        /// <paramref name="isOverUI"/> about the press point, and whether the camera is still gliding), tracks
+        /// it while held, and ends it on release. Returns true on the frame a deliberate tap completes, with
+        /// its release position. See <see cref="TapGesture"/> for what disqualifies a press.
+        /// </summary>
+        public static bool PumpTap(TapGesture tap, System.Func<Vector2, bool> isOverUI, out Vector2 tapPosition)
+        {
+            tapPosition = default;
+            float now = Time.unscaledTime;
+
+            if (WasPointerPressed())
+            {
+                Vector2 p = GetPointerPosition();
+                tap.Begin(p, now, isOverUI?.Invoke(p) ?? false, CameraController.IsGliding);
+            }
+
+            if (tap.IsActive && IsPointerHeld())
+                tap.Track(GetPointerPosition(), ActiveTouchCount());
+
+            if (tap.IsActive && WasPointerReleased())
+            {
+                tapPosition = GetPointerPosition();
+                return tap.End(tapPosition, now);
+            }
+            return false;
+        }
+
         /// <summary>
         /// Returns true if the Android back button (or back gesture) was pressed this frame. The Input
         /// System reports it as the Escape key, so this is also Escape on desktop. Unlike
@@ -66,6 +103,10 @@ namespace MobileIdleBuilder
         public static bool WasBackPressed() =>
             Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
 
+        /// <summary>
+        /// Returns true if the player pressed a cancel input this frame —
+        /// Escape key or right mouse button.
+        /// </summary>
         public static bool WasCancelPressed()
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)

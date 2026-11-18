@@ -8,7 +8,9 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Singleton retention service: 28-day login reward calendar + 3 rotating daily challenges.
     ///
-    /// Time logic is UTC throughout, mirroring AchievementService.CheckPeriodResets():
+    /// Time logic is UTC throughout and uses SERVER time (ServerClock), like AchievementService:
+    /// moving the phone's date must not re-roll challenges or re-open the login reward. With no
+    /// server time (offline) nothing rolls and the login reward cannot be claimed until a sync succeeds.
     ///   - Challenges reset at 00:00 UTC; a new set of 3 is drawn deterministically from the pool.
     ///   - The login calendar advances only when the player CLAIMS (kindness rule — a missed day
     ///     never resets the streak; the index simply does not advance). The calendar loops after day 28.
@@ -35,7 +37,56 @@ namespace MobileIdleBuilder
 
         public DailyContentSO Content => content;
 
-        void Start() => EnsureToday();
+        // Challenge events that arrived before today's set was checked against server time. Counting them
+        // against yesterday's set would lose them when the roll clears progress, so they wait and replay.
+        readonly List<(AchievementTrigger trigger, int delta)> _pendingEvents = new();
+        bool _dayChecked;
+
+        // Server-time sync: one at a time; after a failure, retries wait SyncRetrySeconds.
+        bool  _syncing;
+        float _lastSyncFailedAt = float.NegativeInfinity;
+        const float SyncRetrySeconds       = 30f;
+        const float SaveWaitTimeoutSeconds = 30f;
+        bool  _warnedFutureLoginClaim;
+
+        /// <summary>True while no server time is available; the panel says to connect instead of "claimed".</summary>
+        public bool WaitingForServerTime => !ServerClock.IsSynced;
+
+        void Start()
+        {
+            if (IsSaveFinal) EnsureToday();
+            else             StartCoroutine(EnsureTodayWhenSaveIsFinal());
+        }
+
+        static bool IsSaveFinal => ECSLoadBridge.Instance == null || ECSLoadBridge.Instance.IsLoaded;
+
+        /// <summary>
+        /// Loads once the save is final (the cloud check can replace SaveManager.Current). Loading at scene
+        /// start read the save about to be replaced, and the next flush wrote that stale state back: the same
+        /// bug AchievementService had (2026-11-17).
+        /// </summary>
+        System.Collections.IEnumerator EnsureTodayWhenSaveIsFinal()
+        {
+            float waited = 0f;
+            while (!IsSaveFinal && waited < SaveWaitTimeoutSeconds)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            if (!IsSaveFinal)
+                GameLogger.Warning($"[DailyEvents] Save still NOT final after {waited:0.0}s; loading anyway.");
+            ReloadFromSave();
+            EnsureToday();
+        }
+
+        /// <summary>On resume, a new UTC day may have started while backgrounded; re-sync and check.</summary>
+        void OnApplicationPause(bool paused)
+        {
+            if (paused || !IsSaveFinal) return;
+            ServerClock.Invalidate();
+            _lastSyncFailedAt = float.NegativeInfinity;
+            EnsureToday();
+        }
 
         /// <summary>
         /// Ensures content is loaded, in-memory state is current, and today's challenge set is rolled.
@@ -52,7 +103,42 @@ namespace MobileIdleBuilder
             EnsureContent();
             if (_todaysChallengeIds.Count == 0)
                 ReloadFromSave();
-            CheckDailyReset(GameClock.UtcNow);
+
+            var now = ServerClock.UtcNow;
+            if (now.HasValue) { CheckDailyReset(now.Value); return; }
+
+            if (_syncing || Time.realtimeSinceStartup - _lastSyncFailedAt < SyncRetrySeconds) return;
+            _syncing = true;
+            ServerClock.StartSync(this, ok =>
+            {
+                _syncing = false;
+                var synced = ServerClock.UtcNow;
+                if (ok && synced.HasValue)
+                {
+                    CheckDailyReset(synced.Value);
+                }
+                else
+                {
+                    _lastSyncFailedAt = Time.realtimeSinceStartup;
+                    GameLogger.Warning("[DailyEvents] No server time (offline?): challenges keep their current set " +
+                                       "and the login reward waits until a sync succeeds.");
+                    MarkDayChecked();
+                }
+                OnChanged?.Invoke();   // the open panel switches between "connect" and claimable
+            });
+        }
+
+        /// <summary>Replays challenge events held until today's set was known. Runs once per session.</summary>
+        void MarkDayChecked()
+        {
+            if (_dayChecked) return;
+            _dayChecked = true;
+            if (_pendingEvents.Count == 0) return;
+            GameLogger.Info($"[DailyEvents] Replaying {_pendingEvents.Count} challenge event(s) held until today's set was checked.");
+            var pending = new List<(AchievementTrigger, int)>(_pendingEvents);
+            _pendingEvents.Clear();
+            foreach (var (trigger, delta) in pending)
+                Accumulate(trigger, delta);
         }
 
         void EnsureContent()
@@ -101,9 +187,15 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// Rolls a fresh set of 3 challenges if the current set has expired (00:00 UTC) or none exist.
-        /// Copies AchievementService.CheckPeriodResets()'s ParseOrEpoch / NextMidnightUtc pattern.
+        /// <paramref name="now"/> must be trusted (server) time; EnsureToday supplies it.
         /// </summary>
         public void CheckDailyReset(DateTime now)
+        {
+            try { CheckDailyResetCore(now); }
+            finally { MarkDayChecked(); }
+        }
+
+        void CheckDailyResetCore(DateTime now)
         {
             var save = SaveManager.Instance?.Current;
 
@@ -117,8 +209,21 @@ namespace MobileIdleBuilder
             // e.g. the content asset changed since the set was saved).
             bool stale     = _todaysChallengeIds.Count > 0 && _todaysChallengeIds.Any(id => GetChallenge(id) == null);
             bool needsRoll = now >= nextReset || _todaysChallengeIds.Count == 0 || stale;
-            if (!needsRoll) return;
+            if (!needsRoll)
+            {
+                // A deadline past tomorrow's midnight was written from a clock running ahead; pull it back so
+                // the set rolls on the real day boundary instead of staying stuck until the fake date.
+                if (save != null && nextReset > NextMidnightUtc(now))
+                {
+                    GameLogger.Warning($"[DailyEvents] Challenge deadline {nextReset:o} is past today's end " +
+                                       $"{NextMidnightUtc(now):o} (written from a fast clock); clamping, no re-roll.");
+                    save.dailyChallengeResetUtc = NextMidnightUtc(now).ToString("o");
+                }
+                return;
+            }
 
+            string why = _todaysChallengeIds.Count == 0 ? "no set" : stale ? "stale ids" : $"deadline {nextReset:o} passed";
+            GameLogger.Info($"[DailyEvents] Rolling challenges ({why}); server now {now:o}, device now {DateTime.UtcNow:o}.");
             RollChallenges(now);
 
             if (save != null)
@@ -180,7 +285,13 @@ namespace MobileIdleBuilder
 
         void Accumulate(AchievementTrigger trigger, int delta)
         {
-            if (content == null || _todaysChallengeIds.Count == 0 || delta <= 0) return;
+            if (delta <= 0) return;
+            if (!_dayChecked)
+            {
+                _pendingEvents.Add((trigger, delta));
+                return;
+            }
+            if (content == null || _todaysChallengeIds.Count == 0) return;
 
             string triggerName = trigger.ToString();
             bool dirty = false;
@@ -244,7 +355,12 @@ namespace MobileIdleBuilder
             }
         }
 
-        public bool CanClaimLoginReward() => CanClaimLoginReward(GameClock.UtcNow);
+        /// <summary>False while no server time is available (see <see cref="WaitingForServerTime"/>).</summary>
+        public bool CanClaimLoginReward()
+        {
+            var now = ServerClock.UtcNow;
+            return now.HasValue && CanClaimLoginReward(now.Value);
+        }
 
         /// <summary>True if today's (UTC) login reward has not been claimed yet.</summary>
         public bool CanClaimLoginReward(DateTime now)
@@ -254,11 +370,24 @@ namespace MobileIdleBuilder
             if (content?.loginRewards == null || content.loginRewards.Length == 0) return false;
 
             var last = ParseOrEpoch(save.lastLoginRewardUtc);
+            if (last.Date > now.Date && !_warnedFutureLoginClaim)
+            {
+                _warnedFutureLoginClaim = true;
+                GameLogger.Warning($"[DailyEvents] Last login reward is dated {last:yyyy-MM-dd}, after today " +
+                                   $"{now:yyyy-MM-dd} (claimed with the phone's date set ahead); no claim until then.");
+            }
             // Compare dates, not timestamps, to avoid double-grant within the same UTC day.
             return last == DateTime.MinValue || last.Date < now.Date;
         }
 
-        public bool ClaimLoginReward() => ClaimLoginReward(GameClock.UtcNow);
+        public bool ClaimLoginReward()
+        {
+            var now = ServerClock.UtcNow;
+            if (now.HasValue) return ClaimLoginReward(now.Value);
+            GameLogger.Warning("[DailyEvents] Login reward claim refused: no server time yet.");
+            EnsureToday();   // starts a sync if the retry window allows
+            return false;
+        }
 
         /// <summary>
         /// Claims today's login reward, grants it, advances the streak index (looping after the
@@ -318,6 +447,8 @@ namespace MobileIdleBuilder
             _challengeProgress.Clear();
             _todaysChallengeIds.Clear();
             _claimedChallenges.Clear();
+            _pendingEvents.Clear();
+            _dayChecked = false;
             GameLogger.Debug("[DailyEvents] In-memory state cleared by ResetInMemory().");
         }
 
@@ -332,9 +463,14 @@ namespace MobileIdleBuilder
             return null;
         }
 
-        static DateTime ParseOrEpoch(string iso) =>
-            DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
-                ? dt : DateTime.MinValue;
+        static DateTime ParseOrEpoch(string iso)
+        {
+            if (string.IsNullOrEmpty(iso) ||
+                !DateTime.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture,
+                                   System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+                return DateTime.MinValue;
+            return dt.Kind == DateTimeKind.Local ? dt.ToUniversalTime() : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        }
 
         static DateTime NextMidnightUtc(DateTime from) =>
             from.Date.AddDays(1); // 00:00 UTC tomorrow

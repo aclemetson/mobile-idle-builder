@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17. If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -93,22 +93,43 @@ Covered by `TutorialSellPolicyTests`.
 
 `BuildingPlacementController` does NOT place on press and does NOT lock the camera. Flow (editor mouse + mobile touch, one code path via `InputUtils`):
 
-1. **Press-drag pans** the map (camera stays unlocked during placement). A tap vs. drag is decided by accumulated pointer movement against `CameraController.TapThreshold` (20px) — a drag never places.
+1. **Press-drag pans** the map (camera stays unlocked during placement). Tap vs. pan/zoom is `TapGesture` (see "World taps" below): a drag, a pinch, or a touch that stops a gliding map never places.
 2. A **stationary tap sets a candidate cell** (`SetCandidate`), locks the ghost there (`_hasCandidate` skips the desktop hover-follow), and raises `OnCandidateChanged(true)`. Tapping another cell repositions; Rotate/Flip re-draw the ghost at the candidate.
 3. A **world-anchored confirm popup** (`placement-confirm-popup` in `GameHUD.uxml`, ✕ `btn-cancel-candidate` / ↻ `btn-rotate-candidate` / ✓ `btn-confirm-place`) floats above the candidate. `HUDController.UpdatePlacementConfirmPopup` repositions it every frame via `RuntimePanelUtils.CameraTransformWorldToPanel(panel, CandidateWorldPosition, Camera.main)`, disables ✓ when `CandidateValid` is false, and hides it on `OnCandidateChanged(false)` / placement end. ✓ → `ConfirmCandidate()` (runs the field output-selector if needed, else `ConfirmPlacement`); ✕ / Esc → `ClearCandidate()`; ↻ → `placementController.Rotate()` (same call as the bottom-bar `btn-rotate-output` and the R key). The ↻ button is shown by `OnCandidateChanged` only when `placementController.CanRotate` is true; the per-frame re-anchor + ✓-validity refresh already pick up the new footprint after a rotate. Flip stays on the bottom `placement-bar` (`btn-flip-building`), not the popup.
 
-**Why ✓ is disabled:** `IsCellValidForPending` is `BlockAt(x, y) == PlacementBlock.None`. `BlockAt` returns the first reason a cell fails (`OffGrid`, `Occupied`, `NeedsField`, `WrongField`, `OnField`), and `SetCandidate` shows `BlockMessage(...)` through `InventoryPopupController.NotifyWarning` on every tap of an invalid cell, so a disabled ✓ always comes with a reason (#258). Messages must fit the one-line banner (`PlacementBlockMessageTests` caps them at 56 characters). A new placement rule adds a `PlacementBlock` value and a message, not a bare `return false`.
+**Why ✓ is disabled:** `IsCellValidForPending` is `BlockAt(x, y) == PlacementBlock.None`. `BlockAt` returns the first reason a cell fails (`OffGrid`, `Occupied`, `NeedsField`, `WrongField`, `OnField`, and in edit mode `FieldLacksRecipe`), and `SetCandidate` shows `BlockMessage(...)` through `InventoryPopupController.NotifyWarning` on every tap of an invalid cell, so a disabled ✓ always comes with a reason (#258). Messages must fit the one-line banner (`PlacementBlockMessageTests` caps them at 56 characters). A new placement rule adds a `PlacementBlock` value and a message, not a bare `return false`.
 
 **Gotcha (cost a debug cycle):** `BuildingPlacementController.IsPointerOverPlacementUI` (assigned by `HUDController`) must hit-test the **`placement-bar`** strip and the popup — NOT the `placement-overlay` container, which is full-screen/transparent so the world shows through. Hit-testing the overlay makes *every* tap read as "over UI", so no candidate is ever set and the popup never appears. Use `ScreenPointInElement` (`RuntimePanelUtils.ScreenToPanel` + `worldBound.Contains`).
+
+## Building edit mode (press and hold a placed building)
+
+Holding still on a placed building puts it back into placement mode so it can be moved, turned or flipped without being destroyed. The entity is kept, so its items, craft progress, recipe, upgrades, manager and Filter rules go with it, and moving is free.
+
+- **Gesture:** `PlayerInputRouter` starts a hold on press when `BuildingInspectorController.TryGetEditableBuildingAt` finds a building (not over UI, no mode active, no tutorial `buildingInteractionGate`, never Maxwell's Demon, whose baked cell is never restored from save). Timing is `LongPress`: the `HoldProgressRing` (Painter2D, created from code on the HUD root, picking ignored) appears at `RingDelay` and fills until `HoldSeconds`, then `BuildingPlacementController.BeginEdit` runs. The hold is cancelled as soon as the press can't be a tap (`TapGesture.IsDisqualified`: it moved past the slop, a second finger joined, or it stopped a glide). A release before `HoldSeconds` is an ordinary tap (opens the inspector); the release after edit mode starts is swallowed.
+- **Edit flow:** `BeginEdit` hides the building (`BuildingVisualizer.SetBuildingHidden`, which also hides its port arrows and holes) and sets the candidate on its own cell. In edit mode `BlockAt` treats the building's old footprint as free (`IsOccupiedByOther`), and a moved harvester must land on a field that still yields its recipe (`PlacementBlock.FieldLacksRecipe`). ✓ calls `BuildingPlacer.MoveBuilding` (occupancy swap) → `BuildingMove.Apply` (anchor, footprint, ports, legacy output side, Filter rule facings via `RemapFacing`, splitter turn) and re-keys any manager (`ManagerService.MoveBuilding`); no `OnBuildingPlaced`, so nothing is charged. Cancel restores the building where it was.
+- **Remove:** `btn-remove-building` in `placement-bar` (visible only while `IsEditing`) calls `RequestRemoveEditedBuilding` → `DeconstructController.ConfirmRemove`, the same "Remove {name}?" prompt and refund as deconstruct mode. Deconstruct mode stays for removing several buildings in a row. Placement input pauses while `ConfirmPrompt.IsOpen`.
+
+## Conveyor placement (trace a belt)
+
+`ConveyorPlacementController` Create mode is a `ConveyorTrace` (pure, `Grid/ConveyorTrace.cs`): tap a start, then each next point; ✓ places the whole belt as one chain and clears the trace (the next tap starts a new belt; Done exits).
+- Between consecutive points the belt is **auto-routed** like the old start/end placement: straight when aligned, else an L in the segment's bend, else a detour (`ConveyorPathfinder`, cheaper of L and route wins, router extra cost from `MakeExtraCost`). Cells already on the trace are blocked, so a belt never crosses itself. Two taps and ✓ give the same belt as before, which the tutorial's "tap here, then there" steps rely on.
+- A point on an existing belt (not the start) **merges** and ends the trace; starting on an existing belt is allowed. Tapping the start again while it is the only point makes a single belt (Rotate turns it).
+- Every added point is checked against `ConveyorTopology.CanPlace` through `ConveyorPlacer.RejectReason`, so a fork or an overfull merge is refused on the tap with a reason (`ConveyorPlacer.PlayerReason`) instead of ✓ silently doing nothing. `PlaceConveyorChain` returns `bool` and a refusal too.
+- Bar (`conveyor-bar`, refreshed by `HUDController.UpdateConveyorBar` on `OnTraceChanged`): Bend `btn-conveyor-rotate` (last segment only) and Place `btn-conveyor-confirm` once a belt can be placed; Undo `btn-conveyor-cancel-candidate` (`GlyphIcon.Kind.Undo`, removes the last point) and New once a start is set. The label comes from `HUDController.ConveyorBarLabel`. Refusal lines live in `BeltFeedback` (≤ 45 chars, no ✓ glyph: Android's font lacks it).
+
+## World taps (`TapGesture`)
+
+Every world-tap consumer (`PlayerInputRouter`, `BuildingPlacementController`, `ConveyorPlacementController`, `DeconstructController`) feeds a `TapGesture` through `InputUtils.PumpTap` and acts only on its result, so they agree on what a tap is. A press is **not** a tap when it began over UI, moved farther than the slop from its press point (the farthest distance, not the summed path, so jitter doesn't add up), had a second finger at any point (pinch/rotate/tilt: only the primary finger used to be watched, so lifting after a pinch read as a tap), started while the map was still gliding (`CameraController.IsGliding`: that touch only stops the map), or lasted over `MaxTapSeconds`.
+- **Slop** is `TapGesture.SlopPixels` = max(20 px, 10 dp), about 28 px on a 450-dpi phone (the old fixed 20 px was about 1 mm, so finger jitter dropped real taps). `CameraController.TapThreshold` returns the same value and the camera starts a pan on the same farthest-distance measure, so one press never both pans and taps.
+- Deconstruct mode used to act on **press**; it now acts on a tap, so starting a pan over a belt no longer removes it.
+- Pure and unit-tested (`TapGestureTests`). The Editor's virtual mouse can't produce a second finger, so the pinch rule is only covered by those tests and on device.
 
 ## World-input blocking (taps/pans starting on UI)
 
 `UIInputBlocker` (`Assets/Scripts/UI/UIInputBlocker.cs`) is the single source of truth for "is this screen point over blocking UI". Every world-input consumer routes through it so they all agree:
 
 - `CameraController` — a press whose start point is over UI never begins a pan (`_pressOverUI` gate in `HandleSwipePan`).
-- `PlayerInputRouter` — records `_pressWasOnUI` on press, blocks the tap on release if either the press or the release is over UI.
-- `BuildingPlacementController` — folds `UIInputBlocker.IsPointerOverUI` into `_pressOverUI` (alongside the `IsPointerOverPlacementUI` placement-bar test).
-- `ConveyorPlacementController` / `DeconstructController` — a press over UI is ignored (no start cell / no deconstruct).
+- `PlayerInputRouter`, `BuildingPlacementController` (plus its `IsPointerOverPlacementUI` placement-bar test), `ConveyorPlacementController` (plus the conveyor-bar test) and `DeconstructController` — pass it to `InputUtils.PumpTap`, so a press that began over UI is never a tap (`TapGesture`). The router also blocks a tap whose release lands on UI.
 
 How it works: each `UIDocument` self-registers via `UIInputBlocker.Register` in `OnEnable` and unregisters in `OnDisable` (see `HUDController`, `DevConsoleController`) — so consumers need NO scene wiring. `IsPointerOverUI` converts the point with `RuntimePanelUtils.ScreenToPanel` (**no Y-flip** — matches `HUDController.ScreenPointInElement`, the proven convention) and walks each registered panel's tree, testing `worldBound.Contains` on every visible blocking surface. A surface is blocking if it is a `Button`/`Toggle`/`Slider`/`TextField` or carries a class in `BlockingClasses` (e.g. `slide-panel`, `left-drawer`, `top-bar`, `dev-console`, plus the `blocks-world-input` marker class). `display:none` subtrees (closed slide-panels) are pruned so a collapsed panel never blocks. **Do not use `IPanel.Pick` here** — it proved unreliable across the separate HUD and dev-console panels, which is why the hit-test mirrors HUDController's `worldBound`-based `ScreenPointInElement`.
 

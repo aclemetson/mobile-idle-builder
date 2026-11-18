@@ -42,6 +42,7 @@ namespace MobileIdleBuilder
         private EntityQuery   _prestigeQuery;
         private bool          _ecsReady;
         private Vector2Int    _hoveredCell = new(-1, -1);
+        private readonly TapGesture _tap = new();
 
         // ================================================================
         // Unity lifecycle
@@ -96,6 +97,7 @@ namespace MobileIdleBuilder
 
         public void BeginDeconstructMode()
         {
+            _tap.Cancel();
             IsDeconstructing = true;
             OnDeconstructingChanged?.Invoke(true);
         }
@@ -124,7 +126,7 @@ namespace MobileIdleBuilder
             }
 
             // Waiting on "Remove?": keep the target highlighted and ignore the grid.
-            if (ConfirmPrompt.IsOpen) return;
+            if (ConfirmPrompt.IsOpen) { _tap.Cancel(); return; }
 
             Vector2 screenPos = InputUtils.GetPointerPosition();
             bool    overUI    = IsPointerOverUI(screenPos);
@@ -134,10 +136,12 @@ namespace MobileIdleBuilder
                 ? new Vector2Int(-1, -1)
                 : WorldToCell(screenPos));
 
-            if (!InputUtils.WasPointerPressed() || overUI) return;
+            // Act on a deliberate tap (on release), never on a press: a pan, pinch or glide stop that began
+            // over a belt used to remove it the moment the finger touched down.
+            if (!InputUtils.PumpTap(_tap, IsPointerOverUI, out Vector2 tapPos)) return;
 
-            if (gridRenderer == null) return;
-            Vector2Int cell = WorldToCell(screenPos);
+            if (gridRenderer == null || IsPointerOverUI(tapPos)) return;
+            Vector2Int cell = WorldToCell(tapPos);
             if (!gridRenderer.IsInBounds(cell.x, cell.y)) return;
             if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(cell.x, cell.y)) return;
 
@@ -221,7 +225,18 @@ namespace MobileIdleBuilder
             if (IsConveyorAt(x, y)) RemoveConveyorAt(x, y);
         }
 
-        private void ConfirmBuildingRemoval(Entity e)
+        /// <summary>
+        /// Asks "Remove {name}?" for one building (with its refund) and removes it on confirm, the same as a
+        /// tap in deconstruct mode. Used by building edit mode's Remove button. <paramref name="onRemoved"/>
+        /// runs after the building is gone; nothing runs if the player cancels or the building is protected.
+        /// </summary>
+        public void ConfirmRemove(Entity e, Action onRemoved)
+        {
+            if (!_ecsReady || !_em.Exists(e) || !_em.HasComponent<BuildingData>(e)) return;
+            ConfirmBuildingRemoval(e, onRemoved);
+        }
+
+        private void ConfirmBuildingRemoval(Entity e, Action onRemoved = null)
         {
             var bd = _em.GetComponentData<BuildingData>(e);
             var so = FindBuildingSO(bd.BuildingType);
@@ -245,12 +260,12 @@ namespace MobileIdleBuilder
                 ? $"You get back {refund:N0} entropy ({Mathf.RoundToInt(frac * 100f)}% of the {spent:N0} spent on it)."
                 : "Nothing was spent on it, so there is nothing to refund.";
             ConfirmPrompt.Show($"Remove {name}?", message, "Remove",
-                () => RemoveBuilding(e, spent, refund), ClearHover);
+                () => { if (RemoveBuilding(e, spent, refund)) onRemoved?.Invoke(); }, ClearHover);
         }
 
-        private void RemoveBuilding(Entity e, long spent, long refund)
+        private bool RemoveBuilding(Entity e, long spent, long refund)
         {
-            if (!_ecsReady || !_em.Exists(e)) return; // gone while the prompt was open
+            if (!_ecsReady || !_em.Exists(e)) return false; // gone while the prompt was open
             var (fx, fy, fw, fh) = Footprint(e);
 
             _em.DestroyEntity(e);
@@ -263,6 +278,7 @@ namespace MobileIdleBuilder
             ClearHover();
             SaveManager.Instance?.SaveLocal();
             GameLogger.Develop($"[Deconstruct] Removed building at ({fx},{fy}), refund {refund} of {spent}.");
+            return true;
         }
 
         /// <summary>

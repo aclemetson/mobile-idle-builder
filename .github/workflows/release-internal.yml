@@ -14,13 +14,17 @@ name: Release Internal
 #   pull_request:
 #     types: [closed]
 #     branches: ['release/**']
+#
+# A manual run (Actions > Release Internal > Run workflow, or
+# `gh workflow run "Release Internal" --ref release/<x.y>`) builds and uploads the chosen
+# release branch. Only users with write access can dispatch.
 on:
   workflow_dispatch:
 
 # One internal build per release branch; a burst of merges collapses to the
 # latest (cancel the in-flight build instead of queueing several Unity builds).
 concurrency:
-  group: release-internal-${{ github.base_ref }}
+  group: release-internal-${{ github.base_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -30,7 +34,10 @@ jobs:
   # ── Build the AAB on the local Windows machine ───────────────────────────────
   build:
     name: Android AAB Build
-    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    # A manual run must target a release branch: the Play internal track only takes release builds.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'release/')) ||
+      (github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: [self-hosted, windows, unity]
 
     outputs:

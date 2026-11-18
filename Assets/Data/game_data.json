@@ -1906,7 +1906,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The simplest hydrocarbon. Natural gas is mostly methane. SpaceX's Raptor engine burns it with oxygen. A key carbon feedstock for synthesising carbon fibre and polymers.",
-      "base_sell_value": 5530.0,
+      "base_sell_value": 2460.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2028,7 +2028,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Iron alloyed with controlled carbon content. The structural material of the industrial age — bridges, skyscrapers, ships. Synthesised here by reducing iron oxide with methane.",
-      "base_sell_value": 2450000.0,
+      "base_sell_value": 2440000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -2052,7 +2052,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Crystalline carbon arranged in long chains — five times stronger than steel at one quarter the weight. The structural material of spacecraft, racing vehicles, and megastructures.",
-      "base_sell_value": 1460000.0,
+      "base_sell_value": 1450000.0,
       "isotope_sell_multiplier": 1.0
     },
     {
@@ -6082,13 +6082,13 @@
       "category": "Molecule",
       "inputs": [
         { "item": "hydrogen", "quantity": 4 },
-        { "item": "carbon", "quantity": 6 }
+        { "item": "carbon", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "methane",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 80.0,
+      "base_craft_time": 40.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 350.0,

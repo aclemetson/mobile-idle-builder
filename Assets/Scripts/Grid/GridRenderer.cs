@@ -279,14 +279,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Paints the start and end anchor cells green on top of the already-drawn orange path. The
-        /// painted cells are tracked in _conveyorGhostCells so ClearConveyorGhost always restores them —
-        /// including endpoints that land on an existing belt (which the path itself does not ghost).
+        /// Paints every node of a traced belt green on top of its orange path (the start, each tapped point
+        /// and the end). The painted cells are tracked in _conveyorGhostCells so ClearConveyorGhost always
+        /// restores them, including nodes on an existing belt (which the path itself does not ghost).
         /// </summary>
-        public void PaintConveyorEndpoints(int sx, int sy, int ex, int ey)
+        public void PaintConveyorNodes(IReadOnlyList<Vector2Int> nodes)
         {
-            PaintEndpoint(sx, sy);
-            if (ex != sx || ey != sy) PaintEndpoint(ex, ey);
+            if (nodes == null) return;
+            foreach (var n in nodes) PaintEndpoint(n.x, n.y);
         }
 
         private void PaintEndpoint(int x, int y)
@@ -302,7 +302,7 @@ namespace MobileIdleBuilder
         /// <summary>
         /// Pulses a conveyor endpoint tile between the endpoint green and white for a moment, so the
         /// player sees where a chain continues from. The cell must already be painted as an endpoint
-        /// (PaintConveyorEndpoints); the pulse stops by itself and when the ghost is cleared.
+        /// (PaintConveyorNodes); the pulse stops by itself and when the ghost is cleared.
         /// </summary>
         public void PulseConveyorEndpoint(int x, int y, float seconds = 1.5f)
         {
