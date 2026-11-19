@@ -14,8 +14,9 @@ namespace MobileIdleBuilder
     public class HUDBuildingInspectorSubController : MonoBehaviour
     {
         // Research ids that gate the per-building capacity upgrades (must match game_data.json research ids).
+        // Surplus Containment unlocks both capacity tracks (Feedstock Buffers was merged into it, 2026-11-19).
         private const string OutputCapacityResearchId = "surplus_containment";
-        private const string InputCapacityResearchId  = "feedstock_buffers";
+        private const string InputCapacityResearchId  = "surplus_containment";
 
         private VisualElement _buildingInspectorPanel;
         private VisualElement _inspectorStatic;    // pinned above the scrolls: progress bar + one line of buffer chips

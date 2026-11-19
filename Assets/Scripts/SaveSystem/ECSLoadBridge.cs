@@ -287,11 +287,24 @@ namespace MobileIdleBuilder
             var iKeys  = save.currentRun.inventoryKeys;
             var iVals  = save.currentRun.inventoryValues;
             int iCount = System.Math.Min(iKeys?.Count ?? 0, iVals?.Count ?? 0);
+            long retiredEntropy = 0;
             for (int i = 0; i < iCount; i++)
             {
                 if (!int.TryParse(iKeys[i], out int itemId)) continue;
-                if (iVals[i] > 0)
-                    buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
+                if (iVals[i] <= 0) continue;
+                if (RetiredItems.TryGetValue(itemId, out long price))
+                {
+                    retiredEntropy += SellRetired(price, iVals[i]);
+                    continue;
+                }
+                buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
+            }
+            if (retiredEntropy > 0)
+            {
+                progress = _progressQuery.GetSingleton<PlayerProgressData>();
+                progress.BaseCurrency += retiredEntropy;
+                _progressQuery.SetSingleton(progress);
+                GameLogger.Info($"[ECSLoadBridge] Sold retired items from the inventory for {retiredEntropy} entropy.");
             }
         }
 
@@ -414,6 +427,25 @@ namespace MobileIdleBuilder
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Removed item id -> the entropy each one sold for when it was removed. A save holding one in its
+        /// inventory gets that entropy on load instead of an item nothing can show or use.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<int, long> RetiredItems = new()
+        {
+            // 2026-11-19: Tritium and Carbon-14 had no use but selling; the Isotopic Manipulator now
+            // only does Uranium-235 and the decay chain (elements-and-isotopes.md, "Isotope trim").
+            { 15, 653 },  // tritium
+            { 16, 808 },  // carbon_14
+        };
+
+        /// <summary>Entropy for <paramref name="quantity"/> retired items at <paramref name="price"/>; saturates instead of overflowing.</summary>
+        internal static long SellRetired(long price, int quantity)
+        {
+            if (price <= 0 || quantity <= 0) return 0;
+            return price > long.MaxValue / quantity ? long.MaxValue : price * quantity;
+        }
 
         /// <summary>Removed tutorial step id -> the step a save on it resumes at.</summary>
         internal static readonly System.Collections.Generic.Dictionary<string, string> RetiredSteps = new()

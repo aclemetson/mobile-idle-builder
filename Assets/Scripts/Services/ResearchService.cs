@@ -59,6 +59,7 @@ namespace MobileIdleBuilder
             }
 
             var save = SaveManager.Instance?.Current;
+            MigrateMergedResearch(save);
             if (save?.unlockedResearch != null)
                 foreach (var id in save.unlockedResearch) _unlockedIds.Add(id);
 
@@ -412,6 +413,42 @@ namespace MobileIdleBuilder
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Research merged into another node: removed id -> the node that now does its job. A save that bought
+        /// (or is researching) the removed node gets the node it was merged into, so it keeps what it paid for.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, string> MergedResearch = new()
+        {
+            // 2026-11-19: Surplus Containment unlocks Input Capacity upgrades too.
+            { "feedstock_buffers", "surplus_containment" },
+        };
+
+        /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>
+        internal static void MigrateMergedResearch(SaveData save)
+        {
+            if (save == null) return;
+            if (save.unlockedResearch != null)
+            {
+                for (int i = save.unlockedResearch.Count - 1; i >= 0; i--)
+                {
+                    if (!MergedResearch.TryGetValue(save.unlockedResearch[i], out var into)) continue;
+                    save.unlockedResearch.RemoveAt(i);
+                    if (!save.unlockedResearch.Contains(into)) save.unlockedResearch.Add(into);
+                }
+            }
+            if (!string.IsNullOrEmpty(save.activeResearchId)
+                && MergedResearch.TryGetValue(save.activeResearchId, out var active))
+            {
+                if (save.unlockedResearch != null && save.unlockedResearch.Contains(active))
+                {
+                    // Already owns what the timer was buying: drop the timer rather than run it twice.
+                    save.activeResearchId          = null;
+                    save.activeResearchCompleteUtc = null;
+                }
+                else save.activeResearchId = active;
+            }
+        }
 
         private ResearchSO FindResearch(string id) =>
             _allResearch == null ? null : System.Array.Find(_allResearch, r => r != null && r.id == id);

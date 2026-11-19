@@ -124,21 +124,23 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Recipe_Deuterium_IsHydrogenPlus1Neutron()
+        public void Recipe_Deuterium_IsAProtonNeutronAndElectron()
         {
-            var r = RequireRecipe("deuterium");
-            RequireInput(r, "hydrogen", quantity: 1);
+            // The Atom Generator's Deuterium is the only Deuterium recipe since the Isotopic Manipulator's
+            // duplicate was retired (2026-11-19).
+            var r = RequireRecipe("assemble_deuterium");
+            RequireInput(r, "proton",   quantity: 1);
             RequireInput(r, "neutron",  quantity: 1);
+            RequireInput(r, "electron", quantity: 1);
             Assert.AreEqual("deuterium", r.output.id);
         }
 
         [Test]
-        public void Recipe_Tritium_IsHydrogenPlus2Neutrons()
+        public void RetiredIsotopes_AreGone()
         {
-            var r = RequireRecipe("tritium");
-            RequireInput(r, "hydrogen", quantity: 1);
-            RequireInput(r, "neutron",  quantity: 2);
-            Assert.AreEqual("tritium", r.output.id);
+            foreach (var id in new[] { "deuterium", "tritium", "carbon_14" })
+                Assert.IsFalse(_recipes.Any(x => x.id == id),
+                    $"Recipe '{id}' was retired with the isotope trim (2026-11-19)");
         }
 
         // ── Naming (#336): a recipe is named after its product ──────────────────

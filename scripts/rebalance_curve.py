@@ -15,6 +15,9 @@ The rule, in unlock order (the order scripts/progression_curve.py reports):
    block's budget is spread over its nodes in unlock order, each node's share BLOCK_RAMP x the one before, and
    cost(n) = that share in minutes x 60 x the best earning rate just before n. Anchor blocks (the tutorial) keep
    their hand-tuned costs. A node never costs less than 1.05 x its most expensive prerequisite.
+4. A research may set "cost_multiplier" (default 1) to cost more than its position alone gives, e.g. a node that
+   unlocks two upgrade tracks (Surplus Containment: output and input capacity, 2026-11-19). The extra is on top of
+   the block's budget, so no other node is repriced; the block runs a little over its target instead.
 """
 import json
 import math
@@ -49,6 +52,11 @@ def off_curve(gd):
     """Research flagged "advances_curve": false (e.g. Transportation II, a belt-speed upgrade) is a side upgrade: it
     does not move the wage curve, so adding one never reprices every later item and research."""
     return {r["id"] for r in gd["research"] if r.get("advances_curve") is False}
+
+
+def cost_multiplier(r):
+    """A research's "cost_multiplier" (default 1, never below 1)."""
+    return max(1.0, float(r.get("cost_multiplier") or 1.0))
 
 
 def curve_steps(ids, a, skip):
@@ -170,7 +178,8 @@ def costs(gd):
         # leaves every other node's cost where it was (the block runs a little over its target instead).
         on = sum(w for n, w in zip(members, weights) if order[n]["id"] not in skip)
         for n, w in zip(members, weights):
-            out[order[n]["id"]] = budget * w / on * 60 * order[n]["best_rate_before"]
+            rid = order[n]["id"]
+            out[rid] = budget * w / on * 60 * order[n]["best_rate_before"] * cost_multiplier(research[rid])
     # A node never costs less than its prerequisites (walk in unlock order so prerequisites are final first).
     final = {}
     for o in order:

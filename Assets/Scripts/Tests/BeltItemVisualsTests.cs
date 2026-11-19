@@ -138,7 +138,7 @@ namespace MobileIdleBuilder.Tests
                 }
                 finally { Object.DestroyImmediate(go); }
             }
-            Assert.GreaterOrEqual(atoms, 128, "118 elements + 10 isotopes");
+            Assert.GreaterOrEqual(atoms, 126, "118 elements + 8 isotopes");
         }
 
         [Test]

@@ -23,7 +23,7 @@ MonoBehaviour:
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 33600000
+  costBaseCurrency: 23800000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1

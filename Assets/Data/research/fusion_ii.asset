@@ -24,7 +24,7 @@ MonoBehaviour:
   block: stellar_forge
   treeX: -1
   treeY: -1
-  costBaseCurrency: 2350000
+  costBaseCurrency: 1970000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
