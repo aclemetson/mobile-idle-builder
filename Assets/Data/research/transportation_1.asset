@@ -25,7 +25,7 @@ MonoBehaviour:
   treeX: -1
   treeY: -1
   requiredWorld: 
-  costBaseCurrency: 32200
+  costBaseCurrency: 45500
   costPrestigeCurrency: 0
   durationSeconds: 45
   fieldCooldownMult: 1

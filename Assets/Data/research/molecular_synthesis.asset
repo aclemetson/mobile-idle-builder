@@ -14,18 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: molecular_synthesis
   displayName: Molecular Synthesis
-  description: "Unlock the Molecular Synthesizer \u2014 combine elements into molecules
-    and pure compounds."
+  description: 'Bond the Chemistry world''s harvested elements into the first molecules:
+    liquid hydrogen, water, methane and ammonia. Unlocks the Molecular Synthesizer.'
   icon: {fileID: 0}
   branch: 0
   prerequisites:
-  - {fileID: 11400000, guid: a73fd95767db1af40ae88cc0b35e971b, type: 2}
+  - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   depthInTree: 3
-  block: foundations
+  block: chemistry_entry
   treeX: -1
   treeY: -1
-  requiredWorld: 
-  costBaseCurrency: 158000
+  requiredWorld: world_chemistry
+  costBaseCurrency: 2670000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
@@ -33,9 +33,13 @@ MonoBehaviour:
   unlocksItems:
   - {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
   - {fileID: 11400000, guid: d0f79872604ee82459a1ad07d1cd9d92, type: 2}
+  - {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
+  - {fileID: 11400000, guid: d5b02317e42a8894987ece79732b5188, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
   - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
+  - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
+  - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   unlocksGridExpansion: 0

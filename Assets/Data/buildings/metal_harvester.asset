@@ -52,7 +52,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields:
   - ElementMetal
-  world: 
+  world: world_chemistry
   entropyCost: 20000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

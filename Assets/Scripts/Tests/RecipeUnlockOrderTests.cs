@@ -138,12 +138,13 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void WaterAndAmmonia_UnlockWithOxygenAndNitrogen()
+        public void WaterAndAmmonia_AreChemistry()
         {
+            // 2026-11-19 Chemistry gate: every molecule is made in the Chemistry world.
             var water   = _recipes.First(r => r.id == "water");
             var ammonia = _recipes.First(r => r.id == "ammonia");
-            Assert.AreEqual("fusion_ii",    water.requiredResearch?.id,   "Water unlocks with Oxygen (Alpha Process)");
-            Assert.AreEqual("mid_elements", ammonia.requiredResearch?.id, "Ammonia unlocks with Nitrogen (Mid-Period Elements)");
+            Assert.AreEqual("molecular_synthesis", water.requiredResearch?.id,   "Water is a Chemistry molecule");
+            Assert.AreEqual("molecular_synthesis", ammonia.requiredResearch?.id, "Ammonia is a Chemistry molecule");
         }
     }
 }

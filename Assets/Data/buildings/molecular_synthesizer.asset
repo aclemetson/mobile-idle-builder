@@ -65,7 +65,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
-  world: 
+  world: world_chemistry
   entropyCost: 5000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30
