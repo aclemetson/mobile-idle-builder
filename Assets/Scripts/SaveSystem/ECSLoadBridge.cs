@@ -276,7 +276,7 @@ namespace MobileIdleBuilder
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency      = save.currentRun.baseCurrency;
             progress.TotalEntropySpent      = save.currentRun.totalEntropySpent;
-            progress.TotalEntropyDiscounted = save.currentRun.totalEntropyDiscounted;
+            progress.TotalEntropyDiscounted = BackfillDiscounted(save);
             progress.BaseNetWorth           = save.currentRun.baseNetWorth;
             _progressQuery.SetSingleton(progress);
 
@@ -439,6 +439,41 @@ namespace MobileIdleBuilder
             { 15, 653 },  // tritium
             { 16, 808 },  // carbon_14
         };
+
+        /// <summary>
+        /// The saved discount total, raised so net worth counts the save's research and buildings at
+        /// list price (NetWorthBackfill). Saves from before 0.6.14 never recorded their discounts.
+        /// </summary>
+        private static long BackfillDiscounted(SaveData save)
+        {
+            long saved = save.currentRun.totalEntropyDiscounted;
+            try
+            {
+                ResearchService.MigrateMergedResearch(save); // idempotent; merged ids price as the node they became
+                var research  = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
+                var buildings = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
+                var researchById = new Dictionary<string, ResearchSO>();
+                if (research != null)
+                    foreach (var r in research) if (r != null && !string.IsNullOrEmpty(r.id)) researchById[r.id] = r;
+                var buildingById = new Dictionary<int, BuildingSO>();
+                if (buildings != null)
+                    foreach (var b in buildings) if (b != null) buildingById[b.buildingId] = b;
+
+                long list = NetWorthBackfill.ListValue(save.unlockedResearch, save.currentRun,
+                    id => researchById.TryGetValue(id, out var r) ? r : null,
+                    id => buildingById.TryGetValue(id, out var b) ? b : null);
+                long result = NetWorthBackfill.Discounted(list, save.currentRun.totalEntropySpent, saved);
+                if (result != saved)
+                    GameLogger.Info($"[ECSLoadBridge] Net worth backfill: list value {list:N0}, spent " +
+                                    $"{save.currentRun.totalEntropySpent:N0}, discounted {saved:N0} -> {result:N0}");
+                return result;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.Warning($"[ECSLoadBridge] Net worth backfill skipped: {ex.Message}");
+                return saved;
+            }
+        }
 
         /// <summary>Entropy for <paramref name="quantity"/> retired items at <paramref name="price"/>; saturates instead of overflowing.</summary>
         internal static long SellRetired(long price, int quantity)
