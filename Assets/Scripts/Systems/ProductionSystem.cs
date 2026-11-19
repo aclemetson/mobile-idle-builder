@@ -31,7 +31,9 @@ namespace MobileIdleBuilder
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            float deltaTime = SystemAPI.Time.DeltaTime;
+            // Speed burst: the whole factory runs on a faster clock (FactoryClock, 1 when absent).
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
+            float deltaTime = SystemAPI.Time.DeltaTime * clockRate;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
             long escapedEntropy = 0;
             // Cyclotron Kick boost (1 when none is running) multiplies the byproduct entropy paid below.
@@ -201,7 +203,7 @@ namespace MobileIdleBuilder
                 {
                     var income = SystemAPI.GetSingletonRW<AutomationIncome>();
                     income.ValueRW.Total     += escapedEntropy;
-                    income.ValueRW.Unboosted += escapedEntropy / (double)entropyBoost;
+                    income.ValueRW.Unboosted += escapedEntropy / ((double)entropyBoost * clockRate);
                 }
             }
         }

@@ -91,6 +91,7 @@ namespace MobileIdleBuilder
         internal static readonly int BeltPhaseId = Shader.PropertyToID("_BeltPhase");
         private const float BeltPhaseWrap = 64f;
         private EntityQuery _effectsQuery;
+        private EntityQuery _clockQuery;
         private float       _beltPhase;
 
         /// <summary>The next belt phase: <paramref name="phase"/> advanced by <paramref name="speedCellsPerSecond"/> * dt, wrapped.</summary>
@@ -119,6 +120,7 @@ namespace MobileIdleBuilder
             );
             _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
             _effectsQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ResearchEffects>());
+            _clockQuery   = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<FactoryClock>());
             _queriesReady = true;
         }
 
@@ -131,6 +133,7 @@ namespace MobileIdleBuilder
                 _itemQuery.Dispose();
                 _portQuery.Dispose();
                 _effectsQuery.Dispose();
+                _clockQuery.Dispose();
             }
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
@@ -287,6 +290,9 @@ namespace MobileIdleBuilder
             float speed = 1f;
             if (world != null && world.IsCreated && !_effectsQuery.IsEmpty)
                 speed = _effectsQuery.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
+            // Speed burst: belts run on the factory clock, so the lattice scrolls with the items.
+            if (world != null && world.IsCreated && !_clockQuery.IsEmpty)
+                speed *= FactoryClock.Sanitize(_clockQuery.GetSingleton<FactoryClock>().Rate);
             _beltPhase = AdvanceBeltPhase(_beltPhase, Time.deltaTime, speed);
             Shader.SetGlobalFloat(BeltPhaseId, _beltPhase);
         }

@@ -112,6 +112,28 @@ namespace MobileIdleBuilder.Tests
                 "Remainder must be preserved: 0.3+0.3=0.6 > 0.5 interval → exactly 1 item");
         }
 
+        // ── Speed burst: FactoryClock ────────────────────────────────────────
+
+        [Test]
+        public void FactoryClockAt2_HalfTheTimeMakesAnItem()
+        {
+            _em.CreateSingleton(new FactoryClock { Rate = 2f });
+
+            Tick(deltaTime: 0.5f); // OutputRate=1 → 1 s interval; the 2x clock covers it in 0.5 s
+
+            Assert.AreEqual(1, OutputCount(), "A 2x factory clock must make a 1 s harvest in 0.5 s");
+        }
+
+        [Test]
+        public void FactoryClockAt1_IsNormalSpeed()
+        {
+            _em.CreateSingleton(new FactoryClock { Rate = 1f });
+
+            Tick(deltaTime: 0.5f);
+
+            Assert.AreEqual(0, OutputCount());
+        }
+
         // ── Manager OutputQuantity bonus ──────────────────────────────────────
 
         [Test]

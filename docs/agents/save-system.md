@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; sign-in check, stale-marker rule and non-blocking save choice 2026-11-17; `totalEntropyDiscounted` 2026-11-19. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; sign-in check, stale-marker rule and non-blocking save choice 2026-11-17; `totalEntropyDiscounted` 2026-11-19; boost-window idle weighting 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -21,7 +21,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |
-| `speedBoostExpiryUtc` | ISO 8601; empty = no boost. THE pattern to copy for any timed effect |
+| `speedBoostExpiryUtc` | ISO 8601; empty = no boost. THE pattern to copy for any timed effect. Drives `FactoryClock` live; offline, `OfflineCollectionService` weights only the overlap with the absence. A running timed boost locks other boosts (`BoostLock`) |
 | `dailyResetUtc / weeklyResetUtc / monthlyResetUtc` | achievement period deadlines (ISO 8601 UTC, the time each period next expires); compared against `ServerClock` by `AchievementService.RequestPeriodCheck` |
 | `loginStreakIndex / lastLoginRewardUtc` | daily login calendar position + last-claim date (UTC); survives prestige |
 | `dailyChallengeResetUtc / dailyChallengeIds / dailyChallengeProgress / dailyChallengesClaimed` | rotating daily-challenge set, progress, and claims (UTC reset); survives prestige |

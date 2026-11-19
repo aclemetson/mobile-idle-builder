@@ -2,7 +2,7 @@
 
 **Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item / recipe / building / cost values not listed, look up `Assets/Data/game_data.json` — the single source of truth that the editor importer turns into ScriptableObjects. Never duplicate that dataset here. (`docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` are a human-only visual reference and may lag behind `game_data.json` — do not treat them as authoritative.)
 
-> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19; speed burst as factory clock + one boost at a time 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
 ## Currencies
 
@@ -15,7 +15,8 @@
 IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500◆ ($9.99), 20,000◆ ($19.99) — consumables via Unity IAP / Google Play.
 
 **Crystal value anchor:** $1 ≈ 4 hours of progress at the player's current stage ⇒ **150◆ = 1 "skip-hour"**. Crystals buy *time*, not raw power; the non-time sinks (entropy, prestige currency) grant a **% of the current build** so their dollar value self-scales with progress. Premium-shop sink tiers (`PremiumShopCalculator.cs`):
-- **Speed boost** (2× offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
+- **Speed burst** (2× factory clock, online and offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
+- **One boost at a time** (`BoostLock`, 2026-11-19): while any timed boost runs (speed burst, +50% Idle, Cyclotron Kick), every other shop bonus and ad reward is locked. Crystal packs, the research skip and Double Offline stay available.
 - **Entropy** (% of net worth, floored): 10% 300◆ / 25% 650◆ / 50% 1,200◆ / 100% 2,000◆.
 - **Prestige currency** (flat ✦ grant — it persists across runs, so it is permanent power, not a time-skip): 50✦ 500◆ / 150✦ 900◆ / 500✦ 1,900◆ / 1,500✦ 3,600◆.
 - **Time Warp** (instant offline collection, no wait): 2 h 350◆ / 8 h 1,300◆ / 24 h 3,500◆. Reuses `OfflineCollectionService.ComputeForDuration` (refresh snapshot via `SaveLocal`, pay out at the idle collection rate, apply to live ECS via `ECSLoadBridge.AddEntropy`/`AddInventoryItems`).
@@ -28,8 +29,8 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 |---|---|---|
 | Entropy Boost | 10% of live net worth (`ECSLoadBridge.LiveNetWorth`, floor 500e); the panel previews the amount (`AdService.PreviewEntropyReward`) | 5 |
 | Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
-| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`, applied in `OfflineCollectionService.GetAdIdleMultiplier`) | 3 |
-| Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
+| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`; offline it counts only for the part of the absence it covered, `OfflineCollectionService.BoostWeightedSeconds`) | 3 |
+| Production Surge | 2× factory clock for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
 | Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 180 s avg of `AutomationIncome.Unboosted` (Cyclotron boost excluded), this run only; history restarts on prestige, reload, falling total or a >5 s sample gap (pause); first 10 s after a restart ignored (load backlog); offer held as "Measuring income" until 15 s of settled samples (60 s before 2026-11-18) (side icon hidden, rewards-panel button disabled and labelled "Measuring…", an open card closes if the measurement restarts); amount is quoted before the ad plays and that quote is granted (the ad pauses the app, which restarts the measurement); floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
@@ -79,7 +80,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 - **Building purchase scaling**: `base_cost × multiplier^(n-1)`, n = same-type buildings already placed; multiplier 1.5 (T1), 1.4 (T2), 1.3 (T3+) (`game_config.building_purchase_multiplier_*`).
 - **Power (proximity grid, single shared eV pool)**: a consumer runs only if within a generator's `InfluenceRadius`; global `Draw` (Σ connected consumers' `DrawEV × manager PowerDiscount`) vs `Supply` (Σ generator output eV) gives `ratio = min(1, Supply/Draw)` — connected buildings craft at `ratio` speed (brownout), disconnected at 0. Generator (Basic Generator) scales **50 → 100 → 200 → 400 eV**, radius **3 → 4 → 5 → 6** tiles by level. Per-building draw eV (L1, `base_power_cost_ev`, scales with speed level): SFC 10, Atom Generator 20, Isotopic Manipulator 25, Radioactive Containment 30, Molecular Synthesizer 50, Materials Forge 100, Component Fabricator 200. (v1 uses static per-level draw; the old `power_cost_is_dynamic` mass/neutron formulas are superseded and out of scope. Harvester, Maxwell's Demon, Basic Generator draw nothing.)
 - **Idle/offline**: collects `idleBaseCollectionRate = 20%` of active output, max `idleBaseMaxSeconds = 30 min` base (cut from 2h on 2026-11-16 to bring players back to collect), hard cap 12h (`GameConfigSO.cs:34-40`); both raisable by prestige-shop upgrades (`IdleCollectionRate`, `IdleTimeCap`).
-- **Speed boost (premium)**: timed multiplier composed onto `PrestigeData.SpeedMultiplier` at load (`ECSLoadBridge.cs:148`), stripped at save (`:236`).
+- **Speed burst (premium / Production Surge ad)**: live, `FactoryClockSystem` runs production, harvesters and belts at 2× (`FactoryClock.Rate`). Offline, the idle snapshot is unboosted and `OfflineCollectionService` counts the part of the absence the burst covered twice (`BoostWeightedSeconds`): a 30 min burst over 8 h away pays 8.5 h, not 16 h.
 
 ## Progression phases & research gates (distilled from `game_data.json`)
 
