@@ -33,7 +33,7 @@ TEMPLATE = os.path.join(ROOT, "scripts", "prestige_plan_template.html")
 SHORT = {"memory_resonance": "Mem Res", "research_overdrive": "Overdrive", "assembly_line": "Assembly",
          "quantum_yield": "Quantum Y", "entropy_echo": "Echo", "entropy_headstart": "Headstart",
          "idle_time_cap": "Idle cap", "idle_collection_rate": "Idle rate"}
-PHYSICS_BLOCKS = ("ignition", "foundations", "stellar_forge", "actinide_frontier")
+PHYSICS_BLOCKS = ("ignition", "foundations", "stellar_forge", "deep_burning", "actinide_frontier")
 
 # ── Default plan (one row per run). Levels are TOTAL owned at the start of the run. ─────────
 # target, MR, RO, AL, QY, Echo, Headstart, IdleCap, IdleRate, manager income mult
@@ -41,11 +41,11 @@ PLAN = [
     ("nucleon_harvesting",           0, 0, 0, 0, 0, 0, 0, 0, 1.0),
     ("light_elements",               1, 0, 1, 0, 0, 1, 0, 0, 1.2),
     ("fusion_ii",                    2, 0, 2, 1, 0, 1, 1, 0, 1.2),
-    ("fusion_iii",                   3, 0, 3, 1, 0, 1, 1, 0, 1.4),
-    ("radioactive_isotopes",         3, 0, 3, 2, 0, 1, 2, 1, 1.6),
-    ("slow_neutron_capture",         4, 0, 3, 3, 0, 1, 2, 1, 1.6),
-    ("exotic_metals",                4, 0, 4, 3, 0, 1, 3, 1, 1.8),
-    ("lanthanides_and_heavy_metals", 5, 0, 4, 3, 0, 1, 3, 1, 2.0),
+    ("mid_elements",                 3, 0, 3, 1, 0, 1, 1, 0, 1.4),   # Chemistry task stage 4 (N, Na, Al)
+    ("mid_elements",                 3, 0, 3, 2, 0, 1, 2, 1, 1.6),   # stage 5 (Silicon): Chemistry opens
+    ("fusion_iii",                   4, 0, 3, 3, 0, 1, 2, 1, 1.6),   # past the gate: Physics resumes
+    ("radioactive_isotopes",         4, 0, 4, 3, 0, 1, 3, 1, 1.8),
+    ("slow_neutron_capture",         5, 0, 4, 3, 0, 1, 3, 1, 2.0),
 ]
 # Upgrades the plan tracks (column order in Plan), with per-level ✦ costs from
 # PersistentUpgradeService.All.

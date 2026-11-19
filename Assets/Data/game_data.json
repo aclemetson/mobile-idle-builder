@@ -14309,60 +14309,61 @@
     ]
   },
   "world_tasks": {
-    "_comment": "Chemistry gate (2026-11-19): items delivered to Maxwell's Demon while a stage is active count toward it (they still pay entropy). Stages survive prestige; one is sized per run (first pass, tune with scripts/prestige_plan.py). Finishing the last stage unlocks world_chemistry.",
+    "_comment": "Chemistry gate (2026-11-19): items delivered to Maxwell's Demon while a stage is active count toward it (they still pay entropy). Stages survive prestige; each asks for elements its run can make, sized to about a quarter of that run's output of them (prestige_plan.py run windows). Finishing the last stage unlocks world_chemistry.",
     "world": "world_chemistry",
     "display_name": "Path to Chemistry",
     "stages": [
       {
         "id": "chem_task_1",
         "display_name": "Ignition Ash",
-        "description": "Carbon is the first atom heavier than helium that a star makes in bulk. Send it to the Demon.",
+        "description": "Carbon is the first atom heavier than helium that stars make in bulk. Send it to the Demon.",
         "items": [
-          { "item": "carbon", "quantity": 500 }
+          { "item": "carbon", "quantity": 300 }
         ],
         "dialogue": ""
       },
       {
         "id": "chem_task_2",
-        "display_name": "Light Elements",
-        "description": "Lithium, beryllium and boron: the fragile light elements that stars mostly destroy.",
+        "display_name": "Helium Flash",
+        "description": "Stars run on helium. Feed the Demon helium and the carbon it burns into.",
         "items": [
-          { "item": "lithium", "quantity": 300 },
-          { "item": "beryllium", "quantity": 200 },
-          { "item": "boron", "quantity": 150 }
+          { "item": "helium_4", "quantity": 600 },
+          { "item": "carbon", "quantity": 500 }
         ],
         "dialogue": ""
       },
       {
         "id": "chem_task_3",
-        "display_name": "Stellar Ash",
-        "description": "Oxygen, neon and magnesium, the ash of carbon burning.",
+        "display_name": "Light Elements",
+        "description": "Lithium, beryllium and boron: the fragile light elements that stars mostly destroy.",
         "items": [
-          { "item": "oxygen", "quantity": 400 },
-          { "item": "neon", "quantity": 300 },
-          { "item": "magnesium", "quantity": 200 }
+          { "item": "lithium", "quantity": 600 },
+          { "item": "beryllium", "quantity": 400 },
+          { "item": "boron", "quantity": 300 }
         ],
         "dialogue": ""
       },
       {
         "id": "chem_task_4",
-        "display_name": "Second Burning",
-        "description": "Nitrogen, sodium and aluminum round out the light periodic table.",
+        "display_name": "Stellar Ash",
+        "description": "Oxygen, neon, magnesium and silicon, the ash of carbon and neon burning.",
         "items": [
-          { "item": "nitrogen", "quantity": 400 },
-          { "item": "sodium", "quantity": 300 },
-          { "item": "aluminum", "quantity": 200 }
+          { "item": "oxygen", "quantity": 250 },
+          { "item": "neon", "quantity": 200 },
+          { "item": "magnesium", "quantity": 150 },
+          { "item": "silicon", "quantity": 100 }
         ],
         "dialogue": ""
       },
       {
         "id": "chem_task_5",
-        "display_name": "Silicon",
-        "description": "Silicon is the last element before chemistry takes over. Fill the order and Chemistry opens.",
+        "display_name": "Second Burning",
+        "description": "Nitrogen, sodium and aluminum round out the light elements, and silicon is the last one before chemistry. Fill the order and Chemistry opens.",
         "items": [
-          { "item": "silicon", "quantity": 1000 },
-          { "item": "magnesium", "quantity": 300 },
-          { "item": "aluminum", "quantity": 300 }
+          { "item": "nitrogen", "quantity": 300 },
+          { "item": "sodium", "quantity": 200 },
+          { "item": "aluminum", "quantity": 150 },
+          { "item": "silicon", "quantity": 500 }
         ],
         "dialogue": ""
       }
