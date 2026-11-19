@@ -252,6 +252,9 @@ namespace MobileIdleBuilder.Editor
             // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
             GenerateMegastructure(data.megastructure, itemLookup);
 
+            // ── Step 15: WorldTaskSO (Chemistry gate delivery stages; needs itemLookup) ──
+            GenerateWorldTasks(data.world_tasks, itemLookup);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -722,6 +725,7 @@ namespace MobileIdleBuilder.Editor
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
 
+            so.unlockByTasks   = data.unlock_by_tasks;
             so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
             foreach (var pid in so.prereqUnlockIds)
                 if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
@@ -1024,6 +1028,42 @@ namespace MobileIdleBuilder.Editor
                         crystals    = c.crystals
                     });
             so.challengePool = challengeList.ToArray();
+
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateWorldTasks(WorldTasksJson data, Dictionary<string, ItemSO> itemLookup)
+        {
+            if (data == null || string.IsNullOrEmpty(data.world)) return;
+
+            EnsureDirectory(ResourcesDir);
+            var so = LoadOrCreate<WorldTaskSO>($"{ResourcesDir}/WorldTasks.asset");
+            so.worldId     = data.world;
+            so.displayName = data.display_name;
+
+            var stages = data.stages ?? new List<WorldTaskStageJson>();
+            so.stages = new WorldTaskStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.items ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"World task stage '{sd.id}' items[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+                so.stages[i] = new WorldTaskStage
+                {
+                    id          = sd.id,
+                    displayName = sd.display_name,
+                    description = sd.description,
+                    items       = items,
+                    quantities  = qtys,
+                    dialogueId  = sd.dialogue ?? "",
+                };
+            }
 
             EditorUtility.SetDirty(so);
         }

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Particle Physics
   unlockCost: 0
   prereqUnlockIds: []
+  unlockByTasks: 0
   siteIds:
   - site_origin
   - site_quark_sea

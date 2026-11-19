@@ -12022,8 +12022,9 @@
       "id": "world_chemistry",
       "display_name": "Chemistry",
       "unlock_cost": 0,
-      "_note_gate": "Chem/Bio Phase 4a: the 150K + mid_elements gate now lives on the chemistry_lab RESEARCH node; researching it opens this world (prereq_unlock_ids). unlock_cost is 0 because the research carries the cost.",
-      "prereq_unlock_ids": ["chemistry_lab"],
+      "_note_gate": "2026-11-19 Chemistry gate: finishing world_tasks (Demon deliveries over about five prestiges) unlocks this world; no entropy fee. Its research and Physics past silicon carry required_world world_chemistry.",
+      "prereq_unlock_ids": [],
+      "unlock_by_tasks": true,
       "site_ids": ["site_chem_lab"],
       "theme": { "background_color": "#08171c", "tile_color": "#123039", "field_tint": "#bfeede" }
     },
@@ -14219,6 +14220,66 @@
         ],
         "reward_type": "PrestigeGainMultiplier",
         "reward_value": 1.0
+      }
+    ]
+  },
+  "world_tasks": {
+    "_comment": "Chemistry gate (2026-11-19): items delivered to Maxwell's Demon while a stage is active count toward it (they still pay entropy). Stages survive prestige; one is sized per run (first pass, tune with scripts/prestige_plan.py). Finishing the last stage unlocks world_chemistry.",
+    "world": "world_chemistry",
+    "display_name": "Path to Chemistry",
+    "stages": [
+      {
+        "id": "chem_task_1",
+        "display_name": "Ignition Ash",
+        "description": "Carbon is the first atom heavier than helium that a star makes in bulk. Send it to the Demon.",
+        "items": [
+          { "item": "carbon", "quantity": 500 }
+        ],
+        "dialogue": ""
+      },
+      {
+        "id": "chem_task_2",
+        "display_name": "Light Elements",
+        "description": "Lithium, beryllium and boron: the fragile light elements that stars mostly destroy.",
+        "items": [
+          { "item": "lithium", "quantity": 300 },
+          { "item": "beryllium", "quantity": 200 },
+          { "item": "boron", "quantity": 150 }
+        ],
+        "dialogue": ""
+      },
+      {
+        "id": "chem_task_3",
+        "display_name": "Stellar Ash",
+        "description": "Oxygen, neon and magnesium, the ash of carbon burning.",
+        "items": [
+          { "item": "oxygen", "quantity": 400 },
+          { "item": "neon", "quantity": 300 },
+          { "item": "magnesium", "quantity": 200 }
+        ],
+        "dialogue": ""
+      },
+      {
+        "id": "chem_task_4",
+        "display_name": "Second Burning",
+        "description": "Nitrogen, sodium and aluminum round out the light periodic table.",
+        "items": [
+          { "item": "nitrogen", "quantity": 400 },
+          { "item": "sodium", "quantity": 300 },
+          { "item": "aluminum", "quantity": 200 }
+        ],
+        "dialogue": ""
+      },
+      {
+        "id": "chem_task_5",
+        "display_name": "Silicon",
+        "description": "Silicon is the last element before chemistry takes over. Fill the order and Chemistry opens.",
+        "items": [
+          { "item": "silicon", "quantity": 1000 },
+          { "item": "magnesium", "quantity": 300 },
+          { "item": "aluminum", "quantity": 300 }
+        ],
+        "dialogue": ""
       }
     ]
   }

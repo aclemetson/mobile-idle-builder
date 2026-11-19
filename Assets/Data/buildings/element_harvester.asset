@@ -54,6 +54,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields:
   - Element
+  world: 
   entropyCost: 5000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

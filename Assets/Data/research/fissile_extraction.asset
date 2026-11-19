@@ -24,6 +24,7 @@ MonoBehaviour:
   block: actinide_frontier
   treeX: -1
   treeY: -1
+  requiredWorld: 
   costBaseCurrency: 4240000
   costPrestigeCurrency: 0
   durationSeconds: 900

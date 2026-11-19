@@ -76,6 +76,12 @@ namespace MobileIdleBuilder
         public int          megastructureStage        = 0;     // completed stage count (0-5)
         public List<string> megastructureContribKeys   = new(); // item ids (string numeric, like inventoryKeys), toward the CURRENT stage
         public List<int>    megastructureContribValues = new(); // contributed counts, parallel to megastructureContribKeys
+        // World delivery tasks (Chemistry gate, 2026-11-19): items delivered to the Demon toward the CURRENT
+        // stage. Survive prestige like the megastructure; WorldTasks reads and writes them.
+        public int          worldTaskStage            = 0;     // completed stage count
+        public List<string> worldTaskProgressKeys     = new(); // item ids (string numeric), toward the current stage
+        public List<int>    worldTaskProgressValues   = new(); // delivered counts, parallel to worldTaskProgressKeys
+        public int          worldTaskVersion          = 0;     // 0 = not yet migrated (start stage from prestigeCount)
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();

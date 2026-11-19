@@ -275,7 +275,7 @@ namespace MobileIdleBuilder
         // ── One-shot world introduction ──────────────────────────────────────
 
         /// <summary>Plays a world's intro dialogue the first time it is unlocked, then records it as seen.</summary>
-        private void PlayWorldIntro(string worldId)
+        public void PlayWorldIntro(string worldId)
         {
             var save = SaveManager.Instance?.Current;
             if (save != null) save.worldsIntroSeen ??= new List<string>();
