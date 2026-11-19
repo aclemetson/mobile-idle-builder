@@ -362,6 +362,7 @@ namespace MobileIdleBuilder.Editor
             so.block                = data.block ?? "";
             so.treeX                = data.tree_x;
             so.treeY                = data.tree_y;
+            so.requiredWorld        = data.required_world ?? "";
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -485,6 +486,7 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
             so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;

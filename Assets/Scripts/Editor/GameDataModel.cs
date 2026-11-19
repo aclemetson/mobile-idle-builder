@@ -145,6 +145,7 @@ namespace MobileIdleBuilder.Editor
         public string   block                  = "";    // research_blocks id (game phase)
         public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
         public int      tree_y                 = -1;
+        public string   required_world         = "";    // world id that must be unlocked first ("" = none)
 
         public void Initialize()
         {
@@ -291,6 +292,7 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public string                 world                      = "";      // world id it is built in ("" = every world)
         public bool                   is_item_filter             = false;
         public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
         public bool                   assignable_outputs         = false;
