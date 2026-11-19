@@ -1276,7 +1276,7 @@ namespace MobileIdleBuilder
             SetElementVisible(_sitesPanel, true);
         }
 
-        private void OpenWorldsPanel()
+        internal void OpenWorldsPanel()
         {
             CloseAllPanels();
             _worlds?.Refresh();

@@ -154,6 +154,14 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void TaskStageTitle_NamesTheStageBeingWorkedOn()
+        {
+            Assert.AreEqual("Stage 1/5: Ignition Ash", WorldsSubController.TaskStageTitle(0, 5, "Ignition Ash"));
+            Assert.AreEqual("Stage 5/5: Silicon", WorldsSubController.TaskStageTitle(4, 5, "Silicon"));
+            Assert.AreEqual("Stage 5/5: Silicon", WorldsSubController.TaskStageTitle(5, 5, "Silicon"), "never past the last stage");
+        }
+
+        [Test]
         public void GeneratedData_ChemistryTasks_FiveStages_LightElementsOnly()
         {
             var data = Resources.Load<WorldTaskSO>("WorldTasks");
