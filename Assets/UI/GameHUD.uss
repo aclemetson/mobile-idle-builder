@@ -58,6 +58,16 @@
     color: #b39dff;
 }
 
+/* Chemistry task strip: Chemistry world teal, tappable (opens the Worlds panel) */
+.task-status {
+    background-color: rgba(63, 214, 170, 0.12);
+}
+
+.task-status-label {
+    color: #7fe6c8;
+    font-size: var(--font-size-sm);
+}
+
 .inventory-bar {
     flex-direction: row;
     flex-wrap: wrap;

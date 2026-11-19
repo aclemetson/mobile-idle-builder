@@ -24,7 +24,8 @@ MonoBehaviour:
   block: stellar_forge
   treeX: -1
   treeY: -1
-  costBaseCurrency: 1970000
+  requiredWorld: 
+  costBaseCurrency: 1580000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
@@ -34,13 +35,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a23e5b9e76e088e4493537f741bcce74, type: 2}
   - {fileID: 11400000, guid: ffbf17ea0335f1f4a95224f9f5aec3ae, type: 2}
   - {fileID: 11400000, guid: e9d4fd82ea10f0747bcd10d5cc822c97, type: 2}
-  - {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: a2f350106494f5c44ba427f09c97f0e0, type: 2}
   - {fileID: 11400000, guid: 24da610dc434e6046b54f4bb4c8ecbc9, type: 2}
   - {fileID: 11400000, guid: 3aa75351a59a7df458d9ce4ab5cf936e, type: 2}
   - {fileID: 11400000, guid: 2bf96794b3af2ae4e93b5eab183e17a0, type: 2}
-  - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:

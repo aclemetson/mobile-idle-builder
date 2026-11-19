@@ -39,6 +39,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 887bf25e3533dc448bb93f7d4cf3f30a, type: 2}
   - {fileID: 11400000, guid: 78fb14b7e6d81424c8dcde03aa14d65f, type: 2}
   - {fileID: 11400000, guid: 1f0bb43fd9479054194437589a8e7429, type: 2}
+  - {fileID: 11400000, guid: face61e2bc746ac41947a4036cd598bd, type: 2}
+  - {fileID: 11400000, guid: 1912c62e6e6809a408cb3ab068739a0f, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0
@@ -54,6 +56,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields:
   - Element
+  world: world_chemistry
   entropyCost: 5000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

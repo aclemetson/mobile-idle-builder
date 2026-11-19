@@ -56,6 +56,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: 
   entropyCost: 40
   baseMaxOutputItems: 10
   baseMaxInputItemsPerSlot: 10

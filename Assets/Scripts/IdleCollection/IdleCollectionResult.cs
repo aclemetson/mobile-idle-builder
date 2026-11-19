@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         public float MaxSeconds;
         public Dictionary<int, int> ItemsEarned = new();
         public long  EntropyEarned;
+        public Dictionary<int, long> DemonDelivered = new(); // items the Demon consumed (world delivery tasks)
 
         public bool HasAnyOutput =>
             EntropyEarned > 0 || (ItemsEarned != null && ItemsEarned.Count > 0);

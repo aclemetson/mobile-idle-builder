@@ -63,6 +63,7 @@ namespace MobileIdleBuilder
         public int    cyclotronInsight;         // Insight points banked; spent on the two Cyclotron upgrades
         public int    cyclotronBoostLevel;      // Longer Boost level, 0..10 (+1 min boost each)
         public int    cyclotronCooldownLevel;   // Faster Recharge level, 0..6 (-5 min cooldown each)
+        public bool   cyclotronIntroSeen;       // one-shot: intro_cyclotron dialogue played when it unlocked
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared
@@ -76,6 +77,12 @@ namespace MobileIdleBuilder
         public int          megastructureStage        = 0;     // completed stage count (0-5)
         public List<string> megastructureContribKeys   = new(); // item ids (string numeric, like inventoryKeys), toward the CURRENT stage
         public List<int>    megastructureContribValues = new(); // contributed counts, parallel to megastructureContribKeys
+        // World delivery tasks (Chemistry gate, 2026-11-19): items delivered to the Demon toward the CURRENT
+        // stage. Survive prestige like the megastructure; WorldTasks reads and writes them.
+        public int          worldTaskStage            = 0;     // completed stage count
+        public List<string> worldTaskProgressKeys     = new(); // item ids (string numeric), toward the current stage
+        public List<int>    worldTaskProgressValues   = new(); // delivered counts, parallel to worldTaskProgressKeys
+        public int          worldTaskVersion          = 0;     // 0 = not yet migrated (start stage from prestigeCount)
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();

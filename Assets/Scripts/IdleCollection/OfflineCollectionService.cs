@@ -215,6 +215,8 @@ namespace MobileIdleBuilder
                     if (chain.endsAtEntropySink)
                     {
                         result.EntropyEarned += (long)(wholeItems * chain.baseSellValue);
+                        result.DemonDelivered.TryGetValue(chain.itemId, out long delivered);
+                        result.DemonDelivered[chain.itemId] = delivered + wholeItems;
                     }
                     else
                     {
@@ -231,8 +233,21 @@ namespace MobileIdleBuilder
         {
             if (save?.currentRun == null || result == null) return;
             save.currentRun.baseCurrency += result.EntropyEarned;
+            CreditDemonDeliveries(save, result);
             foreach (var kvp in result.ItemsEarned)
                 MergeInventory(save.currentRun, kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
+        /// Credits what the Demon consumed while away to the world delivery tasks (Chemistry gate), at the same
+        /// idle rate as the entropy. Every path that applies an idle result calls this exactly once.
+        /// </summary>
+        public static void CreditDemonDeliveries(SaveData save, IdleCollectionResult result)
+        {
+            if (save == null || result?.DemonDelivered == null || result.DemonDelivered.Count == 0) return;
+            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, result.DemonDelivered);
+            foreach (var stage in finished)
+                GameLogger.Info($"[Idle] World task stage '{stage.id}' completed while away.");
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

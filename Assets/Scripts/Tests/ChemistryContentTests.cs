@@ -89,23 +89,22 @@ namespace MobileIdleBuilder.Tests
         // ── Phase 4a: C1 research / buildings / compounds ──────────────────────
 
         [Test]
-        public void ChemistryLabResearch_GatesWorld()
+        public void ChemistryLabResearch_IsFirstNodeInsideChemistry()
         {
             var rdb = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
             Assert.IsNotNull(rdb, "ResearchDatabase missing");
             var lab = System.Array.Find(rdb.allResearch, r => r != null && r.id == "chemistry_lab");
             Assert.IsNotNull(lab, "chemistry_lab research missing");
-            var mid = System.Array.Find(rdb.allResearch, r => r != null && r.id == "mid_elements");
-            Assert.Greater(lab.costBaseCurrency, mid.costBaseCurrency, "chemistry_lab costs more than its prerequisite (values: scripts/rebalance_curve.py)");
             Assert.AreEqual(ResearchBranch.Chemistry, lab.branch);
-            Assert.IsNotNull(System.Array.Find(lab.prerequisites, p => p != null && p.id == "mid_elements"),
-                "chemistry_lab requires mid_elements");
+            Assert.AreEqual("world_chemistry", lab.requiredWorld, "chemistry_lab is the first node inside Chemistry");
+            Assert.IsTrue(lab.prerequisites == null || lab.prerequisites.Length == 0, "the world is its only gate");
 
+            // 2026-11-19: the world opens from the delivery tasks (WorldTaskSO), not from research or entropy.
             var wdb = Resources.Load<WorldDatabaseSO>("WorldDatabase");
             var chem = System.Array.Find(wdb.allWorlds, w => w != null && w.id == "world_chemistry");
-            CollectionAssert.Contains(chem.prereqUnlockIds, "chemistry_lab",
-                "world_chemistry is now gated by the chemistry_lab research");
-            Assert.AreEqual(0, chem.unlockCost, "world unlock cost moved onto the research node");
+            Assert.IsTrue(chem.unlockByTasks, "world_chemistry unlocks from its delivery tasks");
+            CollectionAssert.IsEmpty(chem.prereqUnlockIds);
+            Assert.AreEqual(0, chem.unlockCost, "no entropy fee: the tasks are the cost");
         }
 
         [Test]

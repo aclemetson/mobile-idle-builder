@@ -810,6 +810,57 @@ namespace MobileIdleBuilder.Dev
                         : $"Error: unlock of '{w.id}' failed.";
                 });
 
+            // ── world delivery tasks (Chemistry gate) ────────────────────────
+            _registry.Register("task status", "Show the world delivery task stage and progress",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready or WorldTasks asset missing.";
+                    if (svc.IsComplete) return $"All {svc.StageCount} stages done; '{svc.Data.worldId}' unlocks from them.";
+                    var stage = svc.CurrentStage;
+                    var save  = SaveManager.Instance?.Current;
+                    var sb = new StringBuilder($"Stage {svc.CompletedStages + 1}/{svc.StageCount}: {stage.displayName}\n");
+                    for (int i = 0; i < stage.items.Length; i++)
+                    {
+                        var it = stage.items[i];
+                        if (it == null) continue;
+                        sb.AppendLine($"  {it.id,-12} {WorldTasks.Delivered(save, it.itemId),8} / {WorldTasks.Required(stage, it.itemId)}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("task add <item> <qty>", "Credit items to the current task stage as if the Demon got them",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (args.Length < 2 || !long.TryParse(args[1], out long qty) || qty <= 0)
+                        return "Error: usage 'task add <item> <qty>'.";
+                    var item = ItemDatabase.GetStatic(args[0]);
+                    if (item == null) return $"Error: unknown item '{args[0]}'.";
+                    int counted = svc.DevCredit(item.itemId, qty);
+                    return $"Counted {counted} {item.id}. Now stage {svc.CompletedStages + (svc.IsComplete ? 0 : 1)}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task stage <n>", "Set the number of finished task stages (progress on the next is cleared)",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (!int.TryParse(args[0], out int n) || n < 0) return "Error: <n> must be a non-negative integer.";
+                    svc.DevSetStage(n);
+                    return $"Finished stages set to {svc.CompletedStages}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task complete", "Finish every task stage (unlocks the world on the next frame)",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    svc.DevSetStage(svc.StageCount);
+                    return $"All {svc.StageCount} stages finished.";
+                });
+
             // ── tutorial ─────────────────────────────────────────────────────
             _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
                 _ =>
