@@ -910,6 +910,7 @@ namespace MobileIdleBuilder.Dev
                         var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                         pp.BaseCurrency      = entropy;
                         pp.TotalEntropySpent = totalSpent;
+                        pp.TotalEntropyDiscounted = 0;
                         pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
                         pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
                         _progressQuery.SetSingleton(pp);
@@ -944,6 +945,7 @@ namespace MobileIdleBuilder.Dev
                         save.tutorial.isActive                 = true;
                         save.currentRun.baseCurrency           = entropy;
                         save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.totalEntropyDiscounted = 0;
                         save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
                     }
 
@@ -974,6 +976,7 @@ namespace MobileIdleBuilder.Dev
                             var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                             pp.BaseCurrency      = entropy;
                             pp.TotalEntropySpent = totalInvested;
+                            pp.TotalEntropyDiscounted = 0;
                             pp.BaseNetWorth      = 0f;
                             pp.NetWorth          = entropy + totalInvested;
                             _progressQuery.SetSingleton(pp);

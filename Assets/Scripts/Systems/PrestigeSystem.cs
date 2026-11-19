@@ -69,6 +69,8 @@ namespace MobileIdleBuilder
             long bonusEntropy = (long)(PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.StartingEntropyBonus) ?? 0f);
             progress.BaseCurrency      = cfgEntropy + bonusEntropy;
             progress.TotalEntropySpent = 0;
+            progress.TotalEntropyDiscounted = 0;
+            progress.StoredItemValue   = 0d;
             progress.NetWorth          = 0f;
             progress.BaseNetWorth      = 0f;
             progress.CurrentTier       = 1;

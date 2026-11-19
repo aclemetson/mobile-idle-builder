@@ -2,7 +2,7 @@
 
 **Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item / recipe / building / cost values not listed, look up `Assets/Data/game_data.json` — the single source of truth that the editor importer turns into ScriptableObjects. Never duplicate that dataset here. (`docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` are a human-only visual reference and may lag behind `game_data.json` — do not treat them as authoritative.)
 
-> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
 ## Currencies
 
@@ -73,6 +73,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 
 ## Core formulas
 
+- **Net worth** (`NetWorthSystem`, 2026-11-19): entropy held + every purchase this run at its **list price** (buildings, upgrades, research, unlocks; discounts from the prestige cost reduction and Memory Resonance are added back through `TotalEntropyDiscounted`) + inventory at `baseSellValue` + items waiting inside buildings at the Demon price (no timed boosts). Prestige ✦, the prestige wall, Entropy Boost ads and the entropy shop packs all read it.
 - **Prestige wall** (when prestige unlocks): `netWorth ≥ prestige_base_value × prestige_wall_multiplier` = 5,000 × 10 = **50,000e net worth**.
 - **Field purchase (Field Synthesis, 250e after Automation I)**: extra fields bought from the Build menu cost `purchase_cost_base × purchase_cost_multiplier^n`, n = purchases of that field this run (reset on prestige). Quark fields sell as a pair at 300e → 900e → 2,700e → 8,100e…; a lepton field 200e → 600e → 1,800e…. Both ×3, lowered from ×10 on 2026-11-11 so a second hydrogen line (quarks and its electrons) is reachable soon after a prestige. The growth is still exponential so fields never become a repeatable income lever. Prestige `CostReduction` does not apply. Owner: `FieldPurchaseService`.
 - **Building purchase scaling**: `base_cost × multiplier^(n-1)`, n = same-type buildings already placed; multiplier 1.5 (T1), 1.4 (T2), 1.3 (T3+) (`game_config.building_purchase_multiplier_*`).
@@ -213,4 +214,4 @@ Findings from the full earning re-evaluation. These are the things most likely t
 
 5. **Manager star costs are the biggest ✦ sink and are flat-authored.** Star costs live as explicit `star_costs[]` arrays in `game_data.json` (not a formula), so new managers must have their tables hand-tuned. Keep them on the same rough curve (hire cost → ★ costs scaling ~×1.5–2 per star) to avoid outliers.
 
-**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is folded into the idle snapshot alongside `prestigeSpeedMultiplier`.
+**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **stored in buildings** row is `PlayerProgressData.StoredItemValue` (items in building inputs, craft staging and outputs at the Demon price): a number that keeps climbing points at a bottleneck downstream. Its **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is folded into the idle snapshot alongside `prestigeSpeedMultiplier`.

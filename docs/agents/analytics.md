@@ -207,6 +207,8 @@ power-building link ranges are mistuned.
 
 `entropy_per_sec` = NetWorth growth rate over the snapshot interval — a clean income-rate proxy, since
 spending entropy moves BaseCurrency→TotalEntropySpent without changing NetWorth (only production raises it).
+Two small exceptions since 2026-11-19: a discounted purchase raises NetWorth by its discount (list price counts),
+and items piling up inside buildings count at their Demon price, so a backed-up factory reads as income until sold.
 `playtime_*_sec` are session-relative (`realtimeSinceStartup`), not lifetime totals.
 
 ## Reading the data

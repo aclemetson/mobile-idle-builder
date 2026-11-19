@@ -275,8 +275,9 @@ namespace MobileIdleBuilder
             // Currency
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency      = save.currentRun.baseCurrency;
-            progress.TotalEntropySpent = save.currentRun.totalEntropySpent;
-            progress.BaseNetWorth      = save.currentRun.baseNetWorth;
+            progress.TotalEntropySpent      = save.currentRun.totalEntropySpent;
+            progress.TotalEntropyDiscounted = save.currentRun.totalEntropyDiscounted;
+            progress.BaseNetWorth           = save.currentRun.baseNetWorth;
             _progressQuery.SetSingleton(progress);
 
             // Inventory
@@ -317,8 +318,9 @@ namespace MobileIdleBuilder
             {
                 var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                 save.currentRun.baseCurrency      = pp.BaseCurrency;
-                save.currentRun.totalEntropySpent = pp.TotalEntropySpent;
-                save.currentRun.baseNetWorth      = pp.BaseNetWorth;
+                save.currentRun.totalEntropySpent      = pp.TotalEntropySpent;
+                save.currentRun.totalEntropyDiscounted = pp.TotalEntropyDiscounted;
+                save.currentRun.baseNetWorth           = pp.BaseNetWorth;
                 save.lastKnownNetWorth            = pp.NetWorth;
             }
 
@@ -383,6 +385,10 @@ namespace MobileIdleBuilder
         /// <summary>Live net worth from the ECS singleton; null before the world is loaded.</summary>
         public double? LiveNetWorth =>
             IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().NetWorth : null;
+
+        /// <summary>Value of the items waiting inside buildings (inputs, staging, outputs); null before the world is loaded.</summary>
+        public double? LiveStoredItemValue =>
+            IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().StoredItemValue : null;
 
         /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
         public void AddPrestigeCurrency(long amount)

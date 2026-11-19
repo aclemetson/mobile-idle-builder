@@ -26,6 +26,17 @@ namespace MobileIdleBuilder.Tests
         public void TearDown() => Object.DestroyImmediate(_so);
 
         [Test]
+        public void PlacementDiscount_IsListPriceMinusReducedPrice()
+        {
+            // Placing charged ReducedCost and recorded the rest as discount; removing takes that same amount back out.
+            Assert.AreEqual(50, DemolishRefund.PlacementDiscount(_so, 0.25f));
+            Assert.AreEqual(0,  DemolishRefund.PlacementDiscount(_so, 0f));
+            Assert.AreEqual(0,  DemolishRefund.PlacementDiscount(null, 0.25f));
+            Assert.AreEqual(_so.entropyCost,
+                EntropyWallet.ReducedCost(_so.entropyCost, 0.25f) + DemolishRefund.PlacementDiscount(_so, 0.25f));
+        }
+
+        [Test]
         public void Fraction_StartsAtHalf_AndSalvageRaisesItToAFullRefund()
         {
             Assert.AreEqual(0.5f, DemolishRefund.Fraction(0f), 1e-6f);

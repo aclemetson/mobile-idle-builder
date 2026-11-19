@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Populates the Statistics panel (stats-panel): net worth, automation income per second, the idle projection
-    /// and the idle earnings cap. Sits as a component alongside HUDController on the same GameObject.
+    /// Populates the Statistics panel (stats-panel): net worth, value stored in buildings, automation income per
+    /// second, the idle projection and the idle earnings cap. Sits as a component alongside HUDController on the same GameObject.
     /// </summary>
     [RequireComponent(typeof(HUDController))]
     public class StatsSubController : MonoBehaviour
@@ -14,7 +14,10 @@ namespace MobileIdleBuilder
             "Idle payout is estimated from your factory layout when you leave, so it can differ slightly.";
 
         private VisualElement _panel;
-        private Label _netWorthValue, _incomeValue, _incomeSub, _idleValue, _idleSub, _capValue, _footnote;
+        internal const string StoredSubtitle =
+            "Items waiting in building inputs and outputs. If this keeps climbing, something downstream can't keep up.";
+
+        private Label _netWorthValue, _storedValue, _storedSub, _incomeValue, _incomeSub, _idleValue, _idleSub, _capValue, _footnote;
         private HUDController _hud;
         private IncomeRateTracker _tracker;
         private IVisualElementScheduledItem _ticker;
@@ -24,6 +27,8 @@ namespace MobileIdleBuilder
             _hud         = hud;
             _panel       = root.Q("stats-panel");
             _netWorthValue = root.Q<Label>("stats-networth-value");
+            _storedValue = root.Q<Label>("stats-stored-value");
+            _storedSub   = root.Q<Label>("stats-stored-sub");
             _incomeValue = root.Q<Label>("stats-income-value");
             _incomeSub   = root.Q<Label>("stats-income-sub");
             _idleValue   = root.Q<Label>("stats-idle-value");
@@ -51,6 +56,8 @@ namespace MobileIdleBuilder
             float cap    = config != null ? OfflineCollectionService.GetEffectiveIdleCap(config, upgrades) : 0f;
 
             if (_netWorthValue != null) _netWorthValue.text = NetWorthText(ECSLoadBridge.Instance?.LiveNetWorth);
+            if (_storedValue != null) _storedValue.text = NetWorthText(ECSLoadBridge.Instance?.LiveStoredItemValue);
+            if (_storedSub   != null) _storedSub.text   = StoredSubtitle;
             if (_incomeValue != null) _incomeValue.text = IncomeText(perSecond);
             if (_incomeSub   != null) _incomeSub.text   = "Average over the last 60 s";
             if (_idleValue   != null) _idleValue.text   = IncomeText(IdleProjection(perSecond, rate, adMult));

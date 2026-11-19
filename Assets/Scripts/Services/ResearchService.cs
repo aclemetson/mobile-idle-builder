@@ -226,7 +226,7 @@ namespace MobileIdleBuilder
 
             // Check-and-spend in one step; CanPurchase already confirmed the balance.
             long cost = EffectiveCost(research);
-            if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
+            if (!EntropyWallet.TrySpend(_progressQuery, cost, research.costBaseCurrency)) return;
             AchievementService.Instance?.NotifyEntropySpent(cost);
 
             int effective = EffectiveDurationSeconds(research);

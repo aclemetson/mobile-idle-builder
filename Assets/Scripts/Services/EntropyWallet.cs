@@ -28,17 +28,24 @@ namespace MobileIdleBuilder
         /// nothing if they can't, if the singleton is missing, or if <paramref name="amount"/> is
         /// negative. Spending 0 succeeds and changes nothing. Use this for every purchase that is
         /// checked before it happens.
+        /// <para><paramref name="listPrice"/> is the undiscounted price when <paramref name="amount"/> had a
+        /// discount applied (prestige cost reduction, research discount). The difference goes to
+        /// <c>TotalEntropyDiscounted</c> so net worth counts the purchase at its full value. Leave it 0
+        /// for undiscounted purchases.</para>
         /// </summary>
-        public static bool TrySpend(EntityQuery progressQuery, long amount)
+        public static bool TrySpend(EntityQuery progressQuery, long amount, long listPrice = 0)
         {
             if (amount < 0 || progressQuery.IsEmpty) return false;
-            if (amount == 0) return true;
 
             var progress = progressQuery.GetSingleton<PlayerProgressData>();
-            if (progress.BaseCurrency < amount) return false;
+            if (amount > 0 && progress.BaseCurrency < amount) return false;
 
-            progress.BaseCurrency      -= amount;
-            progress.TotalEntropySpent += amount;
+            long discount = Discount(amount, listPrice);
+            if (amount == 0 && discount == 0) return true;
+
+            progress.BaseCurrency           -= amount;
+            progress.TotalEntropySpent      += amount;
+            progress.TotalEntropyDiscounted += discount;
             progressQuery.SetSingleton(progress);
             return true;
         }
@@ -48,20 +55,28 @@ namespace MobileIdleBuilder
         /// returns what was actually charged. Only for charges applied AFTER the thing was already
         /// granted (building placement: <c>HUDController.OnBuildingPlaced</c> runs once the building is
         /// down, so refusing would make it free). Everything else should use <see cref="TrySpend"/>.
+        /// <paramref name="listPrice"/> works as in <see cref="TrySpend"/>: the discount on the full
+        /// <paramref name="amount"/> is recorded even when the player was short, since the thing was granted.
         /// </summary>
-        public static long SpendUpTo(EntityQuery progressQuery, long amount)
+        public static long SpendUpTo(EntityQuery progressQuery, long amount, long listPrice = 0)
         {
-            if (amount <= 0 || progressQuery.IsEmpty) return 0;
+            if (amount < 0 || progressQuery.IsEmpty) return 0;
 
             var progress = progressQuery.GetSingleton<PlayerProgressData>();
-            long charged = Math.Min(amount, Math.Max(0, progress.BaseCurrency));
-            if (charged == 0) return 0;
+            long charged  = Math.Min(amount, Math.Max(0, progress.BaseCurrency));
+            long discount = Discount(amount, listPrice);
+            if (charged == 0 && discount == 0) return 0;
 
-            progress.BaseCurrency      -= charged;
-            progress.TotalEntropySpent += charged;
+            progress.BaseCurrency           -= charged;
+            progress.TotalEntropySpent      += charged;
+            progress.TotalEntropyDiscounted += discount;
             progressQuery.SetSingleton(progress);
             return charged;
         }
+
+        /// <summary>How much a discount saved: list price minus the price charged, never negative.</summary>
+        public static long Discount(long chargedPrice, long listPrice) =>
+            Math.Max(0L, listPrice - Math.Max(0L, chargedPrice));
 
         /// <summary>
         /// A price after the prestige <see cref="PrestigeData.CostReduction"/>. Matches the original

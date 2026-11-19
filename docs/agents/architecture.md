@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); ConveyorSystem tail drawing 2026-11-01 (#223), tail drawn to its real delivery 2026-11-14; Belt Splitter 2026-11-07; belt density 2026-11-11; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); net worth at list price + stored items 2026-11-19; ConveyorSystem tail drawing 2026-11-01 (#223), tail drawn to its real delivery 2026-11-14; Belt Splitter 2026-11-07; belt density 2026-11-11; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -29,7 +29,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `SplitterSystem.cs` | Belt Splitters (`is_splitter`, `splitter_2` / `splitter_3`): moves every input item to the output buffer; `ConveyorSystem.PullFromSplitter` then deals one item per tick to the ready output belts in turn (`Gameplay/SplitterRotation.cs`; a missing or full branch is skipped). Offline, `IdleGraphAnalyzer` splits the producer's flow evenly over the splitter's belts. |
 | `PowerGridSystem.cs` | Proximity power grid (single shared eV pool): connects consumers within a generator's `link_radius_tiles` (range-limited connections, relayed through **Power Relay** buildings), computes global supply/draw/throttle, writes `PowerStatus` + `PowerGridState`. Runs `[UpdateBefore]` `ProductionSystem`, which throttles craft progress by `PowerStatus.ThrottleRatio`. |
 | `EntropySinkSystem.cs` | Sink building consumes items → grants entropy (base currency). |
-| `NetWorthSystem.cs` | Aggregates net worth (inventory + currency + spent); drives prestige wall. |
+| `NetWorthSystem.cs` | Aggregates net worth: inventory + items waiting in building inputs/staging/outputs (Demon price, Demon itself excluded; also written to `StoredItemValue`) + entropy held + `TotalEntropySpent` (price paid) + `TotalEntropyDiscounted` (list price minus price paid, so purchases count at full value) + `BaseNetWorth`; drives prestige wall. |
 | `PrestigeSystem.cs` | Wall detection + prestige execution: currency formula, run reset, destroys buildings + every belt segment (and its item) and empties the kept Demon, since the default world outlives the scene reload; service resets, forced save. |
 | `TutorialSystem.cs` | Advances `TutorialStateData` through `TutorialFlowSO.Current.steps` conditions. |
 | `PVPSystem.cs` | 48h competition run state. |
@@ -43,7 +43,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `ECSLoadBridge` | `Assets/Scripts/SaveSystem/` | THE bridge between SaveData and ECS singletons. See `save-system.md`. |
 | `GridSaveService` | `Assets/Scripts/SaveSystem/` | Saves/restores grid buildings/conveyors/fields; rebuilds idle snapshot. |
 | `ResearchService` | `Assets/Scripts/Services/` | Research purchase: prereqs + `EntropyWallet.TrySpend` (`ResearchService.Purchase`) via ECS; fires `OnResearchUnlocked`. |
-| `EntropyWallet` | `Assets/Scripts/Services/` | Static. THE entropy spend path (#279): `Balance`, `TrySpend` (all-or-nothing, every pre-checked purchase), `SpendUpTo` (clamp; only for building placement, which charges after placing), `ReducedCost` (prestige `CostReduction` price for display, charge and demolish refund). Works on the caller's `PlayerProgressData` query. Never hand-roll `BaseCurrency -=`. |
+| `EntropyWallet` | `Assets/Scripts/Services/` | Static. THE entropy spend path (#279): `Balance`, `TrySpend` (all-or-nothing, every pre-checked purchase), `SpendUpTo` (clamp; only for building placement, which charges after placing), `ReducedCost` (prestige `CostReduction` price for display, charge and demolish refund). Discounted purchases pass the list price as `listPrice`; the difference goes to `TotalEntropyDiscounted` (research, building placement, Nucleon Harvester merge fee; demolish takes the placement discount back out via `DemolishRefund.PlacementDiscount`). Works on the caller's `PlayerProgressData` query. Never hand-roll `BaseCurrency -=`. |
 | `PersistentUpgradeService` | `Assets/Scripts/Services/` | Prestige-shop permanent upgrades. Catalogue is the hardcoded `UpgradeDef[] All` array (`PersistentUpgradeService.cs:48`), NOT data-driven from JSON. |
 | `PremiumShopService` / `PremiumShopCalculator` / `IAPService` | `Assets/Scripts/Services/` | Crystal IAP (4 consumable packs in `IAPService.CrystalAmounts`), speed boosts (`speedBoostExpiryUtc`), entropy/PC purchases. |
 | `RecipeKnowledgeService` | `Assets/Scripts/Services/` | Recipes unlocked across runs (survives prestige). |
@@ -83,7 +83,7 @@ Anything a player waits on (research timers, field cooldowns, speed boosts, offl
 
 | Singleton | Fields that matter | Written by |
 |---|---|---|
-| `PlayerProgressData` | `BaseCurrency` (entropy), `TotalEntropySpent`, `NetWorth` (double, #284), `CurrentTier`, `PrestigeWallValue/Available/Requested` | NetWorthSystem, PrestigeSystem, ECSLoadBridge, UI |
+| `PlayerProgressData` | `BaseCurrency` (entropy), `TotalEntropySpent`, `TotalEntropyDiscounted` (saved), `StoredItemValue` (derived), `NetWorth` (double, #284), `CurrentTier`, `PrestigeWallValue/Available/Requested` | NetWorthSystem, PrestigeSystem, ECSLoadBridge, UI |
 | `PrestigeData` | `RunCount`, `PrestigeCurrency(+Spent)`, `SpeedMultiplier`, `OutputMultiplier`, `CostReduction` | ECSLoadBridge, PrestigeSystem, PrestigeShopSubController |
 | `TutorialStateData` | `IsActive`, `CurrentStepIndex`, `FirstRunComplete` | TutorialSystem, ECSLoadBridge |
 | `InventorySlot` buffer on the `PlayerInventoryTag` entity | global player inventory (`ItemID`, `Quantity`) | ProductionSystem, ECSLoadBridge, ManualCraftService |
