@@ -47,6 +47,32 @@ namespace MobileIdleBuilder
 
         public bool IsOpen => _step != Step.Closed;
 
+        public const string IntroDialogueId = "intro_cyclotron";
+
+        /// <summary>
+        /// Pure rule for the one-shot unlock intro: once the Cyclotron is unlocked, the first time no other
+        /// dialogue is on screen, unless the player has already used it (a save from before the intro existed).
+        /// </summary>
+        public static bool ShouldPlayIntro(SaveData save, bool dialogueBusy) =>
+            save != null && !save.cyclotronIntroSeen && CyclotronProgress.IsUnlocked(save) &&
+            string.IsNullOrEmpty(save.cyclotronLastRunUtc) && !dialogueBusy;
+
+        DialogueController _dialogue;
+
+        void TryPlayIntro(SaveData save)
+        {
+            if (save == null || save.cyclotronIntroSeen) return;
+            if (!string.IsNullOrEmpty(save.cyclotronLastRunUtc)) { save.cyclotronIntroSeen = true; return; } // already played it
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.SaveApplied) return;
+            _dialogue ??= FindAnyObjectByType<DialogueController>();
+            if (_dialogue == null || !ShouldPlayIntro(save, _dialogue.IsPlaying)) return;
+            var dialogue = Resources.Load<DialogueDatabaseSO>("DialogueDatabase")?.Get(IntroDialogueId);
+            if (dialogue == null) return;
+            save.cyclotronIntroSeen = true;
+            SaveManager.Instance?.SaveLocal();
+            _dialogue.PlayDialogue(dialogue);
+        }
+
         public void Init(VisualElement root, HUDController hud)
         {
             _hud          = hud;
@@ -105,6 +131,7 @@ namespace MobileIdleBuilder
             bool unlocked = loaded && CyclotronProgress.IsUnlocked(save);
             HUDController.SetElementVisible(_drawerButton, unlocked);
             if (loaded) SyncBoost(CyclotronProgress.BoostMultiplier(save, GameClock.UtcNow));
+            if (unlocked) TryPlayIntro(save);
 
             if (unlocked && Time.unscaledTime >= _nextStatus)
             {

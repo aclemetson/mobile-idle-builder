@@ -63,6 +63,7 @@ namespace MobileIdleBuilder
         public int    cyclotronInsight;         // Insight points banked; spent on the two Cyclotron upgrades
         public int    cyclotronBoostLevel;      // Longer Boost level, 0..10 (+1 min boost each)
         public int    cyclotronCooldownLevel;   // Faster Recharge level, 0..6 (-5 min cooldown each)
+        public bool   cyclotronIntroSeen;       // one-shot: intro_cyclotron dialogue played when it unlocked
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared

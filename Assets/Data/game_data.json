@@ -13428,6 +13428,44 @@
           "action": ""
         }
       ]
+    },
+    {
+      "_comment": "2026-11-19: one-shot intro when the Cyclotron unlocks (2nd prestige). Played by CyclotronController; skipped for saves that already ran it (cyclotronIntroSeen).",
+      "id": "intro_cyclotron",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Your second prestige has charged the Cyclotron. Open it from the menu.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Kick the particle each time it crosses the gap. Every good kick adds energy and widens its orbit. You have 30 seconds.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "The energy you reach multiplies everything your factory earns, from one and a half to three times, for a few minutes. Each run also pays Insight, which makes the boost last longer or recharge faster.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "It needs an hour to recharge at first. Fire it when your factory is running at its best.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
     }
   ],
 
