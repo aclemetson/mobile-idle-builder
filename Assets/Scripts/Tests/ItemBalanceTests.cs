@@ -55,26 +55,26 @@ namespace MobileIdleBuilder.Tests
 
         [Test] public void T2_Hydrogen_SellValue()    => AssertSell("hydrogen",   5f);
         [Test] public void T2_Helium4_SellValue()     => AssertSell("helium_4",   15f);   // #270: pays more per proton than Hydrogen
-        [Test] public void T2_Lithium_SellValue()     => AssertSell("lithium",    185f);
-        [Test] public void T2_Beryllium_SellValue()   => AssertSell("beryllium",  413f);
-        [Test] public void T2_Boron_SellValue()       => AssertSell("boron",      697f);
+        [Test] public void T2_Lithium_SellValue()     => AssertSell("lithium",    158f);
+        [Test] public void T2_Beryllium_SellValue()   => AssertSell("beryllium",  349f);
+        [Test] public void T2_Boron_SellValue()       => AssertSell("boron",      588f);
         [Test] public void T2_Carbon_SellValue()      => AssertSell("carbon",     160f);
-        [Test] public void T2_Nitrogen_SellValue()    => AssertSell("nitrogen",   830f);
-        [Test] public void T2_Oxygen_SellValue()      => AssertSell("oxygen",     814f);
-        [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    3750f);
-        [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   3860f);
-        [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       19200f);   // natural peak
-        [Test] public void T2_Cobalt_SellValue()      => AssertSell("cobalt",     21200f);   // first capture step up from iron
-        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     23200f);
-        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     25200f);
-        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       27200f);
-        [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 17400f);
-        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     33000f);
-        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   171000f);
-        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   273000f);
-        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       312000f);
-        [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    16900f);          // cheap fission floor
-        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  9370f);          // harvested on the Actinide Vein: cheap
+        [Test] public void T2_Nitrogen_SellValue()    => AssertSell("nitrogen",   634f);
+        [Test] public void T2_Oxygen_SellValue()      => AssertSell("oxygen",     625f);
+        [Test] public void T2_Silicon_SellValue()     => AssertSell("silicon",    2720f);
+        [Test] public void T2_Aluminum_SellValue()    => AssertSell("aluminum",   2790f);
+        [Test] public void T2_Iron_SellValue()        => AssertSell("iron",       18100f);   // natural peak
+        [Test] public void T2_Cobalt_SellValue()      => AssertSell("cobalt",     20100f);   // first capture step up from iron
+        [Test] public void T2_Nickel_SellValue()      => AssertSell("nickel",     22100f);
+        [Test] public void T2_Copper_SellValue()      => AssertSell("copper",     24100f);
+        [Test] public void T2_Zinc_SellValue()        => AssertSell("zinc",       26100f);
+        [Test] public void T2_Technetium_SellValue()  => AssertSell("technetium", 34000f);
+        [Test] public void T2_Silver_SellValue()      => AssertSell("silver",     52800f);
+        [Test] public void T2_Tungsten_SellValue()    => AssertSell("tungsten",   219000f);
+        [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   340000f);
+        [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       386000f);
+        [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    46500f);          // cheap fission floor
+        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  26100f);          // harvested on the Actinide Vein: cheap
         [Test] public void T2_Americium_SellValue()   => AssertSell("americium",  635000f);   // first post-iron synthetic
         [Test] public void T2_Oganesson_SellValue()   => AssertSell("oganesson",  914000f); // global max
 
@@ -82,7 +82,7 @@ namespace MobileIdleBuilder.Tests
 
         // Deuterium sits below half a Helium (0.8x) so fusing two of them is worth more than selling them.
         [Test] public void T2_Deuterium_SellValue()   => AssertSell("deuterium",    4f);
-        [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  21500f);
+        [Test] public void T2_Uranium235_SellValue()  => AssertSell("uranium_235",  52000f);
 
         // ── Tier 2 — Decay particles ─────────────────────────────────────────
 
@@ -96,27 +96,27 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 3 — Molecular ───────────────────────────────────────────────
 
-        [Test] public void T3_LiquidHydrogen_SellValue()       => AssertSell("liquid_hydrogen",  1010f);
-        [Test] public void T3_Water_SellValue()                 => AssertSell("water",            2040f);
-        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          2090f);
-        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          4300f);
-        [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           33000f);
-        [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       133000f);
-        [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 285000f);
+        [Test] public void T3_LiquidHydrogen_SellValue()       => AssertSell("liquid_hydrogen",  1970f);
+        [Test] public void T3_Water_SellValue()                 => AssertSell("water",            2080f);
+        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          4010f);
+        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          4100f);
+        [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           36800f);
+        [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       148000f);
+        [Test] public void T3_UraniumHexafluoride_SellValue()   => AssertSell("uranium_hexafluoride", 360000f);
 
         // ── Tier 3 — Chemistry compounds (C1 P4a, C2-C3 P4b). First-pass values, re-tier in Phase 6. ──
 
-        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    23700f);
-        [Test] public void T3_TableSalt_SellValue()       => AssertSell("table_salt",        43400f);
-        [Test] public void T3_SulfuricAcid_SellValue()    => AssertSell("sulfuric_acid",     52600f);
-        [Test] public void T3_Catalyst_SellValue()        => AssertSell("catalyst",          113000f);
-        [Test] public void T3_ChlorineGas_SellValue()     => AssertSell("chlorine_gas",      46800f);
-        [Test] public void T3_SodiumHydroxide_SellValue() => AssertSell("sodium_hydroxide",  42300f);
-        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       49800f);
+        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    3020f);
+        [Test] public void T3_TableSalt_SellValue()       => AssertSell("table_salt",        12900f);
+        [Test] public void T3_SulfuricAcid_SellValue()    => AssertSell("sulfuric_acid",     11700f);
+        [Test] public void T3_Catalyst_SellValue()        => AssertSell("catalyst",          110000f);
+        [Test] public void T3_ChlorineGas_SellValue()     => AssertSell("chlorine_gas",      44700f);
+        [Test] public void T3_SodiumHydroxide_SellValue() => AssertSell("sodium_hydroxide",  41300f);
+        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       49000f);
         [Test] public void T3_Ethane_SellValue()          => AssertSell("ethane",            55200f);
         [Test] public void T3_Octane_SellValue()          => AssertSell("octane",            309000f);
         [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           122000f);
-        [Test] public void T3_PolymerPrecursor_SellValue() => AssertSell("polymer_precursor", 532000f);
+        [Test] public void T3_PolymerPrecursor_SellValue() => AssertSell("polymer_precursor", 529000f);
 
         // ── Tier 3 — Biology B1 biomolecules. First-pass values, re-tier in Phase 6. ──
 
@@ -140,22 +140,22 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 4 — Materials ───────────────────────────────────────────────
 
-        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              1060000f);
-        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       628000f);
-        [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     1290000f);
-        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 1280000f);
-        [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            1400000f);
-        [Test] public void T4_Superconductor_SellValue()    => AssertSell("superconductor",     5130000f);
-        [Test] public void T4_Metamaterial_SellValue()      => AssertSell("metamaterial",       14700000f);
+        [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              1140000f);
+        [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       647000f);
+        [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     1360000f);
+        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 1300000f);
+        [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            1410000f);
+        [Test] public void T4_Superconductor_SellValue()    => AssertSell("superconductor",     5380000f);
+        [Test] public void T4_Metamaterial_SellValue()      => AssertSell("metamaterial",       15300000f);
 
         // ── Tier 5 — Components ──────────────────────────────────────────────
 
-        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       18600000f);
-        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 67000000f);
-        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         54300000f);
-        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              185000000f);
-        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           392000000f);
-        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           915000000f);
+        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       19100000f);
+        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 69500000f);
+        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         56200000f);
+        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              191000000f);
+        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           404000000f);
+        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           943000000f);
 
         // ── Helper ───────────────────────────────────────────────────────────
 

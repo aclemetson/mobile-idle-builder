@@ -17,6 +17,7 @@ MonoBehaviour:
   unlockCost: 0
   prereqUnlockIds:
   - biology_lab
+  unlockByTasks: 0
   siteIds:
   - site_bio_lab
   theme:

@@ -91,6 +91,13 @@ namespace MobileIdleBuilder
             !string.IsNullOrEmpty(id) && _unlockedIds.Contains(id);
 
         /// <summary>
+        /// False while <paramref name="research"/> needs a world that isn't unlocked yet (WorldGate): Physics past
+        /// silicon and the Chemistry tree wait for the Chemistry tasks.
+        /// </summary>
+        public bool WorldOpen(ResearchSO research) =>
+            WorldGate.ResearchOpen(research, SaveManager.Instance?.Current?.unlockedWorlds);
+
+        /// <summary>
         /// Product of <see cref="ResearchSO.fieldCooldownMult"/> across every unlocked research node.
         /// Returns 1 when nothing relevant is unlocked. Used to shorten the field tap cooldown
         /// (combines multiplicatively with the permanent prestige reduction).
@@ -180,6 +187,7 @@ namespace MobileIdleBuilder
         {
             if (research == null) return false;
             if (IsUnlocked(research.id)) return false;
+            if (!WorldOpen(research)) return false;
 
             if (research.prerequisites != null)
             {

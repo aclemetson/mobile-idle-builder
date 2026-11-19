@@ -471,3 +471,7 @@ The accelerator branch depends on breeding because its **targets are bred actini
 - **Codex-only tail:** Z≳101 (and most transuranics) are intended as codex/prestige-completion content, not core-loop economy — confirm before authoring full recipes.
 - **Fission fragment modelling:** multi-output fission (one `output_item` + fragments in `byproducts[]`) needs the production system to credit byproduct items on craft — verify the existing byproduct path (used by U-235 enrichment's alpha) handles multiple/element byproducts, not just particles.
 - **Maintenance:** any PR that implements part of this (new elements, reactors, fields, particles) MUST update this doc and refresh the `Verified against` stamp.
+
+## Chemistry gate split (2026-11-19)
+
+Before Chemistry opens, Physics reaches **Hydrogen to Silicon (Z 1-14)** and makes no molecules: `fusion_ii` (O, Ne, Mg, Si) and `mid_elements` (N, F, Na, Al) are the last Physics nodes before the gate. Phosphorus (Z15) moved from `mid_elements` to `fusion_iii`; water and ammonia moved to `molecular_synthesis` inside Chemistry. Everything heavier (`fusion_iii` onward, `heavy_elements`/Uranium, isotopes, fission, the capture branch) has `required_world: "world_chemistry"` and opens once the Demon delivery tasks are done (see `chemistry-biology.md`). `ChemistryGateContentTests` pins this.

@@ -126,6 +126,7 @@ namespace MobileIdleBuilder
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
+                OfflineCollectionService.CreditDemonDeliveries(save, result);
             }
             else
             {

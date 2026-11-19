@@ -29,6 +29,7 @@ namespace MobileIdleBuilder.Editor
         public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
         public MegastructureJson         megastructure   = new();
+        public WorldTasksJson            world_tasks     = new();
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
@@ -49,6 +50,8 @@ namespace MobileIdleBuilder.Editor
             tutorial_steps  ??= new List<TutorialStepJson>();
             megastructure   ??= new MegastructureJson();
             megastructure.Initialize();
+            world_tasks     ??= new WorldTasksJson();
+            world_tasks.Initialize();
 
             foreach (var r in research)       r?.Initialize();
             foreach (var rec in recipes)      rec?.Initialize();
@@ -145,6 +148,7 @@ namespace MobileIdleBuilder.Editor
         public string   block                  = "";    // research_blocks id (game phase)
         public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
         public int      tree_y                 = -1;
+        public string   required_world         = "";    // world id that must be unlocked first ("" = none)
 
         public void Initialize()
         {
@@ -291,6 +295,7 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public string                 world                      = "";      // world id it is built in ("" = every world)
         public bool                   is_item_filter             = false;
         public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
         public bool                   assignable_outputs         = false;
@@ -390,6 +395,7 @@ namespace MobileIdleBuilder.Editor
         public string         display_name      = "";
         public long           unlock_cost       = 0;
         public List<string>   prereq_unlock_ids = new();  // research/item ids that gate the unlock
+        public bool           unlock_by_tasks   = false;  // world_tasks for this world must be finished (Chemistry gate)
         public List<string>   site_ids          = new();  // member site ids (flat global site list), in order
         public WorldThemeJson theme;                       // map palette/tint (optional; null = defaults)
 
@@ -491,6 +497,34 @@ namespace MobileIdleBuilder.Editor
         public void Initialize()
         {
             stages ??= new List<MegastructureStageJson>();
+            foreach (var s in stages) s?.Initialize();
+        }
+    }
+
+    /// <summary>One delivery stage of world_tasks: items the Demon must receive.</summary>
+    [Serializable]
+    internal class WorldTaskStageJson
+    {
+        public string              id           = "";
+        public string              display_name = "";
+        public string              description  = "";
+        public List<StageCostJson> items        = new();
+        public string              dialogue     = "";
+
+        public void Initialize() { items ??= new List<StageCostJson>(); }
+    }
+
+    /// <summary>world_tasks: the delivery stages that unlock a world (2026-11-19 Chemistry gate).</summary>
+    [Serializable]
+    internal class WorldTasksJson
+    {
+        public string                   world        = "";
+        public string                   display_name = "";
+        public List<WorldTaskStageJson> stages       = new();
+
+        public void Initialize()
+        {
+            stages ??= new List<WorldTaskStageJson>();
             foreach (var s in stages) s?.Initialize();
         }
     }

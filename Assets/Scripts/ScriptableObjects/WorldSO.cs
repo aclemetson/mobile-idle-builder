@@ -40,6 +40,9 @@ namespace MobileIdleBuilder
         [Tooltip("Research/item ids that must be unlocked before this world can be unlocked (pure economic gate).")]
         public List<string> prereqUnlockIds = new();
 
+        [Tooltip("True when finishing this world's delivery tasks (WorldTaskSO) unlocks it; prereqUnlockIds then also apply.")]
+        public bool unlockByTasks;
+
         [Tooltip("Ids of the Sites that belong to this world, in order. May be empty until sites are authored.")]
         public List<string> siteIds = new();
 

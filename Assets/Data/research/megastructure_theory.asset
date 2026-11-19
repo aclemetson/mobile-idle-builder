@@ -24,7 +24,8 @@ MonoBehaviour:
   block: synthetic_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 652000000
+  requiredWorld: world_chemistry
+  costBaseCurrency: 651000000
   costPrestigeCurrency: 0
   durationSeconds: 14400
   fieldCooldownMult: 1

@@ -85,6 +85,7 @@ namespace MobileIdleBuilder
         public PlacementRule placementRule;
         public BuildingCategory[] compatibleAdjacentCategories;
         public string[] compatibleFields;   // field-type ids this building can be placed on (see FieldTypes)
+        public string world;                // world id this building is built in ("" = every world); WorldGate
 
         [Header("Economy")]
         public int entropyCost;             // entropy spent to place this building

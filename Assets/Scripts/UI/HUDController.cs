@@ -968,9 +968,15 @@ namespace MobileIdleBuilder
             }
         }
 
+        // Prerequisite research done AND its world (WorldGate) open.
         private bool PrereqsMet(ResearchSO research) =>
-            research.prerequisites == null || research.prerequisites.Length == 0 ||
-            System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id));
+            researchService.WorldOpen(research) &&
+            (research.prerequisites == null || research.prerequisites.Length == 0 ||
+             System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id)));
+
+        /// <summary>"Opens with Chemistry" while the research's world is still locked, else null.</summary>
+        private string WorldLockText(ResearchSO research) =>
+            researchService.WorldOpen(research) ? null : $"Opens with {WorldGate.DisplayName(research.requiredWorld)}";
 
         /// <summary>The research the current tutorial step is waiting for, or null when it waits for something else.</summary>
         private string TutorialResearchTargetId()
@@ -995,7 +1001,7 @@ namespace MobileIdleBuilder
                 ResearchTreeView.NodeState.Done   => "Researched",
                 ResearchTreeView.NodeState.Active => $"In progress · {FormatResearchTimer(researchService.ActiveRemainingSeconds)}",
                 ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(researchService.EffectiveCost(r))}" + (currentEntropy >= researchService.EffectiveCost(r) ? "  Ready" : ""),
-                _ => $"Locked · ◈ {ShortNumber(researchService.EffectiveCost(r))}",
+                _ => WorldLockText(r) ?? $"Locked · ◈ {ShortNumber(researchService.EffectiveCost(r))}",
             };
 
             // Open on the research the player is working toward: the one the tutorial is asking for (selected,
@@ -1091,11 +1097,11 @@ namespace MobileIdleBuilder
 
                     if (!prereqsMet)
                     {
-                        // Show what's blocking this research
+                        // Show what's blocking this research: its world first, else the missing prerequisites
                         var prereqNames = string.Join(", ",
-                            System.Array.ConvertAll(research.prerequisites,
+                            System.Array.ConvertAll(research.prerequisites ?? System.Array.Empty<ResearchSO>(),
                                 p => p != null ? p.displayName : "?"));
-                        var prereqLabel = new Label($"Requires: {prereqNames}");
+                        var prereqLabel = new Label(WorldLockText(research) ?? $"Requires: {prereqNames}");
                         prereqLabel.AddToClassList("research-card-prereq");
                         footer.Add(prereqLabel);
                     }
@@ -1270,7 +1276,7 @@ namespace MobileIdleBuilder
             SetElementVisible(_sitesPanel, true);
         }
 
-        private void OpenWorldsPanel()
+        internal void OpenWorldsPanel()
         {
             CloseAllPanels();
             _worlds?.Refresh();
@@ -1944,10 +1950,15 @@ namespace MobileIdleBuilder
 
             AddFieldPurchaseRows(currentEntropy);
 
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             foreach (var entry in placementController.availableBuildings)
             {
-                // Skip buildings whose required research has not been purchased yet
+                // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
                 var bso = entry.building;
+                if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
+
+                // Skip buildings whose required research has not been purchased yet
                 if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
                 {
                     if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))

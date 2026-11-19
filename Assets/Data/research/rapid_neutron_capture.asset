@@ -24,7 +24,8 @@ MonoBehaviour:
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 17900000
+  requiredWorld: world_chemistry
+  costBaseCurrency: 19200000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1

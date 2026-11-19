@@ -24,6 +24,7 @@ MonoBehaviour:
   block: ignition
   treeX: -1
   treeY: -1
+  requiredWorld: 
   costBaseCurrency: 250
   costPrestigeCurrency: 0
   durationSeconds: 20

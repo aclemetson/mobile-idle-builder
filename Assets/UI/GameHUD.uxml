@@ -42,6 +42,11 @@
             <ui:Label name="craft-status-label" text="" class="research-status-label craft-status-label" />
         </ui:VisualElement>
 
+        <!-- ═══ CHEMISTRY TASK STRIP (Demon delivery stages; hidden in the tutorial and once Chemistry is open). Tap opens Worlds ═══ -->
+        <ui:VisualElement name="task-status" class="research-status task-status hidden">
+            <ui:Label name="task-status-label" text="" class="research-status-label task-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
