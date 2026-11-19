@@ -102,6 +102,7 @@ namespace MobileIdleBuilder
     {
         public long  baseCurrency;
         public long  totalEntropySpent;
+        public long  totalEntropyDiscounted;   // list price minus price paid; net worth counts purchases at list price
         public double baseNetWorth;
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();

@@ -2117,7 +2117,7 @@ namespace MobileIdleBuilder
 
             // The building is already placed when this event fires, so charge what the player has
             // rather than refusing (refusing would make it free). See EntropyWallet.SpendUpTo.
-            EntropyWallet.SpendUpTo(_progressQuery, cost);
+            EntropyWallet.SpendUpTo(_progressQuery, cost, rawCost);
         }
 
         // ============================================================

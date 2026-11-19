@@ -625,14 +625,15 @@ namespace MobileIdleBuilder
                 };
             }
 
-            float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            // No speed-burst factor here: the snapshot is the unboosted rate and OfflineCollectionService
+            // weights the time away by how much of it the burst actually covered.
             // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
             // output onto each source's output multiplier (alongside the per-building manager bonus).
             float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
             float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
             // Quantum Yield (prestige output) composes the same way it does live in ProductionSystem.
             if (save.prestigeOutputMultiplier > 0f) megaOutputMult *= save.prestigeOutputMultiplier;
-            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * megaSpeedMult;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;
             float getManagerOutputMultiplier(BuildingSaveData bsd)

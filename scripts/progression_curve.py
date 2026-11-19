@@ -85,7 +85,11 @@ def analyse(gd):
                  and all(p in owned or p not in research for p in r.get("prerequisites") or [])]
         if not ready:
             break
-        node = min(ready, key=lambda r: (block_order.get(r.get("block"), 0), r.get("cost_base_currency") or 0, r["id"]))
+        # Order by the cost before any "cost_multiplier" (rebalance_curve.py): the multiplier makes a node dearer
+        # where it already sits; ordering by the multiplied cost would push it later and price it again there.
+        node = min(ready, key=lambda r: (block_order.get(r.get("block"), 0),
+                                         (r.get("cost_base_currency") or 0) / max(1.0, float(r.get("cost_multiplier") or 1.0)),
+                                         r["id"]))
         cost = float(node.get("cost_base_currency") or 0)
         payback = cost / best["rate"] / 60 if best["rate"] > 0 else math.inf
         elapsed += payback / BUILDINGS

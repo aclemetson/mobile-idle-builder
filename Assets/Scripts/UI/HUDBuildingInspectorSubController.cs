@@ -14,8 +14,9 @@ namespace MobileIdleBuilder
     public class HUDBuildingInspectorSubController : MonoBehaviour
     {
         // Research ids that gate the per-building capacity upgrades (must match game_data.json research ids).
+        // Surplus Containment unlocks both capacity tracks (Feedstock Buffers was merged into it, 2026-11-19).
         private const string OutputCapacityResearchId = "surplus_containment";
-        private const string InputCapacityResearchId  = "feedstock_buffers";
+        private const string InputCapacityResearchId  = "surplus_containment";
 
         private VisualElement _buildingInspectorPanel;
         private VisualElement _inspectorStatic;    // pinned above the scrolls: progress bar + one line of buffer chips
@@ -1137,7 +1138,8 @@ namespace MobileIdleBuilder
             if (nucleon == null) return;
             if (!TryFindMergePartner(entity, so, new Vector2Int(cellX, cellY), out var partner)) return;
 
-            long fee = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            long fee     = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            long listFee = NucleonHarvesterMerge.Fee(nucleon, so, 0f);
             bool canAfford = GetBaseCurrency() >= fee;
 
             var row = new VisualElement();
@@ -1160,7 +1162,7 @@ namespace MobileIdleBuilder
             btn.AddToClassList("craft-btn");
             btn.SetEnabled(canAfford);
             ListTapRouter.Register(_inspectorUpgrades, btn,
-                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee));
+                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee, listFee));
             footer.Add(btn);
             row.Add(footer);
             _inspectorUpgrades?.Add(row);
@@ -1190,7 +1192,7 @@ namespace MobileIdleBuilder
             return false;
         }
 
-        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee)
+        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee, long listFee)
         {
             if (!_ecsReady || !_em.Exists(a) || !_em.Exists(b)) return; // changed while the panel was open
             var ca = _em.GetComponentData<GridPosition>(a).Cell;
@@ -1198,7 +1200,7 @@ namespace MobileIdleBuilder
             if (!NucleonHarvesterMerge.TryPlacement(new Vector2Int(ca.x, ca.y), new Vector2Int(cb.x, cb.y),
                                                     out var anchor, out int rotation)) return;
             var placer = FindAnyObjectByType<BuildingPlacer>();
-            if (placer == null || !TryDeductCurrency(fee)) return;
+            if (placer == null || !TryDeductCurrency(fee, listFee)) return;
 
             var bdA = _em.GetComponentData<BuildingData>(a);
             var bdB = _em.GetComponentData<BuildingData>(b);
@@ -1336,7 +1338,7 @@ namespace MobileIdleBuilder
 
         private long GetBaseCurrency() => _ecsReady ? EntropyWallet.Balance(_playerQuery) : 0L;
 
-        private bool TryDeductCurrency(long cost) => EntropyWallet.TrySpend(_playerQuery, cost);
+        private bool TryDeductCurrency(long cost, long listPrice = 0) => EntropyWallet.TrySpend(_playerQuery, cost, listPrice);
 
         private BuildingSO GetBuildingSO(Entity entity)
         {

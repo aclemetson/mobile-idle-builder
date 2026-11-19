@@ -2,7 +2,7 @@
 
 **Scope:** Currencies, formulas, progression gates, and where authoritative numbers live. Use these numbers; do NOT derive your own. For specific item / recipe / building / cost values not listed, look up `Assets/Data/game_data.json` — the single source of truth that the editor importer turns into ScriptableObjects. Never duplicate that dataset here. (`docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` are a human-only visual reference and may lag behind `game_data.json` — do not treat them as authoritative.)
 
-> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19; speed burst as factory clock + one boost at a time 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
 ## Currencies
 
@@ -15,7 +15,8 @@
 IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500◆ ($9.99), 20,000◆ ($19.99) — consumables via Unity IAP / Google Play.
 
 **Crystal value anchor:** $1 ≈ 4 hours of progress at the player's current stage ⇒ **150◆ = 1 "skip-hour"**. Crystals buy *time*, not raw power; the non-time sinks (entropy, prestige currency) grant a **% of the current build** so their dollar value self-scales with progress. Premium-shop sink tiers (`PremiumShopCalculator.cs`):
-- **Speed boost** (2× offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
+- **Speed burst** (2× factory clock, online and offline): 30 min 75◆ / 2 h 270◆ / 8 h 950◆ / 24 h 2,500◆.
+- **One boost at a time** (`BoostLock`, 2026-11-19): while any timed boost runs (speed burst, +50% Idle, Cyclotron Kick), every other shop bonus and ad reward is locked. Crystal packs, the research skip and Double Offline stay available.
 - **Entropy** (% of net worth, floored): 10% 300◆ / 25% 650◆ / 50% 1,200◆ / 100% 2,000◆.
 - **Prestige currency** (flat ✦ grant — it persists across runs, so it is permanent power, not a time-skip): 50✦ 500◆ / 150✦ 900◆ / 500✦ 1,900◆ / 1,500✦ 3,600◆.
 - **Time Warp** (instant offline collection, no wait): 2 h 350◆ / 8 h 1,300◆ / 24 h 3,500◆. Reuses `OfflineCollectionService.ComputeForDuration` (refresh snapshot via `SaveLocal`, pay out at the idle collection rate, apply to live ECS via `ECSLoadBridge.AddEntropy`/`AddInventoryItems`).
@@ -28,8 +29,8 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 |---|---|---|
 | Entropy Boost | 10% of live net worth (`ECSLoadBridge.LiveNetWorth`, floor 500e); the panel previews the amount (`AdService.PreviewEntropyReward`) | 5 |
 | Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
-| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`, applied in `OfflineCollectionService.GetAdIdleMultiplier`) | 3 |
-| Production Surge | 2× production for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
+| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`; offline it counts only for the part of the absence it covered, `OfflineCollectionService.BoostWeightedSeconds`) | 3 |
+| Production Surge | 2× factory clock for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
 | Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 180 s avg of `AutomationIncome.Unboosted` (Cyclotron boost excluded), this run only; history restarts on prestige, reload, falling total or a >5 s sample gap (pause); first 10 s after a restart ignored (load backlog); offer held as "Measuring income" until 15 s of settled samples (60 s before 2026-11-18) (side icon hidden, rewards-panel button disabled and labelled "Measuring…", an open card closes if the measurement restarts); amount is quoted before the ad plays and that quote is granted (the ad pauses the app, which restarts the measurement); floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
@@ -73,12 +74,13 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 
 ## Core formulas
 
+- **Net worth** (`NetWorthSystem`, 2026-11-19): entropy held + every purchase this run at its **list price** (buildings, upgrades, research, unlocks; discounts from the prestige cost reduction and Memory Resonance are added back through `TotalEntropyDiscounted`) + inventory at `baseSellValue` + items waiting inside buildings at the Demon price (no timed boosts). Prestige ✦, the prestige wall, Entropy Boost ads and the entropy shop packs all read it.
 - **Prestige wall** (when prestige unlocks): `netWorth ≥ prestige_base_value × prestige_wall_multiplier` = 5,000 × 10 = **50,000e net worth**.
 - **Field purchase (Field Synthesis, 250e after Automation I)**: extra fields bought from the Build menu cost `purchase_cost_base × purchase_cost_multiplier^n`, n = purchases of that field this run (reset on prestige). Quark fields sell as a pair at 300e → 900e → 2,700e → 8,100e…; a lepton field 200e → 600e → 1,800e…. Both ×3, lowered from ×10 on 2026-11-11 so a second hydrogen line (quarks and its electrons) is reachable soon after a prestige. The growth is still exponential so fields never become a repeatable income lever. Prestige `CostReduction` does not apply. Owner: `FieldPurchaseService`.
 - **Building purchase scaling**: `base_cost × multiplier^(n-1)`, n = same-type buildings already placed; multiplier 1.5 (T1), 1.4 (T2), 1.3 (T3+) (`game_config.building_purchase_multiplier_*`).
 - **Power (proximity grid, single shared eV pool)**: a consumer runs only if within a generator's `InfluenceRadius`; global `Draw` (Σ connected consumers' `DrawEV × manager PowerDiscount`) vs `Supply` (Σ generator output eV) gives `ratio = min(1, Supply/Draw)` — connected buildings craft at `ratio` speed (brownout), disconnected at 0. Generator (Basic Generator) scales **50 → 100 → 200 → 400 eV**, radius **3 → 4 → 5 → 6** tiles by level. Per-building draw eV (L1, `base_power_cost_ev`, scales with speed level): SFC 10, Atom Generator 20, Isotopic Manipulator 25, Radioactive Containment 30, Molecular Synthesizer 50, Materials Forge 100, Component Fabricator 200. (v1 uses static per-level draw; the old `power_cost_is_dynamic` mass/neutron formulas are superseded and out of scope. Harvester, Maxwell's Demon, Basic Generator draw nothing.)
 - **Idle/offline**: collects `idleBaseCollectionRate = 20%` of active output, max `idleBaseMaxSeconds = 30 min` base (cut from 2h on 2026-11-16 to bring players back to collect), hard cap 12h (`GameConfigSO.cs:34-40`); both raisable by prestige-shop upgrades (`IdleCollectionRate`, `IdleTimeCap`).
-- **Speed boost (premium)**: timed multiplier composed onto `PrestigeData.SpeedMultiplier` at load (`ECSLoadBridge.cs:148`), stripped at save (`:236`).
+- **Speed burst (premium / Production Surge ad)**: live, `FactoryClockSystem` runs production, harvesters and belts at 2× (`FactoryClock.Rate`). Offline, the idle snapshot is unboosted and `OfflineCollectionService` counts the part of the absence the burst covered twice (`BoostWeightedSeconds`): a 30 min burst over 8 h away pays 8.5 h, not 16 h.
 
 ## Progression phases & research gates (distilled from `game_data.json`)
 
@@ -89,13 +91,13 @@ Tutorial = phases ①–⑥ (steps 0–50, ends after first prestige). Post-tuto
 | ⑦ Run 2 ramp | repeat discounts: Recombination I 75e, Hydrogen Synth 38e, Automation I 13e | H loop ~4–8 e/sec |
 | ⑧ Nucleosynthesis | `atomic_assembly` → 500e (375e discounted) | Atom Generator makes He-4 (15e) only (Deuterium comes at ⑧b) |
 | ⑧b Deuterium → Fusion | `deuterium_synthesis` 1,200e → `fusion_i` 4,000e (tutorial end) | D 4e; 2D→He (15e) + γ 5e escape bonus; 3He→C 160e. Everything below is **generated** (see "Derived economy") |
-| ⑨ Heavy Elements / ⑩ Isotopes / ⑫ Molecular Synthesis | 3,000e / 1,500e / 3,000e (tutorial-era, kept) | Atom Generator Uranium 64e: the decay-chain on-ramp; molecules wait for their element inputs |
-| ⑪ Radioactive Isotopes | 40k | first post-tutorial node; decay chain U 64 → Th 413 … Pb 1.82k; U-235 1.5k |
-| Fusion II → Fusion III | `light_elements` 195k, `fusion_ii` 556k, `mid_elements` 2.32M, `fission_i` 8.18M, `fusion_iii` 23.8M | O 977, Si 4.65k, **Fe 37.2k** (~12h with 5 buildings) |
-| Actinide / capture branch (reordered 2026-11-15 so every recipe's inputs exist when it unlocks) | `slow_neutron_capture` 11.7M → `heavy_transition_metals` 16.5M → `rapid_neutron_capture` 23.7M → `lanthanides_and_heavy_metals` 33.6M → `exotic_metals` 49.7M → `precious_metals` 68.9M → `transuranic_elements` 315M → `superheavy_synthesis` 447M | Sm 52.3k, Eu 71.8k, Re 263k, Ir 337k, Pt 392k, **Au 447k**, Hg 469k |
-| Chemistry / Materials | `chemistry_lab` 39.3M, `materials_science` 59.9M | Water 13.9k, Carbon Fiber 457k, Steel 1.23M, Ti Alloy 1.33M; world mines paced to the wage (Iron 1 per ~20s) |
-| ⑭ Component Engineering | 460M | Quantum Processor 18.1M, Antimatter Cell 50.7M, Plasma Ring 61.3M |
-| ⑮ Megastructure Theory / Biology | 904M; `biology_lab` 553M → `ecosystems` 2.02B (last node, ~157h) | Dyson Node 183M, Orbital Frame 402M, Graviton Lens 945M; Ecosystem 41.1B |
+| ⑨ Heavy Elements / ⑫ Molecular Synthesis | `heavy_elements` 1.3M / `molecular_synthesis` 158k | Atom Generator Uranium 16.9k: the decay-chain on-ramp; molecules wait for their element inputs. (⑩ Isotope Engineering was removed 2026-11-19: the Isotopic Manipulator now unlocks at ⑪.) |
+| ⑪ Radioactive Isotopes | 2.89M | Isotopic Manipulator + Decay Chamber; decay chain U 16.9k → Th 18.1k … Pb 22.9k; U-235 21.5k |
+| Fusion II → Fusion III | `light_elements` 644k, `fusion_ii` 1.97M, `mid_elements` 2.83M, `fission_i` 5.7M, `fusion_iii` 4.03M | O 814, Si 3.75k, **Fe 19.2k** |
+| Actinide / capture branch (reordered 2026-11-15 so every recipe's inputs exist when it unlocks) | `slow_neutron_capture` 12.4M → `heavy_transition_metals` 14.9M → `rapid_neutron_capture` 17.9M → `lanthanides_and_heavy_metals` 23.8M → `exotic_metals` 36.3M → `precious_metals` 48.4M → `transuranic_elements` 222M → `superheavy_synthesis` 316M | Sm 35.5k, Eu 49.3k, Re 182k, Ir 234k, Pt 273k, **Au 312k**, Hg 328k |
+| Chemistry / Materials | `chemistry_lab` 40.1M, `materials_science` 57.2M | Water 2.04k, Carbon Fiber 628k, Steel 1.06M, Ti Alloy 1.29M; world mines paced to the wage |
+| ⑭ Component Engineering | 451M | Quantum Processor 18.6M, Antimatter Cell 54.3M, Plasma Ring 67M |
+| ⑮ Megastructure Theory / Biology | 652M; `biology_lab` 610M → `ecosystems` 3.44B (last node, ~128h) | Dyson Node 185M, Orbital Frame 392M, Graviton Lens 915M; Ecosystem 46.9B |
 
 Tiers: 1 Subatomic, 2 Atomic, 3 Molecular, 4 Materials, 5 Components (`game_data.json` `tiers`).
 
@@ -117,12 +119,11 @@ Starting a research costs entropy up front and then runs a **real-time timer** (
 
 **Reduction:** the **Research Overdrive** prestige upgrade (`ResearchSpeed` effect) cuts timer length 5%/level up to −50%; applied at research start via `ResearchService.EffectiveDurationSeconds` (a later purchase does not retroactively shorten an in-flight timer).
 
-**Logistics gates (per-building capacity upgrades are research-gated).** Each building has three per-building upgrade tracks bought with entropy in the inspector: speed (`upgrade_levels`), output capacity (`storage_upgrade_levels`), and input capacity (`input_upgrade_levels`). Speed is always available; the two capacity tracks only appear once their unlocking research is purchased (gate checked in `HUDBuildingInspectorSubController` via `ResearchService.IsUnlocked`):
+**Logistics gates (per-building capacity upgrades are research-gated).** Each building has three per-building upgrade tracks bought with entropy in the inspector: speed (`upgrade_levels`), output capacity (`storage_upgrade_levels`), and input capacity (`input_upgrade_levels`). Speed is always available; both capacity tracks appear once Surplus Containment is purchased (gate checked in `HUDBuildingInspectorSubController` via `ResearchService.IsUnlocked`):
 
 | Logistics research | Branch | Prereq | Cost | Unlocks |
 |---|---|---|---|---|
-| `surplus_containment` | Engineering | `automation_i` | 2,000e | Output Capacity upgrades (idle-stockpile wall) |
-| `feedstock_buffers` | Engineering | `molecular_synthesis` | 10,000e | Input Capacity upgrades (multi-input throughput wall) |
+| `surplus_containment` | Engineering | `automation_i` | 110,000e (`cost_multiplier` 2: twice its curve position) | Output **and** Input Capacity upgrades. Feedstock Buffers (input capacity) was merged in 2026-11-19; saves that owned or were researching it get Surplus Containment (`ResearchService.MergedResearch`). |
 
 ## Prestige shop (13 permanent upgrades — `PersistentUpgradeService.cs:48-130`)
 
@@ -191,6 +192,7 @@ Item values after the tutorial and every post-tutorial research cost are **gener
 - **Values:** a later recipe that makes a new item is priced `outputs = inputs + wage(n) × craft time`, wage(n) = the tutorial-end rate × **1.19** per research. So every craft gains and one building on the newest recipe earns about wage(n). Physics recipes price elements; Chemistry/Biology harvesters reuse those prices, and any raw collect recipe is slowed to `value ÷ wage` so a mine never out-earns its unlock (#332).
 - **Back-pricing:** a recipe whose products were priced by a dearer route (Plutonium fission makes the same fragments as U-235 fission) would out-earn its wage; its harvested inputs are raised until it earns the wage, and their harvesters slow to match. Items the tutorial prices are never changed.
 - **Off-curve research:** a research flagged `"advances_curve": false` (Transportation II) is a side upgrade: `rebalance_curve.py` does not count it as a wage-curve step, and it takes its position's cost share without shrinking the rest of its block. Adding one prices only itself (the block runs a little over its target); a normal node would reprice every later item and research (~19%).
+- **Cost multiplier:** a research may set `"cost_multiplier"` (default 1) to cost that many times its curve position, for a node that unlocks more than its position assumes (Surplus Containment, 2 since 2026-11-19: output and input capacity). The extra sits on top of the block budget, like an off-curve node, and unlock order uses the cost before the multiplier (`progression_curve.py`), so the node stays where it is instead of being pushed later and priced again.
 - **Research blocks (game phases):** `research_blocks` in `game_data.json`; every research names its `block`. Each block has `target_hours`, the time a player running 5 buildings should spend clearing it. Current plan: Ignition (tutorial, 1h, costs kept), Foundations 3h, Stellar Forge 12h, Actinide Frontier 20h, Chemistry World 20h, Synthetic Frontier 30h, Biology World 40h (126h ≈ 5.3 days). Unlock order runs block by block, cheapest first inside one.
 - **Research costs:** each block's budget is spread over its research, each node 1.2× the one before (or the block's own `ramp`: Foundations uses 1.7 so the first nodes after `fusion_i` cost 6.4k, 11k, 18.6k, 31.6k instead of 52k+, 2026-11-14), and `cost = share (building-minutes) × 60 × best rate before the node`; a node never costs less than 1.05× its dearest prerequisite. Edit blocks and targets in the research tree editor (`docs/research-tree.html`, https://claude.ai/artifact/CF6rEtx6GunCJMeGqaRgg9), apply with `scripts/apply_research_tree.py`, then re-run the rebalance. `docs/progression-curve.html` shows target vs model per block.
 - **Prestige pacing (Physics):** `docs/balance/prestige-pacing.xlsx`, generated by `python scripts/prestige_plan.py` from the same curve. 8 runs clear Physics (~36 active hours, the blocks' target) only if research discounts (Memory Resonance) and Assembly Line / Quantum Yield are applied live; as shipped neither is, so every run replays at full price (~84 active hours). Removing the per-node memory discount (2026-11-15) took the plan's 8 runs from ~41 to ~45 active hours (runs 2-8 each +0.1 to +0.9 h). It also models the proposed timed Entropy Surge ad (minutes of income, 15 min cooldown) against today's 10%-of-net-worth Entropy Boost.
@@ -213,4 +215,4 @@ Findings from the full earning re-evaluation. These are the things most likely t
 
 5. **Manager star costs are the biggest ✦ sink and are flat-authored.** Star costs live as explicit `star_costs[]` arrays in `game_data.json` (not a formula), so new managers must have their tables hand-tuned. Keep them on the same rough curve (hire cost → ★ costs scaling ~×1.5–2 per star) to avoid outliers.
 
-**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is folded into the idle snapshot alongside `prestigeSpeedMultiplier`.
+**Value readouts and Statistics.** Item price is fixed (`ItemValue.PricePerItem` = `SurplusSale.DemonPrice`); output bonuses (managers, megastructure `OutputMult`) raise quantity, not price, so the readouts scale "per craft" and "per second" but not "worth each". The Statistics panel's **stored in buildings** row is `PlayerProgressData.StoredItemValue` (items in building inputs, craft staging and outputs at the Demon price): a number that keeps climbing points at a bottleneck downstream. Its **automation income** is entropy per second actually earned by automation (Demon sink, belt surplus sales, escaping byproducts) averaged over the last 60 s; "if you go idle" is that rate x `GetEffectiveCollectionRate` (base 20%, + `idle_collection_rate`) x the ad boost (1.5x). `quantum_yield` (`PrestigeData.OutputMultiplier`) is folded into the idle snapshot alongside `prestigeSpeedMultiplier`.

@@ -2,13 +2,13 @@
 
 **Scope:** The full periodic table as game content — how every element (Z=1..118) and its key isotopes are created (existing buildings + new nuclear buildings + a new fissile-field map purchase), its craft time, its entropy yield, and the exotic particles nuclear reactions produce. **Phase 1 (all 118 elements as Atomic-Assembler recipes) is now shipped data** — see "Phase 1 implementation status" below; the new nuclear buildings, fissile fields, and decay mechanic remain design-only. For currency/formula context read `economy-balance.md`; for how to author items/recipes read `data-pipeline.md`; for the power grid read `ecs-patterns.md`; for new-building art read `visual-design.md`.
 
-> Verified against: `992a572`, 2026-06-29 (natural tent to iron + post-iron synthesis endgame); element-tile icon sprites added 2026-07-02; fusion-gated light ladder + escaping particles 2026-11-01 (see "Fusion-gated ladder" below). If code contradicts this doc, trust the code and update this doc.
+> Verified against: `992a572`, 2026-06-29 (natural tent to iron + post-iron synthesis endgame); element-tile icon sprites added 2026-07-02; fusion-gated light ladder + escaping particles 2026-11-01 (see "Fusion-gated ladder" below); isotope trim 2026-11-19 (see "Isotope trim"). If code contradicts this doc, trust the code and update this doc.
 
 > **Authoritative source:** `Assets/Data/game_data.json` is the single source of truth (editor importer turns it into ScriptableObjects). Do NOT treat `docs/gameplay_loop_data.js` / `docs/gameplay-loop.html` as authoritative — they are a human-only visual reference and may lag. Values marked **(impl)** below are read from `game_data.json` as of the stamp; values marked **(design)** are proposals to author when the feature lands.
 
 ## What exists today vs. what this doc proposes
 
-**Existing (impl):** **all 118 elements (Z=1..118)** plus 4 isotopes (deuterium, tritium, carbon-14, U-235) and 4 particles (alpha, beta, and the fusion particles neutrino, gamma photon). The **Atomic Assembler** (`atomic_assembler`, "Atom Generator") builds only H, D, He and the elements past iron from `proton`/`neutron`/`electron`; **Li..Fe (Z3–26) come only from the Fusion Reactor** (see "Fusion-gated ladder"). Isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no dedicated buildings yet** (every element is currently an Assembler recipe).
+**Existing (impl):** **all 118 elements (Z=1..118)** plus 8 isotopes (deuterium, U-235 and the 6 decay-chain isotopes; tritium and carbon-14 were retired 2026-11-19, see "Isotope trim") and 4 particles (alpha, beta, and the fusion particles neutrino, gamma photon). The **Atomic Assembler** (`atomic_assembler`, "Atom Generator") builds only H, D, He and the elements past iron from `proton`/`neutron`/`electron`; **Li..Fe (Z3–26) come only from the Fusion Reactor** (see "Fusion-gated ladder"). Isotopes adjusted in the **Isotopic Manipulator** (`isotopic_manipulator`), nucleons made in the **Strong Force Combiner** (`strong_force_combiner`), quarks/electrons tapped from fields by the **Harvester**, decay particles caught by **Radioactive Containment**. The `RecipeCategory.Fusion`/`Fission` enums and the `ResearchBranch.Nuclear` branch already exist but **back no dedicated buildings yet** (every element is currently an Assembler recipe).
 
 **Also impl (Phase 3a, pre-iron slice — shipped):** **Fusion Reactor** (`fusion_reactor`) and **Fission Reactor** (`fission_reactor`) as *additive shortcut* buildings, the **Nuclear research branch** (`fusion_i/ii/iii`, `fissile_extraction`, `fission_i`), milestone reactor recipes, and **Uranium/Plutonium fissile fields** (`FieldType.Uranium/Plutonium`) + the `site_actinide_vein` purchase. See "Phase 3a implementation status" below.
 
@@ -356,15 +356,25 @@ Columns: **Z** | **Sym** | **Name** | **A** (mass number = Atomic-Assembler craf
 
 **Transuranics & superheavies (Np…Og).** The post-iron endgame: bred (Np–Fm, ~336M–43B) then accelerator-synthesized (Md–Og, ~86B–**11.3Q**). Mostly **collection/prestige trophies** but now the *highest* values in the game — **Oganesson (Z118) is the single most valuable item**, the 100%-completion capstone. All are radioactive, so each unit is either auto-decayed for ~30% in Radioactive Containment or routed to Maxwell's Demon for full value.
 
+## Isotope trim (2026-11-19)
+
+Isotopes that nothing consumed were cut; the ones the game uses stay.
+
+- **Removed:** Tritium and Carbon-14 (items 15, 16; sell-only), the Isotopic Manipulator's duplicate `deuterium` recipe (recipe 14; the Atom Generator's `assemble_deuterium` is the only one), the `isotopes` research node ("Isotope Engineering", Foundations) and its four orphaned tutorial-era dialogues.
+- **Moved:** the Isotopic Manipulator unlocks with `radioactive_isotopes`, where it first has work (U-235, irradiate, strip). `heavy_elements` now hangs off `atomic_assembly`; `radioactive_isotopes` needs only `heavy_elements`.
+- **Kept:** Deuterium (fusion fuel and tutorial), U-235 (fission), and the 6 decay-chain isotopes (the only route to Pa, Ac, Fr, Bi, At, Tl).
+- **Economy:** one fewer wage-curve step, so `rebalance_curve.py --apply` lowered every value and cost from Foundations on by about 16%; block hours (playtime) are unchanged.
+- **Saves:** Tritium or Carbon-14 in an inventory is sold on load at its old price (`ECSLoadBridge.RetiredItems`). A placed Manipulator that ran a retired recipe falls back to its default (none), so it idles until the player picks a decay-chain recipe or removes it. Guarded by `IsotopeTrimTests`.
+
 ## Isotope taxonomy
 
 Isotopes share an element's `atomic_number` but differ in `atomic_mass`; they are created in the **Isotopic Manipulator** via the `neutron_adjustment[]` convention (points the recipe at the `neutron` ItemSO so the manipulator adds/removes neutrons). `category` = `Isotope`. Radioactive isotopes set `is_radioactive`, `decay_type`, `half_life_note` (display only — half-life is **not** time-simulated), and emit a decay particle as a `byproducts[]` entry caught by Radioactive Containment.
 
 | Element | Isotopes (in-game) | Recipe | Notes |
 |---|---|---|---|
-| Hydrogen | protium / deuterium (H-2, +1n) / tritium (H-3, +2n) | `hydrogen + 1n` / `+2n` | deuterium impl (8e), tritium impl (12e, β, 12.3 yr) |
+| Hydrogen | protium / deuterium (H-2, +1n) | Atom Generator `assemble_deuterium` (p + n + e) | deuterium impl (fusion fuel: `fuse_deuterium`, `capture_lithium`); tritium retired 2026-11-19 |
 | Helium | He-3 / He-4 | He-4 impl; He-3 = fusion intermediate (design) | He-4 = alpha nucleus |
-| Carbon | C-12 / C-14 (+2n, β, 5,730 yr) | `carbon + 2n` | C-14 impl, 240e |
+| Carbon | C-12 only | none | C-14 retired 2026-11-19 (nothing used it) |
 | Uranium | U-238 / U-235 (fissile) | `uranium → U-235 + α` | U-235 ≈ 2× U = **~128e** under the convergent model (impl value 2,621,440e to be rebalanced); fissile |
 | Plutonium | Pu-239 (fissile, design) | breeding | post-iron synthetic; base **~671M e** (Pu-239 the breeder/accelerator fuel) |
 | Cobalt | Co-60 (design, β/γ) | `cobalt + n` | classic radioactive-source teachable; near-iron, base ~134M e |

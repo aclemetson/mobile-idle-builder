@@ -14,18 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: radioactive_isotopes
   displayName: Radioactive Isotopes
-  description: 'Unlock the Decay Chamber and the decay chain: let Uranium decay down
-    to Lead, and add or strip neutrons to reach the elements in between.'
+  description: 'Unlock the Isotopic Manipulator and the Decay Chamber: let Uranium
+    decay down to Lead, and add or strip neutrons to reach the elements in between.'
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   depthInTree: 3
   block: actinide_frontier
   treeX: -1
   treeY: -1
-  costBaseCurrency: 4040000
+  costBaseCurrency: 2890000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
@@ -61,6 +60,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b3ccdeea14324e64aa912819440eba25, type: 2}
   - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
   unlocksBuildings:
+  - {fileID: 11400000, guid: a6884992fc287db43896dc3de5c78638, type: 2}
   - {fileID: 11400000, guid: a04311d95f751514d9d93d850530272d, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch: []

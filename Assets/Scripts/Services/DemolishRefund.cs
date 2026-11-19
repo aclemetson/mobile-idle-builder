@@ -38,6 +38,13 @@ namespace MobileIdleBuilder
             return spent;
         }
 
+        /// <summary>
+        /// What the prestige cost reduction took off this building's placement price: the part of its
+        /// list-price value that <c>TotalEntropyDiscounted</c> holds and that removing it takes back out.
+        /// </summary>
+        public static long PlacementDiscount(BuildingSO so, float costReduction) =>
+            so == null ? 0 : EntropyWallet.Discount(EntropyWallet.ReducedCost(so.entropyCost, costReduction), so.entropyCost);
+
         /// <summary>The refund for <paramref name="spent"/> at <paramref name="fraction"/>, rounded down.</summary>
         public static long Amount(long spent, float fraction) =>
             spent <= 0 ? 0 : (long)System.Math.Floor(spent * (double)Mathf.Clamp01(fraction));

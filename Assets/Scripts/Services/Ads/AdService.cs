@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         NoSave,            // SaveManager not ready
         NothingToCollect,  // reward would have been empty (e.g. TimeWarp with no production)
         OnCooldown,        // this placement's cooldown has not run out yet (Entropy Surge)
+        BoostActive,       // a timed boost is running; no other boost may start (BoostLock)
     }
 
     /// <summary>Result handed back to the UI after a show attempt.</summary>
@@ -145,6 +146,7 @@ namespace MobileIdleBuilder
             if (!EnsureProviderIfEnabled()) return false;
             if (_provider == null || !_provider.IsRewardedReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
+            if (BoostLockRemaining(p) > TimeSpan.Zero) return false;
             if (!IncomeMeasured(p)) return false;
             return Remaining(p) > 0;
         }
@@ -167,6 +169,14 @@ namespace MobileIdleBuilder
         {
             var save = SaveManager.Instance?.Current;
             return save == null ? TimeSpan.Zero : AdRewardCalculator.CooldownRemaining(save, p, GameClock.UtcNow);
+        }
+
+        /// <summary>Time until the one-boost-at-a-time lock lifts for this placement; zero when it may be watched.</summary>
+        public TimeSpan BoostLockRemaining(AdPlacement p)
+        {
+            var save = SaveManager.Instance?.Current;
+            var now  = GameClock.UtcNow;
+            return BoostLock.BlocksAd(save, p, now) ? BoostLock.Remaining(save, now) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -247,6 +257,11 @@ namespace MobileIdleBuilder
             if (cooldown > TimeSpan.Zero)
             {
                 Finish(onDone, Fail(p, AdShowOutcome.OnCooldown, $"Ready again in {FormatCooldown(cooldown)}."));
+                return;
+            }
+            if (BoostLock.BlocksAd(save, p, GameClock.UtcNow))
+            {
+                Finish(onDone, Fail(p, AdShowOutcome.BoostActive, BoostLock.Message(save, GameClock.UtcNow) + "."));
                 return;
             }
             if (!IncomeMeasured(p))
