@@ -13392,7 +13392,7 @@
       ]
     },
     {
-      "_comment": "Last tutorial line (#275): names the goals that left the tutorial.",
+      "_comment": "Last tutorial line (#275): names the goals that left the tutorial. 2026-11-19: also introduces the Chemistry task list and the Cyclotron.",
       "id": "tutorial_complete_context",
       "lines": [
         {
@@ -13405,7 +13405,23 @@
         },
         {
           "speaker_name": "The Architect",
-          "text": "From here the Foundry is yours. The Research panel holds the next frontiers: heavy elements, isotopes, and fission, which splits heavy atoms back down toward iron. Build, balance, and bank the entropy.",
+          "text": "From here the Foundry is yours. The Research panel climbs on through the light elements to Silicon. Past that, the heavier elements and every molecule wait for Chemistry.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "To open Chemistry, work through the task list that appears at the top of the screen. Each stage asks for elements: send them to Maxwell's Demon and they count toward it while still paying entropy. Progress carries over when you prestige, so it takes a few runs. Tap the list to see what the current stage needs.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "One more tool is coming. After your second prestige the Cyclotron opens in the menu: kick a particle around its ring for 30 seconds and everything your factory earns is multiplied, up to three times, for a few minutes. It recharges, so come back to it. Build, balance, and bank the entropy.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
