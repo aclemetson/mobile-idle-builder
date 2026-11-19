@@ -259,11 +259,12 @@ namespace MobileIdleBuilder
             string message = refund > 0
                 ? $"You get back {refund:N0} entropy ({Mathf.RoundToInt(frac * 100f)}% of the {spent:N0} spent on it)."
                 : "Nothing was spent on it, so there is nothing to refund.";
+            long  discount = DemolishRefund.PlacementDiscount(so, CostReduction());
             ConfirmPrompt.Show($"Remove {name}?", message, "Remove",
-                () => { if (RemoveBuilding(e, spent, refund)) onRemoved?.Invoke(); }, ClearHover);
+                () => { if (RemoveBuilding(e, spent, refund, discount)) onRemoved?.Invoke(); }, ClearHover);
         }
 
-        private bool RemoveBuilding(Entity e, long spent, long refund)
+        private bool RemoveBuilding(Entity e, long spent, long refund, long discount)
         {
             if (!_ecsReady || !_em.Exists(e)) return false; // gone while the prompt was open
             var (fx, fy, fw, fh) = Footprint(e);
@@ -273,7 +274,7 @@ namespace MobileIdleBuilder
             buildingVisualizer?.RemoveBuilding(fx, fy);
             // A belt tail that fed this building now feeds something else or nothing: redraw it (#223).
             conveyorVisualizer?.RefreshAll();
-            ApplyRefund(spent, refund);
+            ApplyRefund(spent, refund, discount);
             if (refund > 0) InventoryPopupController.Notify("entropy", (int)System.Math.Min(refund, int.MaxValue));
             ClearHover();
             SaveManager.Instance?.SaveLocal();
@@ -282,17 +283,18 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Gives back the refund and takes the building's whole cost out of TotalEntropySpent, so net
-        /// worth (BaseCurrency + TotalEntropySpent) drops by exactly the unrefunded part: placing and
-        /// removing can never raise it.
+        /// Gives back the refund and takes the building's whole cost out of TotalEntropySpent (and its
+        /// placement discount out of TotalEntropyDiscounted), so net worth drops by exactly the
+        /// unrefunded part plus the discount: placing and removing can never raise it.
         /// </summary>
-        private void ApplyRefund(long spent, long refund)
+        private void ApplyRefund(long spent, long refund, long discount)
         {
             if (_progressQuery.IsEmpty) return;
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
             progress.BaseCurrency      += refund;
             progress.TotalEntropySpent  = System.Math.Max(0L, progress.TotalEntropySpent - spent);
+            progress.TotalEntropyDiscounted = System.Math.Max(0L, progress.TotalEntropyDiscounted - discount);
             _em.SetComponentData(entity, progress);
         }
 

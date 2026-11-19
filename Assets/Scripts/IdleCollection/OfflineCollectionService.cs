@@ -88,9 +88,18 @@ namespace MobileIdleBuilder
 
             float effectiveCap  = GetEffectiveIdleCap(config, upgrades);
             float cappedSeconds = Math.Min(elapsedSeconds, effectiveCap);
-            float rate          = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
+            float rate          = GetEffectiveCollectionRate(config, upgrades);
 
-            var result = ComputePayout(snapshots, cappedSeconds, rate);
+            // Timed boosts count only for the part of the time away they actually covered: a 30 min speed
+            // burst pays 2x for 30 min of an 8 h absence, not all 8 h. The snapshot itself is unboosted.
+            var departed = saveTime.ToUniversalTime();
+            double weighted = BoostWeightedSeconds(
+                cappedSeconds,
+                SecondsLeftAt(save.speedBoostExpiryUtc, departed),   PremiumShopCalculator.SpeedBoostMultiplier,
+                SecondsLeftAt(save.adsIdleBoostExpiryUtc, departed), AdRewardCalculator.IdleRateBoostMultiplier);
+            GameLogger.Debug($"[Idle] Boost-weighted seconds={weighted:F0} of capped={cappedSeconds:F0}");
+
+            var result = ComputePayout(snapshots, (float)weighted, rate);
             result.ElapsedSeconds = elapsedSeconds;
             result.CappedSeconds  = cappedSeconds;
             result.MaxSeconds     = effectiveCap;
@@ -132,6 +141,32 @@ namespace MobileIdleBuilder
         public static float GetAdIdleMultiplier(SaveData save)
             => PremiumShopCalculator.IsBoostActive(save?.adsIdleBoostExpiryUtc)
                 ? AdRewardCalculator.IdleRateBoostMultiplier : 1f;
+
+        /// <summary>Seconds a boost expiring at <paramref name="expiryIso"/> still had at <paramref name="at"/>; 0 if none.</summary>
+        internal static double SecondsLeftAt(string expiryIso, DateTime at)
+        {
+            if (!BoostLock.TryParseUtc(expiryIso, out var end)) return 0d;
+            return Math.Max(0d, (end - at).TotalSeconds);
+        }
+
+        /// <summary>
+        /// Production-weighted length of the first <paramref name="cappedSeconds"/> after departure: each
+        /// second counts <paramref name="speedMult"/> while the speed burst still ran (its first
+        /// <paramref name="speedLeft"/> seconds) and <paramref name="idleMult"/> while the idle-rate ad
+        /// boost ran (<paramref name="idleLeft"/>), multiplied where both overlap. With no boosts it equals
+        /// <paramref name="cappedSeconds"/>.
+        /// </summary>
+        internal static double BoostWeightedSeconds(double cappedSeconds, double speedLeft, float speedMult,
+                                                    double idleLeft, float idleMult)
+        {
+            if (cappedSeconds <= 0d) return 0d;
+            double s = Math.Clamp(speedLeft, 0d, cappedSeconds);
+            double i = Math.Clamp(idleLeft,  0d, cappedSeconds);
+            double both = Math.Min(s, i);
+            double speedOnly = s - both, idleOnly = i - both;
+            double none = cappedSeconds - Math.Max(s, i);
+            return both * speedMult * idleMult + speedOnly * speedMult + idleOnly * idleMult + none;
+        }
 
         /// <summary>
         /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of offline

@@ -27,6 +27,8 @@ namespace MobileIdleBuilder
             long totalEntropy = 0;
             // Cyclotron Kick boost (1 when none is running).
             float boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1f;
+            // Speed burst: items arrive faster, so "unboosted" income (Entropy Surge pricing) takes the clock back out.
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
 
             foreach (var (building, inputSlots) in
                 SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<BuildingInputSlot>>()
@@ -64,7 +66,7 @@ namespace MobileIdleBuilder
             {
                 var income = SystemAPI.GetSingleton<AutomationIncome>();
                 income.Total     += totalEntropy;
-                income.Unboosted += totalEntropy / (double)boost;
+                income.Unboosted += totalEntropy / ((double)boost * clockRate);
                 SystemAPI.SetSingleton(income);
             }
         }

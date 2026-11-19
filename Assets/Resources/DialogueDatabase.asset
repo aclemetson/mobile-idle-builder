@@ -135,14 +135,6 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 2f4e215fc284ae24b8586b12e645fdbb, type: 2}
   - id: uranium_crafted_context
     dialogue: {fileID: 11400000, guid: 6070f72c988bfdf4cbbf64026ce51ed9, type: 2}
-  - id: intro_isotopes_context
-    dialogue: {fileID: 11400000, guid: 6d35297167589f64ea4b9432175ad754, type: 2}
-  - id: isotopes_unlocked_context
-    dialogue: {fileID: 11400000, guid: 721eb2ff2d10d8b4d8e2f245da48ca0e, type: 2}
-  - id: place_manipulator_context
-    dialogue: {fileID: 11400000, guid: 5c4f6e2e370d5fd4397ccc11dacf20bc, type: 2}
-  - id: isotope_crafted_context
-    dialogue: {fileID: 11400000, guid: 26ae493ab17b8e84a80806f435b7a37f, type: 2}
   - id: intro_radioactive_context
     dialogue: {fileID: 11400000, guid: ef38038a87f7e9b44b020f791a455337, type: 2}
   - id: radioactive_unlocked_context

@@ -28,7 +28,9 @@ namespace MobileIdleBuilder
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            float deltaTime = SystemAPI.Time.DeltaTime;
+            // Speed burst: the whole factory runs on a faster clock (FactoryClock, 1 when absent).
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
+            float deltaTime = SystemAPI.Time.DeltaTime * clockRate;
 
             // Global multipliers (1 when a singleton is absent): megastructure and prestige shop. Speed now
             // applies to harvesters too, as it always has in the idle snapshot (IdleGraphAnalyzer scales

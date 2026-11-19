@@ -105,7 +105,7 @@ Copy the `ResearchSO` handling end-to-end:
 - `storage_upgrade_levels` → `storageUpgradeLevels` (output buffer capacity)
 - `input_upgrade_levels` → `inputUpgradeLevels` (input buffer capacity **per item type**; `max_input_items` per tier; enforced by `InputAcceptance` in `ConveyorSystem`; the cap is the input's only: a recipe needing more than it gathers in the building's creation buffer, `CraftStagingSlot` / `CraftStaging`, #268)
 
-The two capacity tracks are research-gated in the UI (`surplus_containment` for output, `feedstock_buffers` for input — see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
+Both capacity tracks are research-gated in the UI by `surplus_containment` (Feedstock Buffers, the old input gate, was merged into it 2026-11-19; see `economy-balance.md`). Baselines come from `base_max_output_items` / `base_max_input_items_per_slot`.
 
 ## Pitfalls
 
