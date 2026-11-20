@@ -87,6 +87,28 @@ namespace MobileIdleBuilder.Tests
                 { _carbon.itemId, 100 }, { _lithium.itemId, 50 }, { _boron.itemId, 20 },
             });
             CollectionAssert.AreEqual(new[] { "s1", "s2" }, finished.Select(s => s.id).ToArray());
+            WorldTasks.PendingAnnouncements.Clear();
+        }
+
+        [Test]
+        public void CreditAll_CarriesTheRestIntoTheNextStage_AndQueuesIt()
+        {
+            // A long bonus (Time Warp, offline return) can finish a stage part way through its batch; live play
+            // would keep counting what arrives after, so the rest of the batch goes on to the next stage.
+            _tasks.stages[1] = new WorldTaskStage { id = "s2", items = new[] { _carbon }, quantities = new[] { 50 } };
+            WorldTasks.PendingAnnouncements.Clear();
+            var save = new SaveData();
+            var finished = WorldTasks.CreditAll(save, _tasks, new Dictionary<int, long> { { _carbon.itemId, 120 } },
+                                                out long counted);
+            Assert.AreEqual(120L, counted);
+            CollectionAssert.AreEqual(new[] { "s1" }, finished.Select(s => s.id).ToArray());
+            Assert.AreEqual(20, WorldTasks.Delivered(save, _carbon.itemId), "120 - 100 carried into stage 2");
+            CollectionAssert.AreEqual(new[] { "s1" }, WorldTasks.PendingAnnouncements.Select(s => s.id).ToArray());
+
+            WorldTasks.CreditAll(save, _tasks, new Dictionary<int, long> { { _carbon.itemId, 500 } }, out counted);
+            Assert.AreEqual(30L, counted, "stops once every stage is done");
+            Assert.IsTrue(WorldTasks.IsComplete(save, _tasks));
+            WorldTasks.PendingAnnouncements.Clear();
         }
 
         [Test]
