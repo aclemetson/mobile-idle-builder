@@ -44,6 +44,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
+| `notifications.enabled` | bool | `true` | Local OS notifications (`NotificationService`): off schedules nothing on background and never shows the post-tutorial opt-in card. Already-scheduled ones are cancelled on the next launch/resume. See `notifications.md`. |
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
 | `maintenance.message` | string | (generic) | Body text shown on the maintenance screen. |
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |

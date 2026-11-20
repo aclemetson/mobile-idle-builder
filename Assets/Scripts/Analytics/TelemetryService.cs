@@ -267,6 +267,25 @@ namespace MobileIdleBuilder
             Emit("game_update_notice", p);
         }
 
+        /// <summary>The player opened the game by tapping a local notification of this kind (NotificationKind name).</summary>
+        public void RecordNotificationOpened(string kind)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["notification_kind"] = kind ?? "";
+            Emit("notification_opened_local", p);
+        }
+
+        /// <summary>The answer to the notification permission ask: where it was asked from and whether it was granted.</summary>
+        public void RecordNotificationPermission(string source, bool granted)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["source"]  = source ?? "";
+            p["granted"] = granted;
+            Emit("notification_permission", p);
+        }
+
         /// <summary>
         /// A dev-console command ran. Alpha builds ship the console (DEVELOPMENT_BUILD), so this marks the
         /// player's data as possibly cheated: the event fires once per session, and the sticky
