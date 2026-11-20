@@ -10,7 +10,7 @@
 |---|---|---|---|
 | **Entropy (e)** — base | Entropy sink consumes items; starting 250/run (`game_config.starting_entropy`) | research, building placement | `PlayerProgressData.BaseCurrency` |
 | **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`), modified by Entropy Echo (+5%/lvl) and Stellar Engine megastructure (×2); also achievements, login calendar, and crystal conversion | 12 prestige-shop upgrades (`PersistentUpgradeService.cs:48`, ≈5→5,400✦) + 8 managers (hire + star tiers, 10→4,000✦) | `PrestigeData.PrestigeCurrency` |
-| **Crystals (◆)** — premium | achievements (2–200◆), daily challenges/login calendar, Crystal Drop ad (25◆/day), IAP packs | premium shop: speed boosts, entropy, prestige currency, time warp, research skip | `SaveData.paidCurrency` |
+| **Crystals (◆)** — premium | achievements (2–200◆), Daily achievements/login calendar, Crystal Drop ad (25◆/day), IAP packs | premium shop: speed boosts, entropy, prestige currency, time warp, research skip | `SaveData.paidCurrency` |
 
 IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500◆ ($9.99), 20,000◆ ($19.99) — consumables via Unity IAP / Google Play.
 
@@ -21,7 +21,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 - **Prestige currency** (flat ✦ grant — it persists across runs, so it is permanent power, not a time-skip): 50✦ 500◆ / 150✦ 900◆ / 500✦ 1,900◆ / 1,500✦ 3,600◆.
 - **Time Warp** (instant offline collection, no wait): 2 h 350◆ / 8 h 1,300◆ / 24 h 3,500◆. Reuses `OfflineCollectionService.ComputeForDuration` (refresh snapshot via `SaveLocal`, pay out FULL production for the window, not the idle collection rate or idle boost (2026-11-20), apply to live ECS via `ECSLoadBridge.AddEntropy`/`AddInventoryItems`). Items reaching the Demon in that window count toward the Chemistry world tasks.
 
-**Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 3 daily challenges (15◆ each), daily achievements (2/3/3/6/10 + 15 on full clear), weekly/monthly achievements, one-time progression. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr); daily achievements are kept low to avoid double-paying the daily challenges for the same actions.
+**Crystal faucet (free income):** 28-day login calendar (~750◆/cycle), 8 Daily achievements worth 45◆/day together (login 3, craft 50 4, craft 200 6, place 3 5, research 1 6, spend 500 5, prestige 8, Day Well Spent 8), weekly/monthly achievements, one-time progression. The separate 3-a-day challenges (15◆ each) were merged into the Daily achievements on 2026-11-20; the Daily tab keeps their ~45◆/day. Daily achievements count from the start; Weekly/Monthly/Progress unlock with the first prestige. Tuned (Balanced stance) so a completionist earns ~3,500◆/mo (~23 skip-hr).
 
 **Rewarded ads (free, opt-in — `AdRewardCalculator.Placements`):** watch a short video for a balance-safe boost, with per-placement daily caps. Rewards are deliberately smaller than the equivalent crystal-shop tier (ads are free). Gated by `ads.enabled`; ships on a mock provider until LevelPlay is wired (`docs/runbooks/levelplay-ads-setup.md`).
 
@@ -59,7 +59,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 |---|---|---|---|
 | faucet | achievements (daily/weekly/monthly/progression) | 2–200◆ | `AchievementService.cs` |
 | faucet | 28-day login calendar | ~750◆/cycle | `DailyEventService.cs` |
-| faucet | 3 daily challenges | 15◆ each (~45◆/day) | `DailyEventService.cs` |
+| faucet | Daily achievements | 45◆/day for all 8 | `Assets/Data/achievements/daily_*.asset` |
 | faucet | Crystal Drop rewarded ad | 25◆, cap 1/day | `AdRewardCalculator.cs` |
 | faucet (paid) | IAP packs | 600 / 3,200 / 7,500 / 20,000◆ | `IAPService.cs` |
 | sink | speed boost / entropy / time warp | see premium-shop tiers above | `PremiumShopCalculator.cs` |

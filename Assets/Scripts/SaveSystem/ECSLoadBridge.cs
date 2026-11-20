@@ -175,10 +175,9 @@ namespace MobileIdleBuilder
             GameLogger.Info($"[ECSLoadBridge] Load finished — IsLoaded=true  SaveApplied={SaveApplied}");
 
             // Session login tick. This is the only point that is both once-per-session and late
-            // enough to count: SaveManager.Current is final (cloud reconcile awaited above). Both
-            // services hold the event until their server-time day/period check has run, then replay
-            // it, so it counts toward today's set rather than yesterday's. Idempotent: the challenge caps at its target and completed
-            // achievements are skipped, and pre-first-prestige the achievement half is dormant.
+            // enough to count: SaveManager.Current is final (cloud reconcile awaited above). The
+            // service holds the event until its server-time period check has run, then replays it, so it
+            // counts toward today rather than yesterday. Idempotent: completed achievements are skipped.
             AchievementService.Instance?.NotifyLogin();
 
             if (_pendingIdleResult != null)

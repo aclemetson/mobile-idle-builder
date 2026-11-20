@@ -15,10 +15,10 @@ namespace MobileIdleBuilder
     ///   Complete() fires OnAchievementUnlocked + adds to unclaimedAchievements →
     ///   Player calls ClaimReward() → currencies credited, OnRewardClaimed fires.
     ///
-    /// The whole feature is dormant until the player's first prestige: Evaluate() returns
-    /// early while tutorial.hasCompletedFirstRun is false, so nothing accrues, completes,
-    /// or reaches save. HUDController flips the gate and calls InitPostPrestige() when the
-    /// first prestige lands mid-session.
+    /// Daily achievements run from the start (they replaced the separate Daily tab's challenges, 2026-11-20).
+    /// Weekly, Monthly and Progression stay dormant until the player's first prestige: Evaluate() skips them
+    /// while tutorial.hasCompletedFirstRun is false, so they neither accrue nor complete. Completions stay
+    /// silent (no toast) while the tutorial runs.
     ///
     /// Loading: saved state is read once the save is final (ECSLoadBridge.IsLoaded, which follows the
     /// cloud check), not at scene start. Events before then are held and replayed.
@@ -64,13 +64,18 @@ namespace MobileIdleBuilder
         public event Action OnPeriodReset;
 
         /// <summary>
-        /// Achievements stay entirely dormant until the player's first prestige: no progress
-        /// accrues, nothing completes, and no toast fires. Gating only the menu is not enough —
-        /// progress recorded during the tutorial would pop a "🏆 Achievement unlocked" toast over
-        /// the tutorial and write itself to save before the feature is meant to exist.
+        /// Weekly, Monthly and Progression achievements unlock with the player's first prestige; until then
+        /// they neither accrue nor complete. Daily achievements always count.
         /// </summary>
-        static bool AchievementsUnlocked =>
+        internal static bool AchievementsUnlocked =>
             SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+
+        /// <summary>True when <paramref name="category"/> counts right now (Daily always; the rest after the first prestige).</summary>
+        public static bool CategoryUnlocked(AchievementCategory category) =>
+            category == AchievementCategory.Daily || AchievementsUnlocked;
+
+        /// <summary>No "achievement unlocked" toast over the tutorial; the reward still waits to be claimed.</summary>
+        static bool TutorialRunning => SaveManager.Instance?.Current?.tutorial?.isActive ?? false;
 
         // Achievement events that arrived before the save was final, replayed by Initialize.
         readonly List<(AchievementTrigger trigger, string targetId, int delta, bool absolute)> _pendingEvents = new();
@@ -81,10 +86,7 @@ namespace MobileIdleBuilder
         void Start()
         {
             if (!AchievementsUnlocked)
-            {
-                GameLogger.Info("[Achievements] Dormant: first prestige not done (tutorial.hasCompletedFirstRun=false).");
-                return;
-            }
+                GameLogger.Info("[Achievements] First prestige not done: only Daily achievements count for now.");
             if (IsSaveFinal) Initialize();   // nothing to wait for (no bridge, or already loaded)
             else             StartCoroutine(InitializeWhenSaveIsFinal());
         }
@@ -115,9 +117,8 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Called when achievements unlock mid-session (first prestige).
-        /// <see cref="Start"/> returned early before the flag was set, so this
-        /// replicates the deferred initialization in the same session.
+        /// Called when the other categories unlock mid-session (first prestige). Initialization already ran at
+        /// Start for the Daily tab, so this is a no-op kept for callers.
         /// </summary>
         public void InitPostPrestige() => Initialize();
 
@@ -419,14 +420,12 @@ namespace MobileIdleBuilder
         public void NotifyCraft(string itemId, int quantity = 1)
         {
             Evaluate(AchievementTrigger.CraftItem, itemId, delta: quantity);
-            DailyEventService.Instance?.NotifyCraft(itemId, quantity);
         }
 
         /// <summary>Call when the player places a building.</summary>
         public void NotifyBuildingPlaced(string buildingType)
         {
             Evaluate(AchievementTrigger.PlaceBuilding, buildingType, delta: 1);
-            DailyEventService.Instance?.NotifyBuildingPlaced(buildingType);
             TelemetryService.Instance?.RecordBuildingPlaced(buildingType);
         }
 
@@ -434,7 +433,6 @@ namespace MobileIdleBuilder
         public void NotifyResearchCompleted(string researchId)
         {
             Evaluate(AchievementTrigger.CompleteResearch, researchId, delta: 1);
-            DailyEventService.Instance?.NotifyResearchCompleted(researchId);
             TelemetryService.Instance?.RecordResearch(researchId);
         }
 
@@ -461,14 +459,12 @@ namespace MobileIdleBuilder
         public void NotifyLogin()
         {
             Evaluate(AchievementTrigger.Login, targetId: "", delta: 1);
-            DailyEventService.Instance?.NotifyLogin();
         }
 
         /// <summary>Call whenever entropy is spent; pass the amount spent this transaction.</summary>
         public void NotifyEntropySpent(long amount)
         {
             Evaluate(AchievementTrigger.SpendEntropy, targetId: "", delta: (int)Mathf.Min(amount, int.MaxValue));
-            DailyEventService.Instance?.NotifyEntropySpent(amount);
         }
 
         /// <summary>Call when the player earns prestige currency; pass the amount earned this prestige.</summary>
@@ -485,9 +481,6 @@ namespace MobileIdleBuilder
         void Evaluate(AchievementTrigger trigger, string targetId, int delta, bool absolute = false)
         {
             if (database == null) return;
-            // Single funnel for every Notify*() call, so this one check keeps the whole feature
-            // dormant pre-prestige. CheckCategoryComplete is only reached from here.
-            if (!AchievementsUnlocked) return;
 
             // Before the saved state is loaded, counting against empty sets would complete achievements the
             // player already has, and the flush would write those empty sets over the save. Hold the event.
@@ -504,6 +497,8 @@ namespace MobileIdleBuilder
             foreach (var achievement in database.All)
             {
                 if (achievement == null)                             continue;
+                // Single funnel for every Notify*() call: Weekly/Monthly/Progression stay dormant pre-prestige.
+                if (!CategoryUnlocked(achievement.category))        continue;
                 if (_completed.Contains(achievement.id))            continue;
                 if (achievement.triggerType != trigger)             continue;
                 if (!string.IsNullOrEmpty(achievement.triggerTargetId) &&
@@ -543,7 +538,7 @@ namespace MobileIdleBuilder
                 : $"Achievement unlocked: {achievement.displayName} — {rewardHint}";
 
             // Tappable: opens the achievements menu on this one's tab; the check button claims it on the spot.
-            hudController?.ShowAchievementNotification(achievement, msg);
+            if (!TutorialRunning) hudController?.ShowAchievementNotification(achievement, msg);
             OnAchievementUnlocked?.Invoke(achievement);
 
             GameLogger.Info($"[Achievements] Unlocked: {achievement.id}");

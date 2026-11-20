@@ -149,20 +149,18 @@ namespace MobileIdleBuilder.PlayModeTests
                 "Only daily_login should have completed from a login alone");
         }
 
-        // ── Still respects the pre-prestige gate ──────────────────────────────
+        // ── Daily counts before the first prestige (2026-11-20) ───────────────
 
         [Test]
-        public void NotifyLogin_PreFirstPrestige_AccruesNothing()
+        public void NotifyLogin_PreFirstPrestige_CompletesTheDailyLogin()
         {
             SpawnServices(hasCompletedFirstRun: false);
 
             AchievementService.Instance.NotifyLogin();
 
-            Assert.IsFalse(AchievementService.Instance.IsCompleted("daily_login"),
-                "Achievements stay dormant until the first prestige");
-            Assert.AreEqual(0, AchievementService.Instance.CompletedCount);
-            Assert.IsEmpty(SaveManager.Instance.Current.achievements,
-                "A pre-prestige login must not persist anything");
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_login"),
+                "The Daily tab works from the start (it absorbed the old Daily panel's login challenge)");
+            CollectionAssert.Contains(SaveManager.Instance.Current.achievements, "daily_login");
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
