@@ -37,7 +37,6 @@ namespace MobileIdleBuilder
             ["research-panel"]      = "btn-research",
             ["upgrades-panel"]      = "btn-upgrades",
             ["managers-panel"]      = "btn-managers",
-            ["daily-panel"]         = "btn-daily",
             ["rewards-panel"]       = "btn-rewards",
             ["achievements-panel"]  = "btn-achievements",
             ["worlds-panel"]        = "btn-worlds",

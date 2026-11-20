@@ -86,7 +86,6 @@
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
-                <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
                 <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
@@ -216,23 +215,6 @@
             <ui:ScrollView name="managers-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
-        </ui:VisualElement>
-
-        <!-- ═══ DAILY EVENTS PANEL ═══ -->
-        <ui:VisualElement name="daily-panel" class="slide-panel hidden">
-            <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Daily Rewards" class="panel-title" />
-                <ui:Button name="btn-close-daily" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-            </ui:VisualElement>
-            <ui:ScrollView name="daily-list" class="recipe-list"
-                           vertical-scroller-visibility="Auto"
-                           horizontal-scroller-visibility="Hidden">
-                <ui:Label text="Login Reward" class="recipe-name" />
-                <ui:Label name="daily-login-info" text="—" class="recipe-inputs" />
-                <ui:Button name="btn-claim-login" text="Claim" class="craft-btn" />
-                <ui:Label text="Daily Challenges" class="recipe-name" />
-                <ui:VisualElement name="daily-challenges-list" />
-            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ FREE REWARDS (REWARDED ADS) PANEL ═══ -->

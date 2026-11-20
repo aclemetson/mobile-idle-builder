@@ -13940,16 +13940,6 @@
     { "day": 28, "crystals": 150, "entropy": 0,     "prestige_currency": 1 }
   ],
 
-  "_comment_daily_challenges": "Rotating daily challenge pool. 3 drawn deterministically per UTC day (DayOfYear % poolCount). trigger matches an AchievementTrigger enum value. Progress accumulates the same way achievements do; each grants crystals on completion.",
-  "daily_challenges": [
-    { "id": "dc_craft_50",   "description": "Craft 50 items",     "trigger": "CraftItem",        "target": 50,  "crystals": 15 },
-    { "id": "dc_craft_200",  "description": "Craft 200 items",    "trigger": "CraftItem",        "target": 200, "crystals": 15 },
-    { "id": "dc_place_3",    "description": "Place 3 buildings",  "trigger": "PlaceBuilding",    "target": 3,   "crystals": 15 },
-    { "id": "dc_research_1",  "description": "Complete 1 research","trigger": "CompleteResearch", "target": 1,   "crystals": 15 },
-    { "id": "dc_spend_500",  "description": "Spend 500 entropy",  "trigger": "SpendEntropy",     "target": 500, "crystals": 15 },
-    { "id": "dc_login",      "description": "Log in",             "trigger": "Login",            "target": 1,   "crystals": 15 }
-  ],
-
   "tutorial_steps": [
     {
       "id": "intro_dialogue",
