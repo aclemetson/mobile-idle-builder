@@ -16,7 +16,10 @@
         "Unity.Services.Analytics",
         "Unity.Purchasing",
         "Unity.Services.RemoteConfig",
-        "Unity.LevelPlay"
+        "Unity.LevelPlay",
+        "Unity.Notifications.Android",
+        "Unity.Notifications.iOS",
+        "Unity.Services.PushNotifications"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

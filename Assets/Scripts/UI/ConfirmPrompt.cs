@@ -17,11 +17,18 @@ namespace MobileIdleBuilder
         static Label         s_title;
         static Label         s_message;
         static Button        s_confirm;
+        static Button        s_cancel;
         static Action        s_onConfirm;
         static Action        s_onCancel;
         static readonly object s_modalOwner = new();
 
         public static bool IsOpen { get; private set; }
+
+        /// <summary>True once the HUD has called <see cref="Init"/>; until then Show confirms immediately.</summary>
+        public static bool IsReady => s_root != null;
+
+        const string DestructiveClass = "cancel-placement-btn";   // red: remove / demolish
+        const string NeutralClass     = "craft-btn";              // the normal action button
 
         public static void Init(VisualElement hudRoot)
         {
@@ -30,19 +37,21 @@ namespace MobileIdleBuilder
             s_title   = s_root.Q<Label>("confirm-prompt__title");
             s_message = s_root.Q<Label>("confirm-prompt__message");
             s_confirm = s_root.Q<Button>("confirm-prompt__confirm");
-            var cancel = s_root.Q<Button>("confirm-prompt__cancel");
+            s_cancel  = s_root.Q<Button>("confirm-prompt__cancel");
 
             if (s_confirm != null) s_confirm.clicked += Confirm;
-            if (cancel    != null) cancel.clicked    += Cancel;
+            if (s_cancel  != null) s_cancel.clicked  += Cancel;
             Close();
         }
 
         /// <summary>
         /// Asks the player to confirm. <paramref name="onConfirm"/> runs on the confirm button;
         /// <paramref name="onCancel"/> (optional) on cancel or when replaced by another prompt.
+        /// <paramref name="destructive"/> styles the confirm button red (the default, for removals); pass false
+        /// for a plain question such as the notification opt-in.
         /// </summary>
         public static void Show(string title, string message, string confirmLabel, Action onConfirm,
-                                Action onCancel = null)
+                                Action onCancel = null, string cancelLabel = "Cancel", bool destructive = true)
         {
             if (s_root == null) { onConfirm?.Invoke(); return; }
 
@@ -51,7 +60,13 @@ namespace MobileIdleBuilder
             s_onCancel  = onCancel;
             if (s_title   != null) s_title.text   = title;
             if (s_message != null) s_message.text = message;
-            if (s_confirm != null) s_confirm.text = confirmLabel;
+            if (s_confirm != null)
+            {
+                s_confirm.text = confirmLabel;
+                s_confirm.EnableInClassList(DestructiveClass, destructive);
+                s_confirm.EnableInClassList(NeutralClass, !destructive);
+            }
+            if (s_cancel != null) s_cancel.text = cancelLabel;
 
             IsOpen = true;
             HUDController.SetElementVisible(s_root, true);

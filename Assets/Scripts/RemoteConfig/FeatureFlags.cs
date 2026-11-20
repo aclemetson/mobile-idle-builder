@@ -30,6 +30,8 @@ namespace MobileIdleBuilder
         public const string AdsTestModeKey        = "ads.test_mode";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
         public const string DailyEventsEnabledKey = "dailyevents.enabled";
+        public const string NotificationsEnabledKey = "notifications.enabled";
+        public const string PushEnabledKey          = "push.enabled";
         public const string MaintenanceEnabledKey = "maintenance.enabled";
         public const string MaintenanceMessageKey = "maintenance.message";
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
@@ -62,6 +64,8 @@ namespace MobileIdleBuilder
         public const bool AdsTestModeDefault        = true;
         public const bool CloudSaveEnabledDefault   = true;
         public const bool DailyEventsEnabledDefault = true;
+        public const bool NotificationsEnabledDefault = true;  // local OS notifications (storage full, research done, ...)
+        public const bool PushEnabledDefault          = true;  // remote push registration (UGS Push); also needs analytics.enabled
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
         public const string MaintenanceMessageDefault = "We're performing scheduled maintenance. Please check back soon.";
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
@@ -96,6 +100,8 @@ namespace MobileIdleBuilder
             new FlagDef(AdsTestModeKey,        FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
             new FlagDef(DailyEventsEnabledKey, FlagType.Bool),
+            new FlagDef(NotificationsEnabledKey, FlagType.Bool),
+            new FlagDef(PushEnabledKey,          FlagType.Bool),
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceMessageKey, FlagType.String),
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
@@ -143,6 +149,8 @@ namespace MobileIdleBuilder
         public static bool ResolveAdsTestMode(bool devBuild, bool flagValue) => devBuild && flagValue;
         public static bool CloudSaveEnabled   => GetBool(CloudSaveEnabledKey,   CloudSaveEnabledDefault);
         public static bool DailyEventsEnabled => GetBool(DailyEventsEnabledKey, DailyEventsEnabledDefault);
+        public static bool NotificationsEnabled => GetBool(NotificationsEnabledKey, NotificationsEnabledDefault);
+        public static bool PushEnabled          => GetBool(PushEnabledKey,          PushEnabledDefault);
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
         public static string MaintenanceMessage  => GetString(MaintenanceMessageKey,  MaintenanceMessageDefault);
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);

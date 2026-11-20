@@ -13,6 +13,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | elements / isotopes / particles / fusion / fission / fissile fields / periodic table | `elements-and-isotopes.md` |
 | worlds / tracks / chemistry / biology / organic compounds / a second or third map | `chemistry-biology.md` |
 | save fields, persistence, cloud, offline earnings, timed effects | `save-system.md` |
+| OS notifications (local reminders), notification permission, Android channels, iOS badge | `notifications.md` |
 | HUD, panels, UXML/USS, sub-controllers | `ui-toolkit.md` |
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |
 | balance numbers, currencies, costs, formulas | `economy-balance.md` (values and research costs are generated: "Derived economy") |

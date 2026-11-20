@@ -130,7 +130,9 @@ namespace MobileIdleBuilder
             if (_sliderMusic  != null) _sliderMusic.SetValueWithoutNotify(s.musicVolume);
 
             if (_toggleNotifications != null)
-                _toggleNotifications.SetValueWithoutNotify(s.notificationsEnabled);
+                _toggleNotifications.SetValueWithoutNotify(NotificationService.Instance != null
+                    ? NotificationService.Instance.IsActive
+                    : s.notificationsEnabled);
 
             if (_sliderPanSensitivity != null)
                 _sliderPanSensitivity.SetValueWithoutNotify(s.panSensitivity);
@@ -173,8 +175,17 @@ namespace MobileIdleBuilder
             else        btn.RemoveFromClassList("quality-btn--active");
         }
 
+        // Turning notifications on may need the OS permission: NotificationService asks for it, or opens the
+        // OS settings page when the player denied it before. The toggle shows what will actually happen.
         private void OnNotificationsChanged(ChangeEvent<bool> evt)
-            => SettingsService.Instance?.SetNotifications(evt.newValue);
+        {
+            var service = NotificationService.Instance;
+            if (service == null) { SettingsService.Instance?.SetNotifications(evt.newValue); return; }
+            service.SetEnabledFromSettings(evt.newValue, active =>
+            {
+                if (_toggleNotifications != null) _toggleNotifications.SetValueWithoutNotify(active);
+            });
+        }
 
         private void OnPanSensitivityChanged(ChangeEvent<float> evt)
             => SettingsService.Instance?.SetPanSensitivity(evt.newValue);

@@ -19,6 +19,10 @@ namespace MobileIdleBuilder.Editor
         // in the manifest, which Google Play rejects ("APK is marked as debuggable").
         public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, devTooling: true);
 
+        // Same dev tooling as BuildAndroidDevelopment, as an APK for sideloading with
+        // `adb install -r` (device testing without a Play upload, e.g. notifications).
+        public static void BuildAndroidDevelopmentApk() => BuildAndroidInternal(appBundle: false, devTooling: true);
+
         public static void BuildWindows()
         {
             string version    = PlayerSettings.bundleVersion;
