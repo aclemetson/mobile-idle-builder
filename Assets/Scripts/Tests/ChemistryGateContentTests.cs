@@ -72,8 +72,17 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(WorldGate.Chemistry, lab.requiredWorld);
             Assert.AreEqual(WorldGate.Chemistry, mol.requiredWorld);
             CollectionAssert.Contains(mol.prerequisites.Select(p => p.id).ToList(), "chemistry_lab");
-            Assert.IsTrue(lab.unlocksRecipes.Any(r => r != null && r.id == "collect_nitrogen"), "Chemistry harvests its own nitrogen for ammonia");
-            Assert.IsTrue(lab.unlocksRecipes.Any(r => r != null && r.id == "collect_silicon"), "and silicon for silica");
+            // 2026-11-19 natural feedstock: the lab starts with hydrogen and oxygen gas and water; graphite comes with
+            // Carbon Chemistry (molecular_synthesis), nitrogen gas with Nitrogen Fixation, silicon with the minerals.
+            foreach (var rid in new[] { "collect_hydrogen_gas", "collect_oxygen_gas", "water" })
+                Assert.IsTrue(lab.unlocksRecipes.Any(r => r != null && r.id == rid), $"chemistry_lab unlocks {rid}");
+            Assert.IsTrue(mol.unlocksRecipes.Any(r => r != null && r.id == "collect_graphite"), "Carbon Chemistry mines graphite");
+            Assert.IsTrue(mol.unlocksRecipes.Any(r => r != null && r.id == "methane"), "and makes methane");
+            var n2 = _research.Single(r => r.id == "nitrogen_fixation");
+            Assert.IsTrue(n2.unlocksRecipes.Any(r => r != null && r.id == "collect_nitrogen_gas"), "Chemistry harvests its own nitrogen for ammonia");
+            Assert.IsTrue(n2.unlocksRecipes.Any(r => r != null && r.id == "ammonia"), "Nitrogen Fixation makes ammonia");
+            var re = _research.Single(r => r.id == "reaction_engineering");
+            Assert.IsTrue(re.unlocksRecipes.Any(r => r != null && r.id == "collect_silicon"), "silicon for silica comes with the minerals");
         }
     }
 }

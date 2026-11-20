@@ -143,8 +143,9 @@ namespace MobileIdleBuilder.Tests
             // 2026-11-19 Chemistry gate: every molecule is made in the Chemistry world.
             var water   = _recipes.First(r => r.id == "water");
             var ammonia = _recipes.First(r => r.id == "ammonia");
-            Assert.AreEqual("molecular_synthesis", water.requiredResearch?.id,   "Water is a Chemistry molecule");
-            Assert.AreEqual("molecular_synthesis", ammonia.requiredResearch?.id, "Ammonia is a Chemistry molecule");
+            // 2026-11-19 natural feedstock: water opens Chemistry (H2 + O2), ammonia waits for nitrogen gas.
+            Assert.AreEqual("chemistry_lab",     water.requiredResearch?.id,   "Water is Chemistry's first molecule");
+            Assert.AreEqual("nitrogen_fixation", ammonia.requiredResearch?.id, "Ammonia comes with Nitrogen Fixation");
         }
     }
 }

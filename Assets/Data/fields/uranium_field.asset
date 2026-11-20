@@ -19,6 +19,7 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
     weight: 1
   tapCooldownSeconds: 3
+  world: world_physics
   purchaseResearchId: 
   purchaseCostBase: 0
   purchaseCostMultiplier: 10

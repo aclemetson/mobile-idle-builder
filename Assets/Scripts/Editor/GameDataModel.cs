@@ -354,6 +354,7 @@ namespace MobileIdleBuilder.Editor
         public string             field_color   = "#FFFFFF";
         public string             field_icon_path = "TODO";
         public string             codex_entry   = "";
+        public string             world         = "";
         public string             purchase_research        = "";
         public long               purchase_cost_base       = 0;
         public float              purchase_cost_multiplier = 10f;

@@ -37,13 +37,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
   - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
   - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
+  - {fileID: 11400000, guid: eea4dfa47f281b443873f34c993f6e68, type: 2}
   - {fileID: 11400000, guid: b62f5d117e826f84b83598cd2a5ef3f9, type: 2}
   - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
   - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
-  - Primary Element
-  - Secondary Element
+  - Primary Feedstock
+  - Secondary Feedstock
   isEntropySink: 0
   isItemFilter: 0
   isSplitter: 0
@@ -122,7 +123,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

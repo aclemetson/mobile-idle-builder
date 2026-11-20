@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: element_harvester
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: element_harvester
-  displayName: Element Harvester
-  description: Mines bulk elements from an Element field. Place on an element seam
-    and pick which element to extract.
+  displayName: Extractor
+  description: 'Draws raw feedstock from Chemistry''s fields: hydrogen, oxygen and
+    nitrogen gas, graphite, and minerals.'
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 14
@@ -33,13 +33,13 @@ MonoBehaviour:
   linkRadiusTiles: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: 7a3bd5726f8a5e24895d0b0a3e2dbd69, type: 2}
-  - {fileID: 11400000, guid: e01e9299b817ac04199ccf12f2f0882d, type: 2}
-  - {fileID: 11400000, guid: 5546a70d14ababd4d9182f96ae90ae7c, type: 2}
+  - {fileID: 11400000, guid: a50a1d06aa8c088428337d360f7ee161, type: 2}
+  - {fileID: 11400000, guid: 4f60b48108a702c438e2ffdc7bb93884, type: 2}
+  - {fileID: 11400000, guid: a5246ee4082e7454c8c47b2918dd39b5, type: 2}
+  - {fileID: 11400000, guid: 5298c8610812ed040a92a8ba467b897f, type: 2}
   - {fileID: 11400000, guid: 887bf25e3533dc448bb93f7d4cf3f30a, type: 2}
   - {fileID: 11400000, guid: 78fb14b7e6d81424c8dcde03aa14d65f, type: 2}
   - {fileID: 11400000, guid: 1f0bb43fd9479054194437589a8e7429, type: 2}
-  - {fileID: 11400000, guid: face61e2bc746ac41947a4036cd598bd, type: 2}
   - {fileID: 11400000, guid: 1912c62e6e6809a408cb3ab068739a0f, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []

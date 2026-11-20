@@ -38,6 +38,14 @@ namespace MobileIdleBuilder
             return building.world == (string.IsNullOrEmpty(activeWorldId) ? Physics : activeWorldId);
         }
 
+        /// <summary>True if <paramref name="field"/> belongs to <paramref name="activeWorldId"/> (empty = every world).</summary>
+        public static bool FieldInWorld(FieldSO field, string activeWorldId)
+        {
+            if (field == null) return false;
+            if (string.IsNullOrEmpty(field.world)) return true;
+            return field.world == (string.IsNullOrEmpty(activeWorldId) ? Physics : activeWorldId);
+        }
+
         /// <summary>
         /// True if a recipe made in <paramref name="craftedIn"/> (building ids; the inventory menu is ignored) can
         /// be made while <paramref name="activeWorldId"/> is active: it lists no building, or at least one of them

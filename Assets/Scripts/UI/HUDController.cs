@@ -2036,8 +2036,12 @@ namespace MobileIdleBuilder
             _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
             if (_fieldGenerator == null) return;
 
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             foreach (var field in _fieldGenerator.KnownFields)
             {
+                // Graphite and nitrogen are bought in Chemistry, quark pairs in Physics.
+                if (!WorldGate.FieldInWorld(field, activeWorldId)) continue;
                 if (!FieldPurchaseService.IsAvailable(field)) continue;
 
                 long cost      = FieldPurchaseService.NextPrice(field);
