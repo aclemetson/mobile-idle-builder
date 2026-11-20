@@ -14,8 +14,9 @@ namespace MobileIdleBuilder
     /// never describes a stale state.
     ///
     /// Runs only when the <c>notifications.enabled</c> flag is on, the player has the Settings toggle on and the
-    /// OS permission is granted. Permission is first asked once the tutorial is over, behind an in-game card
-    /// (<see cref="ConfirmPrompt"/>), so the OS prompt never comes out of nowhere.
+    /// OS permission is granted. Permission is asked behind an in-game card (<see cref="ConfirmPrompt"/>), so the
+    /// OS prompt never comes out of nowhere: at startup once the tutorial is over, then again every 30 days
+    /// until the player turns notifications on or ticks "Don't ask again" (<see cref="NotificationAskPolicy"/>).
     /// Self-bootstrapped: no scene placement needed.
     /// </summary>
     public class NotificationService : SingletonMonoBehaviour<NotificationService>
@@ -28,14 +29,15 @@ namespace MobileIdleBuilder
         /// </summary>
         public const string AndroidSmallIcon = "icon_small";
 
-        /// <summary>Seconds after the tutorial ends before the opt-in card shows, so it does not land on the last dialogue.</summary>
-        const float PromptDelaySeconds = 20f;
+        /// <summary>Seconds after the game is playable (loaded, tutorial over) before the opt-in card shows.</summary>
+        const float PromptDelaySeconds = 8f;
         const float PromptPollSeconds  = 2f;
 
         INotificationPlatform _platform;
-        float _tutorialDoneSince = -1f;
+        float _readySince = -1f;
         float _nextPromptCheck;
         bool  _promptOpen;
+        bool  _promptHandledThisLaunch;
         bool  _subscribed;
 
         /// <summary>Test seam: replaces the OS layer.</summary>
@@ -216,7 +218,9 @@ namespace MobileIdleBuilder
         {
             var s = SettingsService.Instance?.Current;
             return $"flag={FeatureFlags.NotificationsEnabled} toggle={s?.notificationsEnabled} " +
-                   $"permission={Permission} active={IsActive} promptShown={s?.notificationPromptShown} " +
+                   $"permission={Permission} active={IsActive} asked={s?.notificationPromptShown} " +
+                   $"nextAsk={(string.IsNullOrEmpty(s?.notificationNextAskUtc) ? "-" : s.notificationNextAskUtc)} " +
+                   $"neverAsk={s?.notificationNeverAsk} " +
                    $"platform={_platform?.GetType().Name}";
         }
 
@@ -252,7 +256,7 @@ namespace MobileIdleBuilder
         public string DevShowPrompt()
         {
             if (!ConfirmPrompt.IsReady) return "HUD not ready.";
-            SettingsService.Instance?.SetNotificationPromptShown(false);
+            SettingsService.Instance?.ResetNotificationAsk();
             ShowPrompt();
             return "Opt-in card shown.";
         }
@@ -262,28 +266,30 @@ namespace MobileIdleBuilder
 
         // ── Post-tutorial opt-in card ───────────────────────────────────────
 
+        // Checked once per launch: shown at most once per app start, when NotificationAskPolicy says so
+        // (never asked, or 30 days since the last answer, and not "Don't ask again").
         void TickPrompt()
         {
-            if (_promptOpen || Time.unscaledTime < _nextPromptCheck) return;
+            if (_promptHandledThisLaunch || _promptOpen || Time.unscaledTime < _nextPromptCheck) return;
             _nextPromptCheck = Time.unscaledTime + PromptPollSeconds;
 
-            var settings = SettingsService.Instance?.Current;
-            if (settings == null || settings.notificationPromptShown) return;
             if (!FeatureFlags.NotificationsEnabled) return;
-
-            // Already decided at the OS level (granted earlier, or denied): nothing to ask.
-            if (Permission != NotificationPermission.NotDetermined)
+            var settings = SettingsService.Instance?.Current;
+            if (settings == null) return;
+            if (!NotificationAskPolicy.ShouldAsk(settings, Permission, DateTime.UtcNow))
             {
-                SettingsService.Instance.MarkNotificationPromptShown();
+                _promptHandledThisLaunch = true;   // not due at startup: wait for the next launch
                 return;
             }
 
+            // Wait until the game is playable: loaded, tutorial over (a new player is asked right after it),
+            // and nothing else on screen.
             var save = SaveManager.Instance?.Current;
-            bool tutorialDone = save?.tutorial != null && !save.tutorial.isActive
-                                && ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
-            if (!tutorialDone) { _tutorialDoneSince = -1f; return; }
-            if (_tutorialDoneSince < 0f) _tutorialDoneSince = Time.unscaledTime;
-            if (Time.unscaledTime - _tutorialDoneSince < PromptDelaySeconds) return;
+            bool ready = save?.tutorial != null && !save.tutorial.isActive
+                         && ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
+            if (!ready) { _readySince = -1f; return; }
+            if (_readySince < 0f) _readySince = Time.unscaledTime;
+            if (Time.unscaledTime - _readySince < PromptDelaySeconds) return;
 
             if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen) return;
             if (IsDialoguePlaying()) return;
@@ -294,24 +300,36 @@ namespace MobileIdleBuilder
         void ShowPrompt()
         {
             _promptOpen = true;
+            _promptHandledThisLaunch = true;
             ConfirmPrompt.Show(NotificationTexts.PromptTitle, NotificationTexts.PromptMessage,
                 NotificationTexts.PromptConfirm,
                 onConfirm: () =>
                 {
                     _promptOpen = false;
-                    SettingsService.Instance?.MarkNotificationPromptShown();
+                    SettingsService.Instance?.RecordNotificationAsk(DateTime.UtcNow, ConfirmPrompt.CheckboxChecked);
                     SettingsService.Instance?.SetNotifications(true);
-                    RequestPermission("post_tutorial");
+                    switch (Permission)
+                    {
+                        case NotificationPermission.NotDetermined:
+                            RequestPermission("startup_prompt");
+                            break;
+                        case NotificationPermission.Denied:
+                            // The OS will not show its prompt again: send the player to the app's OS settings.
+                            _platform?.OpenSettings();
+                            break;
+                    }
                 },
                 onCancel: () =>
                 {
                     _promptOpen = false;
-                    // "Not now": no OS prompt, so the player can still turn it on from Settings later.
-                    SettingsService.Instance?.MarkNotificationPromptShown();
-                    TelemetryService.Instance?.RecordNotificationPermission("post_tutorial_declined", false);
+                    // "Not now": no OS prompt, so the OS one-time ask is kept for a later "Notify me".
+                    SettingsService.Instance?.RecordNotificationAsk(DateTime.UtcNow, ConfirmPrompt.CheckboxChecked);
+                    TelemetryService.Instance?.RecordNotificationPermission(
+                        ConfirmPrompt.CheckboxChecked ? "startup_prompt_never" : "startup_prompt_declined", false);
                 },
                 cancelLabel: NotificationTexts.PromptCancel,
-                destructive: false);
+                destructive: false,
+                checkboxLabel: NotificationTexts.PromptNeverAsk);
         }
 
         static bool IsDialoguePlaying()

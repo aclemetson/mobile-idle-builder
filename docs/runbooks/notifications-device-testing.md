@@ -21,7 +21,7 @@ Real timers and quiet hours make testing slow; these skip them. Open the console
 | `notif plan` | what backgrounding right now would schedule, with local fire times |
 | `notif test <seconds>` | one test notification N seconds from now, no quiet hours or cap. **Background the app before it fires**: coming back cancels everything pending. |
 | `notif permission` | shows the OS permission prompt (if the OS still allows asking) |
-| `notif prompt` | resets "already asked" and shows the opt-in card now |
+| `notif prompt` | resets the opt-in answers (asked, next ask date, "Don't ask again") and shows the card now |
 
 ## Getting a build on an Android phone
 
@@ -36,7 +36,7 @@ Pick one:
 
 ## Android checks
 
-1. Fresh install on Android 13 or newer. Play through the tutorial. About 20 s after it ends, the "Stay in the
+1. Fresh install on Android 13 or newer. Play through the tutorial. About 8 s after it ends, the "Stay in the
    loop?" card appears. Tap **Notify me**, and the OS permission dialog appears. Allow it.
 2. Start a short research (or queue a craft), then press Home.
    `adb shell dumpsys notification | grep -A3 qf_` lists the channels. `adb shell dumpsys alarm | grep <package>` shows
@@ -49,6 +49,7 @@ Pick one:
 6. Settings > Push Notifications **off**, then Home. Nothing fires. Turn it back on, and there is no prompt (already granted).
 7. Revoke the permission in Android settings, then turn the toggle on in game. The Android app notification settings page opens.
 8. Android 12 or lower: no card and no prompt (permission is implicit). Notifications work straight away.
+9. Re-ask: answer **Not now**, close and reopen the app: no card. `notif status` shows `nextAsk` 30 days out. Run `notif prompt`, tick **Don't ask again**, tap **Not now**: `neverAsk=True`, and the card never comes back.
 
 ## iOS (TestFlight)
 
