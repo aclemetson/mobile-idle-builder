@@ -169,6 +169,7 @@ namespace MobileIdleBuilder
         {
             var settings = SettingsService.Instance;
             settings?.SetNotifications(on);
+            TelemetryService.Instance?.RecordNotificationPreference(on);
             if (!on)
             {
                 ClearPending();

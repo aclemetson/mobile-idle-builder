@@ -401,6 +401,9 @@ namespace MobileIdleBuilder.Dev
                     return "Permission requested; run 'notif status' after answering.";
                 });
 
+            _registry.Register("push status", "Remote push: registered / why not / device token (for dashboard Test on Device)",
+                _ => RemotePushService.Instance?.DevStatus() ?? "Error: RemotePushService not running.");
+
             _registry.Register("notif prompt", "Show the post-tutorial opt-in card now",
                 _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
 

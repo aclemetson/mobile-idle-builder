@@ -276,6 +276,15 @@ namespace MobileIdleBuilder
             Emit("notification_opened_local", p);
         }
 
+        /// <summary>The Settings notification toggle changed. Campaign audiences exclude players whose latest value is false.</summary>
+        public void RecordNotificationPreference(bool enabled)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["enabled"] = enabled;
+            Emit("notification_preference", p);
+        }
+
         /// <summary>The answer to the notification permission ask: where it was asked from and whether it was granted.</summary>
         public void RecordNotificationPermission(string source, bool granted)
         {

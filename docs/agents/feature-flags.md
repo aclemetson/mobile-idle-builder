@@ -45,6 +45,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `cloudsave.enabled` | bool | `true` | `SaveManager` skips cloud data sync (local-only). **UGS still initializes** so Remote Config can load — this gates save sync, not auth. |
 | `dailyevents.enabled` | bool | `true` | `DailyEventService.EnsureToday` no-ops; HUD hides `btn-daily`. |
 | `notifications.enabled` | bool | `true` | Local OS notifications (`NotificationService`): off schedules nothing on background and never shows the post-tutorial opt-in card. Already-scheduled ones are cancelled on the next launch/resume. See `notifications.md`. |
+| `push.enabled` | bool | `true` | Remote push registration (`RemotePushService`, UGS Push Notifications). Also needs `analytics.enabled` on, since UGS targets the push token through Analytics. Off: the device never registers this launch. Already-registered tokens stay valid until the app is reinstalled. |
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
 | `maintenance.message` | string | (generic) | Body text shown on the maintenance screen. |
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |

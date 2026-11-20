@@ -18,7 +18,8 @@
         "Unity.Services.RemoteConfig",
         "Unity.LevelPlay",
         "Unity.Notifications.Android",
-        "Unity.Notifications.iOS"
+        "Unity.Notifications.iOS",
+        "Unity.Services.PushNotifications"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
