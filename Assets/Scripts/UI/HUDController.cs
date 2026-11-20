@@ -433,6 +433,14 @@ namespace MobileIdleBuilder
 
         private void QueryElements(VisualElement root)
         {
+            // The element the slide panels, the hint pill and the overlay instances share; its shape
+            // (wider than tall) switches the panels to their landscape layout (.hud--landscape, GameHUD.uss).
+            _hudFrame    = root.Q("root") ?? root;
+            _dialogueBox = root.Q("dialogue-box");
+            _hintRestore = root.Q("tutorial-hint-restore");
+            _hudFrame.RegisterCallback<GeometryChangedEvent>(_ =>
+                _hudFrame.EnableInClassList("hud--landscape", IsLandscape(_hudFrame.layout.width, _hudFrame.layout.height)));
+
             // HUD chrome
             _drawerPanel    = root.Q("left-drawer");
             _drawerBackdrop = root.Q("drawer-backdrop");
@@ -1583,10 +1591,14 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // One row per output item (#336): hide recipes the player has never unlocked, then group the rest.
+            // One row per output item (#336): hide recipes the player has never unlocked or that are made in
+            // another world (Chemistry's molecules stay out of the Physics list), then group the rest.
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             var known = new List<RecipeJson>();
             foreach (var recipe in recipes)
-                if (RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)
+                if ((RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)
+                    && WorldGate.RecipeInWorld(recipe.crafted_in, BuildingById, activeWorldId))
                     known.Add(recipe);
 
             foreach (var group in RecipeGrouping.Group(known))
@@ -1626,6 +1638,21 @@ namespace MobileIdleBuilder
         private bool IsRecipeLocked(RecipeJson recipe) =>
             !string.IsNullOrEmpty(recipe.requires_research)
             && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
+
+        private Dictionary<string, BuildingSO> _buildingsById;
+
+        private BuildingSO BuildingById(string buildingId)
+        {
+            if (_buildingsById == null)
+            {
+                _buildingsById = new Dictionary<string, BuildingSO>();
+                var all = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
+                if (all != null)
+                    foreach (var b in all)
+                        if (b != null && !string.IsNullOrEmpty(b.id)) _buildingsById[b.id] = b;
+            }
+            return buildingId != null && _buildingsById.TryGetValue(buildingId, out var so) ? so : null;
+        }
 
         private string BuildingNameFor(string buildingId)
         {
@@ -2009,8 +2036,12 @@ namespace MobileIdleBuilder
             _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
             if (_fieldGenerator == null) return;
 
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             foreach (var field in _fieldGenerator.KnownFields)
             {
+                // Graphite and nitrogen are bought in Chemistry, quark pairs in Physics.
+                if (!WorldGate.FieldInWorld(field, activeWorldId)) continue;
                 if (!FieldPurchaseService.IsAvailable(field)) continue;
 
                 long cost      = FieldPurchaseService.NextPrice(field);
@@ -2757,6 +2788,9 @@ namespace MobileIdleBuilder
             open();
         }
 
+        /// <summary>True when the HUD is wider than it is tall (the phone is held sideways).</summary>
+        internal static bool IsLandscape(float width, float height) => width > height && height > 0f;
+
         /// <summary>
         /// True while the left drawer, any slide panel or the building menu is open. Refreshed every frame by
         /// <see cref="RefreshBannerClearance"/>. The Entropy Surge icon hides while it is set so it never sits
@@ -2773,13 +2807,51 @@ namespace MobileIdleBuilder
         {
             if (_allPanels == null) return;
             bool menuOpen = _drawerOpen;
-            if (!menuOpen)
-                foreach (var panel in _allPanels)
-                    if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            VisualElement openPanel = null;
+            foreach (var panel in _allPanels)
+                if (panel != null && !panel.ClassListContains("hidden")) { openPanel = panel; break; }
+            menuOpen |= openPanel != null;
             MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen);
+            RefreshPanelDocking(_drawerOpen ? null : openPanel);
             if (_banner == null) return;
             _banner.SetMenuOpen(menuOpen);
             _banner.RefreshNotificationClearance();
+        }
+
+        // Smallest free strip the tutorial dialogue / "Show hint" pill will move into (panel units).
+        private const float DialogueDockMinHeight = 200f, DialogueDockMinWidth = 240f;
+        private const float PillDockMinHeight     = 52f,  PillDockMinWidth     = 120f;
+        private const float TopBarHeight          = 60f;  // --top-bar-height in tokens.uss
+
+        private VisualElement _hudFrame, _dialogueBox, _hintRestore;
+        private PanelDock _pillDock = PanelDock.None, _dialogueDock = PanelDock.None;
+
+        /// <summary>
+        /// Moves the "Show hint" pill and the tutorial dialogue onto the map beside an open slide panel (above
+        /// it in portrait, left of it in landscape), so neither covers the panel's buttons. See <see cref="PanelDock"/>.
+        /// </summary>
+        private void RefreshPanelDocking(VisualElement openPanel)
+        {
+            if (_hudFrame == null) return;
+            var frame = new Vector2(_hudFrame.layout.width, _hudFrame.layout.height);
+            if (float.IsNaN(frame.x) || float.IsNaN(frame.y)) return;
+            var rect = openPanel != null ? openPanel.layout : Rect.zero;
+            bool sized = openPanel != null && !float.IsNaN(rect.width) && rect.height > 0f;
+
+            var pill = sized ? PanelDock.For(frame, rect, TopBarHeight, PillDockMinHeight, PillDockMinWidth) : PanelDock.None;
+            var dlg  = sized ? PanelDock.For(frame, rect, TopBarHeight, DialogueDockMinHeight, DialogueDockMinWidth) : PanelDock.None;
+
+            if (pill.Where != _pillDock.Where || pill.Free != _pillDock.Free)
+            {
+                _pillDock = pill;
+                pill.PlaceBottomRight(_hintRestore, frame);
+            }
+            if (dlg.Where != _dialogueDock.Where || dlg.Free != _dialogueDock.Free)
+            {
+                _dialogueDock = dlg;
+                dlg.Fill(_dialogueBox, frame);
+                _dialogueBox?.EnableInClassList("dialogue-box--docked", dlg.Where != PanelDock.Side.None);
+            }
         }
 
         private void CloseAllPanels()

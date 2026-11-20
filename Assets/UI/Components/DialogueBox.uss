@@ -79,3 +79,16 @@
 .dialogue-next-btn:active {
     background-color: rgba(0, 229, 255, 0.36);
 }
+
+/* Docked on the map beside an open slide panel (HUDController.RefreshPanelDocking sets its edges), so it
+   no longer covers the recipe or research card it is talking about. The strip is shorter than the
+   normal box, so the text drops a size. */
+.dialogue-box--docked .dialogue-text {
+    font-size: var(--font-size-md);
+}
+
+.dialogue-box--docked .dialogue-portrait {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}

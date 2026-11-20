@@ -129,19 +129,21 @@ namespace MobileIdleBuilder.Tests
         {
             // CH4: one carbon. It once took 6, starving Methane lines of Carbon (fixed 2026-11-18,
             // craft time halved with the atom count: 10 atoms / 80 s -> 5 atoms / 40 s).
+            // 2026-11-19 natural feedstock: C + 2 H2 -> CH4, from graphite and hydrogen gas.
             var r = RequireRecipe("methane");
-            RequireInput(r, "hydrogen", quantity: 4);
-            RequireInput(r, "carbon",   quantity: 1);
+            RequireInput(r, "hydrogen_gas", quantity: 2);
+            RequireInput(r, "graphite",     quantity: 1);
             Assert.AreEqual(40f, r.base_craft_time, 0.001f);
         }
 
-        // Molecules use their real formula, one molecule per craft. Several were multiples or plain wrong
-        // (water 4 H + 8 O, ammonia 7 N, UF6 from silicon); fixed 2026-11-18, craft time scaled with the
-        // atom count so each recipe keeps its pace per atom.
-        [TestCase("water",                "hydrogen", 2, "oxygen",   1, 15f)]
-        [TestCase("ammonia",              "hydrogen", 3, "nitrogen", 1, 36f)]
-        [TestCase("silica",               "silicon",  1, "oxygen",   2, 30f)]
-        [TestCase("iron_oxide",           "iron",     2, "oxygen",   3, 100f)]
+        // Molecules use their real formula. Several were multiples or plain wrong (water 4 H + 8 O, ammonia 7 N,
+        // UF6 from silicon); fixed 2026-11-18, craft time scaled with the atom count. Since 2026-11-19 Chemistry
+        // reacts the gases as found (H2, O2, N2), so some reactions make two molecules
+        // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
+        [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
+        [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
+        [TestCase("silica",               "silicon",      1, "oxygen_gas",   1, 30f)]
+        [TestCase("iron_oxide",           "iron",         4, "oxygen_gas",   3, 100f)]
         [TestCase("uranium_hexafluoride", "uranium",  1, "fluorine", 6, 280f)]
         public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
         {

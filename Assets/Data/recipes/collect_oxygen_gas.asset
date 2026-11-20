@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: collect_carbon
+  m_Name: collect_oxygen_gas
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: collect_carbon
-  displayName: Carbon
+  id: collect_oxygen_gas
+  displayName: Oxygen Gas
   methodLabel: 
-  recipeId: 0
-  tier: 1
+  recipeId: 167
+  tier: 3
   category: 3
   inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
+  outputItem: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 2
-  manualCraftTime: 2
+  baseCraftTime: 4
+  manualCraftTime: 4
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:

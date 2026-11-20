@@ -19,8 +19,8 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
-    quantity: 10
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+    quantity: 5
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
   outputQuantity: 1
@@ -33,7 +33,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

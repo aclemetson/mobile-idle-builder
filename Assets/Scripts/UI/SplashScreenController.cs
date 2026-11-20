@@ -21,7 +21,7 @@ namespace MobileIdleBuilder
             // after a mid-session maintenance kick-out (#195).
             var doc = GetComponent<UIDocument>();
             if (doc != null && doc.panelSettings != null)
-                doc.panelSettings.scale = UIScaler.ComputeScale(Screen.width);
+                doc.panelSettings.scale = UIScaler.ScaleForScreen(Screen.width, Screen.height);
         }
 
         private IEnumerator Start()

@@ -32,6 +32,10 @@ namespace MobileIdleBuilder
                  "Shortened by research and the 'Quick Hands' prestige upgrade.")]
         [Min(0.1f)] public float tapCooldownSeconds = 1.5f;
 
+        [Tooltip("World this field belongs to (world_physics, world_chemistry, ...). Its Build-menu purchase is only " +
+                 "offered there. Empty = every world.")]
+        public string world = "";
+
         [Header("Purchase (Build menu)")]
         [Tooltip("Research that lets the player buy this field. Empty = never for sale.")]
         public string purchaseResearchId;

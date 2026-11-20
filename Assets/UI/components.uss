@@ -202,7 +202,9 @@
 .notification-banner {
     display: none;
     position: absolute;
-    left: var(--spacing-md);
+    /* Starts right of the 44px drawer handle (.drawer-handle, top-left under the top bar), which it
+       covered while a tutorial step's banner was up (2026-11-19 device screenshots). */
+    left: 56px;
     right: var(--spacing-md);
     top: var(--top-bar-height); /* below top bar */
     flex-direction: row;

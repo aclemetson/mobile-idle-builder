@@ -10,28 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: collect_oxygen
+  m_Name: collect_nitrogen_gas
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: collect_oxygen
-  displayName: Oxygen
+  id: collect_nitrogen_gas
+  displayName: Nitrogen Gas
   methodLabel: 
-  recipeId: 166
+  recipeId: 167
   tier: 3
   category: 3
   inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+  outputItem: {fileID: 11400000, guid: d0fea56aa6644c4419ff2c9bd9a53418, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 8
-  manualCraftTime: 8
+  baseCraftTime: 6
+  manualCraftTime: 6
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 94368559b4c1c924fb6cc70797b1772b, type: 2}
   canCraftManually: 1
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

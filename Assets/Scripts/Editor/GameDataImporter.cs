@@ -611,6 +611,7 @@ namespace MobileIdleBuilder.Editor
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
+            so.world                  = data.world ?? "";
             so.purchaseResearchId     = data.purchase_research ?? "";
             so.purchaseCostBase       = data.purchase_cost_base;
             so.purchaseCostMultiplier = data.purchase_cost_multiplier;

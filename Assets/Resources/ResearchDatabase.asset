@@ -32,6 +32,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
   - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
@@ -112,7 +113,7 @@ MonoBehaviour:
       first molecules.'
     startPrestigeCount: 5
     startPrestigeCurrencyEarned: 900
-    startEntropy: 1120000
+    startEntropy: 676000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:2
@@ -136,7 +137,7 @@ MonoBehaviour:
       burning.'
     startPrestigeCount: 5
     startPrestigeCurrencyEarned: 900
-    startEntropy: 5370000
+    startEntropy: 4520000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:2
@@ -160,7 +161,7 @@ MonoBehaviour:
       precious metals.'
     startPrestigeCount: 6
     startPrestigeCurrencyEarned: 1100
-    startEntropy: 2320000
+    startEntropy: 2780000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:3
@@ -184,7 +185,7 @@ MonoBehaviour:
     description: Molecules, the Chemistry world and engineered materials.
     startPrestigeCount: 8
     startPrestigeCurrencyEarned: 2000
-    startEntropy: 46000000
+    startEntropy: 53300000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:3
@@ -209,7 +210,7 @@ MonoBehaviour:
     description: Elements past Uranium, components and the megastructure.
     startPrestigeCount: 15
     startPrestigeCurrencyEarned: 5000
-    startEntropy: 222000000
+    startEntropy: 265000000
     startPermanentUpgrades:
     - assembly_line:5
     - memory_resonance:4
@@ -235,7 +236,7 @@ MonoBehaviour:
     description: Biochemistry to cells, organisms and ecosystems.
     startPrestigeCount: 25
     startPrestigeCurrencyEarned: 11000
-    startEntropy: 446000000
+    startEntropy: 523000000
     startPermanentUpgrades:
     - assembly_line:5
     - memory_resonance:5

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: nitrogen_fixation
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: nitrogen_fixation
+  displayName: Nitrogen Fixation
+  description: "Buy a Nitrogen Vent and split the N\u2082 triple bond with hydrogen
+    to make ammonia."
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  depthInTree: 4
+  block: chemistry_entry
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  costBaseCurrency: 1370000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: d0fea56aa6644c4419ff2c9bd9a53418, type: 2}
+  - {fileID: 11400000, guid: d5b02317e42a8894987ece79732b5188, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 5298c8610812ed040a92a8ba467b897f, type: 2}
+  - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Nitrogen gas is nearly inert: its triple bond is one of the strongest
+    in chemistry. Fixing it into ammonia, with hydrogen under heat and pressure,
+    feeds most of the world''s fertiliser.'

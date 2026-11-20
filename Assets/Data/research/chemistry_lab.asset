@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: chemistry_lab
   displayName: Chemistry Lab
-  description: 'Open the Chemistry world: mine elements from element fields and synthesize
-    inorganic compounds. Gates the Element Harvester and Compound Synthesizer.'
+  description: 'Open the Chemistry world: draw hydrogen and oxygen gas from its fields
+    with the Extractor and burn them into water in the Molecular Synthesizer.'
   icon: {fileID: 0}
   branch: 0
   prerequisites: []
@@ -24,33 +24,26 @@ MonoBehaviour:
   treeX: -1
   treeY: -1
   requiredWorld: world_chemistry
-  costBaseCurrency: 1120000
+  costBaseCurrency: 676000
   costPrestigeCurrency: 0
   durationSeconds: 300
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
-  - {fileID: 11400000, guid: 2643d81dacf1fb845a3a97c22c534af7, type: 2}
-  - {fileID: 11400000, guid: 304291f6767112445982ca91d254c793, type: 2}
-  - {fileID: 11400000, guid: 8d0524d5fdb0aa741b4852d2fc7f4067, type: 2}
+  - {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+  - {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+  - {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
+  - {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 7a3bd5726f8a5e24895d0b0a3e2dbd69, type: 2}
-  - {fileID: 11400000, guid: e01e9299b817ac04199ccf12f2f0882d, type: 2}
-  - {fileID: 11400000, guid: 5546a70d14ababd4d9182f96ae90ae7c, type: 2}
-  - {fileID: 11400000, guid: 887bf25e3533dc448bb93f7d4cf3f30a, type: 2}
-  - {fileID: 11400000, guid: 78fb14b7e6d81424c8dcde03aa14d65f, type: 2}
-  - {fileID: 11400000, guid: 1f0bb43fd9479054194437589a8e7429, type: 2}
-  - {fileID: 11400000, guid: eea4dfa47f281b443873f34c993f6e68, type: 2}
-  - {fileID: 11400000, guid: f51cb0c71f77f97419f352abdfb70b19, type: 2}
-  - {fileID: 11400000, guid: 881f1447bac3d084e9b4c6b0d5350cb3, type: 2}
-  - {fileID: 11400000, guid: face61e2bc746ac41947a4036cd598bd, type: 2}
-  - {fileID: 11400000, guid: 1912c62e6e6809a408cb3ab068739a0f, type: 2}
+  - {fileID: 11400000, guid: a50a1d06aa8c088428337d360f7ee161, type: 2}
+  - {fileID: 11400000, guid: 4f60b48108a702c438e2ffdc7bb93884, type: 2}
+  - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
+  - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: 94368559b4c1c924fb6cc70797b1772b, type: 2}
-  - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
+  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   resetsOnPrestige: 1
   codexEntry: "The bridge from physics to chemistry. Where nuclear synthesis forged

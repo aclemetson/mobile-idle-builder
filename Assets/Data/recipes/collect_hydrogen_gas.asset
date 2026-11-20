@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: collect_hydrogen
+  m_Name: collect_hydrogen_gas
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: collect_hydrogen
-  displayName: Hydrogen
+  id: collect_hydrogen_gas
+  displayName: Hydrogen Gas
   methodLabel: 
-  recipeId: 0
-  tier: 1
+  recipeId: 167
+  tier: 3
   category: 3
   inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
+  outputItem: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 2
-  manualCraftTime: 2
+  baseCraftTime: 4
+  manualCraftTime: 4
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:

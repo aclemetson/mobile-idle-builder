@@ -54,7 +54,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields:
   - Quark
-  world: 
+  world: world_physics
   entropyCost: 500
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

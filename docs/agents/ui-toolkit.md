@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19; landscape side sheets + PanelDock 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -54,6 +54,16 @@ Covered by `TutorialSellPolicyTests`.
 ## Tutorial hint banner (minimizable)
 
 `tutorial-hint-banner` (bottom of `GameHUD.uxml`) is owned by `HUDBannerController` (`ShowTutorialHint` / `HideTutorialHint`, called via `HUDController` by `TutorialOverlayController`). Its minimize button (`tutorial-hint-banner__minimize`, icon is a drawn bar, not a glyph) collapses it to the `tutorial-hint-restore` "Show hint" pill (bottom-right). Minimized state sticks while the same text is re-shown, but a hint with **different text re-expands** so a new step's guidance is never hidden; hiding the hint hides the pill too. `HUDController.RefreshBannerClearance` runs every frame and calls `HUDBannerController.SetMenuOpen(drawerOpen || any slide panel visible)`, which collapses the banner to the pill (its full-width bottom bar hid the drawer's and the Builder sheet's Place buttons) and restores it when everything closes, unless the player had minimized it. Keep it per-frame, not per open path: an explicit call in one open method missed the Builder sheet, which opens after the drawer closes. Under the hint text, `tutorial-hint-banner__progress` shows live have/need counts for `InventoryMin` steps ("Up Quark 2/4, Down Quark 1/2, Electron 0/2"): `TutorialOverlayController.RefreshHintProgress` (every 0.2s) formats it with the pure `TutorialHintProgress.Format` and pushes it through `HUDBannerController.SetTutorialHintProgress`, which never re-expands a minimized hint (#260). Covered by `TutorialHintMinimizeTests` (runs against the real UXML) and `TutorialHintProgressTests`.
+
+## Landscape and panel docking (2026-11-19)
+
+- **Scale:** `UIScaler.ScaleForScreen` scales from the screen's SHORT side and re-applies when the screen size changes, so the HUD is 540 units on its short side in either orientation (by width, a landscape launch gave a 540x250 HUD). `SplashScreenController` uses the same call.
+- **Landscape:** `HUDController.QueryElements` toggles `hud--landscape` on `#root` when it is wider than tall (`IsLandscape`). In `GameHUD.uss` that turns every `.slide-panel` into a right-hand side sheet under the top bar (`left: 40%`; `#research-panel` 24%), and lays the research tree out side by side: tree left, `.rt-detail` card right.
+- **Docking:** `HUDController.RefreshPanelDocking` (per frame, from `RefreshBannerClearance`) moves the `tutorial-hint-restore` pill and the `dialogue-box` onto the map beside an open slide panel: above it in portrait, left of it in landscape. `PanelDock.For` picks the strip, and the piece keeps its USS place when the strip is too small. The docked dialogue gets `dialogue-box--docked` (smaller text). Before this the pill sat on the research Start and craft-queue Cancel buttons. Covered by `PanelDockTests`.
+- **Research tree pan:** `ResearchTreeView.ClampAxis` pins content that fits to the top/left edge and stops larger content at the viewport edges. Centring a node in a two-row tree had left a third of the viewport empty above it.
+- **Research tree lines:** columns are 270 apart and rows 112 (48px gutters). `ResearchTreeView.Route` draws a line between neighbouring columns as a curve. A line that skips columns (most cross-block prerequisites) becomes right-angled segments: it runs through the column gaps and the gutter between rows, each on its own track. A straight line had run under the nodes in between and made them look like prerequisites. `ResearchTreeLayoutTests` checks that no line passes under another node and that lines from different sources never overlap. `docs/research-tree.html` uses the same COLW/ROWH.
+- The research Tree/List toggle (`.research-view-btn`) and the card's Start/Skip buttons are `flex-shrink: 0` with a 44px minimum height. The header row had squeezed the toggle to a sliver.
+- `.notification-banner` starts at `left: 56px` so it no longer covers the drawer handle (≡).
 
 ## Entropy Surge offer (side icon + card)
 
