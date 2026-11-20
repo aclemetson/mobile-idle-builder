@@ -47,6 +47,14 @@ namespace MobileIdleBuilder
         internal Func<float> RealtimeNow = () => Time.realtimeSinceStartup;
 
         public SaveData Current   => _current;
+        public GameConfigSO GameConfig => gameConfig;
+
+        /// <summary>
+        /// Raised after the save is written when the app goes to the background or quits, so listeners
+        /// (local notifications) work from the state that was just saved. Runs synchronously: the player
+        /// loop is about to be suspended, so handlers must not wait on frames.
+        /// </summary>
+        public event Action Backgrounding;
         public bool     IsNewGame { get; private set; }
 
         // True once ReconcileWithCloud() has finished (whether it pulled cloud data, found
@@ -113,6 +121,7 @@ namespace MobileIdleBuilder
                 PlayerPrefs.Save();
                 SaveLocal();
                 PushToCloudBestEffort(skipIfAlreadyPushed: true);   // focus loss usually pushed this already
+                RaiseBackgrounding();
             }
             else
             {
@@ -140,6 +149,13 @@ namespace MobileIdleBuilder
         {
             SaveLocal();
             PushToCloudBestEffort();
+            RaiseBackgrounding();
+        }
+
+        void RaiseBackgrounding()
+        {
+            try { Backgrounding?.Invoke(); }
+            catch (Exception e) { GameLogger.Error($"[Save] Backgrounding handler failed: {e}"); }
         }
 
         // Fire-and-forget cloud push for lifecycle events (background / quit). A frame-based

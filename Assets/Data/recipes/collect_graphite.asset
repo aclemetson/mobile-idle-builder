@@ -10,28 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
-  m_Name: collect_nitrogen
+  m_Name: collect_graphite
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
-  id: collect_nitrogen
-  displayName: Nitrogen
+  id: collect_graphite
+  displayName: Graphite
   methodLabel: 
-  recipeId: 289
+  recipeId: 167
   tier: 3
   category: 3
   inputs: []
   neutronAdjustment: []
-  outputItem: {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
+  outputItem: {fileID: 11400000, guid: 7fc0bedfe283e524c84695400bbed83a, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 8
-  manualCraftTime: 8
+  baseCraftTime: 6
+  manualCraftTime: 6
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 94368559b4c1c924fb6cc70797b1772b, type: 2}
   canCraftManually: 1
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

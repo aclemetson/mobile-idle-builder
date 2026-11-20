@@ -506,6 +506,18 @@
 .research-card-info {
     flex-direction: column;
     align-items: flex-start;
+    flex-shrink: 1;
+}
+
+/* Cards never squash inside the list, and the Start / Skip buttons keep a full touch target. */
+.research-card {
+    flex-shrink: 0;
+}
+
+.research-card-footer > .craft-btn {
+    flex-shrink: 0;
+    min-height: 44px;
+    margin-left: var(--spacing-sm);
 }
 
 .research-card-cost {
@@ -1506,11 +1518,25 @@
     margin-bottom: 2px;
 }
 
+/* Tree/List toggle. The header is a row with a shrinking title, and a default Button shrinks too, so it
+   squeezed down to a sliver: pinned to a full 44px touch target that never shrinks. */
 .research-view-btn {
-    margin-right: var(--spacing-sm);
-    padding: 2px 10px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 auto;
+    min-width: 72px;
+    min-height: 44px;
+    padding: 0 16px;
     font-size: var(--font-size-sm);
-    border-radius: 6px;
+    border-radius: 18px;
+    border-width: 1px;
+    border-color: var(--color-primary);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--color-primary);
+    -unity-text-align: middle-center;
+}
+
+.research-view-btn:active {
+    background-color: rgba(0, 229, 255, 0.24);
 }
 
 .stats-value {
@@ -1774,4 +1800,42 @@
     white-space: normal;
     -unity-text-align: middle-left;
     margin-top: var(--spacing-xs);
+}
+
+/* ---- Landscape (.hud--landscape on #root, set by HUDController when the HUD is wider than tall) ----
+   A bottom sheet 65% tall left the panels a 350px strip across a 1170px-wide screen. In landscape they are
+   side sheets under the top bar instead, with the map visible on the left; the hint pill and the tutorial
+   dialogue dock in that strip (PanelDock). */
+.hud--landscape .slide-panel {
+    left: 40%;
+    top: var(--top-bar-height);
+    height: auto;
+    border-top-right-radius: 0;
+    border-left-width: 1px;
+    border-left-color: var(--color-border);
+    border-bottom-left-radius: 12px;
+}
+
+/* Research gets more width: the tree on the left, the selected node's card beside it. */
+.hud--landscape #research-panel {
+    left: 24%;
+}
+
+.hud--landscape .research-tree {
+    flex-direction: row;
+}
+
+.hud--landscape .rt-viewport {
+    min-height: 0;
+    min-width: 0;
+    flex-basis: 0;
+}
+
+.hud--landscape .rt-detail {
+    max-height: none;
+    width: 40%;
+    min-width: 260px;
+    max-width: 380px;
+    margin-top: 0;
+    margin-left: var(--spacing-sm);
 }

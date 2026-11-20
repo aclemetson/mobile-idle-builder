@@ -50,29 +50,35 @@ namespace MobileIdleBuilder.Tests
                 Assert.AreEqual(0f, byField[removed].densityMultiplier, $"{removed} should be removed (0)");
             }
 
-            // Light/mineral are type "Element" (C1 Element Harvester works on them). Metal is retyped
-            // "ElementMetal" (Phase 4a) so the C1 harvester can't idle-farm the high-value metals.
-            var expectedType = new Dictionary<string, string>
+            // 2026-11-19 natural feedstock: the map starts with hydrogen and oxygen gas only. Graphite, nitrogen,
+            // minerals and metals are listed at density 0 (known, so they can be bought and restored from a save)
+            // and bought from the Build menu after their research. Metal stays "ElementMetal" (its own harvester).
+            var expected = new (string id, string type, bool onMapAtStart, string research)[]
             {
-                { "element_field_light",   "Element" },
-                { "element_field_mineral", "Element" },
-                { "element_field_metal",   "ElementMetal" },
+                ("hydrogen_gas_field",    "Element",      true,  ""),
+                ("oxygen_gas_field",      "Element",      true,  ""),
+                ("graphite_field",        "Element",      false, "molecular_synthesis"),
+                ("nitrogen_gas_field",    "Element",      false, "nitrogen_fixation"),
+                ("element_field_mineral", "Element",      false, "reaction_engineering"),
+                ("element_field_metal",   "ElementMetal", false, "reaction_engineering"),
             };
-            foreach (var kvp in expectedType)
+            foreach (var (ef, type, atStart, research) in expected)
             {
-                string ef = kvp.Key;
-                Assert.IsTrue(byField.ContainsKey(ef), $"element field '{ef}' not introduced on site_chem_lab");
+                Assert.IsTrue(byField.ContainsKey(ef), $"field '{ef}' not listed on site_chem_lab");
                 var field = byField[ef].field;
-                Assert.Greater(byField[ef].densityMultiplier, 0f, $"{ef} should have a positive count");
-                Assert.AreEqual(kvp.Value, field.fieldType, $"{ef}.fieldType");
-                Assert.IsNotEmpty(field.drops, $"{ef} should drop items");
-                foreach (var d in field.drops)
+                if (atStart) Assert.Greater(byField[ef].densityMultiplier, 0f, $"{ef} is on the map from the start");
+                else
                 {
-                    Assert.IsNotNull(d.item, $"{ef} has an unresolved drop");
-                    Assert.AreEqual(ItemCategory.Element, d.item.category,
-                        $"{ef} should drop Element items (got {d.item.id})");
+                    Assert.AreEqual(0f, byField[ef].densityMultiplier, $"{ef} is bought, not placed up front");
+                    Assert.AreEqual(research, field.purchaseResearchId, $"{ef} is for sale after {research}");
+                    Assert.Greater(field.purchaseCostBase, 0, $"{ef} has a price");
                 }
+                Assert.AreEqual(type, field.fieldType, $"{ef}.fieldType");
+                Assert.AreEqual(WorldGate.Chemistry, field.world, $"{ef} belongs to Chemistry");
+                Assert.IsNotEmpty(field.drops, $"{ef} should drop items");
+                foreach (var d in field.drops) Assert.IsNotNull(d.item, $"{ef} has an unresolved drop");
             }
+            Assert.IsFalse(byField.ContainsKey("element_field_light"), "the atom seam is retired");
         }
 
         [Test]
@@ -122,11 +128,16 @@ namespace MobileIdleBuilder.Tests
 
             var synth = System.Array.Find(bdb.allBuildings, b => b != null && b.id == "compound_synthesizer");
             Assert.IsNotNull(synth, "compound_synthesizer missing");
-            Assert.AreEqual("chemistry_lab", synth.requiredResearch?.id, "compound_synthesizer gated by chemistry_lab");
+            Assert.AreEqual("reaction_engineering", synth.requiredResearch?.id, "compound_synthesizer comes with the minerals");
             var outputs = System.Array.ConvertAll(synth.supportedRecipes,
                 r => r != null && r.outputItem != null ? r.outputItem.id : null);
-            foreach (var c in new[] { "carbon_dioxide", "table_salt", "sulfuric_acid" })
+            foreach (var c in new[] { "table_salt", "sulfuric_acid" })
                 CollectionAssert.Contains(outputs, c, $"compound_synthesizer makes {c}");
+
+            // CO2 is graphite burnt in oxygen, so it moved to the Molecular Synthesizer with Carbon Chemistry.
+            var mol = System.Array.Find(bdb.allBuildings, b => b != null && b.id == "molecular_synthesizer");
+            Assert.AreEqual("chemistry_lab", mol.requiredResearch?.id, "the Molecular Synthesizer opens Chemistry (water)");
+            CollectionAssert.Contains(System.Array.ConvertAll(mol.supportedRecipes, r => r?.outputItem?.id), "carbon_dioxide");
         }
 
         [Test]
@@ -151,10 +162,13 @@ namespace MobileIdleBuilder.Tests
 
             ResearchSO Find(string id) => System.Array.Find(rdb.allResearch, r => r != null && r.id == id);
 
-            // chemistry_lab -> reaction_engineering -> organic_chemistry -> biochem_precursors
+            // chemistry_lab (H2, O2, water) -> molecular_synthesis (Carbon Chemistry) -> nitrogen_fixation
+            // -> reaction_engineering -> organic_chemistry -> biochem_precursors
             var expected = new (string id, string prereq, int cost, ResearchBranch branch)[]
             {
-                ("reaction_engineering", "chemistry_lab",        0, ResearchBranch.Chemistry),
+                ("molecular_synthesis",  "chemistry_lab",        0, ResearchBranch.Chemistry),
+                ("nitrogen_fixation",    "molecular_synthesis",  0, ResearchBranch.Chemistry),
+                ("reaction_engineering", "nitrogen_fixation",    0, ResearchBranch.Chemistry),
                 ("organic_chemistry",    "reaction_engineering", 0, ResearchBranch.Chemistry),
                 ("biochem_precursors",   "organic_chemistry",    0, ResearchBranch.Chemistry),
             };
@@ -168,10 +182,11 @@ namespace MobileIdleBuilder.Tests
                     $"{id} must require {prereq}");
             }
 
-            // chemistry_lab chains into reaction_engineering.
-            var lab = Find("chemistry_lab");
-            Assert.IsNotNull(System.Array.Find(lab.unlocksResearch, r => r != null && r.id == "reaction_engineering"),
-                "chemistry_lab must unlock reaction_engineering");
+            // Each step points at the next in the research tree's "unlocks" list.
+            foreach (var (from, to) in new[] { ("chemistry_lab", "molecular_synthesis"), ("molecular_synthesis", "nitrogen_fixation"),
+                                               ("nitrogen_fixation", "reaction_engineering") })
+                Assert.IsNotNull(System.Array.Find(Find(from).unlocksResearch, r => r != null && r.id == to),
+                    $"{from} must unlock {to}");
         }
 
         [Test]

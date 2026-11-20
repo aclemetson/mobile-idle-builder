@@ -20,12 +20,12 @@ MonoBehaviour:
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 0c56fa4024b5d354ea0d5f95d30c3697, type: 2}
-    quantity: 1
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
     quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 21f6fa4a106cd1d41b07d4dfadc04bd6, type: 2}
-  outputQuantity: 1
+  outputQuantity: 2
   byproducts: []
   baseCraftTime: 30
   manualCraftTime: 0

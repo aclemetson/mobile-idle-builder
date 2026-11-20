@@ -35,6 +35,9 @@ namespace MobileIdleBuilder
             internal set { _data = value; _loaded = true; } // tests
         }
 
+        /// <summary>Bumped on every credit, whatever path made it, so the service can tell the UI progress moved.</summary>
+        public static int Revision { get; private set; }
+
         public static int StageCount(WorldTaskSO data) => data?.stages?.Length ?? 0;
 
         /// <summary>Completed stage count, clamped to the data.</summary>
@@ -113,6 +116,7 @@ namespace MobileIdleBuilder
             if (need <= 0) return 0;
             int add = (int)Math.Min(need, quantity);
             SetDelivered(save, itemId, Delivered(save, itemId) + add);
+            Revision++;
 
             if (StageDone(save, stage))
             {
@@ -126,16 +130,50 @@ namespace MobileIdleBuilder
 
         /// <summary>Credits every entry of <paramref name="deliveries"/> (item id → count). Returns the stages it finished.</summary>
         public static List<WorldTaskStage> CreditAll(SaveData save, WorldTaskSO data, IEnumerable<KeyValuePair<int, long>> deliveries)
+            => CreditAll(save, data, deliveries, out _);
+
+        /// <summary>
+        /// Credits every entry of <paramref name="deliveries"/>; <paramref name="counted"/> is how many items counted.
+        /// A batch can finish a stage and carry on into the next one (a long Time Warp), so it keeps crediting what
+        /// is left of each entry until nothing more counts. Finished stages are also queued on
+        /// <see cref="PendingAnnouncements"/> so the service announces them like a live completion.
+        /// </summary>
+        public static List<WorldTaskStage> CreditAll(SaveData save, WorldTaskSO data,
+                                                     IEnumerable<KeyValuePair<int, long>> deliveries, out long counted)
         {
+            counted = 0;
             var done = new List<WorldTaskStage>();
-            if (deliveries == null) return done;
+            if (deliveries == null || save == null) return done;
+            var left = new Dictionary<int, long>();
             foreach (var kv in deliveries)
+                if (kv.Value > 0) left[kv.Key] = (left.TryGetValue(kv.Key, out long v) ? v : 0) + kv.Value;
+
+            bool finishedOne = true;
+            while (finishedOne && left.Count > 0 && !IsComplete(save, data))
             {
-                Credit(save, data, kv.Key, kv.Value, out var finished);
-                if (finished != null) done.Add(finished);
+                finishedOne = false;
+                foreach (int id in new List<int>(left.Keys))
+                {
+                    int add = Credit(save, data, id, left[id], out var finished);
+                    counted += add;
+                    left[id] -= add;
+                    if (left[id] <= 0) left.Remove(id);
+                    if (finished == null) continue;
+                    done.Add(finished);
+                    PendingAnnouncements.Add(finished);
+                    finishedOne = true; // the next stage starts from zero: offer it the rest
+                    break;
+                }
             }
             return done;
         }
+
+        /// <summary>
+        /// Stages finished outside the live Demon path (offline return, Time Warp and the other bonuses), waiting for
+        /// <see cref="WorldTaskService"/> to play their toast and dialogue. Static so a credit made before the service
+        /// exists (offline collection runs before ECS loads) is still announced once the game is up.
+        /// </summary>
+        public static readonly List<WorldTaskStage> PendingAnnouncements = new();
 
         /// <summary>
         /// One-time start point for saves from before the tasks existed: a save that already unlocked the world

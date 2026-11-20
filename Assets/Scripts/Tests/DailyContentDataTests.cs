@@ -18,15 +18,10 @@ namespace MobileIdleBuilder.Tests
         [Serializable] private class Root
         {
             public List<Reward>    daily_rewards    = new();
-            public List<Challenge> daily_challenges = new();
         }
         [Serializable] private class Reward
         {
             public int day; public int crystals; public long entropy; public int prestige_currency;
-        }
-        [Serializable] private class Challenge
-        {
-            public string id; public string description; public string trigger; public int target; public int crystals;
         }
 
         static Root LoadData()
@@ -43,7 +38,6 @@ namespace MobileIdleBuilder.Tests
         {
             var type = typeof(DailyContentSO);
             Assert.IsNotNull(type.GetField("loginRewards"),  "DailyContentSO missing: loginRewards");
-            Assert.IsNotNull(type.GetField("challengePool"), "DailyContentSO missing: challengePool");
         }
 
         [Test]
@@ -54,16 +48,6 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(type.GetField("crystals"),         "DailyRewardEntry missing: crystals");
             Assert.IsNotNull(type.GetField("entropy"),          "DailyRewardEntry missing: entropy");
             Assert.IsNotNull(type.GetField("prestigeCurrency"), "DailyRewardEntry missing: prestigeCurrency");
-        }
-
-        [Test]
-        public void DailyChallengeEntry_HasRequiredFields()
-        {
-            var type = typeof(DailyChallengeEntry);
-            Assert.IsNotNull(type.GetField("id"),       "DailyChallengeEntry missing: id");
-            Assert.IsNotNull(type.GetField("trigger"),  "DailyChallengeEntry missing: trigger");
-            Assert.IsNotNull(type.GetField("target"),   "DailyChallengeEntry missing: target");
-            Assert.IsNotNull(type.GetField("crystals"), "DailyChallengeEntry missing: crystals");
         }
 
         // ── Login reward calendar ─────────────────────────────────────────────
@@ -106,21 +90,12 @@ namespace MobileIdleBuilder.Tests
                     Assert.AreEqual(0, r.prestige_currency, $"Day {r.day} must not grant prestige currency");
         }
 
-        // ── Challenge pool ────────────────────────────────────────────────────
-
         [Test]
-        public void ChallengePool_HasSixValidChallenges()
+        public void ChallengePool_IsGone_DailyTasksAreAchievements()
         {
-            var data = LoadData();
-            Assert.AreEqual(6, data.daily_challenges.Count, "Challenge pool must have 6 entries");
-            foreach (var c in data.daily_challenges)
-            {
-                Assert.IsFalse(string.IsNullOrEmpty(c.id), "Challenge id must not be empty");
-                Assert.Greater(c.target, 0,   $"Challenge '{c.id}' target must be positive");
-                Assert.Greater(c.crystals, 0, $"Challenge '{c.id}' crystal reward must be positive");
-                Assert.IsTrue(Enum.IsDefined(typeof(AchievementTrigger), c.trigger),
-                    $"Challenge '{c.id}' trigger '{c.trigger}' is not a valid AchievementTrigger value");
-            }
+            // 2026-11-20: the rotating pool duplicated four Daily achievements; it was merged into them.
+            StringAssert.DoesNotContain("\"daily_challenges\"", File.ReadAllText(Path.Combine(Application.dataPath, "Data/game_data.json")));
+            Assert.IsNull(typeof(DailyContentSO).GetField("challengePool"));
         }
     }
 }

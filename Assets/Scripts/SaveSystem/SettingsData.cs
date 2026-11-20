@@ -10,6 +10,7 @@ namespace MobileIdleBuilder
         public float musicVolume         = 1f;
         public int   graphicsQuality     = 2;    // 0=Low 1=Medium 2=High
         public bool  notificationsEnabled = true;
+        public bool  notificationPromptShown = false; // the post-tutorial "Stay in the loop?" card was answered
         public bool  showPowerConnections  = false; // map-wide power-connection overlay toggle
 
         // ── Camera ────────────────────────────────────────────────────────────

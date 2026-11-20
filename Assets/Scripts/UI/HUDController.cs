@@ -57,7 +57,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _pvpPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _dailyPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
+                              _shopPanel, _settingsPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -421,7 +421,7 @@ namespace MobileIdleBuilder
                     _achievementsUnlocked = true;
                     ApplyAchievementsGate();
                     achievementService?.InitPostPrestige();
-                    ShowTutorialHint("🏆 Achievements unlocked! Open the drawer and tap Achievements to get started.");
+                    ShowTutorialHint("🏆 Weekly, Monthly and Progress achievements unlocked! Open the drawer and tap Achievements.");
                     StartAchievementsHintPulse();
                 }
             }
@@ -433,6 +433,14 @@ namespace MobileIdleBuilder
 
         private void QueryElements(VisualElement root)
         {
+            // The element the slide panels, the hint pill and the overlay instances share; its shape
+            // (wider than tall) switches the panels to their landscape layout (.hud--landscape, GameHUD.uss).
+            _hudFrame    = root.Q("root") ?? root;
+            _dialogueBox = root.Q("dialogue-box");
+            _hintRestore = root.Q("tutorial-hint-restore");
+            _hudFrame.RegisterCallback<GeometryChangedEvent>(_ =>
+                _hudFrame.EnableInClassList("hud--landscape", IsLandscape(_hudFrame.layout.width, _hudFrame.layout.height)));
+
             // HUD chrome
             _drawerPanel    = root.Q("left-drawer");
             _drawerBackdrop = root.Q("drawer-backdrop");
@@ -450,7 +458,6 @@ namespace MobileIdleBuilder
             _managersPanel     = root.Q("managers-panel");
             _statsPanel        = root.Q("stats-panel");
             _megastructurePanel = root.Q("megastructure-panel");
-            _dailyPanel        = root.Q("daily-panel");
             _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
             _pvpPanel          = root.Q("pvp-panel");
@@ -464,7 +471,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _dailyPanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
@@ -564,8 +571,6 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-managers")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenManagersPanel));
             root.Q<Button>("btn-stats")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenStatsPanel));
             root.Q<Button>("btn-megastructure")?.RegisterCallback<ClickEvent>(_ => TryOpenPanel(OpenMegastructurePanel));
-            var btnDaily = root.Q<Button>("btn-daily");
-            if (btnDaily != null) btnDaily.clicked     += () => TryOpenPanel(OpenDailyPanel);
             // Free Rewards (rewarded ads) — nav button hidden by ApplyFeatureFlagGates when ads.enabled is off.
             var btnRewards = root.Q<Button>("btn-rewards");
             if (btnRewards != null)
@@ -609,8 +614,6 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-managers")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_managersPanel, false));
             root.Q<Button>("btn-close-stats")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_statsPanel, false));
             root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
-            var btnCloseDaily = root.Q<Button>("btn-close-daily");
-            if (btnCloseDaily != null) btnCloseDaily.clicked += () => SetElementVisible(_dailyPanel, false);
             var btnCloseRewards = root.Q<Button>("btn-close-rewards");
             if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
@@ -1264,7 +1267,6 @@ namespace MobileIdleBuilder
         private void ApplyFeatureFlagGates(VisualElement root)
         {
             if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
-            if (!FeatureFlags.DailyEventsEnabled) SetElementVisible(root.Q<Button>("btn-daily"), false);
             if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
         }
 
@@ -1281,13 +1283,6 @@ namespace MobileIdleBuilder
             CloseAllPanels();
             _worlds?.Refresh();
             SetElementVisible(_worldsPanel, true);
-        }
-
-        private void OpenDailyPanel()
-        {
-            CloseAllPanels();
-            _daily?.Refresh();
-            SetElementVisible(_dailyPanel, true);
         }
 
         private void OpenRewardsPanel()
@@ -1309,12 +1304,17 @@ namespace MobileIdleBuilder
             _settings?.Open();
         }
 
+        /// <summary>
+        /// The menu is always open: its Daily tab (login calendar + daily achievements) works from the start.
+        /// Weekly, Monthly and Progress unlock with the first prestige; their tabs show a lock until then.
+        /// </summary>
         private void ApplyAchievementsGate()
         {
-            bool unlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
-            if (_btnAchievements != null)
-                _btnAchievements.SetEnabled(unlocked);
-            SetElementVisible(_achievementsLockedHint, !unlocked);
+            bool unlocked = AchievementsUnlocked;
+            _btnAchievements?.SetEnabled(true);
+            SetElementVisible(_achievementsLockedHint, false);
+            foreach (var tab in new[] { _achTabWeekly, _achTabMonthly, _achTabProgression })
+                tab?.EnableInClassList("achievements-tab--locked", !unlocked);
         }
 
         private void OpenAchievementsPanel() => OpenAchievementsPanel(FirstClaimableCategory());
@@ -1362,6 +1362,7 @@ namespace MobileIdleBuilder
         {
             if (_achResetLabel == null) return;
             _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
+                                  || !AchievementService.CategoryUnlocked(_achActiveCategory)
                 ? ""
                 : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
         }
@@ -1583,10 +1584,14 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // One row per output item (#336): hide recipes the player has never unlocked, then group the rest.
+            // One row per output item (#336): hide recipes the player has never unlocked or that are made in
+            // another world (Chemistry's molecules stay out of the Physics list), then group the rest.
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             var known = new List<RecipeJson>();
             foreach (var recipe in recipes)
-                if (RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)
+                if ((RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)
+                    && WorldGate.RecipeInWorld(recipe.crafted_in, BuildingById, activeWorldId))
                     known.Add(recipe);
 
             foreach (var group in RecipeGrouping.Group(known))
@@ -1626,6 +1631,21 @@ namespace MobileIdleBuilder
         private bool IsRecipeLocked(RecipeJson recipe) =>
             !string.IsNullOrEmpty(recipe.requires_research)
             && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
+
+        private Dictionary<string, BuildingSO> _buildingsById;
+
+        private BuildingSO BuildingById(string buildingId)
+        {
+            if (_buildingsById == null)
+            {
+                _buildingsById = new Dictionary<string, BuildingSO>();
+                var all = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
+                if (all != null)
+                    foreach (var b in all)
+                        if (b != null && !string.IsNullOrEmpty(b.id)) _buildingsById[b.id] = b;
+            }
+            return buildingId != null && _buildingsById.TryGetValue(buildingId, out var so) ? so : null;
+        }
 
         private string BuildingNameFor(string buildingId)
         {
@@ -2009,8 +2029,12 @@ namespace MobileIdleBuilder
             _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
             if (_fieldGenerator == null) return;
 
+            var ws = WorldService.Instance;
+            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
             foreach (var field in _fieldGenerator.KnownFields)
             {
+                // Graphite and nitrogen are bought in Chemistry, quark pairs in Physics.
+                if (!WorldGate.FieldInWorld(field, activeWorldId)) continue;
                 if (!FieldPurchaseService.IsAvailable(field)) continue;
 
                 long cost      = FieldPurchaseService.NextPrice(field);
@@ -2156,6 +2180,22 @@ namespace MobileIdleBuilder
             int completed = achievementService.CompletedCount;
             if (_achievementsTitle != null)
                 _achievementsTitle.text = $"Achievements ({completed} / {all.Count})";
+
+            // The Daily tab opens with the 28-day login calendar (the old Daily panel, merged in 2026-11-20).
+            if (_achActiveCategory == AchievementCategory.Daily)
+            {
+                var card = _daily?.BuildLoginCard(() => OnAchievementUnlocked(null)); // rebuilds only while open
+                if (card != null) _achievementsList.Add(card);
+            }
+
+            if (!AchievementService.CategoryUnlocked(_achActiveCategory))
+            {
+                var locked = new Label("Unlocks after your first prestige.");
+                locked.AddToClassList("ach-locked-msg");
+                _achievementsList.Add(locked);
+                SetElementVisible(_achClaimAllBtn, achievementService.ClaimableCount > 0);
+                return;
+            }
 
             foreach (var achievement in all)
             {
@@ -2537,8 +2577,8 @@ namespace MobileIdleBuilder
         public void ShowAchievementNotification(AchievementSO achievement, string message)
         {
             if (_banner == null) return;
-            bool unlocked = AchievementsUnlocked;
-            if (achievement == null || !unlocked) { _banner.ShowNotification("🏆", message); return; }
+            if (achievement == null || !AchievementService.CategoryUnlocked(achievement.category))
+            { _banner.ShowNotification("🏆", message); return; }
 
             string id       = achievement.id;
             var    category = achievement.category;
@@ -2557,7 +2597,8 @@ namespace MobileIdleBuilder
         {
             if (_reminders == null) return;
             _reminders.Register("btn-achievements",
-                () => AchievementsUnlocked && achievementService != null && achievementService.ClaimableCount > 0,
+                () => !TutorialActive && ((achievementService != null && achievementService.ClaimableCount > 0)
+                                          || LoginRewardWaiting),
                 menuRow: true);
             RegisterAchTabReminder("ach-tab-daily",       AchievementCategory.Daily);
             RegisterAchTabReminder("ach-tab-weekly",      AchievementCategory.Weekly);
@@ -2568,8 +2609,14 @@ namespace MobileIdleBuilder
 
         private void RegisterAchTabReminder(string tab, AchievementCategory category) =>
             _reminders.Register(tab,
-                () => AchievementsUnlocked && achievementService != null && achievementService.HasClaimable(category),
+                () => !TutorialActive && ((achievementService != null && achievementService.HasClaimable(category))
+                                          || (category == AchievementCategory.Daily && LoginRewardWaiting)),
                 menuRow: false);
+
+        private static bool TutorialActive => SaveManager.Instance?.Current?.tutorial?.isActive ?? false;
+
+        private static bool LoginRewardWaiting =>
+            FeatureFlags.DailyEventsEnabled && (DailyEventService.Instance?.CanClaimLoginReward() ?? false);
 
         private void ClaimAchievementFromBanner(string id)
         {
@@ -2757,6 +2804,9 @@ namespace MobileIdleBuilder
             open();
         }
 
+        /// <summary>True when the HUD is wider than it is tall (the phone is held sideways).</summary>
+        internal static bool IsLandscape(float width, float height) => width > height && height > 0f;
+
         /// <summary>
         /// True while the left drawer, any slide panel or the building menu is open. Refreshed every frame by
         /// <see cref="RefreshBannerClearance"/>. The Entropy Surge icon hides while it is set so it never sits
@@ -2773,13 +2823,51 @@ namespace MobileIdleBuilder
         {
             if (_allPanels == null) return;
             bool menuOpen = _drawerOpen;
-            if (!menuOpen)
-                foreach (var panel in _allPanels)
-                    if (panel != null && !panel.ClassListContains("hidden")) { menuOpen = true; break; }
+            VisualElement openPanel = null;
+            foreach (var panel in _allPanels)
+                if (panel != null && !panel.ClassListContains("hidden")) { openPanel = panel; break; }
+            menuOpen |= openPanel != null;
             MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen);
+            RefreshPanelDocking(_drawerOpen ? null : openPanel);
             if (_banner == null) return;
             _banner.SetMenuOpen(menuOpen);
             _banner.RefreshNotificationClearance();
+        }
+
+        // Smallest free strip the tutorial dialogue / "Show hint" pill will move into (panel units).
+        private const float DialogueDockMinHeight = 200f, DialogueDockMinWidth = 240f;
+        private const float PillDockMinHeight     = 52f,  PillDockMinWidth     = 120f;
+        private const float TopBarHeight          = 60f;  // --top-bar-height in tokens.uss
+
+        private VisualElement _hudFrame, _dialogueBox, _hintRestore;
+        private PanelDock _pillDock = PanelDock.None, _dialogueDock = PanelDock.None;
+
+        /// <summary>
+        /// Moves the "Show hint" pill and the tutorial dialogue onto the map beside an open slide panel (above
+        /// it in portrait, left of it in landscape), so neither covers the panel's buttons. See <see cref="PanelDock"/>.
+        /// </summary>
+        private void RefreshPanelDocking(VisualElement openPanel)
+        {
+            if (_hudFrame == null) return;
+            var frame = new Vector2(_hudFrame.layout.width, _hudFrame.layout.height);
+            if (float.IsNaN(frame.x) || float.IsNaN(frame.y)) return;
+            var rect = openPanel != null ? openPanel.layout : Rect.zero;
+            bool sized = openPanel != null && !float.IsNaN(rect.width) && rect.height > 0f;
+
+            var pill = sized ? PanelDock.For(frame, rect, TopBarHeight, PillDockMinHeight, PillDockMinWidth) : PanelDock.None;
+            var dlg  = sized ? PanelDock.For(frame, rect, TopBarHeight, DialogueDockMinHeight, DialogueDockMinWidth) : PanelDock.None;
+
+            if (pill.Where != _pillDock.Where || pill.Free != _pillDock.Free)
+            {
+                _pillDock = pill;
+                pill.PlaceBottomRight(_hintRestore, frame);
+            }
+            if (dlg.Where != _dialogueDock.Where || dlg.Free != _dialogueDock.Free)
+            {
+                _dialogueDock = dlg;
+                dlg.Fill(_dialogueBox, frame);
+                _dialogueBox?.EnableInClassList("dialogue-box--docked", dlg.Where != PanelDock.Side.None);
+            }
         }
 
         private void CloseAllPanels()

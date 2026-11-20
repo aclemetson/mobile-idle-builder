@@ -43,13 +43,9 @@ namespace MobileIdleBuilder
         public string dailyResetUtc;   // ISO 8601 — when current daily period expires
         public string weeklyResetUtc;  // ISO 8601 — when current weekly period expires (Mon 00:00 UTC)
         public string monthlyResetUtc; // ISO 8601 — when current monthly period expires (1st of month)
-        // Daily events (login streak + rotating challenges) — survive prestige, NOT in PrestigeSystem reset.
+        // Daily events (login reward calendar) — survive prestige, NOT in PrestigeSystem reset.
         public int    loginStreakIndex;          // 0-based position in the 28-day login reward calendar
         public string lastLoginRewardUtc;        // ISO 8601 — date of the last claimed login reward
-        public string dailyChallengeResetUtc;    // ISO 8601 — when the current challenge set expires
-        public List<string> dailyChallengeIds                       = new(); // today's 3 challenge ids
-        public List<AchievementProgressEntry> dailyChallengeProgress = new(); // per-challenge accumulated progress
-        public List<string> dailyChallengesClaimed                  = new(); // challenge ids already claimed today
         // Rewarded ads — opt-in video rewards with per-placement daily caps. Survive prestige
         // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
         public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
@@ -102,6 +98,9 @@ namespace MobileIdleBuilder
         public float itemsPerSecond;
         public bool  endsAtEntropySink;
         public float baseSellValue;
+        // Entropy-only entry: byproduct escape entropy or a surplus sale. It pays entropy but no item reaches
+        // the Demon, so it never counts toward world delivery tasks. Absent (false) in older saves.
+        public bool  notDelivered;
     }
 
     [Serializable]

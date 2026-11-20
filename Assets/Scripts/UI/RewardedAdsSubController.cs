@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
         {
             AdPlacement.EntropySurge,
             AdPlacement.EntropyBoost,
+            AdPlacement.IdleRateBoostShort,
             AdPlacement.IdleRateBoost,
             AdPlacement.SpeedBoost,
             AdPlacement.TimeWarp,
