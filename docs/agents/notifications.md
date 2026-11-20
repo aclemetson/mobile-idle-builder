@@ -85,6 +85,16 @@ Ids are stable per kind (`1000 + kind`). Android sends with an explicit id, iOS 
 - **Android:** target SDK is automatic (33+), so `POST_NOTIFICATIONS` is a runtime permission; the package adds the manifest entry.
   - Four channels: `qf_production`, `qf_boosts` and `qf_rewards` at default importance, `qf_reminders` at low (silent). Players can mute each channel in OS settings.
   - Scheduling is inexact. `SCHEDULE_EXACT_ALARM` is not used, which avoids Play policy review.
+  - **Delivery window:** the package's inexact alarm may be up to an hour late. Every `PlannedNotification` has a
+    `MaxLateness` from `NotificationPlanner.MaxLatenessFor` (10 min for game events, 1 h for comeback reminders),
+    one rule for all platforms. On Android, `Assets/Plugins/Android/NotificationAlarmWindow.java` replaces the
+    package's alarm with `AlarmManager.setWindow` (no permission; 10 min is the Android 12+ minimum). It finds the
+    alarm by the package's PendingIntent (receiver `UnityNotificationManager`, request code = notification id), so
+    re-check it after updating `com.unity.mobile.notifications`. Best effort: if it fails, the inexact alarm still fires.
+    `adb shell dumpsys alarm` shows `window=+10m0s0ms` on the game's alarms when it works. iOS triggers already fire on time.
+  - **Power saving:** Battery Saver holds plain alarms (`set`, `setWindow`) until it is turned off (`dumpsys alarm` shows
+    `battery_saver=+364d...`). When power saving is on at scheduling time, the plugin uses `setAndAllowWhileIdle`
+    instead, which still fires (OS-chosen time). Saver turned on later still holds the windowed alarms.
   - "Reschedule on Device Restart" is on, which adds `RECEIVE_BOOT_COMPLETED`.
 - **iOS:**
   - "Request Authorization on App Launch" is OFF (the package default is on): we ask ourselves, after the tutorial.

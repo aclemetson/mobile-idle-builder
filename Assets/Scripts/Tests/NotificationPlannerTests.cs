@@ -147,6 +147,33 @@ namespace MobileIdleBuilder.Tests
             Assert.AreNotEqual(a.Id, new PlannedNotification(NotificationKind.ResearchDone, NotificationChannel.Production, "", "", Now).Id);
         }
 
+        [Test]
+        public void MaxLateness_PreciseForEvents_RelaxedForComebacks()
+        {
+            foreach (NotificationKind k in Enum.GetValues(typeof(NotificationKind)))
+            {
+                var expected = k == NotificationKind.Comeback24h || k == NotificationKind.Comeback72h
+                    ? NotificationPlanner.RelaxedWindow
+                    : NotificationPlanner.PreciseWindow;
+                Assert.AreEqual(expected, NotificationPlanner.MaxLatenessFor(k), k.ToString());
+            }
+            Assert.AreEqual(TimeSpan.FromMinutes(10), NotificationPlanner.PreciseWindow,
+                "10 min is the tightest window Android 12+ grants without an exact-alarm permission");
+        }
+
+        [Test]
+        public void PlannedNotification_CarriesItsKindsLateness()
+        {
+            var i = Inputs();
+            i.ResearchDoneIn  = TimeSpan.FromMinutes(45);
+            i.IncludeComeback = true;
+            var plan = NotificationPlanner.Plan(i);
+            Assert.AreEqual(NotificationPlanner.PreciseWindow,
+                plan.First(p => p.Kind == NotificationKind.ResearchDone).MaxLateness);
+            Assert.AreEqual(NotificationPlanner.RelaxedWindow,
+                plan.First(p => p.Kind == NotificationKind.Comeback24h).MaxLateness);
+        }
+
         // ── Inputs from the save ───────────────────────────────────────────
 
         [Test]
