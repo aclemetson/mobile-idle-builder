@@ -408,6 +408,12 @@ namespace MobileIdleBuilder
         /// </summary>
         bool ShouldRecord => _collecting || !_startDecided;
 
+        /// <summary>
+        /// True once UGS Analytics data collection started this session (analytics.enabled on). Read by
+        /// RemotePushService, so it must exist in player builds, not only under UNITY_EDITOR.
+        /// </summary>
+        internal bool IsCollecting => _collecting;
+
         // Single funnel for every event: send, buffer, or drop — and count what actually reached the
         // backend so a broken pipeline is visible ('analytics status') instead of silently looking like
         // success. Values are captured by the caller at record time; the stamps are applied here, because
@@ -704,8 +710,6 @@ namespace MobileIdleBuilder
             _runStartTime     = _sessionStartTime;
             DrainPreStart();
         }
-
-        internal bool IsCollecting => _collecting;
 
         /// <summary>Events recorded before the analytics.enabled decision landed, still held in memory.</summary>
         internal int PreStartCount => _preStart.Count;
