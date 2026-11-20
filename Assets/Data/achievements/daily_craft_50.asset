@@ -22,6 +22,6 @@ MonoBehaviour:
   triggerTargetId: 
   triggerQuantity: 50
   rewards: []
-  paidCurrencyReward: 3
+  paidCurrencyReward: 4
   prestigeCurrencyReward: 0
   platformAchievementId: 

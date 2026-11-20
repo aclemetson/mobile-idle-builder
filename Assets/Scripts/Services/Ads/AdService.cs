@@ -327,7 +327,12 @@ namespace MobileIdleBuilder
                     long amount = quotedIncome;
                     save.currentRun.baseCurrency += amount;
                     ApplyEntropyToECS(amount);
-                    message = $"+{amount:N0} entropy";
+                    // The income is N minutes of what the Demon sells, so those N minutes of items count toward
+                    // the world tasks too (full rate, like the income). Save first so the snapshot is current.
+                    SaveManager.Instance.SaveLocal();
+                    var delivered = OfflineCollectionService.LiveDemonDeliveries(save, def.IncomeMinutes * 60f);
+                    long counted  = OfflineCollectionService.CreditDemonDeliveries(save, delivered, "Entropy Surge");
+                    message = $"+{amount:N0} entropy" + TaskSuffix(counted);
                     return true;
                 }
                 case AdRewardKind.Crystals:
@@ -374,18 +379,21 @@ namespace MobileIdleBuilder
 
             if (result == null || !result.HasAnyOutput) { message = "Nothing producing to bank."; return false; }
 
-            ApplyCollectionResult(save, result);
-            message = $"Banked {hours:F0}h of production";
+            long counted = ApplyCollectionResult(save, result);
+            message = $"Banked {hours:F0}h of production" + TaskSuffix(counted);
             return true;
         }
 
         bool GrantDoubleOffline(SaveData save, IdleCollectionResult result, out string message)
         {
             if (result == null || !result.HasAnyOutput) { message = "Nothing to double."; return false; }
-            ApplyCollectionResult(save, result);
-            message = "Offline earnings doubled!";
+            long counted = ApplyCollectionResult(save, result);
+            message = "Offline earnings doubled!" + TaskSuffix(counted);
             return true;
         }
+
+        /// <summary>" (+40 task items)" when a reward counted toward the world tasks, else empty.</summary>
+        internal static string TaskSuffix(long counted) => counted > 0 ? $" (+{counted:N0} task items)" : "";
 
         // ── ECS write-through helpers (mirror PremiumShopService) ──────────────
 
@@ -396,19 +404,17 @@ namespace MobileIdleBuilder
             bridge.AddEntropy(amount);
         }
 
-        void ApplyCollectionResult(SaveData save, IdleCollectionResult result)
+        /// <summary>Applies an idle-style result and returns how many items counted toward the world tasks.</summary>
+        long ApplyCollectionResult(SaveData save, IdleCollectionResult result)
         {
             var bridge = ECSLoadBridge.Instance;
             if (bridge != null && bridge.IsLoaded)
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
-                OfflineCollectionService.CreditDemonDeliveries(save, result);
+                return OfflineCollectionService.CreditDemonDeliveries(save, result);
             }
-            else
-            {
-                OfflineCollectionService.ApplyResultToSave(save, result);
-            }
+            return OfflineCollectionService.ApplyResultToSave(save, result);
         }
 
         // ── Internals ─────────────────────────────────────────────────────────

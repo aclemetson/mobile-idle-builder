@@ -26,7 +26,6 @@ namespace MobileIdleBuilder.Editor
         public List<ManagerJson>         managers        = new();
         public List<DialogueJson>        dialogues       = new();
         public List<DailyRewardJson>     daily_rewards   = new();
-        public List<DailyChallengeJson>  daily_challenges= new();
         public List<TutorialStepJson>    tutorial_steps  = new();
         public MegastructureJson         megastructure   = new();
         public WorldTasksJson            world_tasks     = new();
@@ -46,7 +45,6 @@ namespace MobileIdleBuilder.Editor
             managers        ??= new List<ManagerJson>();
             dialogues       ??= new List<DialogueJson>();
             daily_rewards   ??= new List<DailyRewardJson>();
-            daily_challenges??= new List<DailyChallengeJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
             megastructure   ??= new MegastructureJson();
             megastructure.Initialize();
@@ -453,16 +451,6 @@ namespace MobileIdleBuilder.Editor
         public int  crystals          = 0;
         public long entropy           = 0;
         public int  prestige_currency = 0;
-    }
-
-    [Serializable]
-    internal class DailyChallengeJson
-    {
-        public string id          = "";
-        public string description = "";
-        public string trigger     = "";
-        public int    target      = 1;
-        public int    crystals    = 0;
     }
 
     // ── Megastructure JSON models ─────────────────────────────────────────────

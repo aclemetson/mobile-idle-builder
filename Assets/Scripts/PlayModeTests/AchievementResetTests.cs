@@ -91,33 +91,32 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         // ── Pre-first-prestige gating ─────────────────────────────────────────
+        // 2026-11-20: Daily achievements (which replaced the Daily tab's challenges) count from the start;
+        // Weekly, Monthly and Progression stay dormant until the first prestige.
 
         [Test]
-        public void PreFirstPrestige_NotifyCraft_AccruesNothing()
+        public void PreFirstPrestige_DailyCounts_ProgressionDoesNot()
         {
             SpawnServices(hasCompletedFirstRun: false);
 
             AchievementService.Instance.NotifyCraft("any", 5);
 
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_craft_2"),
+                "Daily achievements count before the first prestige");
+            Assert.IsTrue(AchievementService.Instance.IsClaimable("daily_craft_2"));
             Assert.IsFalse(AchievementService.Instance.IsCompleted("prog_first_craft"),
-                "No achievement may complete before the first prestige");
-            Assert.IsFalse(AchievementService.Instance.IsClaimable("daily_craft_2"),
-                "Nothing may become claimable before the first prestige");
-            Assert.AreEqual(0, AchievementService.Instance.ClaimableCount,
-                "A tutorial craft must not queue an unlock toast");
+                "Progression waits for the first prestige");
         }
 
         [Test]
-        public void PreFirstPrestige_NotifyCraft_WritesNoProgressToSave()
+        public void PreFirstPrestige_OnlyDailyProgressReachesTheSave()
         {
             SpawnServices(hasCompletedFirstRun: false);
 
             AchievementService.Instance.NotifyCraft("any", 5);
 
-            Assert.IsEmpty(SaveManager.Instance.Current.achievements,
-                "Pre-prestige activity must not persist completed achievements");
-            Assert.IsEmpty(SaveManager.Instance.Current.achievementProgress,
-                "Pre-prestige activity must not persist achievement progress");
+            CollectionAssert.DoesNotContain(SaveManager.Instance.Current.achievements, "prog_first_craft");
+            CollectionAssert.Contains(SaveManager.Instance.Current.achievements, "daily_craft_2");
         }
 
         [Test]
@@ -125,8 +124,9 @@ namespace MobileIdleBuilder.PlayModeTests
         {
             SpawnServices(hasCompletedFirstRun: false);
 
-            // Tutorial activity while dormant — discarded.
+            // Pre-prestige crafts don't count toward Progression.
             AchievementService.Instance.NotifyCraft("any", 5);
+            Assert.IsFalse(AchievementService.Instance.IsCompleted("prog_first_craft"));
 
             // First prestige lands mid-session: HUDController flips the flag then initializes.
             SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = true;
@@ -136,8 +136,6 @@ namespace MobileIdleBuilder.PlayModeTests
 
             Assert.IsTrue(AchievementService.Instance.IsCompleted("prog_first_craft"),
                 "Crafting after the unlock must complete a quantity-1 achievement");
-            Assert.IsFalse(AchievementService.Instance.IsCompleted("daily_craft_2"),
-                "Pre-prestige crafts must not carry over as progress toward quantity-2");
         }
 
         // ── Claim flow ────────────────────────────────────────────────────────
@@ -352,7 +350,7 @@ namespace MobileIdleBuilder.PlayModeTests
             _saveManagerGO = new GameObject("SaveManager");
             var sm = _saveManagerGO.AddComponent<SaveManager>();
             RunAwake(sm);
-            // Achievements are dormant until first prestige; most tests want the unlocked state.
+            // Non-daily achievements wait for the first prestige; most tests want the unlocked state.
             SaveManager.Instance.Current.tutorial.hasCompletedFirstRun = hasCompletedFirstRun;
 
             _achievementGO = new GameObject("AchievementService");

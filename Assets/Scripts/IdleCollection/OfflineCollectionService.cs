@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MobileIdleBuilder
@@ -169,9 +170,9 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of offline
-        /// production at the current collection rate would yield, from the latest captured
-        /// snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
+        /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of FULL production
+        /// would yield (no idle collection-rate cut and no idle boost: a warp banks real production,
+        /// 2026-11-20), from the latest captured snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
         /// caller applies the returned result (e.g. to the live ECS world). Returns null when
         /// there is no production to bank.
         /// </summary>
@@ -187,8 +188,7 @@ namespace MobileIdleBuilder
                 ? save.siteSnapshots
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
-            float rate   = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
-            var   result = ComputePayout(snapshots, seconds, rate);
+            var   result = ComputePayout(snapshots, seconds, 1f);
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;
             return result.HasAnyOutput ? result : null;
@@ -215,8 +215,11 @@ namespace MobileIdleBuilder
                     if (chain.endsAtEntropySink)
                     {
                         result.EntropyEarned += (long)(wholeItems * chain.baseSellValue);
-                        result.DemonDelivered.TryGetValue(chain.itemId, out long delivered);
-                        result.DemonDelivered[chain.itemId] = delivered + wholeItems;
+                        if (!chain.notDelivered) // byproduct entropy and surplus sales pay but deliver nothing
+                        {
+                            result.DemonDelivered.TryGetValue(chain.itemId, out long delivered);
+                            result.DemonDelivered[chain.itemId] = delivered + wholeItems;
+                        }
                     }
                     else
                     {
@@ -228,26 +231,60 @@ namespace MobileIdleBuilder
             return result;
         }
 
-        /// <summary>Applies a computed payout to SaveData.currentRun (entropy + inventory merge).</summary>
-        public static void ApplyResultToSave(SaveData save, IdleCollectionResult result)
+        /// <summary>
+        /// Applies a computed payout to SaveData.currentRun (entropy + inventory merge) and the world tasks.
+        /// Returns how many items counted toward the tasks.
+        /// </summary>
+        public static long ApplyResultToSave(SaveData save, IdleCollectionResult result)
         {
-            if (save?.currentRun == null || result == null) return;
+            if (save?.currentRun == null || result == null) return 0;
             save.currentRun.baseCurrency += result.EntropyEarned;
-            CreditDemonDeliveries(save, result);
+            long counted = CreditDemonDeliveries(save, result);
             foreach (var kvp in result.ItemsEarned)
                 MergeInventory(save.currentRun, kvp.Key, kvp.Value);
+            return counted;
         }
 
         /// <summary>
         /// Credits what the Demon consumed while away to the world delivery tasks (Chemistry gate), at the same
-        /// idle rate as the entropy. Every path that applies an idle result calls this exactly once.
+        /// idle rate as the entropy. Every path that applies an idle result calls this exactly once. Returns how
+        /// many items counted.
         /// </summary>
-        public static void CreditDemonDeliveries(SaveData save, IdleCollectionResult result)
+        public static long CreditDemonDeliveries(SaveData save, IdleCollectionResult result)
+            => CreditDemonDeliveries(save, result?.DemonDelivered, "idle");
+
+        /// <summary>
+        /// Credits Demon deliveries from any bonus (offline return, Time Warp, Double Offline, Entropy Surge) to
+        /// the world delivery tasks. Stages it finishes are queued for <see cref="WorldTaskService"/> to announce,
+        /// as live deliveries are. Returns how many items counted toward the tasks.
+        /// </summary>
+        public static long CreditDemonDeliveries(SaveData save, IDictionary<int, long> deliveries, string source)
         {
-            if (save == null || result?.DemonDelivered == null || result.DemonDelivered.Count == 0) return;
-            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, result.DemonDelivered);
+            if (save == null || deliveries == null || deliveries.Count == 0) return 0;
+            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, deliveries, out long counted);
+            GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks.");
             foreach (var stage in finished)
-                GameLogger.Info($"[Idle] World task stage '{stage.id}' completed while away.");
+                GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");
+            return counted;
+        }
+
+        /// <summary>
+        /// What the Demon receives in <paramref name="seconds"/> of live production at full rate (no idle-rate
+        /// cut), from the latest snapshots. Entropy Surge pays N minutes of live automation income, so the items
+        /// behind that income count toward the tasks too.
+        /// </summary>
+        public static Dictionary<int, long> LiveDemonDeliveries(SaveData save, float seconds)
+        {
+            var result = ComputePayout(Snapshots(save), seconds, 1f);
+            return result.DemonDelivered;
+        }
+
+        static List<IdleCollectionSnapshot> Snapshots(SaveData save)
+        {
+            if (save == null) return new List<IdleCollectionSnapshot>();
+            return (save.siteSnapshots != null && save.siteSnapshots.Count > 0)
+                ? save.siteSnapshots
+                : new List<IdleCollectionSnapshot> { save.idleSnapshot };
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
