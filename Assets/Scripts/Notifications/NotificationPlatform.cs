@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
         NotificationPermission Permission { get; }
         /// <summary>Coroutine: shows the OS prompt if needed, then reports whether notifications are allowed.</summary>
         IEnumerator RequestPermission(Action<bool> done);
+        /// <summary>Schedules <paramref name="n"/> at its FireUtc; delivery must not be later than its MaxLateness allows.</summary>
         void Schedule(PlannedNotification n);
         /// <summary>Removes every scheduled and delivered notification and clears the app badge.</summary>
         void CancelAll();
@@ -71,7 +72,8 @@ namespace MobileIdleBuilder
         }
 
         public void Schedule(PlannedNotification n) =>
-            GameLogger.Info($"[Notifications] (editor) would schedule {n} (local {n.FireUtc.ToLocalTime():ddd HH:mm})");
+            GameLogger.Info($"[Notifications] (editor) would schedule {n} (local {n.FireUtc.ToLocalTime():ddd HH:mm}, " +
+                            $"within {n.MaxLateness.TotalMinutes:0} min)");
 
         public void CancelAll() => GameLogger.Debug("[Notifications] (editor) cancel all");
         public void OpenSettings() => GameLogger.Info("[Notifications] (editor) would open OS notification settings");
@@ -131,6 +133,26 @@ namespace MobileIdleBuilder
             notification.SmallIcon = NotificationService.AndroidSmallIcon;
             AndroidNotificationCenter.SendNotificationWithExplicitID(notification,
                 NotificationPlatform.ChannelId(n.Channel), n.Id);
+            NarrowWindow(n);
+        }
+
+        // The package schedules an inexact alarm (up to an hour late); NotificationAlarmWindow.java swaps it for
+        // one with an n.MaxLateness window. Best effort: on failure the package's alarm still fires.
+        static void NarrowWindow(PlannedNotification n)
+        {
+            try
+            {
+                long fireMs   = new DateTimeOffset(DateTime.SpecifyKind(n.FireUtc, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
+                long windowMs = (long)n.MaxLateness.TotalMilliseconds;
+                using var player   = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                using var activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+                using var helper   = new AndroidJavaClass("com.clemtek.notifications.NotificationAlarmWindow");
+                helper.CallStatic("apply", activity, n.Id, fireMs, windowMs);
+            }
+            catch (Exception e)
+            {
+                GameLogger.Warning($"[Notifications] Could not narrow the delivery window of {n.Kind}: {e.Message}");
+            }
         }
 
         public void CancelAll() => AndroidNotificationCenter.CancelAllNotifications();
@@ -173,6 +195,7 @@ namespace MobileIdleBuilder
             done?.Invoke(request.Granted);
         }
 
+        // Time-interval triggers fire on time, so n.MaxLateness needs nothing extra here.
         public void Schedule(PlannedNotification n)
         {
             var interval = n.FireUtc - DateTime.UtcNow;

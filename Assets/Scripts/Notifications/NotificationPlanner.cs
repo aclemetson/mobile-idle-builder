@@ -46,6 +46,12 @@ namespace MobileIdleBuilder
         /// <summary>Stable numeric id (Android notification id / iOS identifier suffix).</summary>
         public int Id => 1000 + (int)Kind;
 
+        /// <summary>
+        /// How late the OS may deliver it (see <see cref="NotificationPlanner.MaxLatenessFor"/>). Every platform
+        /// honours it: Android narrows its inexact alarm window to this, iOS triggers already fire on time.
+        /// </summary>
+        public TimeSpan MaxLateness => NotificationPlanner.MaxLatenessFor(Kind);
+
         public override string ToString() => $"{Kind} @ {FireUtc:yyyy-MM-dd HH:mm:ss}Z \"{Title}\"";
     }
 
@@ -181,6 +187,19 @@ namespace MobileIdleBuilder
         public static readonly TimeSpan UnclaimedDailyDelay = TimeSpan.FromHours(4);
         public static readonly TimeSpan Comeback1           = TimeSpan.FromHours(24);
         public static readonly TimeSpan Comeback2           = TimeSpan.FromHours(72);
+
+        /// <summary>Delivery tolerance for anything tied to a game event. 10 min is the tightest Android 12+ allows without an exact-alarm permission.</summary>
+        public static readonly TimeSpan PreciseWindow       = TimeSpan.FromMinutes(10);
+        /// <summary>Delivery tolerance for reminders nobody waits on: the OS may batch them to save battery.</summary>
+        public static readonly TimeSpan RelaxedWindow       = TimeSpan.FromHours(1);
+
+        /// <summary>How late a notification of this kind may arrive. One rule for every platform.</summary>
+        public static TimeSpan MaxLatenessFor(NotificationKind kind) => kind switch
+        {
+            NotificationKind.Comeback24h => RelaxedWindow,
+            NotificationKind.Comeback72h => RelaxedWindow,
+            _                            => PreciseWindow,
+        };
 
         public static List<PlannedNotification> Plan(NotificationInputs inputs)
         {
