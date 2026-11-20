@@ -23,6 +23,29 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void IdleBoost_ComesIn2hAnd4h_TwoADayEach()
+        {
+            var shortDef = AdRewardCalculator.Def(AdPlacement.IdleRateBoostShort);
+            var longDef  = AdRewardCalculator.Def(AdPlacement.IdleRateBoost);
+            Assert.AreEqual(AdRewardKind.IdleRateBoost, shortDef.Kind);
+            Assert.AreEqual(AdRewardKind.IdleRateBoost, longDef.Kind);
+            Assert.AreEqual(2f, shortDef.DurationHours);
+            Assert.AreEqual(4f, longDef.DurationHours);
+            Assert.AreEqual(2, shortDef.DailyCap);
+            Assert.AreEqual(2, longDef.DailyCap);
+        }
+
+        [Test]
+        public void IdleBoosts_CountTheirWatchesSeparately()
+        {
+            var save = NewSave();
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.IdleRateBoostShort);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.IdleRateBoostShort);
+            Assert.IsTrue(AdRewardCalculator.IsAtCap(save, AdPlacement.IdleRateBoostShort));
+            Assert.IsFalse(AdRewardCalculator.IsAtCap(save, AdPlacement.IdleRateBoost), "the 4h boost keeps its own 2");
+        }
+
+        [Test]
         public void EntropyBoost_IsCappedAtFivePerDay()
         {
             Assert.AreEqual(5, AdRewardCalculator.DailyCap(AdPlacement.EntropyBoost));

@@ -8,11 +8,12 @@ namespace MobileIdleBuilder
     {
         EntropyBoost,   // grant a % of net worth in entropy (the core regular-currency placement)
         DoubleOffline,  // re-grant the just-collected offline earnings (offered on the idle-return modal)
-        IdleRateBoost,  // +50% offline collection RATE for a few hours
+        IdleRateBoost,  // +50% offline collection RATE for 4 hours (name kept: it is the save counter id)
         SpeedBoost,     // 2x production for a short window (reuses the speed-boost expiry)
         TimeWarp,       // instantly bank ~1h of offline production
         Crystals,       // small premium-currency drop
         EntropySurge,   // N minutes of current automation income, on a short cooldown (post-prestige lull)
+        IdleRateBoostShort, // +50% offline collection RATE for 2 hours (2026-11-20: pick 2 h or 4 h by time away)
     }
 
     /// <summary>How a placement's reward is delivered. Drives AdService.GrantReward's switch.</summary>
@@ -72,10 +73,16 @@ namespace MobileIdleBuilder
                 Name = "Double Offline", Description = "Watch an ad to double your offline earnings.",
                 DailyCap = 3, CooldownMinutes = StandardCooldownMinutes,
             },
+            // Two lengths so the player picks by how long they'll be away (2026-11-20); each 2 a day.
+            new AdPlacementDef {
+                Placement = AdPlacement.IdleRateBoostShort, Kind = AdRewardKind.IdleRateBoost,
+                Name = "+50% Idle (2h)", Description = "+50% offline collection rate for 2 hours.",
+                DailyCap = 2, DurationHours = 2f, CooldownMinutes = StandardCooldownMinutes,
+            },
             new AdPlacementDef {
                 Placement = AdPlacement.IdleRateBoost, Kind = AdRewardKind.IdleRateBoost,
-                Name = "+50% Idle", Description = "+50% offline collection rate for 4 hours.",
-                DailyCap = 3, DurationHours = 4f, CooldownMinutes = StandardCooldownMinutes,
+                Name = "+50% Idle (4h)", Description = "+50% offline collection rate for 4 hours.",
+                DailyCap = 2, DurationHours = 4f, CooldownMinutes = StandardCooldownMinutes,
             },
             new AdPlacementDef {
                 Placement = AdPlacement.SpeedBoost, Kind = AdRewardKind.SpeedBoost,
