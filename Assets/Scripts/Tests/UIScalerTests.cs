@@ -18,5 +18,12 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ComputeScale_HonorsCustomDesignWidthAndFactor()
             => Assert.AreEqual(1f, UIScaler.ComputeScale(720, 1440f, 2f), 1e-5f);
+
+        [Test]
+        public void ScaleForScreen_UsesTheShortSide_InEitherOrientation()
+        {
+            Assert.AreEqual(2f, UIScaler.ScaleForScreen(1080, 2340), 1e-5f);
+            Assert.AreEqual(2f, UIScaler.ScaleForScreen(2340, 1080), 1e-5f);
+        }
     }
 }

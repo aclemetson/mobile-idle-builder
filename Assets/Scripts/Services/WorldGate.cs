@@ -38,6 +38,28 @@ namespace MobileIdleBuilder
             return building.world == (string.IsNullOrEmpty(activeWorldId) ? Physics : activeWorldId);
         }
 
+        /// <summary>
+        /// True if a recipe made in <paramref name="craftedIn"/> (building ids; the inventory menu is ignored) can
+        /// be made while <paramref name="activeWorldId"/> is active: it lists no building, or at least one of them
+        /// is shared or belongs to that world. Recipe knowledge survives prestige, so without this a save that
+        /// learned Water before molecules moved to Chemistry still listed it in the Physics Recipes panel.
+        /// Unknown building ids count as shared.
+        /// </summary>
+        public static bool RecipeInWorld(IReadOnlyList<string> craftedIn, System.Func<string, BuildingSO> buildingById,
+                                         string activeWorldId)
+        {
+            if (craftedIn == null) return true;
+            bool anyBuilding = false;
+            foreach (var id in craftedIn)
+            {
+                if (string.IsNullOrEmpty(id) || id == RecipeDatabase.InventoryMenuSource) continue;
+                anyBuilding = true;
+                var b = buildingById?.Invoke(id);
+                if (b == null || BuildingInWorld(b, activeWorldId)) return true;
+            }
+            return !anyBuilding;
+        }
+
         /// <summary>Player-facing name of a world id for "Opens with …" labels, e.g. world_chemistry → Chemistry.</summary>
         public static string DisplayName(string worldId)
         {

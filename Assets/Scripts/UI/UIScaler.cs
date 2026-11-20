@@ -29,19 +29,42 @@ namespace MobileIdleBuilder
                                          float scaleFactor = DefaultScaleFactor)
             => (screenWidth / designWidth) * scaleFactor;
 
+        /// <summary>
+        /// Panel scale for the current screen, taken from its SHORT side so the HUD is the same size in
+        /// either orientation. Scaling by Screen.width made a landscape launch (2340 px wide) render a
+        /// 540x250 HUD, with the slide panels squeezed into a strip.
+        /// </summary>
+        public static float ScaleForScreen(int screenWidth, int screenHeight,
+                                           float designWidth = DefaultDesignWidth,
+                                           float scaleFactor = DefaultScaleFactor)
+            => ComputeScale(Mathf.Min(screenWidth, screenHeight), designWidth, scaleFactor);
+
+        private UIDocument _doc;
+        private int _lastW, _lastH;
+
         private void Awake()
         {
-            var doc = GetComponent<UIDocument>();
-            if (doc?.panelSettings == null)
+            _doc = GetComponent<UIDocument>();
+            if (_doc?.panelSettings == null)
             {
                 GameLogger.Warning("[UIScaler] No UIDocument or PanelSettings found.");
                 return;
             }
+            Apply();
+            GameLogger.Info($"[UIScaler] {gameObject.name}: Screen={Screen.width}x{Screen.height} dpi={Screen.dpi:F0} designWidth={designWidth} scaleFactor={scaleFactor} → scale={_doc.panelSettings.scale:F3}");
+        }
 
-            float scale = ComputeScale(Screen.width, designWidth, scaleFactor);
-            doc.panelSettings.scale = scale;
+        // Re-applies after a rotation or window resize so the scale always follows the short side.
+        private void Update()
+        {
+            if (Screen.width != _lastW || Screen.height != _lastH) Apply();
+        }
 
-            GameLogger.Info($"[UIScaler] {gameObject.name}: Screen={Screen.width}x{Screen.height} dpi={Screen.dpi:F0} designWidth={designWidth} scaleFactor={scaleFactor} → scale={scale:F3}");
+        private void Apply()
+        {
+            if (_doc?.panelSettings == null) return;
+            _lastW = Screen.width; _lastH = Screen.height;
+            _doc.panelSettings.scale = ScaleForScreen(_lastW, _lastH, designWidth, scaleFactor);
         }
     }
 }
