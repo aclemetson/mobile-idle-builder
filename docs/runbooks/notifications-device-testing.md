@@ -11,7 +11,30 @@ The Editor only logs the plan (`[Notifications] (editor) would schedule ...`), s
    It runs even while the Settings toggle or permission is off.
 3. The console lists the planned notifications with UTC and local times. Check that the quiet-hours shift and the merging look right.
 
-## Android (internal track build)
+## Dev console shortcuts (Editor and dev builds)
+
+Real timers and quiet hours make testing slow; these skip them. Open the console by shaking the phone (three quick shakes) on device, or with the backquote key in the Editor.
+
+| Command | Does |
+|---|---|
+| `notif status` | flag / Settings toggle / OS permission / active state / platform class |
+| `notif plan` | what backgrounding right now would schedule, with local fire times |
+| `notif test <seconds>` | one test notification N seconds from now, no quiet hours or cap. **Background the app before it fires**: coming back cancels everything pending. |
+| `notif permission` | shows the OS permission prompt (if the OS still allows asking) |
+| `notif prompt` | resets "already asked" and shows the opt-in card now |
+
+## Getting a build on an Android phone
+
+Pick one:
+
+- **Play internal track (recommended for real-world checks):** upload a `BuildAndroidDevelopment` AAB the usual way. It updates over the installed copy and is signed like production.
+- **Sideload a dev APK (fastest loop):**
+  1. Close the Unity Editor (batch builds collide with an open Editor, and `BuildScript` exits Unity).
+  2. Run `MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopmentApk` through `scripts/build-android.ps1 -ExecuteMethod MobileIdleBuilder.Editor.BuildScript.BuildAndroidDevelopmentApk`. This needs `secrets/user.keystore` and the `ANDROID_KEYSTORE_PASS` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASS` variables.
+  3. Uninstall the Play copy first (`adb uninstall com.clemtek.mobileidlebuilder`): Play re-signs apps, so a locally signed APK cannot update it. Cloud save restores progress after sign-in.
+  4. `adb install -r build/Android/<name>.apk`.
+
+## Android checks
 
 1. Fresh install on Android 13 or newer. Play through the tutorial. About 20 s after it ends, the "Stay in the
    loop?" card appears. Tap **Notify me**, and the OS permission dialog appears. Allow it.

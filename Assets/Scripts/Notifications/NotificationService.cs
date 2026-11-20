@@ -208,6 +208,57 @@ namespace MobileIdleBuilder
             done?.Invoke(granted);
         }
 
+        // ── Dev console (testing on device) ─────────────────────────────────
+
+        /// <summary>One-line state dump for the dev console.</summary>
+        public string DevStatus()
+        {
+            var s = SettingsService.Instance?.Current;
+            return $"flag={FeatureFlags.NotificationsEnabled} toggle={s?.notificationsEnabled} " +
+                   $"permission={Permission} active={IsActive} promptShown={s?.notificationPromptShown} " +
+                   $"platform={_platform?.GetType().Name}";
+        }
+
+        /// <summary>The plan the next background would schedule, without scheduling it.</summary>
+        public string DevPreviewPlan()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return "No save loaded.";
+            var plan = NotificationPlanner.Plan(BuildInputs(save));
+            if (plan.Count == 0) return "Nothing to schedule right now.";
+            var sb = new System.Text.StringBuilder();
+            foreach (var n in plan)
+                sb.AppendLine($"  {n.Kind,-18} in {FormatIn(n.FireUtc - DateTime.UtcNow)} (local {n.FireUtc.ToLocalTime():ddd HH:mm})");
+            return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Schedules one test notification <paramref name="seconds"/> from now, bypassing the planner (no quiet
+        /// hours, no cap). Background the app before it fires: coming back cancels everything pending.
+        /// </summary>
+        public string DevScheduleTest(int seconds)
+        {
+            if (_platform == null) return "No platform.";
+            if (Permission != NotificationPermission.Granted)
+                return $"Permission is {Permission}. Run 'notif permission' first.";
+            var (title, body) = NotificationTexts.For(NotificationKind.DevTest);
+            _platform.Schedule(new PlannedNotification(NotificationKind.DevTest, NotificationChannel.Production,
+                title, body, DateTime.UtcNow.AddSeconds(seconds)));
+            return $"Test notification in {seconds}s. Background the app now (returning cancels it).";
+        }
+
+        /// <summary>Clears the "already asked" mark and shows the opt-in card right away.</summary>
+        public string DevShowPrompt()
+        {
+            if (!ConfirmPrompt.IsReady) return "HUD not ready.";
+            SettingsService.Instance?.SetNotificationPromptShown(false);
+            ShowPrompt();
+            return "Opt-in card shown.";
+        }
+
+        static string FormatIn(TimeSpan t) =>
+            t.TotalHours >= 1 ? $"{(int)t.TotalHours}h{t.Minutes:00}m" : $"{(int)Math.Max(0, t.TotalMinutes)}m{Math.Max(0, t.Seconds):00}s";
+
         // ── Post-tutorial opt-in card ───────────────────────────────────────
 
         void TickPrompt()

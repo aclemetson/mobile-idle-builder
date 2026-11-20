@@ -25,6 +25,7 @@ namespace MobileIdleBuilder
         Comeback24h,
         Comeback72h,
         ProductionCombined,   // several production alerts merged into one
+        DevTest,              // dev console "notif test": never planned, scheduled by hand
     }
 
     /// <summary>One notification ready to hand to the OS.</summary>

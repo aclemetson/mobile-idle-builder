@@ -377,6 +377,33 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("help", "List all commands",
                 _ => _registry.GetHelpText());
 
+            // ── local notifications (docs/runbooks/notifications-device-testing.md) ──
+            _registry.Register("notif status", "Notification flag / toggle / OS permission / active state",
+                _ => NotificationService.Instance?.DevStatus() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif plan", "Preview what backgrounding the app would schedule now",
+                _ => NotificationService.Instance?.DevPreviewPlan() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif test <seconds>", "Schedule a test notification in N seconds (then background the app)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int seconds) || seconds < 5)
+                        return "Error: <seconds> must be an integer >= 5.";
+                    return NotificationService.Instance?.DevScheduleTest(seconds) ?? "Error: NotificationService not running.";
+                });
+
+            _registry.Register("notif permission", "Show the OS notification permission prompt (if the OS still allows it)",
+                _ =>
+                {
+                    var svc = NotificationService.Instance;
+                    if (svc == null) return "Error: NotificationService not running.";
+                    svc.RequestPermission("dev_console", granted => GameLogger.Info($"[Notifications] dev permission -> {granted}"));
+                    return "Permission requested; run 'notif status' after answering.";
+                });
+
+            _registry.Register("notif prompt", "Show the post-tutorial opt-in card now",
+                _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
+
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
                 _ =>

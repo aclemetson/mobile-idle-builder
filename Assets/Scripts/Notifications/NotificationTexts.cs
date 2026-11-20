@@ -28,6 +28,8 @@ namespace MobileIdleBuilder
                                                     "There is new physics waiting. Jump back in and keep building."),
             NotificationKind.ProductionCombined => ("Your foundry needs you",
                                                     "Research, crafting or storage is finished. Come back to keep it running."),
+            NotificationKind.DevTest            => ("Test notification",
+                                                    "Local notifications are working on this device."),
             _                                   => ("Quantum Foundry", "Something is ready."),
         };
 
