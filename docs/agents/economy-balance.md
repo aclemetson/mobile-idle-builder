@@ -29,7 +29,7 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 |---|---|---|
 | Entropy Boost | 10% of live net worth (`ECSLoadBridge.LiveNetWorth`, floor 500e); the panel previews the amount (`AdService.PreviewEntropyReward`) | 5 |
 | Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
-| +50% Idle | offline collection rate ×1.5 for 4h (`adsIdleBoostExpiryUtc`; offline it counts only for the part of the absence it covered, `OfflineCollectionService.BoostWeightedSeconds`) | 3 |
+| +50% Idle (2h) / (4h) | offline collection rate ×1.5 for 2h or 4h, the player picks by time away (2026-11-20; `IdleRateBoostShort` / `IdleRateBoost`, both set `adsIdleBoostExpiryUtc`; offline it counts only for the part of the absence it covered, `OfflineCollectionService.BoostWeightedSeconds`) | 2 each |
 | Production Surge | 2× factory clock for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
