@@ -102,6 +102,9 @@ namespace MobileIdleBuilder
         public float itemsPerSecond;
         public bool  endsAtEntropySink;
         public float baseSellValue;
+        // Entropy-only entry: byproduct escape entropy or a surplus sale. It pays entropy but no item reaches
+        // the Demon, so it never counts toward world delivery tasks. Absent (false) in older saves.
+        public bool  notDelivered;
     }
 
     [Serializable]

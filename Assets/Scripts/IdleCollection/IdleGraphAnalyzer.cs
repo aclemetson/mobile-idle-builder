@@ -257,7 +257,8 @@ namespace MobileIdleBuilder
                                 itemId            = node.OutputItemId,
                                 itemsPerSecond    = excess,
                                 endsAtEntropySink = true,
-                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction
+                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction,
+                                notDelivered      = true   // sold at the full input, never reaches the Demon
                             });
                         continue;
                     }
@@ -269,7 +270,8 @@ namespace MobileIdleBuilder
                         itemId            = node.OutputItemId,
                         itemsPerSecond    = perEdge,
                         endsAtEntropySink = sink || stuck,
-                        baseSellValue     = stuck ? price * surplusSaleFraction : price
+                        baseSellValue     = stuck ? price * surplusSaleFraction : price,
+                        notDelivered      = stuck            // a surplus sale, not a Demon delivery
                     });
                 }
             }
@@ -288,7 +290,8 @@ namespace MobileIdleBuilder
                     itemId            = node.OutputItemId,
                     itemsPerSecond    = node.OutputRate / outQty,   // crafts per second
                     endsAtEntropySink = true,
-                    baseSellValue     = node.Recipe.ByproductEntropy
+                    baseSellValue     = node.Recipe.ByproductEntropy,
+                    notDelivered      = true   // escape entropy per craft; the item itself goes wherever its belt goes
                 });
             }
 

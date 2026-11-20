@@ -38,6 +38,7 @@ namespace MobileIdleBuilder
         bool _migrated;
         bool _dirty;
         float _notifyTimer;
+        int _seenRevision;
 
         public WorldTaskSO Data => WorldTasks.Data;
         public bool IsComplete => WorldTasks.IsComplete(SaveManager.Instance?.Current, Data);
@@ -57,6 +58,7 @@ namespace MobileIdleBuilder
             }
 
             DrainDeliveries(save);
+            AnnounceBonusCredits();
             UnlockWorldIfComplete(save);
 
             _notifyTimer -= Time.unscaledDeltaTime;
@@ -102,6 +104,19 @@ namespace MobileIdleBuilder
                 if (finished != null) StageFinished(finished);
             }
             buffer.Clear();
+        }
+
+        /// <summary>
+        /// Picks up credits made off the live path (offline return, Time Warp, Double Offline, Entropy Surge): marks
+        /// the UI dirty and announces each stage they finished, exactly as a live completion is announced.
+        /// </summary>
+        void AnnounceBonusCredits()
+        {
+            if (_seenRevision != WorldTasks.Revision) { _seenRevision = WorldTasks.Revision; _dirty = true; }
+            if (WorldTasks.PendingAnnouncements.Count == 0) return;
+            var stages = WorldTasks.PendingAnnouncements.ToArray();
+            WorldTasks.PendingAnnouncements.Clear();
+            foreach (var stage in stages) StageFinished(stage);
         }
 
         void StageFinished(WorldTaskStage stage)
