@@ -61,13 +61,22 @@ Ids are stable per kind (`1000 + kind`). Android sends with an explicit id, iOS 
 
 ## Permission and settings
 
-- **Opt-in card.** About 20 s after the tutorial ends (`SaveData.tutorial.isActive == false` and
-  `ECSLoadBridge.IsLoaded`), when no dialogue, `ConfirmPrompt` or save-conflict prompt is open, the HUD shows
-  `ConfirmPrompt` with the `NotificationTexts.Prompt*` copy and a neutral (`destructive: false`) button.
-  - "Notify me" shows the OS prompt.
+- **Opt-in card.** Checked once per launch by `NotificationService.TickPrompt`, with the rule in
+  `NotificationAskPolicy` (unit tested):
+  - Asks when never asked (`SettingsData.notificationPromptShown` false), or on the first startup after
+    `notificationNextAskUtc` (30 days after the last answer, either answer).
+  - Never asks once "Don't ask again" was ticked (`notificationNeverAsk`), or while notifications are already
+    on (OS permission granted and the Settings toggle on).
+  - Shows about 8 s after the game is playable (`SaveData.tutorial.isActive == false` and `ECSLoadBridge.IsLoaded`,
+    so a new player gets it right after the tutorial), when no dialogue, `ConfirmPrompt` or save-conflict prompt
+    is open. It uses `ConfirmPrompt` with the `NotificationTexts.Prompt*` copy, a neutral button and the
+    optional checkbox (`checkboxLabel`, read back from `ConfirmPrompt.CheckboxChecked`).
+  - "Notify me" turns the toggle on, then shows the OS prompt, or opens the OS notification settings if the
+    OS already denied it.
   - "Not now" shows no OS prompt, so the OS one-time ask is saved for later.
-  - Either answer sets `SettingsData.notificationPromptShown`, so the card is shown once.
-  - If the OS permission is already decided (Android 12 or lower is always granted), the card is skipped.
+  - `notif prompt` in the dev console resets all three fields and shows the card.
+- **`SettingsService`** self-bootstraps (`BeforeSceneLoad`); it is not placed in any scene. Until it did, it was
+  never created in builds, so every setting, the notification toggle included, read as missing.
 - **Settings toggle** `toggle-notifications` (`HUDSettingsSubController`) calls `NotificationService.SetEnabledFromSettings`:
   - Off: cancels everything.
   - On, never asked: shows the OS prompt.

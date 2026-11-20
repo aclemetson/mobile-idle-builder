@@ -1363,6 +1363,19 @@
     padding: 0 var(--spacing-md);
 }
 
+/* Optional checkbox under the message (e.g. "Don't ask again" on the notification opt-in). */
+.confirm-prompt__checkbox {
+    align-self: center;
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    min-height: 32px;
+}
+
+.confirm-prompt__checkbox .unity-toggle__text {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-sm);
+}
+
 .confirm-prompt__btn {
     flex-grow: 1;
     min-height: 44px;

@@ -57,5 +57,6 @@ namespace MobileIdleBuilder
             "No spam: at most a few a day, never at night.";
         public const string PromptConfirm = "Notify me";
         public const string PromptCancel  = "Not now";
+        public const string PromptNeverAsk = "Don't ask again";
     }
 }

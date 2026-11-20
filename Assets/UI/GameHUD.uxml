@@ -743,6 +743,7 @@
                     <ui:Label name="confirm-prompt__title" text="Remove?" class="panel-title" />
                 </ui:VisualElement>
                 <ui:Label name="confirm-prompt__message" text="" class="game-update-message" />
+                <ui:Toggle name="confirm-prompt__checkbox" text="" value="false" class="confirm-prompt__checkbox hidden" />
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
                     <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />
