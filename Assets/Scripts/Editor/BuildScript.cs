@@ -76,6 +76,9 @@ namespace MobileIdleBuilder.Editor
             else
             {
                 GameLogger.Info($"iOS Xcode project generated: {outputDir}");
+                // game-ci/unity-builder v6 (game-ci CLI) fails the job unless the log contains this exact text
+                // or its own "# Build results #" block, which a custom buildMethod never prints.
+                UnityEngine.Debug.Log("Build succeeded!");
                 EditorApplication.Exit(0);
             }
         }
