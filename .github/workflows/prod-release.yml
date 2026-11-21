@@ -3,11 +3,6 @@ name: Prod Release
 # Future production pipe (parked). Internal testing is fed by release-internal.yml.
 # This ships to the Google Play *production* track as a draft, and is manual-only
 # so nothing reaches production until we deliberately trigger it.
-# DISABLED (portfolio mode): nothing here runs automatically right now.
-# The original triggers are kept below, commented out; restore them to re-enable.
-# See docs/runbooks/ci-setup.md.
-# on:
-#   workflow_dispatch:
 on:
   workflow_dispatch:
 
