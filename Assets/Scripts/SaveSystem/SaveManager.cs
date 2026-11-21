@@ -358,7 +358,8 @@ namespace MobileIdleBuilder
             ulong localHash = LocalSaveService.ContentHash(_current);
             var action = SaveSync.Decide(_current, localHash, localIsNew, cloudSave, marker, playerId, accountSwitched);
             GameLogger.Info($"[SaveManager] Cloud sync: {action} (cloud {(cloudSave == null ? "none" : cloudSave.lastSaved)}, " +
-                            $"local {_current.lastSaved}, marker {(marker.IsSet ? marker.CloudStamp : "none")}, switched={accountSwitched})");
+                            $"local {_current.lastSaved}, marker {(marker.IsSet ? marker.CloudStamp : "none")}, switched={accountSwitched}; " +
+                            $"local grid {GridSummary(_current)}, cloud grid {GridSummary(cloudSave)})");
 
             bool asked = action == SaveSyncAction.AskPlayer;
             if (asked)
@@ -367,7 +368,9 @@ namespace MobileIdleBuilder
             switch (action)
             {
                 case SaveSyncAction.TakeCloud:
-                    if (asked) KeepCopy(_current, ReplacedLocalFile);
+                    // Keep this device's save even when the take is silent: it is the only way back if the
+                    // cloud copy turns out to be the wrong one. A fresh install has nothing worth keeping.
+                    if (asked || !localIsNew) KeepCopy(_current, ReplacedLocalFile);
                     TakeCloudSave(cloudSave, playerId);
                     break;
 
@@ -401,10 +404,15 @@ namespace MobileIdleBuilder
                 // player switched accounts from Settings). Swapping Current under it would be overwritten
                 // by the next flush, so reload the scene from the cloud save instead.
                 GameLogger.Info("[SaveManager] Cloud save chosen while the game is running — reloading the scene.");
+                // The default ECS world survives the reload. Without clearing it, this device's buildings
+                // and belts stayed live and the cloud grid loaded on top of them (mixed map), and the next
+                // flush wrote that mix back into the save and the cloud. Same clearing prestige does.
+                ClearLiveRunState();
                 _current  = cloudSave;
                 IsNewGame = false;
                 _local.SaveWithBackup(_current);
                 SaveSync.SaveMarker(playerId, cloudStamp, _local.LastWrittenContentHash);
+                RecipeKnowledgeService.Instance?.AdoptProfileKnowledge();
                 PrestigeRunReset.BeginReload();   // the same guarded reload prestige uses
                 return;
             }
@@ -417,7 +425,56 @@ namespace MobileIdleBuilder
             IsNewGame = false;
             _local.Save(_current);
             SaveSync.SaveMarker(playerId, cloudStamp, _local.LastWrittenContentHash);
+            RecipeKnowledgeService.Instance?.AdoptProfileKnowledge();
             GameLogger.Info("[SaveManager] Reconciled with cloud (took the cloud save).");
+        }
+
+        /// <summary>"sites 2, buildings 14, belts 37" for the active and all other sites of <paramref name="save"/>.</summary>
+        internal static string GridSummary(SaveData save)
+        {
+            if (save?.currentRun == null) return "none";
+            var grids = save.currentRun.grids;
+            int sites = 0, buildings = 0, belts = 0;
+            if (grids != null && grids.Count > 0)
+            {
+                foreach (var g in grids)
+                {
+                    if (g == null) continue;
+                    sites++;
+                    buildings += g.buildings?.Count ?? 0;
+                    belts     += g.conveyors?.Count ?? 0;
+                }
+            }
+            else if (save.currentRun.grid != null)   // legacy single grid
+            {
+                sites     = 1;
+                buildings = save.currentRun.grid.buildings?.Count ?? 0;
+                belts     = save.currentRun.grid.conveyors?.Count ?? 0;
+            }
+            return $"sites {sites}, buildings {buildings}, belts {belts}";
+        }
+
+        /// <summary>
+        /// Empties the running game before the scene is reloaded from another save: grid occupancy and
+        /// visuals (<see cref="GridSaveService.ClearGrid"/>), then the run entities in the default ECS world,
+        /// which the reload does not rebuild (<see cref="RunStateClearer"/>).
+        /// </summary>
+        internal static void ClearLiveRunState()
+        {
+            try
+            {
+                GridSaveService.Instance?.ClearGrid();
+                var world = Unity.Entities.World.DefaultGameObjectInjectionWorld;
+                if (world != null && world.IsCreated)
+                {
+                    int cleared = RunStateClearer.ClearLiveRunEntities(world.EntityManager);
+                    GameLogger.Info($"[SaveManager] Cleared the running game before the swap ({cleared} buildings left in ECS).");
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLogger.Error($"[SaveManager] Clearing the running game before the swap failed: {ex}");
+            }
         }
 
         IEnumerator AskWhichSave(SaveData cloudSave, Action<SaveSyncAction> answer)
