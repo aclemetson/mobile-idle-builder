@@ -139,15 +139,19 @@ namespace MobileIdleBuilder
             // and the next FlushToSave would write the stale ECS state back over the cloud data.
             // Bounded so a slow or offline network never blocks the load indefinitely.
             //
-            // Never waits on the "which save?" choice: that prompt lives on the HUD, which stays hidden
-            // until the loading screen finishes, and the prompt itself waits for the transition to end. Waiting
-            // here deadlocked both until the prompt's 30 s fallback, with the bar stuck at 99%. Instead this
-            // device's save loads now, the prompt opens over the running game, and choosing the cloud save
-            // reloads the scene from it (SaveManager.TakeCloudSave, live path).
+            // The "which save?" choice: when the loading screen can host the prompt, wait for the player's
+            // answer with no timeout, so the chosen save is the only one applied (taking the cloud save after
+            // a load needs a scene reload, and before 2026-11-21 that reload left this device's buildings in
+            // ECS under the cloud grid). Without the loading screen the prompt needs the HUD, which stays
+            // hidden until the load finishes: waiting then would deadlock (bar stuck at 99%), so this
+            // device's save loads, the prompt opens over the game, and the cloud save reloads the scene
+            // (SaveManager.TakeCloudSave, live path).
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            while (sm != null && !sm.CloudReconcileDone && !sm.AwaitingSaveChoice && cloudElapsed < kCloudTimeout)
+            while (sm != null && !sm.CloudReconcileDone && ShouldKeepWaitingForCloud(sm.AwaitingSaveChoice,
+                       SaveConflictPrompt.LoadingScreenReady || SaveConflictPrompt.IsShownOnLoadingScreen,
+                       cloudElapsed, kCloudTimeout))
             {
                 cloudElapsed += Time.unscaledDeltaTime;
                 yield return null;
@@ -189,6 +193,18 @@ namespace MobileIdleBuilder
             // Game-data update notice renders above the idle-return modal (z-index 101 > 100):
             // closing it reveals the welcome-back modal beneath. No-op unless a newer stamp is published.
             FindAnyObjectByType<HUDController>()?.MaybeShowGameUpdateNotice();
+        }
+
+        /// <summary>
+        /// Whether the load keeps waiting for the cloud reconcile. A pending "which save?" choice that the
+        /// loading screen can host is waited on with no timeout; one that needs the HUD is not waited on at
+        /// all (the HUD is hidden until the load ends); otherwise the wait is capped at <paramref name="timeout"/>.
+        /// </summary>
+        internal static bool ShouldKeepWaitingForCloud(bool awaitingChoice, bool loadingScreenHostsChoice,
+                                                       float elapsed, float timeout)
+        {
+            if (awaitingChoice) return loadingScreenHostsChoice;
+            return elapsed < timeout;
         }
 
         // ── Load path ─────────────────────────────────────────────────────

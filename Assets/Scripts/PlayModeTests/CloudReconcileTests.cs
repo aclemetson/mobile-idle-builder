@@ -239,6 +239,20 @@ namespace MobileIdleBuilder.PlayModeTests
 
             Assert.IsFalse(asked);
             Assert.AreEqual(3, sm.Current.prestigeCount);
+            Assert.IsTrue(File.Exists(Path.Combine(LocalSaveService.SaveDirectory, SaveManager.ReplacedLocalFile)),
+                "a silent take still keeps this device's save, the only way back if the cloud copy is wrong");
+        }
+
+        [Test]
+        public void FreshInstall_TakingTheCloudSave_KeepsNoReplacedCopy()
+        {
+            var sm = NewSaveManager();
+            sm.SetCloudServiceForTesting(new FakeCloud { ToReturn = Stamped(4, "2026-11-14T10:00:00.0000000Z") });
+
+            Pump(sm.InitialCloudReconcile());
+
+            Assert.IsFalse(File.Exists(Path.Combine(LocalSaveService.SaveDirectory, SaveManager.ReplacedLocalFile)),
+                "a blank new game is not worth keeping");
         }
 
         [Test]

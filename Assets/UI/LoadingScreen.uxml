@@ -8,4 +8,27 @@
             <ui:Label name="loading-version" text="" class="loading-version"/>
         </ui:VisualElement>
     </ui:VisualElement>
+
+    <!-- Save choice at startup (SaveConflictPrompt.cs, loading-screen host). Same element names as the HUD
+         copy in GameHUD.uxml; styled by LoadingScreen.uss. Answered before the save loads (ECSLoadBridge waits). -->
+    <ui:VisualElement name="save-choice-modal" class="ls-save-choice hidden">
+        <ui:VisualElement class="ls-save-choice__card">
+            <ui:Label text="Two saves found" class="ls-save-choice__title"/>
+            <ui:Label name="save-choice__message" text="" class="ls-save-choice__message"/>
+            <ui:VisualElement name="save-choice__options">
+                <ui:Button name="save-choice__local" text="" class="ls-save-choice__option">
+                    <ui:Label text="Keep this device's save" class="ls-save-choice__option-title" picking-mode="Ignore"/>
+                    <ui:Label name="save-choice__local-summary" text="" class="ls-save-choice__option-summary" picking-mode="Ignore"/>
+                </ui:Button>
+                <ui:Button name="save-choice__cloud" text="" class="ls-save-choice__option">
+                    <ui:Label text="Use the cloud save" class="ls-save-choice__option-title" picking-mode="Ignore"/>
+                    <ui:Label name="save-choice__cloud-summary" text="" class="ls-save-choice__option-summary" picking-mode="Ignore"/>
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="save-choice__confirm-row" class="ls-save-choice__buttons hidden">
+                <ui:Button name="save-choice__back" text="Back" class="ls-save-choice__btn ls-save-choice__btn--secondary"/>
+                <ui:Button name="save-choice__confirm" text="Confirm" class="ls-save-choice__btn"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
 </ui:UXML>
