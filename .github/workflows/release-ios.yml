@@ -16,14 +16,9 @@ name: Release iOS
 # Tests are NOT re-run: pr-tests.yml already gated the PRs into the release branch
 # and into develop. TestFlight rejecting a duplicate build number is the backstop,
 # mirroring the Google Play upload on the Android side.
-# DISABLED (portfolio mode): nothing here runs automatically right now.
-# The original triggers are kept below, commented out; restore them to re-enable.
-# See docs/runbooks/ci-setup.md.
-# on:
-#   push:
-#     branches: [develop]
-#   workflow_dispatch:
 on:
+  push:
+    branches: [develop]
   workflow_dispatch:
 
 concurrency:

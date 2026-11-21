@@ -7,18 +7,13 @@ name: Release Internal
 # required checks on the PR (pr-tests.yml) before the merge was allowed. This
 # workflow only builds and uploads. The Play upload itself is the final backstop
 # -- it rejects a duplicate version code at upload time.
-# DISABLED (portfolio mode): nothing here runs automatically right now.
-# The original triggers are kept below, commented out; restore them to re-enable.
-# See docs/runbooks/ci-setup.md.
-# on:
-#   pull_request:
-#     types: [closed]
-#     branches: ['release/**']
-#
 # A manual run (Actions > Release Internal > Run workflow, or
 # `gh workflow run "Release Internal" --ref release/<x.y>`) builds and uploads the chosen
 # release branch. Only users with write access can dispatch.
 on:
+  pull_request:
+    types: [closed]
+    branches: ['release/**']
   workflow_dispatch:
 
 # One internal build per release branch; a burst of merges collapses to the
