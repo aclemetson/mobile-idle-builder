@@ -121,6 +121,8 @@ Ids are stable per kind (`1000 + kind`). Android sends with an explicit id, iOS 
 
   TestFlight and App Store builds use production APNs, so the dashboard's Apple key must have Sandbox = false. Xcode debug installs will not receive campaigns.
 
+  **Required:** Project Settings > Mobile Notifications > iOS > "Enable Push Notifications" (`UnityAddRemoteNotificationCapability` in `ProjectSettings/NotificationsSettings.asset`) must be on, with "Use APS Release Environment" on. The native code skips `registerForRemoteNotifications` when that Info.plist key is false, so the push SDK gets an empty token, throws "Failed to register", and no `notificationServices` event is sent (found on 0.6.37). Keep the two "request authorization on app launch" options off: we ask after the tutorial.
+
   `IOSRichPushNotificationPostProcess` also adds a Notification Service Extension target, `notificationservice` (bundle id `<app id>.notificationservice`, for images in pushes). Cloud signing (`-allowProvisioningUpdates` with the Admin App Store Connect key) creates its App ID and profile. Package 4.0.2 writes that target's ARCHS without the closing parenthesis; `Assets/Scripts/Editor/IOSPushExtensionFix.cs` (order 2) repairs it. Re-check both after a push package update.
 - **Dev console:** `push status` shows whether the device is registered, why not if it isn't, and the device token (paste it into the dashboard's "Test on Device").
 - **Sending campaigns, and the key setup:** see `docs/runbooks/push-campaigns.md`.
