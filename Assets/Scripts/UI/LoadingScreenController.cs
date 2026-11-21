@@ -28,6 +28,10 @@ namespace MobileIdleBuilder
 
                 var versionLabel = root?.Q<Label>("loading-version");
                 if (versionLabel != null) versionLabel.text = VersionLabel.Format();
+
+                // "Two saves found" at startup is answered here, before the save is applied to ECS
+                // (ECSLoadBridge waits for it), so the chosen save is the only one ever loaded.
+                SaveConflictPrompt.InitLoadingScreen(root);
             }
 
             if (string.IsNullOrEmpty(SceneLoader.TargetScene))
@@ -127,6 +131,8 @@ namespace MobileIdleBuilder
             Destroy(gameObject);
             GameLogger.Info("[LoadingScreen] Overlay destroyed — transition complete");
         }
+
+        private void OnDestroy() => SaveConflictPrompt.ReleaseLoadingScreen();
 
         private void UpdateProgress(float pct)
         {

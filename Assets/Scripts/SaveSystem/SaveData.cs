@@ -28,7 +28,11 @@ namespace MobileIdleBuilder
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
+        // Recipe knowledge (recipes researched in any run), mirrored from recipe_knowledge.json so it roams
+        // with the cloud save. Survives prestige. recipeKnowledgeVersion 0 = never written (older save):
+        // RecipeKnowledgeService back-fills it from the device file; > 0 = authoritative for this profile.
         public List<string> unlockedRecipes   = new();
+        public int recipeKnowledgeVersion;
         public List<string> unlockedResearch  = new();
         public string activeResearchId;                     // id of the research currently in progress; null/empty = none (one at a time). Cleared on prestige.
         public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
