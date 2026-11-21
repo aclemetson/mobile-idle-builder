@@ -113,13 +113,29 @@ namespace MobileIdleBuilder.Dev
             foreach (var w in worlds?.allWorlds ?? System.Array.Empty<WorldSO>())
             {
                 if (w == null || w == worlds.allWorlds[0]) continue;               // world 0 (Physics) is implicit
-                if (w.prereqUnlockIds == null || w.prereqUnlockIds.Count == 0) continue;
-                if (!w.prereqUnlockIds.All(researched.Contains)) continue;
+                if (w.unlockByTasks)
+                {
+                    // Task-gated (Chemistry): open when research before this block already needed the world.
+                    if (!db.allResearch.Any(r => r != null && researched.Contains(r.id) && r.requiredWorld == w.id)) continue;
+                }
+                else
+                {
+                    if (w.prereqUnlockIds == null || w.prereqUnlockIds.Count == 0) continue;
+                    if (!w.prereqUnlockIds.All(researched.Contains)) continue;
+                }
                 opened.Add(w.id);
                 foreach (var s in w.siteIds ?? new List<string>()) sites.Add(s);
             }
             save.unlockedWorlds   = opened;
             save.unlockedSites    = sites.ToList();
+
+            // Delivery tasks: done if their world is open, else as far as this block's prestiges would have got.
+            var tasks = WorldTasks.Data;
+            save.worldTaskVersion = 0;
+            save.worldTaskStage   = 0;
+            save.worldTaskProgressKeys?.Clear();
+            save.worldTaskProgressValues?.Clear();
+            WorldTasks.Migrate(save, tasks, isNewGame: false);
             save.devConsoleUsed   = true;
             return save;
         }

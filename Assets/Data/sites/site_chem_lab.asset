@@ -20,9 +20,15 @@ MonoBehaviour:
     densityMultiplier: 0
   - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
     densityMultiplier: 0
-  - field: {fileID: 11400000, guid: 0754564f0994d104aafd9c4698316b73, type: 2}
+  - field: {fileID: 11400000, guid: 7e0b08b655619044192b19ef40a8b337, type: 2}
     densityMultiplier: 3
-  - field: {fileID: 11400000, guid: 7f21bc40551e3bc49b69d917d4e3afe3, type: 2}
+  - field: {fileID: 11400000, guid: 848eb5bbad724ff48826323585ee8c32, type: 2}
     densityMultiplier: 2
+  - field: {fileID: 11400000, guid: d1b94a8fc737c214593091d87a98cc22, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: fd1eb9035739ff7409597cadba1bf82e, type: 2}
+    densityMultiplier: 0
   - field: {fileID: 11400000, guid: 2410fc0ec4146e947a11b1a0c9048c89, type: 2}
-    densityMultiplier: 3
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 7f21bc40551e3bc49b69d917d4e3afe3, type: 2}
+    densityMultiplier: 0

@@ -72,6 +72,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_physics
   entropyCost: 2500
   baseMaxOutputItems: 30
   baseMaxInputItemsPerSlot: 30

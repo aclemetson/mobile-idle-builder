@@ -35,6 +35,8 @@ namespace MobileIdleBuilder.PlayModeTests
         [SetUp]
         public void SetUp()
         {
+            // Period resets need server time; tests use the (shiftable) game clock instead of the network.
+            ServerClock.TestNowOverride = () => GameClock.UtcNow;
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
@@ -76,6 +78,7 @@ namespace MobileIdleBuilder.PlayModeTests
         [TearDown]
         public void TearDown()
         {
+            ServerClock.TestNowOverride = null;
             if (_achievementGO != null) { Object.DestroyImmediate(_achievementGO); _achievementGO = null; }
             if (_saveManagerGO != null) { Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
 
@@ -146,20 +149,18 @@ namespace MobileIdleBuilder.PlayModeTests
                 "Only daily_login should have completed from a login alone");
         }
 
-        // ── Still respects the pre-prestige gate ──────────────────────────────
+        // ── Daily counts before the first prestige (2026-11-20) ───────────────
 
         [Test]
-        public void NotifyLogin_PreFirstPrestige_AccruesNothing()
+        public void NotifyLogin_PreFirstPrestige_CompletesTheDailyLogin()
         {
             SpawnServices(hasCompletedFirstRun: false);
 
             AchievementService.Instance.NotifyLogin();
 
-            Assert.IsFalse(AchievementService.Instance.IsCompleted("daily_login"),
-                "Achievements stay dormant until the first prestige");
-            Assert.AreEqual(0, AchievementService.Instance.CompletedCount);
-            Assert.IsEmpty(SaveManager.Instance.Current.achievements,
-                "A pre-prestige login must not persist anything");
+            Assert.IsTrue(AchievementService.Instance.IsCompleted("daily_login"),
+                "The Daily tab works from the start (it absorbed the old Daily panel's login challenge)");
+            CollectionAssert.Contains(SaveManager.Instance.Current.achievements, "daily_login");
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

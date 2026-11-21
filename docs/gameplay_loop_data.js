@@ -125,12 +125,12 @@ recipes: [
   { id:'uranium_235',              label:'Uranium-235',              building:'Manipulator',  inputs:'U − 3n → +α',           time:24,   powerEV:24,       sellId:'uranium_235' },
   // Tier 3 — Molecules (Mol. Synth.)
   { id:'liquid_hydrogen',          label:'Liquid Hydrogen',          building:'Mol. Synth.',  inputs:'10× H',                 time:20,   powerEV:50,       sellId:'liquid_hydrogen' },
-  { id:'water',                    label:'Water',                    building:'Mol. Synth.',  inputs:'4× H + 8× O',           time:60,   powerEV:200,      sellId:'water' },
-  { id:'methane',                  label:'Methane',                  building:'Mol. Synth.',  inputs:'4× H + 6× C',           time:80,   powerEV:350,      sellId:'methane' },
-  { id:'ammonia',                  label:'Ammonia',                  building:'Mol. Synth.',  inputs:'3× H + 7× N',           time:90,   powerEV:450,      sellId:'ammonia' },
-  { id:'silica',                   label:'Silica',                   building:'Mol. Synth.',  inputs:'5× Si + 10× O',         time:150,  powerEV:800,      sellId:'silica' },
-  { id:'iron_oxide',               label:'Iron Oxide',               building:'Mol. Synth.',  inputs:'4× Fe + 6× O',          time:200,  powerEV:1500,     sellId:'iron_oxide' },
-  { id:'uranium_hexafluoride',     label:'UF₆',                     building:'Mol. Synth.',  inputs:'2× U + 8× Si',          time:400,  powerEV:5000,     sellId:'uranium_hexafluoride' },
+  { id:'water',                    label:'Water',                    building:'Mol. Synth.',  inputs:'2× H + 1× O',           time:15,   powerEV:200,      sellId:'water' },
+  { id:'methane',                  label:'Methane',                  building:'Mol. Synth.',  inputs:'4× H + 1× C',           time:40,   powerEV:350,      sellId:'methane' },
+  { id:'ammonia',                  label:'Ammonia',                  building:'Mol. Synth.',  inputs:'3× H + 1× N',           time:36,   powerEV:450,      sellId:'ammonia' },
+  { id:'silica',                   label:'Silica',                   building:'Mol. Synth.',  inputs:'1× Si + 2× O',          time:30,   powerEV:800,      sellId:'silica' },
+  { id:'iron_oxide',               label:'Iron Oxide',               building:'Mol. Synth.',  inputs:'2× Fe + 3× O',          time:100,  powerEV:1500,     sellId:'iron_oxide' },
+  { id:'uranium_hexafluoride',     label:'UF₆',                     building:'Mol. Synth.',  inputs:'1× U + 6× F',           time:280,  powerEV:5000,     sellId:'uranium_hexafluoride' },
   // Tier 4 — Materials (Mat. Forge)
   { id:'steel',                    label:'Steel',                    building:'Mat. Forge',   inputs:'5× Fe₂O₃ + 2× CH₄',    time:300,  powerEV:8000,     sellId:'steel' },
   { id:'carbon_fiber',             label:'Carbon Fiber',             building:'Mat. Forge',   inputs:'4× CH₄ + 3× SiO₂',     time:400,  powerEV:15000,    sellId:'carbon_fiber' },

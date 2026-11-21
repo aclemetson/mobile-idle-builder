@@ -80,9 +80,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Water_CraftTime_Is60s()
+        public void Water_CraftTime_Is15s()
         {
-            Assert.AreEqual(60f, RequireRecipe("water").base_craft_time, 0.001f);
+            // H2O: 3 atoms. Was 4 H + 8 O at 60 s; time scaled with the atom count (2026-11-18).
+            Assert.AreEqual(15f, RequireRecipe("water").base_craft_time, 0.001f);
         }
 
         // ── Tier 4 — Materials craft times ───────────────────────────────────
@@ -121,6 +122,36 @@ namespace MobileIdleBuilder.Tests
                 "Hydrogen should have exactly 2 inputs with quantity > 0 (proton, electron)");
             RequireInput(r, "proton",   quantity: 1);
             RequireInput(r, "electron", quantity: 1);
+        }
+
+        [Test]
+        public void Methane_IsCH4_4Hydrogen_1Carbon_40s()
+        {
+            // CH4: one carbon. It once took 6, starving Methane lines of Carbon (fixed 2026-11-18,
+            // craft time halved with the atom count: 10 atoms / 80 s -> 5 atoms / 40 s).
+            // 2026-11-19 natural feedstock: C + 2 H2 -> CH4, from graphite and hydrogen gas.
+            var r = RequireRecipe("methane");
+            RequireInput(r, "hydrogen_gas", quantity: 2);
+            RequireInput(r, "graphite",     quantity: 1);
+            Assert.AreEqual(40f, r.base_craft_time, 0.001f);
+        }
+
+        // Molecules use their real formula. Several were multiples or plain wrong (water 4 H + 8 O, ammonia 7 N,
+        // UF6 from silicon); fixed 2026-11-18, craft time scaled with the atom count. Since 2026-11-19 Chemistry
+        // reacts the gases as found (H2, O2, N2), so some reactions make two molecules
+        // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
+        [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
+        [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
+        [TestCase("silica",               "silicon",      1, "oxygen_gas",   1, 30f)]
+        [TestCase("iron_oxide",           "iron",         4, "oxygen_gas",   3, 100f)]
+        [TestCase("uranium_hexafluoride", "uranium",  1, "fluorine", 6, 280f)]
+        public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
+        {
+            var r = RequireRecipe(id);
+            Assert.AreEqual(2, r.inputs.Count(i => i.quantity > 0), $"{id}: exactly two elements");
+            RequireInput(r, a, quantity: qa);
+            RequireInput(r, b, quantity: qb);
+            Assert.AreEqual(seconds, r.base_craft_time, 0.001f);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

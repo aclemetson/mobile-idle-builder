@@ -52,6 +52,7 @@ MonoBehaviour:
   compatibleAdjacentCategories: 
   compatibleFields:
   - Organic
+  world: world_biology
   entropyCost: 500000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0

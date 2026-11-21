@@ -44,7 +44,9 @@ namespace MobileIdleBuilder
 
         protected override void OnUpdate()
         {
-            float dt = SystemAPI.Time.DeltaTime;
+            // Speed burst: the whole factory runs on a faster clock (FactoryClock, 1 when absent).
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
+            float dt = SystemAPI.Time.DeltaTime * clockRate;
             // Research effects (Transportation I etc.): belts move faster by this factor. 1 = no bonus.
             float speedMult = SystemAPI.TryGetSingleton<ResearchEffects>(out var fx) ? fx.ConveyorSpeedMult : 1f;
             if (speedMult <= 0f) speedMult = 1f;
@@ -212,7 +214,7 @@ namespace MobileIdleBuilder
                     {
                         var income = EntityManager.GetComponentData<AutomationIncome>(incomeEnt);
                         income.Total     += earned;
-                        income.Unboosted += earned / boost;
+                        income.Unboosted += earned / (boost * clockRate);
                         EntityManager.SetComponentData(incomeEnt, income);
                     }
                 }

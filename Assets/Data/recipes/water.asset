@@ -19,15 +19,15 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
-    quantity: 4
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
-    quantity: 8
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
-  outputQuantity: 1
+  outputQuantity: 2
   byproducts: []
-  baseCraftTime: 60
+  baseCraftTime: 15
   manualCraftTime: 0
   powerCostIsDynamic: 0
   fixedPowerCostEV: 200
@@ -35,7 +35,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

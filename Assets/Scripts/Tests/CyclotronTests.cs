@@ -125,6 +125,25 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void Intro_PlaysOnce_WhenUnlocked_AndNothingElseIsTalking()
+        {
+            Assert.IsFalse(CyclotronController.ShouldPlayIntro(new SaveData { prestigeCount = 1 }, false), "still locked");
+            Assert.IsTrue(CyclotronController.ShouldPlayIntro(new SaveData { prestigeCount = 2 }, false));
+            Assert.IsFalse(CyclotronController.ShouldPlayIntro(new SaveData { prestigeCount = 2 }, true), "waits for the open dialogue");
+            Assert.IsFalse(CyclotronController.ShouldPlayIntro(new SaveData { prestigeCount = 2, cyclotronIntroSeen = true }, false), "once");
+            Assert.IsFalse(CyclotronController.ShouldPlayIntro(
+                new SaveData { prestigeCount = 3, cyclotronLastRunUtc = "2026-11-19T12:00:00.0000000Z" }, false),
+                "a player who already ran it needs no intro");
+        }
+
+        [Test]
+        public void IntroDialogue_Exists()
+        {
+            var db = UnityEngine.Resources.Load<DialogueDatabaseSO>("DialogueDatabase");
+            Assert.IsNotNull(db?.Get(CyclotronController.IntroDialogueId), "run Import Game Data");
+        }
+
+        [Test]
         public void NeverPlayed_IsReady()
         {
             var save = new SaveData();

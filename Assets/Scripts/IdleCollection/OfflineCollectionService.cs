@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MobileIdleBuilder
@@ -88,9 +89,18 @@ namespace MobileIdleBuilder
 
             float effectiveCap  = GetEffectiveIdleCap(config, upgrades);
             float cappedSeconds = Math.Min(elapsedSeconds, effectiveCap);
-            float rate          = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
+            float rate          = GetEffectiveCollectionRate(config, upgrades);
 
-            var result = ComputePayout(snapshots, cappedSeconds, rate);
+            // Timed boosts count only for the part of the time away they actually covered: a 30 min speed
+            // burst pays 2x for 30 min of an 8 h absence, not all 8 h. The snapshot itself is unboosted.
+            var departed = saveTime.ToUniversalTime();
+            double weighted = BoostWeightedSeconds(
+                cappedSeconds,
+                SecondsLeftAt(save.speedBoostExpiryUtc, departed),   PremiumShopCalculator.SpeedBoostMultiplier,
+                SecondsLeftAt(save.adsIdleBoostExpiryUtc, departed), AdRewardCalculator.IdleRateBoostMultiplier);
+            GameLogger.Debug($"[Idle] Boost-weighted seconds={weighted:F0} of capped={cappedSeconds:F0}");
+
+            var result = ComputePayout(snapshots, (float)weighted, rate);
             result.ElapsedSeconds = elapsedSeconds;
             result.CappedSeconds  = cappedSeconds;
             result.MaxSeconds     = effectiveCap;
@@ -133,10 +143,36 @@ namespace MobileIdleBuilder
             => PremiumShopCalculator.IsBoostActive(save?.adsIdleBoostExpiryUtc)
                 ? AdRewardCalculator.IdleRateBoostMultiplier : 1f;
 
+        /// <summary>Seconds a boost expiring at <paramref name="expiryIso"/> still had at <paramref name="at"/>; 0 if none.</summary>
+        internal static double SecondsLeftAt(string expiryIso, DateTime at)
+        {
+            if (!BoostLock.TryParseUtc(expiryIso, out var end)) return 0d;
+            return Math.Max(0d, (end - at).TotalSeconds);
+        }
+
         /// <summary>
-        /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of offline
-        /// production at the current collection rate would yield, from the latest captured
-        /// snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
+        /// Production-weighted length of the first <paramref name="cappedSeconds"/> after departure: each
+        /// second counts <paramref name="speedMult"/> while the speed burst still ran (its first
+        /// <paramref name="speedLeft"/> seconds) and <paramref name="idleMult"/> while the idle-rate ad
+        /// boost ran (<paramref name="idleLeft"/>), multiplied where both overlap. With no boosts it equals
+        /// <paramref name="cappedSeconds"/>.
+        /// </summary>
+        internal static double BoostWeightedSeconds(double cappedSeconds, double speedLeft, float speedMult,
+                                                    double idleLeft, float idleMult)
+        {
+            if (cappedSeconds <= 0d) return 0d;
+            double s = Math.Clamp(speedLeft, 0d, cappedSeconds);
+            double i = Math.Clamp(idleLeft,  0d, cappedSeconds);
+            double both = Math.Min(s, i);
+            double speedOnly = s - both, idleOnly = i - both;
+            double none = cappedSeconds - Math.Max(s, i);
+            return both * speedMult * idleMult + speedOnly * speedMult + idleOnly * idleMult + none;
+        }
+
+        /// <summary>
+        /// Computes an instant "Time Warp" payout: what <paramref name="seconds"/> of FULL production
+        /// would yield (no idle collection-rate cut and no idle boost: a warp banks real production,
+        /// 2026-11-20), from the latest captured snapshots. Does NOT mutate save and applies no elapsed/cap/idempotency guard — the
         /// caller applies the returned result (e.g. to the live ECS world). Returns null when
         /// there is no production to bank.
         /// </summary>
@@ -152,8 +188,7 @@ namespace MobileIdleBuilder
                 ? save.siteSnapshots
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
-            float rate   = GetEffectiveCollectionRate(config, upgrades) * GetAdIdleMultiplier(save);
-            var   result = ComputePayout(snapshots, seconds, rate);
+            var   result = ComputePayout(snapshots, seconds, 1f);
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;
             return result.HasAnyOutput ? result : null;
@@ -180,6 +215,11 @@ namespace MobileIdleBuilder
                     if (chain.endsAtEntropySink)
                     {
                         result.EntropyEarned += (long)(wholeItems * chain.baseSellValue);
+                        if (!chain.notDelivered) // byproduct entropy and surplus sales pay but deliver nothing
+                        {
+                            result.DemonDelivered.TryGetValue(chain.itemId, out long delivered);
+                            result.DemonDelivered[chain.itemId] = delivered + wholeItems;
+                        }
                     }
                     else
                     {
@@ -191,13 +231,60 @@ namespace MobileIdleBuilder
             return result;
         }
 
-        /// <summary>Applies a computed payout to SaveData.currentRun (entropy + inventory merge).</summary>
-        public static void ApplyResultToSave(SaveData save, IdleCollectionResult result)
+        /// <summary>
+        /// Applies a computed payout to SaveData.currentRun (entropy + inventory merge) and the world tasks.
+        /// Returns how many items counted toward the tasks.
+        /// </summary>
+        public static long ApplyResultToSave(SaveData save, IdleCollectionResult result)
         {
-            if (save?.currentRun == null || result == null) return;
+            if (save?.currentRun == null || result == null) return 0;
             save.currentRun.baseCurrency += result.EntropyEarned;
+            long counted = CreditDemonDeliveries(save, result);
             foreach (var kvp in result.ItemsEarned)
                 MergeInventory(save.currentRun, kvp.Key, kvp.Value);
+            return counted;
+        }
+
+        /// <summary>
+        /// Credits what the Demon consumed while away to the world delivery tasks (Chemistry gate), at the same
+        /// idle rate as the entropy. Every path that applies an idle result calls this exactly once. Returns how
+        /// many items counted.
+        /// </summary>
+        public static long CreditDemonDeliveries(SaveData save, IdleCollectionResult result)
+            => CreditDemonDeliveries(save, result?.DemonDelivered, "idle");
+
+        /// <summary>
+        /// Credits Demon deliveries from any bonus (offline return, Time Warp, Double Offline, Entropy Surge) to
+        /// the world delivery tasks. Stages it finishes are queued for <see cref="WorldTaskService"/> to announce,
+        /// as live deliveries are. Returns how many items counted toward the tasks.
+        /// </summary>
+        public static long CreditDemonDeliveries(SaveData save, IDictionary<int, long> deliveries, string source)
+        {
+            if (save == null || deliveries == null || deliveries.Count == 0) return 0;
+            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, deliveries, out long counted);
+            GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks.");
+            foreach (var stage in finished)
+                GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");
+            return counted;
+        }
+
+        /// <summary>
+        /// What the Demon receives in <paramref name="seconds"/> of live production at full rate (no idle-rate
+        /// cut), from the latest snapshots. Entropy Surge pays N minutes of live automation income, so the items
+        /// behind that income count toward the tasks too.
+        /// </summary>
+        public static Dictionary<int, long> LiveDemonDeliveries(SaveData save, float seconds)
+        {
+            var result = ComputePayout(Snapshots(save), seconds, 1f);
+            return result.DemonDelivered;
+        }
+
+        static List<IdleCollectionSnapshot> Snapshots(SaveData save)
+        {
+            if (save == null) return new List<IdleCollectionSnapshot>();
+            return (save.siteSnapshots != null && save.siteSnapshots.Count > 0)
+                ? save.siteSnapshots
+                : new List<IdleCollectionSnapshot> { save.idleSnapshot };
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

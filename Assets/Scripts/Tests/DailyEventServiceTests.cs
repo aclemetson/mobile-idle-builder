@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -8,8 +7,9 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// EditMode tests for DailyEventService. Core logic takes an injected <c>now</c> so reset,
-    /// streak, and deterministic-pick behavior can be driven without the real wall clock.
+    /// EditMode tests for DailyEventService (the 28-day login calendar). Core logic takes an injected
+    /// <c>now</c> so the streak can be driven without the real wall clock. The rotating challenges it used to
+    /// hold became Daily achievements on 2026-11-20 (see DailyMergeTests).
     /// Backs up / restores the developer's save file like the other save-touching test fixtures.
     /// </summary>
     public class DailyEventServiceTests
@@ -26,6 +26,8 @@ namespace MobileIdleBuilder.Tests
         [SetUp]
         public void SetUp()
         {
+            // EnsureToday / the no-arg claim API use server time; tests use the game clock instead of the network.
+            ServerClock.TestNowOverride = () => GameClock.UtcNow;
             _savePath   = Path.Combine(LocalSaveService.SaveDirectory, "save.json");
             _saveBackup = File.Exists(_savePath) ? File.ReadAllText(_savePath) : null;
             new LocalSaveService().Delete(); // save.json + .bak + .tmp: Load() falls back to the others (#280)
@@ -34,6 +36,7 @@ namespace MobileIdleBuilder.Tests
         [TearDown]
         public void TearDown()
         {
+            ServerClock.TestNowOverride = null;
             if (_serviceGO    != null) { UnityEngine.Object.DestroyImmediate(_serviceGO);    _serviceGO    = null; }
             if (_saveManagerGO != null) { UnityEngine.Object.DestroyImmediate(_saveManagerGO); _saveManagerGO = null; }
             if (_content      != null) { UnityEngine.Object.DestroyImmediate(_content);      _content      = null; }
@@ -44,22 +47,13 @@ namespace MobileIdleBuilder.Tests
 
         // ── Test content builders ─────────────────────────────────────────────
 
-        static DailyChallengeEntry Ch(string id, string trigger, int target, int crystals = 15) =>
-            new() { id = id, description = id, trigger = trigger, target = target, crystals = crystals };
-
         static DailyRewardEntry Rw(int day, int crystals, long entropy = 0, int pc = 0) =>
             new() { day = day, crystals = crystals, entropy = entropy, prestigeCurrency = pc };
 
-        /// <summary>3-entry pool — all three are always drawn regardless of the day offset.</summary>
-        DailyContentSO ThreeChallengePool()
+        /// <summary>A 3-day login calendar.</summary>
+        DailyContentSO Calendar()
         {
             _content = ScriptableObject.CreateInstance<DailyContentSO>();
-            _content.challengePool = new[]
-            {
-                Ch("craft5", "CraftItem",     5),
-                Ch("place2", "PlaceBuilding", 2),
-                Ch("login1", "Login",         1),
-            };
             _content.loginRewards = new[] { Rw(1, 10), Rw(2, 20), Rw(3, 150, 0, 1) };
             return _content;
         }
@@ -73,175 +67,7 @@ namespace MobileIdleBuilder.Tests
             var svc = _serviceGO.AddComponent<DailyEventService>();
             RunAwake(svc);
             s_contentField.SetValue(svc, content);
-            svc.ReloadFromSave();
             return svc;
-        }
-
-        // ── Challenge reset / deterministic pick ──────────────────────────────
-
-        [Test]
-        public void CheckDailyReset_FirstInit_RollsThreeChallenges()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            svc.CheckDailyReset(new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc));
-
-            Assert.AreEqual(3, svc.TodaysChallengeIds.Count);
-            CollectionAssert.AreEquivalent(
-                new[] { "craft5", "place2", "login1" }, svc.TodaysChallengeIds);
-        }
-
-        [Test]
-        public void CheckDailyReset_DeterministicPick_SameDaySameIds()
-        {
-            // 6-entry pool so the offset actually selects a subset.
-            _content = ScriptableObject.CreateInstance<DailyContentSO>();
-            _content.challengePool = new[]
-            {
-                Ch("c0", "CraftItem", 1), Ch("c1", "CraftItem", 1), Ch("c2", "CraftItem", 1),
-                Ch("c3", "CraftItem", 1), Ch("c4", "CraftItem", 1), Ch("c5", "CraftItem", 1),
-            };
-            var svc = SpawnService(_content);
-
-            var day = new DateTime(2026, 1, 3, 0, 0, 0, DateTimeKind.Utc); // DayOfYear = 3, offset 3%6 = 3
-            svc.CheckDailyReset(day);
-            var first = svc.TodaysChallengeIds.ToArray();
-
-            CollectionAssert.AreEqual(new[] { "c3", "c4", "c5" }, first);
-
-            // Re-rolling for the same UTC day yields the same set.
-            SaveManager.Instance.Current.dailyChallengeResetUtc =
-                day.AddHours(-1).ToString("o"); // force a re-roll trigger
-            svc.CheckDailyReset(day);
-            CollectionAssert.AreEqual(first, svc.TodaysChallengeIds.ToArray());
-        }
-
-        [Test]
-        public void CheckDailyReset_Rollover_ClearsProgressAndClaimed()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            var today = new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc);
-            svc.CheckDailyReset(today);
-
-            svc.NotifyCraft("any", 5);                    // complete craft5
-            Assert.IsTrue(svc.IsChallengeComplete("craft5"));
-            Assert.IsTrue(svc.ClaimChallenge("craft5"));
-            Assert.IsTrue(svc.IsChallengeClaimed("craft5"));
-
-            // Next UTC day → reset must wipe progress + claimed and draw a fresh set.
-            var tomorrow = today.AddDays(1);
-            svc.CheckDailyReset(tomorrow);
-
-            Assert.AreEqual(0, svc.GetChallengeProgress("craft5"), "progress cleared on rollover");
-            Assert.IsFalse(svc.IsChallengeClaimed("craft5"),       "claimed cleared on rollover");
-        }
-
-        [Test]
-        public void EnsureToday_PopulatesChallenges_WhenNoneRolled()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            // Deliberately do NOT call CheckDailyReset (simulates Start() running before SaveManager
-            // was ready). EnsureToday must still populate the set when the panel opens.
-            Assert.AreEqual(0, svc.TodaysChallengeIds.Count);
-
-            svc.EnsureToday();
-
-            Assert.AreEqual(3, svc.TodaysChallengeIds.Count, "EnsureToday must roll a set when none exists");
-        }
-
-        [Test]
-        public void EnsureToday_ReRolls_WhenStoredIdsNotInPool()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            // Simulate a save written by an older content version: a future reset (so time alone would
-            // NOT trigger a roll) plus an id that no longer exists in the pool.
-            var save = SaveManager.Instance.Current;
-            save.dailyChallengeResetUtc = DateTime.UtcNow.AddDays(5).ToString("o");
-            save.dailyChallengeIds = new System.Collections.Generic.List<string> { "stale_obsolete_id" };
-            svc.ReloadFromSave();
-
-            svc.EnsureToday();
-
-            CollectionAssert.DoesNotContain(svc.TodaysChallengeIds, "stale_obsolete_id",
-                "stale ids absent from the current pool must trigger a re-roll");
-            Assert.AreEqual(3, svc.TodaysChallengeIds.Count);
-        }
-
-        [Test]
-        public void EnsureToday_RollsIntoMemory_WhenNoSaveAvailable()
-        {
-            // Spawn the service WITHOUT a SaveManager (simulates entering GameScene directly,
-            // bypassing the Splash bootstrap that creates SaveManager). Challenges must still
-            // populate so the panel displays them, even though they cannot be persisted.
-            _content = ThreeChallengePool();
-            _serviceGO = new GameObject("DailyEventService");
-            var svc = _serviceGO.AddComponent<DailyEventService>();
-            RunAwake(svc);
-            s_contentField.SetValue(svc, _content);
-
-            Assume.That(SaveManager.Instance == null || SaveManager.Instance.Current == null,
-                "test precondition: no live save");
-
-            svc.EnsureToday();
-
-            Assert.AreEqual(3, svc.TodaysChallengeIds.Count,
-                "challenges must roll into memory even when no save is present");
-        }
-
-        // ── Challenge progress + claim ────────────────────────────────────────
-
-        [Test]
-        public void Challenge_AccumulatesAndCapsAtTarget()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            svc.CheckDailyReset(new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc));
-
-            svc.NotifyCraft("any", 3);
-            Assert.AreEqual(3, svc.GetChallengeProgress("craft5"));
-            Assert.IsFalse(svc.IsChallengeComplete("craft5"));
-
-            svc.NotifyCraft("any", 10);                   // overshoot
-            Assert.AreEqual(5, svc.GetChallengeProgress("craft5"), "progress caps at target");
-            Assert.IsTrue(svc.IsChallengeComplete("craft5"));
-        }
-
-        [Test]
-        public void Challenge_EntropySpent_AccumulatesAmountNotCallCount()
-        {
-            _content = ScriptableObject.CreateInstance<DailyContentSO>();
-            _content.challengePool = new[] { Ch("spend100", "SpendEntropy", 100) };
-            _content.loginRewards  = new[] { Rw(1, 10) };
-            var svc = SpawnService(_content);
-            svc.CheckDailyReset(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-
-            svc.NotifyEntropySpent(40);
-            svc.NotifyEntropySpent(40);
-            Assert.AreEqual(80, svc.GetChallengeProgress("spend100"),
-                "entropy challenge accumulates spent amount, not number of calls");
-        }
-
-        [Test]
-        public void ClaimChallenge_GrantsCrystals_AndRejectsSecondClaim()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            svc.CheckDailyReset(new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc));
-
-            svc.NotifyCraft("any", 5);
-            Assert.IsTrue(svc.ClaimChallenge("craft5"));
-            Assert.AreEqual(15, SaveManager.Instance.Current.paidCurrency);
-
-            Assert.IsFalse(svc.ClaimChallenge("craft5"), "second claim rejected");
-            Assert.AreEqual(15, SaveManager.Instance.Current.paidCurrency, "no double grant");
-        }
-
-        [Test]
-        public void ClaimChallenge_IncompleteRejected()
-        {
-            var svc = SpawnService(ThreeChallengePool());
-            svc.CheckDailyReset(new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc));
-
-            svc.NotifyCraft("any", 2); // below target of 5
-            Assert.IsFalse(svc.ClaimChallenge("craft5"));
-            Assert.AreEqual(0, SaveManager.Instance.Current.paidCurrency);
         }
 
         // ── Login streak ──────────────────────────────────────────────────────
@@ -249,7 +75,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ClaimLoginReward_AdvancesStreakAndGrantsCrystals()
         {
-            var svc = SpawnService(ThreeChallengePool());
+            var svc = SpawnService(Calendar());
             var day1 = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc);
 
             Assert.IsTrue(svc.CanClaimLoginReward(day1));
@@ -262,7 +88,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ClaimLoginReward_SameDaySecondClaimRejected()
         {
-            var svc = SpawnService(ThreeChallengePool());
+            var svc = SpawnService(Calendar());
             var day1 = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc);
 
             Assert.IsTrue(svc.ClaimLoginReward(day1));
@@ -275,7 +101,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ClaimLoginReward_MissedDay_StreakDoesNotReset()
         {
-            var svc = SpawnService(ThreeChallengePool());
+            var svc = SpawnService(Calendar());
             Assert.IsTrue(svc.ClaimLoginReward(new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc)));
             Assert.AreEqual(1, SaveManager.Instance.Current.loginStreakIndex);
 
@@ -289,12 +115,36 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ClaimLoginReward_LoopsAfterLastCalendarDay()
         {
-            var svc = SpawnService(ThreeChallengePool()); // 3-day calendar
+            var svc = SpawnService(Calendar()); // 3-day calendar
             SaveManager.Instance.Current.loginStreakIndex = 2; // last day
 
             Assert.IsTrue(svc.ClaimLoginReward(new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc)));
             Assert.AreEqual(0, SaveManager.Instance.Current.loginStreakIndex,
                 "calendar loops back to day 1 after the final day");
+        }
+
+        // ── Server time ───────────────────────────────────────────────────────
+
+        [Test]
+        public void NoServerTime_LoginRewardCannotBeClaimed()
+        {
+            var svc = SpawnService(Calendar());
+            ServerClock.TestNowOverride = () => null;   // offline
+
+            Assert.IsTrue(svc.WaitingForServerTime);
+            Assert.IsFalse(svc.CanClaimLoginReward(), "the device clock is not trusted for the login reward");
+            Assert.IsFalse(svc.ClaimLoginReward());
+            Assert.AreEqual(0, SaveManager.Instance.Current.paidCurrency);
+        }
+
+        [Test]
+        public void WithServerTime_LoginRewardClaimsOncePerDay()
+        {
+            var svc = SpawnService(Calendar());
+
+            Assert.IsTrue(svc.ClaimLoginReward());
+            Assert.IsFalse(svc.ClaimLoginReward(), "second claim on the same server day is refused");
+            Assert.AreEqual(10, SaveManager.Instance.Current.paidCurrency);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

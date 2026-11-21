@@ -13,8 +13,12 @@ namespace MobileIdleBuilder
     {
         public const string BadStartMessage     = "Start on a free tile or a building output";
         public const string BadEndMessage       = "Can't end there";
-        public const string RetapStartMessage   = "Tap another tile to set the end";
-        public const string ContinuingMessage   = "Continuing from the last belt. Tap New to start elsewhere.";
+        public const string RetapStartMessage   = "Tap the next tile for the belt";
+
+        // Tracing (ConveyorTrace). The banner does not wrap, and Android's font has no ✓, so no glyphs.
+        public const string CrossesItselfMessage = "A belt can't cross itself";
+        public const string NoRouteMessage       = "No way through to there";
+        public const string TraceEndedMessage    = "This belt joins another. Confirm to place.";
 
         /// <summary>A route longer than this multiple of the Manhattan distance is a detour.</summary>
         public const int DetourFactor = 2;

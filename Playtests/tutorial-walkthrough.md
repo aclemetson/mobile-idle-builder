@@ -653,4 +653,6 @@ tutorial says, what advances the step, what it blocks, and how to get the items 
 - **Advances when:** UI event `dialogue_complete`
 - **Dialogue** (`tutorial_complete_context.asset`):
   - The Architect: Carbon. The backbone of every living thing, and you forged it from quarks. Your factory now earns several times what hydrogen ever did.
-  - The Architect: From here the Foundry is yours. The Research panel holds the next frontiers: heavy elements, isotopes, and fission, which splits heavy atoms back down toward iron. Build, balance, and bank the entropy.
+  - The Architect: From here the Foundry is yours. The Research panel climbs on through the light elements to Silicon. Past that, the heavier elements and every molecule wait for Chemistry.
+  - The Architect: To open Chemistry, work through the task list that appears at the top of the screen. Each stage asks for elements: send them to Maxwell's Demon and they count toward it while still paying entropy. Progress carries over when you prestige, so it takes a few runs. Tap the list to see what the current stage needs.
+  - The Architect: One more tool is coming. After your second prestige the Cyclotron opens in the menu: kick a particle around its ring for 30 seconds and everything your factory earns is multiplied, up to three times, for a few minutes. It recharges, so come back to it. Build, balance, and bank the entropy.

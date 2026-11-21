@@ -267,6 +267,34 @@ namespace MobileIdleBuilder
             Emit("game_update_notice", p);
         }
 
+        /// <summary>The player opened the game by tapping a local notification of this kind (NotificationKind name).</summary>
+        public void RecordNotificationOpened(string kind)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["notification_kind"] = kind ?? "";
+            Emit("notification_opened_local", p);
+        }
+
+        /// <summary>The Settings notification toggle changed. Campaign audiences exclude players whose latest value is false.</summary>
+        public void RecordNotificationPreference(bool enabled)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["enabled"] = enabled;
+            Emit("notification_preference", p);
+        }
+
+        /// <summary>The answer to the notification permission ask: where it was asked from and whether it was granted.</summary>
+        public void RecordNotificationPermission(string source, bool granted)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["source"]  = source ?? "";
+            p["granted"] = granted;
+            Emit("notification_permission", p);
+        }
+
         /// <summary>
         /// A dev-console command ran. Alpha builds ship the console (DEVELOPMENT_BUILD), so this marks the
         /// player's data as possibly cheated: the event fires once per session, and the sticky
@@ -379,6 +407,12 @@ namespace MobileIdleBuilder
         /// is disabled, which is the only state where a tap is genuinely a no-op.
         /// </summary>
         bool ShouldRecord => _collecting || !_startDecided;
+
+        /// <summary>
+        /// True once UGS Analytics data collection started this session (analytics.enabled on). Read by
+        /// RemotePushService, so it must exist in player builds, not only under UNITY_EDITOR.
+        /// </summary>
+        internal bool IsCollecting => _collecting;
 
         // Single funnel for every event: send, buffer, or drop — and count what actually reached the
         // backend so a broken pipeline is visible ('analytics status') instead of silently looking like
@@ -676,8 +710,6 @@ namespace MobileIdleBuilder
             _runStartTime     = _sessionStartTime;
             DrainPreStart();
         }
-
-        internal bool IsCollecting => _collecting;
 
         /// <summary>Events recorded before the analytics.enabled decision landed, still held in memory.</summary>
         internal int PreStartCount => _preStart.Count;

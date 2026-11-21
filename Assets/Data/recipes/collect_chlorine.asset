@@ -23,15 +23,15 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 45
-  manualCraftTime: 45
+  baseCraftTime: 85
+  manualCraftTime: 85
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 94368559b4c1c924fb6cc70797b1772b, type: 2}
   canCraftManually: 1
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

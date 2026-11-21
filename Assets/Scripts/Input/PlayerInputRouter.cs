@@ -1,3 +1,4 @@
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,12 +8,16 @@ namespace MobileIdleBuilder
     /// Routes confirmed tap input to building selection, field collection, and
     /// ARCH's presence anchor. Swipe-to-pan is handled entirely by CameraController.
     ///
-    /// Tap vs. swipe discrimination:
-    ///   - On pointer DOWN  : record start position.
-    ///   - While held       : accumulate drag distance.
-    ///   - On pointer UP    : if drag distance &lt; CameraController.TapThreshold → treat as tap.
+    /// Tap vs. swipe discrimination is <see cref="TapGesture"/> (shared with the placement modes): a press
+    /// that moved past the slop, had a second finger, stopped a gliding map, rested over a second, or began
+    /// on UI is not a tap.
     ///
     /// Taps fire on RELEASE (not press) so swipes never accidentally trigger gameplay.
+    ///
+    /// Press-and-hold on a placed building (still, for <see cref="LongPress.HoldSeconds"/>) puts it into
+    /// edit mode (<see cref="BuildingPlacementController.BeginEdit"/>), with a ring showing the hold's
+    /// progress. A press released before that is an ordinary tap; once edit mode starts, the release is
+    /// swallowed so it never also opens the inspector.
     ///
     /// Scene setup: attach to any GameObject, wire placementController, buildingInspector and
     /// gridRenderer. CharacterMover is no longer needed.
@@ -28,10 +33,16 @@ namespace MobileIdleBuilder
         [SerializeField] private GridRenderer                 gridRenderer;
         [SerializeField] private Transform                    tapAnchor;
 
+        private readonly TapGesture _tap = new();
         private Vector2 _pressStart;
-        private float   _dragAccum;
         private bool    _pressWasOnUI;
         private bool    _warnedMissingCollectorWiring;
+
+        // ---- Press-and-hold on a building → edit mode (LongPress) ----
+        private Entity           _holdEntity = Entity.Null;
+        private float            _holdStart;
+        private bool             _holdConsumed; // the hold entered edit mode: this press's release is not a tap
+        private HoldProgressRing _holdRing;
 
         void Awake()
         {
@@ -39,40 +50,45 @@ namespace MobileIdleBuilder
                 deconstructController = FindAnyObjectByType<DeconstructController>();
             if (buildingInspector == null)
                 buildingInspector = FindAnyObjectByType<BuildingInspectorController>();
+            if (placementController == null)
+                placementController = FindAnyObjectByType<BuildingPlacementController>();
             if (fieldCollector == null)
                 fieldCollector = FindAnyObjectByType<ManualFieldCollector>()
                                  ?? gameObject.AddComponent<ManualFieldCollector>();
         }
 
+        void OnDisable() => CancelHold();
+
         void Update()
         {
             UpdateFieldHover();
 
-            // Track gesture on press start
-            if (InputUtils.WasPointerPressed())
+            // TapGesture rules out pans, pinches, glide stops, long rests and presses that began on UI
+            // (that last one also handles click-through when a panel closes on the release frame).
+            bool pressed = InputUtils.WasPointerPressed();
+            bool tapped  = InputUtils.PumpTap(_tap, IsPointerOverUI, out Vector2 screenPos);
+
+            if (pressed)
             {
-                _pressStart    = InputUtils.GetPointerPosition();
-                _dragAccum     = 0f;
-                _pressWasOnUI  = IsPointerOverUI(_pressStart);
+                _pressStart   = _tap.PressPosition;
+                _pressWasOnUI = IsPointerOverUI(_pressStart);
+                BeginHold();
             }
 
-            // Accumulate drag while held
-            if (InputUtils.IsPointerHeld())
-                _dragAccum = Vector2.Distance(InputUtils.GetPointerPosition(), _pressStart);
+            if (InputUtils.IsPointerHeld()) UpdateHold();
 
-            // Only act on confirmed tap (release + small drag)
             if (!InputUtils.WasPointerReleased()) return;
-            if (_dragAccum > CameraController.TapThreshold) return;
+            bool holdConsumed = _holdConsumed;
+            CancelHold();
+            _holdConsumed = false;
+            if (holdConsumed) return; // the press became an edit, not a tap
+            if (!tapped) return;
 
             // Exclusive modes consume all taps
-            if (placementController   != null && placementController.IsPlacing)          return;
-            if (conveyorController    != null && conveyorController.IsPlacing)           return;
-            if (deconstructController != null && deconstructController.IsDeconstructing) return;
+            if (AnyModeActive()) return;
 
-            Vector2 screenPos = InputUtils.GetPointerPosition();
-            // Block the tap if the press started on UI (handles click-through when panels
-            // close on the same frame as the release) or if UI still covers the release pos.
-            if (_pressWasOnUI || IsPointerOverUI(screenPos)) return;
+            // UI may still cover the release point (a panel opened during the press).
+            if (IsPointerOverUI(screenPos)) return;
 
             // Building inspector — tapping a placed building opens it
             bool inspectorHit = buildingInspector != null && buildingInspector.TrySelectBuildingAt(screenPos);
@@ -112,6 +128,69 @@ namespace MobileIdleBuilder
             // Tap on empty ground — clear any building selection and anchor presence
             buildingInspector?.ClearSelection();
             AnchorPresence(screenPos);
+        }
+
+        // ── Press-and-hold → building edit mode ──────────────────────────────
+
+        private bool AnyModeActive() =>
+            (placementController   != null && placementController.IsPlacing)           ||
+            (conveyorController    != null && conveyorController.IsPlacing)            ||
+            (deconstructController != null && deconstructController.IsDeconstructing);
+
+        /// <summary>A press on an editable building (not over UI, no mode active) starts the hold timer.</summary>
+        private void BeginHold()
+        {
+            CancelHold();
+            _holdConsumed = false;
+            if (_pressWasOnUI || AnyModeActive() || buildingInspector == null || placementController == null) return;
+            if (!buildingInspector.TryGetEditableBuildingAt(_pressStart, out var entity)) return;
+
+            _holdEntity = entity;
+            _holdStart  = Time.unscaledTime;
+        }
+
+        /// <summary>
+        /// While the press holds still on the building: past <see cref="LongPress.RingDelay"/> show the ring
+        /// filling, and at <see cref="LongPress.HoldSeconds"/> enter edit mode. Moving past the tap threshold
+        /// is a pan, so it cancels the hold.
+        /// </summary>
+        private void UpdateHold()
+        {
+            if (_holdEntity == Entity.Null) return;
+            // A pan, a second finger (pinch/rotate) or a glide stop can't become an edit either.
+            if (_tap.IsDisqualified || AnyModeActive()) { CancelHold(); return; }
+
+            float held = Time.unscaledTime - _holdStart;
+            if (LongPress.IsComplete(held))
+            {
+                var entity = _holdEntity;
+                CancelHold();
+                _holdConsumed = true;
+                buildingInspector?.ClearSelection();
+                placementController.BeginEdit(entity);
+                return;
+            }
+
+            if (LongPress.RingVisible(held))
+                EnsureHoldRing()?.Show(InputUtils.GetPointerPosition(), LongPress.RingProgress(held));
+        }
+
+        private void CancelHold()
+        {
+            _holdEntity = Entity.Null;
+            _holdRing?.Hide();
+        }
+
+        /// <summary>The ring lives on the HUD's UIDocument, created on first use (no scene wiring).</summary>
+        private HoldProgressRing EnsureHoldRing()
+        {
+            if (_holdRing != null) return _holdRing;
+            var hud  = FindAnyObjectByType<HUDController>();
+            var root = hud != null ? hud.GetComponent<UIDocument>()?.rootVisualElement : null;
+            if (root == null) return null;
+            _holdRing = new HoldProgressRing();
+            root.Add(_holdRing);
+            return _holdRing;
         }
 
         // ── Presence anchor ───────────────────────────────────────────────────

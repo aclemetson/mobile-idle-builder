@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: surplus_containment
   displayName: Surplus Containment
-  description: Unlock Output Capacity upgrades on every building, so automated production
-    keeps stockpiling instead of stalling when output buffers fill.
+  description: 'Unlock Output and Input Capacity upgrades on every building: automated
+    production keeps stockpiling instead of stalling when output buffers fill, and
+    multi-input chains keep their intake full between deliveries.'
   icon: {fileID: 0}
   branch: 3
   prerequisites:
@@ -24,7 +25,8 @@ MonoBehaviour:
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 108000
+  requiredWorld: 
+  costBaseCurrency: 155000
   costPrestigeCurrency: 0
   durationSeconds: 600
   fieldCooldownMult: 1
@@ -36,5 +38,5 @@ MonoBehaviour:
   unlocksResearch: []
   resetsOnPrestige: 1
   codexEntry: "Once production runs unattended, the bottleneck shifts from speed
-    to storage. Containment fields let a building hold far more finished output before
-    it must pause \u2014 the foundation of idle stockpiling."
+    to storage. Containment fields let a building hold far more feedstock and finished
+    output before it must pause \u2014 the foundation of idle stockpiling."

@@ -66,6 +66,9 @@ Every event also carries `player_id` (String) + `collection_phase` (String).
 | `megastructure_stage` | stage (Int) | `MegastructureService.Deduct` on stage completion |
 | `game_update_notice` | data_version (Int) | `HUDController.MaybeShowGameUpdateNotice` when the update modal is shown (newer `gamedata.updatedUtc` than the saved marker) |
 | `player_snapshot` | networth (Float), base_currency (Int), entropy_per_sec (Float), prestige_currency (Int), paid_currency (Int), prestige_count (Int), building_count (Int), highest_tier (Int), megastructure_stage (Int), research_unlocked_count (Int), playtime_total_sec (Int), field_collections (Int), field_cooldown_sec (Float), power_nodes_total (Int), power_nodes_linked (Int), dev_console_used (Boolean) | snapshot loop (5 min of real time, `WaitForSecondsRealtime`, so dialogue pauses don't stall it) + each prestige |
+| `notification_permission` | source (String: `post_tutorial`, `post_tutorial_declined`, `settings`), granted (Boolean) | `NotificationService.RequestRoutine` after the OS answers; the opt-in card's "Not now" sends `post_tutorial_declined` / false |
+| `notification_preference` | enabled (Boolean) | `NotificationService.SetEnabledFromSettings` when the Settings toggle changes. Push campaign audiences exclude players whose latest value is false |
+| `notification_opened_local` | notification_kind (String, `NotificationKind` name) | `NotificationService.ReportLaunchNotification` when the app opens from a tapped local notification |
 | `dev_console_used` | command (String) | `DevConsoleController.SubmitCommand` on a successful command; once per session (command name only, no args) |
 
 ### Dev console in alpha builds (#169)
@@ -207,6 +210,8 @@ power-building link ranges are mistuned.
 
 `entropy_per_sec` = NetWorth growth rate over the snapshot interval — a clean income-rate proxy, since
 spending entropy moves BaseCurrency→TotalEntropySpent without changing NetWorth (only production raises it).
+Two small exceptions since 2026-11-19: a discounted purchase raises NetWorth by its discount (list price counts),
+and items piling up inside buildings count at their Demon price, so a backed-up factory reads as income until sold.
 `playtime_*_sec` are session-relative (`realtimeSinceStartup`), not lifetime totals.
 
 ## Reading the data

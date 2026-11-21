@@ -741,6 +741,24 @@ namespace MobileIdleBuilder
             _portedCells.Remove(cell);
         }
 
+        /// <summary>
+        /// Hides (or shows again) the building anchored at (x, y) and its ground arrows, without touching
+        /// its entity. Edit mode hides the building while its placement ghost stands in for it.
+        /// </summary>
+        public void SetBuildingHidden(int x, int y, bool hidden)
+        {
+            var cell = (x, y);
+            if (_spawnedCubes.TryGetValue(cell, out var cube) && cube != null)
+                cube.SetActive(!hidden);
+
+            // Port arrows and hole fixtures are siblings of the building under the GridRenderer, not children.
+            if (_spawnedPortArrows.TryGetValue(cell, out var fixtures))
+                foreach (var go in fixtures)
+                    if (go != null) go.SetActive(!hidden);
+
+            if (!hidden) RefreshPortArrows(); // each arrow shows again only if its port still needs a belt
+        }
+
         // ----------------------------------------------------------------
         // Selection highlight
         // ----------------------------------------------------------------

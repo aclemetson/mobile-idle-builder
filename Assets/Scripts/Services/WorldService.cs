@@ -84,9 +84,17 @@ namespace MobileIdleBuilder
         /// True if every prerequisite of <paramref name="world"/> is satisfied. Prereqs today are
         /// research ids, so this reads <c>save.unlockedResearch</c>. Pure/testable — no ECS or scene.
         /// </summary>
-        public static bool PrereqsMet(SaveData save, WorldSO world)
+        public static bool PrereqsMet(SaveData save, WorldSO world) => PrereqsMet(save, world, WorldTasks.Data);
+
+        /// <summary>
+        /// As above, plus: a world with <see cref="WorldSO.unlockByTasks"/> also needs every stage of its delivery
+        /// tasks (<paramref name="tasks"/>) finished (the Chemistry gate).
+        /// </summary>
+        public static bool PrereqsMet(SaveData save, WorldSO world, WorldTaskSO tasks)
         {
             if (world == null) return false;
+            if (world.unlockByTasks &&
+                (tasks == null || tasks.worldId != world.id || !WorldTasks.IsComplete(save, tasks))) return false;
             if (world.prereqUnlockIds == null || world.prereqUnlockIds.Count == 0) return true;
             var unlocked = save?.unlockedResearch;
             foreach (var id in world.prereqUnlockIds)

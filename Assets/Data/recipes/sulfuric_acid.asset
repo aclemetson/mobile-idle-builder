@@ -21,10 +21,10 @@ MonoBehaviour:
   inputs:
   - item: {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
     quantity: 1
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
-    quantity: 4
-  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
+  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
     quantity: 2
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 8d0524d5fdb0aa741b4852d2fc7f4067, type: 2}
   outputQuantity: 1
@@ -37,7 +37,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: 

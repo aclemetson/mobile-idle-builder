@@ -60,6 +60,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_biology
   entropyCost: 25000000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30

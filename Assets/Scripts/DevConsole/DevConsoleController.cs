@@ -377,6 +377,36 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("help", "List all commands",
                 _ => _registry.GetHelpText());
 
+            // ── local notifications (docs/runbooks/notifications-device-testing.md) ──
+            _registry.Register("notif status", "Notification flag / toggle / OS permission / active state",
+                _ => NotificationService.Instance?.DevStatus() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif plan", "Preview what backgrounding the app would schedule now",
+                _ => NotificationService.Instance?.DevPreviewPlan() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif test <seconds>", "Schedule a test notification in N seconds (then background the app)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int seconds) || seconds < 5)
+                        return "Error: <seconds> must be an integer >= 5.";
+                    return NotificationService.Instance?.DevScheduleTest(seconds) ?? "Error: NotificationService not running.";
+                });
+
+            _registry.Register("notif permission", "Show the OS notification permission prompt (if the OS still allows it)",
+                _ =>
+                {
+                    var svc = NotificationService.Instance;
+                    if (svc == null) return "Error: NotificationService not running.";
+                    svc.RequestPermission("dev_console", granted => GameLogger.Info($"[Notifications] dev permission -> {granted}"));
+                    return "Permission requested; run 'notif status' after answering.";
+                });
+
+            _registry.Register("push status", "Remote push: registered / why not / device token (for dashboard Test on Device)",
+                _ => RemotePushService.Instance?.DevStatus() ?? "Error: RemotePushService not running.");
+
+            _registry.Register("notif prompt", "Reset the opt-in answers (asked, next ask date, never ask) and show the card now",
+                _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
+
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
                 _ =>
@@ -810,6 +840,57 @@ namespace MobileIdleBuilder.Dev
                         : $"Error: unlock of '{w.id}' failed.";
                 });
 
+            // ── world delivery tasks (Chemistry gate) ────────────────────────
+            _registry.Register("task status", "Show the world delivery task stage and progress",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready or WorldTasks asset missing.";
+                    if (svc.IsComplete) return $"All {svc.StageCount} stages done; '{svc.Data.worldId}' unlocks from them.";
+                    var stage = svc.CurrentStage;
+                    var save  = SaveManager.Instance?.Current;
+                    var sb = new StringBuilder($"Stage {svc.CompletedStages + 1}/{svc.StageCount}: {stage.displayName}\n");
+                    for (int i = 0; i < stage.items.Length; i++)
+                    {
+                        var it = stage.items[i];
+                        if (it == null) continue;
+                        sb.AppendLine($"  {it.id,-12} {WorldTasks.Delivered(save, it.itemId),8} / {WorldTasks.Required(stage, it.itemId)}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("task add <item> <qty>", "Credit items to the current task stage as if the Demon got them",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (args.Length < 2 || !long.TryParse(args[1], out long qty) || qty <= 0)
+                        return "Error: usage 'task add <item> <qty>'.";
+                    var item = ItemDatabase.GetStatic(args[0]);
+                    if (item == null) return $"Error: unknown item '{args[0]}'.";
+                    int counted = svc.DevCredit(item.itemId, qty);
+                    return $"Counted {counted} {item.id}. Now stage {svc.CompletedStages + (svc.IsComplete ? 0 : 1)}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task stage <n>", "Set the number of finished task stages (progress on the next is cleared)",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (!int.TryParse(args[0], out int n) || n < 0) return "Error: <n> must be a non-negative integer.";
+                    svc.DevSetStage(n);
+                    return $"Finished stages set to {svc.CompletedStages}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task complete", "Finish every task stage (unlocks the world on the next frame)",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    svc.DevSetStage(svc.StageCount);
+                    return $"All {svc.StageCount} stages finished.";
+                });
+
             // ── tutorial ─────────────────────────────────────────────────────
             _registry.Register("skip tutorial", "Complete tutorial immediately and unlock all tutorial research",
                 _ =>
@@ -910,6 +991,7 @@ namespace MobileIdleBuilder.Dev
                         var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                         pp.BaseCurrency      = entropy;
                         pp.TotalEntropySpent = totalSpent;
+                        pp.TotalEntropyDiscounted = 0;
                         pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
                         pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
                         _progressQuery.SetSingleton(pp);
@@ -944,6 +1026,7 @@ namespace MobileIdleBuilder.Dev
                         save.tutorial.isActive                 = true;
                         save.currentRun.baseCurrency           = entropy;
                         save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.totalEntropyDiscounted = 0;
                         save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
                     }
 
@@ -974,6 +1057,7 @@ namespace MobileIdleBuilder.Dev
                             var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                             pp.BaseCurrency      = entropy;
                             pp.TotalEntropySpent = totalInvested;
+                            pp.TotalEntropyDiscounted = 0;
                             pp.BaseNetWorth      = 0f;
                             pp.NetWorth          = entropy + totalInvested;
                             _progressQuery.SetSingleton(pp);

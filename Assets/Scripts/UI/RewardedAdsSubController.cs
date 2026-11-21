@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
         {
             AdPlacement.EntropySurge,
             AdPlacement.EntropyBoost,
+            AdPlacement.IdleRateBoostShort,
             AdPlacement.IdleRateBoost,
             AdPlacement.SpeedBoost,
             AdPlacement.TimeWarp,
@@ -72,6 +73,8 @@ namespace MobileIdleBuilder
                         ? "TEST ADS: no real ads are shown (ads.test_mode). Limited per day."
                         : "Watch a short ad for a bonus. Limited per day.")
                     : "Free rewards are currently unavailable.";
+                string lockMsg = BoostLock.Message(SaveManager.Instance?.Current, GameClock.UtcNow);
+                if (lockMsg != null) _info.text += "\n" + lockMsg + ". One boost at a time.";
             }
 
             foreach (var placement in PanelPlacements)
@@ -96,11 +99,9 @@ namespace MobileIdleBuilder
                 watchBtn.AddToClassList("craft-btn");
                 watchBtn.SetEnabled(canWatch);
 
-                if (def.Kind == AdRewardKind.IncomeMinutes || def.Kind == AdRewardKind.Entropy || def.CooldownMinutes > 0f)
-                {
-                    _liveRows.Add((placement, descLabel, watchBtn));
-                    ApplyLiveText(placement, descLabel, watchBtn);
-                }
+                // Every row is live: cooldowns, income previews and the boost-lock countdown tick.
+                _liveRows.Add((placement, descLabel, watchBtn));
+                ApplyLiveText(placement, descLabel, watchBtn);
 
                 var captured = placement;
                 watchBtn.clicked += () => OnWatchPressed(captured);
@@ -131,6 +132,7 @@ namespace MobileIdleBuilder
             var def = AdRewardCalculator.Def(placement);
             int remaining = ads?.Remaining(placement) ?? 0;
             var cooldown  = ads?.CooldownRemaining(placement) ?? System.TimeSpan.Zero;
+            var locked    = ads?.BoostLockRemaining(placement) ?? System.TimeSpan.Zero;
 
             string reward = def.Kind switch
             {
@@ -145,6 +147,7 @@ namespace MobileIdleBuilder
             desc.text = $"{reward}   ({remaining}/{def.DailyCap} left today)";
 
             if (remaining <= 0)                  btn.text = "Maxed";
+            else if (locked > System.TimeSpan.Zero)   btn.text = $"Boost active {BoostLock.FormatLeft(locked)}";
             else if (cooldown > System.TimeSpan.Zero) btn.text = $"Ready in {AdService.FormatCooldown(cooldown)}";
             else if (ads != null && !ads.IncomeMeasured(placement)) btn.text = "Measuring…";
             else                                 btn.text = "▶ Watch";

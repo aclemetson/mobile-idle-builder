@@ -300,5 +300,6 @@ namespace MobileIdleBuilder
         InsufficientCrystals,
         InvalidTier,
         NothingToCollect,
+        BoostActive,        // a timed boost is running; no other boost may be bought (BoostLock)
     }
 }

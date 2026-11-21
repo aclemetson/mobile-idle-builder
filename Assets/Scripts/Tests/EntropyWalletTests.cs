@@ -154,5 +154,58 @@ namespace MobileIdleBuilder.Tests
             foreach (float r in new[] { 0f, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.5f })
                 Assert.AreEqual((long)(int)(raw * (1f - r)), EntropyWallet.ReducedCost(raw, r), $"raw={raw} r={r}");
         }
+
+        // ── List price: discounts count toward net worth ─────────────────────
+
+        [Test]
+        public void TrySpend_WithListPrice_RecordsTheDiscount()
+        {
+            SetBalance(1000);
+            Assert.IsTrue(EntropyWallet.TrySpend(_query, 750, listPrice: 1000));
+            Assert.AreEqual(250, Progress.BaseCurrency);
+            Assert.AreEqual(750, Progress.TotalEntropySpent, "spent stays what was actually paid");
+            Assert.AreEqual(250, Progress.TotalEntropyDiscounted);
+        }
+
+        [Test]
+        public void TrySpend_WithoutListPrice_RecordsNoDiscount()
+        {
+            SetBalance(1000);
+            Assert.IsTrue(EntropyWallet.TrySpend(_query, 400));
+            Assert.AreEqual(0, Progress.TotalEntropyDiscounted);
+        }
+
+        [Test]
+        public void TrySpend_Refused_RecordsNoDiscount()
+        {
+            SetBalance(100);
+            Assert.IsFalse(EntropyWallet.TrySpend(_query, 750, listPrice: 1000));
+            Assert.AreEqual(0, Progress.TotalEntropyDiscounted);
+        }
+
+        [Test]
+        public void TrySpend_FullyDiscounted_RecordsTheWholeListPrice()
+        {
+            SetBalance(0);
+            Assert.IsTrue(EntropyWallet.TrySpend(_query, 0, listPrice: 300));
+            Assert.AreEqual(300, Progress.TotalEntropyDiscounted);
+        }
+
+        [Test]
+        public void SpendUpTo_Short_StillRecordsTheFullDiscount()
+        {
+            // The building is already placed, so its value counts at list price even if the player was short.
+            SetBalance(100);
+            Assert.AreEqual(100, EntropyWallet.SpendUpTo(_query, 150, listPrice: 200));
+            Assert.AreEqual(100, Progress.TotalEntropySpent);
+            Assert.AreEqual(50,  Progress.TotalEntropyDiscounted);
+        }
+
+        [TestCase(750,  1000, 250)]
+        [TestCase(1000, 1000, 0)]
+        [TestCase(1000, 0,    0)]     // no list price given
+        [TestCase(1200, 1000, 0)]     // never negative
+        public void Discount_Values(long charged, long list, long expected) =>
+            Assert.AreEqual(expected, EntropyWallet.Discount(charged, list));
     }
 }

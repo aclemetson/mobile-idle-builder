@@ -1,23 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// Singleton retention service: 28-day login reward calendar + 3 rotating daily challenges.
+    /// Singleton retention service: the 28-day login reward calendar. It is shown at the top of the Daily tab
+    /// of the Achievements menu. Daily tasks are Daily achievements (<see cref="AchievementService"/>); the
+    /// separate rotating challenge pool was merged into them on 2026-11-20 (it duplicated four of them).
     ///
-    /// Time logic is UTC throughout, mirroring AchievementService.CheckPeriodResets():
-    ///   - Challenges reset at 00:00 UTC; a new set of 3 is drawn deterministically from the pool.
-    ///   - The login calendar advances only when the player CLAIMS (kindness rule — a missed day
-    ///     never resets the streak; the index simply does not advance). The calendar loops after day 28.
+    /// Time logic is UTC throughout and uses SERVER time (ServerClock), like AchievementService: moving the
+    /// phone's date must not re-open the login reward. With no server time (offline) the reward cannot be
+    /// claimed until a sync succeeds. The calendar advances only when the player CLAIMS (kindness rule: a
+    /// missed day never resets the streak; the index simply does not advance). It loops after day 28.
     ///
     /// Reward grants reuse existing infrastructure: crystals → SaveData.paidCurrency,
     /// entropy → ECSLoadBridge.AddEntropy, prestige currency → ECSLoadBridge.AddPrestigeCurrency.
-    ///
-    /// State survives prestige (these SaveData fields are not cleared by PrestigeSystem).
-    /// Core logic methods take an injected <c>now</c> so EditMode tests can drive them deterministically.
+    /// State survives prestige. Core logic methods take an injected <c>now</c> so EditMode tests can drive them.
     /// </summary>
     public class DailyEventService : SingletonMonoBehaviour<DailyEventService>
     {
@@ -25,34 +23,55 @@ namespace MobileIdleBuilder
 
         [SerializeField] DailyContentSO content;
 
-        /// <summary>Fired whenever streak/challenge state changes so the panel can refresh.</summary>
+        /// <summary>Fired whenever the login reward state changes so the Daily tab can refresh.</summary>
         public event Action OnChanged;
-
-        // Runtime mirror of the daily-challenge SaveData fields, rebuilt on load.
-        readonly Dictionary<string, int> _challengeProgress = new();
-        readonly List<string>            _todaysChallengeIds = new();
-        readonly HashSet<string>         _claimedChallenges  = new();
 
         public DailyContentSO Content => content;
 
+        // Server-time sync: one at a time; after a failure, retries wait SyncRetrySeconds.
+        bool  _syncing;
+        float _lastSyncFailedAt = float.NegativeInfinity;
+        const float SyncRetrySeconds = 30f;
+        bool  _warnedFutureLoginClaim;
+
+        /// <summary>True while no server time is available; the tab says to connect instead of "claimed".</summary>
+        public bool WaitingForServerTime => !ServerClock.IsSynced;
+
         void Start() => EnsureToday();
 
+        /// <summary>On resume, a new UTC day may have started while backgrounded; re-sync.</summary>
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) return;
+            ServerClock.Invalidate();
+            _lastSyncFailedAt = float.NegativeInfinity;
+            EnsureToday();
+        }
+
         /// <summary>
-        /// Ensures content is loaded, in-memory state is current, and today's challenge set is rolled.
-        /// Safe to call repeatedly (e.g. each time the panel opens) — only re-rolls when expired, empty,
-        /// or stale. Call this from the UI rather than relying solely on Start(), so the panel survives
-        /// init-order races where SaveManager was not yet ready when this service's Start() ran.
+        /// Loads content and makes sure server time is available, so the login reward can be claimed. Safe to
+        /// call repeatedly (the Daily tab calls it each time it is drawn).
         /// </summary>
         public void EnsureToday()
         {
-            // Remote kill-switch: skip rolling challenges / advancing the calendar when disabled.
-            // The HUD also hides the Daily nav button, so the panel is unreachable in this state.
+            // Remote kill-switch: the login calendar is hidden and unclaimable when disabled.
             if (!FeatureFlags.DailyEventsEnabled) return;
 
             EnsureContent();
-            if (_todaysChallengeIds.Count == 0)
-                ReloadFromSave();
-            CheckDailyReset(GameClock.UtcNow);
+            if (ServerClock.UtcNow.HasValue) return;
+
+            if (_syncing || Time.realtimeSinceStartup - _lastSyncFailedAt < SyncRetrySeconds) return;
+            _syncing = true;
+            ServerClock.StartSync(this, ok =>
+            {
+                _syncing = false;
+                if (!ok || !ServerClock.UtcNow.HasValue)
+                {
+                    _lastSyncFailedAt = Time.realtimeSinceStartup;
+                    GameLogger.Warning("[DailyEvents] No server time (offline?): the login reward waits until a sync succeeds.");
+                }
+                OnChanged?.Invoke();   // the open tab switches between "connect" and claimable
+            });
         }
 
         void EnsureContent()
@@ -60,172 +79,7 @@ namespace MobileIdleBuilder
             if (content == null)
                 content = Resources.Load<DailyContentSO>("DailyContent");
             if (content == null)
-                GameLogger.Warning("[DailyEvents] DailyContent asset not found in Resources — daily events disabled.");
-            else if (content.challengePool == null || content.challengePool.Length == 0)
-                GameLogger.Warning("[DailyEvents] DailyContent has no challenge pool — run MobileIdleBuilder > Import Game Data.");
-        }
-
-        // ── Load / flush ──────────────────────────────────────────────────────
-
-        /// <summary>Rebuilds in-memory challenge state from SaveData. Public for tests.</summary>
-        public void ReloadFromSave()
-        {
-            _challengeProgress.Clear();
-            _todaysChallengeIds.Clear();
-            _claimedChallenges.Clear();
-
-            var save = SaveManager.Instance?.Current;
-            if (save == null) return;
-
-            foreach (var id in save.dailyChallengeIds)
-                _todaysChallengeIds.Add(id);
-            foreach (var entry in save.dailyChallengeProgress)
-                _challengeProgress[entry.id] = entry.count;
-            foreach (var id in save.dailyChallengesClaimed)
-                _claimedChallenges.Add(id);
-        }
-
-        void FlushToSave()
-        {
-            var save = SaveManager.Instance?.Current;
-            if (save == null) return;
-
-            save.dailyChallengeIds = new List<string>(_todaysChallengeIds);
-            save.dailyChallengeProgress = _challengeProgress
-                .Select(kvp => new AchievementProgressEntry { id = kvp.Key, count = kvp.Value })
-                .ToList();
-            save.dailyChallengesClaimed = new List<string>(_claimedChallenges);
-        }
-
-        // ── Daily challenge reset ─────────────────────────────────────────────
-
-        /// <summary>
-        /// Rolls a fresh set of 3 challenges if the current set has expired (00:00 UTC) or none exist.
-        /// Copies AchievementService.CheckPeriodResets()'s ParseOrEpoch / NextMidnightUtc pattern.
-        /// </summary>
-        public void CheckDailyReset(DateTime now)
-        {
-            var save = SaveManager.Instance?.Current;
-
-            // Without a save (e.g. GameScene entered without the Splash bootstrap that creates
-            // SaveManager) we cannot read or persist the reset timestamp, but we still roll a set
-            // into memory so the panel displays today's challenges. MaxValue means time-expiry alone
-            // never forces a re-roll in that case — we only roll when the set is empty or stale.
-            DateTime nextReset = save != null ? ParseOrEpoch(save.dailyChallengeResetUtc) : DateTime.MaxValue;
-
-            // Re-roll when expired, empty, or stale (stored ids no longer exist in the current pool,
-            // e.g. the content asset changed since the set was saved).
-            bool stale     = _todaysChallengeIds.Count > 0 && _todaysChallengeIds.Any(id => GetChallenge(id) == null);
-            bool needsRoll = now >= nextReset || _todaysChallengeIds.Count == 0 || stale;
-            if (!needsRoll) return;
-
-            RollChallenges(now);
-
-            if (save != null)
-            {
-                save.dailyChallengeResetUtc = NextMidnightUtc(now).ToString("o");
-                FlushToSave();
-            }
-            OnChanged?.Invoke();
-        }
-
-        void RollChallenges(DateTime now)
-        {
-            _todaysChallengeIds.Clear();
-            _challengeProgress.Clear();
-            _claimedChallenges.Clear();
-
-            var pool = content?.challengePool;
-            if (pool == null || pool.Length == 0)
-            {
-                GameLogger.Warning("[DailyEvents] RollChallenges: challenge pool is empty — no challenges to draw.");
-                return;
-            }
-
-            // Deterministic pick: seed the rotation by UTC day-of-year, take 3 consecutive (wrapping).
-            int take   = Mathf.Min(3, pool.Length);
-            int offset = now.DayOfYear % pool.Length;
-            for (int i = 0; i < take; i++)
-            {
-                var entry = pool[(offset + i) % pool.Length];
-                if (entry != null && !string.IsNullOrEmpty(entry.id))
-                    _todaysChallengeIds.Add(entry.id);
-            }
-
-            string ids = string.Join(", ", _todaysChallengeIds);
-            GameLogger.Debug($"[DailyEvents] Rolled {_todaysChallengeIds.Count} challenges for UTC day {now.DayOfYear}: {ids}");
-        }
-
-        // ── Challenge progress (forwarded from AchievementService.Notify*) ─────
-
-        /// <summary>Call when the player crafts items.</summary>
-        public void NotifyCraft(string itemId, int quantity = 1) =>
-            Accumulate(AchievementTrigger.CraftItem, quantity);
-
-        /// <summary>Call when the player places a building.</summary>
-        public void NotifyBuildingPlaced(string buildingType) =>
-            Accumulate(AchievementTrigger.PlaceBuilding, 1);
-
-        /// <summary>Call when the player completes a research project.</summary>
-        public void NotifyResearchCompleted(string researchId) =>
-            Accumulate(AchievementTrigger.CompleteResearch, 1);
-
-        /// <summary>Call whenever entropy is spent; accumulates the amount (not the call count).</summary>
-        public void NotifyEntropySpent(long amount) =>
-            Accumulate(AchievementTrigger.SpendEntropy, (int)Mathf.Min(amount, int.MaxValue));
-
-        /// <summary>Call once per session start; auto-progresses the "log in" challenge.</summary>
-        public void NotifyLogin() =>
-            Accumulate(AchievementTrigger.Login, 1);
-
-        void Accumulate(AchievementTrigger trigger, int delta)
-        {
-            if (content == null || _todaysChallengeIds.Count == 0 || delta <= 0) return;
-
-            string triggerName = trigger.ToString();
-            bool dirty = false;
-            foreach (var id in _todaysChallengeIds)
-            {
-                if (_claimedChallenges.Contains(id)) continue;
-                var entry = GetChallenge(id);
-                if (entry == null) continue;
-                if (!string.Equals(entry.trigger, triggerName, StringComparison.OrdinalIgnoreCase)) continue;
-
-                _challengeProgress.TryGetValue(id, out int current);
-                int updated = Mathf.Min(current + delta, entry.target); // cap at target
-                if (updated != current)
-                {
-                    _challengeProgress[id] = updated;
-                    dirty = true;
-                }
-            }
-
-            if (dirty)
-            {
-                FlushToSave();
-                OnChanged?.Invoke();
-            }
-        }
-
-        /// <summary>Grants the crystal reward for a completed challenge. Returns false if not claimable.</summary>
-        public bool ClaimChallenge(string id)
-        {
-            if (!_todaysChallengeIds.Contains(id) || _claimedChallenges.Contains(id)) return false;
-
-            var entry = GetChallenge(id);
-            if (entry == null || GetChallengeProgress(id) < entry.target) return false;
-
-            var save = SaveManager.Instance?.Current;
-            if (save == null) return false;
-
-            _claimedChallenges.Add(id);
-            if (entry.crystals > 0) save.paidCurrency += entry.crystals;
-
-            FlushToSave();
-            SaveManager.Instance.SaveLocal();
-            OnChanged?.Invoke();
-            GameLogger.Info($"[DailyEvents] Challenge '{id}' claimed — +{entry.crystals} crystals.");
-            return true;
+                GameLogger.Warning("[DailyEvents] DailyContent asset not found in Resources — login calendar disabled.");
         }
 
         // ── Login reward calendar ─────────────────────────────────────────────
@@ -244,7 +98,12 @@ namespace MobileIdleBuilder
             }
         }
 
-        public bool CanClaimLoginReward() => CanClaimLoginReward(GameClock.UtcNow);
+        /// <summary>False while no server time is available (see <see cref="WaitingForServerTime"/>).</summary>
+        public bool CanClaimLoginReward()
+        {
+            var now = ServerClock.UtcNow;
+            return now.HasValue && CanClaimLoginReward(now.Value);
+        }
 
         /// <summary>True if today's (UTC) login reward has not been claimed yet.</summary>
         public bool CanClaimLoginReward(DateTime now)
@@ -254,11 +113,24 @@ namespace MobileIdleBuilder
             if (content?.loginRewards == null || content.loginRewards.Length == 0) return false;
 
             var last = ParseOrEpoch(save.lastLoginRewardUtc);
+            if (last.Date > now.Date && !_warnedFutureLoginClaim)
+            {
+                _warnedFutureLoginClaim = true;
+                GameLogger.Warning($"[DailyEvents] Last login reward is dated {last:yyyy-MM-dd}, after today " +
+                                   $"{now:yyyy-MM-dd} (claimed with the phone's date set ahead); no claim until then.");
+            }
             // Compare dates, not timestamps, to avoid double-grant within the same UTC day.
             return last == DateTime.MinValue || last.Date < now.Date;
         }
 
-        public bool ClaimLoginReward() => ClaimLoginReward(GameClock.UtcNow);
+        public bool ClaimLoginReward()
+        {
+            var now = ServerClock.UtcNow;
+            if (now.HasValue) return ClaimLoginReward(now.Value);
+            GameLogger.Warning("[DailyEvents] Login reward claim refused: no server time yet.");
+            EnsureToday();   // starts a sync if the retry window allows
+            return false;
+        }
 
         /// <summary>
         /// Claims today's login reward, grants it, advances the streak index (looping after the
@@ -293,50 +165,24 @@ namespace MobileIdleBuilder
             if (prestigeCurrency > 0) ECSLoadBridge.Instance?.AddPrestigeCurrency(prestigeCurrency);
         }
 
-        // ── Query API (for the panel) ─────────────────────────────────────────
-
-        public IReadOnlyList<string> TodaysChallengeIds => _todaysChallengeIds;
-        public DailyChallengeEntry   GetChallengeEntry(string id) => GetChallenge(id);
-        public int  GetChallengeProgress(string id) => _challengeProgress.TryGetValue(id, out var c) ? c : 0;
-        public bool IsChallengeClaimed(string id)   => _claimedChallenges.Contains(id);
-
-        public bool IsChallengeComplete(string id)
-        {
-            var entry = GetChallenge(id);
-            return entry != null && GetChallengeProgress(id) >= entry.target;
-        }
-
-        /// <summary>Completed-but-unclaimed challenges (for a nav badge / "claim all" affordance).</summary>
-        public int ClaimableChallengeCount =>
-            _todaysChallengeIds.Count(id => IsChallengeComplete(id) && !IsChallengeClaimed(id));
-
         // ── Dev / lifecycle helpers ───────────────────────────────────────────
 
         /// <summary>Clears in-memory state after a dev "clear save" so it matches the reset SaveData.</summary>
         public void ResetInMemory()
         {
-            _challengeProgress.Clear();
-            _todaysChallengeIds.Clear();
-            _claimedChallenges.Clear();
+            _warnedFutureLoginClaim = false;
             GameLogger.Debug("[DailyEvents] In-memory state cleared by ResetInMemory().");
         }
 
         // ── Internals ─────────────────────────────────────────────────────────
 
-        DailyChallengeEntry GetChallenge(string id)
+        static DateTime ParseOrEpoch(string iso)
         {
-            var pool = content?.challengePool;
-            if (pool == null || string.IsNullOrEmpty(id)) return null;
-            foreach (var c in pool)
-                if (c != null && c.id == id) return c;
-            return null;
+            if (string.IsNullOrEmpty(iso) ||
+                !DateTime.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture,
+                                   System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+                return DateTime.MinValue;
+            return dt.Kind == DateTimeKind.Local ? dt.ToUniversalTime() : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
         }
-
-        static DateTime ParseOrEpoch(string iso) =>
-            DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
-                ? dt : DateTime.MinValue;
-
-        static DateTime NextMidnightUtc(DateTime from) =>
-            from.Date.AddDays(1); // 00:00 UTC tomorrow
     }
 }

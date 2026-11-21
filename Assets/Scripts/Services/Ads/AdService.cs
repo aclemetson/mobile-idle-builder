@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         NoSave,            // SaveManager not ready
         NothingToCollect,  // reward would have been empty (e.g. TimeWarp with no production)
         OnCooldown,        // this placement's cooldown has not run out yet (Entropy Surge)
+        BoostActive,       // a timed boost is running; no other boost may start (BoostLock)
     }
 
     /// <summary>Result handed back to the UI after a show attempt.</summary>
@@ -145,6 +146,7 @@ namespace MobileIdleBuilder
             if (!EnsureProviderIfEnabled()) return false;
             if (_provider == null || !_provider.IsRewardedReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
+            if (BoostLockRemaining(p) > TimeSpan.Zero) return false;
             if (!IncomeMeasured(p)) return false;
             return Remaining(p) > 0;
         }
@@ -167,6 +169,14 @@ namespace MobileIdleBuilder
         {
             var save = SaveManager.Instance?.Current;
             return save == null ? TimeSpan.Zero : AdRewardCalculator.CooldownRemaining(save, p, GameClock.UtcNow);
+        }
+
+        /// <summary>Time until the one-boost-at-a-time lock lifts for this placement; zero when it may be watched.</summary>
+        public TimeSpan BoostLockRemaining(AdPlacement p)
+        {
+            var save = SaveManager.Instance?.Current;
+            var now  = GameClock.UtcNow;
+            return BoostLock.BlocksAd(save, p, now) ? BoostLock.Remaining(save, now) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -249,6 +259,11 @@ namespace MobileIdleBuilder
                 Finish(onDone, Fail(p, AdShowOutcome.OnCooldown, $"Ready again in {FormatCooldown(cooldown)}."));
                 return;
             }
+            if (BoostLock.BlocksAd(save, p, GameClock.UtcNow))
+            {
+                Finish(onDone, Fail(p, AdShowOutcome.BoostActive, BoostLock.Message(save, GameClock.UtcNow) + "."));
+                return;
+            }
             if (!IncomeMeasured(p))
             {
                 Finish(onDone, Fail(p, AdShowOutcome.NotReady, "Measuring your income, try again in a few seconds."));
@@ -312,7 +327,12 @@ namespace MobileIdleBuilder
                     long amount = quotedIncome;
                     save.currentRun.baseCurrency += amount;
                     ApplyEntropyToECS(amount);
-                    message = $"+{amount:N0} entropy";
+                    // The income is N minutes of what the Demon sells, so those N minutes of items count toward
+                    // the world tasks too (full rate, like the income). Save first so the snapshot is current.
+                    SaveManager.Instance.SaveLocal();
+                    var delivered = OfflineCollectionService.LiveDemonDeliveries(save, def.IncomeMinutes * 60f);
+                    long counted  = OfflineCollectionService.CreditDemonDeliveries(save, delivered, "Entropy Surge");
+                    message = $"+{amount:N0} entropy" + TaskSuffix(counted);
                     return true;
                 }
                 case AdRewardKind.Crystals:
@@ -359,18 +379,21 @@ namespace MobileIdleBuilder
 
             if (result == null || !result.HasAnyOutput) { message = "Nothing producing to bank."; return false; }
 
-            ApplyCollectionResult(save, result);
-            message = $"Banked {hours:F0}h of production";
+            long counted = ApplyCollectionResult(save, result);
+            message = $"Banked {hours:F0}h of production" + TaskSuffix(counted);
             return true;
         }
 
         bool GrantDoubleOffline(SaveData save, IdleCollectionResult result, out string message)
         {
             if (result == null || !result.HasAnyOutput) { message = "Nothing to double."; return false; }
-            ApplyCollectionResult(save, result);
-            message = "Offline earnings doubled!";
+            long counted = ApplyCollectionResult(save, result);
+            message = "Offline earnings doubled!" + TaskSuffix(counted);
             return true;
         }
+
+        /// <summary>" (+40 task items)" when a reward counted toward the world tasks, else empty.</summary>
+        internal static string TaskSuffix(long counted) => counted > 0 ? $" (+{counted:N0} task items)" : "";
 
         // ── ECS write-through helpers (mirror PremiumShopService) ──────────────
 
@@ -381,18 +404,17 @@ namespace MobileIdleBuilder
             bridge.AddEntropy(amount);
         }
 
-        void ApplyCollectionResult(SaveData save, IdleCollectionResult result)
+        /// <summary>Applies an idle-style result and returns how many items counted toward the world tasks.</summary>
+        long ApplyCollectionResult(SaveData save, IdleCollectionResult result)
         {
             var bridge = ECSLoadBridge.Instance;
             if (bridge != null && bridge.IsLoaded)
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
+                return OfflineCollectionService.CreditDemonDeliveries(save, result);
             }
-            else
-            {
-                OfflineCollectionService.ApplyResultToSave(save, result);
-            }
+            return OfflineCollectionService.ApplyResultToSave(save, result);
         }
 
         // ── Internals ─────────────────────────────────────────────────────────

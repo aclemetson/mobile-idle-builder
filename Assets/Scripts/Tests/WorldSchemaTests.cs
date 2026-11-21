@@ -135,11 +135,9 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(0, physics.unlockCost, "world_physics is free/implicit");
             Assert.AreEqual(0, System.Array.IndexOf(db.allWorlds, physics), "world_physics must be index 0");
 
-            // Phase 4a moved the 150K/mid_elements gate onto the chemistry_lab research node:
-            // the world now unlocks for free once that research is done (see ChemistryContentTests).
-            Assert.AreEqual(0, chem.unlockCost, "world_chemistry cost moved to the chemistry_lab research");
-            CollectionAssert.Contains(chem.prereqUnlockIds, "chemistry_lab",
-                "world_chemistry is gated by the chemistry_lab research");
+            // 2026-11-19: Chemistry opens from its delivery tasks, free (see WorldTaskTests).
+            Assert.AreEqual(0, chem.unlockCost, "world_chemistry has no entropy fee");
+            Assert.IsTrue(chem.unlockByTasks, "world_chemistry unlocks from its delivery tasks");
 
             // Every site in the SiteDatabase belongs to exactly one world (worlds partition the flat
             // site list). world_physics owns the original physics sites; site_chem_lab belongs to chem.

@@ -19,7 +19,14 @@ namespace MobileIdleBuilder
         {
             state.RequireForUpdate<EntropySinkTag>();
             state.RequireForUpdate<PlayerProgressData>();
+
+            // What the Demon consumed, for the world delivery tasks (WorldTaskService drains it each frame).
+            var log = state.EntityManager.CreateEntity(typeof(DemonDeliveryLog));
+            state.EntityManager.AddBuffer<DemonDelivery>(log);
         }
+
+        // Drops the log when nothing drains it (no WorldTaskService, e.g. tests), so it can't grow without bound.
+        const int MaxLoggedDeliveries = 512;
 
         public void OnUpdate(ref SystemState state)
         {
@@ -27,6 +34,10 @@ namespace MobileIdleBuilder
             long totalEntropy = 0;
             // Cyclotron Kick boost (1 when none is running).
             float boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1f;
+            // Speed burst: items arrive faster, so "unboosted" income (Entropy Surge pricing) takes the clock back out.
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
+            bool logging = SystemAPI.TryGetSingletonBuffer<DemonDelivery>(out var deliveries);
+            if (logging && deliveries.Length > MaxLoggedDeliveries) deliveries.Clear();
 
             foreach (var (building, inputSlots) in
                 SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<BuildingInputSlot>>()
@@ -49,6 +60,7 @@ namespace MobileIdleBuilder
                     }
 
                     totalEntropy += (long)(sellValue * quantity * boost);
+                    if (logging) deliveries.Add(new DemonDelivery { ItemID = itemID, Quantity = quantity });
                 }
 
                 inputSlots.Clear();
@@ -64,7 +76,7 @@ namespace MobileIdleBuilder
             {
                 var income = SystemAPI.GetSingleton<AutomationIncome>();
                 income.Total     += totalEntropy;
-                income.Unboosted += totalEntropy / (double)boost;
+                income.Unboosted += totalEntropy / ((double)boost * clockRate);
                 SystemAPI.SetSingleton(income);
             }
         }

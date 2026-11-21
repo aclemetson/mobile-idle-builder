@@ -19,6 +19,12 @@ dependencyResolutionManagement {
 // Android Resolver Repos Start
         def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
         maven {
+            url "https://repo.maven.apache.org/maven2" // Assets/Push Notifications/Editor/Android/PushSDKDependencies.xml:8
+        }
+        maven {
+            url "https://maven.google.com" // Assets/Push Notifications/Editor/Android/PushSDKDependencies.xml:8
+        }
+        maven {
             url (unityProjectPath + "/Assets/GoogleSignIn/Editor/m2repository") // Assets/GoogleSignIn/Editor/GoogleSignInSupportDependencies.xml:9
         }
         maven {

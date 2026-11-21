@@ -42,6 +42,11 @@
             <ui:Label name="craft-status-label" text="" class="research-status-label craft-status-label" />
         </ui:VisualElement>
 
+        <!-- ═══ CHEMISTRY TASK STRIP (Demon delivery stages; hidden in the tutorial and once Chemistry is open). Tap opens Worlds ═══ -->
+        <ui:VisualElement name="task-status" class="research-status task-status hidden">
+            <ui:Label name="task-status-label" text="" class="research-status-label task-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
@@ -81,7 +86,6 @@
                 <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
                 <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
-                <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
                 <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
                 <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
@@ -165,7 +169,14 @@
                         <ui:Label text="Net worth" class="upgrade-row-name" />
                         <ui:Label name="stats-networth-value" text="" class="stats-value" />
                     </ui:VisualElement>
-                    <ui:Label text="Entropy you hold and have spent this run, plus your items. Prestige pays out from this." class="upgrade-row-desc" />
+                    <ui:Label text="Entropy you hold, the full price of everything you bought this run, and your items, including those inside buildings. Prestige pays out from this." class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Stored in buildings" class="upgrade-row-name" />
+                        <ui:Label name="stats-stored-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-stored-sub" text="" class="upgrade-row-desc" />
                 </ui:VisualElement>
                 <ui:VisualElement class="upgrade-row">
                     <ui:VisualElement class="upgrade-row-header">
@@ -204,23 +215,6 @@
             <ui:ScrollView name="managers-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
-        </ui:VisualElement>
-
-        <!-- ═══ DAILY EVENTS PANEL ═══ -->
-        <ui:VisualElement name="daily-panel" class="slide-panel hidden">
-            <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Daily Rewards" class="panel-title" />
-                <ui:Button name="btn-close-daily" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-            </ui:VisualElement>
-            <ui:ScrollView name="daily-list" class="recipe-list"
-                           vertical-scroller-visibility="Auto"
-                           horizontal-scroller-visibility="Hidden">
-                <ui:Label text="Login Reward" class="recipe-name" />
-                <ui:Label name="daily-login-info" text="—" class="recipe-inputs" />
-                <ui:Button name="btn-claim-login" text="Claim" class="craft-btn" />
-                <ui:Label text="Daily Challenges" class="recipe-name" />
-                <ui:VisualElement name="daily-challenges-list" />
-            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ FREE REWARDS (REWARDED ADS) PANEL ═══ -->
@@ -419,6 +413,8 @@
                           class="placement-label" />
                 <ui:Button name="btn-rotate-output" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Rotate" /><ui:Label text="Rotate" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-flip-building" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Flip" /><ui:Label text="Flip" picking-mode="Ignore" class="glyph-label" /></ui:Button>
+                <!-- Edit mode only (press and hold a placed building): delete it, after a confirmation. -->
+                <ui:Button name="btn-remove-building" class="rotate-output-btn remove-building-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Trash" /><ui:Label text="Remove" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -433,18 +429,19 @@
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden" picking-mode="Ignore">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
+                <ui:Label name="conveyor-label" text="Tap a start"
                           class="placement-label" />
                 <ui:Button name="btn-conveyor-rotate" text="" tooltip="Bend route" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Rotate" /></ui:Button>
                 <ui:Button name="btn-conveyor-confirm" text="" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
-                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Clear" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Start from a new cell" class="conveyor-mode-btn hidden" />
+                <!-- Undo: removes the last traced point (name kept from the old Clear button). -->
+                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Undo point" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Undo" /></ui:Button>
+                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Clear and start a new belt" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
             <ui:VisualElement name="conveyor-legend" class="conveyor-legend" picking-mode="Ignore">
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--endpoint" picking-mode="Ignore" />
-                <ui:Label text="Start / end" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:Label text="Points" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--path" picking-mode="Ignore" />
                 <ui:Label text="Path preview" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--guide" picking-mode="Ignore" />
@@ -746,6 +743,7 @@
                     <ui:Label name="confirm-prompt__title" text="Remove?" class="panel-title" />
                 </ui:VisualElement>
                 <ui:Label name="confirm-prompt__message" text="" class="game-update-message" />
+                <ui:Toggle name="confirm-prompt__checkbox" text="" value="false" class="confirm-prompt__checkbox hidden" />
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
                     <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />

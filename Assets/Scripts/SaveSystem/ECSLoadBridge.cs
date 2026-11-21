@@ -138,31 +138,46 @@ namespace MobileIdleBuilder
             // seeded from the local save while a slower cloud fetch replaces Current afterward,
             // and the next FlushToSave would write the stale ECS state back over the cloud data.
             // Bounded so a slow or offline network never blocks the load indefinitely.
+            //
+            // Never waits on the "which save?" choice: that prompt lives on the HUD, which stays hidden
+            // until the loading screen finishes, and the prompt itself waits for the transition to end. Waiting
+            // here deadlocked both until the prompt's 30 s fallback, with the bar stuck at 99%. Instead this
+            // device's save loads now, the prompt opens over the running game, and choosing the cloud save
+            // reloads the scene from it (SaveManager.TakeCloudSave, live path).
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            // No timeout while the player is choosing between this device's save and the cloud save.
-            while (sm != null && !sm.CloudReconcileDone && (cloudElapsed < kCloudTimeout || sm.AwaitingSaveChoice))
+            while (sm != null && !sm.CloudReconcileDone && !sm.AwaitingSaveChoice && cloudElapsed < kCloudTimeout)
             {
-                cloudElapsed += Time.deltaTime;
+                cloudElapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
-            if (sm != null && !sm.CloudReconcileDone)
+            if (sm != null && sm.AwaitingSaveChoice)
+                GameLogger.Info("[ECSLoadBridge] Saves differ — loading this device's save; the player chooses after the load.");
+            else if (sm != null && !sm.CloudReconcileDone)
                 GameLogger.Warning($"[ECSLoadBridge] Cloud reconcile not done after {cloudElapsed:F1}s — applying current save anyway.");
 
             GameLogger.Info("[ECSLoadBridge] Applying save to ECS");
-            ApplyLoadedSave();
-            GridSaveService.Instance?.LoadGrid();
-            SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
+            try
+            {
+                ApplyLoadedSave();
+                GridSaveService.Instance?.LoadGrid();
+                SaveApplied = true; // ECS now mirrors the on-disk save — flushing back is safe
+            }
+            catch (System.Exception ex)
+            {
+                // An exception here used to end this coroutine before IsLoaded was set, leaving the loading
+                // screen at 99% for good. Finish the load instead; SaveApplied stays false, so no flush can
+                // write the half-applied state over the good save on disk, and the next launch retries.
+                GameLogger.Error($"[ECSLoadBridge] Applying the save failed: {ex}. SaveApplied stays false; the on-disk save is kept.");
+            }
             IsLoaded = true;
-            GameLogger.Info("[ECSLoadBridge] Save applied to ECS — IsLoaded=true");
+            GameLogger.Info($"[ECSLoadBridge] Load finished — IsLoaded=true  SaveApplied={SaveApplied}");
 
             // Session login tick. This is the only point that is both once-per-session and late
-            // enough to count: SaveManager.Current is final (cloud reconcile awaited above), and
-            // DailyEventService.Start()/EnsureToday() has already rolled today's challenges — its
-            // Accumulate() bails while _todaysChallengeIds is empty, so an earlier hook would
-            // silently drop dc_login. Idempotent: the challenge caps at its target and completed
-            // achievements are skipped, and pre-first-prestige the achievement half is dormant.
+            // enough to count: SaveManager.Current is final (cloud reconcile awaited above). The
+            // service holds the event until its server-time period check has run, then replays it, so it
+            // counts toward today rather than yesterday. Idempotent: completed achievements are skipped.
             AchievementService.Instance?.NotifyLogin();
 
             if (_pendingIdleResult != null)
@@ -259,8 +274,9 @@ namespace MobileIdleBuilder
             // Currency
             var progress = _progressQuery.GetSingleton<PlayerProgressData>();
             progress.BaseCurrency      = save.currentRun.baseCurrency;
-            progress.TotalEntropySpent = save.currentRun.totalEntropySpent;
-            progress.BaseNetWorth      = save.currentRun.baseNetWorth;
+            progress.TotalEntropySpent      = save.currentRun.totalEntropySpent;
+            progress.TotalEntropyDiscounted = BackfillDiscounted(save);
+            progress.BaseNetWorth           = save.currentRun.baseNetWorth;
             _progressQuery.SetSingleton(progress);
 
             // Inventory
@@ -270,11 +286,24 @@ namespace MobileIdleBuilder
             var iKeys  = save.currentRun.inventoryKeys;
             var iVals  = save.currentRun.inventoryValues;
             int iCount = System.Math.Min(iKeys?.Count ?? 0, iVals?.Count ?? 0);
+            long retiredEntropy = 0;
             for (int i = 0; i < iCount; i++)
             {
                 if (!int.TryParse(iKeys[i], out int itemId)) continue;
-                if (iVals[i] > 0)
-                    buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
+                if (iVals[i] <= 0) continue;
+                if (RetiredItems.TryGetValue(itemId, out long price))
+                {
+                    retiredEntropy += SellRetired(price, iVals[i]);
+                    continue;
+                }
+                buffer.Add(new InventorySlot { ItemID = itemId, Quantity = iVals[i] });
+            }
+            if (retiredEntropy > 0)
+            {
+                progress = _progressQuery.GetSingleton<PlayerProgressData>();
+                progress.BaseCurrency += retiredEntropy;
+                _progressQuery.SetSingleton(progress);
+                GameLogger.Info($"[ECSLoadBridge] Sold retired items from the inventory for {retiredEntropy} entropy.");
             }
         }
 
@@ -301,8 +330,9 @@ namespace MobileIdleBuilder
             {
                 var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                 save.currentRun.baseCurrency      = pp.BaseCurrency;
-                save.currentRun.totalEntropySpent = pp.TotalEntropySpent;
-                save.currentRun.baseNetWorth      = pp.BaseNetWorth;
+                save.currentRun.totalEntropySpent      = pp.TotalEntropySpent;
+                save.currentRun.totalEntropyDiscounted = pp.TotalEntropyDiscounted;
+                save.currentRun.baseNetWorth           = pp.BaseNetWorth;
                 save.lastKnownNetWorth            = pp.NetWorth;
             }
 
@@ -368,6 +398,10 @@ namespace MobileIdleBuilder
         public double? LiveNetWorth =>
             IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().NetWorth : null;
 
+        /// <summary>Value of the items waiting inside buildings (inputs, staging, outputs); null before the world is loaded.</summary>
+        public double? LiveStoredItemValue =>
+            IsLoaded && !_progressQuery.IsEmpty ? _progressQuery.GetSingleton<PlayerProgressData>().StoredItemValue : null;
+
         /// <summary>Adds prestige currency directly to the ECS singleton (called from PremiumShopService when game scene is live).</summary>
         public void AddPrestigeCurrency(long amount)
         {
@@ -392,6 +426,60 @@ namespace MobileIdleBuilder
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Removed item id -> the entropy each one sold for when it was removed. A save holding one in its
+        /// inventory gets that entropy on load instead of an item nothing can show or use.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<int, long> RetiredItems = new()
+        {
+            // 2026-11-19: Tritium and Carbon-14 had no use but selling; the Isotopic Manipulator now
+            // only does Uranium-235 and the decay chain (elements-and-isotopes.md, "Isotope trim").
+            { 15, 653 },  // tritium
+            { 16, 808 },  // carbon_14
+        };
+
+        /// <summary>
+        /// The saved discount total, raised so net worth counts the save's research and buildings at
+        /// list price (NetWorthBackfill). Saves from before 0.6.14 never recorded their discounts.
+        /// </summary>
+        private static long BackfillDiscounted(SaveData save)
+        {
+            long saved = save.currentRun.totalEntropyDiscounted;
+            try
+            {
+                ResearchService.MigrateMergedResearch(save); // idempotent; merged ids price as the node they became
+                var research  = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
+                var buildings = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
+                var researchById = new Dictionary<string, ResearchSO>();
+                if (research != null)
+                    foreach (var r in research) if (r != null && !string.IsNullOrEmpty(r.id)) researchById[r.id] = r;
+                var buildingById = new Dictionary<int, BuildingSO>();
+                if (buildings != null)
+                    foreach (var b in buildings) if (b != null) buildingById[b.buildingId] = b;
+
+                long list = NetWorthBackfill.ListValue(save.unlockedResearch, save.currentRun,
+                    id => researchById.TryGetValue(id, out var r) ? r : null,
+                    id => buildingById.TryGetValue(id, out var b) ? b : null);
+                long result = NetWorthBackfill.Discounted(list, save.currentRun.totalEntropySpent, saved);
+                if (result != saved)
+                    GameLogger.Info($"[ECSLoadBridge] Net worth backfill: list value {list:N0}, spent " +
+                                    $"{save.currentRun.totalEntropySpent:N0}, discounted {saved:N0} -> {result:N0}");
+                return result;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.Warning($"[ECSLoadBridge] Net worth backfill skipped: {ex.Message}");
+                return saved;
+            }
+        }
+
+        /// <summary>Entropy for <paramref name="quantity"/> retired items at <paramref name="price"/>; saturates instead of overflowing.</summary>
+        internal static long SellRetired(long price, int quantity)
+        {
+            if (price <= 0 || quantity <= 0) return 0;
+            return price > long.MaxValue / quantity ? long.MaxValue : price * quantity;
+        }
 
         /// <summary>Removed tutorial step id -> the step a save on it resumes at.</summary>
         internal static readonly System.Collections.Generic.Dictionary<string, string> RetiredSteps = new()

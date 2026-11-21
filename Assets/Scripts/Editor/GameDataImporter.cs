@@ -247,10 +247,13 @@ namespace MobileIdleBuilder.Editor
             GenerateDialogueDatabase(data.dialogues, dialogueLookup);
 
             // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
-            GenerateDailyContent(data.daily_rewards, data.daily_challenges);
+            GenerateDailyContent(data.daily_rewards);
 
             // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
             GenerateMegastructure(data.megastructure, itemLookup);
+
+            // ── Step 15: WorldTaskSO (Chemistry gate delivery stages; needs itemLookup) ──
+            GenerateWorldTasks(data.world_tasks, itemLookup);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -263,7 +266,7 @@ namespace MobileIdleBuilder.Editor
                 $"{data.managers.Count} managers, " +
                 $"{data.dialogues.Count} dialogues, " +
                 $"{data.tutorial_steps.Count} tutorial steps, " +
-                $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
+                $"{data.daily_rewards.Count} daily rewards."
             );
         }
 
@@ -362,6 +365,7 @@ namespace MobileIdleBuilder.Editor
             so.block                = data.block ?? "";
             so.treeX                = data.tree_x;
             so.treeY                = data.tree_y;
+            so.requiredWorld        = data.required_world ?? "";
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -485,6 +489,7 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
             so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;
@@ -606,6 +611,7 @@ namespace MobileIdleBuilder.Editor
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
+            so.world                  = data.world ?? "";
             so.purchaseResearchId     = data.purchase_research ?? "";
             so.purchaseCostBase       = data.purchase_cost_base;
             so.purchaseCostMultiplier = data.purchase_cost_multiplier;
@@ -720,6 +726,7 @@ namespace MobileIdleBuilder.Editor
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
 
+            so.unlockByTasks   = data.unlock_by_tasks;
             so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
             foreach (var pid in so.prereqUnlockIds)
                 if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
@@ -990,8 +997,7 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateDailyContent(List<DailyRewardJson> rewards,
-            List<DailyChallengeJson> challenges)
+        private static void GenerateDailyContent(List<DailyRewardJson> rewards)
         {
             EnsureDirectory(ResourcesDir);
             string path = $"{ResourcesDir}/DailyContent.asset";
@@ -1010,18 +1016,41 @@ namespace MobileIdleBuilder.Editor
             rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
             so.loginRewards = rewardList.ToArray();
 
-            var challengeList = new List<DailyChallengeEntry>(challenges?.Count ?? 0);
-            if (challenges != null)
-                foreach (var c in challenges)
-                    challengeList.Add(new DailyChallengeEntry
-                    {
-                        id          = c.id,
-                        description = c.description,
-                        trigger     = c.trigger,
-                        target      = c.target,
-                        crystals    = c.crystals
-                    });
-            so.challengePool = challengeList.ToArray();
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateWorldTasks(WorldTasksJson data, Dictionary<string, ItemSO> itemLookup)
+        {
+            if (data == null || string.IsNullOrEmpty(data.world)) return;
+
+            EnsureDirectory(ResourcesDir);
+            var so = LoadOrCreate<WorldTaskSO>($"{ResourcesDir}/WorldTasks.asset");
+            so.worldId     = data.world;
+            so.displayName = data.display_name;
+
+            var stages = data.stages ?? new List<WorldTaskStageJson>();
+            so.stages = new WorldTaskStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.items ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"World task stage '{sd.id}' items[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+                so.stages[i] = new WorldTaskStage
+                {
+                    id          = sd.id,
+                    displayName = sd.display_name,
+                    description = sd.description,
+                    items       = items,
+                    quantities  = qtys,
+                    dialogueId  = sd.dialogue ?? "",
+                };
+            }
 
             EditorUtility.SetDirty(so);
         }

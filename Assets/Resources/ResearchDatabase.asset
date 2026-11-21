@@ -23,7 +23,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
   - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
   - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
-  - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
   - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
   - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
@@ -33,13 +32,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
   - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
   - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
-  - {fileID: 11400000, guid: 395c3af752d2b7a4cac0c7811dff3a78, type: 2}
   - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
   - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
   - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
@@ -76,65 +75,117 @@ MonoBehaviour:
   - id: foundations
     displayName: Foundations
     order: 2
-    targetHours: 3
+    targetHours: 1.4
     anchor: 0
     description: 'Broaden the base after the tutorial: faster belts and harvesters,
-      isotopes, the first molecules and the Uranium on-ramp.'
+      nucleons and the light elements.'
     startPrestigeCount: 0
     startPrestigeCurrencyEarned: 0
-    startEntropy: 52000
+    startEntropy: 26800
     startPermanentUpgrades: []
     startSites: []
   - id: stellar_forge
     displayName: Stellar Forge
     order: 3
-    targetHours: 12
+    targetHours: 4
     anchor: 0
-    description: Climb the fusion ladder to Iron, then past it with explosive burning.
+    description: 'Fuse Oxygen to Silicon and capture Nitrogen to Aluminum: the end
+      of Physics before Chemistry.'
     startPrestigeCount: 1
     startPrestigeCurrencyEarned: 150
-    startEntropy: 2350000
+    startEntropy: 1580000
     startPermanentUpgrades:
     - assembly_line:1
     - memory_resonance:1
-    - entropy_headstart:2
+    - entropy_headstart:1
     - quantum_yield:1
     - idle_time_cap:1
     - efficient_layouts:1
+    - surplus_resale:1
+    - field_cooldown:1
     startSites: []
-  - id: actinide_frontier
-    displayName: Actinide Frontier
+  - id: chemistry_entry
+    displayName: First Chemistry
     order: 4
-    targetHours: 20
+    targetHours: 2
     anchor: 0
-    description: 'Work back from Uranium: decay, fission and neutron capture to the
-      precious metals.'
-    startPrestigeCount: 4
-    startPrestigeCurrencyEarned: 700
-    startEntropy: 4040000
+    description: 'The Chemistry tasks are done: the lab, element harvesting and the
+      first molecules.'
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 676000
     startPermanentUpgrades:
-    - assembly_line:2
+    - assembly_line:3
     - memory_resonance:2
     - entropy_headstart:2
     - quantum_yield:2
     - idle_time_cap:2
     - research_overdrive:1
     - idle_collection_rate:2
-    - efficient_layouts:1
+    - efficient_layouts:2
     - surplus_resale:2
-    - expanded_vault:1
-    - field_cooldown:1
-    - salvage_protocols:1
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    startSites: []
+  - id: deep_burning
+    displayName: Deep Burning
+    order: 5
+    targetHours: 8
+    anchor: 0
+    description: 'Physics resumes past Silicon: the fusion ladder to Iron, then explosive
+      burning.'
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    startSites: []
+  - id: actinide_frontier
+    displayName: Actinide Frontier
+    order: 6
+    targetHours: 20
+    anchor: 0
+    description: 'Work back from Uranium: decay, fission and neutron capture to the
+      precious metals.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 2780000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
     startSites: []
   - id: chemistry_world
     displayName: Chemistry World
-    order: 5
+    order: 7
     targetHours: 20
     anchor: 0
     description: Molecules, the Chemistry world and engineered materials.
     startPrestigeCount: 8
     startPrestigeCurrencyEarned: 2000
-    startEntropy: 39900000
+    startEntropy: 53300000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:3
@@ -147,25 +198,25 @@ MonoBehaviour:
     - surplus_resale:3
     - expanded_vault:3
     - field_cooldown:3
-    - salvage_protocols:2
+    - salvage_protocols:3
     - turnkey_builder:1
     startSites:
     - site_actinide_vein
   - id: synthetic_frontier
     displayName: Synthetic Frontier
-    order: 6
+    order: 8
     targetHours: 30
     anchor: 0
     description: Elements past Uranium, components and the megastructure.
     startPrestigeCount: 15
     startPrestigeCurrencyEarned: 5000
-    startEntropy: 315000000
+    startEntropy: 265000000
     startPermanentUpgrades:
-    - assembly_line:4
-    - memory_resonance:5
+    - assembly_line:5
+    - memory_resonance:4
     - entropy_headstart:4
     - quantum_yield:4
-    - idle_time_cap:4
+    - idle_time_cap:6
     - research_overdrive:3
     - idle_collection_rate:4
     - efficient_layouts:4
@@ -179,25 +230,25 @@ MonoBehaviour:
     - site_actinide_vein
   - id: biology_world
     displayName: Biology World
-    order: 7
+    order: 9
     targetHours: 40
     anchor: 0
     description: Biochemistry to cells, organisms and ecosystems.
     startPrestigeCount: 25
     startPrestigeCurrencyEarned: 11000
-    startEntropy: 647000000
+    startEntropy: 523000000
     startPermanentUpgrades:
     - assembly_line:5
     - memory_resonance:5
     - entropy_headstart:5
     - quantum_yield:5
-    - idle_time_cap:6
+    - idle_time_cap:5
     - research_overdrive:4
     - idle_collection_rate:5
     - efficient_layouts:4
     - surplus_resale:4
-    - expanded_vault:4
-    - field_cooldown:4
+    - expanded_vault:5
+    - field_cooldown:5
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2

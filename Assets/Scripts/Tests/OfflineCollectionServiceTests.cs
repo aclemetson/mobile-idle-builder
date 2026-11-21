@@ -194,11 +194,11 @@ namespace MobileIdleBuilder.Tests
         {
             var save = MakeSave(OneChain(
                 new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 3f }));
-            // 1/s × 7200 s × 0.5 rate × 3 sell = 10800 entropy
+            // 1/s × 7200 s × 3 sell = 21600 entropy (full production, not the 0.5 idle rate)
             var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(10800L, result.EntropyEarned);
+            Assert.AreEqual(21600L, result.EntropyEarned);
             Assert.AreEqual(0L, save.currentRun.baseCurrency, "ComputeForDuration must not mutate the save");
             Assert.IsNull(save.idleCollectionApplied, "ComputeForDuration must not stamp the idempotency guard");
         }
@@ -212,7 +212,7 @@ namespace MobileIdleBuilder.Tests
             var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 86400f);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(129600L, result.EntropyEarned, "1/s × 86400 s × 0.5 × 3 — no cap applied");
+            Assert.AreEqual(259200L, result.EntropyEarned, "1/s × 86400 s × 3 — no cap, full rate");
         }
 
         [Test]
@@ -220,6 +220,83 @@ namespace MobileIdleBuilder.Tests
         {
             var save = MakeSave(new IdleCollectionSnapshot { chains = new List<IdleChainEntry>() });
             Assert.IsNull(OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f));
+        }
+
+        // ── World delivery tasks from bonuses (Time Warp, Double Offline, Entropy Surge) ──────
+
+        [Test]
+        public void Payout_EntropyOnlyChains_DeliverNothingToTheDemon()
+        {
+            var save = MakeSave(new IdleCollectionSnapshot { chains = new List<IdleChainEntry>
+            {
+                new IdleChainEntry { itemId = 6, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f },
+                new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f,
+                                     notDelivered = true }, // byproduct entropy / surplus sale
+            }});
+            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 100f);
+            Assert.AreEqual(200L, result.EntropyEarned, "both pay entropy");
+            Assert.AreEqual(100L, result.DemonDelivered[6]);
+            Assert.IsFalse(result.DemonDelivered.ContainsKey(7), "only items that reach the Demon count");
+        }
+
+        [Test]
+        public void TimeWarp_CreditsTheWorldTasks_AndQueuesTheFinishedStage()
+        {
+            var prev = WorldTasks.Data;
+            var tasks = ScriptableObject.CreateInstance<WorldTaskSO>();
+            var carbon = ScriptableObject.CreateInstance<ItemSO>();
+            try
+            {
+                carbon.itemId = 6;
+                tasks.worldId = "world_chemistry";
+                tasks.stages = new[]
+                {
+                    new WorldTaskStage { id = "s1", items = new[] { carbon }, quantities = new[] { 100 } },
+                    new WorldTaskStage { id = "s2", items = new[] { carbon }, quantities = new[] { 1000 } },
+                };
+                WorldTasks.Data = tasks;
+                WorldTasks.PendingAnnouncements.Clear();
+                int rev = WorldTasks.Revision;
+
+                var save = MakeSave(OneChain(
+                    new IdleChainEntry { itemId = 6, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 1f }));
+                var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 300f); // 300 carbon, full rate
+                long counted = OfflineCollectionService.ApplyResultToSave(save, result);
+
+                Assert.AreEqual(300L, counted, "100 finish stage 1, the other 200 go on to stage 2 as they would live");
+                Assert.AreEqual(1, save.worldTaskStage);
+                Assert.AreEqual(200, WorldTasks.Delivered(save, 6));
+                Assert.AreEqual(new[] { "s1" }, WorldTasks.PendingAnnouncements.ConvertAll(s => s.id).ToArray(),
+                                "the service announces a stage a bonus finished");
+                Assert.AreNotEqual(rev, WorldTasks.Revision, "the UI is told progress moved");
+            }
+            finally
+            {
+                WorldTasks.Data = prev;
+                WorldTasks.PendingAnnouncements.Clear();
+                UnityEngine.Object.DestroyImmediate(tasks);
+                UnityEngine.Object.DestroyImmediate(carbon);
+            }
+        }
+
+        [Test]
+        public void LiveDemonDeliveries_AreFullRate_ForEntropySurge()
+        {
+            var save = MakeSave(new IdleCollectionSnapshot { chains = new List<IdleChainEntry>
+            {
+                new IdleChainEntry { itemId = 6, itemsPerSecond = 2f, endsAtEntropySink = true,  baseSellValue = 1f },
+                new IdleChainEntry { itemId = 8, itemsPerSecond = 5f, endsAtEntropySink = false, baseSellValue = 1f },
+            }});
+            var delivered = OfflineCollectionService.LiveDemonDeliveries(save, 600f);
+            Assert.AreEqual(1200L, delivered[6], "10 minutes of 2/s, no idle-rate cut (the income is live income)");
+            Assert.IsFalse(delivered.ContainsKey(8), "items going to inventory are not Demon deliveries");
+        }
+
+        [Test]
+        public void TaskSuffix_ShowsOnlyWhenItemsCounted()
+        {
+            Assert.AreEqual("", AdService.TaskSuffix(0));
+            Assert.AreEqual(" (+1,200 task items)", AdService.TaskSuffix(1200));
         }
 
         // ── Rewarded-ad idle-rate boost (+50%) ────────────────────────────────
@@ -250,17 +327,18 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void ComputeForDuration_AppliesIdleBoost_WhenActive()
+        public void ComputeForDuration_IsFullProduction_IdleRateAndIdleBoostDoNotApply()
         {
             var save = MakeSave(OneChain(
                 new IdleChainEntry { itemId = 7, itemsPerSecond = 1f, endsAtEntropySink = true, baseSellValue = 3f }));
             save.adsIdleBoostExpiryUtc = DateTime.UtcNow.AddHours(1).ToString("O");
 
-            // Without boost this is 10800 (rate 0.5); with +50% the rate is 0.75 → 16200.
-            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 7200f);
+            // A warp banks real production: the 0.5 idle rate and the +50% idle-rate ad boost are for time away.
+            var result = OfflineCollectionService.ComputeForDuration(save, _cfg, null, 3600f);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(16200L, result.EntropyEarned, "1/s × 7200 s × (0.5 × 1.5) × 3 sell");
+            Assert.AreEqual(10800L, result.EntropyEarned, "1/s × 3600 s × 3 sell");
+            Assert.AreEqual(3600L, result.DemonDelivered[7], "an hour of Demon deliveries, all counting for tasks");
         }
 
         // ── Multi-site aggregation (siteSnapshots) ────────────────────────────
@@ -579,6 +657,7 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(bonus, "the synth's escaping byproducts must be an entropy chain");
             Assert.AreEqual(1f, bonus.itemsPerSecond, 1e-4f, "one bonus per craft, 1 craft/s");
             Assert.AreEqual(5f, bonus.baseSellValue, 1e-4f);
+            Assert.IsTrue(bonus.notDelivered, "escape entropy is not item 20 reaching the Demon (world tasks)");
             Assert.IsTrue(snap.chains.Exists(c => !c.endsAtEntropySink && c.itemId == 20),
                 "the main output still goes to inventory");
         }
@@ -610,6 +689,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(HydrogenItem, snap.chains[0].itemId, "the sink consumes the synthesized hydrogen");
             Assert.AreEqual(2f, snap.chains[0].itemsPerSecond, 1e-3f, "input-limited to the collector's 2/s of quarks");
             Assert.AreEqual(50f, snap.chains[0].baseSellValue, 1e-3f, "hydrogen's sell value, not the quark's");
+            Assert.IsFalse(snap.chains[0].notDelivered, "hydrogen really reaches the Demon, so it counts for world tasks");
         }
 
         [Test]

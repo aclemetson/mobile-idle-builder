@@ -43,13 +43,9 @@ namespace MobileIdleBuilder
         public string dailyResetUtc;   // ISO 8601 — when current daily period expires
         public string weeklyResetUtc;  // ISO 8601 — when current weekly period expires (Mon 00:00 UTC)
         public string monthlyResetUtc; // ISO 8601 — when current monthly period expires (1st of month)
-        // Daily events (login streak + rotating challenges) — survive prestige, NOT in PrestigeSystem reset.
+        // Daily events (login reward calendar) — survive prestige, NOT in PrestigeSystem reset.
         public int    loginStreakIndex;          // 0-based position in the 28-day login reward calendar
         public string lastLoginRewardUtc;        // ISO 8601 — date of the last claimed login reward
-        public string dailyChallengeResetUtc;    // ISO 8601 — when the current challenge set expires
-        public List<string> dailyChallengeIds                       = new(); // today's 3 challenge ids
-        public List<AchievementProgressEntry> dailyChallengeProgress = new(); // per-challenge accumulated progress
-        public List<string> dailyChallengesClaimed                  = new(); // challenge ids already claimed today
         // Rewarded ads — opt-in video rewards with per-placement daily caps. Survive prestige
         // (not cleared by PrestigeSystem), mirroring the daily-event fields above.
         public List<AchievementProgressEntry> adWatchCounts         = new(); // id = AdPlacement name -> count watched today
@@ -63,6 +59,7 @@ namespace MobileIdleBuilder
         public int    cyclotronInsight;         // Insight points banked; spent on the two Cyclotron upgrades
         public int    cyclotronBoostLevel;      // Longer Boost level, 0..10 (+1 min boost each)
         public int    cyclotronCooldownLevel;   // Faster Recharge level, 0..6 (-5 min cooldown each)
+        public bool   cyclotronIntroSeen;       // one-shot: intro_cyclotron dialogue played when it unlocked
         // Managers (hireable building crew) — survive prestige; NOT cleared in PrestigeSystem.
         // hiredManagers: ManagerSO.id of every hired manager. managerAssignments: which hired manager
         // is bound to which building. Buildings are destroyed on prestige, so assignments are cleared
@@ -76,6 +73,12 @@ namespace MobileIdleBuilder
         public int          megastructureStage        = 0;     // completed stage count (0-5)
         public List<string> megastructureContribKeys   = new(); // item ids (string numeric, like inventoryKeys), toward the CURRENT stage
         public List<int>    megastructureContribValues = new(); // contributed counts, parallel to megastructureContribKeys
+        // World delivery tasks (Chemistry gate, 2026-11-19): items delivered to the Demon toward the CURRENT
+        // stage. Survive prestige like the megastructure; WorldTasks reads and writes them.
+        public int          worldTaskStage            = 0;     // completed stage count
+        public List<string> worldTaskProgressKeys     = new(); // item ids (string numeric), toward the current stage
+        public List<int>    worldTaskProgressValues   = new(); // delivered counts, parallel to worldTaskProgressKeys
+        public int          worldTaskVersion          = 0;     // 0 = not yet migrated (start stage from prestigeCount)
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();
@@ -95,6 +98,9 @@ namespace MobileIdleBuilder
         public float itemsPerSecond;
         public bool  endsAtEntropySink;
         public float baseSellValue;
+        // Entropy-only entry: byproduct escape entropy or a surplus sale. It pays entropy but no item reaches
+        // the Demon, so it never counts toward world delivery tasks. Absent (false) in older saves.
+        public bool  notDelivered;
     }
 
     [Serializable]
@@ -102,6 +108,7 @@ namespace MobileIdleBuilder
     {
         public long  baseCurrency;
         public long  totalEntropySpent;
+        public long  totalEntropyDiscounted;   // list price minus price paid; net worth counts purchases at list price
         public double baseNetWorth;
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();

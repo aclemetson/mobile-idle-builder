@@ -97,6 +97,8 @@ namespace MobileIdleBuilder
             // The measurement restarted under an open card (app was backgrounded): its price is stale, so
             // close it. The icon returns once the income has been measured again.
             if (IsOpen && (ads == null || !ads.IncomeMeasured(Placement))) CloseCard();
+            // A timed boost started (shop, another ad, Cyclotron Kick): no other boost may be taken now.
+            if (IsOpen && ads.BoostLockRemaining(Placement) > TimeSpan.Zero) CloseCard();
 
             bool show = ShouldShowIcon(
                 FeatureFlags.AdsEnabled,
@@ -104,7 +106,8 @@ namespace MobileIdleBuilder
                 ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded,
                 ads != null && ads.IsReady,
                 ads?.Remaining(Placement) ?? 0,
-                ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero,
+                // A running timed boost hides the offer like a cooldown does (BoostLock).
+                Max(ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero, ads?.BoostLockRemaining(Placement) ?? TimeSpan.Zero),
                 IsOpen,
                 _menuOpen,
                 ads != null && ads.IncomeMeasured(Placement));
@@ -180,5 +183,7 @@ namespace MobileIdleBuilder
         }
 
         void OnDisable() => UIInputBlocker.SetModal(_modalOwner, false);
+
+        static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
     }
 }

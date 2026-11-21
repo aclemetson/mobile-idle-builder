@@ -37,6 +37,8 @@ namespace MobileIdleBuilder.Tests
 
         [TestCase("btn-stats")]
         [TestCase("stats-networth-value")]
+        [TestCase("stats-stored-value")]
+        [TestCase("stats-stored-sub")]
         [TestCase("stats-panel")]
         [TestCase("btn-close-stats")]
         public void GameHudUxml_HasStatsElement(string name)
