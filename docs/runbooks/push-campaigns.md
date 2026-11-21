@@ -21,7 +21,9 @@ Android was set up on 2026-11-20. iOS (APNs key) is still to do. Repeat a step o
    - Team ID
    - Topic = the iOS bundle id
    - **Sandbox = false**, because TestFlight and App Store builds use production APNs
-3. The Xcode capability is added by the push package at build time. Nothing in CI changes.
+3. Upload it to **each** Unity environment you send from. TestFlight builds use development, like the Android internal builds.
+4. The Xcode capability is added by the push package at build time. Nothing in CI changes. The package also adds a `notificationservice` app extension, and cloud signing registers its App ID on the first build.
+5. The dashboard may count a campaign aimed at every platform as incomplete while either key is missing. 2026-11-21: with no Apple key, an Android campaign showed Completed but sent nothing, while Test on Device worked. This is unconfirmed: if campaigns still don't send with both keys present, contact Unity support.
 
 **Remote Config / Analytics:**
 - `analytics.enabled` must be **true**. Devices only register for push while analytics is collecting.
