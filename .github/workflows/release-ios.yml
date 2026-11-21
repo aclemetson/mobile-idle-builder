@@ -70,8 +70,13 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          # unity-builder v6 looks up game-ci/cli releases on the GitHub API; unauthenticated
+          # calls from shared runners hit the rate limit (403) and fail the job in seconds.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           unityVersion: 6000.3.6f1
+          # Pinned so builds are reproducible and "latest" needs no API lookup. Bump on purpose.
+          cliVersion: v0.1.76
           targetPlatform: iOS
           buildMethod: MobileIdleBuilder.Editor.BuildScript.BuildIOS
 
