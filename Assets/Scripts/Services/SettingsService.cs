@@ -53,6 +53,9 @@ namespace MobileIdleBuilder
             Save();
         }
 
+        /// <summary>The on-time reminders (exact alarms) card was shown; it is never shown again.</summary>
+        public void MarkExactAlarmAsked() { _current.exactAlarmAsked = true; Save(); }
+
         /// <summary>Dev console: forget every answer so the card is shown again.</summary>
         public void ResetNotificationAsk()
         {

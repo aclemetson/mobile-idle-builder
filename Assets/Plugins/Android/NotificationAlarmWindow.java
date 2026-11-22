@@ -14,8 +14,9 @@ import android.util.Log;
  *
  * The package schedules with AlarmManager.set(), an inexact alarm: Android delivers it anywhere from the fire time
  * to about 3/4 of the delay later (capped at 1 hour). setWindow() lets any app ask for a tighter window with no
- * permission (Android 12+ stretches windows under 10 minutes to 10 minutes). Exact alarms are not used: they need
- * a user-granted permission on Android 14+ and draw Play policy review.
+ * permission (Android 12+ stretches windows under 10 minutes to 10 minutes). When the player has allowed
+ * "Alarms & reminders" (SCHEDULE_EXACT_ALARM) the package sets an exact alarm instead, and the C# side skips this
+ * for game events (AndroidNotificationPlatform.Schedule); relaxed reminders still come through here.
  *
  * Battery Saver: plain alarms of background apps wait until it is turned off, so when it is on at scheduling time
  * the alarm becomes setAndAllowWhileIdle instead (fires under Battery Saver and Doze, no permission, OS-chosen time).
