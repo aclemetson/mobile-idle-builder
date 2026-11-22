@@ -126,6 +126,19 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void WorldTaskStrip_ShowsOnlyWhereTheTasksAreDelivered()
+        {
+            var tasks = ScriptableObject.CreateInstance<WorldTaskSO>();
+            tasks.worldId = WorldGate.Chemistry;
+            tasks.deliverIn = WorldGate.Physics;
+            Assert.IsTrue(WorldTasks.ShownIn(tasks, WorldGate.Physics));
+            Assert.IsTrue(WorldTasks.ShownIn(tasks, null), "null = Physics");
+            Assert.IsFalse(WorldTasks.ShownIn(tasks, WorldGate.Chemistry), "Physics' deliveries are not Chemistry's tasks");
+            Object.DestroyImmediate(tasks);
+            Assert.AreEqual(WorldGate.Physics, Resources.Load<WorldTaskSO>("WorldTasks").deliverIn);
+        }
+
+        [Test]
         public void ChemistryWorld_HasItsOwnTutorial_AndPhysicsDoesNot()
         {
             var worlds = Resources.Load<WorldDatabaseSO>("WorldDatabase")?.allWorlds;

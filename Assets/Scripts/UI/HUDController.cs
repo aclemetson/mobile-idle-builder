@@ -70,6 +70,8 @@ namespace MobileIdleBuilder
         private ResearchTreeView _researchTree;
         private Button     _researchModeBtn;
         private bool       _researchTreeMode = true;
+        private VisualElement _researchTabs;        // one tab per unlocked world (Physics / Chemistry / Biology)
+        private string     _researchWorldTab;       // world id whose research is shown; set to the live world on open
         private string     _researchSelectedId;
         private bool       _researchFocusPending;
         private ResearchBlock[] _researchBlocks;
@@ -806,12 +808,53 @@ namespace MobileIdleBuilder
             };
             var close = header?.Q<Button>("btn-close-research");
             if (header != null) header.Insert(close != null ? header.IndexOf(close) : header.childCount, _researchModeBtn);
+
+            // World tabs under the header: each world's research on its own page.
+            _researchTabs = new VisualElement { name = "research-world-tabs" };
+            _researchTabs.AddToClassList("research-tabs");
+            _researchPanel.Insert(_researchPanel.IndexOf(_researchList), _researchTabs);
+        }
+
+        /// <summary>World a research belongs to for the tabs (ResearchSO.world; empty = Physics).</summary>
+        internal static string ResearchTabOf(ResearchSO r) =>
+            string.IsNullOrEmpty(r?.world) ? WorldGate.Physics : r.world;
+
+        /// <summary>Rebuilds the world tabs: one per unlocked world, hidden when only Physics is open.</summary>
+        private void RefreshResearchTabs()
+        {
+            if (_researchTabs == null) return;
+            _researchTabs.Clear();
+            var ws = WorldService.Instance;
+            var worlds = ws?.AllWorlds;
+            int shown = 0;
+            if (worlds != null)
+                for (int i = 0; i < worlds.Count; i++)
+                {
+                    var w = worlds[i];
+                    if (w == null || !ws.IsUnlocked(i)) continue;
+                    shown++;
+                    string id = w.id;
+                    var tab = new Button(() =>
+                    {
+                        if (_researchWorldTab == id) return;
+                        _researchWorldTab = id;
+                        _researchSelectedId = null;
+                        _researchFocusPending = true;
+                        BuildResearchList();
+                    }) { text = w.displayName, name = "research-tab-" + id };
+                    tab.AddToClassList("research-tab");
+                    if (id == _researchWorldTab) tab.AddToClassList("research-tab--selected");
+                    _researchTabs.Add(tab);
+                }
+            SetElementVisible(_researchTabs, shown > 1);
         }
 
         private void OpenResearchPanel()
         {
             CloseAllPanels();
             _researchFocusPending = true;
+            // Open on the world the player is in: its research first, the others one tap away.
+            _researchWorldTab = WorldGate.ActiveWorldId() ?? WorldGate.Physics;
             BuildResearchList();
             SetElementVisible(_researchPanel, true);
 
@@ -942,6 +985,13 @@ namespace MobileIdleBuilder
             if (_ecsReady && !_tutorialQuery.IsEmpty)
                 tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
 
+            _researchWorldTab ??= WorldGate.ActiveWorldId() ?? WorldGate.Physics;
+            RefreshResearchTabs();
+            // Only the selected world's research (the tabs); the tutorial's target always shows.
+            string tutorialTarget = tutorialActive ? TutorialResearchTargetId() : null;
+            var shownResearch = researchService.AllResearch
+                .Where(r => r != null && (ResearchTabOf(r) == _researchWorldTab || r.id == tutorialTarget)).ToList();
+
             bool treeMode = _researchTree != null && _researchTreeMode;
             SetElementVisible(_researchList, !treeMode);
             if (_researchTree != null) SetElementVisible(_researchTree, treeMode);
@@ -953,11 +1003,11 @@ namespace MobileIdleBuilder
 
             if (treeMode)
             {
-                BuildResearchTree(currentEntropy, tutorialActive ? TutorialResearchTargetId() : null);
+                BuildResearchTree(shownResearch, currentEntropy, tutorialTarget);
                 return;
             }
 
-            foreach (var research in researchService.AllResearch)
+            foreach (var research in shownResearch)
             {
                 if (research == null) continue;
                 bool unlocked   = researchService.IsUnlocked(research.id);
@@ -991,9 +1041,8 @@ namespace MobileIdleBuilder
             return condition.type == ConditionType.ResearchUnlocked ? condition.researchId : null;
         }
 
-        private void BuildResearchTree(long currentEntropy, string tutorialTargetId)
+        private void BuildResearchTree(IReadOnlyList<ResearchSO> all, long currentEntropy, string tutorialTargetId)
         {
-            var all = researchService.AllResearch;
             ResearchTreeView.NodeState State(ResearchSO r) =>
                 researchService.IsUnlocked(r.id) ? ResearchTreeView.NodeState.Done
                 : researchService.HasActiveResearch && researchService.ActiveResearchId == r.id ? ResearchTreeView.NodeState.Active

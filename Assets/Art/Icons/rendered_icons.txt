@@ -5,7 +5,6 @@ ethane
 ethanol
 fatty_acid
 glucose
-liquid_hydrogen
 methane
 nitric_acid
 octane

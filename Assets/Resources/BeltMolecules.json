@@ -1164,31 +1164,6 @@
    ]
   },
   {
-   "id": "liquid_hydrogen",
-   "hideH": false,
-   "atoms": [
-    {
-     "e": "H",
-     "x": -0.3705,
-     "y": 0.0,
-     "z": 0.0
-    },
-    {
-     "e": "H",
-     "x": 0.3705,
-     "y": 0.0,
-     "z": 0.0
-    }
-   ],
-   "bonds": [
-    {
-     "a": 0,
-     "b": 1,
-     "o": 1
-    }
-   ]
-  },
-  {
    "id": "methane",
    "hideH": false,
    "atoms": [

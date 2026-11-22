@@ -184,7 +184,7 @@ namespace MobileIdleBuilder
                         itemsPerSecond    = kv.Value,
                         endsAtEntropySink = true,
                         baseSellValue     = sink ? price : price * surplusSaleFraction,
-                        notDelivered      = !sink,
+                        notDelivered      = true,   // never Maxwell's Demon: no world-task credit (WorldTasks)
                     });
                 }
             }

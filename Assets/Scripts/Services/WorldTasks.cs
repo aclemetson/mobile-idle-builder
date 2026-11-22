@@ -129,6 +129,17 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Credits every entry of <paramref name="deliveries"/> (item id → count). Returns the stages it finished.</summary>
+        /// <summary>
+        /// True when the task strip belongs on screen in <paramref name="activeWorldId"/>: the tasks are delivered
+        /// in one world (Physics feeds the Chemistry gate), so another world never shows them.
+        /// </summary>
+        public static bool ShownIn(WorldTaskSO data, string activeWorldId)
+        {
+            if (data == null) return false;
+            string home = string.IsNullOrEmpty(data.deliverIn) ? WorldGate.Physics : data.deliverIn;
+            return home == (string.IsNullOrEmpty(activeWorldId) ? WorldGate.Physics : activeWorldId);
+        }
+
         public static List<WorldTaskStage> CreditAll(SaveData save, WorldTaskSO data, IEnumerable<KeyValuePair<int, long>> deliveries)
             => CreditAll(save, data, deliveries, out _);
 
