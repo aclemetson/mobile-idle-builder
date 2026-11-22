@@ -77,6 +77,10 @@ namespace MobileIdleBuilder
                 float powerRatio = SystemAPI.HasComponent<PowerStatus>(entity)
                     ? SystemAPI.GetComponent<PowerStatus>(entity).ThrottleRatio
                     : 1f;
+                // Stream worlds (Chemistry): flow replaces power. StreamFlowSystem writes the share of its
+                // draw the building got from the stream beside it, upstream first.
+                if (SystemAPI.HasComponent<StreamStatus>(entity))
+                    powerRatio *= SystemAPI.GetComponent<StreamStatus>(entity).Ratio;
 
                 // ---- Input availability check (drives InputsSatisfied flag for UI) ----
                 // Optional buffer (probed, not queried): entities built without it keep the old path.
