@@ -149,6 +149,7 @@ namespace MobileIdleBuilder
             ClearSinglePreview();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
+            if (_streamMaterial != null) Destroy(_streamMaterial);
             if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
         }
 
@@ -632,7 +633,7 @@ namespace MobileIdleBuilder
                 ConveyorFlowMeshBuilder.Build(cs, entryDir, exitDir, inboundEdges);
 
             var wmr = flow.GetComponent<MeshRenderer>();
-            wmr.sharedMaterial    = GetFlowMaterial();
+            wmr.sharedMaterial    = IsStreamWorld() ? GetStreamMaterial() : GetFlowMaterial();
             wmr.shadowCastingMode = ShadowCastingMode.Off;
             wmr.receiveShadows    = false;
 
@@ -643,6 +644,30 @@ namespace MobileIdleBuilder
         /// The shared belt material (the <c>ConveyorField</c> lattice); a Belt Splitter's river draws with it
         /// to match its belts. Line colours contrast with every world's dark tiles.
         /// </summary>
+        // Chemistry streams: the same lattice in water colours (cool cyan lines, deep blue glow).
+        private static readonly Color StreamLineColor = new Color(0.62f, 0.92f, 1.00f);
+        private static readonly Color StreamGlowColor = new Color(0.18f, 0.48f, 0.95f);
+        private Material _streamMaterial;
+
+        /// <summary>True when the live world's belts are streams (every belt there is one).</summary>
+        private static bool IsStreamWorld()
+        {
+            var w = World.DefaultGameObjectInjectionWorld;
+            return w != null && w.IsCreated && WorldRules.IsStreamWorld(w.EntityManager);
+        }
+
+        /// <summary>The belt material recoloured as water for stream worlds; the flow material when the shader is missing.</summary>
+        public Material GetStreamMaterial()
+        {
+            if (_streamMaterial != null) return _streamMaterial;
+            var baseMat = GetFlowMaterial();
+            if (!_ownsFlowMaterial || baseMat == null) return baseMat;
+            _streamMaterial = new Material(baseMat);
+            _streamMaterial.SetColor("_LineColor", StreamLineColor);
+            _streamMaterial.SetColor("_GlowColor", StreamGlowColor);
+            return _streamMaterial;
+        }
+
         public Material GetFlowMaterial()
         {
             if (_flowMaterial != null) return _flowMaterial;

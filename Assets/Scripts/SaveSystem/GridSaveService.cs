@@ -649,6 +649,30 @@ namespace MobileIdleBuilder
                 return (ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f) * megaOutputMult;
             }
 
+            // Stream worlds (Chemistry) produce along ordered streams, not producer-to-consumer belts.
+            if (WorldRules.StreamTransport(save))
+            {
+                save.idleSnapshot = StreamIdleAnalyzer.BuildSnapshot(
+                    grid,
+                    isCollector,
+                    isEntropySink,
+                    getFootprint,
+                    getOutputItemId,
+                    bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
+                        ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
+                    getItemSellValue,
+                    getRecipeInfo,
+                    id => buildingLookup.TryGetValue(id, out var sp) && sp.building.isSpring ? sp.building.streamFlow : 0f,
+                    id => buildingLookup.TryGetValue(id, out var fd) ? fd.building.flowDraw : 0f,
+                    speedMult,
+                    DateTime.UtcNow.ToString("O"),
+                    SurplusSale.CurrentFraction(),
+                    getManagerOutputMultiplier);
+                MirrorActiveSiteSnapshot(save);
+                GameLogger.Debug($"[Idle] RebuildIdleSnapshot (streams) — chains={save.idleSnapshot?.chains?.Count ?? 0}");
+                return;
+            }
+
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
                 grid,
                 isCollector,

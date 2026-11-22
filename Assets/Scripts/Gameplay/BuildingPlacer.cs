@@ -23,6 +23,30 @@ namespace MobileIdleBuilder
         /// Returns true on success, false if the cell is already occupied.
         /// Pass outputDirection for field-collector buildings; omit (null) for all others.
         /// </summary>
+        /// <summary>
+        /// True when a stream segment (Chemistry channel) lies beside the footprint of
+        /// <paramref name="building"/> placed at (x, y). Used for the "No water" placement warning.
+        /// </summary>
+        public bool TouchesStream(int gridX, int gridY, BuildingSO building, int rotation, bool flipped)
+        {
+            if (building == null) return false;
+            var baseFp = new UnityEngine.Vector2Int(Mathf.Max(1, building.footprint.x), Mathf.Max(1, building.footprint.y));
+            var fp = PortUtils.RotatedFootprint(baseFp, rotation);
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<StreamSegment>(), ComponentType.ReadOnly<ConveyorSegmentData>());
+            var segs = q.ToComponentDataArray<ConveyorSegmentData>(Unity.Collections.Allocator.Temp);
+            bool touches = false;
+            foreach (var s in segs)
+            {
+                int dx = s.Cell.x < gridX ? gridX - s.Cell.x : s.Cell.x - (gridX + fp.x - 1);
+                int dy = s.Cell.y < gridY ? gridY - s.Cell.y : s.Cell.y - (gridY + fp.y - 1);
+                if (dx < 0) dx = 0;
+                if (dy < 0) dy = 0;
+                if (dx + dy == 1) { touches = true; break; }
+            }
+            segs.Dispose();
+            return touches;
+        }
+
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
                                   int speedLevel = 1, int storageLevel = 1, int inputLevel = 1,

@@ -66,6 +66,22 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(-1, StreamRules.DropIndex(new List<float> { 0.7f }, 0.5f, 0.5f));
         }
 
+        [Test]
+        public void FlowLabel_WarnsWhenBuildingsAreShortOfWater()
+        {
+            Assert.AreEqual("Flow 6 / 10 L/s", HUDStatusBarController.FormatFlowLabel(6f, 10f, 0));
+            StringAssert.StartsWith("⚠", HUDStatusBarController.FormatFlowLabel(12f, 10f, 1));
+        }
+
+        [Test]
+        public void InspectorStreamStatus_NamesTheProblem()
+        {
+            Assert.AreEqual("Not beside a stream", HUDBuildingInspectorSubController.StreamStatusText(new StreamStatus()));
+            StringAssert.StartsWith("Dry", HUDBuildingInspectorSubController.StreamStatusText(new StreamStatus { OnStream = 1 }));
+            StringAssert.Contains("50%", HUDBuildingInspectorSubController.StreamStatusText(new StreamStatus { OnStream = 1, Ratio = 0.5f }));
+            Assert.AreEqual("Flowing", HUDBuildingInspectorSubController.StreamStatusText(new StreamStatus { OnStream = 1, Ratio = 1f }));
+        }
+
         // ── ECS ───────────────────────────────────────────────────────────────
 
         World _world;
