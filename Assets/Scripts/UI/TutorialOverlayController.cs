@@ -165,6 +165,8 @@ namespace MobileIdleBuilder
                     _pendingHintText = null;
                     _lastHintProgress = null;
                     hudController?.SetTutorialHintProgress(null);
+                    // A step dialogue of the flow we just left (e.g. Chemistry's) must not stay open in the other world.
+                    dialogueController?.HideDialogue();
                 }
                 _wasActive     = false;
                 _lastStepIndex = -1;

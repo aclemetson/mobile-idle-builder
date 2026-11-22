@@ -96,6 +96,22 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ResetWorld_StartsThatWorldsTutorialOver_OnlyForThatWorld()
+        {
+            var save = new SaveData();
+            TutorialFlows.Slot(save, "world_chemistry", create: true).done = true;
+            TutorialFlows.Slot(save, "world_biology", create: true).currentStepId = "x";
+
+            TutorialFlows.ResetWorld(save, "world_chemistry");
+
+            var ts = new TutorialStateData();
+            TutorialFlows.Load(ref ts, save, _chem);
+            Assert.IsTrue(ts.IsActive);
+            Assert.AreEqual(0, ts.CurrentStepIndex);
+            Assert.IsNotNull(TutorialFlows.Slot(save, "world_biology", create: false), "other worlds untouched");
+        }
+
+        [Test]
         public void ReturningToPhysics_RestoresThePhysicsState()
         {
             var save = new SaveData();

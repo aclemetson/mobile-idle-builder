@@ -76,6 +76,12 @@ namespace MobileIdleBuilder
             return true;
         }
 
+        /// <summary>Forgets a world's tutorial progress, so it starts from the first step next time (dev 'visit world').</summary>
+        public static void ResetWorld(SaveData save, string worldId)
+        {
+            save?.worldTutorials?.RemoveAll(s => s == null || s.worldId == worldId);
+        }
+
         public static WorldTutorialSaveData Slot(SaveData save, string worldId, bool create)
         {
             save.worldTutorials ??= new List<WorldTutorialSaveData>();
