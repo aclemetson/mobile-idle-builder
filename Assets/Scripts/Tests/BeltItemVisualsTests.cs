@@ -179,7 +179,7 @@ namespace MobileIdleBuilder.Tests
                 }
                 finally { Object.DestroyImmediate(go); }
             }
-            Assert.AreEqual(22, count, "18 molecules + 4 organic compounds");
+            Assert.AreEqual(21, count, "17 molecules + 4 organic compounds (liquid hydrogen retired 2026-11-22)");
         }
 
         [Test]
@@ -191,16 +191,14 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void LiquidHydrogen_HasItsFrost_AndTheCatalystIsMetal()
+        public void TheCatalystIsMetal()
         {
-            var lh2 = BeltItemVisuals.BuildMolecule(null, "liquid_hydrogen");
             var cat = BeltItemVisuals.BuildMolecule(null, "catalyst");
             try
             {
-                Assert.IsNotNull(lh2.transform.Find("Frost"));
                 Assert.Greater(cat.transform.Find("Molecule").GetComponent<MeshRenderer>().sharedMaterial.GetFloat("_Metal"), 0.5f);
             }
-            finally { Object.DestroyImmediate(lh2); Object.DestroyImmediate(cat); }
+            finally { Object.DestroyImmediate(cat); }
         }
 
         [Test]

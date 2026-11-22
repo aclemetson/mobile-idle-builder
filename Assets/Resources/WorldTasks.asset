@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: WorldTasks
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldTaskSO
   worldId: world_chemistry
+  deliverIn: world_physics
   displayName: Path to Chemistry
   stages:
   - id: chem_task_1

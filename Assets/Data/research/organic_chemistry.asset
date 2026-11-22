@@ -25,7 +25,8 @@ MonoBehaviour:
   treeX: -1
   treeY: -1
   requiredWorld: world_chemistry
-  costBaseCurrency: 227000000
+  world: world_chemistry
+  costBaseCurrency: 229000000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1

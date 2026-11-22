@@ -382,6 +382,17 @@ door fixtures and a flare on the production tick (DROP in `RecipeProcessData.Pro
   containment field (`TorusMeshBuilder`); irregular (randomised) decay flashes flare the shell and
   brighten the ring. Contains rather than emits.
 
+- **Spring — "rock pool"** (`SpringStructure`, 1×1, Chemistry, no arrows or holes): a ring of rough low-poly stones (the
+  host mesh, so it keeps hover/selection tints) around a pool of water welling up, open on the output side where a spill lip
+  runs to the cell edge; a small dome of water bobs in the middle. Pool, spill and dome use the channels' water material, with
+  uv.y as the distance from the centre, so the light ripples move outward. Concepts (A rock pool, B wellhead, C geyser,
+  D crystal) were built in Blender 2026-11-22; the player chose A.
+- **Channels (stream worlds)**: `MobileIdleBuilder/StreamWater` (concept F2, always included in GraphicsSettings) on the
+  belt ribbon: a static world-space pebble bed under clear water, deeper in the middle, with soft caustics laid along the
+  ribbon (uv.y, repeating a whole number of times per cell) that scroll with `_BeltPhase`, so the light moves with the items
+  and bends never shear it. `ConveyorVisualizer.GetStreamMaterial` falls back to the blue-recoloured lattice if the shader is
+  missing. Fallback look if F2 doesn't work out: concept F1 (rippled current, foam streaks along the flow).
+
 `RoundedBoxMeshBuilder` (superellipsoid dome) is the reusable form for footprint-filling solid bodies;
 `CollectorMeshBuilder` (with FrontFlattenFrac=1) gives round spindles; `AtomNucleusMeshBuilder` gives the
 nucleus bulb; `RevolveMeshBuilder` turns any profile into a revolved part, or makes a flat sector. Pick/compose

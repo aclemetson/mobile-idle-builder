@@ -382,6 +382,7 @@ namespace MobileIdleBuilder.Editor
             so.treeX                = data.tree_x;
             so.treeY                = data.tree_y;
             so.requiredWorld        = data.required_world ?? "";
+            so.world                = data.world ?? "";
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -1059,6 +1060,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(ResourcesDir);
             var so = LoadOrCreate<WorldTaskSO>($"{ResourcesDir}/WorldTasks.asset");
             so.worldId     = data.world;
+            so.deliverIn   = string.IsNullOrEmpty(data.deliver_in) ? WorldGate.Physics : data.deliver_in;
             so.displayName = data.display_name;
 
             var stages = data.stages ?? new List<WorldTaskStageJson>();

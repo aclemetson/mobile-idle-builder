@@ -85,6 +85,7 @@ namespace MobileIdleBuilder
         private static readonly Color ContainmentLead      = new Color(0.35f, 0.35f, 0.38f);// Radioactive Containment shell base
         private static readonly Color FusionPlinth         = new Color(0.20f, 0.22f, 0.30f);// Fusion Reactor plinth base
         private static readonly Color SplitterRock         = new Color(0.50f, 0.56f, 0.66f);// Belt Splitter rock base
+        private static readonly Color SpringStone          = new Color(0.40f, 0.47f, 0.51f);// Spring pool stones
         private const float LowHoleScale = 0.55f; // holes on a low plinth, which has little face to fill
         private static readonly Color OutputHoleColor    = new Color(1.0f, 0.85f, 0.45f); // lit emission aperture
         private static readonly Color InputHoleColor     = new Color(0.05f, 0.07f, 0.12f); // dark recessed intake mouth
@@ -276,6 +277,10 @@ namespace MobileIdleBuilder
                     {
                         baseColor = FusionPlinth; // dark plinth base
                     }
+                    else if (styleKind == BuildingStructureKind.Spring)
+                    {
+                        baseColor = SpringStone; // grey-blue pool stones
+                    }
 
                     // PresenceReceiver owns all colour state for this cube; _baseColors remembers the
                     // logical base so power/hover tints restore to it (not white) afterwards.
@@ -410,6 +415,22 @@ namespace MobileIdleBuilder
                         cube.transform.localScale = Vector3.one * cs;
                         InitializeSplitter(cube, em, ent, baseColor);
                     }
+                    else if (styleKind == BuildingStructureKind.Spring)
+                    {
+                        cube.name = $"Spring_{x}_{y}";
+                        cube.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+                        cube.transform.localScale = Vector3.one * cs;
+                        int outDir = (int)OutputDirection.South;
+                        if (em.HasBuffer<PlacedPortData>(ent))
+                        {
+                            var ports = em.GetBuffer<PlacedPortData>(ent);
+                            for (int p = 0; p < ports.Length; p++)
+                                if (ports[p].PortType == (int)PortType.Output) { outDir = ports[p].Facing; break; }
+                        }
+                        if (_conveyorVisualizer == null) _conveyorVisualizer = FindAnyObjectByType<ConveyorVisualizer>();
+                        cube.AddComponent<SpringStructure>().Initialize(outDir, baseColor,
+                            _conveyorVisualizer != null ? _conveyorVisualizer.GetStreamMaterial() : null);
+                    }
 
                     _spawnedCubes[cell] = cube;
                 }
@@ -442,6 +463,8 @@ namespace MobileIdleBuilder
                 // inputs). A Belt Splitter's river is its own opening, so it gets arrows only.
                 bool hasStyle = em.HasComponent<BuildingVisualStyle>(entities[i]);
                 int  styleId  = hasStyle ? em.GetComponentData<BuildingVisualStyle>(entities[i]).Kind : 0;
+                // A Spring's spill lip already shows where its stream leaves: no arrow over the pool.
+                if (styleId == (int)BuildingStructureKind.Spring) { _portedCells.Add(cell); continue; }
                 bool drawHoles = hasStyle && styleId != (int)BuildingStructureKind.BeltSplitter;
                 bool lowHoles = styleId == (int)BuildingStructureKind.FusionReactor
                              || styleId == (int)BuildingStructureKind.NucleonHarvester;

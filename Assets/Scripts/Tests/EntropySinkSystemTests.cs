@@ -41,6 +41,35 @@ namespace MobileIdleBuilder.Tests
             _em.AddBuffer<BuildingInputSlot>(_sinkEntity);
         }
 
+        private int LoggedDeliveries()
+        {
+            using var q = _em.CreateEntityQuery(typeof(DemonDelivery));
+            if (q.IsEmpty) return 0;
+            var buf = _em.GetBuffer<DemonDelivery>(q.GetSingletonEntity());
+            int n = 0;
+            for (int i = 0; i < buf.Length; i++) n += buf[i].Quantity;
+            return n;
+        }
+
+        [Test]
+        public void TheDemon_LogsDeliveriesForTheWorldTasks()
+        {
+            _em.AddComponent<DemonTag>(_sinkEntity);
+            AddInputItems(3, 5);
+            Tick();
+            Assert.AreEqual(5, LoggedDeliveries());
+        }
+
+        [Test]
+        public void APlacedSink_PaysButNeverCountsForTheWorldTasks()
+        {
+            // Chemistry's Calorimeter: EntropySinkTag without DemonTag.
+            AddInputItems(3, 5);
+            Tick();
+            Assert.Greater(GetCurrency(), 0);
+            Assert.AreEqual(0, LoggedDeliveries());
+        }
+
         [TearDown]
         public void TearDown()
         {

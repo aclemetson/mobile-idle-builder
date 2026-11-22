@@ -656,10 +656,21 @@ namespace MobileIdleBuilder
             return w != null && w.IsCreated && WorldRules.IsStreamWorld(w.EntityManager);
         }
 
-        /// <summary>The belt material recoloured as water for stream worlds; the flow material when the shader is missing.</summary>
+        /// <summary>
+        /// Stream worlds' channel material: clear water over a pebble bed with drifting caustics
+        /// (MobileIdleBuilder/StreamWater, concept F2). Falls back to the belt lattice recoloured blue when the
+        /// shader is missing.
+        /// </summary>
         public Material GetStreamMaterial()
         {
             if (_streamMaterial != null) return _streamMaterial;
+            var water = Shader.Find("MobileIdleBuilder/StreamWater");
+            if (water != null)
+            {
+                _streamMaterial = new Material(water);
+                _streamMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
+                return _streamMaterial;
+            }
             var baseMat = GetFlowMaterial();
             if (!_ownsFlowMaterial || baseMat == null) return baseMat;
             _streamMaterial = new Material(baseMat);

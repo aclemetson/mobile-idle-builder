@@ -74,12 +74,6 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 3 — Molecular craft times ───────────────────────────────────
 
         [Test]
-        public void LiquidHydrogen_CraftTime_Is20s()
-        {
-            Assert.AreEqual(20f, RequireRecipe("liquid_hydrogen").base_craft_time, 0.001f);
-        }
-
-        [Test]
         public void Water_CraftTime_Is15s()
         {
             // H2O: 3 atoms. Was 4 H + 8 O at 60 s; time scaled with the atom count (2026-11-18).

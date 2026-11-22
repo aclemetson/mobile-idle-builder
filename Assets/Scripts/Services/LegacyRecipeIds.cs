@@ -18,6 +18,8 @@ namespace MobileIdleBuilder
         {
             // Legacy "helium" made helium_4 from 2 protons + 2 neutrons + 2 electrons in the Atomic Assembler.
             { "helium", "helium_4" },
+            // Liquid Hydrogen (5 H2 -> LH2) was retired 2026-11-22; a save that knew it knows Water, its sibling.
+            { "liquid_hydrogen", "water" },
         };
 
         /// <summary>The current id for <paramref name="id"/>: the mapped id when it is a legacy one, else unchanged.</summary>

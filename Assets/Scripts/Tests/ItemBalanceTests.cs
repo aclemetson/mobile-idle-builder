@@ -28,13 +28,13 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is188()
+        public void AllItems_TotalCount_Is187()
         {
             // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
             // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4) + 2 fusion particles (neutrino, gamma)
             // + 6 decay-chain isotopes (#322) - Tritium and Carbon-14 (retired 2026-11-19).
-            Assert.AreEqual(188, _items.Length,
-                $"Expected 188 items in Resources/Items/, found {_items.Length}. " +
+            Assert.AreEqual(187, _items.Length,
+                $"Expected 187 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -96,7 +96,6 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 3 — Molecular ───────────────────────────────────────────────
 
-        [Test] public void T3_LiquidHydrogen_SellValue()       => AssertSell("liquid_hydrogen",  3220f);
         [Test] public void T3_Water_SellValue()                 => AssertSell("water",            1090f);
         [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          5050f);
         [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          2880f);
@@ -143,7 +142,7 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T4_Steel_SellValue()             => AssertSell("steel",              1020000f);
         [Test] public void T4_CarbonFiber_SellValue()       => AssertSell("carbon_fiber",       766000f);
         [Test] public void T4_TitaniumAlloy_SellValue()     => AssertSell("titanium_alloy",     1340000f);
-        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 1540000f);
+        [Test] public void T4_SemiconductorWafer_SellValue() => AssertSell("semiconductor_wafer", 1530000f);
         [Test] public void T4_Aerogel_SellValue()           => AssertSell("aerogel",            1670000f);
         [Test] public void T4_Superconductor_SellValue()    => AssertSell("superconductor",     6380000f);
         [Test] public void T4_Metamaterial_SellValue()      => AssertSell("metamaterial",       18100000f);

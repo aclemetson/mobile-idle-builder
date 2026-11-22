@@ -52,8 +52,12 @@ namespace MobileIdleBuilder.Tests
                 surplusSaleFraction: 0.5f);
         }
 
+        // "delivered" = burnt in the Calorimeter at full value; otherwise sold at the open mouth's surplus rate.
         static float Rate(IdleCollectionSnapshot s, int item, bool delivered) =>
-            s.chains.Where(c => c.itemId == item && c.notDelivered == !delivered).Sum(c => c.itemsPerSecond);
+            s.chains.Where(c => c.itemId == item && (c.baseSellValue >= FullPrice(item) - 1e-3f) == delivered)
+                    .Sum(c => c.itemsPerSecond);
+
+        static float FullPrice(int item) => item == Water ? 100f : 10f;
 
         [Test]
         public void VentsToWaterToCalorimeter_PaysWaterAtFullValue()
@@ -71,7 +75,7 @@ namespace MobileIdleBuilder.Tests
         {
             var s = Run(Grid(B(Spring, 0, 1), B(H2Ex, 1, 1)));
             var h2 = s.chains.Single(c => c.itemId == H2);
-            Assert.IsTrue(h2.notDelivered);
+            Assert.IsTrue(h2.notDelivered, "never Maxwell's Demon");
             Assert.AreEqual(5f, h2.baseSellValue, 1e-4f);
         }
 
@@ -90,6 +94,13 @@ namespace MobileIdleBuilder.Tests
             var s = Run(Grid(B(Spring, 0, 1), B(Synth, 1, 1), B(H2Ex, 2, 1), B(O2Ex, 3, 1), B(Cal, 6, 0)));
             Assert.AreEqual(0f, Rate(s, Water, delivered: true), 1e-4f);
             Assert.AreEqual(1f, Rate(s, H2, delivered: true), 1e-4f);
+        }
+
+        [Test]
+        public void Calorimeter_NeverCountsAsADemonDelivery()
+        {
+            var s = Run(Grid(B(Spring, 0, 1), B(H2Ex, 1, 1), B(O2Ex, 2, 1), B(Synth, 3, 1), B(Cal, 6, 0)));
+            Assert.IsTrue(s.chains.All(c => c.notDelivered), "the world tasks only count the Demon");
         }
 
         [Test]

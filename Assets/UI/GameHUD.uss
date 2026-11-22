@@ -1866,3 +1866,28 @@
     background-color: rgba(0, 229, 255, 0.22);
     border-color: var(--color-primary);
 }
+
+/* Research panel: one tab per unlocked world (HUDController.RefreshResearchTabs). */
+.research-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    padding: 0 var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+}
+
+.research-tab {
+    flex-grow: 1;
+    margin: 0 var(--spacing-xs) 0 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+}
+
+.research-tab.research-tab--selected {
+    background-color: rgba(0, 229, 255, 0.22);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
