@@ -1962,8 +1962,14 @@ namespace MobileIdleBuilder
                     conveyorController.BeginConveyorMode();
                 });
 
-                _buildingsList.Add(MakeBuildingCard("Conveyor Belt",
-                    "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
+                // Stream worlds (Chemistry): the same tool draws water channels from a Spring.
+                bool streams = WorldRules.StreamTransport(SaveManager.Instance?.Current);
+                _buildingsList.Add(streams
+                    ? MakeBuildingCard("Channel",
+                        "Draw a stream from a Spring past your buildings; each takes what its reaction needs",
+                        MakeCostLabel(0, true), placeBtn)
+                    : MakeBuildingCard("Conveyor Belt",
+                        "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
             }
 
             if (placementController == null) return;

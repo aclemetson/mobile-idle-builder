@@ -61,7 +61,7 @@ namespace MobileIdleBuilder.Tests
         {
             foreach (var id in new[] { "molecular_synthesizer", "element_harvester", "compound_synthesizer" })
                 Assert.AreEqual(WorldGate.Chemistry, _buildings.Single(b => b.id == id).world, id);
-            Assert.IsTrue(string.IsNullOrEmpty(_buildings.Single(b => b.isEntropySink).world), "the Demon is shared");
+            Assert.IsTrue(string.IsNullOrEmpty(_buildings.Single(b => b.IsFixedSink).world), "the Demon is shared");
         }
 
         [Test]

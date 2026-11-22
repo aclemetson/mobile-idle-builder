@@ -164,6 +164,27 @@ Notes:
 - The auto-save loop will persist the loaded snapshot as the live save; if cloud save is on, it will
   also push to cloud on the next interval. Use `clear save` to get back to a clean slate.
 
+### 1.x Visiting and coming back (`visit`)
+
+Try something out and return to exactly where you were. The first `visit` saves your current game as a
+return point (`snapshots/visit_return.json`); further visits keep that original point, and `visit return`
+restores it and deletes it.
+
+| Command | Effect |
+|---|---|
+| `visit world <id>` | Saves the return point, then enters a world as a first arrival: unlocked for free, its buildings and channels removed (fields stay), its own tutorial from the first step. `<id>` is the world id, its short name (`chemistry`) or its index. Reloads the scene. |
+| `visit <name>` | Saves the return point, then loads any snapshot (`snapshot list`), e.g. one you made with `snapshot save`. |
+| `visit return` | Restores the game saved before the first visit and reloads. |
+| `visit status` | Says whether a return point is waiting. |
+
+Test the Chemistry tutorial on a phone: `visit world chemistry`, play it through (add entropy with
+`add currency 1000000` if the Chemistry Lab research is out of reach), then `visit return`.
+
+Notes:
+- While visiting, autosave and cloud save hold the visit's state; `visit return` writes your game back. If
+  the app is closed mid-visit, the return point stays on the device and `visit return` still works.
+- Recipe knowledge is not part of a snapshot, so recipes learned during a visit stay learned.
+
 ---
 
 ## Part 2 — tutorial list

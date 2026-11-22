@@ -607,7 +607,29 @@ namespace MobileIdleBuilder
                 // A power problem stops the building, so it stays in view instead of hiding behind (i).
                 if (statusText != "Powered") AddInspectorRow(_inspectorStatic, $"⚡ {statusText}");
             }
+
+            // Streams (Chemistry): a Spring's flow, or the share a bank building gets from its stream.
+            if (so.isSpring)
+            {
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Flow: {so.streamFlow:0.#} L/s, shared by the buildings downstream, nearest first");
+            }
+            else if (_em.HasComponent<StreamStatus>(_inspectorEntity))
+            {
+                var st   = _em.GetComponentData<StreamStatus>(_inspectorEntity);
+                string s = StreamStatusText(st);
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Draw: {so.flowDraw:0.#} L/s");
+                AddInspectorRow(_inspectorInfo, $"Status: {s}");
+                if (st.OnStream == 0 || st.Ratio < 0.999f) AddInspectorRow(_inspectorStatic, $"💧 {s}");
+            }
         }
+
+        internal static string StreamStatusText(StreamStatus st) =>
+            st.OnStream == 0  ? "Not beside a stream"
+            : st.Ratio <= 0f  ? "Dry: the stream ran out of water upstream"
+            : st.Ratio < 0.999f ? $"Short of water, {st.Ratio * 100f:0}% speed"
+            : "Flowing";
 
         // ── Upgrade UI ────────────────────────────────────────────────────────
 

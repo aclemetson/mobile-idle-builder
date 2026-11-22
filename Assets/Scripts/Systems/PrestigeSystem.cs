@@ -106,7 +106,9 @@ namespace MobileIdleBuilder
             {
                 var ts = SystemAPI.GetSingleton<TutorialStateData>();
                 ts.FirstRunComplete = true;
-                ts.IsActive         = false;
+                // Ends the main tutorial only. A world's own tutorial (Chemistry) keeps its progress: the
+                // flush below stores it in that world's slot.
+                if (!TutorialFlows.WorldFlowActive) ts.IsActive = false;
                 SystemAPI.SetSingleton(ts);
             }
 

@@ -478,7 +478,7 @@ namespace MobileIdleBuilder
             if (world == null) return;
 
             using var query = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<EntropySinkTag>(),
+                ComponentType.ReadOnly<DemonTag>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
 

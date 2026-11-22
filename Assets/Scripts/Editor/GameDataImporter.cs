@@ -212,7 +212,8 @@ namespace MobileIdleBuilder.Editor
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
-            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
+            var mainTutorial = GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup,
+                completionMessage: "Tutorial complete! The Foundry is yours.");
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, data.research_blocks, researchLookup);
@@ -229,6 +230,21 @@ namespace MobileIdleBuilder.Editor
             var worldLookup = new Dictionary<string, WorldSO>();
             foreach (var world in data.worlds)
                 worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
+            // ── Step 12.52: per-world tutorials (run the first time the player is in that world) ──
+            foreach (var w in worldLookup.Values) if (w != null) w.tutorialFlow = null;
+            foreach (var wt in data.world_tutorials)
+            {
+                if (wt == null || string.IsNullOrEmpty(wt.id)) continue;
+                if (!worldLookup.TryGetValue(wt.world ?? "", out var wso) || wso == null)
+                {
+                    GameLogger.Warning($"[GameDataImporter] world_tutorials '{wt.id}': world '{wt.world}' not found.");
+                    continue;
+                }
+                wso.tutorialFlow = GenerateTutorialFlow(wt.steps, dialogueLookup, buildingLookup,
+                    $"{TutorialDir}/{wt.id}.asset", wt.world, wt.completion_message);
+                EditorUtility.SetDirty(wso);
+            }
+            if (mainTutorial != null) TutorialFlowSO.EditorResetStatics(mainTutorial);
             GenerateWorldDatabase(data.worlds, worldLookup);
 
             // ── Step 12.59: RecipeDatabaseSO (runtime recipe list, #336/#287) ─
@@ -489,6 +505,10 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isPlacedSink        = data.is_placed_sink;
+            so.isSpring            = data.is_spring;
+            so.streamFlow          = data.stream_flow;
+            so.flowDraw            = data.flow_draw;
             so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
             so.isSplitter          = data.is_splitter;
@@ -727,6 +747,7 @@ namespace MobileIdleBuilder.Editor
             so.unlockCost  = data.unlock_cost;
 
             so.unlockByTasks   = data.unlock_by_tasks;
+            so.streamTransport = data.stream_transport;
             so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
             foreach (var pid in so.prereqUnlockIds)
                 if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
@@ -843,14 +864,17 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
+        private static TutorialFlowSO GenerateTutorialFlow(List<TutorialStepJson> steps,
             Dictionary<string, DialogueSO> dialogueLookup,
-            Dictionary<string, BuildingSO> buildingLookup)
+            Dictionary<string, BuildingSO> buildingLookup,
+            string path = null, string worldId = "", string completionMessage = "")
         {
-            if (steps == null || steps.Count == 0) return;
+            if (steps == null || steps.Count == 0) return null;
 
-            string path = $"{TutorialDir}/tutorial_flow.asset";
+            path ??= $"{TutorialDir}/tutorial_flow.asset";
             var so = LoadOrCreate<TutorialFlowSO>(path);
+            so.worldId           = worldId ?? "";
+            so.completionMessage = completionMessage ?? "";
 
             var realSteps = steps.FindAll(s => !string.IsNullOrEmpty(s.id));
             so.steps = new TutorialStepDef[realSteps.Count];
@@ -995,6 +1019,7 @@ namespace MobileIdleBuilder.Editor
             }
 
             EditorUtility.SetDirty(so);
+            return so;
         }
 
         private static void GenerateDailyContent(List<DailyRewardJson> rewards)

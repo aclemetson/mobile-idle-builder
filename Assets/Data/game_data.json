@@ -9825,7 +9825,7 @@
     {
       "id": "collect_hydrogen_gas",
       "display_name": "Hydrogen Gas",
-      "recipe_id": 167,
+      "recipe_id": 291,
       "tier": 3,
       "category": "Element",
       "inputs": [],
@@ -9848,7 +9848,7 @@
     {
       "id": "collect_oxygen_gas",
       "display_name": "Oxygen Gas",
-      "recipe_id": 167,
+      "recipe_id": 292,
       "tier": 3,
       "category": "Element",
       "inputs": [],
@@ -9871,7 +9871,7 @@
     {
       "id": "collect_graphite",
       "display_name": "Graphite",
-      "recipe_id": 167,
+      "recipe_id": 293,
       "tier": 3,
       "category": "Element",
       "inputs": [],
@@ -9894,7 +9894,7 @@
     {
       "id": "collect_nitrogen_gas",
       "display_name": "Nitrogen Gas",
-      "recipe_id": 167,
+      "recipe_id": 294,
       "tier": 3,
       "category": "Element",
       "inputs": [],
@@ -10031,6 +10031,35 @@
       "unlocks_research": null,
       "is_simplified": false,
       "simplification_note": ""
+    },
+    {
+      "id": "methane_combustion",
+      "display_name": "Carbon Dioxide",
+      "recipe_id": 295,
+      "tier": 3,
+      "category": "Molecule",
+      "inputs": [
+        { "item": "methane", "quantity": 1 },
+        { "item": "oxygen_gas", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "carbon_dioxide",
+      "output_quantity": 1,
+      "byproducts": [
+        { "item": "water", "quantity": 2 }
+      ],
+      "base_craft_time": 30.0,
+      "manual_craft_time": 0.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 100.0,
+      "valid_buildings": ["molecular_synthesizer"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "nitrogen_fixation",
+      "unlocks_research": null,
+      "is_simplified": false,
+      "simplification_note": "",
+      "method_label": "Combustion"
     },
     {
       "id": "table_salt",
@@ -10870,6 +10899,114 @@
       "structure_kind": "BeltSplitter"
     },
     {
+      "id": "spring",
+      "display_name": "Spring",
+      "description": "Wells up clean water. Draw a channel from it and the stream carries whatever you drop in past every building on its banks. Its flow is shared by those buildings, upstream first.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 29,
+      "tier": 1,
+      "category": "Core",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": false,
+      "is_power_source": false,
+      "base_power_cost_ev": 0.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": [],
+      "input_slot_count": 0,
+      "input_slot_labels": [],
+      "is_entropy_sink": false,
+      "footprint": [1, 1],
+      "ports": [
+        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 2000,
+      "base_max_output_items": 0,
+      "base_max_input_items_per_slot": 0,
+      "upgrade_levels": [],
+      "storage_upgrade_levels": [],
+      "input_upgrade_levels": [],
+      "has_special_upgrade": false,
+      "special_upgrade_id": "",
+      "required_research": "chemistry_lab",
+      "available_from_start": false,
+      "tutorial_note": "Chemistry streams: every channel starts at a Spring.",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A spring is groundwater forced up through rock. Its flow sets how many reactors one stream can feed.",
+      "is_splitter": false,
+      "structure_kind": "None",
+      "world": "world_chemistry",
+      "is_spring": true,
+      "stream_flow": 10.0,
+      "flow_draw": 0.0
+    },
+    {
+      "id": "calorimeter",
+      "display_name": "Calorimeter",
+      "description": "Sits at a stream's mouth and burns whatever reaches it, turning the energy stored in its bonds into entropy. Finished compounds pay far more than raw gas.",
+      "icon_path": "TODO",
+      "prefab_path": "TODO",
+      "building_id": 30,
+      "tier": 1,
+      "category": "Core",
+      "is_obsoleteable": false,
+      "obsolete_condition": "",
+      "requires_power": false,
+      "is_power_source": false,
+      "base_power_cost_ev": 0.0,
+      "power_cost_is_dynamic": false,
+      "base_output_ev": 0.0,
+      "influence_radius_tiles": 0.0,
+      "link_radius_tiles": 0.0,
+      "base_output_rate": 1.0,
+      "supported_recipes": [],
+      "input_slot_count": 0,
+      "input_slot_labels": [],
+      "is_entropy_sink": true,
+      "footprint": [2, 2],
+      "ports": [
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
+        { "port_type": "Input", "local_cell": [0, 1], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [1, 0], "local_facing": "North" },
+        { "port_type": "Input", "local_cell": [1, 1], "local_facing": "South" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [1, 0], "local_facing": "West" },
+        { "port_type": "Input", "local_cell": [0, 1], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [1, 1], "local_facing": "West" }
+      ],
+      "placement_rule": "Anywhere",
+      "compatible_adjacent_categories": [],
+      "compatible_fields": [],
+      "entropy_cost": 5000,
+      "base_max_output_items": 0,
+      "base_max_input_items_per_slot": 50,
+      "upgrade_levels": [],
+      "storage_upgrade_levels": [],
+      "input_upgrade_levels": [],
+      "has_special_upgrade": false,
+      "special_upgrade_id": "",
+      "required_research": "chemistry_lab",
+      "available_from_start": false,
+      "tutorial_note": "Chemistry's sink. Without one, a stream's mouth sells leftovers at the surplus rate.",
+      "collects_decay_particles": false,
+      "decay_collection_rate": 0.0,
+      "codex_entry": "A bomb calorimeter measures the heat a substance releases when it burns: its enthalpy of combustion.",
+      "is_splitter": false,
+      "structure_kind": "None",
+      "world": "world_chemistry",
+      "is_placed_sink": true,
+      "flow_draw": 0.0
+    },
+    {
       "id": "neutron_capture",
       "display_name": "Neutron Capture",
       "description": "Soaks an element in neutrons until one turns into a proton, making the next element up. Slow mode (s-process) is cheap on power; Fast mode (r-process) is the only way to make Gold, Platinum, Iridium, Osmium and Europium.",
@@ -11039,7 +11176,8 @@
       "tutorial_note": "Introduced immediately after the Strong Force Combiner. Teaches power radius and the energy grid. Small radius (generates eV, short reach) — pair with the Power Relay to spread coverage.",
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
-      "codex_entry": "Generates electron volts (eV) to power nearby buildings. Place within link range of powered buildings. Link multiple generators to share power across the grid."
+      "codex_entry": "Generates electron volts (eV) to power nearby buildings. Place within link range of powered buildings. Link multiple generators to share power across the grid.",
+      "world": "world_physics"
     },
     {
       "id": "power_relay",
@@ -11075,7 +11213,7 @@
       "base_max_output_items": 0,
       "base_max_input_items_per_slot": 0,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 6.0, "link_radius_tiles": 7.0, "cost_base_currency": 800,  "cost_prestige_currency": 0 },
+        { "level": 2, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 6.0, "link_radius_tiles": 7.0, "cost_base_currency": 800, "cost_prestige_currency": 0 },
         { "level": 3, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 7.0, "link_radius_tiles": 8.0, "cost_base_currency": 3200, "cost_prestige_currency": 0 },
         { "level": 4, "output_rate": 0.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 8.0, "link_radius_tiles": 9.0, "cost_base_currency": 12000, "cost_prestige_currency": 0 }
       ],
@@ -11087,7 +11225,8 @@
       "tutorial_note": "",
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
-      "codex_entry": "A resonant broadcast mast. The Relay generates no power of its own — it re-radiates the grid's existing eV field across a far wider area than a generator can reach, letting a single power source feed buildings spread across the whole site."
+      "codex_entry": "A resonant broadcast mast. The Relay generates no power of its own — it re-radiates the grid's existing eV field across a far wider area than a generator can reach, letting a single power source feed buildings spread across the whole site.",
+      "world": "world_physics"
     },
     {
       "_comment": "--- SPECIAL BUILDINGS (available from start, no research required) ---",
@@ -11354,24 +11493,23 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
-      "base_power_cost_ev": 50.0,
+      "base_power_cost_ev": 0.0,
       "power_cost_is_dynamic": false,
       "_note_power": "v1 power-draw: static per-level eV draw (per-recipe draw deferred).",
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["liquid_hydrogen", "water", "methane", "ammonia", "carbon_dioxide", "silica", "iron_oxide", "uranium_hexafluoride"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Primary Feedstock", "Secondary Feedstock"],
+      "supported_recipes": ["liquid_hydrogen", "water", "methane", "ammonia", "carbon_dioxide", "silica", "iron_oxide", "uranium_hexafluoride", "methane_combustion"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "MolecularSynthesizer",
       "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -11381,9 +11519,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 75.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 50000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 115.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 170.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 50000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 200000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 800000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150, "cost_base_currency": 35000, "cost_prestige_currency": 0 },
@@ -11403,7 +11541,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "Drives covalent bond formation between elements at high energy density. Primary intake accepts the dominant element; secondary intake accepts the reactant. Output is one molecule unit per cycle.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 3.0
     },
     {
       "id": "materials_forge",
@@ -11416,9 +11555,9 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
-      "base_power_cost_ev": 100.0,
+      "base_power_cost_ev": 0.0,
       "power_cost_is_dynamic": false,
       "_note_power": "v1 power-draw: static per-level eV draw (per-recipe draw deferred).",
       "base_output_ev": 0.0,
@@ -11426,14 +11565,13 @@
       "link_radius_tiles": 0.0,
       "base_output_rate": 0.5,
       "supported_recipes": ["steel", "carbon_fiber", "titanium_alloy", "semiconductor_wafer", "aerogel", "superconductor", "metamaterial"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Primary Molecule", "Secondary Molecule"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "MaterialsForge",
       "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -11443,9 +11581,9 @@
       "base_max_output_items": 15,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 1.0, "power_cost_ev": 150.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 2.0, "power_cost_ev": 225.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 4.0, "power_cost_ev": 340.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25000000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 1.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 5000000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25000000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 100, "cost_base_currency": 700000, "cost_prestige_currency": 0 },
@@ -11465,7 +11603,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "Operates at extreme temperatures and pressures to force molecular precursors into stable alloy lattices. Slower than the Molecular Synthesizer by design — materials science demands patience.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 4.0
     },
     {
       "id": "component_fabricator",
@@ -11704,7 +11843,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A boring rig for matter itself. Placed on an element seam, it extracts a chosen element in bulk — the raw feedstock for chemistry.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 1.0
     },
     {
       "id": "compound_synthesizer",
@@ -11717,23 +11857,22 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
-      "base_power_cost_ev": 50.0,
+      "base_power_cost_ev": 0.0,
       "power_cost_is_dynamic": false,
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
       "supported_recipes": ["table_salt", "sulfuric_acid"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Primary Element", "Secondary Element"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "MolecularSynthesizer",
       "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -11743,9 +11882,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 75.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 100000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 115.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 400000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 170.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 100000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 400000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150, "cost_base_currency": 70000, "cost_prestige_currency": 0 },
@@ -11765,7 +11904,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A reaction vessel that forces mined elements into bonds. Two intakes feed the reactants; one output delivers the compound.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 3.0
     },
     {
       "_comment": "--- CHEMISTRY C2-C4 BUILDINGS (Chem/Bio Phase 4b) ---",
@@ -11817,7 +11957,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A heavier cousin of the Element Harvester, geared for metal lodes. Extracts iron, copper, aluminum, or nickel to feed reactors and catalysts.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 1.0
     },
     {
       "id": "catalytic_reactor",
@@ -11830,23 +11971,22 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
-      "base_power_cost_ev": 100.0,
+      "base_power_cost_ev": 0.0,
       "power_cost_is_dynamic": false,
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
       "supported_recipes": ["chlorine_gas", "sodium_hydroxide", "nitric_acid", "catalyst"],
-      "input_slot_count": 2,
-      "input_slot_labels": ["Primary Reactant", "Secondary Reactant"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "MolecularSynthesizer",
       "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -11856,9 +11996,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 150.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 400000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 230.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 340.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 6400000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 400000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 6400000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150, "cost_base_currency": 280000, "cost_prestige_currency": 0 },
@@ -11878,7 +12018,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A pressurized vessel packed with catalytic surfaces. It forces reluctant reagents to react, turning mined stock into the salts, acids, and catalysts of heavy industry.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 4.0
     },
     {
       "id": "organic_synthesizer",
@@ -11891,24 +12032,22 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
-      "base_power_cost_ev": 200.0,
+      "base_power_cost_ev": 0.0,
       "power_cost_is_dynamic": false,
       "base_output_ev": 0.0,
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
       "supported_recipes": ["ethane", "octane", "ethanol", "polymer_precursor", "glucose", "amino_acid", "fatty_acid", "nucleotide"],
-      "input_slot_count": 3,
-      "input_slot_labels": ["Carbon Source", "Reagent", "Reagent"],
+      "input_slot_count": 1,
+      "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "MolecularSynthesizer",
       "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
         { "port_type": "Input", "local_cell": [0, 0], "local_facing": "North" },
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -11918,9 +12057,9 @@
       "base_max_output_items": 20,
       "base_max_input_items_per_slot": 30,
       "upgrade_levels": [
-        { "level": 2, "output_rate": 2.0, "power_cost_ev": 300.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 },
-        { "level": 3, "output_rate": 4.0, "power_cost_ev": 460.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 6400000, "cost_prestige_currency": 0 },
-        { "level": 4, "output_rate": 8.0, "power_cost_ev": 680.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25600000, "cost_prestige_currency": 0 }
+        { "level": 2, "output_rate": 2.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1600000, "cost_prestige_currency": 0 },
+        { "level": 3, "output_rate": 4.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 6400000, "cost_prestige_currency": 0 },
+        { "level": 4, "output_rate": 8.0, "power_cost_ev": 0.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 25600000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
         { "level": 2, "max_output_items": 150, "cost_base_currency": 1120000, "cost_prestige_currency": 0 },
@@ -11940,7 +12079,8 @@
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
       "codex_entry": "A three-intake synthesis train for carbon chemistry. Hydrocarbons enter, and — once the biochemical precursors are understood — the four monomers of life emerge: sugar, amino acid, fatty acid, and nucleotide.",
-      "world": "world_chemistry"
+      "world": "world_chemistry",
+      "flow_draw": 5.0
     },
     {
       "_comment": "--- BIOLOGY B1 BUILDINGS (Chem/Bio Biology track) ---",
@@ -12564,7 +12704,8 @@
       "prereq_unlock_ids": [],
       "unlock_by_tasks": true,
       "site_ids": ["site_chem_lab"],
-      "theme": { "background_color": "#08171c", "tile_color": "#123039", "field_tint": "#bfeede" }
+      "theme": {"background_color": "#08171c", "tile_color": "#123039", "field_tint": "#bfeede"},
+      "stream_transport": true
     },
     {
       "id": "world_biology",
@@ -13466,7 +13607,46 @@
       "id": "intro_world_chemistry",
       "lines": [
         { "speaker_name": "The Architect", "text": "You have crossed a threshold. Physics forged the elements one nucleus at a time. Out here they come as nature leaves them: hydrogen and oxygen as gases, carbon as graphite, nitrogen in the air.", "portrait_path": "TODO", "pause_game": true, "highlight_target": "", "action": "" },
-        { "speaker_name": "The Architect", "text": "Research the Chemistry Lab, then put Extractors on the Hydrogen Seeps and Oxygen Vents and burn the two gases into water in a Molecular Synthesizer. Graphite and nitrogen come with later research. Travel between worlds from the Worlds panel whenever you wish; each keeps producing while you are away.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+        { "speaker_name": "The Architect", "text": "Chemistry is open. Travel there from the Worlds panel whenever you wish; every world keeps producing while you are away. I will show you how things work when you arrive.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_flow",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "The stream is working. One more rule: a Spring's flow is limited, and buildings share it nearest the source first. The bar at the top shows how much is used.", "portrait_path": "TODO", "pause_game": true, "highlight_target": "", "action": "" },
+        { "speaker_name": "The Architect", "text": "When the last buildings run short of water, add another Spring and start a new stream. The lab is yours.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_calorimeter",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Where the stream ends, place a Calorimeter. It burns whatever reaches it and turns the energy in its bonds into entropy; finished compounds pay far more than raw gas. An open mouth only sells leftovers cheaply.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_bank",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Now a reaction. Buildings sit on the bank of the stream. As items float past, each one takes only what its recipe needs and lets everything else flow on, then drops what it makes back into the water.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" },
+        { "speaker_name": "The Architect", "text": "Place a Molecular Synthesizer with its bank side on the channel, downstream of your Extractors, so the gases reach it.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_extractors",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Raw elements come as nature leaves them: hydrogen and oxygen gas seep from vents. Put an Extractor on a Hydrogen Seep and one on an Oxygen Vent, beside your channel, and point their output at the water.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_spring",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "First, water. A Spring wells it up, and a Channel drawn from it becomes a stream that carries whatever you drop in.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "chem_tut_welcome",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Welcome to the lab. Chemistry plays by different rules: there is no power here, and no Maxwell's Demon. Water does the work.", "portrait_path": "TODO", "pause_game": true, "highlight_target": "", "action": "" },
+        { "speaker_name": "The Architect", "text": "Every reaction is an equation. Two hydrogen and one oxygen make two water, nitrogen and three hydrogen make two ammonia. Your buildings follow those recipes exactly.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
       ]
     },
     {
@@ -14731,6 +14911,141 @@
       "hint": "",
       "advance_condition": { "type": "UiEvent", "ui_event_id": "dialogue_complete" },
       "on_enter": { "dialogue_id": "tutorial_complete_context" }
+    }
+  ],
+  "_world_tutorials_note": "Per-world tutorials (2026-11-22): run the first time the player is in that world, instead of the Physics tutorial. Same step format as tutorial_steps; progress is saved per world (SaveData.worldTutorials).",
+  "world_tutorials": [
+    {
+      "id": "tutorial_chemistry",
+      "world": "world_chemistry",
+      "completion_message": "Chemistry tutorial complete. The lab is yours.",
+      "steps": [
+        {
+          "id": "chem_welcome",
+          "hint": "",
+          "advance_condition": {
+            "type": "UiEvent",
+            "ui_event_id": "dialogue_complete"
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_welcome"
+          }
+        },
+        {
+          "id": "chem_research_lab",
+          "hint": "Open Research and study the Chemistry Lab.",
+          "advance_condition": {
+            "type": "ResearchUnlocked",
+            "research_id": "chemistry_lab"
+          },
+          "on_enter": {
+            "pulse_button_id": "btn-research"
+          }
+        },
+        {
+          "id": "chem_place_spring",
+          "hint": "Open the Builder and place a Spring.",
+          "advance_condition": {
+            "type": "BuildingMin",
+            "building_id": "spring",
+            "min_count": 1
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_spring",
+            "pulse_button_id": "btn-place-spring"
+          }
+        },
+        {
+          "id": "chem_draw_channel",
+          "hint": "Place a Channel: tap the tile in front of the Spring, then where the stream should end, and confirm.",
+          "advance_condition": {
+            "type": "UiEvent",
+            "ui_event_id": "conveyor_placed"
+          },
+          "on_enter": {
+            "pulse_button_id": "btn-place-conveyor"
+          }
+        },
+        {
+          "id": "chem_place_extractors",
+          "hint": "Place Extractors on a Hydrogen Seep and an Oxygen Vent beside the channel, output toward the water.",
+          "advance_condition": {
+            "type": "BuildingMin",
+            "building_id": "element_harvester",
+            "min_count": 2
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_extractors",
+            "pulse_button_id": "btn-place-element_harvester",
+            "highlight_target": "hydrogen_gas_field",
+            "highlight_mode": "VisualOnly"
+          }
+        },
+        {
+          "id": "chem_place_synth",
+          "hint": "Place a Molecular Synthesizer on the bank, downstream of the Extractors.",
+          "advance_condition": {
+            "type": "BuildingMin",
+            "building_id": "molecular_synthesizer",
+            "min_count": 1
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_bank",
+            "pulse_button_id": "btn-place-molecular_synthesizer"
+          }
+        },
+        {
+          "id": "chem_set_water",
+          "hint": "Tap the Synthesizer and set it to Water: 2 H2 + O2 -> 2 H2O.",
+          "advance_condition": {
+            "type": "BuildingRecipeSet",
+            "building_id": "molecular_synthesizer",
+            "recipe_id": 31
+          },
+          "on_enter": {
+            "highlight_target": "molecular_synthesizer",
+            "highlight_mode": "VisualOnly"
+          }
+        },
+        {
+          "id": "chem_place_calorimeter",
+          "hint": "Place a Calorimeter at the end of the channel.",
+          "advance_condition": {
+            "type": "BuildingMin",
+            "building_id": "calorimeter",
+            "min_count": 1
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_calorimeter",
+            "pulse_button_id": "btn-place-calorimeter"
+          }
+        },
+        {
+          "id": "chem_first_water",
+          "hint": "Watch the stream carry hydrogen and oxygen to the Synthesizer.",
+          "advance_condition": {
+            "type": "ItemCraftedMin",
+            "items": [
+              {
+                "item_id": 33,
+                "quantity": 2
+              }
+            ]
+          },
+          "on_enter": {}
+        },
+        {
+          "id": "chem_flow",
+          "hint": "",
+          "advance_condition": {
+            "type": "UiEvent",
+            "ui_event_id": "dialogue_complete"
+          },
+          "on_enter": {
+            "dialogue_id": "chem_tut_flow"
+          }
+        }
+      ]
     }
   ],
   "megastructure": {

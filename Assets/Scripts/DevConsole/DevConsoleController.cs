@@ -1264,6 +1264,37 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
 
+            // ── visit: try something out, then come back to exactly where you were ──
+            // The first 'visit' saves the current game as the return point (snapshots/visit_return.json);
+            // further visits keep that original point until 'visit return' restores it. Specific forms are
+            // registered before 'visit <name>' because the first matching pattern wins.
+            _registry.Register("visit return", "Go back to the game as it was before the first 'visit'",
+                _ => VisitReturn());
+
+            _registry.Register("visit status", "Show whether a 'visit' return point is waiting",
+                _ => File.Exists(Path.Combine(SnapshotDir, VisitReturnName + ".json"))
+                    ? $"Visiting. 'visit return' restores the game saved at " +
+                      $"{File.GetLastWriteTime(Path.Combine(SnapshotDir, VisitReturnName + ".json")):g}."
+                    : "Not visiting. 'visit <snapshot>' or 'visit world <id>' saves a return point first.");
+
+            _registry.Register("visit world <id>", "Save a return point, then enter a world fresh: unlocked, its buildings cleared, its tutorial from the start",
+                args => VisitWorld(args[0]));
+
+            _registry.Register("visit <name>", "Save a return point, then load any snapshot (see 'snapshot list'); 'visit return' comes back",
+                args =>
+                {
+                    if (args[0] == VisitReturnName) return "Use 'visit return' to go back.";
+                    var data = SnapshotRead(args[0], out string err);
+                    if (data == null) return err;
+                    string saved = SaveVisitReturnPoint();
+                    if (saved.StartsWith("Error")) return saved;
+                    SaveManager.Instance.DevReplaceCurrent(data);
+                    GridSaveService.Instance?.ClearGrid();
+                    _inputField?.Blur();
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    return $"{saved} Visiting snapshot '{args[0]}'. 'visit return' brings you back.";
+                });
+
             // ── simulated spending and absence (AI playtest benchmarks) ──────
             _registry.Register("iap grant <tier>", "Simulate buying crystal pack 1-4 ($0.99 / $4.99 / $9.99 / $19.99)",
                 args => IapGrant(args[0]));
@@ -1296,6 +1327,90 @@ namespace MobileIdleBuilder.Dev
             double dollars = double.Parse(pack.DisplayPrice.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture);
             Playtest.PlaytestBenchmark.Active?.AddPurchase(dollars, pack.CrystalAmount, pack.Name);
             return $"Granted {pack.Name}: +{pack.CrystalAmount} crystals ({pack.DisplayPrice}).";
+        }
+
+        // ── Visit helpers ─────────────────────────────────────────────────────
+
+        private const string VisitReturnName = "visit_return";
+
+        /// <summary>
+        /// Saves the current game as the return point, unless one is already waiting: chained visits all
+        /// come back to the game as it was before the first one.
+        /// </summary>
+        private static string SaveVisitReturnPoint()
+        {
+            if (SceneLoader.IsTransitioning || !(ECSLoadBridge.Instance?.SaveApplied ?? false))
+                return "Error: the game is still loading. Try again once it has finished.";
+            if (File.Exists(Path.Combine(SnapshotDir, VisitReturnName + ".json")))
+                return "Return point kept from your first visit.";
+            string r = SnapshotSave(VisitReturnName);
+            return r.StartsWith("Error") ? r : "Return point saved.";
+        }
+
+        private string VisitReturn()
+        {
+            if (SceneLoader.IsTransitioning) return "The game is still loading. Try again once it has finished.";
+            var data = SnapshotRead(VisitReturnName, out _);
+            if (data == null) return "Nothing to return to: no 'visit' is in progress.";
+            if (SaveManager.Instance == null) return "Error: SaveManager not ready.";
+
+            SaveManager.Instance.DevReplaceCurrent(data);
+            File.Delete(Path.Combine(SnapshotDir, VisitReturnName + ".json"));
+            GridSaveService.Instance?.ClearGrid();
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            return "Returning to the game as it was before your visit...";
+        }
+
+        /// <summary>
+        /// 'visit world &lt;id&gt;': saves a return point, then sets the game up to try a world as a first
+        /// arrival: the world (and its sites) unlocked, travelled to, its buildings and channels removed
+        /// (fields stay), and its own tutorial reset to the start. Reloads the scene so everything
+        /// (tutorial overlay included) starts clean. Accepts a world id, its short name or its index.
+        /// </summary>
+        private string VisitWorld(string key)
+        {
+            var svc  = WorldService.Instance;
+            var sm   = SaveManager.Instance;
+            if (svc == null || sm?.Current == null) return "Error: WorldService or SaveManager not ready.";
+
+            int idx = svc.IndexOf(key);
+            if (idx < 0) idx = svc.IndexOf("world_" + key);
+            if (idx < 0 && int.TryParse(key, out int n) && svc.GetWorld(n) != null) idx = n;
+            var world = svc.GetWorld(idx);
+            if (world == null) return $"Error: unknown world '{key}'. Try 'world list'.";
+
+            string saved = SaveVisitReturnPoint();
+            if (saved.StartsWith("Error")) return saved;
+
+            // Unlock it and its sites without charging (a dev visit), then travel there.
+            var save = sm.Current;
+            save.unlockedWorlds ??= new List<string>();
+            if (idx != 0 && !save.unlockedWorlds.Contains(world.id)) save.unlockedWorlds.Add(world.id);
+            save.unlockedSites ??= new List<string>();
+            foreach (var sid in world.siteIds ?? new List<string>())
+            {
+                if (string.IsNullOrEmpty(sid)) continue;
+                if (!save.unlockedSites.Contains(sid)) save.unlockedSites.Add(sid);
+                int sidx = SiteService.Instance != null ? SiteService.Instance.IndexOf(sid) : -1;
+                if (sidx >= 0) GridSaveService.EnsureSiteGrid(save, sidx);
+            }
+            if (svc.ActiveIndex != idx && !svc.SwitchTo(idx))
+                return $"{saved} Error: could not travel to '{world.id}'. 'visit return' restores your game.";
+
+            // Clear the live site's buildings and channels (fields stay), then write it down.
+            var ecs = Unity.Entities.World.DefaultGameObjectInjectionWorld;
+            if (ecs != null && ecs.IsCreated) RunStateClearer.ClearLiveRunEntities(ecs.EntityManager);
+            sm.SaveLocal();
+
+            // Its tutorial starts over (the flush above re-wrote its slot from the live state).
+            TutorialFlows.ResetWorld(save, world.id);
+            sm.SaveLocal(skipGridFlush: true, skipECSFlush: true);
+
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            string tut = world.tutorialFlow != null ? "its tutorial from the start" : "no tutorial of its own";
+            return $"{saved} Entering '{world.id}' fresh ({tut}). 'visit return' brings you back.";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────

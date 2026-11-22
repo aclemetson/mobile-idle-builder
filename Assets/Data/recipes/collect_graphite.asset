@@ -15,7 +15,7 @@ MonoBehaviour:
   id: collect_graphite
   displayName: Graphite
   methodLabel: 
-  recipeId: 167
+  recipeId: 293
   tier: 3
   category: 3
   inputs: []

@@ -72,7 +72,7 @@ namespace MobileIdleBuilder
                 // Preserve entropy sinks (Maxwell's Demon) — they're baked from the SubScene, and
                 // LoadGrid deliberately refuses to re-place them, so destroying one here would
                 // leave the grid with no Demon at all.
-                if (_em.HasComponent<EntropySinkTag>(e))
+                if (_em.HasComponent<DemonTag>(e))
                 {
                     GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
                     continue;
@@ -135,7 +135,7 @@ namespace MobileIdleBuilder
         /// mark the chains that end at the Demon for offline earnings.
         /// </summary>
         internal static bool IsRestorable(BuildingSO building) =>
-            building != null && !building.isEntropySink;
+            building != null && !building.IsFixedSink;
 
         /// <summary>
         /// A saved building that no longer fits anywhere near its old anchor (its footprint grew) is
@@ -328,6 +328,16 @@ namespace MobileIdleBuilder
         public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
+
+            // World rules first (stream belts, Demon on/off), so the belts restored below are built
+            // for the world they belong to. Runs on scene load and every site/world switch.
+            if (save != null && _ecsReady)
+            {
+                WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>());
+                // Each world runs its own tutorial; the Physics one never runs in Chemistry.
+                TutorialFlows.Activate(_em, save, WorldRules.ActiveWorld(save));
+            }
+
             var grid = EnsureActiveGrid(save);
             if (grid == null) return;
             if (!forceApply && SaveManager.Instance.IsNewGame) return;
@@ -641,6 +651,30 @@ namespace MobileIdleBuilder
                 if (bsd?.position == null || bsd.position.Length < 2) return megaOutputMult;
                 int posKey = ManagerService.EncodePos(bsd.position[0], bsd.position[1]);
                 return (ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f) * megaOutputMult;
+            }
+
+            // Stream worlds (Chemistry) produce along ordered streams, not producer-to-consumer belts.
+            if (WorldRules.StreamTransport(save))
+            {
+                save.idleSnapshot = StreamIdleAnalyzer.BuildSnapshot(
+                    grid,
+                    isCollector,
+                    isEntropySink,
+                    getFootprint,
+                    getOutputItemId,
+                    bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
+                        ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
+                    getItemSellValue,
+                    getRecipeInfo,
+                    id => buildingLookup.TryGetValue(id, out var sp) && sp.building.isSpring ? sp.building.streamFlow : 0f,
+                    id => buildingLookup.TryGetValue(id, out var fd) ? fd.building.flowDraw : 0f,
+                    speedMult,
+                    DateTime.UtcNow.ToString("O"),
+                    SurplusSale.CurrentFraction(),
+                    getManagerOutputMultiplier);
+                MirrorActiveSiteSnapshot(save);
+                GameLogger.Debug($"[Idle] RebuildIdleSnapshot (streams) — chains={save.idleSnapshot?.chains?.Count ?? 0}");
+                return;
             }
 
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(

@@ -112,9 +112,14 @@ namespace MobileIdleBuilder
                 var   seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
                 float step = dt * speedMult / seg.TransportTime;
 
+                // Streams (Chemistry): a channel no Spring feeds is dry and nothing on it moves; a stream's
+                // mouth never holds items back (a Calorimeter takes them, else they are sold as surplus).
+                bool isStream = EntityManager.HasComponent<StreamSegment>(e);
+                if (isStream && EntityManager.GetComponentData<StreamSegment>(e).HasSource == 0) continue;
+
                 float frontLimit = seg.NextSegment != Entity.Null
                     ? BeltMotion.FrontLimitBehind(Rear(seg.NextSegment), spacing)
-                    : TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
+                    : isStream || TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
                         ? BeltMotion.Open : BeltMotion.TailRest(spacing);
 
                 for (int k = 0; k < buf.Length; k++)
@@ -159,16 +164,20 @@ namespace MobileIdleBuilder
                 {
                     // Tail segment — deposit into a building input whose port faces this cell,
                     // in whichever adjacent direction it sits (independent of the belt's exit dir).
+                    bool streamMouth = EntityManager.HasComponent<StreamSegment>(e);
                     if (TryPickInput(e, seg, item.ItemID, buildingMap, out Entity bldg, out int deliverDir, out var decision))
                     {
                         switch (decision)
                         {
                             case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
                             case InputDecision.Overflow: overflows.Add((e, item.ItemID, bldg));                    break;
-                            // Wait: input full (for this item) or item unused -- it waits on the belt
+                            // Wait: input full (for this item) or item unused -- it waits on the belt,
+                            // except at a stream's mouth, which sells it as surplus.
+                            default: if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null));                 break;
                         }
                     }
-                    // No adjacent input port: item waits at tail
+                    // No adjacent input port: a belt's item waits at the tail; a stream's open mouth sells it.
+                    else if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null));
                 }
             }
 
@@ -200,7 +209,7 @@ namespace MobileIdleBuilder
                     if (!FrontIsReady(from, itemID)) continue;
                     double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction) * boost;
                     _surplusCarry += value;
-                    SurplusSaleLog.Record(bldg, value, now);
+                    if (bldg != Entity.Null) SurplusSaleLog.Record(bldg, value, now);
                     ConveyorItems.RemoveFront(EntityManager, from);
                 }
                 long earned = (long)System.Math.Floor(_surplusCarry);
@@ -220,6 +229,9 @@ namespace MobileIdleBuilder
                 }
                 if (debugLog) GameLogger.Develop($"[Conveyor] Surplus: {overflows.Count} item(s) sold, paid {earned}");
             }
+
+            // Streams: buildings on the banks take the items their recipe uses as they pass.
+            StreamSidePickup(segEntities, buildingMap);
 
             foreach (var target in mergeTargets)
             {
@@ -384,10 +396,102 @@ namespace MobileIdleBuilder
                 });
             }
 
+            // Streams: bank buildings drop their products into the middle of the tile beside them.
+            StreamSideDrop(segEntities, buildingMap, spacing);
+
             segEntities.Dispose();
             bldgEntities.Dispose();
             segMap.Dispose();
             buildingMap.Dispose();
+        }
+
+        // ----------------------------------------------------------------
+        // Streams (Chemistry, StreamSegment): side pickup and side drop
+        // ----------------------------------------------------------------
+
+        /// <summary>
+        /// A building with an input port facing a stream segment takes, each frame, the first item on that
+        /// segment its set recipe uses while that input is below its cap. Everything else floats past: no
+        /// waiting, no surplus sale. Sinks are fed at the mouth only (tail path), never from the bank.
+        /// </summary>
+        private void StreamSidePickup(NativeArray<Entity> segs, NativeHashMap<int2, Entity> buildingMap)
+        {
+            for (int i = 0; i < segs.Length; i++)
+            {
+                var e = segs[i];
+                if (!EntityManager.HasComponent<StreamSegment>(e) || !ConveyorItems.Has(EntityManager, e)) continue;
+                var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+
+                for (int dir = 0; dir < 4; dir++)
+                {
+                    int2 cell = AdjacentCell(seg.Cell, dir);
+                    if (!buildingMap.TryGetValue(cell, out Entity bldg)) continue;
+                    if (EntityManager.HasComponent<EntropySinkTag>(bldg)) continue;
+                    if (!HasMatchingPort(bldg, cell, dir, PortType.Input)) continue;
+                    if (!EntityManager.HasComponent<RecipeProcessData>(bldg) || !EntityManager.HasBuffer<RecipeInputSlot>(bldg)) continue;
+                    if (EntityManager.GetComponentData<RecipeProcessData>(bldg).RecipeID < 0) continue;
+                    if (!EntityManager.HasBuffer<BuildingInputSlot>(bldg) || !EntityManager.HasComponent<BuildingInventoryConfig>(bldg)) continue;
+
+                    int cap   = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg).InputCapacity;
+                    var items = EntityManager.GetBuffer<ConveyorItem>(e);
+                    var recipeInputs = EntityManager.GetBuffer<RecipeInputSlot>(bldg, isReadOnly: true);
+                    var inputBuf     = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
+                    for (int k = 0; k < items.Length; k++)
+                    {
+                        int id = items[k].ItemID;
+                        if (!InputAcceptance.RecipeUses(recipeInputs, id)) continue;
+                        if (SlotBufferUtils.CountInInputBuffer(inputBuf, id) >= cap) continue;
+                        SlotBufferUtils.AddToInputBuffer(inputBuf, id, 1);
+                        items.RemoveAt(k);
+                        if (BuildingInputFX.Instance != null) BuildingInputFX.Instance.Trigger(seg.Cell, dir, id);
+                        break;
+                    }
+                    if (items.Length == 0) break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// A building with an output port facing a stream segment drops its next product into the middle of
+        /// that tile when there is a gap (<see cref="StreamRules.DropIndex"/>); otherwise it keeps it. Chain
+        /// heads are skipped: the head pull (pass 4) already takes from a building at the stream's start.
+        /// </summary>
+        private void StreamSideDrop(NativeArray<Entity> segs, NativeHashMap<int2, Entity> buildingMap, float spacing)
+        {
+            var progresses = new List<float>(4);
+            for (int i = 0; i < segs.Length; i++)
+            {
+                var e = segs[i];
+                if (!EntityManager.HasComponent<StreamSegment>(e)) continue;
+                var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                if (seg.IsChainHead) continue;
+
+                for (int dir = 0; dir < 4; dir++)
+                {
+                    int2 cell = AdjacentCell(seg.Cell, dir);
+                    if (!buildingMap.TryGetValue(cell, out Entity bldg)) continue;
+                    if (EntityManager.HasComponent<SplitterTag>(bldg) || EntityManager.HasBuffer<OutputPortFilter>(bldg)) continue;
+                    if (!HasMatchingPort(bldg, cell, OppositeDir(dir), PortType.Output)) continue;
+                    if (!EntityManager.HasBuffer<BuildingOutputSlot>(bldg)) continue;
+                    var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
+                    if (outputBuf.Length == 0 || outputBuf[0].Quantity <= 0) continue;
+
+                    var items = ConveyorItems.Get(EntityManager, e);
+                    progresses.Clear();
+                    for (int k = 0; k < items.Length; k++) progresses.Add(items[k].Progress);
+                    int at = StreamRules.DropIndex(progresses, StreamRules.DropAt, spacing);
+                    if (at < 0) continue;
+
+                    int itemID = outputBuf[0].ItemID;
+                    SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
+                    items.Insert(at, new ConveyorItem
+                    {
+                        ItemID   = itemID,
+                        Progress = StreamRules.DropAt,
+                        InEdge   = ConveyorItem.EncodeEdge(dir),
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -568,11 +672,14 @@ namespace MobileIdleBuilder
             Entity overflowBldg = Entity.Null;
             int    overflowDir  = -1;
             int bestAcceptRank = int.MaxValue, bestOverflowRank = int.MaxValue;
+            // A stream's mouth feeds sinks only: bank buildings take what they need from the side.
+            bool streamTail = EntityManager.HasComponent<StreamSegment>(tail);
             for (int dir = 0; dir < 4; dir++)
             {
                 int2 candidate = AdjacentCell(seg.Cell, dir);
                 if (!buildingMap.TryGetValue(candidate, out Entity cand)) continue;
                 if (!HasMatchingPort(cand, candidate, dir, PortType.Input)) continue;
+                if (streamTail && !EntityManager.HasComponent<EntropySinkTag>(cand)) continue;
 
                 int rank = TailInputPriority.Rank(dir == seg.ExitDir, EntityManager.HasComponent<EntropySinkTag>(cand));
                 if (rank >= bestAcceptRank) continue;
