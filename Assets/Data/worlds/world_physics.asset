@@ -18,6 +18,7 @@ MonoBehaviour:
   prereqUnlockIds: []
   unlockByTasks: 0
   streamTransport: 0
+  tutorialFlow: {fileID: 0}
   siteIds:
   - site_origin
   - site_quark_sea

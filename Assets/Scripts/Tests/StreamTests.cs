@@ -181,6 +181,22 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void EverythingDemolished_FlowReadoutGoesToZero()
+        {
+            using (var q = _em.CreateEntityQuery(typeof(StreamGridState)))
+                q.SetSingleton(new StreamGridState { Supply = 10f, Draw = 5f, StalledCount = 1 });
+
+            Tick();
+
+            using (var q = _em.CreateEntityQuery(typeof(StreamGridState)))
+            {
+                var s = q.GetSingleton<StreamGridState>();
+                Assert.AreEqual(0f, s.Supply);
+                Assert.AreEqual(0f, s.Draw);
+            }
+        }
+
+        [Test]
         public void BuildingAwayFromTheStream_DoesNotRun()
         {
             Spring(10f);

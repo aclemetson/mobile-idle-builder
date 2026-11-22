@@ -22,27 +22,9 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: Research the Chemistry Lab, then put Extractors on the Hydrogen Seeps and
-      Oxygen Vents and burn the two gases into water in a Molecular Synthesizer.
-      Graphite and nitrogen come with later research. Travel between worlds from
-      the Worlds panel whenever you wish; each keeps producing while you are away.
-    portrait: {fileID: 0}
-    pauseGame: 0
-    highlightTarget: 
-    action: 
-  - speakerName: The Architect
-    text: 'There is no power here. Water does the work. Place a Spring and draw a
-      channel from it: the stream carries whatever your Extractors drop in, and every
-      building on its bank takes only what its reaction needs and lets the rest flow
-      on.'
-    portrait: {fileID: 0}
-    pauseGame: 0
-    highlightTarget: 
-    action: 
-  - speakerName: The Architect
-    text: Each Spring has a limited flow, shared upstream first, so a long stream
-      starves its last buildings. Put a Calorimeter at the mouth to burn what arrives
-      for entropy; anything that reaches an open mouth is sold off cheaply.
+    text: Chemistry is open. Travel there from the Worlds panel whenever you wish;
+      every world keeps producing while you are away. I will show you how things
+      work when you arrive.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

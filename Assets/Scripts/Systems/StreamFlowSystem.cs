@@ -44,6 +44,10 @@ namespace MobileIdleBuilder
             if (segs.Length == 0 && consumers.Length == 0)
             {
                 consumers.Dispose(); segs.Dispose();
+                // Nothing on the streams any more (all demolished, or a world without streams): zero the
+                // HUD totals so the flow strip doesn't keep showing the last stream's numbers.
+                if (SystemAPI.TryGetSingletonEntity<StreamGridState>(out var empty))
+                    EntityManager.SetComponentData(empty, default(StreamGridState));
                 return;
             }
 

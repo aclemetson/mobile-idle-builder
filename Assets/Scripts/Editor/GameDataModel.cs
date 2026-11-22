@@ -27,6 +27,7 @@ namespace MobileIdleBuilder.Editor
         public List<DialogueJson>        dialogues       = new();
         public List<DailyRewardJson>     daily_rewards   = new();
         public List<TutorialStepJson>    tutorial_steps  = new();
+        public List<WorldTutorialJson>   world_tutorials = new();   // tutorials for worlds other than Physics
         public MegastructureJson         megastructure   = new();
         public WorldTasksJson            world_tasks     = new();
 
@@ -46,6 +47,7 @@ namespace MobileIdleBuilder.Editor
             dialogues       ??= new List<DialogueJson>();
             daily_rewards   ??= new List<DailyRewardJson>();
             tutorial_steps  ??= new List<TutorialStepJson>();
+            world_tutorials ??= new List<WorldTutorialJson>();
             megastructure   ??= new MegastructureJson();
             megastructure.Initialize();
             world_tasks     ??= new WorldTasksJson();
@@ -59,7 +61,23 @@ namespace MobileIdleBuilder.Editor
             foreach (var w in worlds)         w?.Initialize();
             foreach (var d in dialogues)      d?.Initialize();
             foreach (var s in tutorial_steps) s?.Initialize();
+            foreach (var wt in world_tutorials)
+            {
+                if (wt == null) continue;
+                wt.steps ??= new List<TutorialStepJson>();
+                foreach (var s in wt.steps) s?.Initialize();
+            }
         }
+    }
+
+    /// <summary>A world's own tutorial (same step format as tutorial_steps), started on the first visit.</summary>
+    [Serializable]
+    internal class WorldTutorialJson
+    {
+        public string                 id                 = "";
+        public string                 world              = "";
+        public string                 completion_message = "";
+        public List<TutorialStepJson> steps              = new();
     }
 
     [Serializable]

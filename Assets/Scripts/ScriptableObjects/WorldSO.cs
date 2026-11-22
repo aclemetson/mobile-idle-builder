@@ -46,6 +46,9 @@ namespace MobileIdleBuilder
         [Tooltip("World rule: belts are water streams. Buildings sit beside them and take only what their recipe uses; a Spring's flow replaces eV power (Chemistry).")]
         public bool streamTransport;
 
+        [Tooltip("This world's own tutorial, run the first time the player is here (null = none). Physics uses the main tutorial.")]
+        public TutorialFlowSO tutorialFlow;
+
         [Tooltip("Ids of the Sites that belong to this world, in order. May be empty until sites are authored.")]
         public List<string> siteIds = new();
 

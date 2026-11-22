@@ -332,7 +332,11 @@ namespace MobileIdleBuilder
             // World rules first (stream belts, Demon on/off), so the belts restored below are built
             // for the world they belong to. Runs on scene load and every site/world switch.
             if (save != null && _ecsReady)
+            {
                 WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>());
+                // Each world runs its own tutorial; the Physics one never runs in Chemistry.
+                TutorialFlows.Activate(_em, save, WorldRules.ActiveWorld(save));
+            }
 
             var grid = EnsureActiveGrid(save);
             if (grid == null) return;
