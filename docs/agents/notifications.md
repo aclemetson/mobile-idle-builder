@@ -6,7 +6,7 @@
 
 Both use the same OS permission and the same Settings toggle.
 
-> Verified against: `feat/local-notifications`, 2026-11-20.
+> Verified against: `feat/surge-notification-exact-alarms`, 2026-11-21.
 
 ## Files
 
@@ -45,13 +45,15 @@ Both use the same OS permission and the same Settings toggle.
 | `BoostEnded` | boosts | `BoostLock.Remaining` (when every timed boost has ended) | speed burst, Idle ad boost, Cyclotron boost |
 | `DailyReward` | rewards | next UTC midnight if today's reward was claimed, else in 4 h (before the reset) | `lastLoginRewardUtc` |
 | `RewardsExpiring` | rewards | 2 h before the daily/weekly/monthly reset, only if `AchievementService.HasClaimable` for it | achievement resets |
+| `SurgeReady` | boosts | latest of: Entropy Surge cooldown, `BoostLock` (when it blocks the ad), the daily-cap reset (00:00 UTC, only when today's watches are used up), and `SurgeMinAway` (2 h). Only after the first prestige and with `ads.enabled` on | `adLastWatch`, `adWatchCounts` (`NotificationInputs.SurgeReadyDelay`) |
 | `Comeback24h` / `Comeback72h` | reminders | now + 24 h / 72 h (after the tutorial) | none |
 
 The rules live in `NotificationPlanner` and are covered by the tests:
 - Anything less than 60 s away is skipped.
 - Quiet hours run from 22:00 to 08:00 device local time; anything that would land in them moves to 08:00.
 - Production alerts within 15 min of each other merge into one `ProductionCombined` ("Your foundry needs you"), fired at the latest time.
-- At most 3 notifications land in any 24 h, kept in priority order: storage > combined > research > craft > Cyclotron > boost > rewards expiring > daily > comeback.
+- At most 3 notifications land in any 24 h, kept in priority order: storage > combined > research > craft > Cyclotron > boost > rewards expiring > daily > surge > comeback.
+- The surge reminder has a 2 h floor so a 15 min cooldown does not ping everyone who closes the app right after a surge. It cannot know whether an ad will be loaded, and the HUD icon waits a few seconds for income to be measured after launch.
 
 **Clocks:** the delays are measured against `GameClock.UtcNow` (the timers' own clock), and the fire time is
 `DateTime.UtcNow + delay`, because the OS fires on the wall clock. That way a playtest clock offset never
@@ -74,7 +76,16 @@ Ids are stable per kind (`1000 + kind`). Android sends with an explicit id, iOS 
   - "Notify me" turns the toggle on, then shows the OS prompt, or opens the OS notification settings if the
     OS already denied it.
   - "Not now" shows no OS prompt, so the OS one-time ask is saved for later.
-  - `notif prompt` in the dev console resets all three fields and shows the card.
+  - `notif prompt` in the dev console resets all four fields (including `exactAlarmAsked`) and shows the card.
+- **On-time reminders card (Android exact alarms).** `NotificationTexts.Exact*`, rule in
+  `NotificationAskPolicy.ShouldAskExact`. Shown once ever (`SettingsData.exactAlarmAsked`, either answer), only while
+  notifications are on and `INotificationPlatform.ExactAlarmsNeedGrant` (Android 12+ without "Alarms & reminders").
+  - Right after the player allows notifications (opt-in card or Settings toggle), 0.5 s after the OS dialog closes.
+  - At startup, in place of the opt-in card, for players who already had notifications on.
+  - "Open settings" calls `AndroidNotificationCenter.RequestExactScheduling` (the OS page for this app). The OS page
+    is the only place to grant it; the next background picks up the new state.
+  - Telemetry: `notification_permission` with source `exact_<after_opt_in|startup>` (opened) or `..._declined`.
+  - `notif exact` in the dev console shows it now.
 - **`SettingsService`** self-bootstraps (`BeforeSceneLoad`); it is not placed in any scene. Until it did, it was
   never created in builds, so every setting, the notification toggle included, read as missing.
 - **Settings toggle** `toggle-notifications` (`HUDSettingsSubController`) calls `NotificationService.SetEnabledFromSettings`:
@@ -84,8 +95,14 @@ Ids are stable per kind (`1000 + kind`). Android sends with an explicit id, iOS 
   - The toggle displays `IsActive`, not just the saved preference.
 - **Android:** target SDK is automatic (33+), so `POST_NOTIFICATIONS` is a runtime permission; the package adds the manifest entry.
   - Four channels: `qf_production`, `qf_boosts` and `qf_rewards` at default importance, `qf_reminders` at low (silent). Players can mute each channel in OS settings.
-  - Scheduling is inexact. `SCHEDULE_EXACT_ALARM` is not used, which avoids Play policy review.
-  - **Delivery window:** the package's inexact alarm may be up to an hour late. Every `PlannedNotification` has a
+  - **Exact alarms:** "Schedule at exact time" is `ExactWhenAvailable | AddScheduleExactPermission` (`3` in
+    `NotificationsSettings.asset`), which adds `SCHEDULE_EXACT_ALARM` only. `USE_EXACT_ALARM` (auto-granted) is NOT
+    added: Play restricts it to alarm-clock and calendar apps. When the OS allows exact alarms (below Android 12
+    always; Android 12/13 by default; Android 14+ only after the player grants "Alarms & reminders"), the package
+    schedules `setExactAndAllowWhileIdle` (on time, also under Doze and Battery Saver) and
+    `AndroidNotificationPlatform.Schedule` skips the window plugin for game events. Comeback reminders still get
+    the 1 h window, to save battery.
+  - **Delivery window (no exact grant):** the package's inexact alarm may be up to an hour late. Every `PlannedNotification` has a
     `MaxLateness` from `NotificationPlanner.MaxLatenessFor` (10 min for game events, 1 h for comeback reminders),
     one rule for all platforms. On Android, `Assets/Plugins/Android/NotificationAlarmWindow.java` replaces the
     package's alarm with `AlarmManager.setWindow` (no permission; 10 min is the Android 12+ minimum). It finds the

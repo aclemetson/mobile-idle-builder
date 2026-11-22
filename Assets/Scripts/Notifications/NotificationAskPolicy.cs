@@ -42,12 +42,22 @@ namespace MobileIdleBuilder
             if (neverAskAgain) s.notificationNeverAsk = true;
         }
 
+        /// <summary>
+        /// Whether to show the Android "on-time reminders" card (exact alarms, "Alarms &amp; reminders" special access).
+        /// Once ever, either answer: only while notifications are on (permission granted and the toggle on), and only
+        /// where the OS needs the grant (Android 12+ without it; Android 14+ denies it to new installs by default).
+        /// </summary>
+        public static bool ShouldAskExact(SettingsData s, NotificationPermission permission, bool exactNeedsGrant)
+            => s != null && exactNeedsGrant && !s.exactAlarmAsked
+               && permission == NotificationPermission.Granted && s.notificationsEnabled;
+
         public static void Reset(SettingsData s)
         {
             if (s == null) return;
             s.notificationPromptShown = false;
             s.notificationNextAskUtc  = "";
             s.notificationNeverAsk    = false;
+            s.exactAlarmAsked         = false;
         }
     }
 }

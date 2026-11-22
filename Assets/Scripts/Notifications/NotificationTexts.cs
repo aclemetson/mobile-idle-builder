@@ -28,6 +28,8 @@ namespace MobileIdleBuilder
                                                     "There is new physics waiting. Jump back in and keep building."),
             NotificationKind.ProductionCombined => ("Your foundry needs you",
                                                     "Research, crafting or storage is finished. Come back to keep it running."),
+            NotificationKind.SurgeReady         => ("Entropy Surge is back",
+                                                    "A fresh surge of automation income is waiting. Come back to claim it."),
             NotificationKind.DevTest            => ("Test notification",
                                                     "Local notifications are working on this device."),
             _                                   => ("Quantum Foundry", "Something is ready."),
@@ -45,7 +47,7 @@ namespace MobileIdleBuilder
         public static string ChannelDescription(NotificationChannel c) => c switch
         {
             NotificationChannel.Production => "Research, crafting, Cyclotron and idle storage",
-            NotificationChannel.Boosts     => "When a timed boost ends",
+            NotificationChannel.Boosts     => "When a timed boost ends or the Entropy Surge is back",
             NotificationChannel.Rewards    => "Daily login and achievement rewards",
             NotificationChannel.Reminders  => "Occasional reminders when you have been away",
             _                              => "",
@@ -58,5 +60,13 @@ namespace MobileIdleBuilder
         public const string PromptConfirm = "Notify me";
         public const string PromptCancel  = "Not now";
         public const string PromptNeverAsk = "Don't ask again";
+
+        // Android 12+ "Alarms & reminders" (exact alarms): asked once, right after notifications are allowed.
+        public const string ExactTitle   = "Reminders on time?";
+        public const string ExactMessage =
+            "Android can delay game reminders by up to 10 minutes to save battery. " +
+            "To get them right on time, turn on \"Allow setting alarms and reminders\" on the next screen.";
+        public const string ExactConfirm = "Open settings";
+        public const string ExactCancel  = "Not now";
     }
 }

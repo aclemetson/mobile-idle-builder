@@ -407,6 +407,9 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("notif prompt", "Reset the opt-in answers (asked, next ask date, never ask) and show the card now",
                 _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
 
+            _registry.Register("notif exact", "Show the on-time reminders card (Android Alarms & reminders) now",
+                _ => NotificationService.Instance?.DevShowExactPrompt() ?? "Error: NotificationService not running.");
+
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
                 _ =>
