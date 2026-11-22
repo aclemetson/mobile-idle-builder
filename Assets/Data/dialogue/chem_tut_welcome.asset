@@ -15,15 +15,16 @@ MonoBehaviour:
   lines:
   - speakerName: The Architect
     text: 'Welcome to the lab. Chemistry plays by different rules: there is no power
-      here, and no Maxwell''s Demon. Water does the work.'
+      here, and no Maxwell''s Demon. Water does the work, and the Calorimeter in
+      the middle turns finished chemicals into entropy.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: Every reaction is an equation. Two hydrogen and one oxygen make two water,
-      nitrogen and three hydrogen make two ammonia. Your buildings follow those recipes
-      exactly.
+    text: Every reaction is an equation. Two hydrogen and one oxygen make two water.
+      I have set aside enough entropy for your first stream; spend it on the Chemistry
+      Lab first.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

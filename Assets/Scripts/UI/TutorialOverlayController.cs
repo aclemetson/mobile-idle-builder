@@ -647,6 +647,8 @@ namespace MobileIdleBuilder
                 _pulsingButton.RemoveFromClassList("panel-btn--highlight");
                 _pulsingButton = null;
             }
+            _scrolledCard?.RemoveFromClassList("building-card--tutorial");
+            _scrolledCard = null;
         }
 
         /// <summary>
@@ -665,11 +667,34 @@ namespace MobileIdleBuilder
 
                 _pulsingButton = el;
                 el?.AddToClassList("panel-btn--highlight");
+                // The target itself (e.g. a Place button in the Builder list): bring its card into view
+                // and light the whole card, so a building far down the list is never missed.
+                var card = el != null && el.name == buttonId ? CardOf(el) : null;
+                if (card != null)
+                {
+                    card.AddToClassList("building-card--tutorial");
+                    if (!ReferenceEquals(card, _scrolledCard))
+                    {
+                        _scrolledCard = card;
+                        card.GetFirstAncestorOfType<ScrollView>()?.ScrollTo(card);
+                    }
+                }
                 yield return new WaitForSecondsRealtime(0.7f);
                 el?.RemoveFromClassList("panel-btn--highlight");
+                card?.RemoveFromClassList("building-card--tutorial");
                 _pulsingButton = null;
                 yield return new WaitForSecondsRealtime(0.7f);
             }
+        }
+
+        private VisualElement _scrolledCard;
+
+        /// <summary>The Builder card a Place button sits on, or null for any other button.</summary>
+        private static VisualElement CardOf(VisualElement button)
+        {
+            for (var e = button.parent; e != null; e = e.parent)
+                if (e.ClassListContains("building-card")) return e;
+            return null;
         }
 
         private bool IsPlacingInWorld() =>

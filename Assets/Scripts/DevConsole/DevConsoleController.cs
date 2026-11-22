@@ -1277,6 +1277,9 @@ namespace MobileIdleBuilder.Dev
                       $"{File.GetLastWriteTime(Path.Combine(SnapshotDir, VisitReturnName + ".json")):g}."
                     : "Not visiting. 'visit <snapshot>' or 'visit world <id>' saves a return point first.");
 
+            _registry.Register("tutorial restart <world>", "Save a return point, then start a world's tutorial over on a fresh map (physics = a fresh run); 'visit return' comes back",
+                args => VisitWorld(args[0]));
+
             _registry.Register("visit world <id>", "Save a return point, then enter a world fresh: unlocked, its buildings cleared, its tutorial from the start",
                 args => VisitWorld(args[0]));
 
@@ -1370,8 +1373,8 @@ namespace MobileIdleBuilder.Dev
         /// </summary>
         private string VisitWorld(string key)
         {
-            var svc  = WorldService.Instance;
-            var sm   = SaveManager.Instance;
+            var svc = WorldService.Instance;
+            var sm  = SaveManager.Instance;
             if (svc == null || sm?.Current == null) return "Error: WorldService or SaveManager not ready.";
 
             int idx = svc.IndexOf(key);
@@ -1383,34 +1386,33 @@ namespace MobileIdleBuilder.Dev
             string saved = SaveVisitReturnPoint();
             if (saved.StartsWith("Error")) return saved;
 
-            // Unlock it and its sites without charging (a dev visit), then travel there.
-            var save = sm.Current;
-            save.unlockedWorlds ??= new List<string>();
-            if (idx != 0 && !save.unlockedWorlds.Contains(world.id)) save.unlockedWorlds.Add(world.id);
-            save.unlockedSites ??= new List<string>();
-            foreach (var sid in world.siteIds ?? new List<string>())
-            {
-                if (string.IsNullOrEmpty(sid)) continue;
-                if (!save.unlockedSites.Contains(sid)) save.unlockedSites.Add(sid);
-                int sidx = SiteService.Instance != null ? SiteService.Instance.IndexOf(sid) : -1;
-                if (sidx >= 0) GridSaveService.EnsureSiteGrid(save, sidx);
-            }
-            if (svc.ActiveIndex != idx && !svc.SwitchTo(idx))
-                return $"{saved} Error: could not travel to '{world.id}'. 'visit return' restores your game.";
+            // Build the visit on a copy of the save and reload once, like 'snapshot load'. No live world
+            // switch first: switching and then reloading straight away is what froze on the loading screen.
+            var sites    = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            var siteIds  = new List<string>();
+            if (sites != null) foreach (var site in sites) siteIds.Add(site != null ? site.id : null);
+            var research = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
+            var fieldWorlds = new Dictionary<string, string>();
+            if (sites != null)
+                foreach (var site in sites)
+                    if (site?.fieldOverrides != null)
+                        foreach (var ov in site.fieldOverrides)
+                            if (ov.field != null) fieldWorlds[ov.field.id] = ov.field.world;
 
-            // Clear the live site's buildings and channels (fields stay), then write it down.
-            var ecs = Unity.Entities.World.DefaultGameObjectInjectionWorld;
-            if (ecs != null && ecs.IsCreated) RunStateClearer.ClearLiveRunEntities(ecs.EntityManager);
-            sm.SaveLocal();
+            var data = WorldVisit.Clone(sm.Current);
+            long startEntropy = GameBootstrap.Instance?.gameConfig != null ? GameBootstrap.Instance.gameConfig.startingEntropy : 0;
+            WorldVisit.PrepareFreshArrival(data, world, idx, siteIds,
+                rid => research == null ? null : System.Array.Find(research, r => r != null && r.id == rid)?.requiredWorld,
+                fid => fieldWorlds.TryGetValue(fid, out var w) ? w : null,
+                startEntropy);
 
-            // Its tutorial starts over (the flush above re-wrote its slot from the live state).
-            TutorialFlows.ResetWorld(save, world.id);
-            sm.SaveLocal(skipGridFlush: true, skipECSFlush: true);
-
+            sm.DevReplaceCurrent(data);
+            SaveManager.ClearLiveRunState();
             _inputField?.Blur();
             SceneLoader.GoTo(SceneManager.GetActiveScene().name);
-            string tut = world.tutorialFlow != null ? "its tutorial from the start" : "no tutorial of its own";
-            return $"{saved} Entering '{world.id}' fresh ({tut}). 'visit return' brings you back.";
+            string what = idx == 0 ? "a fresh run with the main tutorial"
+                        : world.tutorialFlow != null ? "its tutorial from the start" : "no tutorial of its own";
+            return $"{saved} Entering '{world.id}' fresh ({what}). 'visit return' brings you back.";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────

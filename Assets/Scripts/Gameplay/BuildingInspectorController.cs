@@ -183,11 +183,12 @@ namespace MobileIdleBuilder
             var foundPos = _em.GetComponentData<GridPosition>(found);
             buildingVisualizer?.SelectBuilding(foundPos.Cell.x, foundPos.Cell.y);
 
-            // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
-            if (_em.HasComponent<DemonTag>(found))
+            // Maxwell's Demon gets its own interaction panel instead of the generic inspector, and so does
+            // any placed sink (Chemistry's Calorimeter): tap it to burn what you carry, like the Demon.
+            if (_em.HasComponent<EntropySinkTag>(found))
             {
                 HasSelection = true;
-                maxwellsDemon?.Open();
+                maxwellsDemon?.Open(_em.HasComponent<DemonTag>(found) ? null : GetBuildingDisplayName(found));
                 return true;
             }
 

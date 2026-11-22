@@ -117,6 +117,10 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: d250f565c3f9d474089ec6a354b950d9, type: 2}
   - id: intro_world_chemistry
     dialogue: {fileID: 11400000, guid: 1af5689e683ed1a4884b81b8decc7091, type: 2}
+  - id: chem_tut_fields
+    dialogue: {fileID: 11400000, guid: 30078a786ddba7b4d862553c44001688, type: 2}
+  - id: chem_tut_channel
+    dialogue: {fileID: 11400000, guid: 0bc2f5a3121eae44ca3ad46e283aca90, type: 2}
   - id: chem_tut_flow
     dialogue: {fileID: 11400000, guid: 8b0076def2dd99749bc2046cf344ac90, type: 2}
   - id: chem_tut_calorimeter

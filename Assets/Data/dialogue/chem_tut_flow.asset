@@ -14,9 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: 'The stream is working. One more rule: a Spring''s flow is limited, and
-      buildings share it nearest the source first. The bar at the top shows how much
-      is used.'
+    text: 'One more rule: a Spring''s flow is limited, and buildings share it nearest
+      the source first. The bar at the top shows how much is used.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

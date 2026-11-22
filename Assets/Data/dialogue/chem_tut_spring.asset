@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: First, water. A Spring wells it up, and a Channel drawn from it becomes
-      a stream that carries whatever you drop in.
+    text: First, water. A Spring wells it up. Place one on the glowing tile, up and
+      to the left of the Calorimeter.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

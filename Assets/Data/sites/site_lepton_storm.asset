@@ -20,3 +20,4 @@ MonoBehaviour:
     densityMultiplier: 2
   - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
     densityMultiplier: 0
+  startingBuildings: []

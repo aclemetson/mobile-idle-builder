@@ -14,16 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Now a reaction. Buildings sit on the bank of the stream. As items float
-      past, each one takes only what its recipe needs and lets everything else flow
-      on, then drops what it makes back into the water.
-    portrait: {fileID: 0}
-    pauseGame: 0
-    highlightTarget: 
-    action: 
-  - speakerName: The Architect
-    text: Place a Molecular Synthesizer with its bank side on the channel, downstream
-      of your Extractors, so the gases reach it.
+    text: 'Now a reaction. Place a Molecular Synthesizer on the glowing tile below
+      the stream, downstream of the vents. Its arrows face the water too: it takes
+      what its recipe needs as the stream passes, lets everything else float on,
+      and drops what it makes back in.'
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

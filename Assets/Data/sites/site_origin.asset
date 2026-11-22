@@ -16,3 +16,4 @@ MonoBehaviour:
   displayName: Origin Domain
   unlockCost: 0
   fieldOverrides: []
+  startingBuildings: []
