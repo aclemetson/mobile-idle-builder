@@ -63,7 +63,8 @@ namespace MobileIdleBuilder
         PowerRelay,         // broadcast pylon
         BeltSplitter,       // river forking around a rock
         FusionReactor,      // star in a magnetic bottle
-        NucleonHarvester    // two field wells feeding one nucleon
+        NucleonHarvester,   // two field wells feeding one nucleon
+        Spring              // rock pool welling up into a stream (Chemistry). Appended: serialized ints stay put.
     }
 
     /// <summary>

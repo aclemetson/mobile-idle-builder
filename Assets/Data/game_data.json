@@ -11105,7 +11105,7 @@
       "decay_collection_rate": 0.0,
       "codex_entry": "A spring is groundwater forced up through rock. Its flow sets how many reactors one stream can feed.",
       "is_splitter": false,
-      "structure_kind": "None",
+      "structure_kind": "Spring",
       "world": "world_chemistry",
       "is_spring": true,
       "stream_flow": 10.0,
