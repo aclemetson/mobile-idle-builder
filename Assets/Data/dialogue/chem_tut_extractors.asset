@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: 'Raw elements come as nature leaves them: hydrogen and oxygen gas seep
-      from vents. Put an Extractor on a Hydrogen Seep and one on an Oxygen Vent,
-      beside your channel, and point their output at the water.'
+    text: An Extractor on each vent draws the gas out and drops it into the water
+      in front of it. Its arrow must point up at the stream; that is the side it
+      drops into.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

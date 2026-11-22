@@ -325,6 +325,38 @@ namespace MobileIdleBuilder
 
         /// <summary>Called by ECSLoadBridge after ECS entities are confirmed present.</summary>
         /// <param name="forceApply">If true, bypasses the IsNewGame guard (used by tutorial skip on a fresh session).</param>
+        /// <summary>
+        /// Places the active site's starting buildings (SiteSO.startingBuildings, e.g. Chemistry's Calorimeter
+        /// in the centre) once per run: <see cref="GridSaveData.startersPlaced"/> records it, so a starter the
+        /// player moved or demolished is not put back. Prestige resets the grids, so each run gets them again.
+        /// </summary>
+        private void PlaceStartingBuildings(SaveData save, GridSaveData grid)
+        {
+            if (save == null || grid == null || grid.startersPlaced || !_ecsReady) return;
+            var sites = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            int idx   = save.currentRun?.activeSiteIndex ?? 0;
+            var site  = sites != null && idx >= 0 && idx < sites.Length ? sites[idx] : null;
+            grid.startersPlaced = true;
+            if (site?.startingBuildings == null || site.startingBuildings.Count == 0) return;
+
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null || placementController?.availableBuildings == null) return;
+            foreach (var sb in site.startingBuildings)
+            {
+                var entry = System.Array.Find(placementController.availableBuildings,
+                                              e => e.building != null && e.building.id == sb.buildingId);
+                if (entry.building == null)
+                {
+                    GameLogger.Warning($"[GridSave] Starting building '{sb.buildingId}' on '{site.id}' not found.");
+                    continue;
+                }
+                if (!placer.PlaceBuilding(sb.x, sb.y, entry.building, null, null, sb.rotation))
+                    GameLogger.Warning($"[GridSave] Could not place starting building '{sb.buildingId}' at ({sb.x},{sb.y}).");
+            }
+            FindAnyObjectByType<BuildingVisualizer>()?.Refresh();
+            GameLogger.Info($"[GridSave] Placed {site.startingBuildings.Count} starting building(s) on '{site.id}'.");
+        }
+
         public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
@@ -347,7 +379,11 @@ namespace MobileIdleBuilder
             bool hasFields    = grid.fields?.Count > 0;
             // Fields must restore even with no buildings/conveyors — a build site can hold a
             // generated field layout that the player has not built on yet.
-            if (!hasBuildings && !hasConveyors && !hasFields) return;
+            if (!hasBuildings && !hasConveyors && !hasFields)
+            {
+                PlaceStartingBuildings(save, grid);
+                return;
+            }
 
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
@@ -487,6 +523,7 @@ namespace MobileIdleBuilder
             else
                 GameLogger.Debug($"[Prime] skipped — ecsReady={_ecsReady} hasConveyors={hasConveyors} forceApply={forceApply}");
 
+            PlaceStartingBuildings(save, grid);
             RebuildIdleSnapshot(save);
         }
 

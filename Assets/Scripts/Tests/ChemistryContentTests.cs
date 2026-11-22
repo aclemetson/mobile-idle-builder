@@ -55,8 +55,9 @@ namespace MobileIdleBuilder.Tests
             // and bought from the Build menu after their research. Metal stays "ElementMetal" (its own harvester).
             var expected = new (string id, string type, bool onMapAtStart, string research)[]
             {
-                ("hydrogen_gas_field",    "Element",      true,  ""),
-                ("oxygen_gas_field",      "Element",      true,  ""),
+                // 2026-11-22 tutorial v2: the player places the first gas vents (bought after the Chemistry Lab).
+                ("hydrogen_gas_field",    "Element",      false, "chemistry_lab"),
+                ("oxygen_gas_field",      "Element",      false, "chemistry_lab"),
                 ("graphite_field",        "Element",      false, "molecular_synthesis"),
                 ("nitrogen_gas_field",    "Element",      false, "nitrogen_fixation"),
                 ("element_field_mineral", "Element",      false, "reaction_engineering"),

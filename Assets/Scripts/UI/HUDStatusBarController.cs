@@ -96,8 +96,11 @@ namespace MobileIdleBuilder
             var buffer = _em.GetBuffer<InventorySlot>(
                 _inventoryQuery.GetSingletonEntity(), isReadOnly: true);
 
+            // Items made only in another world are not listed here (WorldGate.ItemInWorld).
+            string worldId = WorldGate.ActiveWorldId();
+
             // Cheap hash over non-zero slots — skip DOM writes if nothing changed
-            int hash = 0;
+            int hash = worldId?.GetHashCode() ?? 0;
             for (int i = 0; i < buffer.Length; i++)
                 if (buffer[i].Quantity > 0)
                     hash = hash * 397 ^ (buffer[i].ItemID * 1000 + buffer[i].Quantity);
@@ -111,8 +114,9 @@ namespace MobileIdleBuilder
                 var slot = buffer[i];
                 if (slot.Quantity <= 0) continue;
 
-                seen.Add(slot.ItemID);
                 var item = ItemDatabase.GetStatic(slot.ItemID);
+                if (item != null && !WorldGate.ItemInWorld(item, worldId)) continue;
+                seen.Add(slot.ItemID);
                 string label = item != null
                     ? $"{item.symbol ?? item.displayName}  ×{slot.Quantity}"
                     : $"#{slot.ItemID}  ×{slot.Quantity}";

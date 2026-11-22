@@ -176,9 +176,10 @@ restores it and deletes it.
 | `visit <name>` | Saves the return point, then loads any snapshot (`snapshot list`), e.g. one you made with `snapshot save`. |
 | `visit return` | Restores the game saved before the first visit and reloads. |
 | `visit status` | Says whether a return point is waiting. |
+| `tutorial restart <world>` | Same as `visit world <world>`: start that world's tutorial over on a fresh map (for `physics`, a fresh run with the main tutorial; prestige progress kept). `visit return` comes back. |
 
-Test the Chemistry tutorial on a phone: `visit world chemistry`, play it through (add entropy with
-`add currency 1000000` if the Chemistry Lab research is out of reach), then `visit return`.
+Test the Chemistry tutorial on a phone: `tutorial restart chemistry`, play it through (the tutorial grants the
+entropy it needs), then `visit return`. Both commands build the visit in the save and reload the scene once.
 
 Notes:
 - While visiting, autosave and cloud save hold the visit's state; `visit return` writes your game back. If

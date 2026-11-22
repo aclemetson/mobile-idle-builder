@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: Where the stream ends, place a Calorimeter. It burns whatever reaches it
-      and turns the energy in its bonds into entropy; finished compounds pay far
-      more than raw gas. An open mouth only sells leftovers cheaply.
+    text: Water is flowing to the Calorimeter. It burns whatever reaches it for entropy;
+      finished compounds pay far more than raw gas. Tap it any time to burn what
+      you carry, just like the Demon.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 
