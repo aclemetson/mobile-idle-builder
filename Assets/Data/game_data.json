@@ -15341,6 +15341,7 @@
   "world_tasks": {
     "_comment": "Chemistry gate (2026-11-19): items delivered to Maxwell's Demon while a stage is active count toward it (they still pay entropy). Stages survive prestige; each asks for elements its run can make, sized to about a quarter of that run's output of them (prestige_plan.py run windows). Finishing the last stage unlocks world_chemistry.",
     "world": "world_chemistry",
+    "deliver_in": "world_physics",
     "display_name": "Path to Chemistry",
     "stages": [
       {

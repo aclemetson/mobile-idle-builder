@@ -1060,6 +1060,7 @@ namespace MobileIdleBuilder.Editor
             EnsureDirectory(ResourcesDir);
             var so = LoadOrCreate<WorldTaskSO>($"{ResourcesDir}/WorldTasks.asset");
             so.worldId     = data.world;
+            so.deliverIn   = string.IsNullOrEmpty(data.deliver_in) ? WorldGate.Physics : data.deliver_in;
             so.displayName = data.display_name;
 
             var stages = data.stages ?? new List<WorldTaskStageJson>();

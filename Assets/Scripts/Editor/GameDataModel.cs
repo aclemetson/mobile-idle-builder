@@ -547,6 +547,7 @@ namespace MobileIdleBuilder.Editor
     internal class WorldTasksJson
     {
         public string                   world        = "";
+        public string                   deliver_in   = "";   // world where the deliveries are made ("" = Physics)
         public string                   display_name = "";
         public List<WorldTaskStageJson> stages       = new();
 

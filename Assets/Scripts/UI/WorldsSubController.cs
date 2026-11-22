@@ -120,7 +120,7 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// The strip under the top bar: "⚗ Chemistry  Stage 2/5: Light Elements  43%". Hidden in the tutorial, once
-        /// the tasks are done, or without task data.
+        /// the tasks are done, without task data, or in any world other than the one they are delivered in.
         /// </summary>
         private void RefreshTaskStrip()
         {
@@ -129,7 +129,8 @@ namespace MobileIdleBuilder
             var save  = SaveManager.Instance?.Current;
             var stage = WorldTasks.CurrentStage(save, tasks);
             bool loaded = ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
-            bool show = loaded && stage != null && save != null && !(save.tutorial?.isActive ?? false);
+            bool show = loaded && stage != null && save != null && !(save.tutorial?.isActive ?? false)
+                        && WorldTasks.ShownIn(tasks, WorldGate.ActiveWorldId());   // only where they are delivered
             HUDController.SetElementVisible(_taskStrip, show);
             if (!show || _taskLabel == null) return;
             int pct = Mathf.FloorToInt(WorldTasks.StageFraction(save, stage) * 100f);
