@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         public bool   notificationPromptShown = false; // asked at least once (either answer)
         public string notificationNextAskUtc  = "";    // ISO UTC: ask again on the first startup after this
         public bool   notificationNeverAsk    = false; // "Don't ask again" was ticked
+        public bool   exactAlarmAsked         = false; // Android "Alarms & reminders" card shown once (either answer)
         public bool  showPowerConnections  = false; // map-wide power-connection overlay toggle
 
         // ── Camera ────────────────────────────────────────────────────────────

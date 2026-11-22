@@ -141,7 +141,8 @@ namespace MobileIdleBuilder
                 localOffset: TimeZoneInfo.Local.GetUtcOffset(wallNow),
                 idleCapSeconds: idleCap,
                 dailyRewardEnabled: FeatureFlags.DailyEventsEnabled && DailyEventService.Instance != null,
-                hasClaimable: achievements != null ? new Func<AchievementCategory, bool>(achievements.HasClaimable) : null);
+                hasClaimable: achievements != null ? new Func<AchievementCategory, bool>(achievements.HasClaimable) : null,
+                surgeOfferEnabled: FeatureFlags.AdsEnabled);
         }
 
         void ClearPending()
@@ -183,9 +184,14 @@ namespace MobileIdleBuilder
             {
                 case NotificationPermission.Granted:
                     onResult?.Invoke(IsActive);
+                    AskExactSoon();
                     break;
                 case NotificationPermission.NotDetermined:
-                    RequestPermission("settings", granted => onResult?.Invoke(granted && IsActive));
+                    RequestPermission("settings", granted =>
+                    {
+                        onResult?.Invoke(granted && IsActive);
+                        if (granted) AskExactSoon();
+                    });
                     break;
                 default:
                     // Denied: only the OS can change it. Keep the preference on so it works once allowed.
@@ -221,6 +227,7 @@ namespace MobileIdleBuilder
                    $"permission={Permission} active={IsActive} asked={s?.notificationPromptShown} " +
                    $"nextAsk={(string.IsNullOrEmpty(s?.notificationNextAskUtc) ? "-" : s.notificationNextAskUtc)} " +
                    $"neverAsk={s?.notificationNeverAsk} " +
+                   $"exactNeedsGrant={ExactNeedsGrant} exactAsked={s?.exactAlarmAsked} " +
                    $"platform={_platform?.GetType().Name}";
         }
 
@@ -276,7 +283,10 @@ namespace MobileIdleBuilder
             if (!FeatureFlags.NotificationsEnabled) return;
             var settings = SettingsService.Instance?.Current;
             if (settings == null) return;
-            if (!NotificationAskPolicy.ShouldAsk(settings, Permission, DateTime.UtcNow))
+            bool askOptIn = NotificationAskPolicy.ShouldAsk(settings, Permission, DateTime.UtcNow);
+            // Players who turned notifications on before the on-time card existed get it once at startup.
+            bool askExact = !askOptIn && NotificationAskPolicy.ShouldAskExact(settings, Permission, ExactNeedsGrant);
+            if (!askOptIn && !askExact)
             {
                 _promptHandledThisLaunch = true;   // not due at startup: wait for the next launch
                 return;
@@ -294,7 +304,12 @@ namespace MobileIdleBuilder
             if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen) return;
             if (IsDialoguePlaying()) return;
 
-            ShowPrompt();
+            if (askOptIn) ShowPrompt();
+            else
+            {
+                _promptHandledThisLaunch = true;
+                ShowExactPrompt("startup");
+            }
         }
 
         void ShowPrompt()
@@ -310,8 +325,11 @@ namespace MobileIdleBuilder
                     SettingsService.Instance?.SetNotifications(true);
                     switch (Permission)
                     {
+                        case NotificationPermission.Granted:
+                            AskExactSoon();   // the toggle was off, the OS already allowed it
+                            break;
                         case NotificationPermission.NotDetermined:
-                            RequestPermission("startup_prompt");
+                            RequestPermission("startup_prompt", granted => { if (granted) AskExactSoon(); });
                             break;
                         case NotificationPermission.Denied:
                             // The OS will not show its prompt again: send the player to the app's OS settings.
@@ -330,6 +348,70 @@ namespace MobileIdleBuilder
                 cancelLabel: NotificationTexts.PromptCancel,
                 destructive: false,
                 checkboxLabel: NotificationTexts.PromptNeverAsk);
+        }
+
+        // ── On-time reminders (Android exact alarms) ────────────────────────
+
+        bool ExactNeedsGrant
+        {
+            get
+            {
+                try { return _platform != null && _platform.ExactAlarmsNeedGrant; }
+                catch (Exception e)
+                {
+                    GameLogger.Warning($"[Notifications] Exact alarm check failed: {e.Message}");
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Right after the player allows notifications: offer "Alarms &amp; reminders" once, where the OS needs it.
+        /// A short wait lets the OS permission dialog finish closing first. If another card is open by then,
+        /// the next startup asks instead (<see cref="TickPrompt"/>).
+        /// </summary>
+        void AskExactSoon() => StartCoroutine(AskExactRoutine());
+
+        IEnumerator AskExactRoutine()
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+            var settings = SettingsService.Instance?.Current;
+            if (!NotificationAskPolicy.ShouldAskExact(settings, Permission, ExactNeedsGrant)) yield break;
+            if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen) yield break;
+            ShowExactPrompt("after_opt_in");
+        }
+
+        void ShowExactPrompt(string source)
+        {
+            // ConfirmPrompt confirms at once when the HUD is not up: never open OS settings unasked.
+            if (!ConfirmPrompt.IsReady) return;
+            _promptOpen = true;
+            ConfirmPrompt.Show(NotificationTexts.ExactTitle, NotificationTexts.ExactMessage,
+                NotificationTexts.ExactConfirm,
+                onConfirm: () =>
+                {
+                    _promptOpen = false;
+                    SettingsService.Instance?.MarkExactAlarmAsked();
+                    TelemetryService.Instance?.RecordNotificationPermission($"exact_{source}", true);
+                    try { _platform?.RequestExactAlarms(); }
+                    catch (Exception e) { GameLogger.Warning($"[Notifications] Could not open Alarms & reminders: {e.Message}"); }
+                },
+                onCancel: () =>
+                {
+                    _promptOpen = false;
+                    SettingsService.Instance?.MarkExactAlarmAsked();
+                    TelemetryService.Instance?.RecordNotificationPermission($"exact_{source}_declined", false);
+                },
+                cancelLabel: NotificationTexts.ExactCancel,
+                destructive: false);
+        }
+
+        /// <summary>Dev console: shows the on-time reminders card now, whatever was answered before.</summary>
+        public string DevShowExactPrompt()
+        {
+            if (!ConfirmPrompt.IsReady) return "HUD not ready.";
+            ShowExactPrompt("dev");
+            return $"On-time card shown (exactNeedsGrant={ExactNeedsGrant}).";
         }
 
         static bool IsDialoguePlaying()

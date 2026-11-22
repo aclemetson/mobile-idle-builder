@@ -21,7 +21,8 @@ Real timers and quiet hours make testing slow; these skip them. Open the console
 | `notif plan` | what backgrounding right now would schedule, with local fire times |
 | `notif test <seconds>` | one test notification N seconds from now, no quiet hours or cap. **Background the app before it fires**: coming back cancels everything pending. |
 | `notif permission` | shows the OS permission prompt (if the OS still allows asking) |
-| `notif prompt` | resets the opt-in answers (asked, next ask date, "Don't ask again") and shows the card now |
+| `notif prompt` | resets the opt-in answers (asked, next ask date, "Don't ask again", on-time card) and shows the card now |
+| `notif exact` | shows the on-time reminders card (Android "Alarms & reminders") now; `notif status` shows `exactNeedsGrant` / `exactAsked` |
 
 ## Getting a build on an Android phone
 
@@ -50,6 +51,9 @@ Pick one:
 7. Revoke the permission in Android settings, then turn the toggle on in game. The Android app notification settings page opens.
 8. Android 12 or lower: no card and no prompt (permission is implicit). Notifications work straight away.
 9. Re-ask: answer **Not now**, close and reopen the app: no card. `notif status` shows `nextAsk` 30 days out. Run `notif prompt`, tick **Don't ask again**, tap **Not now**: `neverAsk=True`, and the card never comes back.
+10. On-time reminders, Android 14+ fresh install: tap **Notify me** and allow. The "Reminders on time?" card follows. **Open settings** lands on "Alarms & reminders" for the app; turn it on and go back. `notif status` shows `exactNeedsGrant=False`. Start a research, background: `adb shell dumpsys alarm` shows the game's alarm as exact (no `window=+10m`). Comeback alarms keep `window=+1h`.
+11. On-time card is asked once: answer **Not now**, relaunch: no card. A player who already had notifications on gets it once at startup instead of the opt-in card. Android 12/13 normally has the grant already, so no card.
+12. Entropy Surge (after the first prestige): watch a surge, background. `notif plan` shows `SurgeReady` 2 h out (or later if a boost or the daily cap holds it).
 
 ## iOS (TestFlight)
 
