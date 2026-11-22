@@ -246,7 +246,10 @@ namespace MobileIdleBuilder
             prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
 
-            // Tutorial — always restore so baked defaults never clobber saved progress
+            // Tutorial — always restore so baked defaults never clobber saved progress. This is the main
+            // (Physics) tutorial's state, so make it the running flow first; LoadGrid then switches to the
+            // live world's own tutorial if it has one (TutorialFlows).
+            TutorialFlowSO.Activate(null);
             if (!_tutorialQuery.IsEmpty)
             {
                 var ts = _tutorialQuery.GetSingleton<TutorialStateData>();
@@ -388,6 +391,12 @@ namespace MobileIdleBuilder
             {
                 var ts   = _tutorialQuery.GetSingleton<TutorialStateData>();
                 var flow = TutorialFlowSO.Current;
+                // A world's own tutorial (Chemistry) is running: save it to its slot, leave the main one alone.
+                if (TutorialFlows.Store(save, ts))
+                {
+                    save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete || save.tutorial.hasCompletedFirstRun;
+                    return;
+                }
                 save.tutorial.isActive            = ts.IsActive;
                 // Never downgrade: PrestigeSystem sets hasCompletedFirstRun on SaveData before
                 // ECS TutorialStateData is updated, so preserve any true already on the save.

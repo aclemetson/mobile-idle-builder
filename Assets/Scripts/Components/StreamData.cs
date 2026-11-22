@@ -1,0 +1,60 @@
+using Unity.Entities;
+
+namespace MobileIdleBuilder
+{
+    /// <summary>
+    /// Singleton: the rules of the world whose site is live. Written by <see cref="WorldRules.Apply"/>
+    /// whenever the grid loads (scene load and every site/world switch).
+    /// StreamTransport = 1 in worlds with WorldSO.streamTransport (Chemistry): belts are streams,
+    /// buildings draw flow instead of eV, Maxwell's Demon is disabled.
+    /// </summary>
+    public struct ActiveWorldRules : IComponentData
+    {
+        public byte StreamTransport;
+    }
+
+    /// <summary>
+    /// On every conveyor segment placed in a stream world. Items ride it as on a belt, but buildings
+    /// beside it pick the items their recipe uses off it and drop their products onto it
+    /// (ConveyorSystem stream passes). Flow is the water left in this segment after the buildings
+    /// upstream took theirs (StreamFlowSystem); 0 = dry, items stand still.
+    /// HasSource = 1 when a Spring feeds this segment's stream.
+    /// </summary>
+    public struct StreamSegment : IComponentData
+    {
+        public float Flow;
+        public byte  HasSource;
+    }
+
+    /// <summary>A Spring (BuildingSO.isSpring): the head of the stream at its output carries Flow L/s.</summary>
+    public struct StreamSource : IComponentData
+    {
+        public float Flow;
+    }
+
+    /// <summary>A building that draws flow (BuildingSO.flowDraw) from the stream beside it.</summary>
+    public struct StreamConsumer : IComponentData
+    {
+        public float Draw;
+    }
+
+    /// <summary>
+    /// Per-building stream state, written every frame by StreamFlowSystem and read by ProductionSystem
+    /// and CollectorSystem (speed multiplier) and the inspector.
+    /// OnStream = 1 when a port of the building touches a stream segment; Ratio is the share of its
+    /// draw it got (1 = full, 0 = dry upstream or not beside a stream).
+    /// </summary>
+    public struct StreamStatus : IComponentData
+    {
+        public byte  OnStream;
+        public float Ratio;
+    }
+
+    /// <summary>Singleton: totals for the HUD flow readout (StreamFlowSystem).</summary>
+    public struct StreamGridState : IComponentData
+    {
+        public float Supply;
+        public float Draw;
+        public int   StalledCount;
+    }
+}

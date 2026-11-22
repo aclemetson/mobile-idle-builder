@@ -32,6 +32,10 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 5
   linkRadiusTiles: 6
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 0
   supportedRecipes: []
   inputSlotCount: 0
@@ -48,7 +52,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
-  world: 
+  world: world_physics
   entropyCost: 300
   baseMaxOutputItems: 0
   baseMaxInputItemsPerSlot: 0

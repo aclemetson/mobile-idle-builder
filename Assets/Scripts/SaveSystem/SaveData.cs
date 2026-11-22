@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
         public List<string> unlockedWorlds     = new();   // world ids unlocked; survives prestige. world_physics implicit (like site_origin).
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
         public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
+        public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
@@ -243,6 +244,16 @@ namespace MobileIdleBuilder
         public string currentStepId       = "";
         public bool   isActive            = true;
         public bool   hasCompletedFirstRun = false;
+    }
+
+    /// <summary>Progress through one world's own tutorial (WorldSO.tutorialFlow). Survives prestige.</summary>
+    [Serializable]
+    public class WorldTutorialSaveData
+    {
+        public string worldId       = "";
+        /// <summary>TutorialStepDef.id of the step to resume at; "" = from the start.</summary>
+        public string currentStepId = "";
+        public bool   done;
     }
 
     /// <summary>Tracks in-progress count for achievements that require N of something.</summary>

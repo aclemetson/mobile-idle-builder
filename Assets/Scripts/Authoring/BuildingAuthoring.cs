@@ -122,6 +122,8 @@ namespace MobileIdleBuilder
                 // Entropy sink
                 if (so != null && so.isEntropySink)
                     AddComponent(entity, new EntropySinkTag());
+                if (so != null && so.IsFixedSink)
+                    AddComponent(entity, new DemonTag());
 
                 // Autonomous collector (field buildings)
                 if (so != null && so.placementRule == PlacementRule.MustBeOnField)

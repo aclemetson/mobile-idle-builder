@@ -40,7 +40,7 @@ namespace MobileIdleBuilder.Tests
             var other    = _em.CreateEntity(typeof(BuildingData), typeof(GridPosition));
             var belt     = _em.CreateEntity(typeof(ConveyorSegmentData), typeof(GridPosition));
             ConveyorItems.Add(_em, belt, 3, 0.5f);
-            var demon = _em.CreateEntity(typeof(BuildingData), typeof(EntropySinkTag));
+            var demon = _em.CreateEntity(typeof(BuildingData), typeof(EntropySinkTag), typeof(DemonTag));
             _em.AddBuffer<BuildingInputSlot>(demon).Add(new BuildingInputSlot { ItemID = 3, Quantity = 7 });
             _em.AddBuffer<BuildingOutputSlot>(demon).Add(new BuildingOutputSlot { ItemID = 3, Quantity = 2 });
 
@@ -55,6 +55,16 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(_em.Exists(demon), "the Demon is a baked fixture and stays");
             Assert.AreEqual(0, _em.GetBuffer<BuildingInputSlot>(demon).Length);
             Assert.AreEqual(0, _em.GetBuffer<BuildingOutputSlot>(demon).Length);
+        }
+
+        [Test]
+        public void ClearLiveRunEntities_RemovesAPlacedSink()
+        {
+            // Chemistry's Calorimeter is an entropy sink but not the Demon: it is a run building.
+            var calorimeter = _em.CreateEntity(typeof(BuildingData), typeof(EntropySinkTag));
+
+            Assert.AreEqual(1, RunStateClearer.ClearLiveRunEntities(_em));
+            Assert.IsFalse(_em.Exists(calorimeter));
         }
 
         [Test]

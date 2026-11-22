@@ -15,7 +15,7 @@ MonoBehaviour:
   id: collect_nitrogen_gas
   displayName: Nitrogen Gas
   methodLabel: 
-  recipeId: 167
+  recipeId: 294
   tier: 3
   category: 3
   inputs: []

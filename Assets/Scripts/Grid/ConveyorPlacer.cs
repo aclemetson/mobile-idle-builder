@@ -99,6 +99,7 @@ namespace MobileIdleBuilder
             }
 
             var newCells = new HashSet<int2>();
+            bool stream  = WorldRules.IsStreamWorld(_em);   // Chemistry: every belt is a stream
 
             for (int i = 0; i < count; i++)
             {
@@ -126,6 +127,7 @@ namespace MobileIdleBuilder
                         IsChainHead   = true,
                         MergeCursor   = 0
                     });
+                    if (stream) _em.AddComponentData(e, new StreamSegment());
                     GridOccupancy.Instance?.RegisterConveyor(cell.x, cell.y);
                     cellMap[cell] = e;
                     newCells.Add(new int2(cell.x, cell.y));

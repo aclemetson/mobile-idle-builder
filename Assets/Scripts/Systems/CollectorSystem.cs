@@ -63,7 +63,11 @@ namespace MobileIdleBuilder
                 if (!building.ValueRO.IsActive) continue;
                 if (recipeOutputSlots.Length == 0) continue;
 
-                collector.ValueRW.Timer += deltaTime * globalSpeedMult;
+                // Stream worlds: an Extractor runs at the share of flow it got from its stream (StreamFlowSystem).
+                float streamRatio = SystemAPI.HasComponent<StreamStatus>(entity)
+                    ? SystemAPI.GetComponent<StreamStatus>(entity).Ratio
+                    : 1f;
+                collector.ValueRW.Timer += deltaTime * globalSpeedMult * streamRatio;
 
                 float rate     = collector.ValueRO.OutputRate > 0f ? collector.ValueRO.OutputRate : 1f;
                 float interval = 1f / rate;

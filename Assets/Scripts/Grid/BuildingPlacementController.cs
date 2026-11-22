@@ -697,6 +697,9 @@ namespace MobileIdleBuilder
 
             if (placed && unpowered)
                 InventoryPopupController.NotifyWarning("Unpowered: place it in generator range");
+            if (placed && _pending.building != null && _pending.building.flowDraw > 0f
+                && !buildingPlacer.TouchesStream(x, y, _pending.building, _rotation, _flipped))
+                InventoryPopupController.NotifyWarning("No water: place it beside a channel from a Spring");
 
             if (placed)
             {

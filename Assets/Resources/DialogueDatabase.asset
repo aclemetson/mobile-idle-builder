@@ -117,6 +117,18 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: d250f565c3f9d474089ec6a354b950d9, type: 2}
   - id: intro_world_chemistry
     dialogue: {fileID: 11400000, guid: 1af5689e683ed1a4884b81b8decc7091, type: 2}
+  - id: chem_tut_flow
+    dialogue: {fileID: 11400000, guid: 8b0076def2dd99749bc2046cf344ac90, type: 2}
+  - id: chem_tut_calorimeter
+    dialogue: {fileID: 11400000, guid: ff6fc5db69392d546b77b8ee1e3af969, type: 2}
+  - id: chem_tut_bank
+    dialogue: {fileID: 11400000, guid: b53f81da2a2ebfe469116c837e683176, type: 2}
+  - id: chem_tut_extractors
+    dialogue: {fileID: 11400000, guid: 563e16e6450697f4f97aeb8984c5f515, type: 2}
+  - id: chem_tut_spring
+    dialogue: {fileID: 11400000, guid: 263ac4c52909f804bbfb82aa97e4b2d4, type: 2}
+  - id: chem_tut_welcome
+    dialogue: {fileID: 11400000, guid: f9604ebf0d69d2a49908e094f4073f82, type: 2}
   - id: intro_world_biology
     dialogue: {fileID: 11400000, guid: de01fe572e8254a48a1dff034e904cde, type: 2}
   - id: upgrade_complete_context

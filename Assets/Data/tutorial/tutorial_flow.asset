@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 981af5c3da3ff194dbbacff74738f3b0, type: 3}
   m_Name: tutorial_flow
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialFlowSO
+  worldId: 
+  completionMessage: Tutorial complete! The Foundry is yours.
   steps:
   - id: intro_dialogue
     hintText: 

@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
 
         private int    _lastStepIndex = -1;
         private bool   _wasActive;
+        private TutorialFlowSO _lastFlow;   // a world switch swaps the running flow (TutorialFlows)
         private VisualElement _pulsingButton;
         private Coroutine     _pulseRoutine;
 
@@ -148,6 +149,29 @@ namespace MobileIdleBuilder
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
 
+            // The running flow changed (travelled to or from a world with its own tutorial): drop the old
+            // flow's UI without a "complete" toast, and enter the new flow's current step from scratch.
+            if (TutorialFlowSO.Current != _lastFlow)
+            {
+                bool hadFlow = _lastFlow != null;
+                _lastFlow = TutorialFlowSO.Current;
+                if (hadFlow)
+                {
+                    UnlockAllFields();
+                    StopPulseRoutine();
+                    tutorialHighlighter?.ClearHighlight();
+                    hudController?.HideTutorialHint();
+                    CancelHintReveal();
+                    _pendingHintText = null;
+                    _lastHintProgress = null;
+                    hudController?.SetTutorialHintProgress(null);
+                    // A step dialogue of the flow we just left (e.g. Chemistry's) must not stay open in the other world.
+                    dialogueController?.HideDialogue();
+                }
+                _wasActive     = false;
+                _lastStepIndex = -1;
+            }
+
             // Tutorial just ended — clean up all tutorial UI and stop watching.
             if (_wasActive && !state.IsActive)
             {
@@ -157,11 +181,14 @@ namespace MobileIdleBuilder
                 tutorialHighlighter?.ClearHighlight();
                 // Don't clear the hint when ended by prestige — HUDController shows the
                 // achievements unlock hint on the same frame and we must not stomp it.
-                if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                bool worldFlow = TutorialFlows.WorldFlowActive;
+                if (worldFlow || !(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
                 {
                     hudController?.HideTutorialHint();
                     // Real active -> complete transition only (_wasActive is never set by a save that loads complete).
-                    hudController?.ShowNotification("★", "Tutorial complete! The Foundry is yours.", "success");
+                    string done = TutorialFlowSO.Current?.completionMessage;
+                    if (!string.IsNullOrEmpty(done))
+                        hudController?.ShowNotification("★", done, "success");
                 }
                 dialogueController?.HideDialogue();
                 _lastHintProgress = null;

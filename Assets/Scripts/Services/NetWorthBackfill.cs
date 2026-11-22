@@ -36,7 +36,7 @@ namespace MobileIdleBuilder
                     {
                         if (b == null) continue;
                         var so = buildingById(b.buildingId);
-                        if (so == null || so.isEntropySink) continue;
+                        if (so == null || so.IsFixedSink) continue;
                         total += DemolishRefund.EntropySpent(so, b.level, b.storageLevel, b.inputLevel, 0f);
                     }
                 }
