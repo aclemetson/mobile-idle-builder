@@ -31,5 +31,18 @@ namespace MobileIdleBuilder
 
         [Tooltip("Per-field density overrides for this site. Empty = default field set.")]
         public List<SiteFieldOverride> fieldOverrides = new();
+
+        [Tooltip("Buildings placed once per run the first time this site's grid loads (Chemistry's Calorimeter). The player may move or demolish them; prestige places them again.")]
+        public List<SiteStartingBuilding> startingBuildings = new();
+    }
+
+    /// <summary>A building a site starts with each run (by BuildingSO id).</summary>
+    [System.Serializable]
+    public class SiteStartingBuilding
+    {
+        public string buildingId;
+        public int    x;
+        public int    y;
+        public int    rotation;
     }
 }

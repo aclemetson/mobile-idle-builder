@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
+  world: world_physics
   fieldType: Lepton
   isSecondaryParticle: 0
   particleUses: 0

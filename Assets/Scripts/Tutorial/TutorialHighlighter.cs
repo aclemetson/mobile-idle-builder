@@ -200,6 +200,20 @@ namespace MobileIdleBuilder
             if (TutorialRouteGuide.TryParsePower(targetId, out var powered, out var near))
                 return FindPoweredTarget(powered, near);
 
+            // Fixed tiles ("cells:x,y" or "cells:x,y>x2,y2"): a world's scripted starting layout.
+            if (TutorialRouteGuide.TryParseCells(targetId, out var c1, out var c2))
+            {
+                float cs = gridRenderer != null ? gridRenderer.CellSize : 1f;
+                var t = new WorldTarget { AnchorX = c1.x, AnchorZ = c1.y, FootprintW = 1, FootprintH = 1,
+                                          CameraTarget = new Vector3(c1.x * cs, 0f, c1.y * cs) };
+                if (c2 is Vector2Int b)
+                {
+                    t.HasSecond = true; t.SecondX = b.x; t.SecondZ = b.y;
+                    t.CameraTarget = new Vector3((c1.x + b.x) * 0.5f * cs, 0f, (c1.y + b.y) * 0.5f * cs);
+                }
+                return t;
+            }
+
             // Any other placed building by BuildingSO id ("atomic_assembler", "fusion_reactor", ...).
             // Only "atomic_assembler" used to resolve, so other ids timed out with no highlight.
             var placed = FindBuildingSO(targetId);

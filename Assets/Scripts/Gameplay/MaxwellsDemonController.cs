@@ -149,9 +149,14 @@ namespace MobileIdleBuilder
         // Public API
         // ================================================================
 
-        public void Open()
+        /// <summary>
+        /// Opens the sell panel. <paramref name="title"/> names the sink it was opened from (Maxwell's Demon,
+        /// or Chemistry's Calorimeter); null keeps the Demon's name.
+        /// </summary>
+        public void Open(string title = null)
         {
             if (_panel == null) return;
+            if (_titleLabel != null) _titleLabel.text = string.IsNullOrEmpty(title) ? "Maxwell's Demon" : title;
 
             if (!_ecsReady)
             {
@@ -176,6 +181,8 @@ namespace MobileIdleBuilder
             _panel.RemoveFromClassList(CSS_Hidden);
             OnOpened?.Invoke();
         }
+
+        private Label _titleLabel;
 
         public void Close()
         {
@@ -220,6 +227,7 @@ namespace MobileIdleBuilder
         private void BindElements(VisualElement root)
         {
             _panel            = root.Q("demon-panel");
+            _titleLabel       = _panel?.Q<Label>(className: "demon-panel__title");
             _inventoryGrid    = root.Q<ScrollView>("demon-inventory-grid");
             _dropZone         = root.Q("demon-drop-zone");
             _earnPreviewLabel = root.Q<Label>("demon-earn-preview");
@@ -391,6 +399,7 @@ namespace MobileIdleBuilder
             GameLogger.Develop($"[Demon] Buffer length={buffer.Length}");
 
             bool anyItems = false, anySellable = false;
+            string worldId = WorldGate.ActiveWorldId();
             for (int i = 0; i < buffer.Length; i++)
             {
                 var slot = buffer[i];
@@ -398,6 +407,7 @@ namespace MobileIdleBuilder
                 GameLogger.Develop($"[Demon] Slot {i}: itemId={slot.ItemID}, qty={slot.Quantity}, found={itemSO != null}");
                 if (slot.Quantity <= 0) continue;
                 if (itemSO == null) continue;
+                if (!WorldGate.ItemInWorld(itemSO, worldId)) continue;   // another world's items stay put
 
                 bool sellable = CanSell(slot.ItemID);
                 _inventoryGrid.Add(BuildItemRow(itemSO, slot.Quantity, sellable));
@@ -714,6 +724,7 @@ namespace MobileIdleBuilder
             var invEntity = _inventoryQuery.GetSingletonEntity();
             var buffer    = _em.GetBuffer<InventorySlot>(invEntity);
             long totalEarned = 0;
+            string worldId = WorldGate.ActiveWorldId();
 
             for (int i = 0; i < buffer.Length; i++)
             {
@@ -722,6 +733,7 @@ namespace MobileIdleBuilder
 
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
                 if (itemSO == null) continue;
+                if (!WorldGate.ItemInWorld(itemSO, worldId)) continue;   // only this world's items
                 if (!CanSell(slot.ItemID)) continue;
 
                 totalEarned += CalcEntropy(itemSO, slot.Quantity);

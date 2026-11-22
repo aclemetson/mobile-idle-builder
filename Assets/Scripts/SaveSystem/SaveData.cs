@@ -182,6 +182,7 @@ namespace MobileIdleBuilder
         public List<FieldSaveData>   fields      = new();
         public int[] blockedOutputs;             // flattened [x0,y0,...] of belt cells whose forward output
                                                  // is an intentional dead-end (ran up to a belt without merging)
+        public bool  startersPlaced;             // the site's starting buildings (SiteSO.startingBuildings) were placed this run
     }
 
     [Serializable]

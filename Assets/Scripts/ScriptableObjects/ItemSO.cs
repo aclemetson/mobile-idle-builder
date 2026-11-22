@@ -30,6 +30,8 @@ namespace MobileIdleBuilder
 
         [Header("Harvesting")]
         public bool isHarvested;        // true = raw resource, no recipe
+        [Tooltip("World whose buildings or fields make this item; empty = shared. Inventory views in another world hide it.")]
+        public string world = "";
         public string fieldType = FieldTypes.None;   // free-form field-type id (see FieldTypes)
 
         [Header("Secondary Particle")]

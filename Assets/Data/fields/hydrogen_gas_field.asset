@@ -20,9 +20,9 @@ MonoBehaviour:
     weight: 1
   tapCooldownSeconds: 2
   world: world_chemistry
-  purchaseResearchId: 
-  purchaseCostBase: 0
-  purchaseCostMultiplier: 10
+  purchaseResearchId: chemistry_lab
+  purchaseCostBase: 1000
+  purchaseCostMultiplier: 1.5
   purchaseGroupSize: 1
   fieldColor: {r: 0.6039216, g: 0.81960785, b: 0.9607843, a: 1}
   fieldIcon: {fileID: 0}

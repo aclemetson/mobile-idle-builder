@@ -1852,3 +1852,17 @@
     margin-top: 0;
     margin-left: var(--spacing-sm);
 }
+
+/* Tutorial highlight on a Builder card and its Place button. Compound selectors: the plain
+   .panel-btn--highlight lost to .craft-btn / .building-card (same specificity, declared later),
+   so a pulsed Place button never lit up. Colour only, so nothing shifts (#239). */
+.craft-btn.panel-btn--highlight {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: rgb(8, 16, 24);
+}
+
+.building-card.building-card--tutorial {
+    background-color: rgba(0, 229, 255, 0.22);
+    border-color: var(--color-primary);
+}

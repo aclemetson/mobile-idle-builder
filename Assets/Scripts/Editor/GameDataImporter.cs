@@ -435,6 +435,7 @@ namespace MobileIdleBuilder.Editor
             if (TryParseEnum<DecayType>(data.decay_type, $"ItemSO '{data.id}'.decayType", out var decay))
                 so.decayType = decay;
             so.fieldType = FieldTypes.Normalize(data.field_type);
+            so.world     = data.world ?? "";
 
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
@@ -674,6 +675,13 @@ namespace MobileIdleBuilder.Editor
                         field             = ResolveRef(ov.field, fieldLookup, $"SiteSO '{data.id}' field_override '{ov.field}'"),
                         densityMultiplier = ov.density_multiplier
                     });
+
+            so.startingBuildings.Clear();
+            if (data.starting_buildings != null)
+                foreach (var sb in data.starting_buildings)
+                    if (!string.IsNullOrEmpty(sb.building))
+                        so.startingBuildings.Add(new SiteStartingBuilding
+                            { buildingId = sb.building, x = sb.x, y = sb.y, rotation = sb.rotation });
 
             EditorUtility.SetDirty(so);
             return so;

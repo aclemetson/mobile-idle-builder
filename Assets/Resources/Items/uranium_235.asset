@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 703.8 million years
   isFissile: 1
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0

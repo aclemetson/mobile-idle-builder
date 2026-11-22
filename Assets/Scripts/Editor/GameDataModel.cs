@@ -179,6 +179,7 @@ namespace MobileIdleBuilder.Editor
     [Serializable]
     internal class ItemJson
     {
+        public string world                 = "";   // world whose buildings/fields make it ("" = shared)
         public string id                    = "";
         public string display_name          = "";
         public string symbol               = "";
@@ -397,8 +398,22 @@ namespace MobileIdleBuilder.Editor
         public string                        display_name    = "";
         public long                          unlock_cost     = 0;
         public List<SiteFieldOverrideJson>   field_overrides = new();
+        public List<SiteStartingBuildingJson> starting_buildings = new();   // placed once per run on first load
 
-        public void Initialize() { field_overrides ??= new List<SiteFieldOverrideJson>(); }
+        public void Initialize()
+        {
+            field_overrides    ??= new List<SiteFieldOverrideJson>();
+            starting_buildings ??= new List<SiteStartingBuildingJson>();
+        }
+    }
+
+    [Serializable]
+    internal class SiteStartingBuildingJson
+    {
+        public string building = "";   // BuildingSO id
+        public int    x;
+        public int    y;
+        public int    rotation;        // 0-3 clockwise
     }
 
     [Serializable]

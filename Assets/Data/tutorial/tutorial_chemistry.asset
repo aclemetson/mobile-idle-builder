@@ -46,6 +46,37 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: chem_grant
+    hintText: 
+    advanceCondition:
+      type: 0
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 700000
   - id: chem_research_lab
     hintText: Open Research and study the Chemistry Lab.
     advanceCondition:
@@ -78,7 +109,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: chem_place_spring
-    hintText: Open the Builder and place a Spring.
+    hintText: Place a Spring on the glowing tile.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -97,8 +128,8 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: 263ac4c52909f804bbfb82aa97e4b2d4, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: cells:5,11
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-spring
@@ -109,18 +140,18 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: chem_draw_channel
-    hintText: 'Place a Channel: tap the tile in front of the Spring, then where the
-      stream should end, and confirm.'
+    hintText: 'Place a Channel: tap the glowing tile under the Spring, then the one
+      beside the Calorimeter, and confirm.'
     advanceCondition:
-      type: 3
+      type: 8
       anyOf: 0
       items: []
-      uiEventId: conveyor_placed
+      uiEventId: 
       researchId: 
-      minCount: 0
-      buildingType: -1
-      buildingIsEntropySink: 0
-      fromBuildingType: -1
+      minCount: 1
+      buildingType: 30
+      buildingIsEntropySink: 1
+      fromBuildingType: 29
       minLevel: 0
       fieldId: 
       recipeId: -1
@@ -128,9 +159,9 @@ MonoBehaviour:
       researchId: 
       skipToId: 
     onEnter:
-      dialogue: {fileID: 0}
-      highlightTarget: 
-      highlightMode: 0
+      dialogue: {fileID: 11400000, guid: 0bc2f5a3121eae44ca3ad46e283aca90, type: 2}
+      highlightTarget: cells:5,10>8,10
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-conveyor
@@ -140,9 +171,70 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
+  - id: chem_place_h2_field
+    hintText: Place a Hydrogen Seep on the glowing tile below the stream.
+    advanceCondition:
+      type: 10
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: hydrogen_gas_field
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 30078a786ddba7b4d862553c44001688, type: 2}
+      highlightTarget: cells:6,9
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-hydrogen_gas_field
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: chem_place_o2_field
+    hintText: Place an Oxygen Vent on the glowing tile next to the Hydrogen Seep.
+    advanceCondition:
+      type: 10
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: oxygen_gas_field
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: cells:7,9
+      highlightMode: 1
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-oxygen_gas_field
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
   - id: chem_place_extractors
-    hintText: Place Extractors on a Hydrogen Seep and an Oxygen Vent beside the channel,
-      output toward the water.
+    hintText: Place an Extractor on each vent with its arrow pointing up at the stream.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -162,7 +254,7 @@ MonoBehaviour:
     onEnter:
       dialogue: {fileID: 11400000, guid: 563e16e6450697f4f97aeb8984c5f515, type: 2}
       highlightTarget: hydrogen_gas_field
-      highlightMode: 2
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-element_harvester
@@ -173,7 +265,7 @@ MonoBehaviour:
     isSubstep: 0
     rewardEntropy: 0
   - id: chem_place_synth
-    hintText: Place a Molecular Synthesizer on the bank, downstream of the Extractors.
+    hintText: Place a Molecular Synthesizer on the glowing tile below the stream.
     advanceCondition:
       type: 5
       anyOf: 0
@@ -192,8 +284,8 @@ MonoBehaviour:
       skipToId: 
     onEnter:
       dialogue: {fileID: 11400000, guid: b53f81da2a2ebfe469116c837e683176, type: 2}
-      highlightTarget: 
-      highlightMode: 0
+      highlightTarget: cells:8,9
+      highlightMode: 1
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: btn-place-molecular_synthesizer
@@ -234,37 +326,6 @@ MonoBehaviour:
     lockedResearchIds: []
     isSubstep: 0
     rewardEntropy: 0
-  - id: chem_place_calorimeter
-    hintText: Place a Calorimeter at the end of the channel.
-    advanceCondition:
-      type: 5
-      anyOf: 0
-      items: []
-      uiEventId: 
-      researchId: 
-      minCount: 1
-      buildingType: 30
-      buildingIsEntropySink: 1
-      fromBuildingType: -1
-      minLevel: 0
-      fieldId: 
-      recipeId: -1
-    skipCondition:
-      researchId: 
-      skipToId: 
-    onEnter:
-      dialogue: {fileID: 11400000, guid: ff6fc5db69392d546b77b8ee1e3af969, type: 2}
-      highlightTarget: 
-      highlightMode: 0
-      blockCollection: 0
-      collectionFilter: None
-      pulseButtonId: btn-place-calorimeter
-      demonHighlightItemIds: 
-      buildingInteractionGate: 0
-      lockedMessages: []
-    lockedResearchIds: []
-    isSubstep: 0
-    rewardEntropy: 0
   - id: chem_first_water
     hintText: Watch the stream carry hydrogen and oxygen to the Synthesizer.
     advanceCondition:
@@ -289,6 +350,37 @@ MonoBehaviour:
       dialogue: {fileID: 0}
       highlightTarget: 
       highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: chem_calorimeter
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: ff6fc5db69392d546b77b8ee1e3af969, type: 2}
+      highlightTarget: calorimeter
+      highlightMode: 2
       blockCollection: 0
       collectionFilter: None
       pulseButtonId: 
