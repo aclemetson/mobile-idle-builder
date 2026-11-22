@@ -72,7 +72,7 @@ namespace MobileIdleBuilder
                 // Preserve entropy sinks (Maxwell's Demon) — they're baked from the SubScene, and
                 // LoadGrid deliberately refuses to re-place them, so destroying one here would
                 // leave the grid with no Demon at all.
-                if (_em.HasComponent<EntropySinkTag>(e))
+                if (_em.HasComponent<DemonTag>(e))
                 {
                     GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
                     continue;
@@ -135,7 +135,7 @@ namespace MobileIdleBuilder
         /// mark the chains that end at the Demon for offline earnings.
         /// </summary>
         internal static bool IsRestorable(BuildingSO building) =>
-            building != null && !building.isEntropySink;
+            building != null && !building.IsFixedSink;
 
         /// <summary>
         /// A saved building that no longer fits anywhere near its old anchor (its footprint grew) is
@@ -328,6 +328,12 @@ namespace MobileIdleBuilder
         public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
+
+            // World rules first (stream belts, Demon on/off), so the belts restored below are built
+            // for the world they belong to. Runs on scene load and every site/world switch.
+            if (save != null && _ecsReady)
+                WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>());
+
             var grid = EnsureActiveGrid(save);
             if (grid == null) return;
             if (!forceApply && SaveManager.Instance.IsNewGame) return;

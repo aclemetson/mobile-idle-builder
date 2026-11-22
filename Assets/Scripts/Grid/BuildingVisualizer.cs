@@ -186,7 +186,7 @@ namespace MobileIdleBuilder
                 int fw = 1, fh = 1;
                 if (_footprints.TryGetValue(cell, out var fp)) { fw = fp.Item1; fh = fp.Item2; }
 
-                bool isSink = em.HasComponent<EntropySinkTag>(ent);
+                bool isSink = em.HasComponent<DemonTag>(ent);
 
                 for (int dx = 0; dx < fw; dx++)
                     for (int dy = 0; dy < fh; dy++)

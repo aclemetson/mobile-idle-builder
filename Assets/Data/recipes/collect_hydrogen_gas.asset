@@ -15,7 +15,7 @@ MonoBehaviour:
   id: collect_hydrogen_gas
   displayName: Hydrogen Gas
   methodLabel: 
-  recipeId: 167
+  recipeId: 291
   tier: 3
   category: 3
   inputs: []

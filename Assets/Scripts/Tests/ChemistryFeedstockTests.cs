@@ -87,9 +87,12 @@ namespace MobileIdleBuilder.Tests
                 Assert.IsTrue(WorldGate.BuildingInWorld(b, WorldGate.Physics), $"{id} is built in Physics");
                 Assert.IsFalse(WorldGate.BuildingInWorld(b, WorldGate.Chemistry), $"{id} is not built in Chemistry");
             }
-            // Logistics, power and the Demon work everywhere.
-            foreach (var b in _buildings.Where(x => x.isSplitter || x.isItemFilter || x.isEntropySink || x.isPowerSource))
+            // Logistics and the Demon work everywhere (the Demon is switched off at runtime in stream worlds).
+            foreach (var b in _buildings.Where(x => x.isSplitter || x.isItemFilter || x.IsFixedSink))
                 Assert.IsTrue(string.IsNullOrEmpty(b.world), $"{b.id} is shared by every world");
+            // Chemistry runs on streams, not eV: power is Physics-only.
+            foreach (var b in _buildings.Where(x => x.isPowerSource || x.id == "power_relay"))
+                Assert.AreEqual(WorldGate.Physics, b.world, $"{b.id} is built in Physics only");
         }
 
         [Test]

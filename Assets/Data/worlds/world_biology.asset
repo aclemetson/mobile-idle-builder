@@ -18,6 +18,7 @@ MonoBehaviour:
   prereqUnlockIds:
   - biology_lab
   unlockByTasks: 0
+  streamTransport: 0
   siteIds:
   - site_bio_lab
   theme:

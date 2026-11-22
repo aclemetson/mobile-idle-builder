@@ -43,6 +43,9 @@ namespace MobileIdleBuilder
         [Tooltip("True when finishing this world's delivery tasks (WorldTaskSO) unlocks it; prereqUnlockIds then also apply.")]
         public bool unlockByTasks;
 
+        [Tooltip("World rule: belts are water streams. Buildings sit beside them and take only what their recipe uses; a Spring's flow replaces eV power (Chemistry).")]
+        public bool streamTransport;
+
         [Tooltip("Ids of the Sites that belong to this world, in order. May be empty until sites are authored.")]
         public List<string> siteIds = new();
 

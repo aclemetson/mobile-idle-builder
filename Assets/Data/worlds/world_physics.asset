@@ -17,6 +17,7 @@ MonoBehaviour:
   unlockCost: 0
   prereqUnlockIds: []
   unlockByTasks: 0
+  streamTransport: 0
   siteIds:
   - site_origin
   - site_quark_sea

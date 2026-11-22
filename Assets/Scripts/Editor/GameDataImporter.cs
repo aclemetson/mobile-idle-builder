@@ -489,6 +489,10 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isPlacedSink        = data.is_placed_sink;
+            so.isSpring            = data.is_spring;
+            so.streamFlow          = data.stream_flow;
+            so.flowDraw            = data.flow_draw;
             so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
             so.isSplitter          = data.is_splitter;
@@ -727,6 +731,7 @@ namespace MobileIdleBuilder.Editor
             so.unlockCost  = data.unlock_cost;
 
             so.unlockByTasks   = data.unlock_by_tasks;
+            so.streamTransport = data.stream_transport;
             so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
             foreach (var pid in so.prereqUnlockIds)
                 if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))

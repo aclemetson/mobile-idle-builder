@@ -184,7 +184,7 @@ namespace MobileIdleBuilder
             buildingVisualizer?.SelectBuilding(foundPos.Cell.x, foundPos.Cell.y);
 
             // Maxwell's Demon gets its own interaction panel instead of the generic inspector.
-            if (_em.HasComponent<EntropySinkTag>(found))
+            if (_em.HasComponent<DemonTag>(found))
             {
                 HasSelection = true;
                 maxwellsDemon?.Open();
@@ -220,7 +220,7 @@ namespace MobileIdleBuilder
             if (!ScreenToWorldGround(screenPos, out Vector3 worldPos)) return false;
 
             var e = FindBuildingAtWorld(worldPos);
-            if (e == Entity.Null || _em.HasComponent<EntropySinkTag>(e)) return false;
+            if (e == Entity.Null || _em.HasComponent<DemonTag>(e)) return false;
             found = e;
             return true;
         }

@@ -31,6 +31,10 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 1
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: bc8242727f23e9f4680a80515e744290, type: 2}

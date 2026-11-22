@@ -293,6 +293,10 @@ namespace MobileIdleBuilder.Editor
         public int                    input_slot_count           = 0;
         public string[]               input_slot_labels          = Array.Empty<string>();
         public bool                   is_entropy_sink            = false;
+        public bool                   is_placed_sink             = false;   // placed sink (Calorimeter), saved/restored like any building
+        public bool                   is_spring                  = false;   // stream source (stream worlds)
+        public float                  stream_flow                = 0f;      // L/s a Spring supplies
+        public float                  flow_draw                  = 0f;      // L/s a building takes from its stream
         public string                 world                      = "";      // world id it is built in ("" = every world)
         public bool                   is_item_filter             = false;
         public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
@@ -395,6 +399,7 @@ namespace MobileIdleBuilder.Editor
         public long           unlock_cost       = 0;
         public List<string>   prereq_unlock_ids = new();  // research/item ids that gate the unlock
         public bool           unlock_by_tasks   = false;  // world_tasks for this world must be finished (Chemistry gate)
+        public bool           stream_transport  = false;  // belts become water streams: side pickup, flow budget, no eV power (Chemistry)
         public List<string>   site_ids          = new();  // member site ids (flat global site list), in order
         public WorldThemeJson theme;                       // map palette/tint (optional; null = defaults)
 

@@ -66,6 +66,18 @@ namespace MobileIdleBuilder
         public float influenceRadiusTiles;
         public float linkRadiusTiles;
 
+        [Header("Streams (worlds with WorldSO.streamTransport, e.g. Chemistry)")]
+        [Tooltip("Spring: the stream starts at this building's output and carries this much flow (L/s).")]
+        public bool isSpring;
+        public float streamFlow;
+        [Tooltip("Flow (L/s) this building takes from the stream it sits beside, upstream first. 0 = runs on any stream.")]
+        public float flowDraw;
+        [Tooltip("A placed entropy sink (Calorimeter): saved, restored and demolished like any building. Maxwell's Demon is the baked, fixed sink.")]
+        public bool isPlacedSink;
+
+        /// <summary>Maxwell's Demon: the sink baked from the SubScene, kept as a fixture (see <see cref="DemonTag"/>).</summary>
+        public bool IsFixedSink => isEntropySink && !isPlacedSink;
+
         [Header("Production")]
         public float baseOutputRate;        // items per second
         public RecipeSO[] supportedRecipes;

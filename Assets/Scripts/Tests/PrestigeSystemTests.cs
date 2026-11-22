@@ -267,6 +267,7 @@ namespace MobileIdleBuilder.Tests
             var demon = _em.CreateEntity();
             _em.AddComponent<BuildingData>(demon);
             _em.AddComponent<EntropySinkTag>(demon);
+            _em.AddComponent<DemonTag>(demon);
             _em.AddBuffer<BuildingInputSlot>(demon).Add(new BuildingInputSlot { ItemID = 3, Quantity = 7 });
             _em.AddBuffer<BuildingOutputSlot>(demon).Add(new BuildingOutputSlot { ItemID = 3, Quantity = 2 });
 

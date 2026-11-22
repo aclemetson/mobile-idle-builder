@@ -23,7 +23,7 @@ namespace MobileIdleBuilder
             using var buildings = em.CreateEntityQuery(new EntityQueryDesc
             {
                 All  = new[] { ComponentType.ReadOnly<BuildingData>() },
-                None = new[] { ComponentType.ReadOnly<EntropySinkTag>() },
+                None = new[] { ComponentType.ReadOnly<DemonTag>() },
             });
             int buildingCount = buildings.CalculateEntityCount();
             em.DestroyEntity(buildings);
@@ -31,7 +31,7 @@ namespace MobileIdleBuilder
             using var belts = em.CreateEntityQuery(ComponentType.ReadOnly<ConveyorSegmentData>());
             em.DestroyEntity(belts);
 
-            using var sinks = em.CreateEntityQuery(ComponentType.ReadOnly<EntropySinkTag>());
+            using var sinks = em.CreateEntityQuery(ComponentType.ReadOnly<DemonTag>());
             var sinkEntities = sinks.ToEntityArray(Unity.Collections.Allocator.Temp);
             foreach (var e in sinkEntities)
             {

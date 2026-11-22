@@ -139,6 +139,8 @@ namespace MobileIdleBuilder
 
             if (building?.isEntropySink == true)
                 _em.AddComponentData(entity, new EntropySinkTag());
+            if (building != null && building.IsFixedSink)
+                _em.AddComponentData(entity, new DemonTag());
 
             // Bespoke procedural structure selector (data-driven, no hardcoded ids). Collectors and
             // entropy sinks are detected by their gameplay components; everything else that declares a
@@ -180,6 +182,16 @@ namespace MobileIdleBuilder
                     DrawEV = BuildingSO.PowerDrawFor(building, speedLevel, recipe)
                 });
                 _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
+            }
+
+            // Streams (stream worlds): a Spring heads a stream; a building with a flow draw takes its
+            // share from the stream beside it and StreamFlowSystem writes how much it got.
+            if (building != null && building.isSpring)
+                _em.AddComponentData(entity, new StreamSource { Flow = building.streamFlow });
+            if (building != null && building.flowDraw > 0f)
+            {
+                _em.AddComponentData(entity, new StreamConsumer { Draw = building.flowDraw });
+                _em.AddComponentData(entity, new StreamStatus { OnStream = 0, Ratio = 0f });
             }
 
             if (hasPorts)

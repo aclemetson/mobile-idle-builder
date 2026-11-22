@@ -17,6 +17,7 @@ MonoBehaviour:
   unlockCost: 0
   prereqUnlockIds: []
   unlockByTasks: 1
+  streamTransport: 1
   siteIds:
   - site_chem_lab
   theme:

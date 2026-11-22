@@ -24,13 +24,17 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
-  basePowerCostEV: 50
+  basePowerCostEV: 0
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 3
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
@@ -41,10 +45,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b62f5d117e826f84b83598cd2a5ef3f9, type: 2}
   - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
   - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
-  inputSlotCount: 2
+  - {fileID: 11400000, guid: b77d5ce6d8f63424397c8cbe29205a0a, type: 2}
+  inputSlotCount: 1
   inputSlotLabels:
-  - Primary Feedstock
-  - Secondary Feedstock
+  - Stream
   isEntropySink: 0
   isItemFilter: 0
   isSplitter: 0
@@ -56,10 +60,7 @@ MonoBehaviour:
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 1
+    localFacing: 0
   - portType: 1
     localCell: {x: 0, y: 0}
     localFacing: 2
@@ -73,7 +74,7 @@ MonoBehaviour:
   upgradeLevels:
   - level: 2
     outputRate: 2
-    powerCostEV: 75
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -81,7 +82,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 4
-    powerCostEV: 115
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -89,7 +90,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 8
-    powerCostEV: 170
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
