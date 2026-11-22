@@ -119,7 +119,8 @@
       "resets_on_prestige": true,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "hydrogen_synthesis",
@@ -139,7 +140,8 @@
       "resets_on_prestige": true,
       "codex_entry": "The simplest atom: one proton orbited by one electron. Hydrogen is the most abundant element in the universe and the gateway to all atomic chemistry.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "automation_i",
@@ -159,7 +161,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "_comment": "Lets the player buy and place extra fields from the Build menu. Prices live on each field (purchase_cost_*), so this node gates no building.",
@@ -180,7 +183,8 @@
       "resets_on_prestige": true,
       "codex_entry": "A field is only a region where the vacuum is unusually generous. Pump enough entropy into empty space and it learns to give up particles too, though every new field strains the vacuum more than the last.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "atomic_assembly",
@@ -200,7 +204,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Combining protons, neutrons, and electrons into stable atoms. Each element's identity is defined by its proton count — change it and you change the element.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "deuterium_synthesis",
@@ -220,7 +225,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Deuterium is hydrogen with a neutron attached. One in every 6,400 hydrogen atoms in Earth's oceans is deuterium. Fusing two of them is far easier than fusing bare protons, which is why every fusion experiment on Earth starts with it.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "power_distribution",
@@ -240,7 +246,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Power need not be generated where it is used. A resonant relay re-radiates the grid's existing eV field across a far wider area than any single generator can reach, decoupling where you make power from where you spend it.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "nucleon_harvesting",
@@ -260,7 +267,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Two harvesters on opposing polarity fields can be merged into a single Nucleon Harvester, producing protons or neutrons directly without quark combination.",
       "icon_path": "TODO",
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     },
     {
       "_comment": "Field tap-cooldown reduction branch — purely a manual-collection modifier, gates no buildings/items",
@@ -282,7 +290,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Refining the extraction pulse lets a field recharge faster after each manual tap, shortening the wait between collections.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "rapid_extraction_ii",
@@ -303,7 +312,8 @@
       "resets_on_prestige": true,
       "codex_entry": "A tuned resonance cascade drives field recharge near its physical limit, collapsing the cooldown between taps.",
       "icon_path": "TODO",
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     },
     {
       "id": "heavy_elements",
@@ -324,7 +334,8 @@
       "codex_entry": "Beyond iron, fusion in stars becomes energy-negative. Only cosmic violence — supernovae, neutron star collisions — forges the heavy elements. We replicate that violence, precisely.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "radioactive_isotopes",
@@ -345,7 +356,8 @@
       "codex_entry": "Some isotopes are inherently unstable, shedding mass as alpha or beta particles. With proper containment, decay is not a hazard — it is a resource.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
 
     {
@@ -367,7 +379,8 @@
       "resets_on_prestige": true,
       "codex_entry": "The lightest solid elements: beryllium, harder than steel and lighter than aluminium; boron, an exotic metalloid with industrial and nuclear applications.",
       "icon_path": "TODO",
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     },
     {
       "id": "mid_elements",
@@ -387,7 +400,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable batteries.",
       "icon_path": "TODO",
-      "block": "stellar_forge"
+      "block": "stellar_forge",
+      "world": "world_physics"
     },
     {
       "id": "transition_metals",
@@ -408,7 +422,8 @@
       "codex_entry": "Copper carries electricity better than any common metal. Zinc prevents corrosion and is half of brass. Together they defined the Bronze and Brass Ages.",
       "icon_path": "TODO",
       "block": "deep_burning",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "precious_metals",
@@ -429,7 +444,8 @@
       "codex_entry": "Silver has the highest electrical conductivity of any element. Gold resists corrosion absolutely — every circuit connector in space relies on it.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "exotic_metals",
@@ -450,7 +466,8 @@
       "codex_entry": "Platinum catalyses the reactions that make fuel cells possible. Tungsten has the highest melting point of any element — used in rocket nozzles and light filaments.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "transuranic_elements",
@@ -471,7 +488,8 @@
       "codex_entry": "Plutonium does not occur naturally on Earth — it must be synthesised. Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional physics.",
       "icon_path": "TODO",
       "block": "synthetic_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
 
     {
@@ -494,7 +512,8 @@
       "codex_entry": "Atoms combine into molecules through covalent and ionic bonds. Water, methane, and ammonia are the feedstocks of planetary chemistry — and industrial civilisation.",
       "icon_path": "TODO",
       "block": "chemistry_entry",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "nitrogen_fixation",
@@ -515,7 +534,8 @@
       "codex_entry": "Nitrogen gas is nearly inert: its triple bond is one of the strongest in chemistry. Fixing it into ammonia, with hydrogen under heat and pressure, feeds most of the world's fertiliser.",
       "icon_path": "TODO",
       "block": "chemistry_entry",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "advanced_molecules",
@@ -536,7 +556,8 @@
       "codex_entry": "Silica is the basis of glass and semiconductors. Iron oxide rusts and builds — it is the ore steel begins from. Uranium hexafluoride enables isotope separation by gaseous diffusion.",
       "icon_path": "TODO",
       "block": "chemistry_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "materials_science",
@@ -557,7 +578,8 @@
       "codex_entry": "Steel defined the industrial age. Carbon fibre enables spacecraft. Titanium alloys survive re-entry. Materials science is the discipline that turns molecules into civilisation.",
       "icon_path": "TODO",
       "block": "chemistry_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "advanced_materials",
@@ -578,7 +600,8 @@
       "codex_entry": "Semiconductor wafers are the substrate of computation. Aerogel is the lightest solid material. Superconductors carry current with zero resistance. Metamaterials bend light and gravity around themselves.",
       "icon_path": "TODO",
       "block": "chemistry_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "component_engineering",
@@ -599,7 +622,8 @@
       "codex_entry": "Quantum processors harness superposition for computation. Plasma containment rings confine stellar material. Antimatter cells store energy at matter-annihilation density.",
       "icon_path": "TODO",
       "block": "synthetic_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "megastructure_theory",
@@ -608,7 +632,7 @@
       "branch": "Astrophysics",
       "prerequisites": ["component_engineering"],
       "depth_in_tree": 8,
-      "cost_base_currency": 771000000,
+      "cost_base_currency": 775000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 14400,
       "unlocks_items": ["dyson_node", "orbital_frame", "graviton_lens"],
@@ -620,7 +644,8 @@
       "codex_entry": "A Dyson sphere captures all energy output of a star. Dyson nodes are the structural anchors. Orbital frames are the load-bearing superstructure. Graviton lenses stabilise the whole assembly against tidal forces.",
       "icon_path": "TODO",
       "block": "synthetic_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "_comment": "--- LOGISTICS NODES: unlock per-building capacity upgrades ---",
@@ -642,7 +667,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Once production runs unattended, the bottleneck shifts from speed to storage. Containment fields let a building hold far more feedstock and finished output before it must pause — the foundation of idle stockpiling.",
       "icon_path": "TODO",
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     },
     {
       "id": "heavy_transition_metals",
@@ -663,7 +689,8 @@
       "codex_entry": "The second row of transition metals: catalytic, refractory, and the rare-earth precursors. Bridging the periodic table from the everyday metals toward the lanthanides.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "lanthanides_and_heavy_metals",
@@ -684,7 +711,8 @@
       "codex_entry": "The rare earths power magnets, lasers, and phosphors; the heavy metals below them mark the edge of stability where the first natural radioactivity appears.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "superheavy_synthesis",
@@ -705,7 +733,8 @@
       "codex_entry": "Beyond fermium, nuclei survive only by slamming lighter atoms together at relativistic speed. Each new element exists for fractions of a second \u2014 and is worth a fortune in captured entropy.",
       "icon_path": "TODO",
       "block": "synthetic_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "fusion_i",
@@ -725,7 +754,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Stars fuse hydrogen into helium and onward, releasing binding energy at every step up to iron. The Fusion Reactor reproduces that ladder: combine two cheap light nuclei into one heavier, more valuable atom.",
       "icon_path": "TODO",
-      "block": "ignition"
+      "block": "ignition",
+      "world": "world_physics"
     },
     {
       "id": "fusion_ii",
@@ -745,7 +775,8 @@
       "resets_on_prestige": true,
       "codex_entry": "In evolved stars, helium nuclei (alpha particles) are captured one at a time: oxygen, neon, magnesium, silicon. Each capture climbs the fusion ladder by two protons.",
       "icon_path": "TODO",
-      "block": "stellar_forge"
+      "block": "stellar_forge",
+      "world": "world_physics"
     },
     {
       "id": "fusion_iii",
@@ -766,7 +797,8 @@
       "codex_entry": "The last day of a massive star: silicon burning forges its way to iron-56, the most tightly bound nucleus. Fusion can climb no further \u2014 beyond iron it costs more energy than it yields.",
       "icon_path": "TODO",
       "block": "deep_burning",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "explosive_burning",
@@ -787,7 +819,8 @@
       "codex_entry": "When a massive star explodes, a shock wave sweeps through its silicon and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements next to iron, like Manganese and Vanadium.",
       "icon_path": "TODO",
       "block": "deep_burning",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "fissile_extraction",
@@ -808,7 +841,8 @@
       "codex_entry": "Matter heavier than iron has no cheap fusion route \u2014 it must enter the economy from a fissile field. Harvest uranium and plutonium to feed the fission ladder back down toward iron.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "fission_i",
@@ -829,7 +863,8 @@
       "codex_entry": "A slow neutron splits a heavy fissile nucleus into two mid-weight fragments \u2014 each closer to iron, and each worth far more than the cheap fuel that produced it. The fragments and spare neutrons are caught for reuse.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "slow_neutron_capture",
@@ -850,7 +885,8 @@
       "codex_entry": "In red giant stars, free neutrons trickle into heavy nuclei one at a time, slowly enough for each unstable result to decay before the next arrives.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "id": "rapid_neutron_capture",
@@ -871,7 +907,8 @@
       "codex_entry": "When two neutron stars collide, matter is bathed in so many neutrons that nuclei swell faster than they can decay. The 2017 merger GW170817 was seen forging gold and platinum.",
       "icon_path": "TODO",
       "block": "actinide_frontier",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_physics"
     },
     {
       "_comment": "--- CHEMISTRY WORLD (Chem/Bio Phase 4a) ---",
@@ -884,8 +921,8 @@
       "cost_base_currency": 676000,
       "cost_prestige_currency": 0,
       "duration_seconds": 300,
-      "unlocks_items": ["hydrogen_gas", "oxygen_gas", "water", "liquid_hydrogen"],
-      "unlocks_recipes": ["collect_hydrogen_gas", "collect_oxygen_gas", "water", "liquid_hydrogen"],
+      "unlocks_items": ["hydrogen_gas", "oxygen_gas", "water"],
+      "unlocks_recipes": ["collect_hydrogen_gas", "collect_oxygen_gas", "water"],
       "unlocks_buildings": ["element_harvester", "molecular_synthesizer"],
       "unlocks_grid_expansion": false,
       "unlocks_research": ["molecular_synthesis"],
@@ -893,7 +930,8 @@
       "codex_entry": "The bridge from physics to chemistry. Where nuclear synthesis forged the elements one nucleus at a time, chemistry mines them in bulk and recombines them into molecules \u2014 the first step toward life.",
       "icon_path": "TODO",
       "block": "chemistry_entry",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "_comment": "--- CHEMISTRY C2-C4 (Chem/Bio Phase 4b). Chained after chemistry_lab; culminates in the OrganicCompound feedstock that gates Biology. Costs are FIRST-PASS (real re-tier is Phase 6). ---",
@@ -915,7 +953,8 @@
       "codex_entry": "Chemistry stops being a curiosity and becomes an industry. Catalysts lower the energy of reactions, and mined metals become the reactors and reagents that drive them.",
       "icon_path": "TODO",
       "block": "chemistry_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "organic_chemistry",
@@ -924,7 +963,7 @@
       "branch": "Chemistry",
       "prerequisites": ["reaction_engineering"],
       "depth_in_tree": 5,
-      "cost_base_currency": 227000000,
+      "cost_base_currency": 229000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["ethane", "octane", "ethanol", "polymer_precursor"],
@@ -936,7 +975,8 @@
       "codex_entry": "Carbon bonds to itself without limit, building chains and rings. Hydrocarbons and their derivatives are the scaffolding on which all organic matter is assembled.",
       "icon_path": "TODO",
       "block": "chemistry_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "id": "biochem_precursors",
@@ -957,7 +997,8 @@
       "codex_entry": "The last step of chemistry and the first of biology. Carbon, nitrogen, and phosphorus are woven into glucose, amino acids, fatty acids, and nucleotides \u2014 the monomers from which life will build itself.",
       "icon_path": "TODO",
       "block": "biology_world",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "world": "world_chemistry"
     },
     {
       "_comment": "--- BIOLOGY WORLD (Chem/Bio Biology track). New branch 'Biology'. biology_lab is the Biology WORLD gate: prereq biochem_precursors (must have unlocked the organic precursors in Chemistry). Costs are FIRST-PASS (Phase 6 re-tier). ---",
@@ -978,7 +1019,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Chemistry made the parts; biology assembles them into machines that copy themselves. The first tier weaves monomers into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
       "icon_path": "TODO",
-      "block": "biology_world"
+      "block": "biology_world",
+      "world": "world_biology"
     },
     {
       "_comment": "--- BIOLOGY B2-B4 (Chem/Bio Biology track). Chained after biology_lab; culminates in whole ecosystems, the Biology endgame. Costs are FIRST-PASS (Phase 6 re-tier). ---",
@@ -999,7 +1041,8 @@
       "resets_on_prestige": true,
       "codex_entry": "The macromolecules find their common cause: enclosed by a membrane, running on ribosomes and mitochondria, the first cell is a chemistry that keeps itself alive.",
       "icon_path": "TODO",
-      "block": "biology_world"
+      "block": "biology_world",
+      "world": "world_biology"
     },
     {
       "id": "multicellular_life",
@@ -1019,7 +1062,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Cells stop living alone. Nucleated and specialised, they bind into tissues and organs — a division of labour that lets life grow large.",
       "icon_path": "TODO",
-      "block": "biology_world"
+      "block": "biology_world",
+      "world": "world_biology"
     },
     {
       "id": "ecosystems",
@@ -1039,7 +1083,8 @@
       "resets_on_prestige": true,
       "codex_entry": "Organs become organisms, organisms become populations, and populations weave into an ecosystem — a self-sustaining web of life. From quarks to a living world.",
       "icon_path": "TODO",
-      "block": "biology_world"
+      "block": "biology_world",
+      "world": "world_biology"
     },
     {
       "id": "transportation_1",
@@ -1062,7 +1107,8 @@
       "resets_on_prestige": true,
       "codex_entry": "",
       "icon_path": "TODO",
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     },
     {
       "id": "transportation_2",
@@ -1086,7 +1132,8 @@
       "codex_entry": "",
       "icon_path": "TODO",
       "advances_curve": false,
-      "block": "foundations"
+      "block": "foundations",
+      "world": "world_physics"
     }
   ],
 
@@ -1821,32 +1868,6 @@
     },
 
     {
-      "_comment": "--- TIER 3: MOLECULES (items 32–38) ---",
-      "id": "liquid_hydrogen",
-      "display_name": "Liquid Hydrogen",
-      "symbol": "LH₂",
-      "icon_path": "TODO",
-      "item_id": 32,
-      "tier": 3,
-      "tier_ref": "tier_3",
-      "category": "Molecule",
-      "atomic_number": 0,
-      "atomic_mass": 0,
-      "charge": "0",
-      "is_radioactive": false,
-      "decay_type": "None",
-      "half_life_note": "",
-      "is_fissile": false,
-      "is_harvested": false,
-      "field_type": "None",
-      "is_secondary_particle": false,
-      "particle_uses": 0,
-      "codex_entry": "Hydrogen cooled to −253°C, just 20 degrees above absolute zero. The most energy-dense chemical rocket propellant by mass. Used as a feedstock for fuel cells and semiconductor processing.",
-      "base_sell_value": 3220.0,
-      "isotope_sell_multiplier": 1.0,
-      "world": "world_chemistry"
-    },
-    {
       "id": "water",
       "display_name": "Water",
       "symbol": "H₂O",
@@ -2194,7 +2215,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Ultrapure crystalline silicon sliced to sub-millimetre thickness. The substrate on which every integrated circuit is etched. Grown from molten silica in hydrogen atmosphere.",
-      "base_sell_value": 1540000.0,
+      "base_sell_value": 1530000.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry"
     },
@@ -6166,32 +6187,6 @@
     },
 
     {
-      "_comment": "--- TIER 3: MOLECULAR SYNTHESIZER RECIPES (recipe_ids 30–36) ---",
-      "id": "liquid_hydrogen",
-      "display_name": "Liquid Hydrogen",
-      "recipe_id": 30,
-      "tier": 3,
-      "category": "Molecule",
-      "inputs": [
-        { "item": "hydrogen_gas", "quantity": 5 }
-      ],
-      "neutron_adjustment": [],
-      "output_item": "liquid_hydrogen",
-      "output_quantity": 1,
-      "byproducts": [],
-      "base_craft_time": 20.0,
-      "manual_craft_time": 0.0,
-      "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 50.0,
-      "valid_buildings": ["molecular_synthesizer"],
-      "can_craft_manually": false,
-      "known_from_start": false,
-      "required_research": "chemistry_lab",
-      "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
-    },
-    {
       "id": "water",
       "display_name": "Water",
       "recipe_id": 31,
@@ -6435,7 +6430,7 @@
       "category": "Alloy",
       "inputs": [
         { "item": "silica", "quantity": 5 },
-        { "item": "liquid_hydrogen", "quantity": 2 }
+        { "item": "hydrogen_gas", "quantity": 4 }
       ],
       "neutron_adjustment": [],
       "output_item": "semiconductor_wafer",
@@ -11669,7 +11664,7 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 1.0,
-      "supported_recipes": ["liquid_hydrogen", "water", "methane", "ammonia", "carbon_dioxide", "silica", "iron_oxide", "uranium_hexafluoride", "methane_combustion"],
+      "supported_recipes": ["water", "methane", "ammonia", "carbon_dioxide", "silica", "iron_oxide", "uranium_hexafluoride", "methane_combustion"],
       "input_slot_count": 1,
       "input_slot_labels": ["Stream"],
       "is_entropy_sink": false,

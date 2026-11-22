@@ -21,8 +21,8 @@ MonoBehaviour:
   inputs:
   - item: {fileID: 11400000, guid: 6d1a01fd29cd2544086df1cd0c88ccda, type: 2}
     quantity: 5
-  - item: {fileID: 11400000, guid: 53f7babf259c14c4186f3fd657e1be68, type: 2}
-    quantity: 2
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+    quantity: 4
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: e1f450e49f29d4345adf780f9cd764d9, type: 2}
   outputQuantity: 1

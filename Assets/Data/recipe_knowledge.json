@@ -24,7 +24,6 @@
         { "id": "platinum",                  "previous_research": false },
         { "id": "tungsten",                  "previous_research": false },
         { "id": "plutonium",                 "previous_research": false },
-        { "id": "liquid_hydrogen",           "previous_research": false },
         { "id": "water",                     "previous_research": false },
         { "id": "methane",                   "previous_research": false },
         { "id": "ammonia",                   "previous_research": false },

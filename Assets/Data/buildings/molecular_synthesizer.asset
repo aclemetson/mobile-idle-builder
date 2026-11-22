@@ -37,7 +37,6 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
   - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
   - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
   - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}

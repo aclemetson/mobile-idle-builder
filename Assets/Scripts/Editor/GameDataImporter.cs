@@ -382,6 +382,7 @@ namespace MobileIdleBuilder.Editor
             so.treeX                = data.tree_x;
             so.treeY                = data.tree_y;
             so.requiredWorld        = data.required_world ?? "";
+            so.world                = data.world ?? "";
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;

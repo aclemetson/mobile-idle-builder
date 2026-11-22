@@ -76,6 +76,20 @@ namespace MobileIdleBuilder
         /// Node positions in tree space. Uses each node's editor position when it has one; the rest follow the
         /// editor's Tidy layout (blocks in order, prerequisite-depth columns inside a block, rows by branch then cost).
         /// </summary>
+        /// <summary>
+        /// <see cref="Layout"/> moved left so the leftmost node sits at x = 0: a world's tab holds part of the tree,
+        /// which then starts at the left edge instead of where it sits in the whole tree.
+        /// </summary>
+        public static Dictionary<string, Vector2> LayoutFromLeft(IReadOnlyList<ResearchSO> research, IReadOnlyList<ResearchBlock> blocks)
+        {
+            var laid = Layout(research, blocks);
+            if (laid.Count == 0) return laid;
+            float minX = laid.Values.Min(v => v.x);
+            if (minX > 0f)
+                foreach (var key in laid.Keys.ToList()) laid[key] = new Vector2(laid[key].x - minX, laid[key].y);
+            return laid;
+        }
+
         public static Dictionary<string, Vector2> Layout(IReadOnlyList<ResearchSO> research, IReadOnlyList<ResearchBlock> blocks)
         {
             var pos = new Dictionary<string, Vector2>();
@@ -135,7 +149,7 @@ namespace MobileIdleBuilder
             foreach (var n in _nodes.Values) n.RemoveFromHierarchy();
             _nodes.Clear();
             _bands.Clear();
-            _pos = Layout(research, blocks);
+            _pos = LayoutFromLeft(research, blocks);
 
             float maxX = 0, maxY = 0;
             foreach (var r in research)

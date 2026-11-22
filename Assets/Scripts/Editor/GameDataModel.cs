@@ -165,6 +165,7 @@ namespace MobileIdleBuilder.Editor
         public int      tree_x                 = -1;    // research tree layout from the editor; -1 = auto layout
         public int      tree_y                 = -1;
         public string   required_world         = "";    // world id that must be unlocked first ("" = none)
+        public string   world                  = "";    // world whose Research tab lists it ("" = Physics)
 
         public void Initialize()
         {
