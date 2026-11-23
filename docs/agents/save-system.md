@@ -2,7 +2,7 @@
 
 **Scope:** Save envelope, the ECS bridge, grid persistence, idle snapshot, and how to add a save field safely. Read before touching anything persisted.
 
-> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; sign-in check, stale-marker rule and non-blocking save choice 2026-11-17; `totalEntropyDiscounted` + load backfill 2026-11-19; world task fields 2026-11-19; boost-window idle weighting 2026-11-19; live cloud swap clears ECS, loading-screen save choice, roaming recipe knowledge 2026-11-21. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `e4ef2c6` + multi-grids Phase 1-2, 2026-06-12; prestige reset + scene reload (`PrestigeRunReset`) 2026-11-07; recipe-id migration (#336) 2026-11-07; Services table (`SaveManager`, `LocalSaveService`) refreshed for #280, 2026-10-31; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; sign-in check, stale-marker rule and non-blocking save choice 2026-11-17; `totalEntropyDiscounted` + load backfill 2026-11-19; world task fields 2026-11-19; boost-window idle weighting 2026-11-19; live cloud swap clears ECS, loading-screen save choice, roaming recipe knowledge 2026-11-21; player name fields 2026-11-23. If code contradicts this doc, trust the code and update this doc.
 
 ## The envelope: `Assets/Scripts/SaveSystem/SaveData.cs`
 
@@ -19,6 +19,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `unlockedResearch / codex` | `unlockedResearch` is per-run (cleared by PrestigeSystem); `codex` is dead |
 | ~~`researchCompletedEver`~~ | removed 2026-11-15 with the per-node prestige memory discount. Older saves still carry it; `JsonUtility` ignores it on load and drops it on the next save |
 | `adLastWatch` (`AdLastWatchEntry` id/utc) | last watch per ad placement (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge, 15 min). Survives prestige |
+| `playerName` / `namePromptSkipped` | public player name for tournament leaderboards (PvE phase 1, 2026-11-23): cached full UGS name `Name#1234` ("" = never chosen; UGS Authentication player names is the source of truth, refreshed each launch by `PlayerNameService.RefreshAsync`), and whether the post-tutorial name card was answered Later. Survive prestige |
 | `devConsoleUsed` | sticky: a dev-console command ran on this save. Set by `DevConsoleController`, stamped on telemetry `player_snapshot`. Survives prestige (never cleared) |
 | `domainsIntroSeen` | one-shot guard: Quantum Domains intro dialogue shown when `materials_science` research unlocks. Survives prestige |
 | `paidCurrency / crystalsPurchased` | crystals balance / lifetime IAP audit |

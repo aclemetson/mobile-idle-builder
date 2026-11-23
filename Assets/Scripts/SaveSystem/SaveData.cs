@@ -26,6 +26,10 @@ namespace MobileIdleBuilder
         public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
+        // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
+        // for offline display. Full UGS form "Name#1234"; "" = never chosen. Survives prestige.
+        public string playerName                    = "";
+        public bool   namePromptSkipped;                   // the post-tutorial "Choose your name" card was skipped; only Settings (and PvE) ask again. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply

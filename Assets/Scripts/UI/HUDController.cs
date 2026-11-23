@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         private ManagersSubController               _managers;
         private StatsSubController                  _stats;
         private EntropySurgeOfferController         _surgeOffer;
+        private PlayerNamePromptController          _namePrompt;
         private MenuReminderController              _reminders;
         private TestAdOverlayController             _testAd;
         private CyclotronController                 _cyclotron;
@@ -204,6 +205,7 @@ namespace MobileIdleBuilder
             _reminders    = GetComponent<MenuReminderController>() ?? gameObject.AddComponent<MenuReminderController>();
             _testAd       = GetComponent<TestAdOverlayController>() ?? gameObject.AddComponent<TestAdOverlayController>();
             _cyclotron    = GetComponent<CyclotronController>() ?? gameObject.AddComponent<CyclotronController>();
+            _namePrompt   = GetComponent<PlayerNamePromptController>() ?? gameObject.AddComponent<PlayerNamePromptController>();
         }
 
         void OnEnable()
@@ -541,6 +543,7 @@ namespace MobileIdleBuilder
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
+            _namePrompt?.Init(root, this);  // "Choose your name" card (PvE leaderboards): after the tutorial + Settings
             InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
@@ -2596,7 +2599,8 @@ namespace MobileIdleBuilder
                                         || _modeEndedFrame == Time.frameCount,
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
                 TestAdOpen       = _testAd != null && _testAd.IsOpen,
-                ConfirmOpen      = ConfirmPrompt.IsOpen,
+                // The name card is a centred question card like ConfirmPrompt, so it shares that layer.
+                ConfirmOpen      = ConfirmPrompt.IsOpen || PlayerNamePromptController.IsOpen,
                 // The Cyclotron card is a centred modal like the Surge offer, so it shares that layer.
                 SurgeOfferOpen   = (_surgeOffer != null && _surgeOffer.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen),
                 IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
@@ -2609,7 +2613,10 @@ namespace MobileIdleBuilder
             switch (BackNavigation.TopLayer(state))
             {
                 case BackNavigation.Layer.TestAd:        _testAd.Skip();                 break;
-                case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
+                case BackNavigation.Layer.ConfirmPrompt:
+                    if (ConfirmPrompt.IsOpen) ConfirmPrompt.CancelFromBack();
+                    else _namePrompt?.CancelFromBack();
+                    break;
                 case BackNavigation.Layer.SurgeOffer:
                     if (_cyclotron != null && _cyclotron.IsOpen) _cyclotron.Close();
                     else _surgeOffer.Minimize();

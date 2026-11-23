@@ -33,6 +33,7 @@ namespace MobileIdleBuilder
 
         private Label  _accountLabel;
         private Button _btnGoogleSignIn;
+        private Button _btnPlayerName;
         private bool   _signingIn;
         private string _accountStatus;   // result of the last Settings sign-in, shown under the account
 
@@ -63,6 +64,8 @@ namespace MobileIdleBuilder
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         -= OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        -= OnPrivacyPolicy;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         -= OnGoogleSignIn;
+            if (_btnPlayerName       != null) _btnPlayerName.clicked           -= OnPlayerName;
+            PlayerNameService.OnNameChanged -= OnNameChanged;
         }
 
         private void OnDisable() => Cleanup();
@@ -99,6 +102,7 @@ namespace MobileIdleBuilder
             _versionLabel         = root.Q<Label>("settings-version");
             _accountLabel         = root.Q<Label>("settings-account");
             _btnGoogleSignIn      = root.Q<Button>("btn-google-sign-in");
+            _btnPlayerName        = root.Q<Button>("btn-player-name");
 
             if (_versionLabel != null) _versionLabel.text = VersionLabel.Format();
         }
@@ -118,6 +122,8 @@ namespace MobileIdleBuilder
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         += OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        += OnPrivacyPolicy;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         += OnGoogleSignIn;
+            if (_btnPlayerName       != null) _btnPlayerName.clicked           += OnPlayerName;
+            PlayerNameService.OnNameChanged += OnNameChanged;
         }
 
         private void SyncFromSettings()
@@ -209,7 +215,18 @@ namespace MobileIdleBuilder
                 _btnGoogleSignIn.SetEnabled(!_signingIn);
                 _btnGoogleSignIn.text = _signingIn ? "Signing in..." : "Sign in with Google";
             }
+            if (_btnPlayerName != null) _btnPlayerName.text = PlayerNameButtonText(PlayerNameService.Current);
         }
+
+        /// <summary>The Settings name row: the current public name (with its UGS tag), or an invitation to pick one.</summary>
+        internal static string PlayerNameButtonText(string fullName) =>
+            string.IsNullOrEmpty(fullName)
+                ? "Choose a player name"
+                : $"Player name: {PlayerNameRules.WithoutTag(fullName)} {PlayerNameRules.Tag(fullName)}".TrimEnd();
+
+        private void OnPlayerName() => GetComponent<PlayerNamePromptController>()?.OpenFromSettings();
+
+        private void OnNameChanged(string _) { if (this != null) RefreshAccount(); }
 
         /// <summary>
         /// The account row: who the save belongs to and a short player id, so two devices can be checked

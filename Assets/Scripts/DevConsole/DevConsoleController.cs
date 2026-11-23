@@ -410,6 +410,35 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("notif exact", "Show the on-time reminders card (Android Alarms & reminders) now",
                 _ => NotificationService.Instance?.DevShowExactPrompt() ?? "Error: NotificationService not running.");
 
+            // ── player name (PvE phase 1) ────────────────────────────────────
+            _registry.Register("name status", "Cached player name, skip flag, and whether UGS is reachable",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    bool online = PlayerNameService.Backend?.IsReady ?? false;
+                    return $"name='{save?.playerName}' skipped={save?.namePromptSkipped} online={online} " +
+                           $"patterns={PlayerNameService.Patterns.Count}";
+                });
+
+            _registry.Register("name check <text>", "Validate a name against the rules and filter (saves nothing)",
+                args =>
+                {
+                    string name = PlayerNameRules.Clean(args[0]);
+                    var check = PlayerNameRules.Validate(name, PlayerNameService.Patterns);
+                    return $"'{name}' (normalised '{PlayerNameRules.Normalize(name)}'): {check}";
+                });
+
+            _registry.Register("name prompt", "Clear the 'Later' answer and open the name card now",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save != null) save.namePromptSkipped = false;
+                    var card = FindAnyObjectByType<PlayerNamePromptController>();
+                    if (card == null) return "Error: HUD not ready.";
+                    card.OpenFromSettings();
+                    return "Name card shown.";
+                });
+
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
                 _ =>

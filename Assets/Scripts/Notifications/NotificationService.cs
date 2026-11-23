@@ -301,7 +301,7 @@ namespace MobileIdleBuilder
             if (_readySince < 0f) _readySince = Time.unscaledTime;
             if (Time.unscaledTime - _readySince < PromptDelaySeconds) return;
 
-            if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen) return;
+            if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen || PlayerNamePromptController.IsOpen) return;
             if (IsDialoguePlaying()) return;
 
             if (askOptIn) ShowPrompt();
@@ -377,7 +377,7 @@ namespace MobileIdleBuilder
             yield return new WaitForSecondsRealtime(0.5f);
             var settings = SettingsService.Instance?.Current;
             if (!NotificationAskPolicy.ShouldAskExact(settings, Permission, ExactNeedsGrant)) yield break;
-            if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen) yield break;
+            if (!ConfirmPrompt.IsReady || ConfirmPrompt.IsOpen || SaveConflictPrompt.IsOpen || PlayerNamePromptController.IsOpen) yield break;
             ShowExactPrompt("after_opt_in");
         }
 
