@@ -1,6 +1,6 @@
 # Feature: PvE Tournaments (weekly 24h league runs)
 
-**Status:** Phases 1-3 merged into `integration/2026-11-23` (PRs #492, #493, #494; module deployed). Phase 4 (tournament run) done on `feat/pve-4-run` (2026-11-23). Phases 5-6 pending.
+**Status:** Phases 1-4 merged into `integration/2026-11-23` (PRs #492-#495; module deployed). Phase 5 (results + rewards) done on `feat/pve-5-rewards` (2026-11-23). Phase 6 (onboarding) pending.
 **Size:** XL (6 phases, one PR each, stacked where they share files).
 **Required reading:** `architecture.md`, `save-system.md`, `feature-flags.md`, `ui-toolkit.md`, `economy-balance.md` (currencies), `analytics.md` (snapshot loop). Source design: `docs/pve.txt`.
 
@@ -130,6 +130,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - After 24h, the score is frozen (server side). The run continues normally, and prestige unlocks again.
 
 ### Phase 5: PvE panel + rewards
+- **Done 2026-11-23 (as built):** `pvp-*` renamed to `pve-*` (`pve-panel`, drawer `btn-tournament`). League badge (`pve-league-badge--{id}` colours), result banner for the latest settled tournament (Results/Waiting/Open screens), "You: #3 of 12", and a Claim button for the next reward this save hasn't applied. **Claim order: local first** (`TournamentService.ClaimAsync`: crystals + `ItemStars.Grant` from discovered items + week recorded in `SaveData.pveClaimedWeeks`, saved) **then** the server `Claim`; a failed server step is retried on each status refresh without paying again. Reveal card via `ConfirmPrompt` ("★×2 Carbon: now ★5 (+100% value)"). Pure text in `TournamentPanelText`; tests in `TournamentRulesTests`.
 - Reuse `pvp-panel` in `GameHUD.uxml`, renamed to `pve-panel` (grep every query first; rename the drawer button to "Tournament").
 - States: Locked (before the Chemistry tutorial), Waiting (outside the window, shows a countdown to Friday 00:00 plus last week's result), Open (explainer + Start), Running (timer, league badge, leaderboard), Finished (frozen score, "results Sunday 00:00"), Results (rank, promote/demote banner, Claim).
 - Leaderboard rows: rank, name, value at your time; projected values in italics with a "~" and a tooltip ("estimated: idle since 6h 12m"); your own row pinned.

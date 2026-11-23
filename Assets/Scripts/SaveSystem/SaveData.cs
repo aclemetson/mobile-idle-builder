@@ -102,6 +102,10 @@ namespace MobileIdleBuilder
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();   // LEGACY: the old 48h PvP stub (removed 2026-11-23). Kept so old saves load; never read.
         public TournamentSaveData tournament                = new();   // PvE tournament this device entered (TournamentService). Survives prestige.
+        // Weeks whose PvE reward this save has applied (crystals + stars). The reward is applied here first, then
+        // cleared on the server; this list stops a retry of the server step from granting it twice. Newest last,
+        // trimmed to TournamentRules.ClaimedWeeksKept. Survives prestige.
+        public List<string> pveClaimedWeeks                 = new();
         public CurrentRunData currentRun                    = new();
     }
 

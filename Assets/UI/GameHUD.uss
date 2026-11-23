@@ -1383,6 +1383,52 @@
     -unity-text-align: middle-center;
 }
 
+/* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
+.pve-league-badge {
+    margin-left: var(--spacing-sm);
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: #0a0e1a;
+    background-color: #cd7f32;
+    border-color: #cd7f32;
+}
+
+.pve-league-badge--silver   { background-color: #c0c7d0; border-color: #c0c7d0; }
+.pve-league-badge--gold     { background-color: #ffd700; border-color: #ffd700; }
+.pve-league-badge--platinum { background-color: #7fe0d6; border-color: #7fe0d6; }
+.pve-league-badge--diamond  { background-color: #8ab4ff; border-color: #8ab4ff; }
+.pve-league-badge--champion { background-color: #c47dff; border-color: #c47dff; color: #ffffff; }
+
+/* Last result banner: green when promoted, red when moved down, neutral when staying. */
+.pve-banner {
+    margin: var(--spacing-xs) 0 var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.pve-banner--promoted { border-color: var(--color-success); color: var(--color-success); }
+.pve-banner--demoted  { border-color: var(--color-danger);  color: var(--color-danger); }
+
+.pve-your-rank {
+    flex-grow: 1;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-right;
+    margin-right: var(--spacing-sm);
+}
+
 /* Tournament leaderboard rows (TournamentPanelController). Projected values (players behind you) are italic with "~". */
 .tournament-row {
     flex-direction: row;

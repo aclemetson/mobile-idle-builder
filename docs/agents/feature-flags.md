@@ -38,7 +38,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 
 | Key | Type | Default | Gates |
 |---|---|---|---|
-| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: HUD hides `btn-pvp` (the Tournament drawer button), `TournamentService` sends no snapshots and the panel shows Disabled. Replaced `pvp.enabled` (the dead PvP stub). |
+| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: HUD hides `btn-tournament` (the Tournament drawer button), `TournamentService` sends no snapshots and the panel shows Disabled. Replaced `pvp.enabled` (the dead PvP stub). |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
 | `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/runbooks/levelplay-ads-setup.md`). |
 | `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |

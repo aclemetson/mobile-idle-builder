@@ -90,6 +90,7 @@ namespace MobileIdleBuilder
             {
                 LastStatus = status;
                 MirrorEntry(status);
+                await FinishServerClaims(status);
             }
             else if (LastStatus == null || status.error.StartsWith("network:") == false)
             {
@@ -125,6 +126,54 @@ namespace MobileIdleBuilder
             GameLogger.Info($"[PvE] Joined {status.bracketId}, run until {status.runEndsUtc}.");
             OnChanged?.Invoke();
             return status;
+        }
+
+        /// <summary>What a claim gave, for the reveal card.</summary>
+        public sealed class ClaimOutcome
+        {
+            public PveReward reward;
+            public System.Collections.Generic.List<string> starsLanded = new System.Collections.Generic.List<string>();
+            public bool applied;            // false = this save had already received it (only the server step ran)
+            public string serverError;      // non-empty when the server step failed (it is retried on the next refresh)
+        }
+
+        /// <summary>
+        /// Claims a tournament reward. Applied to the save first (crystals, stars on discovered items, the week
+        /// recorded) and saved, then cleared on the server. A failed server step leaves the reward listed there;
+        /// <see cref="RefreshAsync"/> clears it later without granting it again (<see cref="TournamentRules.RewardApplied"/>).
+        /// </summary>
+        public async Task<ClaimOutcome> ClaimAsync(PveReward reward)
+        {
+            var outcome = new ClaimOutcome { reward = reward };
+            var save = Save;
+            if (save == null || reward == null) return outcome;
+            if (!TournamentRules.RewardApplied(save, reward.week))
+            {
+                var pool = ItemStars.DiscoveredItemIds(RecipeDatabase.Instance?.Recipes, RecipeKnowledgeService.Current);
+                outcome.starsLanded = TournamentRules.ApplyReward(save, reward, pool, new System.Random());
+                outcome.applied = true;
+                SaveManager.Instance.SaveLocal();
+                GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars.");
+            }
+            var r = await PveApi.Claim(reward.week);
+            if (!string.IsNullOrEmpty(r.error) && r.error != PveErrors.NothingToClaim) outcome.serverError = r.error;
+            await RefreshAsync();
+            return outcome;
+        }
+
+        // Rewards this save already applied but the server still lists (its Claim never landed): clear them there.
+        async Task FinishServerClaims(PveStatusResponse status)
+        {
+            var list = status.profile?.pendingRewards;
+            if (list == null || list.Count == 0) return;
+            bool any = false;
+            foreach (var reward in list.ToArray())
+            {
+                if (!TournamentRules.RewardApplied(Save, reward.week)) continue;
+                var r = await PveApi.Claim(reward.week);
+                if (string.IsNullOrEmpty(r.error) || r.error == PveErrors.NothingToClaim) { list.Remove(reward); any = true; }
+            }
+            if (any) GameLogger.Info("[PvE] Cleared already-applied rewards on the server.");
         }
 
         void MirrorEntry(PveStatusResponse s)

@@ -43,7 +43,7 @@ namespace MobileIdleBuilder
             ["sites-panel"]         = "btn-sites",
             ["shop-panel"]          = "btn-shop",
             ["megastructure-panel"] = "btn-megastructure",
-            ["pvp-panel"]           = "btn-pvp",
+            ["pve-panel"]           = "btn-tournament",
             ["settings-panel"]      = "btn-settings", // top-bar button, not in the drawer
         };
 

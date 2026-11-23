@@ -6,10 +6,11 @@ using UnityEngine.UIElements;
 namespace MobileIdleBuilder
 {
     /// <summary>
-    /// The Tournament panel (<c>pvp-panel</c> in GameHUD.uxml; PvE phase 4). Shows the tournament state from
-    /// <see cref="TournamentService"/>, starts a run (confirm card → server join → the normal prestige through
-    /// <see cref="HUDController.RequestTournamentPrestige"/>), and lists the bracket leaderboard at your own
-    /// elapsed time. Phase 5 adds the league badge, results screen and reward claiming.
+    /// The Tournament panel (<c>pve-panel</c> in GameHUD.uxml; PvE phases 4-5). Shows the tournament state from
+    /// <see cref="TournamentService"/> with the league badge and the last result banner, starts a run (confirm
+    /// card → server join → the normal prestige through <see cref="HUDController.RequestTournamentPrestige"/>),
+    /// lists the bracket leaderboard at your own elapsed time, and claims rewards (crystals + item stars, with
+    /// a card revealing where the stars landed).
     ///
     /// Also finishes a join whose prestige never ran (the app closed between the join and the prestige).
     /// Added to the HUD GameObject by <see cref="HUDController"/> (GetComponent ?? AddComponent): no scene wiring.
@@ -18,12 +19,13 @@ namespace MobileIdleBuilder
     {
         HUDController _hud;
         VisualElement _panel;
-        Label _state, _timer, _info, _completed;
-        Button _start, _refresh;
+        Label _state, _timer, _info, _completed, _badge, _banner, _yourRank;
+        Button _start, _refresh, _claim;
         ScrollView _list;
         IVisualElementScheduledItem _ticker;
 
         bool _busy;
+        bool _claiming;
         bool _subscribed;
         bool _pendingPrestigeHandled;
         string _message;              // last error / hint shown in the info line
@@ -34,16 +36,21 @@ namespace MobileIdleBuilder
         public void Init(VisualElement root, HUDController hud)
         {
             _hud       = hud;
-            _panel     = root?.Q("pvp-panel");
-            if (_panel == null) { GameLogger.Warning("[PvE] pvp-panel missing from GameHUD.uxml; tournament panel disabled."); return; }
-            _state     = _panel.Q<Label>("pvp-state-label");
-            _timer     = _panel.Q<Label>("pvp-timer-label");
-            _info      = _panel.Q<Label>("pvp-lock-label");
-            _completed = _panel.Q<Label>("pvp-completed-label");
-            _start     = _panel.Q<Button>("btn-enter-pvp");
-            _refresh   = _panel.Q<Button>("btn-refresh-leaderboard");
-            _list      = _panel.Q<ScrollView>("pvp-leaderboard-list");
+            _panel     = root?.Q("pve-panel");
+            if (_panel == null) { GameLogger.Warning("[PvE] pve-panel missing from GameHUD.uxml; tournament panel disabled."); return; }
+            _state     = _panel.Q<Label>("pve-state-label");
+            _timer     = _panel.Q<Label>("pve-timer-label");
+            _info      = _panel.Q<Label>("pve-info-label");
+            _completed = _panel.Q<Label>("pve-result-label");
+            _badge     = _panel.Q<Label>("pve-league-badge");
+            _banner    = _panel.Q<Label>("pve-banner");
+            _yourRank  = _panel.Q<Label>("pve-your-rank");
+            _start     = _panel.Q<Button>("btn-pve-start");
+            _claim     = _panel.Q<Button>("btn-pve-claim");
+            _refresh   = _panel.Q<Button>("btn-pve-refresh");
+            _list      = _panel.Q<ScrollView>("pve-leaderboard-list");
             if (_start != null)   _start.clicked   += OnStartPressed;
+            if (_claim != null)   _claim.clicked   += OnClaimPressed;
             if (_refresh != null) _refresh.clicked += () => _ = RefreshAllAsync();
             foreach (var l in new[] { _info, _completed }) if (l != null) l.style.whiteSpace = WhiteSpace.Normal;
         }
@@ -127,8 +134,34 @@ namespace MobileIdleBuilder
             {
                 HUDController.SetElementVisible(_start, d.showStart);
                 _start.SetEnabled(!_busy);
-                _start.text = _busy ? "Starting..." : "Start tournament";
+                _start.text = _busy && !_claiming ? "Starting..." : "Start tournament";
             }
+
+            // League badge (header), result banner, claim button, your rank.
+            bool live = state != TournamentPanelState.Disabled && state != TournamentPanelState.Locked;
+            string leagueId = svc.LastStatus?.profile?.league ?? svc.Entry?.league;
+            if (_badge != null)
+            {
+                _badge.text = TournamentRules.LeagueName(cfg, leagueId);
+                foreach (var l in TournamentPanelText.LeagueIds) _badge.EnableInClassList("pve-league-badge--" + l, l == leagueId);
+                HUDController.SetElementVisible(_badge, live && !string.IsNullOrEmpty(leagueId));
+            }
+            var banner = TournamentPanelText.Banner(svc.LastStatus, cfg, state);
+            if (_banner != null)
+            {
+                _banner.text = banner.text;
+                _banner.EnableInClassList("pve-banner--promoted", banner.kind == "promoted");
+                _banner.EnableInClassList("pve-banner--demoted", banner.kind == "demoted");
+                HUDController.SetElementVisible(_banner, live && !string.IsNullOrEmpty(banner.text));
+            }
+            var reward = live ? TournamentRules.NextUnappliedReward(svc.LastStatus, SaveManager.Instance?.Current) : null;
+            if (_claim != null)
+            {
+                HUDController.SetElementVisible(_claim, reward != null);
+                _claim.SetEnabled(!_busy);
+                if (reward != null) _claim.text = _claiming ? "Claiming..." : TournamentPanelText.ClaimButtonText(reward);
+            }
+            if (_yourRank != null) _yourRank.text = TournamentPanelText.YourRank(_board, state);
             if (rowsToo) BuildRows(state);
         }
 
@@ -163,6 +196,28 @@ namespace MobileIdleBuilder
                 _list.Add(row);
             }
             _list.Add(new Label(TournamentPanelText.BoardFootnote(_board)) { style = { whiteSpace = WhiteSpace.Normal, fontSize = 11, opacity = 0.7f } });
+        }
+
+        // ── Claim ─────────────────────────────────────────────────────────
+
+        async void OnClaimPressed()
+        {
+            var svc = TournamentService.Instance;
+            var reward = TournamentRules.NextUnappliedReward(svc?.LastStatus, SaveManager.Instance?.Current);
+            if (svc == null || reward == null || _busy) return;
+            _busy = _claiming = true;
+            Rebuild(rowsToo: false);
+            TournamentService.ClaimOutcome outcome;
+            try { outcome = await svc.ClaimAsync(reward); }
+            finally { _busy = _claiming = false; }
+            if (this == null) return;
+            Rebuild();
+            if (!outcome.applied) return;
+            string text = TournamentPanelText.RevealText(outcome.reward, outcome.starsLanded,
+                id => ItemDatabase.GetStatic(id)?.displayName ?? id,
+                id => ItemStars.Count(SaveManager.Instance?.Current, id),
+                GameBootstrap.Instance != null ? GameBootstrap.Instance.gameConfig?.pve : null);
+            ConfirmPrompt.Show("Tournament reward", text, "Nice!", onConfirm: null, cancelLabel: "Close", destructive: false);
         }
 
         // ── Start ─────────────────────────────────────────────────────────
@@ -299,6 +354,77 @@ namespace MobileIdleBuilder
             (r.projected ? "~" : "") + NumberFormat.Entropy(r.value);
 
         public static string PlayedText(int elapsedSeconds) => $"{elapsedSeconds / 3600f:0.0}h";
+
+        /// <summary>League ids with a badge colour (pve-league-badge--{id} in GameHUD.uss).</summary>
+        public static readonly string[] LeagueIds = { "bronze", "silver", "gold", "platinum", "diamond", "champion" };
+
+        /// <summary>
+        /// The result banner for the most recent settled tournament: shown on the Results screen and, until the
+        /// next tournament starts, on the Waiting and Open screens. kind = promoted / demoted / stayed.
+        /// </summary>
+        public static (string text, string kind) Banner(PveStatusResponse status, PveConfig cfg, TournamentPanelState state)
+        {
+            if (state != TournamentPanelState.Results && state != TournamentPanelState.Waiting && state != TournamentPanelState.Open)
+                return ("", "");
+            var h = status?.profile?.history;
+            if (h == null || h.Count == 0) return ("", "");
+            var last = h[h.Count - 1];
+            string league = TournamentRules.LeagueName(cfg, last.newLeague);
+            return last.result switch
+            {
+                "promoted" => ($"Promoted to {league}!", "promoted"),
+                "demoted"  => ($"Moved down to {league}", "demoted"),
+                _          => ($"Staying in {league}", "stayed"),
+            };
+        }
+
+        /// <summary>"Claim 150 ◆ + 5 ★".</summary>
+        public static string ClaimButtonText(PveReward r)
+        {
+            if (r == null) return "";
+            if (r.crystals > 0 && r.stars > 0) return $"Claim {r.crystals:N0} ◆ + {r.stars} ★";
+            if (r.stars > 0) return $"Claim {r.stars} ★";
+            return $"Claim {r.crystals:N0} ◆";
+        }
+
+        /// <summary>"You: #3 of 12" while a board is shown, else "".</summary>
+        public static string YourRank(PveBoardResponse b, TournamentPanelState state)
+        {
+            bool shown = state == TournamentPanelState.Running || state == TournamentPanelState.Finished
+                         || state == TournamentPanelState.Results;
+            if (!shown || b?.rows == null) return "";
+            var me = b.rows.Find(r => r.you);
+            return me == null ? "" : $"You: #{me.rank} of {b.rows.Count}";
+        }
+
+        /// <summary>
+        /// The reveal card: rank, crystals, then each item that got stars (grouped) with its new total and bonus,
+        /// e.g. "★×2 Carbon: now ★5 (+100% value)".
+        /// </summary>
+        public static string RevealText(PveReward r, System.Collections.Generic.IReadOnlyList<string> starsLanded,
+                                        Func<string, string> nameOf, Func<string, int> starsNow, PveConfig cfg = null)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"Rank {r.rank} of {r.size} in {TournamentRules.LeagueName(cfg, r.league)}.");
+            if (r.crystals > 0) sb.Append($"\n+{r.crystals:N0} ◆");
+            if (starsLanded != null && starsLanded.Count > 0)
+            {
+                var order = new System.Collections.Generic.List<string>();
+                var counts = new System.Collections.Generic.Dictionary<string, int>();
+                foreach (var id in starsLanded)
+                {
+                    if (!counts.ContainsKey(id)) { counts[id] = 0; order.Add(id); }
+                    counts[id]++;
+                }
+                foreach (var id in order)
+                {
+                    int total = starsNow(id);
+                    string got = counts[id] > 1 ? $"★×{counts[id]}" : "★";
+                    sb.Append($"\n{got} {nameOf(id)}: now ★{total} (+{Mathf.RoundToInt(total * ItemStars.BonusPerStar * 100f)}% value)");
+                }
+            }
+            return sb.ToString();
+        }
 
         public static string BoardFootnote(PveBoardResponse b)
         {
