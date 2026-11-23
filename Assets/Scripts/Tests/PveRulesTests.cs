@@ -57,7 +57,8 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(PveRules.CanJoin(Fri.AddDays(1)));
             Assert.AreEqual(Fri.AddDays(1), PveRules.PhaseEnds(Fri.AddHours(3)));
             Assert.AreEqual(Fri.AddDays(7), PveRules.NextEntry(Fri.AddDays(3)));
-            Assert.AreEqual(Fri.AddDays(2), PveRules.SettleAfter("2026-11-27"));
+            Assert.AreEqual(Fri.AddDays(2).AddMinutes(10), PveRules.SettleAfter("2026-11-27"),
+                "settlement waits for the final-snapshot grace after the last run ends");
         }
 
         [Test]
@@ -65,7 +66,9 @@ namespace MobileIdleBuilder.Tests
         {
             var lastJoin = Fri.AddDays(1).AddSeconds(-1);
             Assert.IsTrue(PveRules.CanJoin(lastJoin));
-            Assert.LessOrEqual(lastJoin.AddSeconds(PveRules.DaySeconds), PveRules.SettleAfter(PveRules.WeekId(lastJoin)));
+            Assert.LessOrEqual(lastJoin.AddSeconds(PveRules.DaySeconds + PveRules.FinalGraceSeconds),
+                               PveRules.SettleAfter(PveRules.WeekId(lastJoin)),
+                "the latest run's final snapshot (with grace) lands before settlement
         }
 
         [Test]

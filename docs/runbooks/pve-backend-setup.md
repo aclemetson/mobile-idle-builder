@@ -52,10 +52,10 @@ dotnet test
 
 ## 3. Weekly settlement schedule
 
-Every week's brackets are settled at Sunday 00:00 UTC, once every 24h run has ended. A player's own bracket is also settled when they next open the tournament (the `Status` call), so a missed schedule only delays other players' history and rewards until they open it.
+Every week's brackets are settled shortly after Sunday 00:00 UTC, once every 24h run has ended and its final snapshot is in (00:10 at the earliest). A player's own bracket is also settled when they next open the tournament (the `Status` call), so a missed schedule only delays other players' history and rewards until they open it.
 
 1. Dashboard → **Triggers** (Scheduler):
-   - Create a **schedule**: name `pve-settle`, recurring cron `5 0 * * 0` (Sundays 00:05 UTC), payload `{}`.
+   - Create a **schedule**: name `pve-settle`, **recurring weekly, Sunday 00:15 UTC**, payload `{}`. (If the dashboard asks for a time zone, pick UTC; if it only takes local time, convert.) Not midnight: the last runs end at Sunday 00:00 and their final snapshot is accepted for 10 more minutes (`PveRules.FinalGraceSeconds`), so `SettleWeek` refuses to settle before 00:10 (`PveRules.SettleAfter`) and would answer `too_early`.
    - Create a **trigger** on that schedule's event (the dashboard offers it by name, `com.unity.services.scheduler.pve-settle.v1`). Action type **Cloud Code module**, URN `urn:ugs:cloud-code:PveModule/SettleWeek`.
 2. `SettleWeek` refuses calls made by a player, so only the trigger (a service call) can run it. With no `week` argument it settles the most recent week whose runs have all ended. It is safe to repeat: settled brackets and already-credited players are skipped.
 

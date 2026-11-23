@@ -24,7 +24,7 @@ The six side items at the bottom of `docs/pve.txt` are tracked as issues #486-#4
 
 - **Entry window:** Friday 00:00 to Saturday 00:00. A player can join at any moment in the window.
 - **Run:** 24h from the player's own join time. The latest possible finish is Sunday 00:00.
-- **Settlement:** Sunday 00:00. Every run is over by then, so ranks are final. Promotion, demotion and rewards are computed, and players claim on their next login.
+- **Settlement:** Sunday 00:10 at the earliest (00:00 + the final-snapshot grace); the schedule runs at 00:15. Every run is over by then, so ranks are final. Promotion, demotion and rewards are computed, and players claim on their next login.
 - **Week id:** ISO date of the window's Friday, e.g. `2026-11-27`.
 - Every time decision goes through **server time**: the Cloud Code clock on the backend, `ServerClock` on the client (the same pattern achievements use). Never the device clock or `GameClock` (dev builds can fast-forward `GameClock`). The playtest harness gets a server-side override instead (Phase 3).
 
@@ -33,7 +33,7 @@ The six side items at the bottom of `docs/pve.txt` are tracked as issues #486-#4
 Answer to "does Unity offer temporary per-league storage": yes.
 - **Cloud Save Custom Items** are game-owned records that clients cannot write directly. Each bracket is one custom item.
 - **Cloud Code** is the only writer. As built (phase 3) it is a **C# module** (`CloudCode/PveModule`, deployed from the Editor's Deployment window via `Assets/CloudCode/PveModule.ccmr`), not JS scripts: JS scripts cannot share code, while the module links the same `PveRules.cs` / `PveModels.cs` / `PlayerNameRules.cs` the client compiles, and embeds game_data.json for the league table and name filter.
-- **Triggers + Scheduler** run settlement on a cron.
+- **Triggers + Scheduler** run settlement weekly (Sunday 00:15 UTC; `SettleAfter` = Sunday 00:00 + the 10 min final-snapshot grace).
 
 UGS Leaderboards was rejected because it keeps only the current score, with no history to read "as of" an elapsed time.
 

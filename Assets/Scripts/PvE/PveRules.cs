@@ -68,8 +68,13 @@ namespace MobileIdleBuilder
 
         public static bool CanJoin(DateTime nowUtc) => Phase(nowUtc) == PvePhase.Entry;
 
-        /// <summary>When a week's brackets may be settled: Sunday 00:00, after every run has ended.</summary>
-        public static DateTime SettleAfter(string weekId) => WeekStartOf(weekId).AddDays(2);
+        /// <summary>
+        /// When a week's brackets may be settled: Sunday 00:00 (every run has ended) plus the final-snapshot
+        /// grace, so a run ending at midnight still gets its real last snapshot counted. The weekly schedule
+        /// runs a little after this (Sunday 00:15 UTC).
+        /// </summary>
+        public static DateTime SettleAfter(string weekId) =>
+            WeekStartOf(weekId).AddDays(2).AddSeconds(FinalGraceSeconds);
 
         /// <summary>Seconds since <paramref name="startUtc"/>, clamped to 0..<paramref name="runSeconds"/>.</summary>
         public static int Elapsed(DateTime startUtc, DateTime nowUtc, int runSeconds)
