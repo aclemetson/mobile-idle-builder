@@ -174,7 +174,9 @@ namespace MobileIdleBuilder.PveModule
         // ── Snapshot ──────────────────────────────────────────────────────
 
         [CloudCodeFunction("Snapshot")]
-        public async Task<string> Snapshot(IExecutionContext ctx, double netWorth, double rate, int cap, string debugNow = null)
+        /// <param name="atT">-1 = now; otherwise the elapsed time (s) the device took this snapshot at, for one it
+        /// couldn't deliver earlier (see PveRules.SnapshotTime).</param>
+        public async Task<string> Snapshot(IExecutionContext ctx, double netWorth, double rate, int cap, int atT = -1, string debugNow = null)
         {
             var cfg = Config();
             if (cfg?.leagues == null) return Ser(new PveSnapshotResponse { error = PveErrors.Config });
@@ -183,8 +185,11 @@ namespace MobileIdleBuilder.PveModule
             var now = Now(settings, debugNow);
 
             var profile = (await store.GetProfile(ctx.PlayerId)).Value;
-            if (profile == null || string.IsNullOrEmpty(profile.bracketId) || profile.lastWeek != PveRules.WeekId(now))
+            if (profile == null || string.IsNullOrEmpty(profile.bracketId) || string.IsNullOrEmpty(profile.lastWeek))
                 return Ser(new PveSnapshotResponse { error = PveErrors.NotJoined });
+            // Once the week is settled the scores are written: nothing more counts (late deliveries included).
+            if (now >= PveRules.SettleAfter(profile.lastWeek))
+                return Ser(new PveSnapshotResponse { error = PveErrors.RunOver });
 
             int run = PveRules.RunSeconds(cfg);
             var check = SnapCheck.Accepted;
@@ -195,7 +200,9 @@ namespace MobileIdleBuilder.PveModule
                 m =>
                 {
                     if (m == null) { check = SnapCheck.Stale; return null; }
-                    int rawT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
+                    int serverT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
+                    check = PveRules.SnapshotTime(serverT, atT, out int rawT);
+                    if (check != SnapCheck.Accepted) { t = Math.Max(0, Math.Min(serverT, run)); return null; }
                     check = PveRules.AddSnap(m.snaps, rawT, netWorth, rate, cap, run, cfg.snapshot_bucket_minutes * 60);
                     t = Math.Min(Math.Max(0, rawT), run);
                     return check == SnapCheck.Accepted ? m : null;

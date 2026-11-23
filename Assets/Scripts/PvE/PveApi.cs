@@ -33,8 +33,13 @@ namespace MobileIdleBuilder
         public static Task<PveStatusResponse> Join(bool devSave) =>
             Send<PveStatusResponse>("Join", Args(("dev", devSave)));
 
-        public static Task<PveSnapshotResponse> Snapshot(double netWorth, double ratePerSecond, int idleCapSeconds) =>
-            Send<PveSnapshotResponse>("Snapshot", Args(("netWorth", netWorth), ("rate", ratePerSecond), ("cap", idleCapSeconds)));
+        /// <param name="atT">-1 = count it now; otherwise the elapsed seconds it was taken at (a delayed delivery).</param>
+        public static Task<PveSnapshotResponse> Snapshot(double netWorth, double ratePerSecond, int idleCapSeconds, int atT = -1)
+        {
+            var args = Args(("netWorth", netWorth), ("rate", ratePerSecond), ("cap", idleCapSeconds));
+            if (atT >= 0) args["atT"] = atT;
+            return Send<PveSnapshotResponse>("Snapshot", args);
+        }
 
         public static Task<PveBoardResponse> Board() =>
             Send<PveBoardResponse>("Board", Args());

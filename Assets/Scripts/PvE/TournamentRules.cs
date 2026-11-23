@@ -78,6 +78,47 @@ namespace MobileIdleBuilder
             return !t.finalSent && nowUtc <= end.Value.AddSeconds(PveRules.FinalGraceSeconds);
         }
 
+        /// <summary>Elapsed seconds into the run at <paramref name="nowUtc"/>, clamped to the run; null when not entered.</summary>
+        public static int? Elapsed(TournamentSaveData t, DateTime nowUtc)
+        {
+            var start = RunStart(t); var end = RunEnds(t);
+            if (!start.HasValue || !end.HasValue) return null;
+            return PveRules.Elapsed(start.Value, nowUtc, (int)(end.Value - start.Value).TotalSeconds);
+        }
+
+        public static bool HasPending(TournamentSaveData t) => t != null && t.pendingT >= 0;
+
+        /// <summary>
+        /// Remembers a snapshot taken now as the one to deliver later if this send doesn't land. Only during the
+        /// run and after the join's prestige (the device never keeps a post-24h value), and never older than
+        /// the one already kept. Returns true when it was kept.
+        /// </summary>
+        public static bool CapturePending(TournamentSaveData t, DateTime nowUtc, int prestigeCount,
+                                          double netWorth, double rate, int cap)
+        {
+            if (t == null || !InRun(t, nowUtc) || PrestigePending(t, prestigeCount)) return false;
+            int? e = Elapsed(t, nowUtc);
+            if (!e.HasValue || (t.pendingT >= 0 && e.Value < t.pendingT)) return false;
+            t.pendingT = e.Value; t.pendingNw = netWorth; t.pendingRate = rate; t.pendingCap = cap;
+            return true;
+        }
+
+        /// <summary>
+        /// A delivered snapshot taken at device-elapsed <paramref name="deliveredT"/> supersedes the kept one
+        /// unless the kept one is newer (captured while the send was in flight).
+        /// </summary>
+        public static void ClearPendingIfCovered(TournamentSaveData t, int deliveredT)
+        {
+            if (t != null && t.pendingT >= 0 && deliveredT >= t.pendingT) t.pendingT = -1;
+        }
+
+        /// <summary>
+        /// Deliver the kept snapshot now? Once the run is over (during it the next live snapshot supersedes it)
+        /// and the join's prestige has run.
+        /// </summary>
+        public static bool ShouldSendPending(TournamentSaveData t, DateTime nowUtc, int prestigeCount) =>
+            HasPending(t) && !InRun(t, nowUtc) && !PrestigePending(t, prestigeCount);
+
         /// <summary>Panel state from the flag, the unlock, the last server status and the local copy.</summary>
         public static TournamentPanelState PanelState(bool enabled, bool unlocked, PveStatusResponse status,
                                                       TournamentSaveData t, DateTime nowUtc)

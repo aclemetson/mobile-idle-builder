@@ -352,6 +352,13 @@ namespace MobileIdleBuilder
         /// </summary>
         public int    prestigeCountAtJoin = -1;
         public bool   finalSent;            // the snapshot at the 24h mark went through
+        // The latest snapshot taken during the run that the server hasn't confirmed (pendingT = its elapsed
+        // seconds; -1 = none). Kept so a snapshot lost when the OS suspended the app still counts: it is sent
+        // on the next launch with its own time (TournamentRules.CapturePending, PveRules.SnapshotTime).
+        public int    pendingT = -1;
+        public double pendingNw;
+        public double pendingRate;
+        public int    pendingCap;
     }
 
     /// <summary>

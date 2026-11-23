@@ -28,6 +28,7 @@ namespace MobileIdleBuilder
         public PveStatusResponse LastStatus { get; private set; }
 
         float _sinceSnapshot;
+        float _pendingRetryAt;          // unscaled time before which a failed delayed delivery isn't retried
         bool  _sending;
         bool  _forceSnapshot = true;    // first snapshot as soon as the run's scene is loaded
         bool  _subscribed;
@@ -161,6 +162,9 @@ namespace MobileIdleBuilder
 
             if (TournamentRules.ShouldSnapshot(save.tournament, Now, save.prestigeCount, _sinceSnapshot, _forceSnapshot))
                 _ = SendSnapshotAsync();
+            else if (Time.unscaledTime >= _pendingRetryAt
+                     && TournamentRules.ShouldSendPending(save.tournament, Now, save.prestigeCount))
+                _ = SendPendingAsync();
         }
 
         void OnApplicationPause(bool paused)
@@ -168,13 +172,17 @@ namespace MobileIdleBuilder
             if (!paused) _forceSnapshot = true;   // back from the background: report what offline earnings paid
         }
 
-        // Best effort: the OS may suspend the app before this completes.
+        // The OS may suspend the app before the send completes, so the snapshot is kept on disk first: if it
+        // never lands, the next launch delivers it with its own time (SendPendingAsync).
         void OnBackgrounding()
         {
             var save = Save;
-            if (_sending || save?.tournament == null || !Enabled) return;
+            if (save?.tournament == null || !Enabled) return;
             if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded || PrestigeRunReset.ReloadPending) return;
-            if (TournamentRules.ShouldSnapshot(save.tournament, Now, save.prestigeCount, _sinceSnapshot, force: true))
+            var (nw, rate, cap) = SnapshotValues();
+            if (TournamentRules.CapturePending(save.tournament, Now, save.prestigeCount, nw, rate, cap))
+                SaveManager.Instance.SaveLocal();
+            if (!_sending && TournamentRules.ShouldSnapshot(save.tournament, Now, save.prestigeCount, _sinceSnapshot, force: true))
                 _ = SendSnapshotAsync();
         }
 
@@ -199,9 +207,13 @@ namespace MobileIdleBuilder
         {
             _sending = true;
             _forceSnapshot = false;
-            var t = Save.tournament;
+            var save = Save;
+            var t = save.tournament;
             bool afterEnd = !TournamentRules.InRun(t, Now);
             var (nw, rate, cap) = SnapshotValues();
+            // Keep it until the server confirms it (or a newer one), in case this send never lands.
+            TournamentRules.CapturePending(t, Now, save.prestigeCount, nw, rate, cap);
+            int carriedT = t.pendingT;     // the kept snapshot this send stands for (-1: none)
             PveSnapshotResponse r;
             try { r = await PveApi.Snapshot(nw, rate, cap); }
             finally { _sending = false; }
@@ -209,6 +221,9 @@ namespace MobileIdleBuilder
             if (string.IsNullOrEmpty(r.error))
             {
                 _sinceSnapshot = 0f;
+                // Clears the kept copy this send carried, not a newer one captured while it was in flight
+                // (going to the background mid-send). Compares device times, not the server's r.t.
+                TournamentRules.ClearPendingIfCovered(t, carriedT);
                 if (afterEnd) MarkFinalSent();
                 GameLogger.Debug($"[PvE] Snapshot t={r.t}s nw={nw:N0} rate={rate:0.##}/s");
             }
@@ -227,6 +242,28 @@ namespace MobileIdleBuilder
             }
         }
 
+        /// <summary>Delivers the snapshot kept from before the run ended (the app was suspended or offline then).</summary>
+        internal async Task SendPendingAsync()
+        {
+            var t = Save.tournament;
+            _sending = true;
+            PveSnapshotResponse r;
+            try { r = await PveApi.Snapshot(t.pendingNw, t.pendingRate, t.pendingCap, atT: t.pendingT); }
+            finally { _sending = false; }
+
+            if (r.error != null && r.error.StartsWith("network:"))
+            {
+                _pendingRetryAt = Time.unscaledTime + 30f;
+                return;
+            }
+            // Accepted, or refused for good (too late, superseded, settled): either way it is done.
+            if (string.IsNullOrEmpty(r.error)) GameLogger.Info($"[PvE] Delivered the kept snapshot from t={t.pendingT}s.");
+            else GameLogger.Info($"[PvE] Kept snapshot from t={t.pendingT}s not counted: {r.error}");
+            t.pendingT = -1;
+            SaveManager.Instance.SaveLocal();
+            OnChanged?.Invoke();
+        }
+
         void MarkFinalSent()
         {
             var t = Save?.tournament;
@@ -240,10 +277,11 @@ namespace MobileIdleBuilder
         public string DevStatus()
         {
             var t = Entry;
+            string kept = TournamentRules.HasPending(t) ? $"t={t.pendingT}s nw={t.pendingNw:N0}" : "none";
             return $"enabled={Enabled} unlocked={Unlocked} state={PanelState} inRun={InRun} " +
                    $"remaining={TournamentRules.FormatSpan(RunRemaining)} prestigeLocked={PrestigeLocked} " +
                    $"pending={JoinPrestigePending} week={t?.week} bracket={t?.bracketId} final={t?.finalSent} " +
-                   $"now={PveRules.Iso(Now)}";
+                   $"keptSnapshot={kept} now={PveRules.Iso(Now)}";
         }
     }
 }

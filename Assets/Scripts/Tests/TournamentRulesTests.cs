@@ -93,6 +93,42 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(TournamentRules.ShouldSnapshot(new TournamentSaveData(), Start, 1, 999f, true));
         }
 
+        // ── Kept snapshot (delivered later if the app was suspended) ─────────
+
+        [Test]
+        public void KeptSnapshot_OnlyDuringTheRun_AfterTheJoinPrestige_NeverOlder()
+        {
+            var t = Entry(prestigeAtJoin: 2);
+            Assert.IsFalse(TournamentRules.CapturePending(t, Start.AddHours(1), 2, 100, 1, 1800), "prestige still pending");
+            Assert.IsTrue(TournamentRules.CapturePending(t, Start.AddHours(1), 3, 100, 1, 1800));
+            Assert.AreEqual(3600, t.pendingT);
+            Assert.IsFalse(TournamentRules.CapturePending(t, Start.AddMinutes(30), 3, 50, 1, 1800), "older than the kept one");
+            Assert.IsTrue(TournamentRules.CapturePending(t, Start.AddHours(23), 3, 900, 2, 1800));
+            Assert.AreEqual(900d, t.pendingNw);
+            Assert.IsFalse(TournamentRules.CapturePending(t, Start.AddHours(25), 3, 99999, 2, 1800),
+                           "never keeps a value from after the 24h mark");
+            Assert.AreEqual(23 * 3600, t.pendingT);
+        }
+
+        [Test]
+        public void KeptSnapshot_ClearedByTheSendThatCarriedIt_NotByAnOlderOne()
+        {
+            var t = Entry(); t.pendingT = 5000;
+            TournamentRules.ClearPendingIfCovered(t, 4000);
+            Assert.AreEqual(5000, t.pendingT, "a newer one was kept while that send was in flight");
+            TournamentRules.ClearPendingIfCovered(t, 5000);
+            Assert.AreEqual(-1, t.pendingT);
+        }
+
+        [Test]
+        public void KeptSnapshot_IsDeliveredOnceTheRunIsOver()
+        {
+            var t = Entry(prestigeAtJoin: 1); t.pendingT = 80000;
+            Assert.IsFalse(TournamentRules.ShouldSendPending(t, Start.AddHours(23), 2), "during the run the next live one supersedes it");
+            Assert.IsTrue(TournamentRules.ShouldSendPending(t, Start.AddHours(30), 2));
+            Assert.IsFalse(TournamentRules.ShouldSendPending(Entry(), Start.AddHours(30), 2), "nothing kept");
+        }
+
         // ── Panel state ───────────────────────────────────────────────────────
 
         static PveStatusResponse Status(string phase, bool joined = false, bool settled = false) => new PveStatusResponse
@@ -186,6 +222,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("InRun", save.pvpRun.state);
             Assert.IsNotNull(save.tournament);
             Assert.AreEqual(-1, save.tournament.prestigeCountAtJoin);
+            Assert.AreEqual(-1, save.tournament.pendingT, "nothing kept");
             Assert.IsFalse(TournamentRules.InRun(save.tournament, Start));
         }
 
@@ -313,6 +350,43 @@ namespace MobileIdleBuilder.Tests
             var r = svc.JoinAsync().GetAwaiter().GetResult();
             Assert.AreEqual(PveErrors.OutsideWindow, r.error);
             Assert.IsNull(SaveManager.Instance.Current.tournament.bracketId);
+        }
+
+        [Test]
+        public void SendPending_SendsItsOwnTime_ClearsWhenDoneOrRefused_KeepsOnNetworkError()
+        {
+            var svc = Spawn(prestigeCount: 3);
+            var save = SaveManager.Instance.Current;
+            save.tournament = Entry(prestigeAtJoin: 2);
+            save.tournament.pendingT = 85000; save.tournament.pendingNw = 4321; save.tournament.pendingRate = 2; save.tournament.pendingCap = 1800;
+
+            var fake = new FakeTransport();
+            PveApi.Transport = fake;
+            fake.Replies["Snapshot"] = "{\"error\":\"network:offline\"}";
+            svc.SendPendingAsync().GetAwaiter().GetResult();
+            Assert.AreEqual(85000, save.tournament.pendingT, "kept for the next try");
+
+            fake.Replies["Snapshot"] = "{\"t\":85000,\"accepted\":true}";
+            ArgsCapture.Last = null;
+            PveApi.Transport = new ArgsCapture(fake);
+            svc.SendPendingAsync().GetAwaiter().GetResult();
+            Assert.AreEqual(85000, ArgsCapture.Last["atT"]);
+            Assert.AreEqual(4321d, ArgsCapture.Last["netWorth"]);
+            Assert.AreEqual(-1, save.tournament.pendingT);
+
+            save.tournament.pendingT = 85000;
+            fake.Replies["Snapshot"] = "{\"error\":\"run_over\"}";
+            PveApi.Transport = fake;
+            svc.SendPendingAsync().GetAwaiter().GetResult();
+            Assert.AreEqual(-1, save.tournament.pendingT, "settled already: nothing more to deliver");
+        }
+
+        sealed class ArgsCapture : IPveTransport
+        {
+            public static Dictionary<string, object> Last;
+            readonly IPveTransport _inner;
+            public ArgsCapture(IPveTransport inner) => _inner = inner;
+            public Task<string> Call(string function, Dictionary<string, object> args) { Last = args; return _inner.Call(function, args); }
         }
 
         [Test]
