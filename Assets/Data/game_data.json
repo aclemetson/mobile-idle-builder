@@ -316,14 +316,15 @@
       "id": "deep_physics",
       "name": "Deep Physics",
       "order": 17,
-      "target_hours": 40.0,
+      "target_hours": 70.0,
       "anchor": false,
       "description": "Fission, the transuranics and the superheavy elements.",
       "start_prestige_count": 25,
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": ["site_actinide_vein"],
+      "planned": true
     },
     {
       "id": "bio_multicellular",
@@ -396,12 +397,41 @@
       "start_sites": ["site_actinide_vein"]
     },
     {
-      "id": "synthetic_frontier",
-      "name": "Synthetic Frontier",
+      "id": "engineering_components",
+      "name": "Components",
       "order": 23,
-      "target_hours": 30,
+      "target_hours": 10.0,
       "anchor": false,
-      "description": "Elements past Uranium, components and the megastructure.",
+      "planned": true,
+      "description": "Circuit boards, quantum processors and plasma containment, from Metallurgy's materials.",
+      "start_prestige_count": 25,
+      "start_prestige_currency_earned": 11000,
+      "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
+      "start_entropy": 523000000,
+      "start_sites": ["site_actinide_vein"]
+    },
+    {
+      "id": "engineering_systems",
+      "name": "Systems",
+      "order": 24,
+      "target_hours": 10.0,
+      "anchor": false,
+      "planned": true,
+      "description": "Orbital frames, antimatter cells and graviton lenses.",
+      "start_prestige_count": 25,
+      "start_prestige_currency_earned": 11000,
+      "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
+      "start_entropy": 523000000,
+      "start_sites": ["site_actinide_vein"]
+    },
+    {
+      "id": "engineering_megastructure",
+      "name": "Megastructure",
+      "order": 25,
+      "target_hours": 6.0,
+      "anchor": false,
+      "planned": true,
+      "description": "Dyson Nodes for the Dyson Sphere; every research done opens Ascension.",
       "start_prestige_count": 25,
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
@@ -1041,50 +1071,6 @@
       "planned": true
     },
     {
-      "id": "component_engineering",
-      "display_name": "Component Engineering",
-      "description": "Unlock the Component Fabricator — assemble quantum processors, plasma rings, and antimatter cells.",
-      "branch": "Engineering",
-      "prerequisites": ["metamaterials", "transuranic_elements"],
-      "depth_in_tree": 7,
-      "cost_base_currency": 745000000000,
-      "cost_prestige_currency": 0,
-      "duration_seconds": 10800,
-      "unlocks_items": ["quantum_processor", "plasma_containment_ring", "antimatter_cell"],
-      "unlocks_recipes": ["quantum_processor", "plasma_containment_ring", "antimatter_cell"],
-      "unlocks_buildings": ["component_fabricator"],
-      "unlocks_grid_expansion": false,
-      "unlocks_research": ["megastructure_theory"],
-      "resets_on_prestige": true,
-      "codex_entry": "Quantum processors harness superposition for computation. Plasma containment rings confine stellar material. Antimatter cells store energy at matter-annihilation density.",
-      "icon_path": "TODO",
-      "block": "synthetic_frontier",
-      "required_world": "world_chemistry",
-      "world": "world_physics"
-    },
-    {
-      "id": "megastructure_theory",
-      "display_name": "Megastructure Theory",
-      "description": "Unlock Dyson nodes, orbital frames, and graviton lenses — the components of a Dyson sphere.",
-      "branch": "Astrophysics",
-      "prerequisites": ["component_engineering"],
-      "depth_in_tree": 8,
-      "cost_base_currency": 783000000000,
-      "cost_prestige_currency": 0,
-      "duration_seconds": 14400,
-      "unlocks_items": ["dyson_node", "orbital_frame", "graviton_lens"],
-      "unlocks_recipes": ["dyson_node", "orbital_frame", "graviton_lens"],
-      "unlocks_buildings": [],
-      "unlocks_grid_expansion": false,
-      "unlocks_research": [],
-      "resets_on_prestige": true,
-      "codex_entry": "A Dyson sphere captures all energy output of a star. Dyson nodes are the structural anchors. Orbital frames are the load-bearing superstructure. Graviton lenses stabilise the whole assembly against tidal forces.",
-      "icon_path": "TODO",
-      "block": "synthetic_frontier",
-      "required_world": "world_chemistry",
-      "world": "world_physics"
-    },
-    {
       "_comment": "--- LOGISTICS NODES: unlock per-building capacity upgrades ---",
       "id": "surplus_containment",
       "display_name": "Surplus Containment",
@@ -1661,7 +1647,7 @@
       "branch": "Nuclear",
       "prerequisites": ["iron_convergence"],
       "depth_in_tree": 27,
-      "cost_base_currency": 850000000,
+      "cost_base_currency": 3770000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["neptunium", "plutonium"],
@@ -1674,7 +1660,8 @@
       "icon_path": "TODO",
       "block": "deep_physics",
       "world": "world_physics",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "planned": true
     },
     {
       "id": "transuranic_elements",
@@ -1683,20 +1670,21 @@
       "branch": "Nuclear",
       "prerequisites": ["fission_i"],
       "depth_in_tree": 28,
-      "cost_base_currency": 1020000000,
+      "cost_base_currency": 5760000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["americium", "curium", "berkelium", "californium", "einsteinium", "fermium"],
       "unlocks_recipes": ["americium", "curium", "berkelium", "californium", "einsteinium", "fermium"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["component_engineering", "superheavy_synthesis"],
+      "unlocks_research": ["superheavy_synthesis"],
       "resets_on_prestige": true,
       "codex_entry": "Plutonium does not occur naturally on Earth \u2014 it must be synthesised. Its fissile isotope Pu-239 is the most energy-dense fuel known to conventional physics.",
       "icon_path": "TODO",
       "block": "deep_physics",
       "world": "world_physics",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "planned": true
     },
     {
       "id": "superheavy_synthesis",
@@ -1705,7 +1693,7 @@
       "branch": "Nuclear",
       "prerequisites": ["transuranic_elements"],
       "depth_in_tree": 29,
-      "cost_base_currency": 1230000000,
+      "cost_base_currency": 54600000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium", "meitnerium", "darmstadtium"],
@@ -1718,7 +1706,8 @@
       "icon_path": "TODO",
       "block": "deep_physics",
       "world": "world_physics",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "planned": true
     },
     {
       "id": "island_of_stability",
@@ -1727,7 +1716,7 @@
       "branch": "Nuclear",
       "prerequisites": ["superheavy_synthesis"],
       "depth_in_tree": 30,
-      "cost_base_currency": 1470000000,
+      "cost_base_currency": 870000000000,
       "cost_prestige_currency": 0,
       "duration_seconds": 3600,
       "unlocks_items": ["roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine", "oganesson"],
@@ -1740,7 +1729,8 @@
       "icon_path": "TODO",
       "block": "deep_physics",
       "world": "world_physics",
-      "required_world": "world_chemistry"
+      "required_world": "world_chemistry",
+      "planned": true
     },
     {
       "id": "chemistry_lab",
@@ -2054,7 +2044,7 @@
       "unlocks_recipes": ["metamaterial"],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["component_engineering"],
+      "unlocks_research": [],
       "resets_on_prestige": true,
       "codex_entry": "Metamaterials",
       "icon_path": "TODO",
@@ -2062,6 +2052,144 @@
       "world": "world_metallurgy",
       "planned": true,
       "required_world": "world_metallurgy"
+    },
+    {
+      "id": "circuitry",
+      "display_name": "Circuitry",
+      "description": "Circuitry: Circuit Board, Quantum Processor.",
+      "branch": "Engineering",
+      "prerequisites": [],
+      "depth_in_tree": 3,
+      "cost_base_currency": 637000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["circuit_board", "quantum_processor"],
+      "unlocks_recipes": ["circuit_board", "quantum_processor"],
+      "unlocks_buildings": ["component_fabricator"],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["containment"],
+      "resets_on_prestige": true,
+      "codex_entry": "Circuitry",
+      "icon_path": "TODO",
+      "block": "engineering_components",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
+    },
+    {
+      "id": "containment",
+      "display_name": "Plasma Containment",
+      "description": "Plasma Containment: Plasma Containment Ring.",
+      "branch": "Engineering",
+      "prerequisites": ["circuitry"],
+      "depth_in_tree": 4,
+      "cost_base_currency": 637000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["plasma_containment_ring"],
+      "unlocks_recipes": ["plasma_containment_ring"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["structures"],
+      "resets_on_prestige": true,
+      "codex_entry": "Plasma Containment",
+      "icon_path": "TODO",
+      "block": "engineering_components",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
+    },
+    {
+      "id": "structures",
+      "display_name": "Orbital Structures",
+      "description": "Orbital Structures: Orbital Frame.",
+      "branch": "Engineering",
+      "prerequisites": ["containment"],
+      "depth_in_tree": 5,
+      "cost_base_currency": 637000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["orbital_frame"],
+      "unlocks_recipes": ["orbital_frame"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["antimatter"],
+      "resets_on_prestige": true,
+      "codex_entry": "Orbital Structures",
+      "icon_path": "TODO",
+      "block": "engineering_systems",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
+    },
+    {
+      "id": "antimatter",
+      "display_name": "Antimatter",
+      "description": "Antimatter: Antimatter Cell.",
+      "branch": "Engineering",
+      "prerequisites": ["structures"],
+      "depth_in_tree": 6,
+      "cost_base_currency": 637000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["antimatter_cell"],
+      "unlocks_recipes": ["antimatter_cell"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["gravitics"],
+      "resets_on_prestige": true,
+      "codex_entry": "Antimatter",
+      "icon_path": "TODO",
+      "block": "engineering_systems",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
+    },
+    {
+      "id": "gravitics",
+      "display_name": "Gravitics",
+      "description": "Gravitics: Graviton Lens.",
+      "branch": "Engineering",
+      "prerequisites": ["antimatter"],
+      "depth_in_tree": 7,
+      "cost_base_currency": 4740000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["graviton_lens"],
+      "unlocks_recipes": ["graviton_lens"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": ["dyson_engineering"],
+      "resets_on_prestige": true,
+      "codex_entry": "Gravitics",
+      "icon_path": "TODO",
+      "block": "engineering_systems",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
+    },
+    {
+      "id": "dyson_engineering",
+      "display_name": "Dyson Engineering",
+      "description": "Dyson Engineering: Dyson Node.",
+      "branch": "Engineering",
+      "prerequisites": ["gravitics"],
+      "depth_in_tree": 8,
+      "cost_base_currency": 4740000000000,
+      "cost_prestige_currency": 0,
+      "duration_seconds": 3600,
+      "unlocks_items": ["dyson_node"],
+      "unlocks_recipes": ["dyson_node"],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": false,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "codex_entry": "Dyson Engineering",
+      "icon_path": "TODO",
+      "block": "engineering_megastructure",
+      "required_world": "world_engineering",
+      "world": "world_engineering",
+      "planned": true
     },
     {
       "id": "transportation_1",
@@ -2856,9 +2984,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Does not occur naturally on Earth — only made in reactors and particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling it requires exquisite precision.",
-      "base_sell_value": 26200.0,
+      "base_sell_value": 2400000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
 
     {
@@ -3301,8 +3430,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A processor that harnesses quantum superposition and entanglement. Factorises problems in polynomial time that classical computers cannot solve in the lifetime of the universe.",
-      "base_sell_value": 1780000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 8190000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "plasma_containment_ring",
@@ -3325,8 +3456,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A toroidal magnetic confinement structure that holds stellar plasma at 150 million degrees — hotter than the sun's core. The heart of a fusion power plant or a miniature star.",
-      "base_sell_value": 11200000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 5970000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "antimatter_cell",
@@ -3349,8 +3482,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A magnetic bottle storing antihydrogen — matter's mirror. When antimatter meets matter, 100% of both masses convert to energy per E=mc². The most energy-dense storage known.",
-      "base_sell_value": 8560000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 13700000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "dyson_node",
@@ -3373,8 +3508,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The structural anchor point of a Dyson sphere. Each node bears the gravitational tension of thousands of square kilometres of solar-collecting surface. Built to last a million years.",
-      "base_sell_value": 26000000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 94500000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "orbital_frame",
@@ -3397,8 +3534,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The load-bearing superstructure of a megastructure. Woven from titanium alloy and carbon fibre into a tensegrity lattice strong enough to encircle a star.",
-      "base_sell_value": 52600000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 7870000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "graviton_lens",
@@ -3421,8 +3560,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A metamaterial array that bends spacetime curvature. Compensates for tidal forces across the inner surface of a Dyson sphere, maintaining structural integrity against the star's gravity gradient.",
-      "base_sell_value": 123000000000.0,
-      "isotope_sell_multiplier": 1.0
+      "base_sell_value": 33600000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "planned": true,
+      "world": "world_engineering"
     },
     {
       "id": "fluorine",
@@ -5338,9 +5479,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Neptunium (Np), element number 93 with mass number 237. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 14700.0,
+      "base_sell_value": 1150000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "americium",
@@ -5363,9 +5505,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Americium (Am), element number 95 with mass number 243. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 14700.0,
+      "base_sell_value": 1380000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "curium",
@@ -5388,9 +5531,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Curium (Cm), element number 96 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 14900.0,
+      "base_sell_value": 1550000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "berkelium",
@@ -5413,9 +5557,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Berkelium (Bk), element number 97 with mass number 247. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 14900.0,
+      "base_sell_value": 1710000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "californium",
@@ -5438,9 +5583,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Californium (Cf), element number 98 with mass number 251. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 15200.0,
+      "base_sell_value": 1930000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "einsteinium",
@@ -5463,9 +5609,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Einsteinium (Es), element number 99 with mass number 252. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 15200.0,
+      "base_sell_value": 2160000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "fermium",
@@ -5488,9 +5635,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Fermium (Fm), element number 100 with mass number 257. Bred neutron-by-neutron beyond uranium; its value climbs past iron.",
-      "base_sell_value": 15500.0,
+      "base_sell_value": 2480000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "mendelevium",
@@ -5513,9 +5661,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Mendelevium (Md), element number 101 with mass number 258. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 18400.0,
+      "base_sell_value": 2820000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "nobelium",
@@ -5538,9 +5687,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nobelium (No), element number 102 with mass number 259. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 18400.0,
+      "base_sell_value": 3240000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "lawrencium",
@@ -5563,9 +5713,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Lawrencium (Lr), element number 103 with mass number 266. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 18900.0,
+      "base_sell_value": 3830000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "rutherfordium",
@@ -5588,9 +5739,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Rutherfordium (Rf), element number 104 with mass number 267. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19000.0,
+      "base_sell_value": 4460000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "dubnium",
@@ -5613,9 +5765,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Dubnium (Db), element number 105 with mass number 268. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19100.0,
+      "base_sell_value": 5240000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "seaborgium",
@@ -5638,9 +5791,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Seaborgium (Sg), element number 106 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19100.0,
+      "base_sell_value": 6220000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "bohrium",
@@ -5663,9 +5817,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Bohrium (Bh), element number 107 with mass number 270. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19200.0,
+      "base_sell_value": 7460000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "hassium",
@@ -5688,9 +5843,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Hassium (Hs), element number 108 with mass number 269. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19100.0,
+      "base_sell_value": 8980000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "meitnerium",
@@ -5713,9 +5869,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Meitnerium (Mt), element number 109 with mass number 278. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 19800.0,
+      "base_sell_value": 11400000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "darmstadtium",
@@ -5738,9 +5895,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Darmstadtium (Ds), element number 110 with mass number 281. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 20000.0,
+      "base_sell_value": 14200000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "roentgenium",
@@ -5763,9 +5921,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Roentgenium (Rg), element number 111 with mass number 282. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 23700.0,
+      "base_sell_value": 17800000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "copernicium",
@@ -5788,9 +5947,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Copernicium (Cn), element number 112 with mass number 285. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 23900.0,
+      "base_sell_value": 22900000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "nihonium",
@@ -5813,9 +5973,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Nihonium (Nh), element number 113 with mass number 286. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24000.0,
+      "base_sell_value": 29500000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "flerovium",
@@ -5838,9 +5999,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Flerovium (Fl), element number 114 with mass number 289. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24300.0,
+      "base_sell_value": 39000000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "moscovium",
@@ -5863,9 +6025,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Moscovium (Mc), element number 115 with mass number 290. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24400.0,
+      "base_sell_value": 52000000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "livermorium",
@@ -5888,9 +6051,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Livermorium (Lv), element number 116 with mass number 293. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24600.0,
+      "base_sell_value": 70900000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "tennessine",
@@ -5913,9 +6077,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Tennessine (Ts), element number 117 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24700.0,
+      "base_sell_value": 97900000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
     {
       "id": "oganesson",
@@ -5938,9 +6103,10 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Oganesson (Og), element number 118 with mass number 294. A superheavy nucleus forced together in the accelerator: vanishingly unstable, immensely valued.",
-      "base_sell_value": 24700.0,
+      "base_sell_value": 180000000.0,
       "isotope_sell_multiplier": 1.0,
-      "world": "world_physics"
+      "world": "world_physics",
+      "planned": true
     },
 
     {
@@ -7706,6 +7872,32 @@
       "isotope_sell_multiplier": 1.0,
       "world": "world_metallurgy",
       "planned": true
+    },
+    {
+      "id": "circuit_board",
+      "display_name": "Circuit Board",
+      "symbol": "PCB",
+      "icon_path": "TODO",
+      "item_id": 230,
+      "tier": 5,
+      "tier_ref": "tier_5",
+      "category": "Component",
+      "atomic_number": 0,
+      "atomic_mass": 0,
+      "charge": "0",
+      "is_radioactive": false,
+      "decay_type": "None",
+      "half_life_note": "",
+      "is_fissile": false,
+      "is_harvested": false,
+      "field_type": "None",
+      "is_secondary_particle": false,
+      "particle_uses": 0,
+      "codex_entry": "A silicon wafer etched and wired with copper: the first machine part.",
+      "base_sell_value": 2240000000.0,
+      "isotope_sell_multiplier": 1.0,
+      "world": "world_engineering",
+      "planned": true
     }
   ],
 
@@ -8296,24 +8488,25 @@
       "tier": 5,
       "category": "Component",
       "inputs": [
-        { "item": "semiconductor_wafer", "quantity": 3 },
-        { "item": "superconductor", "quantity": 2 }
+        { "item": "circuit_board", "quantity": 2 },
+        { "item": "superconductor", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "quantum_processor",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1200.0,
+      "base_craft_time": 2400.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 2000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "component_engineering",
+      "required_research": "circuitry",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "circuit + superconductor",
+      "planned": true
     },
     {
       "id": "plasma_containment_ring",
@@ -8322,24 +8515,25 @@
       "tier": 5,
       "category": "Component",
       "inputs": [
-        { "item": "metamaterial", "quantity": 4 },
+        { "item": "superconductor", "quantity": 2 },
         { "item": "titanium_alloy", "quantity": 2 }
       ],
       "neutron_adjustment": [],
       "output_item": "plasma_containment_ring",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 1500.0,
+      "base_craft_time": 2400.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 5000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "component_engineering",
+      "required_research": "containment",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "superconducting magnet",
+      "planned": true
     },
     {
       "id": "antimatter_cell",
@@ -8348,24 +8542,25 @@
       "tier": 5,
       "category": "Component",
       "inputs": [
-        { "item": "metamaterial", "quantity": 3 },
+        { "item": "plasma_containment_ring", "quantity": 1 },
         { "item": "aerogel", "quantity": 2 }
       ],
       "neutron_adjustment": [],
       "output_item": "antimatter_cell",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 2000.0,
+      "base_craft_time": 3600.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 10000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "component_engineering",
+      "required_research": "antimatter",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "containment + deep physics",
+      "planned": true
     },
     {
       "id": "dyson_node",
@@ -8374,24 +8569,27 @@
       "tier": 5,
       "category": "Component",
       "inputs": [
-        { "item": "quantum_processor", "quantity": 2 },
-        { "item": "plasma_containment_ring", "quantity": 2 }
+        { "item": "graviton_lens", "quantity": 1 },
+        { "item": "orbital_frame", "quantity": 1 },
+        { "item": "antimatter_cell", "quantity": 1 },
+        { "item": "ecosystem", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "dyson_node",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 3000.0,
+      "base_craft_time": 7200.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 50000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "megastructure_theory",
+      "required_research": "dyson_engineering",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "every world's capstone",
+      "planned": true
     },
     {
       "id": "orbital_frame",
@@ -8401,23 +8599,25 @@
       "category": "Component",
       "inputs": [
         { "item": "titanium_alloy", "quantity": 3 },
-        { "item": "dyson_node", "quantity": 2 }
+        { "item": "carbon_fiber", "quantity": 2 },
+        { "item": "steel", "quantity": 2 }
       ],
       "neutron_adjustment": [],
       "output_item": "orbital_frame",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 4000.0,
+      "base_craft_time": 3600.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 100000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "megastructure_theory",
+      "required_research": "structures",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "titanium + carbon fiber",
+      "planned": true
     },
     {
       "id": "graviton_lens",
@@ -8426,24 +8626,25 @@
       "tier": 5,
       "category": "Component",
       "inputs": [
-        { "item": "orbital_frame", "quantity": 2 },
-        { "item": "antimatter_cell", "quantity": 2 }
+        { "item": "metamaterial", "quantity": 2 },
+        { "item": "quantum_processor", "quantity": 1 }
       ],
       "neutron_adjustment": [],
       "output_item": "graviton_lens",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 5000.0,
+      "base_craft_time": 5400.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
-      "fixed_power_cost_ev": 500000000.0,
+      "fixed_power_cost_ev": 0.0,
       "valid_buildings": ["component_fabricator"],
       "can_craft_manually": false,
       "known_from_start": false,
-      "required_research": "megastructure_theory",
+      "required_research": "gravitics",
       "unlocks_research": null,
-      "is_simplified": false,
-      "simplification_note": ""
+      "is_simplified": true,
+      "simplification_note": "metamaterial + processor",
+      "planned": true
     },
     {
       "id": "americium",
@@ -13262,6 +13463,33 @@
       "planned": true
     },
     {
+      "id": "circuit_board",
+      "recipe_id": 397,
+      "display_name": "Circuit Board",
+      "tier": 5,
+      "category": "Component",
+      "inputs": [
+        { "item": "semiconductor_wafer", "quantity": 1 },
+        { "item": "copper_wire", "quantity": 2 }
+      ],
+      "neutron_adjustment": [],
+      "output_item": "circuit_board",
+      "output_quantity": 1,
+      "byproducts": [],
+      "base_craft_time": 1800.0,
+      "manual_craft_time": 0.0,
+      "power_cost_is_dynamic": false,
+      "fixed_power_cost_ev": 0.0,
+      "valid_buildings": ["component_fabricator"],
+      "can_craft_manually": false,
+      "known_from_start": false,
+      "required_research": "circuitry",
+      "unlocks_research": null,
+      "is_simplified": true,
+      "simplification_note": "wafer + copper wire",
+      "planned": true
+    },
+    {
       "id": "sulfuric_acid",
       "display_name": "Sulfuric Acid",
       "recipe_id": 172,
@@ -14785,7 +15013,7 @@
       "category": "Transient",
       "is_obsoleteable": false,
       "obsolete_condition": "",
-      "requires_power": true,
+      "requires_power": false,
       "is_power_source": false,
       "base_power_cost_ev": 200.0,
       "power_cost_is_dynamic": false,
@@ -14794,15 +15022,15 @@
       "influence_radius_tiles": 0.0,
       "link_radius_tiles": 0.0,
       "base_output_rate": 0.25,
-      "supported_recipes": ["quantum_processor", "plasma_containment_ring", "antimatter_cell", "dyson_node", "orbital_frame", "graviton_lens"],
+      "supported_recipes": ["quantum_processor", "plasma_containment_ring", "antimatter_cell", "dyson_node", "orbital_frame", "graviton_lens", "circuit_board"],
       "input_slot_count": 2,
       "input_slot_labels": ["Primary Material", "Secondary Material"],
       "is_entropy_sink": false,
       "footprint": [1, 1],
       "structure_kind": "ComponentFabricator",
       "ports": [
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "West"  },
-        { "port_type": "Input",  "local_cell": [0, 0], "local_facing": "East"  },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "West" },
+        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
         { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
       ],
       "placement_rule": "Anywhere",
@@ -14816,21 +15044,22 @@
         { "level": 3, "output_rate": 1.0, "power_cost_ev": 450.0, "output_ev": 0.0, "influence_radius_tiles": 0.0, "cost_base_currency": 1000000000, "cost_prestige_currency": 0 }
       ],
       "storage_upgrade_levels": [
-        { "level": 2, "max_output_items": 75,  "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
-        { "level": 3, "max_output_items": 375, "cost_base_currency": 700000000,  "cost_prestige_currency": 0 }
+        { "level": 2, "max_output_items": 75, "cost_base_currency": 70000000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_output_items": 375, "cost_base_currency": 700000000, "cost_prestige_currency": 0 }
       ],
       "input_upgrade_levels": [
-        { "level": 2, "max_input_items": 120, "cost_base_currency": 70000000,   "cost_prestige_currency": 0 },
-        { "level": 3, "max_input_items": 400, "cost_base_currency": 700000000,  "cost_prestige_currency": 0 }
+        { "level": 2, "max_input_items": 120, "cost_base_currency": 70000000, "cost_prestige_currency": 0 },
+        { "level": 3, "max_input_items": 400, "cost_base_currency": 700000000, "cost_prestige_currency": 0 }
       ],
       "has_special_upgrade": false,
       "special_upgrade_id": null,
-      "required_research": "component_engineering",
+      "required_research": "circuitry",
       "available_from_start": false,
       "tutorial_note": "",
       "collects_decay_particles": false,
       "decay_collection_rate": 0.0,
-      "codex_entry": "The pinnacle of in-Foundry manufacturing. Operates at near-quantum precision, assembling materials into components that will eventually orbit a star. Each cycle takes minutes. Each output lasts millennia."
+      "codex_entry": "The pinnacle of in-Foundry manufacturing. Operates at near-quantum precision, assembling materials into components that will eventually orbit a star. Each cycle takes minutes. Each output lasts millennia.",
+      "world": "world_engineering"
     },
     {
       "id": "fusion_reactor",
@@ -16053,6 +16282,16 @@
         { "field": "chalcopyrite_field", "density_multiplier": 0.0 },
         { "field": "rutile_field", "density_multiplier": 0.0 }
       ]
+    },
+    {
+      "id": "site_assembly",
+      "display_name": "Assembly Bay",
+      "unlock_cost": 0,
+      "_note_eng": "First Engineering-world site (Item Timeline phase 4, 2026-11-23). No fields: every part is built from other worlds' materials carried in the inventory.",
+      "field_overrides": [
+        { "field": "quark_field", "density_multiplier": 0.0 },
+        { "field": "electron_field", "density_multiplier": 0.0 }
+      ]
     }
   ],
 
@@ -16096,6 +16335,16 @@
       "unlock_by_tasks": true,
       "site_ids": ["site_foundry"],
       "theme": {"background_color": "#170f0a", "tile_color": "#33231a", "field_tint": "#ffd2a8"}
+    },
+    {
+      "id": "world_engineering",
+      "display_name": "Engineering",
+      "unlock_cost": 0,
+      "_note_gate": "Item Timeline phase 4 (2026-11-23): delivery stages made in Metallurgy (more_world_tasks) unlock it.",
+      "prereq_unlock_ids": [],
+      "unlock_by_tasks": true,
+      "site_ids": ["site_assembly"],
+      "theme": {"background_color": "#0d0f1a", "tile_color": "#1f2440", "field_tint": "#c8d2ff"}
     }
   ],
 
@@ -17093,6 +17342,32 @@
       "id": "met_tut_next",
       "lines": [
         { "speaker_name": "The Architect", "text": "Ore reaches the Demon. Next, Roasting opens the Materials Forge: two hematite make iron oxide, and iron oxide with coal makes steel.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "intro_world_engineering",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Physics, chemistry, life and metal: you have every material. Engineering puts them together into machines, and the machines into a megastructure around the star.", "portrait_path": "TODO", "pause_game": true, "highlight_target": "", "action": "" },
+        { "speaker_name": "The Architect", "text": "Engineering is open. Its parts take materials from every world; carry them in your inventory and the Component Fabricator draws on it.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "eng_tut_welcome",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "The assembly bay. Nothing grows or is mined here: every part is built from what the other worlds make.", "portrait_path": "TODO", "pause_game": true, "highlight_target": "", "action": "" },
+        { "speaker_name": "The Architect", "text": "I have set aside enough entropy for Circuitry. A circuit board is a wafer and copper wire from Metallurgy.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "eng_tut_fabricator",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Place a Component Fabricator. It takes its parts from your inventory when nothing feeds it by belt.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
+      ]
+    },
+    {
+      "id": "eng_tut_next",
+      "lines": [
+        { "speaker_name": "The Architect", "text": "Each Engineering part is slow and precious. The last is the Dyson Node; finish every research in one run and you can Ascend from the Megastructure panel.", "portrait_path": "TODO", "pause_game": false, "highlight_target": "", "action": "" }
       ]
     },
     {
@@ -18532,12 +18807,24 @@
         { "id": "met_to_demon", "hint": "Belt the Harvester's output to Maxwell's Demon.", "advance_condition": {"type": "ConveyorLinked", "from_building_id": "metal_harvester", "building_id": "maxwells_demon", "min_count": 1}, "on_enter": {"pulse_button_id": "btn-place-conveyor"} },
         { "id": "met_next", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "met_tut_next"} }
       ]
+    },
+    {
+      "id": "tutorial_engineering",
+      "world": "world_engineering",
+      "completion_message": "Engineering tutorial complete. Build the megastructure.",
+      "steps": [
+        { "id": "eng_welcome", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "eng_tut_welcome"} },
+        { "id": "eng_grant", "hint": "", "advance_condition": {"type": "Auto"}, "on_enter": {}, "reward_entropy": 638000000000 },
+        { "id": "eng_research", "hint": "Open Research and study Circuitry.", "advance_condition": {"type": "ResearchUnlocked", "research_id": "circuitry"}, "on_enter": {"pulse_button_id": "btn-research"} },
+        { "id": "eng_place_fabricator", "hint": "Place a Component Fabricator.", "advance_condition": {"type": "BuildingMin", "building_id": "component_fabricator", "min_count": 1}, "on_enter": {"dialogue_id": "eng_tut_fabricator", "pulse_button_id": "btn-place-component_fabricator"} },
+        { "id": "eng_next", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "eng_tut_next"} }
+      ]
     }
   ],
   "megastructure": {
     "id": "dyson_sphere",
     "display_name": "Dyson Sphere",
-    "required_research": "megastructure_theory",
+    "required_research": "dyson_engineering",
     "stages": [
       {
         "id": "ms_stage_1",
@@ -18602,6 +18889,16 @@
         { "id": "metal_task_2", "display_name": "First Cells", "description": "A cell copies itself. Send the first ones.", "items": [{"item": "prokaryotic_cell", "quantity": 40}], "dialogue": "" },
         { "id": "metal_task_3", "display_name": "Bodies", "description": "Tissues and organs: life gets large.", "items": [{"item": "tissue", "quantity": 20}, {"item": "organ", "quantity": 10}], "dialogue": "" },
         { "id": "metal_task_4", "display_name": "A Living World", "description": "One ecosystem, whole. Life is done; now build with metal.", "items": [{"item": "ecosystem", "quantity": 1}], "dialogue": "" }
+      ]
+    },
+    {
+      "world": "world_engineering",
+      "deliver_in": "world_metallurgy",
+      "display_name": "Path to Engineering",
+      "stages": [
+        { "id": "eng_task_1", "display_name": "Structural Steel", "description": "Every machine starts as steel. Send it to Maxwell's Demon.", "items": [{"item": "steel", "quantity": 300}], "dialogue": "" },
+        { "id": "eng_task_2", "display_name": "Light Alloys", "description": "Titanium and carbon fibre: strong and light.", "items": [{"item": "titanium_alloy", "quantity": 120}, {"item": "carbon_fiber", "quantity": 120}], "dialogue": "" },
+        { "id": "eng_task_3", "display_name": "Exotic Materials", "description": "Superconductors and metamaterial: the stuff of machines that bend physics.", "items": [{"item": "superconductor", "quantity": 30}, {"item": "metamaterial", "quantity": 5}], "dialogue": "" }
       ]
     }
   ],

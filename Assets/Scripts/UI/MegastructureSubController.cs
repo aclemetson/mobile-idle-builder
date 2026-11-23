@@ -83,10 +83,72 @@ namespace MobileIdleBuilder
                 complete.AddToClassList("recipe-name");
                 complete.style.whiteSpace = WhiteSpace.Normal; // wrap so the full sentence fits the panel
                 _list.Add(complete);
-                return;
             }
+            else BuildCurrentStage(svc, stage);
 
-            BuildCurrentStage(svc, stage);
+            BuildAscension(svc);
+        }
+
+        // ── Ascension and Expansion (Item Timeline phase 4, AscensionRules) ──────────────────────
+        float _confirmUntil;
+
+        private void BuildAscension(MegastructureService svc)
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+            var container = new VisualElement();
+            container.AddToClassList("upgrade-row");
+
+            var title = new Label("Ascension");
+            title.AddToClassList("upgrade-row-name");
+            container.Add(title);
+
+            int level = save.megastructureExpansion;
+            var info = new Label($"Megastructure material: {save.megastructureMaterial:N0}   " +
+                                 $"Expansion level {level} (+{Mathf.RoundToInt(AscensionRules.ExpansionBonus(level) * 100f)}% output)   " +
+                                 $"Ascensions: {save.ascensionCount}");
+            info.AddToClassList("upgrade-row-desc");
+            info.style.whiteSpace = WhiteSpace.Normal;
+            container.Add(info);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
+
+            long cost = AscensionRules.ExpansionCost(level);
+            var expand = new Button { text = $"Expand ({cost:N0} material)" };
+            expand.AddToClassList("craft-btn");
+            expand.SetEnabled(save.megastructureMaterial >= cost);
+            expand.clicked += () => { svc.BuyExpansion(); Refresh(); };
+            footer.Add(expand);
+
+            var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
+            var ids = new System.Collections.Generic.List<string>();
+            if (db?.allResearch != null) foreach (var r in db.allResearch) if (r != null) ids.Add(r.id);
+            bool ready = AscensionRules.IsAvailable(save, ids);
+            bool confirming = Time.unscaledTime < _confirmUntil;
+            var ascend = new Button
+            {
+                text = !ready ? "Ascend (unlock every research first)"
+                     : confirming ? $"Tap again: Ascend for {AscensionRules.MaterialFor(save.ascensionCount):N0} material"
+                     : $"Ascend (+{AscensionRules.MaterialFor(save.ascensionCount):N0} material)"
+            };
+            ascend.AddToClassList("craft-btn");
+            ascend.SetEnabled(ready);
+            ascend.clicked += () =>
+            {
+                if (Time.unscaledTime < _confirmUntil) { _confirmUntil = 0f; _hud?.RequestAscension(); return; }
+                _confirmUntil = Time.unscaledTime + 4f;   // a second tap within 4 s confirms
+                Refresh();
+            };
+            footer.Add(ascend);
+            container.Add(footer);
+
+            var note = new Label("Ascending resets everything but the prestige shop, managers and the megastructure: " +
+                                 "the worlds lock again and the prestige currency you hold is spent.");
+            note.AddToClassList("upgrade-row-desc");
+            note.style.whiteSpace = WhiteSpace.Normal;
+            container.Add(note);
+            _list.Add(container);
         }
 
         private void BuildCurrentStage(MegastructureService svc, MegastructureStage stage)

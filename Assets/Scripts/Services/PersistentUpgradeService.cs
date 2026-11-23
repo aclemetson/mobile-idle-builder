@@ -168,6 +168,11 @@ namespace MobileIdleBuilder
                 "Metallurgy buildings smelt 15% faster per level.",
                 UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
                 new[]{ 220, 310, 440, 610, 850, 1200, 1700, 2400 }, null, WorldGate.Metallurgy),
+            new UpgradeDef(
+                "precision", "Precision",
+                "Engineering buildings produce +10% more output per level.",
+                UpgradeEffectType.WorldOutput, 0.10f, 8,
+                new[]{ 240, 330, 460, 650, 900, 1300, 1800, 2500 }, null, WorldGate.Engineering),
             // ── Idle collection ───────────────────────────────────────────────
             // A short 30 min base cap brings players back to collect; the first levels are cheap and have
             // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.

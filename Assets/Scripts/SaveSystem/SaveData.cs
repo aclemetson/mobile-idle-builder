@@ -87,6 +87,10 @@ namespace MobileIdleBuilder
         // Delivery tasks of the other worlds (Metallurgy, Engineering: 2026-11-23), one entry per world. The Chemistry
         // gate keeps the fields above. Survive prestige the same way.
         public List<WorldTaskProgressData> worldTaskSets = new();
+        // Ascension (2026-11-23, AscensionRules): survive prestige and Ascension.
+        public int          ascensionCount            = 0;
+        public long         megastructureMaterial     = 0;
+        public int          megastructureExpansion    = 0;     // Expansion levels bought with material
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();

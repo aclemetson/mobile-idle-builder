@@ -121,6 +121,15 @@ namespace MobileIdleBuilder
                 // reach the save, then wipe the whole run: grids, bought fields, research, craft queue.
                 ECSLoadBridge.Instance?.FlushToSave();
                 PrestigeRunReset.ResetRun(save, cfgEntropy + bonusEntropy);
+                // An Ascension is this prestige plus its own resets: worlds lock, delivery stages restart, the
+                // prestige currency held is spent; megastructure material is paid.
+                if (AscensionRules.Pending)
+                {
+                    AscensionRules.Pending = false;
+                    long material = AscensionRules.Apply(save);
+                    GameLogger.Info($"[Ascension] Ascension {save.ascensionCount}: +{material} megastructure material " +
+                                    $"(now {save.megastructureMaterial}).");
+                }
                 // The old scene's belts, fields and buildings are still live until the reload, so
                 // write the reset save as it is instead of flushing them back into it.
                 SaveManager.Instance.SaveLocal(skipGridFlush: true, skipECSFlush: true);

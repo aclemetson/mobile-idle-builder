@@ -41,8 +41,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 189d6e03b4e9d894ea5d855a0884a6de, type: 2}
   - {fileID: 11400000, guid: ed637f9e67f419d45a9e785cfe8d41b6, type: 2}
   - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
-  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
-  - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
   - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
   - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
@@ -86,6 +84,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2241ab6a31db69c4c8406bb90be00668, type: 2}
   - {fileID: 11400000, guid: 0350dd279371d6c42b78f4a0a4e9f284, type: 2}
   - {fileID: 11400000, guid: 82a63f39ed765ee46b77823300765c11, type: 2}
+  - {fileID: 11400000, guid: 407758744366c814d991e87b6a1dd0c1, type: 2}
+  - {fileID: 11400000, guid: 9f39951201fa4d244bc4bb3e898c2a45, type: 2}
+  - {fileID: 11400000, guid: 7ba831a6a8f7b0149b267ccf87e0ff11, type: 2}
+  - {fileID: 11400000, guid: c0a30fb846171314ca9e4f7da6cc4265, type: 2}
+  - {fileID: 11400000, guid: 80bc36f1f3afb7249a3774024bc40584, type: 2}
+  - {fileID: 11400000, guid: 45cac0aa7a4f2384cb0c8c625e23e162, type: 2}
   - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
   - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
   blocks:
@@ -440,7 +444,7 @@ MonoBehaviour:
   - id: deep_physics
     displayName: Deep Physics
     order: 17
-    targetHours: 40
+    targetHours: 70
     anchor: 0
     description: Fission, the transuranics and the superheavy elements.
     startPrestigeCount: 25
@@ -595,12 +599,65 @@ MonoBehaviour:
     - entropy_echo:2
     startSites:
     - site_actinide_vein
-  - id: synthetic_frontier
-    displayName: Synthetic Frontier
+  - id: engineering_components
+    displayName: Components
     order: 23
-    targetHours: 30
+    targetHours: 10
     anchor: 0
-    description: Elements past Uranium, components and the megastructure.
+    description: Circuit boards, quantum processors and plasma containment, from
+      Metallurgy's materials.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: engineering_systems
+    displayName: Systems
+    order: 24
+    targetHours: 10
+    anchor: 0
+    description: Orbital frames, antimatter cells and graviton lenses.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: engineering_megastructure
+    displayName: Megastructure
+    order: 25
+    targetHours: 6
+    anchor: 0
+    description: Dyson Nodes for the Dyson Sphere; every research done opens Ascension.
     startPrestigeCount: 25
     startPrestigeCurrencyEarned: 11000
     startEntropy: 523000000

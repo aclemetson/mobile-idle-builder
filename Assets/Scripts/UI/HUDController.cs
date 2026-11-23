@@ -1601,6 +1601,15 @@ namespace MobileIdleBuilder
             SetElementVisible(_prestigePanel, true);
         }
 
+        /// <summary>The Megastructure panel's Ascend button: a prestige that also applies <see cref="AscensionRules"/>.</summary>
+        public void RequestAscension()
+        {
+            if (!_ecsReady || _progressQuery.IsEmpty) return;
+            AscensionRules.Pending = true;
+            OnPrestigeConfirmed();
+            ShowNotification("◉", "Ascension! The worlds begin again; the megastructure grows.");
+        }
+
         private void OnPrestigeConfirmed()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;

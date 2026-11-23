@@ -687,6 +687,31 @@ namespace MobileIdleBuilder.Dev
                     return "Prestige requested. PrestigeSystem will process on next frame.";
                 });
 
+            // ── Ascension (Item Timeline phase 4) ─────────────────────────────
+            _registry.Register("ascend", "Ascend now (skips the every-research check): prestige + lock worlds + pay megastructure material",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    AscensionRules.Pending = true;
+                    var entity = _progressQuery.GetSingletonEntity();
+                    var data   = _em.GetComponentData<PlayerProgressData>(entity);
+                    data.PrestigeRequested = true;
+                    _em.SetComponentData(entity, data);
+                    var save = SaveManager.Instance?.Current;
+                    return $"Ascension requested: +{AscensionRules.MaterialFor(save?.ascensionCount ?? 0)} material.";
+                });
+
+            _registry.Register("add material <n>", "Add megastructure material (buys Expansion levels in the Megastructure panel)",
+                args =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: no save.";
+                    if (!long.TryParse(args[0], out long n) || n <= 0) return "Error: <n> must be a positive integer.";
+                    save.megastructureMaterial += n;
+                    MegastructureService.Instance?.ApplyBonusToECS();
+                    return $"Megastructure material: {save.megastructureMaterial:N0}.";
+                });
+
             // ── PVP ───────────────────────────────────────────────────────────
             _registry.Register("unlock pvp", "Override PVP prestige lock",
                 _ =>
@@ -1246,10 +1271,10 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("block list", "List research blocks (game phases) and what 'block load' gives you",
                 _ => BlockList());
 
-            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists",
+            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists. 'visit return' comes back",
                 args => BlockLoad(args[0], preferCapture: true));
 
-            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point",
+            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point. 'visit return' comes back",
                 args => BlockLoad(args[0], preferCapture: false));
 
             _registry.Register("block capture <id>", "Save the current game as the save point for a research block",
@@ -1491,6 +1516,11 @@ namespace MobileIdleBuilder.Dev
             data ??= BlockStartPresets.Build(sm.Current, db, Resources.Load<WorldDatabaseSO>("WorldDatabase"), block);
             if (data == null) return "Error: could not build the block's save.";
 
+            // Like 'visit': keep the game as it was so 'visit return' brings it back (the first return point
+            // is kept across chained visits and block loads).
+            string returnPoint = SaveVisitReturnPoint();
+            if (returnPoint.StartsWith("Error")) return returnPoint;
+
             // The Recipes panel lists only recipes the player has learned; research learns them.
             var knowledge = RecipeKnowledgeService.Instance;
             var recipes   = RecipeDatabase.Instance?.Recipes;
@@ -1505,7 +1535,7 @@ namespace MobileIdleBuilder.Dev
             SceneLoader.GoTo(SceneManager.GetActiveScene().name);
             return $"Starting '{block.displayName}' from its {source}: {data.unlockedResearch.Count} research done, " +
                    $"{data.prestigeCount} prestiges, {data.permanentUpgrades.Count} permanent upgrades, " +
-                   $"{data.currentRun.baseCurrency:N0}e. Reloading...";
+                   $"{data.currentRun.baseCurrency:N0}e. {returnPoint} Type 'visit return' to come back. Reloading...";
         }
 
         private static SaveData SnapshotRead(string name, out string error)

@@ -1,0 +1,172 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 981af5c3da3ff194dbbacff74738f3b0, type: 3}
+  m_Name: tutorial_engineering
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.TutorialFlowSO
+  worldId: world_engineering
+  completionMessage: Engineering tutorial complete. Build the megastructure.
+  steps:
+  - id: eng_welcome
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: d33bb6b3289875c41807095fe47fadf1, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: eng_grant
+    hintText: 
+    advanceCondition:
+      type: 0
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 638000000000
+  - id: eng_research
+    hintText: Open Research and study Circuitry.
+    advanceCondition:
+      type: 4
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: circuitry
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 0}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-research
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: eng_place_fabricator
+    hintText: Place a Component Fabricator.
+    advanceCondition:
+      type: 5
+      anyOf: 0
+      items: []
+      uiEventId: 
+      researchId: 
+      minCount: 1
+      buildingType: 10
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: 86493563551b44b4daea4687f61c0d26, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: btn-place-component_fabricator
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0
+  - id: eng_next
+    hintText: 
+    advanceCondition:
+      type: 3
+      anyOf: 0
+      items: []
+      uiEventId: dialogue_complete
+      researchId: 
+      minCount: 0
+      buildingType: -1
+      buildingIsEntropySink: 0
+      fromBuildingType: -1
+      minLevel: 0
+      fieldId: 
+      recipeId: -1
+    skipCondition:
+      researchId: 
+      skipToId: 
+    onEnter:
+      dialogue: {fileID: 11400000, guid: b1c58bf371111d543b0decaa3ab59804, type: 2}
+      highlightTarget: 
+      highlightMode: 0
+      blockCollection: 0
+      collectionFilter: None
+      pulseButtonId: 
+      demonHighlightItemIds: 
+      buildingInteractionGate: 0
+      lockedMessages: []
+    lockedResearchIds: []
+    isSubstep: 0
+    rewardEntropy: 0

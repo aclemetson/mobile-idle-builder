@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Berkelium (Bk), element number 97 with mass number 247. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 14900
+  baseSellValue: 1710000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

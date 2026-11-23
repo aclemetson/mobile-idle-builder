@@ -92,9 +92,10 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 5 — Component craft times ───────────────────────────────────
 
         [Test]
-        public void QuantumProcessor_CraftTime_Is1200s()
+        public void QuantumProcessor_CraftTime_Is2400s()
         {
-            Assert.AreEqual(1200f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
+            // Item Timeline phase 4: Engineering parts are few and slow (2 circuit boards + a superconductor).
+            Assert.AreEqual(2400f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
         }
 
         // ── Ingredient counts for tutorial-critical recipes ───────────────────

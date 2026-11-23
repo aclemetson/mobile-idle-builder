@@ -145,6 +145,14 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 8b78d7108e7c3ea428a0df61700a6adf, type: 2}
   - id: met_tut_next
     dialogue: {fileID: 11400000, guid: ac67672704dc98a4ead7b1d32fafe92a, type: 2}
+  - id: intro_world_engineering
+    dialogue: {fileID: 11400000, guid: f486581510f0abe478b7f3298ad5b80a, type: 2}
+  - id: eng_tut_welcome
+    dialogue: {fileID: 11400000, guid: d33bb6b3289875c41807095fe47fadf1, type: 2}
+  - id: eng_tut_fabricator
+    dialogue: {fileID: 11400000, guid: 86493563551b44b4daea4687f61c0d26, type: 2}
+  - id: eng_tut_next
+    dialogue: {fileID: 11400000, guid: b1c58bf371111d543b0decaa3ab59804, type: 2}
   - id: upgrade_complete_context
     dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
   - id: post_tutorial_intro
