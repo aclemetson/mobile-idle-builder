@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: prebiotic_nitrogen
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: prebiotic_nitrogen
+  displayName: Prebiotic Nitrogen
+  description: 'Prebiotic Nitrogen: Hydrogen Cyanide, Urea, Nitric Acid.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 3dc8be268dcffa345a79b103092e1b09, type: 2}
+  depthInTree: 8
+  block: chem_small_molecules
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 1690000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 44973a2eee4a8b845a02bbae75a2b2e2, type: 2}
+  - {fileID: 11400000, guid: d4deaa496883b834f8bc9891ec73973a, type: 2}
+  - {fileID: 11400000, guid: d0242ae0a576323418664de78adb6e1b, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: f9061d7f8db3bac4595bf425432ede14, type: 2}
+  - {fileID: 11400000, guid: afdd7e6684b06404188c4efef38d29d6, type: 2}
+  - {fileID: 11400000, guid: 68e2ac9bc7adf9c41898ac0eaea123e0, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Prebiotic Nitrogen

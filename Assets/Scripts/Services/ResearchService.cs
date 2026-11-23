@@ -430,6 +430,27 @@ namespace MobileIdleBuilder
         {
             // 2026-11-19: Surplus Containment unlocks Input Capacity upgrades too.
             { "feedstock_buffers", "surplus_containment" },
+            // 2026-11-23 Item Timeline (scripts/apply_item_timeline.py REMOVED_RESEARCH): the s/r-process capture
+            // groups became the Spallation descent and Uranium is mined from the Uranium Vein.
+            { "transition_metals",            "iron_convergence" },
+            { "precious_metals",              "spallation_1" },
+            { "exotic_metals",                "spallation_1" },
+            { "lanthanides_and_heavy_metals", "spallation_3" },
+            { "heavy_transition_metals",      "spallation_5" },
+            { "rapid_neutron_capture",        "spallation_4" },
+            { "slow_neutron_capture",         "spallation_7" },
+            { "fissile_extraction",           "heavy_elements" },
+            // Phase 2: Organic Chemistry became Hydrocarbons (and Alcohols and Acids after it).
+            { "organic_chemistry",            "hydrocarbons" },
+            // Phase 3: Biology's precursors are the life chemicals; metals and materials moved to Metallurgy.
+            { "biochem_precursors",           "energy_currency" },
+            { "reaction_engineering",         "ore_prospecting" },
+            { "advanced_molecules",           "roasting" },
+            { "materials_science",            "steelmaking" },
+            { "advanced_materials",           "metamaterials" },
+            // Phase 4: the components moved to the Engineering world.
+            { "component_engineering",        "circuitry" },
+            { "megastructure_theory",         "dyson_engineering" },
         };
 
         /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>

@@ -11,6 +11,12 @@ namespace MobileIdleBuilder
     public struct ActiveWorldRules : IComponentData
     {
         public byte StreamTransport;
+        /// <summary>The live world's prestige-shop track (e.g. Neutron Economy in Physics): craft speed x. 0 = 1.</summary>
+        public float SpeedMult;
+        /// <summary>The live world's prestige-shop track (e.g. Fission Yield in Physics): output x. 0 = 1.</summary>
+        public float OutputMult;
+        /// <summary>The live world's Spring flow track (Spring Pressure in Chemistry): flow x. 0 = 1.</summary>
+        public float FlowMult;
     }
 
     /// <summary>

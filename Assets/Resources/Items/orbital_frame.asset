@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  world: 
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -36,6 +36,6 @@ MonoBehaviour:
     alloy and carbon fibre into a tensegrity lattice strong enough to encircle a
     star.
   codexUnlocked: 0
-  baseSellValue: 475000000
+  baseSellValue: 7.87e+9
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

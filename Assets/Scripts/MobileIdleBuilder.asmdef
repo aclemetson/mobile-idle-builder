@@ -13,6 +13,7 @@
         "Unity.Services.Core",
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
+        "Unity.Services.CloudCode",
         "Unity.Services.Analytics",
         "Unity.Purchasing",
         "Unity.Services.RemoteConfig",

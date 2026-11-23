@@ -28,9 +28,15 @@ MonoBehaviour:
     densityMultiplier: 0
   - field: {fileID: 11400000, guid: fd1eb9035739ff7409597cadba1bf82e, type: 2}
     densityMultiplier: 0
-  - field: {fileID: 11400000, guid: 2410fc0ec4146e947a11b1a0c9048c89, type: 2}
+  - field: {fileID: 11400000, guid: 056ae3db86b7506428d86d588ed96c80, type: 2}
     densityMultiplier: 0
-  - field: {fileID: 11400000, guid: 7f21bc40551e3bc49b69d917d4e3afe3, type: 2}
+  - field: {fileID: 11400000, guid: f9c0a39232c7e3349a310613cea7dfd5, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: ef3119529dc8dbc46a4102a2f8365b52, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: a1cf790cbc3d7e643b1a80344c179da3, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 7a45487fdf799ab47a0ba4a6eb0988b4, type: 2}
     densityMultiplier: 0
   startingBuildings:
   - buildingId: calorimeter

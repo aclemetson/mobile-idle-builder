@@ -41,10 +41,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
   - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
   - {fileID: 11400000, guid: eea4dfa47f281b443873f34c993f6e68, type: 2}
-  - {fileID: 11400000, guid: b62f5d117e826f84b83598cd2a5ef3f9, type: 2}
-  - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
-  - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
-  - {fileID: 11400000, guid: b77d5ce6d8f63424397c8cbe29205a0a, type: 2}
+  - {fileID: 11400000, guid: b9182a9e2888de249809cc006fc6133d, type: 2}
+  - {fileID: 11400000, guid: d34aca21beec2ce428db67a6d54466ed, type: 2}
+  - {fileID: 11400000, guid: 3f4feccd033875b499ebc7328c2e3d9a, type: 2}
   inputSlotCount: 1
   inputSlotLabels:
   - Stream

@@ -462,6 +462,18 @@ namespace MobileIdleBuilder
             // only does Uranium-235 and the decay chain (elements-and-isotopes.md, "Isotope trim").
             { 15, 653 },  // tritium
             { 16, 808 },  // carbon_14
+            // 2026-11-23 Item Timeline phase 2: Chemistry is life chemistry; industrial products leave it.
+            { 162, 21000 },   // octane
+            { 164, 651000 },  // polymer_precursor
+            { 157, 624000 },  // catalyst
+            { 158, 7000 },    // chlorine_gas
+            { 159, 2280 },    // sodium_hydroxide
+            { 155, 6300 },    // table_salt
+            // Phase 3: Biology runs on the life chemicals; UF6 left with the old Superconductor recipe.
+            { 152, 3360 },    // amino_acid
+            { 151, 109000 },  // fatty_acid
+            { 153, 31800 },   // nucleotide
+            { 38, 20000 },    // uranium_hexafluoride
         };
 
         /// <summary>

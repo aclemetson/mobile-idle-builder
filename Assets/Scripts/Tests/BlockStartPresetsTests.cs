@@ -87,7 +87,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void LateBlocks_OpenTheWorldsAndSitesTheirEarlierResearchUnlocked()
         {
-            var bio = Build("biology_world");
+            var bio = Build("bio_cells");
             CollectionAssert.Contains(bio.unlockedSites, "site_actinide_vein", "Fissile Extraction is behind the player");
             var chemistry = _worlds.allWorlds.FirstOrDefault(w => w != null && w.id == "world_chemistry");
             Assert.IsNotNull(chemistry);
@@ -110,5 +110,35 @@ namespace MobileIdleBuilder.Tests
                 Assert.LessOrEqual(spent, b.startPrestigeCurrencyEarned, $"{b.id}: upgrades cost more than the ✦ earned");
             }
         }
-    }
+    
+        [Test]
+        public void ChemistryBlock_OpensChemistry_AndStartsThere_TutorialDone()
+        {
+            // 2026-11-23: 'block fresh chem_organics' drops you on the Chemistry site, tutorial behind you.
+            var save = Build("chem_organics");
+            int chem = System.Array.FindIndex(_worlds.allWorlds, w => w != null && w.id == WorldGate.Chemistry);
+            CollectionAssert.Contains(save.unlockedWorlds, WorldGate.Chemistry);
+            Assert.AreEqual(chem, save.currentRun.activeWorldIndex);
+            var site = Resources.Load<SiteDatabaseSO>("SiteDatabase").allSites[save.currentRun.activeSiteIndex];
+            CollectionAssert.Contains(_worlds.allWorlds[chem].siteIds, site.id, "on a Chemistry site");
+            Assert.IsTrue(TutorialFlows.Slot(save, WorldGate.Chemistry, create: false)?.done ?? false, "tutorial already done");
+        }
+
+        [Test]
+        public void FirstChemistryBlock_StartsInChemistry_WithItsTutorialToPlay()
+        {
+            var save = Build("chemistry_entry");
+            CollectionAssert.Contains(save.unlockedWorlds, WorldGate.Chemistry);
+            Assert.IsFalse(TutorialFlows.Slot(save, WorldGate.Chemistry, create: false)?.done ?? false,
+                "the Chemistry tutorial plays on the world's first block");
+        }
+
+        [Test]
+        public void PhysicsBlock_StaysInPhysics()
+        {
+            var save = Build("metal_descent");
+            Assert.AreEqual(0, save.currentRun.activeWorldIndex);
+            Assert.IsNull(BlockStartPresets.BlockWorld(_db, BlockStartPresets.Find(_db, "metal_descent"), _worlds));
+        }
+}
 }

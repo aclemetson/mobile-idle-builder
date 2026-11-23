@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_9
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_9
+  displayName: 'Spallation: Zirconium to Krypton'
+  description: 'Spallation: Zirconium to Krypton.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 2cec6ea9df900004dab0cb69331282cf, type: 2}
+  depthInTree: 23
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 11600000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 7ff6620ad85a4db44aa38c67562cfa53, type: 2}
+  - {fileID: 11400000, guid: 70db03cb72e77ac43a0fc8e06b4aa285, type: 2}
+  - {fileID: 11400000, guid: 5cf1775ba60352a4fb8cbf667244a155, type: 2}
+  - {fileID: 11400000, guid: 2cb9fa981f0d9b14fa559c3bb4e0ed2b, type: 2}
+  - {fileID: 11400000, guid: 65bb40278e1be8145874cff40ba59794, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: db068bbb3c96e9a41b64d9e019c835be, type: 2}
+  - {fileID: 11400000, guid: 65281e983978c3c4bac3c8d2cd5845d7, type: 2}
+  - {fileID: 11400000, guid: 458c323afdb280f48b9c516c7c29909a, type: 2}
+  - {fileID: 11400000, guid: 013c83583451d6143a0013d58e7f0017, type: 2}
+  - {fileID: 11400000, guid: a40b34af682f5c340ac065358ca08ef6, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 2ac06ddcc41be364c91592ce3f9ef477, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Zirconium to Krypton'

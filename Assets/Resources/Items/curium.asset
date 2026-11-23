@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Curium (Cm), element number 96 with mass number 247. Bred neutron-by-neutron
     beyond uranium; its value climbs past iron.
   codexUnlocked: 0
-  baseSellValue: 768000
+  baseSellValue: 1550000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

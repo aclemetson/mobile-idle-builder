@@ -22,6 +22,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | crash/exception reporting, Cloud Diagnostics, debug data to Unity Cloud, symbol upload | `../runbooks/cloud-diagnostics-setup.md` |
 | building/structure visuals, procedural meshes, shaders, art direction | `visual-design.md` |
 | rewarded ads, ad SDK, LevelPlay go-live | `../runbooks/levelplay-ads-setup.md` |
+| PvE tournaments, leagues, player names, item stars, Cloud Code module | `tasks/feature-pve-tournaments.md` + `../runbooks/pve-backend-setup.md` |
 | any code change (before committing) | `testing.md` |
 | AI playtests (agent plays in the Editor via MCP), playtest briefs, fixtures, `playtest_*` tools | `../../Playtests/README.md` |
 
@@ -34,6 +35,7 @@ Each task file opens with its own Required-reading line and a Status line; updat
 | Task | Status | Size |
 |---|---|---|
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
+| `tasks/feature-pve-tournaments.md` — weekly 24h league tournaments (UGS Cloud Code), nicknames, item stars | phases 1-5 merged (#492-#496), phase 6 on feat/pve-6-onboarding | XL (6 phases) |
 
 ### Done (`tasks/archive/`)
 

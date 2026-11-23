@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19; landscape side sheets + PanelDock 2026-11-19. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19; landscape side sheets + PanelDock 2026-11-19; player name card 2026-11-23; PvE tournaments (TournamentService) 2026-11-23. If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -10,7 +10,7 @@
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 
-`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
+`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pve-panel` (the Tournament panel: `TournamentPanelController`, drawer button `btn-tournament`; elements `pve-league-badge`, `pve-banner`, `pve-state-label`, `pve-timer-label`, `pve-info-label`, `btn-pve-start`, `pve-result-label`, `btn-pve-claim`, `pve-your-rank`, `btn-pve-refresh`, `pve-leaderboard-list`), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
 
 Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by adding/removing `hidden`.
 
@@ -68,6 +68,14 @@ Covered by `TutorialSellPolicyTests`.
 ## Entropy Surge offer (side icon + card)
 
 `surge-offer-btn` (round tab on the right edge, `top: 15%`, kept above the slide panels' 35% header line so it never covers their close button); it also hides while `HUDController.MenuOpen` (drawer, any slide panel or the building menu open), returning without its pop when the menu closes and `surge-offer-modal` (copy of the confirm-prompt card, with a `GlyphIcon` close button) in `GameHUD.uxml`, owned by `EntropySurgeOfferController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, initialised next to `ConfirmPrompt.Init`). Every 0.5 s the icon shows (never while `PrestigeRunReset.ReloadPending`, which also closes an open card) when the pure `ShouldShowIcon` holds: ads enabled, first prestige done, ECS loaded, an ad ready, watches left today, Entropy Surge off cooldown, card closed. Tapping it opens the card with the reward recalculated (`AdService.PreviewIncomeReward`). **Watch ad** runs `AdService.Show` (the cooldown restarts from the watch); **No thanks** calls `AdService.DeclineOffer` (restarts the 15 min cooldown, does not use a daily watch, saves); the **X** and Android back only close the card, so the icon comes straight back. The card sets `UIInputBlocker.SetModal` while open. Covered by `EntropySurgeOfferTests` and `BackNavigationTests`.
+
+## Player name card (PvE phase 1)
+
+`name-prompt` (GameHUD.uxml, z-index 101, `confirm-prompt` card classes plus a `TextField` `name-prompt__input` and a `name-prompt__error` line) is owned by `PlayerNamePromptController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, `Init` next to `ConfirmPrompt.Init`). It validates as you type (`PlayerNameRules` + `game_config.name_filter_patterns`) and saves through `PlayerNameService` (UGS player names). It opens by itself once per launch after the tutorial (pure `ShouldAutoPrompt`; **Later** stops that for good) and from Settings > Account (`btn-player-name`, **Cancel**). Android back shares the ConfirmPrompt layer. The notification opt-in waits while it is open. Covered by `PlayerNameTests`.
+
+## Tournament panel and intro (PvE)
+
+`pve-panel` is owned by `TournamentPanelController` (status, league badge, result banner, Start, leaderboard, Claim); `TournamentIntroController` plays the once-per-entry-window dialogue and then pulses the way to `btn-tournament` with the tutorial's `panel-btn--highlight` class via `TutorialPulseResolver` (`pve-panel` maps to `btn-tournament` there). Both are added in `HUDController.Awake` with `GetComponent ?? AddComponent`. Pure text and rules: `TournamentPanelText`, `TournamentRules`, `TournamentIntroController.ShouldShow`; tests `TournamentRulesTests`.
 
 ## Chemistry task strip (world delivery tasks)
 

@@ -15,7 +15,6 @@ namespace MobileIdleBuilder
         [SerializeField] private ConveyorPlacementController  conveyorController;
         [SerializeField] private DeconstructController        deconstructController;
         [SerializeField] private AchievementService           achievementService;
-        [SerializeField] private PVPService                   pvpService;
         [SerializeField] private ResearchService              researchService;
 
         // Sub-controllers (siblings on same GameObject)
@@ -26,6 +25,9 @@ namespace MobileIdleBuilder
         private ManagersSubController               _managers;
         private StatsSubController                  _stats;
         private EntropySurgeOfferController         _surgeOffer;
+        private PlayerNamePromptController          _namePrompt;
+        private TournamentPanelController           _tournament;
+        private TournamentIntroController           _tournamentIntro;
         private MenuReminderController              _reminders;
         private TestAdOverlayController             _testAd;
         private CyclotronController                 _cyclotron;
@@ -56,13 +58,13 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _achievementsPanel, _tournamentPanel, _placementOverlay,
                               _shopPanel, _settingsPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
-                           _researchList, _upgradesList, _achievementsList, _pvpLeaderboardList;
+                           _researchList, _upgradesList, _achievementsList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
         // Research timer UI (live countdown + skip on the in-progress card)
         private Label      _researchCountdownLabel;
@@ -79,7 +81,6 @@ namespace MobileIdleBuilder
         private Button     _researchSkipBtn;
         private bool       _researchSkipConfirming;
         private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
-        private Label      _pvpStateLabel, _pvpTimerLabel, _pvpLockLabel, _pvpCompletedLabel;
 
         // Live affordability refresh: automation can raise entropy past a building's cost while
         // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
@@ -96,7 +97,6 @@ namespace MobileIdleBuilder
         private readonly List<(Button btn, Label costLabel, ResearchSO research)> _researchAffordRows = new();
         private long _lastResearchAffordEntropy = long.MinValue;
         private bool _lastResearchAffordLabBusy;
-        private Button     _btnEnterPVP;
 
         // ---- HUD chrome ----
         private VisualElement _drawerPanel;
@@ -204,6 +204,9 @@ namespace MobileIdleBuilder
             _reminders    = GetComponent<MenuReminderController>() ?? gameObject.AddComponent<MenuReminderController>();
             _testAd       = GetComponent<TestAdOverlayController>() ?? gameObject.AddComponent<TestAdOverlayController>();
             _cyclotron    = GetComponent<CyclotronController>() ?? gameObject.AddComponent<CyclotronController>();
+            _namePrompt   = GetComponent<PlayerNamePromptController>() ?? gameObject.AddComponent<PlayerNamePromptController>();
+            _tournament   = GetComponent<TournamentPanelController>() ?? gameObject.AddComponent<TournamentPanelController>();
+            _tournamentIntro = GetComponent<TournamentIntroController>() ?? gameObject.AddComponent<TournamentIntroController>();
         }
 
         void OnEnable()
@@ -298,8 +301,6 @@ namespace MobileIdleBuilder
                 achievementService.OnPeriodReset         += OnAchievementPeriodReset;
             }
 
-            if (pvpService != null)
-                pvpService.OnStateChanged += OnPVPStateChanged;
 
             BindLiveServices();
 
@@ -365,8 +366,6 @@ namespace MobileIdleBuilder
                 achievementService.OnPeriodReset         -= OnAchievementPeriodReset;
             }
 
-            if (pvpService != null)
-                pvpService.OnStateChanged -= OnPVPStateChanged;
 
             if (researchService != null)
                 researchService.OnResearchUnlocked -= OnResearchUnlocked;
@@ -462,7 +461,7 @@ namespace MobileIdleBuilder
             _megastructurePanel = root.Q("megastructure-panel");
             _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
-            _pvpPanel          = root.Q("pvp-panel");
+            _tournamentPanel          = root.Q("pve-panel");
             _prestigePanel     = root.Q("prestige-panel");
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
@@ -473,7 +472,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _tournamentPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
@@ -485,7 +484,6 @@ namespace MobileIdleBuilder
             SetUpResearchTree();
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievementsList    = root.Q<ScrollView>("achievements-list");
-            _pvpLeaderboardList = root.Q<ScrollView>("pvp-leaderboard-list");
 
             // Achievements category tabs
             _achTabDaily       = root.Q<Button>("ach-tab-daily");
@@ -500,11 +498,6 @@ namespace MobileIdleBuilder
             _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
             _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
-            _pvpStateLabel     = root.Q<Label>("pvp-state-label");
-            _pvpTimerLabel     = root.Q<Label>("pvp-timer-label");
-            _pvpLockLabel      = root.Q<Label>("pvp-lock-label");
-            _pvpCompletedLabel = root.Q<Label>("pvp-completed-label");
-            _btnEnterPVP       = root.Q<Button>("btn-enter-pvp");
 
             _prestigeSummary  = root.Q<Label>("prestige-summary");
             _prestigeCurrency = root.Q<Label>("prestige-currency");
@@ -541,6 +534,9 @@ namespace MobileIdleBuilder
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
+            _namePrompt?.Init(root, this);  // "Choose your name" card (PvE leaderboards): after the tutorial + Settings
+            _tournament?.Init(root, this);  // Tournament panel (pve-panel): status, join, leaderboard, rewards
+            _tournamentIntro?.Init(root, this); // "Tournament open" dialogue once per entry window + pulse to the button
             InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
@@ -591,7 +587,7 @@ namespace MobileIdleBuilder
             };
             root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
             root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
-            root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenPVPPanel);
+            root.Q<Button>("btn-tournament").clicked   += () => TryOpenPanel(OpenTournamentPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
@@ -619,19 +615,10 @@ namespace MobileIdleBuilder
             var btnCloseRewards = root.Q<Button>("btn-close-rewards");
             if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
-            root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
+            root.Q<Button>("btn-close-pve").clicked              += () => SetElementVisible(_tournamentPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
             root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
             root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
-
-            // PVP actions (queried after _btnEnterPVP is set in QueryElements)
-            if (_btnEnterPVP != null)
-                _btnEnterPVP.clicked += OnEnterPVPPressed;
-            root.Q<Button>("btn-refresh-leaderboard").clicked += () =>
-            {
-                if (pvpService != null)
-                    StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
-            };
 
             // Deconstruct (header button inside buildings panel)
             var btnDeconstruct = root.Q<Button>("btn-deconstruct");
@@ -1315,7 +1302,7 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFeatureFlagGates(VisualElement root)
         {
-            if (!FeatureFlags.PvpEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
+            if (!FeatureFlags.PveEnabled)         SetElementVisible(root.Q<Button>("btn-tournament"), false);
             if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
         }
 
@@ -1465,125 +1452,52 @@ namespace MobileIdleBuilder
         private void OnAchievementPeriodReset() => OnAchievementUnlocked(null);
 
         // ============================================================
-        // PVP panel
+        // Tournament panel (PvE; TournamentPanelController owns pve-panel)
         // ============================================================
 
-        private void OpenPVPPanel()
+        private void OpenTournamentPanel()
         {
             CloseAllPanels();
-            BuildPVPPanel();
-            SetElementVisible(_pvpPanel, true);
-
-            // Kick off leaderboard fetch whenever the panel opens
-            if (pvpService != null)
-                StartCoroutine(pvpService.FetchLeaderboardAsync(PopulatePVPLeaderboard));
+            _tournament?.Open();
         }
 
-        private void OnPVPStateChanged()
+        /// <summary>
+        /// True while a tournament run locks manual prestige and Ascension; shows why. The tournament's own
+        /// join prestige goes through <see cref="RequestTournamentPrestige"/> instead.
+        /// </summary>
+        private bool BlockedByTournament()
         {
-            if (_pvpPanel != null && !_pvpPanel.ClassListContains("hidden"))
-                BuildPVPPanel();
+            var svc = TournamentService.Instance;
+            if (svc == null || !svc.PrestigeLocked) return false;
+            ShowNotification("🔒", $"Prestige is locked during your tournament run ({TournamentRules.FormatSpan(svc.RunRemaining)} left).", "warning");
+            return true;
         }
 
-        private void BuildPVPPanel()
+        /// <summary>The prestige that starts a tournament run: the normal prestige, exempt from the tournament lock.</summary>
+        public void RequestTournamentPrestige()
         {
-            if (pvpService == null) return;
-
-            var state = pvpService.State;
-
-            // --- state label ---
-            if (_pvpStateLabel != null)
-                _pvpStateLabel.text = state switch
-                {
-                    PVPState.Locked    => "Locked",
-                    PVPState.Available => "Available — this week's competition is open!",
-                    PVPState.InRun     => $"In Run — {pvpService.FormatTimeRemaining()} remaining",
-                    PVPState.Completed => "Run complete — score submitted",
-                    _                  => "—"
-                };
-
-            // --- timer (only visible during a run) ---
-            if (_pvpTimerLabel != null)
-                _pvpTimerLabel.text = state == PVPState.InRun ? pvpService.FormatTimeRemaining() : "";
-
-            // --- lock label ---
-            if (_pvpLockLabel != null)
-            {
-                bool showLock = state == PVPState.Locked;
-                _pvpLockLabel.text = showLock
-                    ? $"Complete {PVPService.PvpPrestigeUnlockCount} prestiges to unlock Weekly Competition."
-                    : "";
-                SetElementVisible(_pvpLockLabel, showLock);
-            }
-
-            // --- enter button (only when available) ---
-            if (_btnEnterPVP != null)
-                SetElementVisible(_btnEnterPVP, state == PVPState.Available);
-
-            // --- completed label ---
-            if (_pvpCompletedLabel != null)
-            {
-                bool showCompleted = state == PVPState.Completed;
-                _pvpCompletedLabel.text = showCompleted
-                    ? "Your score has been submitted. Rewards are distributed after the competition window closes."
-                    : "";
-                SetElementVisible(_pvpCompletedLabel, showCompleted);
-            }
-        }
-
-        private void OnEnterPVPPressed()
-        {
-            if (pvpService == null || !pvpService.CanEnterCompetition) return;
             if (!_ecsReady || _progressQuery.IsEmpty) return;
-
-            // Reset the grid/inventory via ECS (same mechanism as prestige)
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.PVPRunRequested = true;
+            progress.PrestigeRequested = true;
             _em.SetComponentData(entity, progress);
-
-            // Record run start in save data
-            pvpService.MarkRunStarted();
-
-            SetElementVisible(_pvpPanel, false);
-            ShowNotification("⚔", "Competition run started! 48 hours on the clock.");
+            CloseAllPanels();
         }
 
-        private void PopulatePVPLeaderboard(System.Collections.Generic.List<LeaderboardEntry> entries)
+        /// <summary>Prestige currency a prestige would pay now (the tournament join card shows it).</summary>
+        public long CurrentPrestigePreview()
         {
-            if (_pvpLeaderboardList == null) return;
-            _pvpLeaderboardList.Clear();
-
-            if (entries == null || entries.Count == 0)
-            {
-                _pvpLeaderboardList.Add(new Label("No leaderboard data yet."));
-                return;
-            }
-
-            foreach (var entry in entries)
-            {
-                var row = new VisualElement();
-                row.AddToClassList("leaderboard-row");
-
-                var rankLabel   = new Label($"#{entry.rank}");
-                rankLabel.AddToClassList("leaderboard-row__rank");
-
-                var playerLabel = new Label(entry.playerId);
-                playerLabel.AddToClassList("leaderboard-row__player");
-
-                var scoreLabel  = new Label(entry.score.ToString("N0"));
-                scoreLabel.AddToClassList("leaderboard-row__score");
-
-                row.Add(rankLabel);
-                row.Add(playerLabel);
-                row.Add(scoreLabel);
-                _pvpLeaderboardList.Add(row);
-            }
+            if (!_ecsReady || _progressQuery.IsEmpty) return 0;
+            return CalculatePrestigePreview(_em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth);
         }
+
+        /// <summary>True once ECS is ready for a prestige request.</summary>
+        public bool CanRequestPrestige => _ecsReady && !_progressQuery.IsEmpty;
 
         private void OpenPrestigePanel()
         {
             if (!_ecsReady || _progressQuery.IsEmpty || _prestigeQuery.IsEmpty) return;
+            if (BlockedByTournament()) return;
 
             CloseAllPanels();
 
@@ -1601,9 +1515,20 @@ namespace MobileIdleBuilder
             SetElementVisible(_prestigePanel, true);
         }
 
+        /// <summary>The Megastructure panel's Ascend button: a prestige that also applies <see cref="AscensionRules"/>.</summary>
+        public void RequestAscension()
+        {
+            if (!_ecsReady || _progressQuery.IsEmpty) return;
+            if (BlockedByTournament()) return;
+            AscensionRules.Pending = true;
+            OnPrestigeConfirmed();
+            ShowNotification("◉", "Ascension! The worlds begin again; the megastructure grows.");
+        }
+
         private void OnPrestigeConfirmed()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;
+            if (BlockedByTournament()) return;
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
@@ -1793,7 +1718,7 @@ namespace MobileIdleBuilder
             // What one item sells for. Shown once per row (the group's row), not on each method row.
             if (outputItem != null)
             {
-                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem)));
+                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId)));
                 worthLabel.style.fontSize = 11;
                 worthLabel.AddToClassList("recipe-bonus-hint");
                 info.Add(worthLabel);
@@ -1883,8 +1808,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Recipe-row / inspector line for what one item sells for, e.g. "Worth ◈ 2.5 each".</summary>
-        internal static string WorthEachText(float price) =>
-            $"Worth {NumberFormat.Entropy(price)} each";
+        internal static string WorthEachText(float price, int stars = 0) =>
+            stars > 0
+                ? $"Worth {NumberFormat.Entropy(price)} each · {StarBadge(stars)}"
+                : $"Worth {NumberFormat.Entropy(price)} each";
+
+        /// <summary>Tournament stars on an item, e.g. "★3 +60%" (PvE phase 2, <see cref="ItemStars"/>).</summary>
+        internal static string StarBadge(int stars) =>
+            stars <= 0 ? "" : $"★{stars} +{Mathf.RoundToInt(stars * ItemStars.BonusPerStar * 100f)}%";
 
         /// <summary>Recipe-row / inspector line for fusion byproducts that escape as entropy.</summary>
         internal static string EscapeBonusText(float entropyPerCraft) =>
@@ -2587,7 +2518,8 @@ namespace MobileIdleBuilder
                                         || _modeEndedFrame == Time.frameCount,
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
                 TestAdOpen       = _testAd != null && _testAd.IsOpen,
-                ConfirmOpen      = ConfirmPrompt.IsOpen,
+                // The name card is a centred question card like ConfirmPrompt, so it shares that layer.
+                ConfirmOpen      = ConfirmPrompt.IsOpen || PlayerNamePromptController.IsOpen,
                 // The Cyclotron card is a centred modal like the Surge offer, so it shares that layer.
                 SurgeOfferOpen   = (_surgeOffer != null && _surgeOffer.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen),
                 IdleReturnOpen   = _idleReturn != null && _idleReturn.IsOpen,
@@ -2600,7 +2532,10 @@ namespace MobileIdleBuilder
             switch (BackNavigation.TopLayer(state))
             {
                 case BackNavigation.Layer.TestAd:        _testAd.Skip();                 break;
-                case BackNavigation.Layer.ConfirmPrompt: ConfirmPrompt.CancelFromBack(); break;
+                case BackNavigation.Layer.ConfirmPrompt:
+                    if (ConfirmPrompt.IsOpen) ConfirmPrompt.CancelFromBack();
+                    else _namePrompt?.CancelFromBack();
+                    break;
                 case BackNavigation.Layer.SurgeOffer:
                     if (_cyclotron != null && _cyclotron.IsOpen) _cyclotron.Close();
                     else _surgeOffer.Minimize();

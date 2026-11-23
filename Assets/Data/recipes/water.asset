@@ -38,4 +38,4 @@ MonoBehaviour:
   requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: 2 H2 + O2 -> 2 H2O

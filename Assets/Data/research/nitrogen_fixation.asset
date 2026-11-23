@@ -14,21 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: nitrogen_fixation
   displayName: Nitrogen Fixation
-  description: "Buy a Nitrogen Vent and split the N\u2082 triple bond with hydrogen
-    to make ammonia."
+  description: 'Nitrogen Fixation: Nitrogen Gas, Ammonia.'
   icon: {fileID: 0}
   branch: 0
   prerequisites:
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
-  depthInTree: 4
+  depthInTree: 5
   block: chemistry_entry
   treeX: -1
   treeY: -1
   requiredWorld: world_chemistry
   world: world_chemistry
-  costBaseCurrency: 1370000
+  costBaseCurrency: 431000
   costPrestigeCurrency: 0
-  durationSeconds: 600
+  durationSeconds: 300
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
@@ -40,7 +39,7 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  - {fileID: 11400000, guid: 8df3263ba828dd242a8e4db2896dc77f, type: 2}
   resetsOnPrestige: 1
   codexEntry: 'Nitrogen gas is nearly inert: its triple bond is one of the strongest
     in chemistry. Fixing it into ammonia, with hydrogen under heat and pressure,

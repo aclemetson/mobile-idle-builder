@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_11
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_11
+  displayName: 'Spallation: Zinc to Cobalt'
+  description: 'Spallation: Zinc to Cobalt.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 2ac06ddcc41be364c91592ce3f9ef477, type: 2}
+  depthInTree: 25
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 70800000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: b28f1a8061c3b71459a2610eb4b6845d, type: 2}
+  - {fileID: 11400000, guid: a54ba785cfd90ba4cab6c58983b5ca6f, type: 2}
+  - {fileID: 11400000, guid: b38fb179e9f505b4e8dc5d0b5874d70f, type: 2}
+  - {fileID: 11400000, guid: 3a2da077bc6cc0143a8daf8a8e159dea, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 106dc92fe2291404b8a07b9cc3c1da53, type: 2}
+  - {fileID: 11400000, guid: e53c98d3d45b7964298576b8fef89e57, type: 2}
+  - {fileID: 11400000, guid: 376919c5b9af5c2408a614a42614156d, type: 2}
+  - {fileID: 11400000, guid: b049f23da419dfe42bf146dfaecc1671, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 38337d98e2e2d9f4ca28b9331c7e1638, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Zinc to Cobalt'

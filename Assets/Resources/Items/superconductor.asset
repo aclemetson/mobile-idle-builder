@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  world: world_chemistry
+  world: world_metallurgy
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -36,6 +36,6 @@ MonoBehaviour:
     Enables MRI machines, maglev trains, and the magnetic confinement coils of fusion
     reactors.
   codexUnlocked: 0
-  baseSellValue: 6380000
+  baseSellValue: 581000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

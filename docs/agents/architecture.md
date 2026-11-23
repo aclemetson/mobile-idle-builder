@@ -2,7 +2,7 @@
 
 **Scope:** Structural map of the codebase — scenes, layers, data flow, init order, what not to touch.
 
-> Verified against: `deea0a4`, 2026-06-11; Chemistry streams (StreamFlowSystem, WorldRules, DemonTag) 2026-11-22; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); net worth at list price + stored items 2026-11-19; FactoryClock + BoostLock 2026-11-19; ConveyorSystem tail drawing 2026-11-01 (#223), tail drawn to its real delivery 2026-11-14; Belt Splitter 2026-11-07; belt density 2026-11-11; prestige multipliers live + research discounts + Entropy Surge 2026-11-11. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; Chemistry streams (StreamFlowSystem, WorldRules, DemonTag) 2026-11-22; Time section added 2026-10-22 (power grid + World/Site layer rows refreshed `3c264f2`, 2026-07-06); EntropyWallet rows 2026-10-31 (#279); net worth at list price + stored items 2026-11-19; FactoryClock + BoostLock 2026-11-19; ConveyorSystem tail drawing 2026-11-01 (#223), tail drawn to its real delivery 2026-11-14; Belt Splitter 2026-11-07; belt density 2026-11-11; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; PvE tournaments (TournamentService) 2026-11-23. If code contradicts this doc, trust the code and update this doc.
 
 ## Scene & boot flow
 
@@ -34,7 +34,6 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `NetWorthSystem.cs` | Aggregates net worth: inventory + items waiting in building inputs/staging/outputs (Demon price, Demon itself excluded; also written to `StoredItemValue`) + entropy held + `TotalEntropySpent` (price paid) + `TotalEntropyDiscounted` (list price minus price paid, so purchases count at full value) + `BaseNetWorth`; drives prestige wall. |
 | `PrestigeSystem.cs` | Wall detection + prestige execution: currency formula, run reset, destroys buildings + every belt segment (and its item) and empties the kept Demon, since the default world outlives the scene reload; service resets, forced save. |
 | `TutorialSystem.cs` | Advances `TutorialStateData` through `TutorialFlowSO.Current.steps` conditions. |
-| `PVPSystem.cs` | 48h competition run state. |
 | `ProductionAchievementBridge.cs` | Forwards ECS production events to `AchievementService.Notify*()`. |
 
 ### MonoBehaviour services (singletons, base class `Assets/Scripts/Bootstrap/SingletonMonoBehaviour.cs`)
@@ -58,6 +57,7 @@ SplashScene  ──►  LoadingScreen (overlay scene)  ──►  GameScene
 | `OfflineCollectionService` | `Assets/Scripts/IdleCollection/` | Static: computes offline earnings from `SaveData.idleSnapshot`, capped by `GetEffectiveIdleCap()`. |
 | `ManualCraftService` | `Assets/Scripts/Gameplay/` | Recipes-panel crafting. `TryEnqueue` takes inputs and queues x1/x5/x10/max crafts (`currentRun.craftQueue`, see `save-system.md`); each item takes the recipe's `base_craft_time` divided by the fastest placed building that makes it. A building-only recipe (`crafted_in` without `inventory_menu`) needs one of those buildings placed; its current recipe and busy state do not matter (#309). UI: `CraftQueueView` strip above `recipe-list`. |
 | `NotificationService` | `Assets/Scripts/Notifications/` | Local OS notifications (Android + iOS, `com.unity.mobile.notifications`). Self-bootstrapped. Schedules on `SaveManager.Backgrounding` from the just-written save (`NotificationPlanner`, pure), cancels everything on resume. Post-tutorial opt-in card via `ConfirmPrompt`. See `notifications.md`. |
+| `TournamentService` / `TournamentRules` / `PveApi` | `Assets/Scripts/PvE/` | Weekly PvE tournaments (2026-11-23; spec `tasks/feature-pve-tournaments.md`, backend runbook `../runbooks/pve-backend-setup.md`). `PveApi` calls the UGS Cloud Code C# module `PveModule` (`CloudCode/PveModule`, which compiles the shared `PveRules`/`PveModels`/`PlayerNameRules` and embeds game_data.json). `TournamentService` (self-bootstrapped, persistent) mirrors the entry into `SaveData.tournament`, sends snapshots (every 5 min of play, load, resume, background, final at 24h; never while the join's prestige is pending) and exposes `PrestigeLocked` (manual prestige and Ascension blocked during the 24h run: `HUDController.BlockedByTournament`; the join's own prestige goes through `RequestTournamentPrestige`). Onboarding: `TournamentIntroController` (once per entry window, dialogue `pve_intro` then `pve_intro_weekly`, then pulses `btn-tournament`). UI: `TournamentPanelController` on `pve-panel` (drawer button `btn-tournament`): league badge, result banner, Start, leaderboard, Claim (rewards applied to the save first, then cleared on the server; `SaveData.pveClaimedWeeks` stops a double grant). Replaced the dead `PVPService`/`PVPSystem` AWS stub. |
 | `ToastService`, `SettingsService` | `Assets/Scripts/Services/` | UI toasts; user prefs to `settings.json`. |
 
 ### UI (`Assets/Scripts/UI/`, UI Toolkit)
@@ -83,7 +83,7 @@ SaveData (save.json) ◄──ECSLoadBridge.FlushToSave()/ApplyLoadedSave()─�
 
 ## Time
 
-Anything a player waits on (research timers, field cooldowns, speed boosts, offline earnings via the background timestamp, daily/weekly/achievement resets, PVP, ad caps) reads `GameClock.UtcNow` (`Assets/Scripts/Services/GameClock.cs`), never `DateTime.UtcNow`. Release builds read the wall clock; editor/dev builds let the AI playtest harness freeze and fast-forward it (`Playtests/README.md`, "Time"). Stays on the wall clock: `SaveData.lastSaved` (cold-boot offline earnings + cloud reconcile), the idle snapshot stamp, auth policy, telemetry.
+Anything a player waits on (research timers, field cooldowns, speed boosts, offline earnings via the background timestamp, daily/weekly/achievement resets, ad caps) reads `GameClock.UtcNow` (`Assets/Scripts/Services/GameClock.cs`), never `DateTime.UtcNow`. Release builds read the wall clock; editor/dev builds let the AI playtest harness freeze and fast-forward it (`Playtests/README.md`, "Time"). Stays on the wall clock: `SaveData.lastSaved` (cold-boot offline earnings + cloud reconcile), the idle snapshot stamp, auth policy, telemetry. **PvE tournaments are the exception:** the server decides every tournament time (Cloud Code clock); the client shows its run timer and prestige lock from `TournamentService.Now` = the dev console debug time, else `ServerClock.UtcNow`, else the wall clock.
 
 ## Key ECS singletons (components in `Assets/Scripts/Components/`)
 

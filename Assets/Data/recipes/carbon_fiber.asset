@@ -19,10 +19,8 @@ MonoBehaviour:
   tier: 4
   category: 6
   inputs:
-  - item: {fileID: 11400000, guid: d0f79872604ee82459a1ad07d1cd9d92, type: 2}
+  - item: {fileID: 11400000, guid: 1b45a35c21bca3f47b2dfeeb8003d314, type: 2}
     quantity: 4
-  - item: {fileID: 11400000, guid: 6d1a01fd29cd2544086df1cd0c88ccda, type: 2}
-    quantity: 3
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
   outputQuantity: 1
@@ -30,12 +28,12 @@ MonoBehaviour:
   baseCraftTime: 400
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 15000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 57aa8ecd6478e5047b3ccbf84fa1775c, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: graphite fibre

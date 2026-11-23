@@ -32,9 +32,14 @@ namespace MobileIdleBuilder
         /// <summary>True when the live world's belts are streams (pure; for UI and placement checks).</summary>
         public static bool StreamTransport(SaveData save) => ActiveWorld(save)?.streamTransport == true;
 
+        /// <summary>The world whose rules were last applied (null until the first grid load = Physics).</summary>
+        public static string CurrentWorldId { get; private set; }
+
         /// <summary>Writes <see cref="ActiveWorldRules"/> and enables or disables the Demon to match.</summary>
-        public static void Apply(EntityManager em, bool streamTransport, BuildingVisualizer visualizer = null)
+        public static void Apply(EntityManager em, bool streamTransport, BuildingVisualizer visualizer = null,
+            string worldId = null)
         {
+            CurrentWorldId = worldId;
             SetRules(em, streamTransport);
             SetDemonEnabled(em, !streamTransport, visualizer);
         }
@@ -43,9 +48,45 @@ namespace MobileIdleBuilder
         public static void SetRules(EntityManager em, bool streamTransport)
         {
             using var q = em.CreateEntityQuery(ComponentType.ReadWrite<ActiveWorldRules>());
-            var rules = new ActiveWorldRules { StreamTransport = (byte)(streamTransport ? 1 : 0) };
+            var (speed, output) = WorldMultipliers(CurrentWorldId);
+            var rules = new ActiveWorldRules
+            {
+                StreamTransport = (byte)(streamTransport ? 1 : 0),
+                SpeedMult = speed, OutputMult = output, FlowMult = SpringFlowMultiplier(CurrentWorldId),
+            };
             if (q.IsEmpty) em.CreateEntity(typeof(ActiveWorldRules));
             q.SetSingleton(rules);
+        }
+
+        /// <summary>
+        /// The prestige shop's world tracks for <paramref name="worldId"/> (null = Physics): craft speed and output
+        /// multipliers, 1 when nothing is bought or the shop is not loaded. Live production reads them from
+        /// <see cref="ActiveWorldRules"/>; the idle snapshot and the inspector call this directly.
+        /// </summary>
+        public static (float speed, float output) WorldMultipliers(string worldId)
+        {
+            var ups = PersistentUpgradeService.Instance;
+            if (ups == null) return (1f, 1f);
+            return (1f + ups.GetWorldEffect(UpgradeEffectType.WorldCraftSpeed, worldId),
+                    1f + ups.GetWorldEffect(UpgradeEffectType.WorldOutput, worldId));
+        }
+
+        /// <summary>Spring flow multiplier in <paramref name="worldId"/> (Spring Pressure); 1 without the shop.</summary>
+        public static float SpringFlowMultiplier(string worldId)
+        {
+            var ups = PersistentUpgradeService.Instance;
+            return ups == null ? 1f : 1f + ups.GetWorldEffect(UpgradeEffectType.WorldStreamFlow, worldId);
+        }
+
+        /// <summary>Rewrites the live world's multipliers after a world-track purchase (no-op before ECS is up).</summary>
+        public static void RefreshWorldBonus()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+            var em = world.EntityManager;
+            using var q = em.CreateEntityQuery(ComponentType.ReadOnly<ActiveWorldRules>());
+            if (q.IsEmpty) return;
+            SetRules(em, q.GetSingleton<ActiveWorldRules>().StreamTransport != 0);
         }
 
         /// <summary>Reads the singleton (false when it was never written).</summary>

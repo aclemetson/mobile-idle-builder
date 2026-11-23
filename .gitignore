@@ -136,3 +136,9 @@ __pycache__/
 scripts/molecule_icons/renders/
 scripts/belt_particles/renders/
 scripts/belt_items/renders/
+
+# PvE Cloud Code module build output
+/CloudCode/**/bin/
+/CloudCode/**/obj/
+!/CloudCode/**/*.sln
+!/CloudCode/**/*.csproj

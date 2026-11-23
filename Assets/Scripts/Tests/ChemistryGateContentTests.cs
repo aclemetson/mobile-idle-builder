@@ -81,8 +81,8 @@ namespace MobileIdleBuilder.Tests
             var n2 = _research.Single(r => r.id == "nitrogen_fixation");
             Assert.IsTrue(n2.unlocksRecipes.Any(r => r != null && r.id == "collect_nitrogen_gas"), "Chemistry harvests its own nitrogen for ammonia");
             Assert.IsTrue(n2.unlocksRecipes.Any(r => r != null && r.id == "ammonia"), "Nitrogen Fixation makes ammonia");
-            var re = _research.Single(r => r.id == "reaction_engineering");
-            Assert.IsTrue(re.unlocksRecipes.Any(r => r != null && r.id == "collect_silicon"), "silicon for silica comes with the minerals");
+            // 2026-11-23 phase 3: silica is quartz sand mined in Metallurgy; Chemistry no longer mines silicon.
+            Assert.IsFalse(_research.Any(r => r.id == "reaction_engineering"), "merged into Metallurgy's Ore Prospecting");
         }
     }
 }

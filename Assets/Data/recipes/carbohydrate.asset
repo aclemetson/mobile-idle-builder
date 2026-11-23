@@ -16,24 +16,24 @@ MonoBehaviour:
   displayName: Carbohydrate
   methodLabel: 
   recipeId: 194
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 56d7d1047f99e5a439dfaf7f3de183d6, type: 2}
-    quantity: 4
+    quantity: 3
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 933bfad7e4cfc524288f0b7f1a391b82, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 30
+  baseCraftTime: 60
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 250
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: glucose chains

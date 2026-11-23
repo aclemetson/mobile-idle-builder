@@ -32,3 +32,235 @@ MonoBehaviour:
   buildingPurchaseMultiplierT1: 1.5
   buildingPurchaseMultiplierT2: 1.4
   buildingPurchaseMultiplierT3Plus: 1.3
+  nameFilterPatterns:
+  - f+u+c+k
+  - f+u+k+
+  - f+c+k
+  - f+u+q
+  - s+h+i+t
+  - b+i+t+c+h
+  - b+a+s+t+a+r+d
+  - c+u+n+t
+  - t+w+a+t
+  - ^w+a+n+k
+  - w+a+n+k+e+r
+  - w+h+o+r+e
+  - s+l+u+t
+  - b+o+l+o+c+k
+  - ^a+s+s*$
+  - a+s+h+o+l+e
+  - ^a+r+s+e
+  - ^p+i+s{2,}
+  - p+i+s+e+d$
+  - d+o+u+c+h+e
+  - m+o+t+h+e+r+f
+  - ^d+i+c+k+s?$
+  - d+i+c+k+h+e+a+d
+  - ^c+o+c+k+s?$
+  - c+o+c+k+s+u+c+k
+  - p+u+s+y
+  - p+e+n+i+s
+  - v+a+g+i+n+a
+  - p+o+r+n
+  - ^c+u+m+s?$
+  - c+u+m+s+h+o+t
+  - t+i+t+i+e+s
+  - b+o+o+b
+  - d+i+l+d+o
+  - j+i+z+z?
+  - s+e+x+y
+  - ^s+e+x+
+  - o+r+g+a+s+m
+  - ^h+o+r+n+y
+  - b+u+t+t+h+o+l+e
+  - b+u+t+h+o+l+e
+  - n+[i1!]+g{2,}
+  - ^n+i+g+(e+r+|a+h?)s*$
+  - n+i+g+e+r+s?$
+  - f+a+g+(o+t+)?
+  - ^r+e+t+a+r+d
+  - r+e+t+a+r+d+(s|e+d)?$
+  - s+p+i+c+k?s?$
+  - c+h+i+n+k
+  - k+i+k+e
+  - t+r+a+n+y
+  - d+y+k+e
+  - ^c+o+o+n+s?$
+  - w+e+t+b+a+c+k
+  - g+o+o+k
+  - h+i+t+l+e+r
+  - n+a+z+i+s?$
+  - n+a+z+i+s+m
+  - ^r+a+p+(e+|i+s+t+)
+  - ^k+y+s+$
+  - k+i+l+y+o+u+r+s+e+l+f
+  - h+e+i+l
+  - ^a+d+m+i+n
+  - ^m+o+d+(e+r+a+t+o+r+)?s?$
+  - ^s+u+p+o+r+t
+  - ^s+t+a+f+f+$
+  - ^o+f+i+c+i+a+l
+  - ^d+e+v+e+l+o+p+e+r
+  - q+u+a+n+t+u+m+f+o+u+n+d+r+y
+  - ^s+y+s+t+e+m+$
+  pve:
+    run_hours: 24
+    test_bracket_size: 5
+    snapshot_bucket_minutes: 10
+    leagues:
+    - id: bronze
+      name: Bronze
+      bracket_size: 100
+      promote: 15
+      demote: 0
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 150
+        stars: 5
+      - rank_to: 3
+        top_percent: 0
+        crystals: 100
+        stars: 3
+      - rank_to: 10
+        top_percent: 0
+        crystals: 60
+        stars: 2
+      - rank_to: 0
+        top_percent: 25
+        crystals: 30
+        stars: 1
+      - rank_to: 0
+        top_percent: 0
+        crystals: 10
+        stars: 1
+    - id: silver
+      name: Silver
+      bracket_size: 75
+      promote: 12
+      demote: 10
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 225
+        stars: 8
+      - rank_to: 3
+        top_percent: 0
+        crystals: 150
+        stars: 5
+      - rank_to: 10
+        top_percent: 0
+        crystals: 90
+        stars: 3
+      - rank_to: 0
+        top_percent: 25
+        crystals: 45
+        stars: 2
+      - rank_to: 0
+        top_percent: 0
+        crystals: 15
+        stars: 1
+    - id: gold
+      name: Gold
+      bracket_size: 50
+      promote: 8
+      demote: 8
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 300
+        stars: 10
+      - rank_to: 3
+        top_percent: 0
+        crystals: 200
+        stars: 6
+      - rank_to: 10
+        top_percent: 0
+        crystals: 120
+        stars: 4
+      - rank_to: 0
+        top_percent: 25
+        crystals: 60
+        stars: 2
+      - rank_to: 0
+        top_percent: 0
+        crystals: 20
+        stars: 1
+    - id: platinum
+      name: Platinum
+      bracket_size: 40
+      promote: 6
+      demote: 6
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 375
+        stars: 13
+      - rank_to: 3
+        top_percent: 0
+        crystals: 250
+        stars: 8
+      - rank_to: 10
+        top_percent: 0
+        crystals: 150
+        stars: 5
+      - rank_to: 0
+        top_percent: 25
+        crystals: 75
+        stars: 3
+      - rank_to: 0
+        top_percent: 0
+        crystals: 25
+        stars: 2
+    - id: diamond
+      name: Diamond
+      bracket_size: 30
+      promote: 4
+      demote: 5
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 450
+        stars: 15
+      - rank_to: 3
+        top_percent: 0
+        crystals: 300
+        stars: 9
+      - rank_to: 10
+        top_percent: 0
+        crystals: 180
+        stars: 6
+      - rank_to: 0
+        top_percent: 25
+        crystals: 90
+        stars: 3
+      - rank_to: 0
+        top_percent: 0
+        crystals: 30
+        stars: 2
+    - id: champion
+      name: Champion
+      bracket_size: 20
+      promote: 0
+      demote: 4
+      rewards:
+      - rank_to: 1
+        top_percent: 0
+        crystals: 600
+        stars: 20
+      - rank_to: 3
+        top_percent: 0
+        crystals: 400
+        stars: 12
+      - rank_to: 10
+        top_percent: 0
+        crystals: 240
+        stars: 8
+      - rank_to: 0
+        top_percent: 25
+        crystals: 120
+        stars: 4
+      - rank_to: 0
+        top_percent: 0
+        crystals: 40
+        stars: 2

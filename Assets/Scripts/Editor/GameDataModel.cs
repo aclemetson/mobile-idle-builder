@@ -30,6 +30,7 @@ namespace MobileIdleBuilder.Editor
         public List<WorldTutorialJson>   world_tutorials = new();   // tutorials for worlds other than Physics
         public MegastructureJson         megastructure   = new();
         public WorldTasksJson            world_tasks     = new();
+        public List<WorldTasksJson>      more_world_tasks = new();  // the other worlds' delivery tasks (2026-11-23)
 
         /// <summary>Ensures no list field is null after deserialization.</summary>
         public void Initialize()
@@ -52,6 +53,8 @@ namespace MobileIdleBuilder.Editor
             megastructure.Initialize();
             world_tasks     ??= new WorldTasksJson();
             world_tasks.Initialize();
+            more_world_tasks ??= new List<WorldTasksJson>();
+            foreach (var t in more_world_tasks) t?.Initialize();
 
             foreach (var r in research)       r?.Initialize();
             foreach (var rec in recipes)      rec?.Initialize();
@@ -100,6 +103,8 @@ namespace MobileIdleBuilder.Editor
         public float  building_purchase_multiplier_t1       = 1.5f;
         public float  building_purchase_multiplier_t2       = 1.4f;
         public float  building_purchase_multiplier_t3_plus  = 1.3f;
+        public string[] name_filter_patterns             = Array.Empty<string>();
+        public PveConfig pve;
     }
 
     [Serializable]

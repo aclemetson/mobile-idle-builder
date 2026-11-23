@@ -50,8 +50,14 @@ def nice(v):
 
 def off_curve(gd):
     """Research flagged "advances_curve": false (e.g. Transportation II, a belt-speed upgrade) is a side upgrade: it
-    does not move the wage curve, so adding one never reprices every later item and research."""
-    return {r["id"] for r in gd["research"] if r.get("advances_curve") is False}
+    does not move the wage curve, so adding one never reprices every later item and research. Research marked
+    "planned" (priced by the Item Timeline, scripts/apply_item_timeline.py) does not move it either."""
+    return {r["id"] for r in gd["research"] if r.get("advances_curve") is False or r.get("planned")}
+
+
+def planned_items(gd):
+    """Items the Item Timeline prices (scripts/economy_plan.py); this script keeps their values."""
+    return {i["id"] for i in gd["items"] if i.get("planned")}
 
 
 def cost_multiplier(r):
@@ -78,8 +84,8 @@ def derive(gd):
     for r in gd["recipes"]:
         recipes_by_node.setdefault(r.get("required_research"), []).append(r)
 
-    priced = set(FIXED)
-    anchored = set()      # items the tutorial prices; nothing later may change them
+    priced = set(FIXED) | planned_items(gd)
+    anchored = set(planned_items(gd))   # items the tutorial (or the Item Timeline) prices; nothing later may change them
     new = dict(value)
     wage_at_anchor = order[a]["new_best_rate"] or order[a]["best_rate_before"]
     pending = list(free)
@@ -127,7 +133,7 @@ def derive(gd):
     raw = {r["output_item"] for r in gd["recipes"] if not r["inputs"]} - FIXED - anchored   # harvested, not tutorial-priced
     for r in gd["recipes"]:
         gate = r.get("required_research")
-        if not r["inputs"] or gate not in ids or ids.index(gate) <= a:
+        if not r["inputs"] or gate not in ids or ids.index(gate) <= a or r.get("planned"):
             continue
         w = wage_at_anchor * WAGE_GROWTH ** step[ids.index(gate)]
         t = float(r.get("base_craft_time") or 1.0)
@@ -145,7 +151,7 @@ def derive(gd):
     times = {}
     for r in gd["recipes"]:
         gate = r.get("required_research")
-        if r["inputs"] or not gate or gate not in ids or ids.index(gate) <= a:
+        if r["inputs"] or not gate or gate not in ids or ids.index(gate) <= a or r.get("planned"):
             continue
         w = wage_at_anchor * WAGE_GROWTH ** step[ids.index(gate)]
         t0 = float(_ORIG_TIME.get(r["id"]) or r.get("base_craft_time") or 1.0)   # against the file, not a prior pass
@@ -167,7 +173,7 @@ def costs(gd):
     out = {}
     for bid, members in by_block.items():
         b = blocks.get(bid)
-        if b is None or b.get("anchor"):
+        if b is None or b.get("anchor") or b.get("planned"):
             continue
         budget = float(b["target_hours"]) * 60 * BUILDINGS          # building-minutes
         # A block may set its own "ramp": a steeper one front-loads cheap nodes, so the first research after the
@@ -179,6 +185,8 @@ def costs(gd):
         on = sum(w for n, w in zip(members, weights) if order[n]["id"] not in skip)
         for n, w in zip(members, weights):
             rid = order[n]["id"]
+            if research[rid].get("planned"):
+                continue
             out[rid] = budget * w / on * 60 * order[n]["best_rate_before"] * cost_multiplier(research[rid])
     # A node never costs less than its prerequisites (walk in unlock order so prerequisites are final first).
     final = {}

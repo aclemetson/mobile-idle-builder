@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Radium-226 plus one neutron. A neutron inside it turns into a proton
     (beta decay), making Actinium-227.
   codexUnlocked: 0
-  baseSellValue: 59700
+  baseSellValue: 4140
   isotopeSellMultiplier: 1.155
   escapesAsEntropy: 0

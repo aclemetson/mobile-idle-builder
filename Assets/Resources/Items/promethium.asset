@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Promethium (Pm), element number 61 with mass number 145. A fission
     fragment on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 61500
+  baseSellValue: 76300
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

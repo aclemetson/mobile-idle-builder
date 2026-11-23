@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Actinium (Ac), element number 89 with mass number 227. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 60800
+  baseSellValue: 4420
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

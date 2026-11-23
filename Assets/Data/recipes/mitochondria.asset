@@ -16,26 +16,28 @@ MonoBehaviour:
   displayName: Mitochondria
   methodLabel: 
   recipeId: 198
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 5f83ae9a620d1ba4cafcc198b79ab9a2, type: 2}
     quantity: 2
   - item: {fileID: 11400000, guid: 322f1bf46d44c09488ddc3ac803ed97c, type: 2}
     quantity: 1
+  - item: {fileID: 11400000, guid: 531af99f9a89ad543b6738321f0e3f0e, type: 2}
+    quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: e830a9dae71a8c842848edddf8156ade, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 40
+  baseCraftTime: 90
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 400
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: a0de88d3e739b624194a8e1ca9275fb9, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: protein + membrane + ATP

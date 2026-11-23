@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Ruthenium (Ru), element number 44 with mass number 102. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 45800
+  baseSellValue: 161000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

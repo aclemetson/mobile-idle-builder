@@ -32,7 +32,101 @@ namespace MobileIdleBuilder
                 if (!_loaded) { _data = Resources.Load<WorldTaskSO>("WorldTasks"); _loaded = true; }
                 return _data;
             }
-            internal set { _data = value; _loaded = true; } // tests
+            internal set { _data = value; _loaded = true; _all = null; } // tests
+        }
+
+        static WorldTaskSO[] _all;
+
+        /// <summary>
+        /// Every world's delivery tasks: the Chemistry gate (<see cref="Data"/>) first, then the others
+        /// (Resources/WorldTaskSets, game_data.json <c>more_world_tasks</c>; Metallurgy and Engineering, 2026-11-23).
+        /// </summary>
+        public static WorldTaskSO[] All
+        {
+            get
+            {
+                if (_all != null) return _all;
+                var list = new List<WorldTaskSO>();
+                if (Data != null) list.Add(Data);
+                foreach (var t in Resources.LoadAll<WorldTaskSO>("WorldTaskSets"))
+                    if (t != null && !list.Contains(t)) list.Add(t);
+                return _all = list.ToArray();
+            }
+            internal set => _all = value; // tests
+        }
+
+        /// <summary>The tasks that unlock <paramref name="worldId"/>, or null.</summary>
+        public static WorldTaskSO For(string worldId)
+        {
+            foreach (var t in All) if (t != null && t.worldId == worldId) return t;
+            return null;
+        }
+
+        /// <summary>
+        /// The tasks in focus in <paramref name="activeWorldId"/>: the first unfinished set delivered there, else the
+        /// Chemistry gate. The HUD strip and the dev console's 'task' commands work on it.
+        /// </summary>
+        public static WorldTaskSO Focus(SaveData save, string activeWorldId)
+        {
+            foreach (var t in All)
+                if (t != null && ShownIn(t, activeWorldId) && !IsComplete(save, t)) return t;
+            return Data;
+        }
+
+        // ── Storage: the Chemistry gate keeps its original save fields; every other set has a worldTaskSets entry ──
+
+        /// <summary>The Chemistry gate (its world, or the Resources/WorldTasks asset) uses the original save fields.</summary>
+        static bool IsPrimary(WorldTaskSO data) => data == null || data == Data || data.worldId == WorldGate.Chemistry;
+
+        static WorldTaskProgressData Entry(SaveData save, WorldTaskSO data, bool create)
+        {
+            if (save == null || data == null) return null;
+            save.worldTaskSets ??= new List<WorldTaskProgressData>();
+            foreach (var e in save.worldTaskSets) if (e != null && e.worldId == data.worldId) return e;
+            if (!create) return null;
+            var made = new WorldTaskProgressData { worldId = data.worldId };
+            save.worldTaskSets.Add(made);
+            return made;
+        }
+
+        static int StoredStage(SaveData save, WorldTaskSO data) =>
+            IsPrimary(data) ? (save?.worldTaskStage ?? 0) : (Entry(save, data, false)?.stage ?? 0);
+
+        /// <summary>Sets the completed stage count of <paramref name="data"/> and clears progress toward the next one.</summary>
+        public static void SetStage(SaveData save, WorldTaskSO data, int completed)
+        {
+            if (save == null) return;
+            completed = Mathf.Clamp(completed, 0, StageCount(data));
+            if (IsPrimary(data))
+            {
+                save.worldTaskStage = completed;
+                save.worldTaskProgressKeys?.Clear();
+                save.worldTaskProgressValues?.Clear();
+            }
+            else
+            {
+                var e = Entry(save, data, true);
+                e.stage = completed;
+                e.keys.Clear();
+                e.values.Clear();
+            }
+            Revision++;
+        }
+
+        static (List<string> keys, List<int> values) Progress(SaveData save, WorldTaskSO data, bool create)
+        {
+            if (save == null) return (null, null);
+            if (IsPrimary(data))
+            {
+                if (create)
+                {
+                    save.worldTaskProgressKeys   ??= new List<string>();
+                    save.worldTaskProgressValues ??= new List<int>();
+                }
+                return (save.worldTaskProgressKeys, save.worldTaskProgressValues);
+            }
+            var e = Entry(save, data, create);
+            return e == null ? (null, null) : (e.keys, e.values);
         }
 
         /// <summary>Bumped on every credit, whatever path made it, so the service can tell the UI progress moved.</summary>
@@ -42,7 +136,7 @@ namespace MobileIdleBuilder
 
         /// <summary>Completed stage count, clamped to the data.</summary>
         public static int CompletedStages(SaveData save, WorldTaskSO data) =>
-            Mathf.Clamp(save?.worldTaskStage ?? 0, 0, StageCount(data));
+            Mathf.Clamp(StoredStage(save, data), 0, StageCount(data));
 
         public static bool IsComplete(SaveData save, WorldTaskSO data) =>
             data != null && StageCount(data) > 0 && CompletedStages(save, data) >= StageCount(data);
@@ -54,11 +148,13 @@ namespace MobileIdleBuilder
             return i < StageCount(data) ? data.stages[i] : null;
         }
 
-        /// <summary>How many of <paramref name="itemId"/> the current stage has received.</summary>
-        public static int Delivered(SaveData save, int itemId)
+        /// <summary>How many of <paramref name="itemId"/> the Chemistry gate's current stage has received.</summary>
+        public static int Delivered(SaveData save, int itemId) => Delivered(save, Data, itemId);
+
+        /// <summary>How many of <paramref name="itemId"/> the current stage of <paramref name="data"/> has received.</summary>
+        public static int Delivered(SaveData save, WorldTaskSO data, int itemId)
         {
-            var keys = save?.worldTaskProgressKeys;
-            var vals = save?.worldTaskProgressValues;
+            var (keys, vals) = Progress(save, data, false);
             if (keys == null || vals == null) return 0;
             string key = itemId.ToString();
             for (int i = 0; i < keys.Count && i < vals.Count; i++)
@@ -77,8 +173,11 @@ namespace MobileIdleBuilder
             return total;
         }
 
-        /// <summary>Delivered over required for the whole stage, 0..1.</summary>
-        public static float StageFraction(SaveData save, WorldTaskStage stage)
+        /// <summary>Delivered over required for the Chemistry gate's stage, 0..1.</summary>
+        public static float StageFraction(SaveData save, WorldTaskStage stage) => StageFraction(save, Data, stage);
+
+        /// <summary>Delivered over required for <paramref name="stage"/> of <paramref name="data"/>, 0..1.</summary>
+        public static float StageFraction(SaveData save, WorldTaskSO data, WorldTaskStage stage)
         {
             if (stage?.items == null) return 0f;
             long need = 0, have = 0;
@@ -88,16 +187,16 @@ namespace MobileIdleBuilder
                 if (item == null || !seen.Add(item.itemId)) continue;
                 int req = Required(stage, item.itemId);
                 need += req;
-                have += Math.Min(req, Delivered(save, item.itemId));
+                have += Math.Min(req, Delivered(save, data, item.itemId));
             }
             return need <= 0 ? 1f : (float)have / need;
         }
 
-        static bool StageDone(SaveData save, WorldTaskStage stage)
+        static bool StageDone(SaveData save, WorldTaskSO data, WorldTaskStage stage)
         {
             if (stage?.items == null) return true;
             foreach (var item in stage.items)
-                if (item != null && Delivered(save, item.itemId) < Required(stage, item.itemId)) return false;
+                if (item != null && Delivered(save, data, item.itemId) < Required(stage, item.itemId)) return false;
             return true;
         }
 
@@ -112,17 +211,15 @@ namespace MobileIdleBuilder
             var stage = CurrentStage(save, data);
             if (stage == null) return 0;
 
-            int need = Required(stage, itemId) - Delivered(save, itemId);
+            int need = Required(stage, itemId) - Delivered(save, data, itemId);
             if (need <= 0) return 0;
             int add = (int)Math.Min(need, quantity);
-            SetDelivered(save, itemId, Delivered(save, itemId) + add);
+            SetDelivered(save, data, itemId, Delivered(save, data, itemId) + add);
             Revision++;
 
-            if (StageDone(save, stage))
+            if (StageDone(save, data, stage))
             {
-                save.worldTaskStage = CompletedStages(save, data) + 1;
-                save.worldTaskProgressKeys?.Clear();
-                save.worldTaskProgressValues?.Clear();
+                SetStage(save, data, CompletedStages(save, data) + 1);
                 stageCompleted = stage;
             }
             return add;
@@ -208,21 +305,20 @@ namespace MobileIdleBuilder
             }
         }
 
-        static void SetDelivered(SaveData save, int itemId, int value)
+        static void SetDelivered(SaveData save, WorldTaskSO data, int itemId, int value)
         {
-            save.worldTaskProgressKeys   ??= new List<string>();
-            save.worldTaskProgressValues ??= new List<int>();
+            var (keys, values) = Progress(save, data, true);
             string key = itemId.ToString();
-            for (int i = 0; i < save.worldTaskProgressKeys.Count; i++)
+            for (int i = 0; i < keys.Count; i++)
             {
-                if (save.worldTaskProgressKeys[i] != key) continue;
-                while (save.worldTaskProgressValues.Count <= i) save.worldTaskProgressValues.Add(0);
-                save.worldTaskProgressValues[i] = value;
+                if (keys[i] != key) continue;
+                while (values.Count <= i) values.Add(0);
+                values[i] = value;
                 return;
             }
-            save.worldTaskProgressKeys.Add(key);
-            while (save.worldTaskProgressValues.Count < save.worldTaskProgressKeys.Count - 1) save.worldTaskProgressValues.Add(0);
-            save.worldTaskProgressValues.Add(value);
+            keys.Add(key);
+            while (values.Count < keys.Count - 1) values.Add(0);
+            values.Add(value);
         }
     }
 }

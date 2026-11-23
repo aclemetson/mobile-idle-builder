@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: dipeptide
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: dipeptide
+  displayName: Dipeptide (Gly-Ala)
+  methodLabel: 
+  recipeId: 381
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: d5116251558ce72429a913896cb1e11d, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: a9184878d4f5d71478f8524cafc82c44, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: afe7834b40b46cb46908397c9c43c652, type: 2}
+  outputQuantity: 1
+  byproducts:
+  - item: {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
+    quantity: 1
+  baseCraftTime: 150
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 200
+  validBuildings:
+  - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 0626b96c592cea04582f0afdd48df07f, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: C2H5NO2 + C3H7NO2 -> C5H10N2O3 + H2O

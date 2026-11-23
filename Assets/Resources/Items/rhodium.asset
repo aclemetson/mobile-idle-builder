@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Rhodium (Rh), element number 45 with mass number 103. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 51300
+  baseSellValue: 155000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

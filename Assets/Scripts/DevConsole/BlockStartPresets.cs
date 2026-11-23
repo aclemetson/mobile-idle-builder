@@ -70,6 +70,20 @@ namespace MobileIdleBuilder.Dev
         /// The save for the start of <paramref name="block"/>, built from <paramref name="current"/> (which is
         /// not modified). The first block (the tutorial) gives a fresh game that keeps only the player id.
         /// </summary>
+        /// <summary>
+        /// The world a block belongs to: the one most of its research names in <see cref="ResearchSO.world"/>.
+        /// Null for Physics (world 0), blocks without research, or no world database.
+        /// </summary>
+        public static WorldSO BlockWorld(ResearchDatabaseSO db, ResearchBlock block, WorldDatabaseSO worlds)
+        {
+            if (db?.allResearch == null || block == null || worlds?.allWorlds == null) return null;
+            var top = db.allResearch.Where(r => r != null && r.block == block.id && !string.IsNullOrEmpty(r.world))
+                        .GroupBy(r => r.world).OrderByDescending(g => g.Count()).FirstOrDefault()?.Key;
+            if (top == null) return null;
+            var w = System.Array.Find(worlds.allWorlds, x => x != null && x.id == top);
+            return w == null || w == worlds.allWorlds[0] ? null : w;
+        }
+
         public static SaveData Build(SaveData current, ResearchDatabaseSO db, WorldDatabaseSO worlds, ResearchBlock block)
         {
             if (block == null || db == null) return null;
@@ -126,8 +140,40 @@ namespace MobileIdleBuilder.Dev
                 opened.Add(w.id);
                 foreach (var s in w.siteIds ?? new List<string>()) sites.Add(s);
             }
+            // The block's own world (most of its research names it, e.g. chem_organics -> Chemistry) is open too, and
+            // the run starts there, on its entry site. Its tutorial plays only at that world's first block; worlds
+            // the player has already worked in have theirs done.
+            var blockWorld = BlockWorld(db, block, worlds);
+            if (blockWorld != null && !opened.Contains(blockWorld.id))
+            {
+                opened.Add(blockWorld.id);
+                foreach (var s in blockWorld.siteIds ?? new List<string>()) sites.Add(s);
+            }
+            foreach (var wid in opened)
+            {
+                bool worked = db.allResearch.Any(r => r != null && researched.Contains(r.id) && r.world == wid);
+                if (worked || (blockWorld != null && wid != blockWorld.id))
+                    TutorialFlows.Slot(save, wid, create: true).done = true;
+            }
             save.unlockedWorlds   = opened;
             save.unlockedSites    = sites.ToList();
+            if (blockWorld != null)
+            {
+                int worldIndex = System.Array.IndexOf(worlds.allWorlds, blockWorld);
+                var siteDb = Resources.Load<SiteDatabaseSO>("SiteDatabase");
+                int entry = -1;
+                foreach (var sid in blockWorld.siteIds ?? new List<string>())
+                {
+                    entry = siteDb?.allSites == null ? -1 : System.Array.FindIndex(siteDb.allSites, s => s != null && s.id == sid);
+                    if (entry >= 0) break;
+                }
+                if (worldIndex > 0 && entry >= 0)
+                {
+                    GridSaveService.EnsureSiteGrid(save, entry);
+                    save.currentRun.activeSiteIndex  = entry;
+                    save.currentRun.activeWorldIndex = worldIndex;
+                }
+            }
 
             // Delivery tasks: done if their world is open, else as far as this block's prestiges would have got.
             var tasks = WorldTasks.Data;
@@ -136,6 +182,11 @@ namespace MobileIdleBuilder.Dev
             save.worldTaskProgressKeys?.Clear();
             save.worldTaskProgressValues?.Clear();
             WorldTasks.Migrate(save, tasks, isNewGame: false);
+            // The other worlds' delivery tasks (Metallurgy, Engineering): done if their world is open, else unstarted.
+            save.worldTaskSets?.Clear();
+            foreach (var t in WorldTasks.All)
+                if (t != null && t != tasks && save.unlockedWorlds.Contains(t.worldId))
+                    WorldTasks.SetStage(save, t, WorldTasks.StageCount(t));
             save.devConsoleUsed   = true;
             return save;
         }

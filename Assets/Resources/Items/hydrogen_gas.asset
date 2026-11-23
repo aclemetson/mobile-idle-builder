@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: "Hydrogen as it is found: paired into H\u2082 molecules, the lightest
     gas there is. Chemistry's first feedstock."
   codexUnlocked: 0
-  baseSellValue: 322
+  baseSellValue: 130
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -41,13 +41,14 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(_data.research.Any(r => r.id == "isotopes"));
 
         [Test]
-        public void IsotopicManipulator_UnlocksWithRadioactiveIsotopes()
+        public void IsotopicManipulator_UnlocksWithIsotopeChemistry()
         {
+            // Item Timeline (2026-11-23): Uranium Vein -> Radioactive Decay -> Isotope Chemistry.
             var b = _data.buildings.Single(x => x.id == "isotopic_manipulator");
-            Assert.AreEqual("radioactive_isotopes", b.required_research);
-            var r = _data.research.Single(x => x.id == "radioactive_isotopes");
+            Assert.AreEqual("isotope_chemistry", b.required_research);
+            var r = _data.research.Single(x => x.id == "isotope_chemistry");
             CollectionAssert.Contains(r.unlocks_buildings, "isotopic_manipulator");
-            CollectionAssert.AreEquivalent(new[] { "heavy_elements" }, r.prerequisites);
+            CollectionAssert.AreEquivalent(new[] { "radioactive_isotopes" }, r.prerequisites);
         }
 
         [Test]
@@ -59,8 +60,8 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void HeavyElements_HangsOffAtomicAssembly() =>
-            CollectionAssert.AreEquivalent(new[] { "atomic_assembly" },
+        public void HeavyElements_FollowsTheFusionClimbToManganese() =>
+            CollectionAssert.AreEquivalent(new[] { "silicon_burning" },
                 _data.research.Single(x => x.id == "heavy_elements").prerequisites);
 
         [TestCase(653, 3, 1959)]

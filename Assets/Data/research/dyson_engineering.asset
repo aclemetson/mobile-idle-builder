@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: dyson_engineering
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: dyson_engineering
+  displayName: Dyson Engineering
+  description: 'Dyson Engineering: Dyson Node.'
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: 80bc36f1f3afb7249a3774024bc40584, type: 2}
+  depthInTree: 8
+  block: engineering_megastructure
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_engineering
+  world: world_engineering
+  costBaseCurrency: 4740000000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 24bcd30ef7b5e7b44a0d68fb21137ee2, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: bb179f5212dd1cc4da28657a681470bc, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  codexEntry: Dyson Engineering

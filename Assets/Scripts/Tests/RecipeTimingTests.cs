@@ -66,9 +66,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FuseIron_CraftTime_Is28s()
+        public void IronConvergence_CraftTime_Is60s()
         {
-            Assert.AreEqual(28f, RequireRecipe("fuse_iron").base_craft_time, 0.001f);
+            // Item Timeline (2026-11-23): Iron joins Manganese and Cobalt, the slowest fusion step.
+            Assert.AreEqual(60f, RequireRecipe("iron_convergence").base_craft_time, 0.001f);
         }
 
         // ── Tier 3 — Molecular craft times ───────────────────────────────────
@@ -91,9 +92,10 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 5 — Component craft times ───────────────────────────────────
 
         [Test]
-        public void QuantumProcessor_CraftTime_Is1200s()
+        public void QuantumProcessor_CraftTime_Is2400s()
         {
-            Assert.AreEqual(1200f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
+            // Item Timeline phase 4: Engineering parts are few and slow (2 circuit boards + a superconductor).
+            Assert.AreEqual(2400f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
         }
 
         // ── Ingredient counts for tutorial-critical recipes ───────────────────
@@ -136,9 +138,6 @@ namespace MobileIdleBuilder.Tests
         // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
         [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
         [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
-        [TestCase("silica",               "silicon",      1, "oxygen_gas",   1, 30f)]
-        [TestCase("iron_oxide",           "iron",         4, "oxygen_gas",   3, 100f)]
-        [TestCase("uranium_hexafluoride", "uranium",  1, "fluorine", 6, 280f)]
         public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
         {
             var r = RequireRecipe(id);

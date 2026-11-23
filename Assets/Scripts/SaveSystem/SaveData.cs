@@ -26,6 +26,14 @@ namespace MobileIdleBuilder
         public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
+        // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
+        // for offline display. Full UGS form "Name#1234"; "" = never chosen. Survives prestige.
+        public string playerName                    = "";
+        // Tournament item stars (PvE phase 2, ItemStars): +20% value per star, permanent. Parallel lists keyed by item
+        // STRING id (stable across renumbering). Survive prestige and Ascension.
+        public List<string> itemStarIds             = new();
+        public List<int>    itemStarCounts          = new();
+        public bool   namePromptSkipped;                   // the post-tutorial "Choose your name" card was skipped; only Settings (and PvE) ask again. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.
         public string idleCollectionApplied;   // ISO 8601 — set after each session's offline calc to prevent double-apply
@@ -84,8 +92,24 @@ namespace MobileIdleBuilder
         public List<string> worldTaskProgressKeys     = new(); // item ids (string numeric), toward the current stage
         public List<int>    worldTaskProgressValues   = new(); // delivered counts, parallel to worldTaskProgressKeys
         public int          worldTaskVersion          = 0;     // 0 = not yet migrated (start stage from prestigeCount)
+        // Delivery tasks of the other worlds (Metallurgy, Engineering: 2026-11-23), one entry per world. The Chemistry
+        // gate keeps the fields above. Survive prestige the same way.
+        public List<WorldTaskProgressData> worldTaskSets = new();
+        // Ascension (2026-11-23, AscensionRules): survive prestige and Ascension.
+        public int          ascensionCount            = 0;
+        public long         megastructureMaterial     = 0;
+        public int          megastructureExpansion    = 0;     // Expansion levels bought with material
         public TutorialSaveData tutorial                     = new();
-        public PVPRunData pvpRun                            = new();
+        public PVPRunData pvpRun                            = new();   // LEGACY: the old 48h PvP stub (removed 2026-11-23). Kept so old saves load; never read.
+        public TournamentSaveData tournament                = new();   // PvE tournament this device entered (TournamentService). Survives prestige.
+        // Weeks whose PvE reward this save has applied (crystals + stars). The reward is applied here first, then
+        // cleared on the server; this list stops a retry of the server step from granting it twice. Newest last,
+        // trimmed to TournamentRules.ClaimedWeeksKept. Survives prestige.
+        public List<string> pveClaimedWeeks                 = new();
+        // PvE onboarding (TournamentIntroController): the full intro has been shown once; tournamentIntroWeek = the
+        // week id whose "tournament open" message was last shown (one per entry window). Survive prestige.
+        public bool   tournamentIntroSeen;
+        public string tournamentIntroWeek;
         public CurrentRunData currentRun                    = new();
     }
 
@@ -247,6 +271,16 @@ namespace MobileIdleBuilder
         public bool   hasCompletedFirstRun = false;
     }
 
+    /// <summary>Delivery-task progress toward unlocking one world (all but the Chemistry gate). Survives prestige.</summary>
+    [Serializable]
+    public class WorldTaskProgressData
+    {
+        public string       worldId = "";
+        public int          stage;                 // completed stage count
+        public List<string> keys   = new();        // item ids (string numeric), toward the current stage
+        public List<int>    values = new();        // delivered counts, parallel to keys
+    }
+
     /// <summary>Progress through one world's own tutorial (WorldSO.tutorialFlow). Survives prestige.</summary>
     [Serializable]
     public class WorldTutorialSaveData
@@ -306,6 +340,37 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>
+    /// The PvE tournament the player entered (PvE phase 4, <c>TournamentService</c>). The server holds the truth
+    /// (docs/runbooks/pve-backend-setup.md); this copy drives the run timer, the prestige lock and when snapshots
+    /// are sent while offline from the server. Root field: survives prestige (the tournament run IS the run that
+    /// starts with the join's prestige).
+    /// </summary>
+    [Serializable]
+    public class TournamentSaveData
+    {
+        public string week;                 // week id (Friday date) of the tournament entered; null = never
+        public string bracketId;
+        public string league;
+        public string startUtc;             // server time the 24h run started (ISO 8601)
+        public string runEndsUtc;           // start + 24h
+        /// <summary>
+        /// prestigeCount when the player joined; the join's prestige is still pending while
+        /// <c>SaveData.prestigeCount</c> has not passed it. No snapshot is sent before then: the old run's
+        /// net worth would make every later (post-reset) snapshot look like a drop. -1 = not pending.
+        /// </summary>
+        public int    prestigeCountAtJoin = -1;
+        public bool   finalSent;            // the snapshot at the 24h mark went through
+        // The latest snapshot taken during the run that the server hasn't confirmed (pendingT = its elapsed
+        // seconds; -1 = none). Kept so a snapshot lost when the OS suspended the app still counts: it is sent
+        // on the next launch with its own time (TournamentRules.CapturePending, PveRules.SnapshotTime).
+        public int    pendingT = -1;
+        public double pendingNw;
+        public double pendingRate;
+        public int    pendingCap;
+    }
+
+    /// <summary>
+    /// LEGACY: state of the removed 48h PvP stub. Never read; kept so saves that have it still load.
     /// Persistent PVP competition state for the current player.
     /// state: "Available" | "InRun" | "Completed"
     /// Locked is derived at runtime from prestigeCount.

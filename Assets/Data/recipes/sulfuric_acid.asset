@@ -19,25 +19,25 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 51f867538a1670e4e981f8d03a51aa51, type: 2}
-    quantity: 1
-  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+  - item: {fileID: 11400000, guid: 9ec80825d56dbb04482633e6bbabf610, type: 2}
     quantity: 2
-  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
-    quantity: 1
+  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+    quantity: 3
+  - item: {fileID: 11400000, guid: 6da36f93584ed4c40b3f73317bb4394a, type: 2}
+    quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 8d0524d5fdb0aa741b4852d2fc7f4067, type: 2}
-  outputQuantity: 1
+  outputQuantity: 2
   byproducts: []
   baseCraftTime: 40
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 150
+  fixedPowerCostEV: 200
   validBuildings:
   - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 41439204a2889224fa55ada4505d65e8, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: 2 S + 3 O2 + 2 H2O -> 2 H2SO4

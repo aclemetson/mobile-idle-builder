@@ -589,7 +589,7 @@ namespace MobileIdleBuilder
             _selectedMax    = qty;
             _dragItemId     = itemId;
             _dragQuantity   = qty;
-            _dragSellValue  = itemSO?.baseSellValue ?? 0f;
+            _dragSellValue  = ItemStars.StarredBase(itemSO);
             _dragItemName   = itemSO?.displayName ?? "";
 
             if (_dragGhostLabel != null) _dragGhostLabel.text = _dragItemName;
@@ -624,7 +624,7 @@ namespace MobileIdleBuilder
 
             _dragItemId    = itemId;
             _dragQuantity  = maxQty;
-            _dragSellValue = itemSO?.baseSellValue ?? 0f;
+            _dragSellValue = ItemStars.StarredBase(itemSO);
             _dragItemName  = itemSO?.displayName ?? "";
             if (_dragGhostLabel != null) _dragGhostLabel.text = _dragItemName;
 
@@ -772,7 +772,7 @@ namespace MobileIdleBuilder
         private long CalcEntropy(ItemSO item, int quantity)
         {
             float multiplier = GetMultiplier(item);
-            return (long)(item.baseSellValue * quantity * multiplier);
+            return (long)(ItemStars.StarredBase(item) * quantity * multiplier);
         }
 
         // The Cyclotron Kick entropy boost (1 when none is running); shared by the sale and the earn preview.

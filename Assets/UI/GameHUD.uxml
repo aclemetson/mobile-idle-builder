@@ -91,7 +91,7 @@
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
-                <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
+                <ui:Button name="btn-tournament"   text="Tournament"   class="drawer-nav-btn" />
                 <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
@@ -304,28 +304,32 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ PVP PANEL ═══ -->
-        <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
+        <!-- ═══ TOURNAMENT PANEL (PvE: TournamentPanelController) ═══ -->
+        <ui:VisualElement name="pve-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Weekly Competition" class="panel-title" />
-                <ui:Button name="btn-close-pvp" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                <ui:Label name="pve-title" text="Tournament" class="panel-title" />
+                <ui:Label name="pve-league-badge" text="" class="pve-league-badge hidden" />
+                <ui:Button name="btn-close-pve" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
-            <!-- Status section -->
-            <ui:VisualElement name="pvp-status-section" class="recipe-list">
-                <ui:Label name="pvp-state-label"    text="—"                    class="recipe-name" />
-                <ui:Label name="pvp-timer-label"    text=""                     class="recipe-inputs" />
-                <ui:Label name="pvp-lock-label"     text=""                     class="recipe-inputs" />
-                <ui:Button name="btn-enter-pvp"     text="Enter Competition"    class="craft-btn" />
-                <ui:Label name="pvp-completed-label" text=""                    class="recipe-inputs" />
+            <!-- Status. The banner shows the last result (promoted / stayed / moved down). -->
+            <ui:VisualElement name="pve-status-section" class="recipe-list">
+                <ui:Label name="pve-banner"        text=""                 class="pve-banner hidden" />
+                <ui:Label name="pve-state-label"   text="—"                class="recipe-name" />
+                <ui:Label name="pve-timer-label"   text=""                 class="recipe-inputs" />
+                <ui:Label name="pve-info-label"    text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-start"    text="Start tournament" class="craft-btn" />
+                <ui:Label name="pve-result-label"  text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-claim"    text="Claim reward"     class="craft-btn hidden" />
             </ui:VisualElement>
 
             <!-- Leaderboard section -->
-            <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
+            <ui:VisualElement name="pve-leaderboard-section" class="panel-header">
                 <ui:Label text="Leaderboard" class="panel-title" />
-                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="craft-btn panel-header-action" />
+                <ui:Label name="pve-your-rank" text="" class="pve-your-rank" />
+                <ui:Button name="btn-pve-refresh" text="Refresh" class="craft-btn panel-header-action" />
             </ui:VisualElement>
-            <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
+            <ui:ScrollView name="pve-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
@@ -397,6 +401,7 @@
                 </ui:VisualElement>
                 <ui:Label text="ACCOUNT" class="drawer-section-title" />
                 <ui:Label name="settings-account" text="" class="settings-account" />
+                <ui:Button name="btn-player-name" text="Choose a player name" class="drawer-nav-btn" />
                 <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
@@ -747,6 +752,26 @@
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
                     <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ PLAYER NAME (PlayerNamePromptController.cs) ═══
+             Public name for tournament leaderboards (PvE phase 1). Shown once after the tutorial, and from
+             Settings > Account. Saved to UGS player names; checked against game_config.name_filter_patterns. -->
+        <ui:VisualElement name="name-prompt" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="name-prompt__title" text="Choose your name" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="name-prompt__message" text="" class="game-update-message" />
+                <ui:TextField name="name-prompt__input" max-length="16" class="name-prompt__input" />
+                <ui:Label name="name-prompt__error" text="" class="name-prompt__error" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="name-prompt__skip" text="Later" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="name-prompt__save" text="Save" class="craft-btn confirm-prompt__btn" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

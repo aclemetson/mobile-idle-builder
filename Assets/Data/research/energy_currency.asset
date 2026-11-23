@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: energy_currency
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: energy_currency
+  displayName: Energy Currency
+  description: 'Energy Currency: ATP.'
+  icon: {fileID: 0}
+  branch: 5
+  prerequisites:
+  - {fileID: 11400000, guid: ed637f9e67f419d45a9e785cfe8d41b6, type: 2}
+  depthInTree: 21
+  block: chem_molecules_of_life
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 884000000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 531af99f9a89ad543b6738321f0e3f0e, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 14aaaec39d269b342a64de0e010500f9, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Adenosine triphosphate: the energy currency of every living cell.'

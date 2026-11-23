@@ -157,7 +157,7 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// A ball-and-stick molecule (<see cref="BeltMoleculeData"/>) that tumbles slowly about Y while its bonds
-        /// vibrate. The Ni/Fe catalyst is glossy metal.
+        /// vibrate. Ids in <see cref="MetalMolecules"/> are glossy metal.
         /// </summary>
         internal static GameObject BuildMolecule(Transform parent, string id)
         {
@@ -165,9 +165,15 @@ namespace MobileIdleBuilder
             if (mesh == null) return null;
             var root = Root(parent, id);
             StructureParts.AddMesh("Molecule", root.transform, mesh,
-                                   id == "catalyst" ? MetalMoleculeMaterial() : MoleculeMaterial(), Vector3.zero);
+                                   MetalMolecules.Contains(id) ? MetalMoleculeMaterial() : MoleculeMaterial(), Vector3.zero);
             return root;
         }
+
+        /// <summary>
+        /// Molecules drawn in glossy metal. Empty since the Ni/Fe catalyst left Chemistry (2026-11-23); Metallurgy's
+        /// compounds join it when they get belt structures.
+        /// </summary>
+        internal static readonly System.Collections.Generic.HashSet<string> MetalMolecules = new();
 
         // ----------------------------------------------------------------
         // Builders

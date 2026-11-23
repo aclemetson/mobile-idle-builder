@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_6
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_6
+  displayName: 'Spallation: Cesium to Antimony'
+  description: 'Spallation: Cesium to Antimony.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 0bfa92ae2a56bb5438fb301daee9cc32, type: 2}
+  depthInTree: 20
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 8490000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 05f6df57af5210046a808b6b95d4de07, type: 2}
+  - {fileID: 11400000, guid: 00df9c08ff2c3a14fb5a89c4160c0cb9, type: 2}
+  - {fileID: 11400000, guid: f15dd8d2fad40b240a9bc19b3f9121e7, type: 2}
+  - {fileID: 11400000, guid: 67680bf3fc373ff459ee1aeb38a0dc77, type: 2}
+  - {fileID: 11400000, guid: 2442a2f96280afe4ca690b05036abbbe, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 457c2f870639dc241a986b04efcf4a93, type: 2}
+  - {fileID: 11400000, guid: f500b882c98249444923a8399184697a, type: 2}
+  - {fileID: 11400000, guid: 88a04c8acdd6fe54584c10df41b38ea4, type: 2}
+  - {fileID: 11400000, guid: c5731eaf9d7e7f444b212ca7e0bb1ea4, type: 2}
+  - {fileID: 11400000, guid: 9a59475ca1f60c344ba786f1d0670e88, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 8ff1c81446308d84c91c60340c2f6e81, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Cesium to Antimony'

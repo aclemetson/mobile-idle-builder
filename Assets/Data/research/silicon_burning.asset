@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: silicon_burning
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: silicon_burning
+  displayName: Silicon Burning
+  description: 'Vanadium, Chromium and Manganese: the end of the fusion climb, one
+    step short of Iron.'
+  icon: {fileID: 0}
+  branch: 4
+  prerequisites:
+  - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
+  depthInTree: 10
+  block: deep_burning
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 2340000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: e62f17f097d33ae4498907181c45f781, type: 2}
+  - {fileID: 11400000, guid: 645e50d6505ef684bb44d92ee861a907, type: 2}
+  - {fileID: 11400000, guid: c4932c0b7989ec14499515b2d1fb1812, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
+  - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
+  - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Vanadium, Chromium and Manganese: the end of the fusion climb, one
+    step short of Iron.'

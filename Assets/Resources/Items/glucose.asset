@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
   id: glucose
   displayName: Glucose
-  symbol: Glc
+  symbol: "C\u2086H\u2081\u2082O\u2086"
   icon: {fileID: 21300000, guid: 7d828eb33fa73fe48ab234e95a784ab4, type: 3}
   itemId: 150
   tier: 3
@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A simple sugar and the universal cellular fuel. Chemistry's first step
     toward biology.
   codexUnlocked: 0
-  baseSellValue: 287000
+  baseSellValue: 23500
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

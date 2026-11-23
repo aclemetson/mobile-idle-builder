@@ -61,6 +61,7 @@ namespace MobileIdleBuilder
                         var itemSO = db.Get(itemID);
                         if (itemSO != null && itemSO.baseSellValue > 0f) sellValue = itemSO.baseSellValue;
                     }
+                    sellValue *= ItemStars.Multiplier(itemID);   // tournament stars (+20% each)
 
                     totalEntropy += (long)(sellValue * quantity * boost);
                     if (logging && demon) deliveries.Add(new DemonDelivery { ItemID = itemID, Quantity = quantity });

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55661f66af733364caedaac78f3e4bd4, type: 3}
+  m_Name: chalcopyrite
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
+  id: chalcopyrite
+  displayName: Chalcopyrite
+  symbol: "CuFeS\u2082"
+  icon: {fileID: 21300000, guid: 48084e7a77c3f6b438792cd4aeea6872, type: 3}
+  itemId: 226
+  tier: 4
+  category: 0
+  tierData: {fileID: 11400000, guid: e794dcdbb82111946a943cbb5703f195, type: 2}
+  atomicNumber: 0
+  atomicMass: 0
+  charge: 0
+  isRadioactive: 0
+  decayType: 0
+  halfLifeNote: 
+  isFissile: 0
+  isHarvested: 1
+  world: world_metallurgy
+  fieldType: Ore
+  isSecondaryParticle: 0
+  particleUses: 0
+  codexEntry: The most common copper ore.
+  codexUnlocked: 0
+  baseSellValue: 7360000
+  isotopeSellMultiplier: 1
+  escapesAsEntropy: 0

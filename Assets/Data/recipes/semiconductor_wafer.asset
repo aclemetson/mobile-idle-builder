@@ -20,8 +20,6 @@ MonoBehaviour:
   category: 6
   inputs:
   - item: {fileID: 11400000, guid: 6d1a01fd29cd2544086df1cd0c88ccda, type: 2}
-    quantity: 5
-  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
     quantity: 4
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: e1f450e49f29d4345adf780f9cd764d9, type: 2}
@@ -30,12 +28,12 @@ MonoBehaviour:
   baseCraftTime: 600
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 50000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 2241ab6a31db69c4c8406bb90be00668, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: silica + hydrogen gas

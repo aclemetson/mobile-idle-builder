@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  world: 
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -36,6 +36,6 @@ MonoBehaviour:
     antimatter meets matter, 100% of both masses convert to energy per E=mc\xB2.
     The most energy-dense storage known."
   codexUnlocked: 0
-  baseSellValue: 66500000
+  baseSellValue: 1.37e+10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: mineral_salts
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: mineral_salts
+  displayName: Mineral Salts
+  description: 'Mineral Salts: Halite (rock salt), Sylvite (potash), Limestone.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 3207e21981d7768419c5d1b1a7793f31, type: 2}
+  depthInTree: 13
+  block: chem_building_blocks
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 4070000
+  costPrestigeCurrency: 0
+  durationSeconds: 1500
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: e374c3296a9a4c649a984f911cff7475, type: 2}
+  - {fileID: 11400000, guid: 74047fd8824c09544a5e2d728139034f, type: 2}
+  - {fileID: 11400000, guid: 6ec351e2218b46243a7fb1426f411904, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 5df64d3f7bcd4d8469989d9e84628ad9, type: 2}
+  - {fileID: 11400000, guid: 5383b278bc8fde34096c7bbfee544474, type: 2}
+  - {fileID: 11400000, guid: 19f4535f1c8c0ac4fbc0afed0f5ee6db, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: bae6289ff3f6496428e5ae371786f222, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Calcium carbonate. Shells, bones and the calcium signals in every cell.

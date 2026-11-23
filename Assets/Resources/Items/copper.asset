@@ -36,6 +36,6 @@ MonoBehaviour:
     Foundry, copper is synthesised atom by atom \u2014 ironic, given it is the cheapest
     ore in simpler mining games."
   codexUnlocked: 0
-  baseSellValue: 28400
+  baseSellValue: 275000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Sulfur (S), element number 16 with mass number 32. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 4900
+  baseSellValue: 1950
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0
