@@ -4,6 +4,8 @@
 
 > Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19; speed burst as factory clock + one boost at a time 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
+> Item pacing across worlds (as built and the proposed restructure, with calendar days): `docs/item-timeline.html` / `scripts/item_timeline.py` (see `chemistry-biology.md`).
+
 ## Currencies
 
 | Currency | Earned | Spent | Storage |
