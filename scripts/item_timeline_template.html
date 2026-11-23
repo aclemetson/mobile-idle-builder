@@ -159,6 +159,18 @@ select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid 
     </div>
   </section>
 
+  <section class="panel" aria-label="Prices">
+    <div class="row"><h2>Prices and time to create</h2><span class="status" id="priceSummary"></span></div>
+    <p class="note">Every item is priced the way the game prices recipes today: value = inputs + wage x craft time, so each craft
+      earns about the wage. The wage (entropy per building-second) grows with active play hours. Research for an item costs the
+      active time the timeline gives it (since the world's previous unlock) x the income of that moment: buildings x wage x the
+      upgrade multiplier, which grows with every wall cleared. "Work" is the total building time one item takes, all the way from raw sources; "Slowest step" is how often one comes out with
+      one building on each step (the step to multiply). Edit craft times in the item table.</p>
+    <div class="asc-params" id="priceParams"></div>
+    <div class="tl-scroll" style="margin-top:10px"><svg id="priceChart" role="img" aria-label="Item value by day, log scale"></svg></div>
+    <div id="priceFlags" class="note" style="margin-top:8px"></div>
+  </section>
+
   <section class="panel" aria-label="Items">
     <div class="row">
       <h2>Items</h2>
@@ -186,7 +198,8 @@ const worldName = id => SEED.worlds.find(w => w.id === id)?.name || id;
 
 // ── State ────────────────────────────────────────────────────────────────────────────────────
 const fresh = () => ({ phases: structuredClone(SEED.phases), proposal: structuredClone(SEED.proposal), walls: structuredClone(SEED.walls),
-  upgrades: structuredClone(SEED.upgrades), ascension: structuredClone(SEED.ascension), activeHoursPerDay: SEED.activeHoursPerDay });
+  upgrades: structuredClone(SEED.upgrades), ascension: structuredClone(SEED.ascension), activeHoursPerDay: SEED.activeHoursPerDay,
+  prices: structuredClone(SEED.prices) });
 let state = fresh();
 let view = "prop", useAds = true, selected = null, dirty = false, db = null, userNs = null;
 
@@ -209,7 +222,55 @@ function placeProposal() {
     rest.forEach((r, i) => { t += g * w[i]; r.d = t; });
   }
   state.proposal.forEach(r => { if (r.pinDay != null && r.pinDay !== "") r.d = +r.pinDay; });
+  pricePlan();
 }
+
+// ── Prices: value, research cost and pipeline time for every item ──────────────────────────────
+const LIMIT = 2 ** 53;
+const wageAt = h => { const P = state.prices; return P.wage0 * Math.pow(2, (h - P.anchorH) / P.doubleH); };
+function pricePlan() {
+  const P = state.prices, ahpd = state.activeHoursPerDay || 2, byId = {};
+  state.proposal.forEach(r => byId[r.id] = r);
+  const live = state.proposal.filter(r => r.d != null).sort((a, b) => a.d - b.d);
+  const wallDays = state.walls.map(w => byId[w.before]?.d).filter(d => d != null);
+  const lastH = {};
+  for (const r of live) {
+    const H = r.d * ahpd, w = Math.max(1, wageAt(H));
+    r.wage = w;
+    const craft = r.craft == null || r.craft === "" ? null : +r.craft;
+    if (r.phase === "p_ignition" && r.builtValue != null) r.value = r.builtValue;          // tutorial anchor
+    else if (craft == null) r.value = r.id === "megastructure_material" ? null : (r.builtValue != null && r.z === 0 ? r.builtValue : Math.ceil(w * 60));
+    else {
+      const ins = (r.inputs || []).reduce((a, i) => a + (byId[i.item]?.value || 0) * i.q, 0);
+      r.value = nice((ins + w * craft) / (r.outQ || 1));
+    }
+    const walls = wallDays.filter(d => d < r.d).length, mult = Math.pow(1 + P.wallGain, walls);
+    const gapS = Math.max(P.minPaybackMin * 60, (H - (lastH[r.world] ?? H)) * 3600);
+    r.research = r.phase === "p_ignition" ? null : nice(P.buildings * w * mult * gapS);
+    r.mult = mult;
+    lastH[r.world] = H;
+  }
+  state.proposal.filter(r => r.d == null).forEach(r => { r.value = r.research = r.wage = null; r.pipe = null; });
+  for (const r of live) r.pipe = pipeline(r, byId);
+}
+function nice(v) { if (!isFinite(v) || v <= 0) return v; if (v < 100) return Math.ceil(v); const p = Math.pow(10, Math.floor(Math.log10(v)) - 2); return Math.ceil(v / p - 1e-9) * p; }
+// One building per recipe: seconds per finished unit = the slowest step (units it must make x its craft time).
+function pipeline(r, byId) {
+  const demand = {};
+  const walk = (it, q, depth, stack) => {
+    if (!it || depth > 30 || stack.has(it.id)) return;
+    demand[it.id] = (demand[it.id] || 0) + q / (it.outQ || 1);
+    stack.add(it.id);
+    (it.inputs || []).forEach(i => walk(byId[i.item], i.q * q / (it.outQ || 1), depth + 1, stack));
+    stack.delete(it.id);
+  };
+  walk(r, 1, 0, new Set());
+  let worst = 0, at = null, work = 0;
+  for (const [id, q] of Object.entries(demand)) { const c = +byId[id].craft || 0; work += q * c; if (q * c > worst) { worst = q * c; at = id; } }
+  return { s: worst, at, work };
+}
+const fmtS = s => s == null || !s ? "" : s < 90 ? Math.round(s) + " s" : s < 5400 ? (s / 60).toFixed(s < 600 ? 1 : 0) + " min" : s < 172800 ? (s / 3600).toFixed(1) + " h" : (s / 86400).toFixed(1) + " d";
+
 const builtDay = b => useAds ? b.daysAds : b.days;
 
 // ── Timeline ────────────────────────────────────────────────────────────────────────────────
@@ -310,6 +371,9 @@ function showDetail() {
       ${selected.key === "prop" ? `<dt>Proposed</dt><dd>${r.d == null ? "no date" : fmtD(r.d) + " · ~" + fmtH(r.d * ahpd) + " active"}${r.pinDay != null && r.pinDay !== "" ? " (pinned)" : ""}</dd>` : ""}
       ${built ? `<dt>As built</dt><dd>${fmtD(builtDay(built))} · ${fmtH(built.h)} active · run ${built.run} · ${esc(built.research)}</dd>` : `<dt>As built</dt><dd>not in the game yet</dd>`}
       ${built ? `<dt>Value</dt><dd>${fmtN(built.value)} e · craft ${built.craft}s${built.outQ > 1 ? " · makes " + built.outQ : ""}</dd>` : ""}
+      ${selected.key === "prop" && r.value != null ? `<dt>Value</dt><dd>${fmtN(r.value)} e each${r.outQ > 1 ? " (makes " + r.outQ + ")" : ""} · craft ${r.craft ? r.craft + " s" : "byproduct"} · wage ${fmtN(r.wage)} e/s</dd>` : ""}
+      ${selected.key === "prop" && r.research != null ? `<dt>Research</dt><dd>${fmtN(r.research)} e · upgrades ×${r.mult.toFixed(1)}</dd>` : ""}
+      ${selected.key === "prop" && r.pipe?.s ? `<dt>Time to create</dt><dd>${fmtS(r.pipe.work)} of building time per item; one building per step makes one every ${fmtS(r.pipe.s)} (slowest step: ${esc(state.proposal.find(x => x.id === r.pipe.at)?.name || r.pipe.at)})</dd>` : ""}
       ${wall ? `<dt>Wall</dt><dd>${wall.repeats} prestiges here · breaks with ${esc(wall.breaks)}</dd>` : ""}
       ${inputs ? `<dt>Inputs</dt><dd>${esc(inputs)}</dd>` : ""}
       ${r.how ? `<dt>How</dt><dd>${esc(r.how)}</dd>` : ""}
@@ -453,6 +517,42 @@ document.getElementById("ascParams").addEventListener("change", e => {
   state.ascension[k] = +e.target.value; markDirty(); renderAscension();
 });
 
+const PRICE_FIELDS = [["wage0", "Wage at tutorial end (e/s)"], ["anchorH", "Tutorial end (active h)"], ["doubleH", "Wage doubles every (active h)"],
+  ["buildings", "Buildings earning"], ["wallGain", "Upgrade gain per wall"], ["minPaybackMin", "Cheapest research (building-min)"]];
+function renderPrices() {
+  const P = state.prices;
+  document.getElementById("priceParams").innerHTML = PRICE_FIELDS.map(([k, l]) =>
+    `<label class="ctl" for="pr-${k}">${esc(l)} <input type="number" step="any" id="pr-${k}" data-k="${k}" value="${P[k]}"></label>`).join("");
+  const live = state.proposal.filter(r => r.d != null && r.value > 0);
+  if (!live.length) return;
+  const svg = document.getElementById("priceChart"), D = Math.max(...live.map(r => r.d)) + 2, W = Math.max(640, D * 10), H = 240, L = 52, B = 26;
+  const lo = Math.floor(Math.log10(Math.min(...live.map(r => r.value)))), hi = Math.ceil(Math.log10(Math.max(...live.map(r => Math.max(r.value, r.research || 0)))));
+  const x = d => L + d / D * (W - L - 12), y = v => H - B - (Math.log10(v) - lo) / Math.max(1, hi - lo) * (H - B - 12);
+  let s = `<g class="axis">`;
+  for (let e = lo; e <= hi; e += Math.max(1, Math.ceil((hi - lo) / 6))) s += `<line x1="${L}" x2="${W - 12}" y1="${y(10 ** e)}" y2="${y(10 ** e)}" stroke="${cssVar("--grid")}"/><text x="${L - 6}" y="${y(10 ** e) + 4}" text-anchor="end">1e${e}</text>`;
+  for (let d = 0; d <= D; d += D > 60 ? 10 : 5) s += `<text x="${x(d)}" y="${H - 8}" text-anchor="middle">d${d}</text>`;
+  s += `</g>`;
+  live.forEach(r => { if (r.research) s += `<rect x="${x(r.d) - 2}" y="${y(r.research) - 2}" width="4" height="4" fill="${cssVar("--muted")}" opacity=".5"><title>${esc(r.name)} research ${fmtN(r.research)} e</title></rect>`; });
+  live.forEach(r => s += `<circle class="pdot" data-id="${esc(r.id)}" cx="${x(r.d)}" cy="${y(r.value)}" r="3.2" fill="${cssVar(WORLD_COLORS[r.world])}" style="cursor:pointer"><title>${esc(r.name)} · ${fmtN(r.value)} e · ${fmtD(r.d)}</title></circle>`);
+  s += `<text x="${L + 4}" y="14" font-size="11" fill="${cssVar("--muted")}">Item value (dots, by world) and research cost (grey squares), log scale</text>`;
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = s;
+  const big = live.filter(r => r.value > LIMIT || r.research > LIMIT), last = live.at(-1);
+  const slow = live.filter(r => r.pipe?.s > 86400);
+  const byId = Object.fromEntries(state.proposal.map(r => [r.id, r]));
+  const loss = live.filter(r => r.craft && (r.inputs || []).length && r.value * (r.outQ || 1) < (r.inputs || []).reduce((a, i) => a + (byId[i.item]?.value || 0) * i.q, 0));
+  document.getElementById("priceSummary").textContent = `top value ${fmtN(Math.max(...live.map(r => r.value)))} e · dearest research ${fmtN(Math.max(...live.map(r => r.research || 0)))} e · wage at the end ${fmtN(last?.wage)} e/s`;
+  document.getElementById("priceFlags").innerHTML = [
+    big.length ? `<b>Over the 2^53 limit:</b> ${big.map(r => esc(r.name)).join(", ")}` : "No value or research cost is over the 2^53 limit.",
+    slow.length ? `<b>Slowest step over a day (needs parallel buildings):</b> ${slow.map(r => esc(r.name) + " " + fmtS(r.pipe.s)).join(", ")}` : "",
+    loss.length ? `<b>Sells for less than its inputs:</b> ${loss.map(r => esc(r.name)).join(", ")}` : "",
+  ].filter(Boolean).join("<br>");
+}
+document.getElementById("priceParams").addEventListener("change", e => {
+  const k = e.target.dataset.k; if (!k || e.target.value === "") return;
+  state.prices[k] = +e.target.value; markDirty(); refreshAll();
+});
+document.getElementById("priceChart").addEventListener("click", e => { const t = e.target.closest(".pdot"); if (t) select("prop", t.dataset.id); });
+
 // ── Items table ──────────────────────────────────────────────────────────────────────────────
 const STATUSES = ["keep", "new", "moved", "retire"];
 function renderFilters() {
@@ -467,7 +567,7 @@ function renderItems() {
   const rows = state.proposal.map((r, i) => ({ r, i })).filter(({ r }) => (!fw || r.world === fw) && (!fp || r.phase === fp)
     && (!ft || (r.name + " " + r.id + " " + (r.equation || "")).toLowerCase().includes(ft)));
   const phOpts = sel => state.phases.map(p => `<option value="${p.id}"${p.id === sel ? " selected" : ""}>${esc(p.name)}</option>`).join("");
-  document.getElementById("items").innerHTML = `<thead><tr><th></th><th>Item</th><th>Phase</th><th>Status</th><th>Equation / how</th><th class="num">Proposed</th><th class="num">Pin day</th><th class="num">As built</th><th>Notes</th><th></th></tr></thead><tbody>` +
+  document.getElementById("items").innerHTML = `<thead><tr><th></th><th>Item</th><th>Phase</th><th>Status</th><th>Equation / how</th><th class="num">Proposed</th><th class="num">Pin day</th><th class="num">Craft s</th><th class="num">Value</th><th class="num">Research</th><th class="num">Slowest step</th><th class="num">Work</th><th class="num">As built</th><th>Notes</th><th></th></tr></thead><tbody>` +
     (rows.length ? rows.map(({ r, i }) => {
       const b = built[r.id], isSel = selected?.key === "prop" && selected.id === r.id;
       return `<tr class="${isSel ? "sel" : ""}" data-i="${i}">
@@ -478,16 +578,21 @@ function renderItems() {
         <td><input id="it-${i}-eq" data-k="${r.equation != null ? "equation" : "how"}" value="${esc(r.equation ?? r.how ?? "")}" style="min-width:230px; font-family:var(--mono); font-size:12px"></td>
         <td class="num">${r.d == null ? "" : fmtD(r.d)}${wallBy[r.id] ? ` <span class="pill wall">↻${wallBy[r.id].repeats}</span>` : ""}</td>
         <td class="num"><input class="num" id="it-${i}-pin" data-k="pinDay" type="number" step="any" value="${r.pinDay ?? ""}" placeholder="auto"></td>
-        <td class="num">${b ? fmtD(builtDay(b)) : "none"}</td>
+        <td class="num"><input class="num" id="it-${i}-craft" data-k="craft" type="number" step="any" value="${r.craft ?? ""}" placeholder="byproduct"></td>
+        <td class="num">${r.value == null ? "" : fmtN(r.value) + " e"}</td>
+        <td class="num">${r.research == null ? "" : fmtN(r.research) + " e"}</td>
+        <td class="num">${fmtS(r.pipe?.s)}</td>
+        <td class="num">${r.pipe?.work ? fmtS(r.pipe.work) : ""}</td>
+        <td class="num">${b ? fmtD(builtDay(b)) + " · " + fmtN(b.value) + " e" : "none"}</td>
         <td><input id="it-${i}-notes" data-k="notes" value="${esc(r.notes ?? "")}" style="min-width:160px"></td>
         <td><button class="mini" data-act="del" aria-label="Delete ${esc(r.name)}">✕</button></td></tr>`;
-    }).join("") : `<tr><td colspan="10" class="empty">No items match.</td></tr>`) + `</tbody>`;
+    }).join("") : `<tr><td colspan="15" class="empty">No items match.</td></tr>`) + `</tbody>`;
 }
 const itemsEl = document.getElementById("items");
 itemsEl.addEventListener("change", e => {
   const tr = e.target.closest("tr[data-i]"), k = e.target.dataset.k; if (!tr || !k) return;
   const r = state.proposal[+tr.dataset.i];
-  r[k] = k === "pinDay" ? (e.target.value === "" ? null : +e.target.value) : e.target.value;
+  r[k] = (k === "pinDay" || k === "craft") ? (e.target.value === "" ? null : +e.target.value) : e.target.value;
   if (k === "phase") { const ph = state.phases.find(p => p.id === r.phase); if (ph) r.world = ph.world; }
   markDirty(); refreshAll();
 });
@@ -524,22 +629,22 @@ document.getElementById("ads").onchange = e => { useAds = e.target.checked; rend
 document.getElementById("ahpd").onchange = e => { if (+e.target.value > 0) { state.activeHoursPerDay = +e.target.value; markDirty(); refreshAll(); } };
 document.getElementById("zoom").oninput = render;
 document.getElementById("labels").onchange = render;
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { render(); renderAscension(); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { render(); renderAscension(); renderPrices(); });
 
 // ── Save / load ──────────────────────────────────────────────────────────────────────────────
 const statusEl = document.getElementById("status"), saveBtn = document.getElementById("save");
 function setStatus(t, cls = "") { statusEl.textContent = t; statusEl.className = "status " + cls; }
 function markDirty() { dirty = true; setStatus("Unsaved changes"); }
 function snapshot() {
-  return { schema: SCHEMA, phases: state.phases, proposal: state.proposal.map(({ d, builtDays, ...r }) => r), walls: state.walls,
-    upgrades: state.upgrades, ascension: state.ascension, activeHoursPerDay: state.activeHoursPerDay,
+  return { schema: SCHEMA, phases: state.phases, proposal: state.proposal.map(({ d, builtDays, value, research, wage, mult, pipe, ...r }) => r), walls: state.walls,
+    upgrades: state.upgrades, ascension: state.ascension, activeHoursPerDay: state.activeHoursPerDay, prices: state.prices,
     savedAt: new Date().toISOString(), seedGenerated: SEED.generated };
 }
 function applySaved(doc) {
   if (doc?.schema !== SCHEMA || !doc.proposal || !doc.phases) return false;
   const base = fresh();
   state = { phases: doc.phases, proposal: doc.proposal.map(r => ({ ...r })), walls: doc.walls || base.walls, upgrades: doc.upgrades || base.upgrades,
-    ascension: { ...base.ascension, ...(doc.ascension || {}) }, activeHoursPerDay: doc.activeHoursPerDay || base.activeHoursPerDay };
+    ascension: { ...base.ascension, ...(doc.ascension || {}) }, activeHoursPerDay: doc.activeHoursPerDay || base.activeHoursPerDay, prices: { ...base.prices, ...(doc.prices || {}) } };
   return true;
 }
 async function save() {
@@ -582,7 +687,7 @@ document.getElementById("export").onclick = async () => {
 
 function refreshAll() {
   document.getElementById("ahpd").value = state.activeHoursPerDay;
-  renderPhases(); renderFilters(); render(); renderCallouts(); renderWalls(); renderUpgrades(); renderAscension(); renderItems(); showDetail();
+  renderPhases(); renderFilters(); render(); renderCallouts(); renderWalls(); renderUpgrades(); renderAscension(); renderPrices(); renderItems(); showDetail();
 }
 refreshAll();
 

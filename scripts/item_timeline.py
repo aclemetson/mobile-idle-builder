@@ -294,7 +294,88 @@ def proposal(gd, built):
         world = {"b": "world_biology", "m": "world_metallurgy", "e": "world_engineering"}[ph_[0]]
         it = items.get(iid)
         add(iid, it["display_name"] if it else name, world, ph_, st, how=how)
+    attach_recipes(gd, rows, built)
     return rows
+
+
+# Recipes for the later worlds in the proposal: (inputs [(q, item)], craft seconds, output quantity).
+# Worlds stay self-contained except Engineering, which imports Metallurgy, Biology and Chemistry products.
+LATER_RECIPES = {
+    "protein": ([(3, "dipeptide")], 60), "carbohydrate": ([(3, "glucose")], 60),
+    "lipid_membrane": ([(3, "phospholipid")], 60), "nucleic_acid": ([(3, "amp"), (1, "atp")], 75),
+    "ribosome": ([(2, "protein"), (1, "nucleic_acid")], 90), "cell_membrane": ([(2, "lipid_membrane"), (1, "protein")], 90),
+    "mitochondria": ([(2, "protein"), (1, "lipid_membrane"), (2, "atp")], 90),
+    "prokaryotic_cell": ([(1, "ribosome"), (1, "mitochondria"), (1, "cell_membrane")], 120),
+    "eukaryotic_cell": ([(1, "prokaryotic_cell"), (1, "mitochondria")], 150), "tissue": ([(2, "eukaryotic_cell")], 420),
+    "organ": ([(2, "tissue")], 600), "organism": ([(2, "organ")], 900), "population": ([(2, "organism")], 1200),
+    "ecosystem": ([(3, "population")], 1800),
+    "hematite": ([], 60), "bauxite": ([], 75), "chalcopyrite": ([], 90), "rutile": ([], 120), "silica": ([], 45),
+    "coal": ([], 60), "iron_oxide": ([(2, "hematite")], 90), "steel": ([(3, "iron_oxide"), (1, "coal")], 300),
+    "aluminium_ingot": ([(2, "bauxite")], 240), "copper_wire": ([(2, "chalcopyrite")], 240),
+    "titanium_alloy": ([(2, "rutile"), (1, "aluminium_ingot")], 480), "carbon_fiber": ([(4, "coal")], 400),
+    "semiconductor_wafer": ([(4, "silica")], 600), "aerogel": ([(3, "silica")], 700),
+    "superconductor": ([(2, "copper_wire"), (1, "titanium_alloy")], 900),
+    "metamaterial": ([(2, "superconductor"), (2, "semiconductor_wafer")], 1200),
+    "circuit_board": ([(1, "semiconductor_wafer"), (2, "copper_wire")], 1800),
+    "quantum_processor": ([(2, "circuit_board"), (1, "superconductor")], 2400),
+    "plasma_containment_ring": ([(2, "superconductor"), (2, "titanium_alloy")], 2400),
+    "orbital_frame": ([(3, "titanium_alloy"), (2, "carbon_fiber"), (2, "steel")], 3600),
+    "antimatter_cell": ([(1, "plasma_containment_ring"), (2, "aerogel")], 3600),
+    "graviton_lens": ([(2, "metamaterial"), (1, "quantum_processor")], 5400),
+    "dyson_node": ([(1, "graviton_lens"), (1, "orbital_frame"), (1, "antimatter_cell"), (1, "ecosystem")], 7200),
+}
+# Craft seconds for one step down the descent (decay is quick, fission/capture slower).
+DESCENT_CRAFT = {"p_descent": 20.0, "p_metals": 30.0}
+# Default craft seconds for a new Chemistry reaction, by phase (kept items keep today's craft time).
+CHEM_CRAFT = {"c1": 15, "c2": 30, "c3": 45, "c4": 60, "c5": 90, "c6": 150}
+
+
+def attach_recipes(gd, rows, built):
+    """Give every row inputs, craft seconds, output quantity and today's value: the later worlds from
+    LATER_RECIPES, Chemistry from its reaction (today's craft time when the item already exists), Physics from
+    its first recipe in game_data.json. Sources with no inputs are mines."""
+    value = {b["id"]: b["value"] for b in built}
+    prev = None
+    for row in rows:
+        if row["phase"] in ("p_descent", "p_metals") and row.get("z"):
+            if row["id"] == "uranium":
+                row["inputs"], row["craft"], row["outQ"] = [], 60.0, 1
+            elif prev:
+                extra = [{"item": "neutron", "q": 1}] if row["phase"] == "p_metals" else []
+                row["inputs"] = [{"item": prev, "q": 1}] + extra
+                row["craft"] = DESCENT_CRAFT[row["phase"]]
+                row["outQ"] = 1
+                row["how"] = ("decay of " if row["phase"] == "p_descent" else "fission / capture from ") + prev
+            prev = row["id"]
+        elif row["id"] == "iron":
+            row["inputs"] = [{"item": "manganese", "q": 1}, {"item": prev or "cobalt", "q": 1}]
+            row["craft"], row["outQ"] = 60.0, 1
+    descent_done = {r["id"] for r in rows if r.get("inputs") is not None and r["phase"] in ("p_descent", "p_metals", "p_iron")}
+    first = {}
+    for r in gd["recipes"]:
+        first.setdefault(r["output_item"], r)
+    for row in rows:
+        iid = row["id"]
+        row["builtValue"] = value.get(iid)
+        if iid in descent_done:
+            continue
+        if iid in LATER_RECIPES:
+            ins, t = LATER_RECIPES[iid]
+            row["inputs"], row["craft"], row["outQ"] = [{"item": x, "q": q} for q, x in ins], t, 1
+        elif row["world"] == "world_chemistry" and row.get("how") == "reaction":
+            r = first.get(iid)
+            row["craft"] = float(r["base_craft_time"]) if r and row["status"] == "keep" else CHEM_CRAFT[row["phase"]]
+            row["outQ"] = next(c[5] for c in CHEM if c[0] == iid)
+        elif row.get("how") == "mined source":
+            r = first.get(iid)
+            row["inputs"], row["craft"], row["outQ"] = [], float(r["base_craft_time"]) if r else 20.0, 1
+        else:
+            r = first.get(iid)
+            if r:
+                row["inputs"] = [{"item": i["item"], "q": i["quantity"]} for i in r["inputs"]]
+                row["craft"], row["outQ"] = float(r.get("base_craft_time") or 1), r.get("output_quantity") or 1
+            elif iid != "megastructure_material":
+                row["inputs"], row["craft"], row["outQ"] = [], None, 1
 
 
 # Biology (fed by the life chemicals), Metallurgy (ores -> metals -> alloys) and Engineering (few, slow parts
@@ -321,6 +402,7 @@ METALLURGY_ITEMS = [
     ("chalcopyrite", "Chalcopyrite (copper ore)", "m1", "new", "mined ore, CuFeS2"),
     ("rutile", "Rutile (titanium ore)", "m1", "new", "mined ore, TiO2"),
     ("silica", "Silica", "m1", "moved", "quartz sand"),
+    ("coal", "Coal", "m1", "new", "mined, carbon for steel and fibre"),
     ("iron_oxide", "Iron Oxide", "m1", "moved", "roasted ore"),
     ("steel", "Steel", "m2", "moved", "iron + carbon"),
     ("aluminium_ingot", "Aluminium Ingot", "m2", "new", "electrolysis of bauxite"),
@@ -451,6 +533,14 @@ UPGRADES = [
      "costs": "250k ... 16M", "status": "new", "world": "Engineering", "walls": "Metamaterial, Graviton Lens"},
 ]
 
+# Pricing model the page applies live (edit it there):
+#   wage(H) = wage0 x 2^((H - anchorH) / doubleH) entropy/s per building, H = active hours at unlock
+#   value   = (inputs + wage x craft) / output quantity  (the game's derived-economy rule, with wage on time)
+#   research cost = buildings x wage x upgrade multiplier x active seconds since the world's previous unlock,
+#   where the upgrade multiplier grows (1 + wallGain) per wall already cleared. Tutorial items keep their values.
+PRICES = {"wage0": 20, "anchorH": 1.0, "doubleH": 10, "buildings": 5, "wallGain": 0.35, "minPaybackMin": 2}
+
+
 # Ascension: once every item is unlocked, Ascend (worlds lock again; items, research and prestige currency
 # reset; shop upgrades stay) for megastructure material. Each megastructure stage costs more material and
 # adds a permanent production bonus, so each loop is faster. The page projects this over years.
@@ -470,6 +560,7 @@ def main():
         "generated": __import__("datetime").date.today().isoformat(),
         "runsSource": runs_source, "runs": runs, "chemStart": chem, "worlds": WORLDS, "phases": PHASES,
         "walls": WALLS, "upgrades": UPGRADES, "ascension": ASCENSION, "activeHoursPerDay": 2.0,
+        "prices": PRICES,
         "asBuilt": built, "proposal": prop,
     }
     if "--check" in sys.argv:
